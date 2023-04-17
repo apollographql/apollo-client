@@ -63,7 +63,7 @@ type SubscribeToMoreFunction<
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
 export function useSuspenseQuery_experimental<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -74,7 +74,7 @@ export function useSuspenseQuery_experimental<
 ): UseSuspenseQueryResult<TData, TVariables>;
 
 export function useSuspenseQuery_experimental<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -85,7 +85,7 @@ export function useSuspenseQuery_experimental<
 ): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
 export function useSuspenseQuery_experimental<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -95,7 +95,7 @@ export function useSuspenseQuery_experimental<
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
 export function useSuspenseQuery_experimental<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -105,7 +105,7 @@ export function useSuspenseQuery_experimental<
 ): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
 
 export function useSuspenseQuery_experimental<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -113,7 +113,7 @@ export function useSuspenseQuery_experimental<
 ): UseSuspenseQueryResult<TData, TVariables>;
 
 export function useSuspenseQuery_experimental<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,

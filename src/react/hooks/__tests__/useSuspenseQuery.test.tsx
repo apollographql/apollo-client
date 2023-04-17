@@ -7015,6 +7015,18 @@ describe('useSuspenseQuery', () => {
   });
 
   describe.skip('type tests', () => {
+    it('returns unknown when TData cannot be inferred', () => {
+      const query = gql`
+        query {
+          hello
+        }
+      `;
+
+      const { data } = useSuspenseQuery(query);
+
+      expectTypeOf(data).toEqualTypeOf<unknown>();
+    });
+
     it('returns TData in default case', () => {
       const { query } = useVariablesQueryCase();
 

@@ -7140,6 +7140,29 @@ describe('useSuspenseQuery', () => {
       expectTypeOf(inferred).not.toEqualTypeOf<DeepPartial<SimpleQueryData>>();
     });
 
+    it('returns TData when passing an option that does not affect TData', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        fetchPolicy: 'no-cache',
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { fetchPolicy: 'no-cache' });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+    });
+
     it('handles combinations of options', () => {
       const { query } = useVariablesQueryCase();
 

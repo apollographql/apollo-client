@@ -20,6 +20,7 @@ import {
   SuspenseQueryHookFetchPolicy,
   SuspenseQueryHookOptions,
   ObservableQueryFields,
+  NoInfer,
 } from '../types/types';
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
@@ -67,7 +68,7 @@ export function useSuspenseQuery_experimental<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<TData, TVariables> & {
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     errorPolicy?: never;
     returnPartialData?: never;
   }
@@ -78,7 +79,7 @@ export function useSuspenseQuery_experimental<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<TData, TVariables> & {
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: true;
     errorPolicy: 'ignore' | 'all';
   }
@@ -89,7 +90,7 @@ export function useSuspenseQuery_experimental<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<TData, TVariables> & {
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     errorPolicy: 'ignore' | 'all';
   }
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
@@ -99,7 +100,7 @@ export function useSuspenseQuery_experimental<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<TData, TVariables> & {
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: true;
   }
 ): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
@@ -109,7 +110,7 @@ export function useSuspenseQuery_experimental<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SuspenseQueryHookOptions<TData, TVariables>
+  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): UseSuspenseQueryResult<TData, TVariables>;
 
 export function useSuspenseQuery_experimental<
@@ -117,7 +118,10 @@ export function useSuspenseQuery_experimental<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
+  options: SuspenseQueryHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>
+  > = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
   const didPreviouslySuspend = useRef(false);
   const client = useApolloClient(options.client);

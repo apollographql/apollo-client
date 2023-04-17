@@ -7027,6 +7027,13 @@ describe('useSuspenseQuery', () => {
       expectTypeOf(data).toEqualTypeOf<unknown>();
     });
 
+    it('disallows wider variables type than specified', () => {
+      const { query } = useVariablesQueryCase();
+
+      // @ts-expect-error should not allow wider TVariables type
+      useSuspenseQuery(query, { variables: { id: '1', foo: 'bar' } });
+    });
+
     it('returns TData in default case', () => {
       const { query } = useVariablesQueryCase();
 

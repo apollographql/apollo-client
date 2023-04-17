@@ -236,21 +236,24 @@ function useErrorCase<TData extends ErrorCaseData>(
   return { query, mocks: [mock] };
 }
 
+interface VariablesCaseData {
+  character: {
+    id: string;
+    name: string;
+  };
+}
+
+interface VariablesCaseVariables {
+  id: string;
+}
+
 function useVariablesQueryCase() {
   const CHARACTERS = ['Spider-Man', 'Black Widow', 'Iron Man', 'Hulk'];
 
-  interface QueryData {
-    character: {
-      id: string;
-      name: string;
-    };
-  }
-
-  interface QueryVariables {
-    id: string;
-  }
-
-  const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+  const query: TypedDocumentNode<
+    VariablesCaseData,
+    VariablesCaseVariables
+  > = gql`
     query CharacterQuery($id: ID!) {
       character(id: $id) {
         id

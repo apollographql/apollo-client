@@ -7016,93 +7016,167 @@ describe('useSuspenseQuery', () => {
 
   describe.skip('type tests', () => {
     it('returns TData in default case', () => {
-      const { query } = useSimpleQueryCase();
+      const { query } = useVariablesQueryCase();
 
-      const { data } = useSuspenseQuery(query);
+      const { data: inferred } = useSuspenseQuery(query);
 
-      expectTypeOf(data).toEqualTypeOf<SimpleQueryData>();
-      expectTypeOf(data).not.toEqualTypeOf<SimpleQueryData | undefined>();
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
     });
 
     it('returns TData | undefined with errorPolicy: "ignore"', () => {
-      const { query } = useSimpleQueryCase();
+      const { query } = useVariablesQueryCase();
 
-      const { data } = useSuspenseQuery(query, { errorPolicy: 'ignore' });
+      const { data: inferred } = useSuspenseQuery(query, {
+        errorPolicy: 'ignore',
+      });
 
-      expectTypeOf(data).toEqualTypeOf<SimpleQueryData | undefined>();
-      expectTypeOf(data).not.toEqualTypeOf<SimpleQueryData>();
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { errorPolicy: 'ignore' });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     });
 
     it('returns TData | undefined with errorPolicy: "all"', () => {
-      const { query } = useSimpleQueryCase();
+      const { query } = useVariablesQueryCase();
 
-      const { data } = useSuspenseQuery(query, { errorPolicy: 'all' });
+      const { data: inferred } = useSuspenseQuery(query, {
+        errorPolicy: 'all',
+      });
 
-      expectTypeOf(data).toEqualTypeOf<SimpleQueryData | undefined>();
-      expectTypeOf(data).not.toEqualTypeOf<SimpleQueryData>();
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        errorPolicy: 'all',
+      });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     });
 
     it('returns TData with errorPolicy: "none"', () => {
-      const { query } = useSimpleQueryCase();
+      const { query } = useVariablesQueryCase();
 
-      const { data } = useSuspenseQuery(query, { errorPolicy: 'none' });
+      const { data: inferred } = useSuspenseQuery(query, {
+        errorPolicy: 'none',
+      });
 
-      expectTypeOf(data).toEqualTypeOf<SimpleQueryData>();
-      expectTypeOf(data).not.toEqualTypeOf<SimpleQueryData | undefined>();
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { errorPolicy: 'none' });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
     });
 
     it('returns DeepPartial<TData> with returnPartialData: true', () => {
-      const { query } = useSimpleQueryCase();
+      const { query } = useVariablesQueryCase();
 
-      const { data } = useSuspenseQuery(query, { returnPartialData: true });
+      const { data: inferred } = useSuspenseQuery(query, {
+        returnPartialData: true,
+      });
 
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleQueryData>>();
-      expectTypeOf(data).not.toEqualTypeOf<SimpleQueryData>();
+      expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { returnPartialData: true });
+
+      expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     });
 
     it('returns TData with returnPartialData: false', () => {
       const { query } = useSimpleQueryCase();
 
-      const { data } = useSuspenseQuery(query, { returnPartialData: false });
+      const { data: inferred } = useSuspenseQuery(query, {
+        returnPartialData: false,
+      });
 
-      expectTypeOf(data).toEqualTypeOf<SimpleQueryData>();
-      expectTypeOf(data).not.toEqualTypeOf<DeepPartial<SimpleQueryData>>();
+      expectTypeOf(inferred).toEqualTypeOf<SimpleQueryData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<DeepPartial<SimpleQueryData>>();
     });
 
     it('handles combinations of options', () => {
-      const { query } = useSimpleQueryCase();
+      const { query } = useVariablesQueryCase();
 
-      const { data: partialDataIgnore } = useSuspenseQuery(query, {
+      const { data: inferredPartialDataIgnore } = useSuspenseQuery(query, {
         returnPartialData: true,
         errorPolicy: 'ignore',
       });
 
-      expectTypeOf(partialDataIgnore).toEqualTypeOf<
-        DeepPartial<SimpleQueryData> | undefined
+      expectTypeOf(inferredPartialDataIgnore).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
       >();
-      expectTypeOf(partialDataIgnore).not.toEqualTypeOf<SimpleQueryData>();
+      expectTypeOf(
+        inferredPartialDataIgnore
+      ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: noPartialDataIgnore } = useSuspenseQuery(query, {
-        returnPartialData: false,
+      const { data: explicitPartialDataIgnore } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: true,
         errorPolicy: 'ignore',
       });
 
-      expectTypeOf(noPartialDataIgnore).toEqualTypeOf<
-        SimpleQueryData | undefined
+      expectTypeOf(explicitPartialDataIgnore).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
       >();
-      expectTypeOf(noPartialDataIgnore).not.toEqualTypeOf<
-        DeepPartial<SimpleQueryData>
-      >();
+      expectTypeOf(
+        explicitPartialDataIgnore
+      ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: partialDataNone } = useSuspenseQuery(query, {
+      const { data: inferredPartialDataNone } = useSuspenseQuery(query, {
         returnPartialData: true,
         errorPolicy: 'none',
       });
 
-      expectTypeOf(partialDataNone).toEqualTypeOf<
-        DeepPartial<SimpleQueryData>
+      expectTypeOf(inferredPartialDataNone).toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
       >();
-      expectTypeOf(partialDataNone).not.toEqualTypeOf<SimpleQueryData>();
+      expectTypeOf(
+        inferredPartialDataNone
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicitPartialDataNone } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(explicitPartialDataNone).toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(
+        explicitPartialDataNone
+      ).not.toEqualTypeOf<VariablesCaseData>();
     });
   });
 });

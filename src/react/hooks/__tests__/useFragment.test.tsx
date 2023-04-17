@@ -953,7 +953,7 @@ describe("useFragment", () => {
     });
 
     it("throws an exception with `returnPartialData: false` if only partial data is available", () => {
-      // this is actually not intended behavuor, but it is the current behaviour
+      // this is actually not intended behavior, but it is the current behavior
       // let's document it in a test until we remove `returnPartialData` in 3.8
 
       let error: Error;
@@ -978,7 +978,7 @@ describe("useFragment", () => {
     });
 
     it("throws an exception with `returnPartialData: false` if no data is available", () => {
-      // this is actually not intended behavuor, but it is the current behaviour
+      // this is actually not intended behavior, but it is the current behavior
       // let's document it in a test until we remove `returnPartialData` in 3.8
       let error: Error;
 

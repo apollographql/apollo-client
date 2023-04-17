@@ -15,7 +15,7 @@ import { OperationVariables } from "../../core";
 
 export interface UseFragmentOptions<TData, TVars>
 extends Omit<
-  Cache.DiffOptions<TData, TVars>, 
+  Cache.DiffOptions<TData, TVars>,
   | "id"
   | "query"
   | "optimistic"

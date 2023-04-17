@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-deprecate `useFragement` `returnPartialData` option
+Deprecate `useFragment` `returnPartialData` option

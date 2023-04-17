@@ -7234,5 +7234,30 @@ describe('useSuspenseQuery', () => {
         explicitPartialDataNone
       ).not.toEqualTypeOf<VariablesCaseData>();
     });
+
+    it('returns correct TData type when combined options that do not affect TData', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        fetchPolicy: 'no-cache',
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        fetchPolicy: 'no-cache',
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
   });
 });

@@ -58,7 +58,7 @@ export type UseFragmentResult<TData> =
   | {
       data: TData;
       complete: true;
-      missing?: MissingTree;
+      missing?: never;
     }
   | {
       data: Partial<TData>;

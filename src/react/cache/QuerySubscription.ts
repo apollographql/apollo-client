@@ -13,7 +13,6 @@ import {
   hasAnyDirectives,
   createFulfilledPromise,
 } from '../../utilities';
-import { equal } from '@wry/equality';
 import { invariant } from '../../utilities/globals';
 import { wrap } from 'optimism';
 
@@ -172,9 +171,10 @@ export class QuerySubscription<TData = any> {
   }
 
   private handleNext(result: ApolloQueryResult<TData>) {
-    if (equal(this.result, result)) {
+    if (result.data === this.result.data) {
       return;
     }
+
     // If we encounter an error with the new result after we have successfully
     // fetched a previous result, we should set the new result data to the last
     // successful result.

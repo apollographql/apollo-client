@@ -141,7 +141,7 @@ function ToDoList() {
 
 ### Overriding registered fragments with local versions
 
-Queries can still declare their own local versions of named fragments, which will take precendence over the pre-registered ones, even if the local fragment is only indirectly referenced by other fragments. Take the following example:
+Queries can declare their own local versions of named fragments which will take precendence over ones registered via `createFragmentRegistry`, even if the local fragment is only indirectly referenced by other registered fragments. Take the following example:
 
 ```js title="index.js" {7-16}
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
@@ -165,7 +165,9 @@ const client = new ApolloClient({
 });
 ```
 
-```jsx title="ItemList.jsx" {8-15,22}
+The local version of the `ExtraFields` fragment declared in `ItemList.jsx` takes precedence over the `ExtraFields` originally registered with the `InMemoryCache`. Thus, its definition will be used when the `ExtraFields` fragment spread is parsed inside of the registered `ItemFragment` _only when `GetItemList` query is executed_, because explicit definitions take precedence over registered fragments.
+
+```jsx title="ItemList.jsx" {8-10,17}
 const listQuery = gql`
   query GetItemList {
     list {
@@ -173,10 +175,6 @@ const listQuery = gql`
     }
   }
 
-  # This version of the ExtraFields fragment, referenced via fragment spread
-  # on the registered ItemFragment, will be used instead of the one
-  # registered in the FragmentRegistry, because explicit definitions take
-  # precedence over registered fragments.
   fragment ExtraFields on Item {
     createdBy
   }

@@ -96,7 +96,7 @@ export const GET_POST_DETAILS = gql`
 
 ## Registering named fragments using `createFragmentRegistry`
 
-Starting in Apollo Client 3.7, fragments can be registered with your `InMemoryCache` so that they can be referred to by name elsewhere without needing to interpolate their declarations.
+Starting in Apollo Client 3.7, fragments can be registered with your `InMemoryCache` so that they can be referred to by name in any query or `InMemoryCache` operation (such as `cache.readFragment`, `cache.readQuery` and `cache.watch`) without needing to interpolate their declarations.
 
 Let's look at an example in React.
 
@@ -117,7 +117,7 @@ const client = new ApolloClient({
 });
 ```
 
-Since `ItemFragment` was registered with `InMemoryCache`, it can be referenced by name in any query, as can be seen below with the fragment spread inside of `GetItemList`.
+Since `ItemFragment` was registered with `InMemoryCache`, it can be referenced by name as seen below with the fragment spread inside of the `GetItemList` query.
 
 ```jsx title="ItemList.jsx" {4,13}
 const listQuery = gql`
@@ -143,7 +143,7 @@ function ToDoList() {
 
 Queries can declare their own local versions of named fragments which will take precendence over ones registered via `createFragmentRegistry`, even if the local fragment is only indirectly referenced by other registered fragments. Take the following example:
 
-```js title="index.js" {7-16}
+```js title="index.js" {7-17}
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
 

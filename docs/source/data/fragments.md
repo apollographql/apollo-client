@@ -100,7 +100,7 @@ Starting in Apollo Client 3.7, fragments can be registered with your `InMemoryCa
 
 Let's look at an example in React.
 
-```js title="index.js"
+```js title="index.js" {7-12}
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
 
@@ -119,7 +119,7 @@ const client = new ApolloClient({
 
 Since `ItemFragment` was registered with `InMemoryCache`, it can be referenced by name in any query, as can be seen below with the fragment spread inside of `GetItemList`.
 
-```jsx title="ItemList.jsx"
+```jsx title="ItemList.jsx" {4,13}
 const listQuery = gql`
   query GetItemList {
     list {
@@ -131,7 +131,9 @@ function ToDoList() {
   const { data } = useQuery(listQuery);
   return (
     <ol>
-      {data?.list.map(item => <Item key={item.id} text={item.text} />)}
+      {data?.list.map(item => (
+        <Item key={item.id} text={item.text} />
+      ))}
     </ol>
   );
 }

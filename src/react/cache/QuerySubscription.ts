@@ -176,8 +176,8 @@ export class QuerySubscription<TData = any> {
     }
 
     // If we encounter an error with the new result after we have successfully
-    // fetched a previous result, we should set the new result data to the last
-    // successful result.
+    // fetched a previous result, set the new result data to the last successful
+    // result.
     if (this.result.data && result.data === void 0) {
       result.data = this.result.data;
     }

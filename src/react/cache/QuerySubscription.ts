@@ -91,12 +91,10 @@ export class QuerySubscription<TData = any> {
       };
     }
 
-    this.subscription = observable
-      .filter((result) => isNetworkRequestSettled(result.networkStatus))
-      .subscribe({
-        next: this.handleNext,
-        error: this.handleError,
-      });
+    this.subscription = observable.subscribe({
+      next: this.handleNext,
+      error: this.handleError,
+    });
 
     // This error should never happen since the `.subscribe` call above
     // will ensure a concast is set on the observable via the `reobserve`

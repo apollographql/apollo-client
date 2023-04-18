@@ -201,7 +201,7 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
     () => ({
       ...options,
       query,
-      notifyOnNetworkStatusChange: true,
+      notifyOnNetworkStatusChange: false,
       nextFetchPolicy: void 0,
     }),
     [options, query]

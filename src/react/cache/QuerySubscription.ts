@@ -49,7 +49,7 @@ interface QuerySubscriptionOptions {
   autoDisposeTimeoutMs?: number;
 }
 
-export class QuerySubscription<TData = any> {
+export class QuerySubscription<TData = unknown> {
   public result: ApolloQueryResult<TData>;
   public promise: Promise<ApolloQueryResult<TData>>;
   public refetchPromise: Promise<ApolloQueryResult<TData>> | null = null;

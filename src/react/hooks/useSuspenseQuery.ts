@@ -167,21 +167,25 @@ function useSubscription<TData, TVariables extends OperationVariables>(
   const setVersion = (version: Version) => setState({ version });
 
   useEffect(() => {
-    return subscription.listen(() => setVersion('main'));
+    return subscription.listen(() => {
+      setVersion('main');
+    });
   }, [subscription]);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
+      const promise = subscription.fetchMore(options);
       setVersion('network');
-      return subscription.fetchMore(options);
+      return promise;
     },
     [subscription]
   );
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
+      const promise = subscription.refetch(variables);
       setVersion('network');
-      return subscription.refetch(variables);
+      return promise;
     },
     [subscription]
   );
@@ -193,10 +197,7 @@ function useSubscription<TData, TVariables extends OperationVariables>(
     );
 
   return {
-    promise:
-      version === 'network'
-        ? subscription.refetchPromise || subscription.promise
-        : subscription.promise,
+    promise: subscription.promises[version] || subscription.promises.main,
     refetch,
     fetchMore,
     subscribeToMore,

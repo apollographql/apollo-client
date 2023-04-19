@@ -51,9 +51,12 @@ interface QuerySubscriptionOptions {
 
 export class QuerySubscription<TData = unknown> {
   public result: ApolloQueryResult<TData>;
-  public promise: Promise<ApolloQueryResult<TData>>;
-  public refetchPromise: Promise<ApolloQueryResult<TData>> | null = null;
   public readonly observable: ObservableQuery<TData>;
+
+  public promises: {
+    main: Promise<ApolloQueryResult<TData>>;
+    network?: Promise<ApolloQueryResult<TData>>;
+  };
 
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener>();
@@ -79,7 +82,7 @@ export class QuerySubscription<TData = unknown> {
       (this.result.data &&
         (!this.result.partial || this.observable.options.returnPartialData))
     ) {
-      this.promise = createFulfilledPromise(this.result);
+      this.promises = { main: createFulfilledPromise(this.result) };
     }
 
     this.subscription = observable.subscribe({
@@ -99,10 +102,12 @@ export class QuerySubscription<TData = unknown> {
 
     const concast = observable['concast'];
 
-    if (!this.promise) {
-      this.promise = isMultipartQuery(observable.query)
-        ? wrapWithCustomPromise(concast)
-        : concast.promise;
+    if (!this.promises) {
+      this.promises = {
+        main: isMultipartQuery(observable.query)
+          ? wrapWithCustomPromise(concast)
+          : concast.promise,
+      };
     }
 
     // Start a timer that will automatically dispose of the query if the
@@ -131,7 +136,7 @@ export class QuerySubscription<TData = unknown> {
   refetch(variables: OperationVariables | undefined) {
     const promise = this.observable.refetch(variables);
 
-    this.refetchPromise = promise;
+    this.promises.network = promise;
 
     return promise;
   }
@@ -139,7 +144,7 @@ export class QuerySubscription<TData = unknown> {
   fetchMore(options: FetchMoreOptions<TData>) {
     const promise = this.observable.fetchMore<TData>(options);
 
-    this.refetchPromise = promise;
+    this.promises.network = promise;
 
     return promise;
   }
@@ -166,7 +171,7 @@ export class QuerySubscription<TData = unknown> {
     }
 
     this.result = result;
-    this.promise = createFulfilledPromise(result);
+    this.promises.main = createFulfilledPromise(result);
     this.deliver();
   }
 

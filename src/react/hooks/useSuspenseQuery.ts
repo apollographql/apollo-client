@@ -164,10 +164,7 @@ function useSubscription<TData, TVariables extends OperationVariables>(
     version: 'main',
   });
 
-  const setVersion = useCallback(
-    (version: Version) => setState({ version }),
-    []
-  );
+  const setVersion = (version: Version) => setState({ version });
 
   useEffect(() => {
     return subscription.listen(() => setVersion('main'));
@@ -195,12 +192,15 @@ function useSubscription<TData, TVariables extends OperationVariables>(
       [subscription]
     );
 
-  const promise =
-    version === 'network'
-      ? subscription.refetchPromise || subscription.promise
-      : subscription.promise;
-
-  return { promise, refetch, fetchMore, subscribeToMore };
+  return {
+    promise:
+      version === 'network'
+        ? subscription.refetchPromise || subscription.promise
+        : subscription.promise,
+    refetch,
+    fetchMore,
+    subscribeToMore,
+  };
 }
 
 interface UseWatchQueryOptionsHookOptions<

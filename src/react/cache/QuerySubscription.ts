@@ -56,7 +56,6 @@ interface PromiseChannel<TData> {
 
 export class QuerySubscription<TData = any> {
   public result: ApolloQueryResult<TData>;
-  public promise: Promise<ApolloQueryResult<TData>>;
   public readonly observable: ObservableQuery<TData>;
 
   private subscription: ObservableSubscription;

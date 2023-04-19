@@ -82,20 +82,14 @@ export function useSuspenseQuery_experimental<
     client.watchQuery(watchQueryOptions)
   );
 
-  const [promise, { refetch, fetchMore }] = useSubscribedPromise<
+  useTrackedSubscriptions(subscription);
+
+  const { promise, refetch, fetchMore, subscribeToMore } = useSubscribedPromise<
     TData,
     TVariables
   >(subscription);
 
-  useTrackedSubscriptions(subscription);
-
   const result = __use(promise);
-
-  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-    useCallback(
-      (options) => subscription.observable.subscribeToMore(options),
-      [subscription]
-    );
 
   return useMemo(() => {
     return {
@@ -162,7 +156,7 @@ function useTrackedSubscriptions(subscription: QuerySubscription) {
 }
 
 function useSubscribedPromise<TData, TVariables extends OperationVariables>(
-  subscription: QuerySubscription
+  subscription: QuerySubscription<TData>
 ) {
   // Use an object as state to force React to re-render when we publish an
   // update to the same version (such as sequential cache updates).
@@ -195,12 +189,18 @@ function useSubscribedPromise<TData, TVariables extends OperationVariables>(
     [subscription]
   );
 
+  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
+    useCallback(
+      (options) => subscription.observable.subscribeToMore(options),
+      [subscription]
+    );
+
   const promise =
     version === 'network'
       ? subscription.refetchPromise || subscription.promise
       : subscription.promise;
 
-  return [promise, { refetch, fetchMore }] as const;
+  return { promise, refetch, fetchMore, subscribeToMore };
 }
 
 interface UseWatchQueryOptionsHookOptions<

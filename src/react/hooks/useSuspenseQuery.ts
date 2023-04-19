@@ -80,9 +80,9 @@ export function useSuspenseQuery_experimental<
     client.watchQuery(watchQueryOptions)
   );
 
-  const [[channel], setChannel] = useState<
-    ['main' | 'refetch' | 'fetchMore', number]
-  >(['main', 0]);
+  const [[channel], setChannel] = useState<['main' | 'refetch' | 'fetchMore']>([
+    'main',
+  ]);
 
   const dispose = useTrackedSubscriptions(subscription);
 
@@ -92,13 +92,13 @@ export function useSuspenseQuery_experimental<
 
   useEffect(() => {
     return subscription.listen(() => {
-      setChannel(([, version]) => ['main', version + 1]);
+      setChannel(['main']);
     });
   }, [subscription]);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
-      setChannel(([, version]) => ['fetchMore', version]);
+      setChannel(['fetchMore']);
       return subscription.fetchMore(options);
     },
     [subscription]
@@ -106,7 +106,7 @@ export function useSuspenseQuery_experimental<
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
-      setChannel(([, version]) => ['refetch', version + 1]);
+      setChannel(['refetch']);
       return subscription.refetch(variables);
     },
     [subscription]

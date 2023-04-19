@@ -84,7 +84,7 @@ export function useSuspenseQuery_experimental<
 
   useTrackedSubscriptions(subscription);
 
-  const { promise, refetch, fetchMore, subscribeToMore } = useSubscribedPromise<
+  const { promise, refetch, fetchMore, subscribeToMore } = useSubscription<
     TData,
     TVariables
   >(subscription);
@@ -155,7 +155,7 @@ function useTrackedSubscriptions(subscription: QuerySubscription) {
   });
 }
 
-function useSubscribedPromise<TData, TVariables extends OperationVariables>(
+function useSubscription<TData, TVariables extends OperationVariables>(
   subscription: QuerySubscription<TData>
 ) {
   // Use an object as state to force React to re-render when we publish an

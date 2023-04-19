@@ -22,8 +22,6 @@ type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
 >[0];
 
-export type Version = 'main' | 'network';
-
 function wrapWithCustomPromise<TData>(
   concast: Concast<ApolloQueryResult<TData>>
 ) {
@@ -53,13 +51,13 @@ interface QuerySubscriptionOptions {
 
 export class QuerySubscription<TData = any> {
   public result: ApolloQueryResult<TData>;
+  public promise: Promise<ApolloQueryResult<TData>>;
+  public refetchPromise: Promise<ApolloQueryResult<TData>> | null = null;
   public readonly observable: ObservableQuery<TData>;
 
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
-  private promise: Promise<ApolloQueryResult<TData>>;
-  private refetchPromise: Promise<ApolloQueryResult<TData>> | null = null;
 
   constructor(
     observable: ObservableQuery<TData>,
@@ -115,14 +113,6 @@ export class QuerySubscription<TData = any> {
       this.dispose,
       options.autoDisposeTimeoutMs ?? 30_000
     );
-  }
-
-  getPromise(version: Version) {
-    if (version === 'network') {
-      return this.refetchPromise || this.promise;
-    }
-
-    return this.promise;
   }
 
   listen(listener: Listener) {

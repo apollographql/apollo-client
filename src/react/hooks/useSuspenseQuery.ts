@@ -1,5 +1,5 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import { useRef, useCallback, useMemo, useEffect, useReducer } from 'react';
+import { useRef, useCallback, useMemo, useEffect, useState } from 'react';
 import {
   ApolloClient,
   ApolloError,
@@ -21,7 +21,7 @@ import {
 } from '../types/types';
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
-import { QuerySubscription, Version } from '../cache/QuerySubscription';
+import { QuerySubscription } from '../cache/QuerySubscription';
 import { canonicalStringify } from '../../cache';
 
 export interface UseSuspenseQueryResult<
@@ -59,20 +59,7 @@ type SubscribeToMoreFunction<
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
-interface State {
-  version: Version;
-}
-
-const initialState: State = { version: 'main' };
-
-function reducer(_: State, version: 'main' | 'network') {
-  // Return a new object each time the reducer is run to force re-render the
-  // component. This ensures that publishing to the same version (such as when
-  // a cache update comes in), the component is re-rendered with the updated
-  // result. If we were to return the string directly, React may skip
-  // re-rendering the component since the state values would be the same.
-  return { version };
-}
+type Version = 'main' | 'network';
 
 export function useSuspenseQuery_experimental<
   TData = any,
@@ -95,13 +82,18 @@ export function useSuspenseQuery_experimental<
     client.watchQuery(watchQueryOptions)
   );
 
-  const [{ version }, setVersion] = useReducer(reducer, initialState);
+  const { version, setVersion } = usePromiseVersion();
 
   const dispose = useTrackedSubscriptions(subscription);
 
   useStrictModeSafeCleanupEffect(dispose);
 
-  const result = __use(subscription.getPromise(version));
+  const promise =
+    version === 'network'
+      ? subscription.refetchPromise || subscription.promise
+      : subscription.promise;
+
+  const result = __use(promise);
 
   useEffect(() => {
     return subscription.listen(() => setVersion('main'));
@@ -191,6 +183,19 @@ function useTrackedSubscriptions(subscription: QuerySubscription) {
   return function dispose() {
     trackedSubscriptions.current.forEach((sub) => sub.dispose());
   };
+}
+
+function usePromiseVersion() {
+  // Use an object as state to force React to re-render when we publish an
+  // update to the same version (such as sequential cache updates).
+  const [state, setState] = useState<{ version: Version }>({ version: 'main' });
+
+  const setVersion = useCallback(
+    (version: Version) => setState({ version }),
+    []
+  );
+
+  return { version: state.version, setVersion };
 }
 
 interface UseWatchQueryOptionsHookOptions<

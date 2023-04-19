@@ -82,38 +82,16 @@ export function useSuspenseQuery_experimental<
     client.watchQuery(watchQueryOptions)
   );
 
-  const { version, setVersion } = usePromiseVersion();
+  const [promise, { refetch, fetchMore }] = useSubscribedPromise<
+    TData,
+    TVariables
+  >(subscription);
 
   const dispose = useTrackedSubscriptions(subscription);
 
   useStrictModeSafeCleanupEffect(dispose);
 
-  const promise =
-    version === 'network'
-      ? subscription.refetchPromise || subscription.promise
-      : subscription.promise;
-
   const result = __use(promise);
-
-  useEffect(() => {
-    return subscription.listen(() => setVersion('main'));
-  }, [subscription]);
-
-  const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
-    (options) => {
-      setVersion('network');
-      return subscription.fetchMore(options);
-    },
-    [subscription]
-  );
-
-  const refetch: RefetchFunction<TData, TVariables> = useCallback(
-    (variables) => {
-      setVersion('network');
-      return subscription.refetch(variables);
-    },
-    [subscription]
-  );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
     useCallback(
@@ -185,17 +163,46 @@ function useTrackedSubscriptions(subscription: QuerySubscription) {
   };
 }
 
-function usePromiseVersion() {
+function useSubscribedPromise<TData, TVariables extends OperationVariables>(
+  subscription: QuerySubscription
+) {
   // Use an object as state to force React to re-render when we publish an
   // update to the same version (such as sequential cache updates).
-  const [state, setState] = useState<{ version: Version }>({ version: 'main' });
+  const [{ version }, setState] = useState<{ version: Version }>({
+    version: 'main',
+  });
 
   const setVersion = useCallback(
     (version: Version) => setState({ version }),
     []
   );
 
-  return { version: state.version, setVersion };
+  useEffect(() => {
+    return subscription.listen(() => setVersion('main'));
+  }, [subscription]);
+
+  const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
+    (options) => {
+      setVersion('network');
+      return subscription.fetchMore(options);
+    },
+    [subscription]
+  );
+
+  const refetch: RefetchFunction<TData, TVariables> = useCallback(
+    (variables) => {
+      setVersion('network');
+      return subscription.refetch(variables);
+    },
+    [subscription]
+  );
+
+  const promise =
+    version === 'network'
+      ? subscription.refetchPromise || subscription.promise
+      : subscription.promise;
+
+  return [promise, { refetch, fetchMore }] as const;
 }
 
 interface UseWatchQueryOptionsHookOptions<

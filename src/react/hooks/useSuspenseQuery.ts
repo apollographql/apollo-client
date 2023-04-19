@@ -87,9 +87,7 @@ export function useSuspenseQuery_experimental<
     TVariables
   >(subscription);
 
-  const dispose = useTrackedSubscriptions(subscription);
-
-  useStrictModeSafeCleanupEffect(dispose);
+  useTrackedSubscriptions(subscription);
 
   const result = __use(promise);
 
@@ -158,9 +156,9 @@ function useTrackedSubscriptions(subscription: QuerySubscription) {
 
   trackedSubscriptions.current.add(subscription);
 
-  return function dispose() {
+  useStrictModeSafeCleanupEffect(() => {
     trackedSubscriptions.current.forEach((sub) => sub.dispose());
-  };
+  });
 }
 
 function useSubscribedPromise<TData, TVariables extends OperationVariables>(

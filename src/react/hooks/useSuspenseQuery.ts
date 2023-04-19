@@ -63,15 +63,16 @@ type Channel = 'main' | 'refetch';
 
 interface ReducerState {
   channel: Channel;
-  version: number;
 }
 
-const initialState: ReducerState = { channel: 'main', version: 0 };
+const initialState: ReducerState = { channel: 'main' };
 
-function reducer(state: ReducerState, channel: Channel) {
-  // `version` is not actually used by the hook, but allows us to force
-  // re-render the component when publishing to the same channel.
-  return { channel, version: state.version + 1 };
+function reducer(_: ReducerState, channel: Channel) {
+  // Return a new object each time the reducer is run to force re-render the
+  // component when publishing to the same channel. If returning the string
+  // directly, React may skip re-rendering the component since the state values
+  // are the same.
+  return { channel };
 }
 
 export function useSuspenseQuery_experimental<

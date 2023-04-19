@@ -1,5 +1,5 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import { useRef, useCallback, useMemo, useState, useEffect } from 'react';
+import { useRef, useCallback, useMemo, useEffect, useReducer } from 'react';
 import {
   ApolloClient,
   ApolloError,
@@ -59,6 +59,21 @@ type SubscribeToMoreFunction<
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
+type Channel = 'main' | 'refetch';
+
+interface ReducerState {
+  channel: Channel;
+  version: number;
+}
+
+const initialState: ReducerState = { channel: 'main', version: 0 };
+
+function reducer(state: ReducerState, channel: Channel) {
+  // `version` is not actually used by the hook, but allows us to force
+  // re-render the component when publishing to the same channel.
+  return { channel, version: state.version + 1 };
+}
+
 export function useSuspenseQuery_experimental<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
@@ -80,7 +95,7 @@ export function useSuspenseQuery_experimental<
     client.watchQuery(watchQueryOptions)
   );
 
-  const [[channel], setChannel] = useState<['main' | 'refetch']>(['main']);
+  const [{ channel }, publish] = useReducer(reducer, initialState);
 
   const dispose = useTrackedSubscriptions(subscription);
 
@@ -89,14 +104,12 @@ export function useSuspenseQuery_experimental<
   const result = __use(subscription.getPromise(channel));
 
   useEffect(() => {
-    return subscription.listen(() => {
-      setChannel(['main']);
-    });
+    return subscription.listen(() => publish('main'));
   }, [subscription]);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
-      setChannel(['refetch']);
+      publish('refetch');
       return subscription.fetchMore(options);
     },
     [subscription]
@@ -104,7 +117,7 @@ export function useSuspenseQuery_experimental<
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
-      setChannel(['refetch']);
+      publish('refetch');
       return subscription.refetch(variables);
     },
     [subscription]

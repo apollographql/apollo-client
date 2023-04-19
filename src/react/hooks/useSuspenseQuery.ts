@@ -21,7 +21,7 @@ import {
 } from '../types/types';
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
-import { QuerySubscription } from '../cache/QuerySubscription';
+import { QuerySubscription, Version } from '../cache/QuerySubscription';
 import { canonicalStringify } from '../../cache';
 
 export interface UseSuspenseQueryResult<
@@ -59,20 +59,19 @@ type SubscribeToMoreFunction<
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
-type Channel = 'main' | 'refetch';
-
-interface ReducerState {
-  channel: Channel;
+interface State {
+  version: Version;
 }
 
-const initialState: ReducerState = { channel: 'main' };
+const initialState: State = { version: 'main' };
 
-function reducer(_: ReducerState, channel: Channel) {
+function reducer(_: State, version: 'main' | 'network') {
   // Return a new object each time the reducer is run to force re-render the
-  // component when publishing to the same channel. If returning the string
-  // directly, React may skip re-rendering the component since the state values
-  // are the same.
-  return { channel };
+  // component. This ensures that publishing to the same version (such as when
+  // a cache update comes in), the component is re-rendered with the updated
+  // result. If we were to return the string directly, React may skip
+  // re-rendering the component since the state values would be the same.
+  return { version };
 }
 
 export function useSuspenseQuery_experimental<
@@ -96,21 +95,21 @@ export function useSuspenseQuery_experimental<
     client.watchQuery(watchQueryOptions)
   );
 
-  const [{ channel }, publish] = useReducer(reducer, initialState);
+  const [{ version }, setVersion] = useReducer(reducer, initialState);
 
   const dispose = useTrackedSubscriptions(subscription);
 
   useStrictModeSafeCleanupEffect(dispose);
 
-  const result = __use(subscription.getPromise(channel));
+  const result = __use(subscription.getPromise(version));
 
   useEffect(() => {
-    return subscription.listen(() => publish('main'));
+    return subscription.listen(() => setVersion('main'));
   }, [subscription]);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
-      publish('refetch');
+      setVersion('network');
       return subscription.fetchMore(options);
     },
     [subscription]
@@ -118,7 +117,7 @@ export function useSuspenseQuery_experimental<
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
-      publish('refetch');
+      setVersion('network');
       return subscription.refetch(variables);
     },
     [subscription]

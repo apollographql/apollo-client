@@ -22,6 +22,8 @@ type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
 >[0];
 
+export type Version = 'main' | 'network';
+
 function wrapWithCustomPromise<TData>(
   concast: Concast<ApolloQueryResult<TData>>
 ) {
@@ -115,8 +117,8 @@ export class QuerySubscription<TData = any> {
     );
   }
 
-  getPromise(channel: 'main' | 'refetch') {
-    if (channel === 'refetch') {
+  getPromise(version: Version) {
+    if (version === 'network') {
       return this.refetchPromise || this.promise;
     }
 

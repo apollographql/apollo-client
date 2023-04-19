@@ -155,7 +155,7 @@ export class QuerySubscription<TData = any> {
 
     this.channels.refetch = promise;
 
-    return this.promise;
+    return promise;
   }
 
   dispose() {

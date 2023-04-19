@@ -49,11 +49,6 @@ interface QuerySubscriptionOptions {
   autoDisposeTimeoutMs?: number;
 }
 
-interface PromiseChannel<TData> {
-  main: Promise<ApolloQueryResult<TData>>;
-  refetch?: Promise<ApolloQueryResult<TData>>;
-}
-
 export class QuerySubscription<TData = any> {
   public result: ApolloQueryResult<TData>;
   public readonly observable: ObservableQuery<TData>;
@@ -61,8 +56,8 @@ export class QuerySubscription<TData = any> {
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
-
-  private channels: PromiseChannel<TData>;
+  private promise: Promise<ApolloQueryResult<TData>>;
+  private refetchPromise: Promise<ApolloQueryResult<TData>> | null = null;
 
   constructor(
     observable: ObservableQuery<TData>,
@@ -84,9 +79,7 @@ export class QuerySubscription<TData = any> {
       (this.result.data &&
         (!this.result.partial || this.observable.options.returnPartialData))
     ) {
-      this.channels = {
-        main: createFulfilledPromise(this.result),
-      };
+      this.promise = createFulfilledPromise(this.result);
     }
 
     this.subscription = observable.subscribe({
@@ -106,12 +99,10 @@ export class QuerySubscription<TData = any> {
 
     const concast = observable['concast'];
 
-    if (!this.channels) {
-      this.channels = {
-        main: isMultipartQuery(observable.query)
-          ? wrapWithCustomPromise(concast)
-          : concast.promise,
-      };
+    if (!this.promise) {
+      this.promise = isMultipartQuery(observable.query)
+        ? wrapWithCustomPromise(concast)
+        : concast.promise;
     }
 
     // Start a timer that will automatically dispose of the query if the
@@ -125,7 +116,11 @@ export class QuerySubscription<TData = any> {
   }
 
   getPromise(channel: 'main' | 'refetch') {
-    return this.channels[channel] || this.channels.main;
+    if (channel === 'refetch') {
+      return this.refetchPromise || this.promise;
+    }
+
+    return this.promise;
   }
 
   listen(listener: Listener) {
@@ -144,7 +139,7 @@ export class QuerySubscription<TData = any> {
   refetch(variables: OperationVariables | undefined) {
     const promise = this.observable.refetch(variables);
 
-    this.channels.refetch = promise;
+    this.refetchPromise = promise;
 
     return promise;
   }
@@ -152,7 +147,7 @@ export class QuerySubscription<TData = any> {
   fetchMore(options: FetchMoreOptions<TData>) {
     const promise = this.observable.fetchMore<TData>(options);
 
-    this.channels.refetch = promise;
+    this.refetchPromise = promise;
 
     return promise;
   }
@@ -179,7 +174,7 @@ export class QuerySubscription<TData = any> {
     }
 
     this.result = result;
-    this.channels.main = createFulfilledPromise(result);
+    this.promise = createFulfilledPromise(result);
     this.deliver();
   }
 

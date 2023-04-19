@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.7.12
+
+### Patch Changes
+
+- [#10735](https://github.com/apollographql/apollo-client/pull/10735) [`895bcdcff`](https://github.com/apollographql/apollo-client/commit/895bcdcff146bc4575c8f3423c30fa9e885be16b) Thanks [@alessbell](https://github.com/alessbell)! - If a multipart chunk contains only `hasNext: false`, immediately complete the observable.
+
 ## 3.7.11
 
 ### Patch Changes

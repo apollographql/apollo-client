@@ -1346,6 +1346,18 @@ describe('HttpLink', () => {
         '-----',
       ].join("\r\n");
 
+      const finalChunkOnlyHasNextFalse = [
+        "--graphql",
+        "content-type: application/json",
+        "",
+        '{"data":{"allProducts":[null,null,null]},"errors":[{"message":"Cannot return null for non-nullable field Product.nonNullErrorField."},{"message":"Cannot return null for non-nullable field Product.nonNullErrorField."},{"message":"Cannot return null for non-nullable field Product.nonNullErrorField."}],"hasNext":true}',
+        "--graphql",
+        "content-type: application/json",
+        "",
+        '{"hasNext":false}',
+        "--graphql--",
+      ].join("\r\n");
+
       it('whatwg stream bodies', (done) => {
         const stream = new ReadableStream({
           async start(controller) {
@@ -1410,6 +1422,73 @@ describe('HttpLink', () => {
           },
           () => {
             if (i !== 2) {
+              done(new Error("Unexpected end to observable"));
+            }
+
+            done();
+          },
+        );
+      });
+
+      // Verify that observable completes if final chunk does not contain
+      // incremental array.
+      it('whatwg stream bodies, final chunk of { hasNext: false }', (done) => {
+        const stream = new ReadableStream({
+          async start(controller) {
+            const lines = finalChunkOnlyHasNextFalse.split("\r\n");
+            try {
+              for (const line of lines) {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+                controller.enqueue(line + "\r\n");
+              }
+            } finally {
+              controller.close();
+            }
+          },
+        });
+
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ 'Content-Type': 'multipart/mixed;boundary="graphql";deferSpec=20220824' }),
+        }));
+
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+
+        let i = 0;
+        execute(link, { query: sampleDeferredQuery }).subscribe(
+          result => {
+            try {
+              if (i === 0) {
+                expect(result).toMatchObject({
+                  data: {
+                    allProducts: [
+                      null,
+                      null,
+                      null
+                    ]
+                  },
+                  // errors is also present, but for the purpose of this test
+                  // we're not interested in its (lengthy) content.
+                  // errors: [{...}],
+                  hasNext: true,
+                });
+              }
+              // Since the second chunk contains only hasNext: false,
+              // there is no next result to receive.
+            } catch (err) {
+              done(err);
+            } finally {
+              i++;
+            }
+          },
+          err => {
+            done(err);
+          },
+          () => {
+            if (i !== 1) {
               done(new Error("Unexpected end to observable"));
             }
 

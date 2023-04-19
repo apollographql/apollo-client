@@ -52,7 +52,6 @@ interface QuerySubscriptionOptions {
 interface PromiseChannel<TData> {
   main: Promise<ApolloQueryResult<TData>>;
   refetch?: Promise<ApolloQueryResult<TData>>;
-  fetchMore?: Promise<ApolloQueryResult<TData>>;
 }
 
 export class QuerySubscription<TData = any> {
@@ -126,7 +125,7 @@ export class QuerySubscription<TData = any> {
     );
   }
 
-  getPromise(channel: 'main' | 'refetch' | 'fetchMore') {
+  getPromise(channel: 'main' | 'refetch') {
     return this.channels[channel] || this.channels.main;
   }
 
@@ -154,7 +153,7 @@ export class QuerySubscription<TData = any> {
   fetchMore(options: FetchMoreOptions<TData>) {
     const promise = this.observable.fetchMore<TData>(options);
 
-    this.channels.fetchMore = promise;
+    this.channels.refetch = promise;
 
     return this.promise;
   }

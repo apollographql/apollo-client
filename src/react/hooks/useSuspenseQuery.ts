@@ -80,9 +80,7 @@ export function useSuspenseQuery_experimental<
     client.watchQuery(watchQueryOptions)
   );
 
-  const [[channel], setChannel] = useState<['main' | 'refetch' | 'fetchMore']>([
-    'main',
-  ]);
+  const [[channel], setChannel] = useState<['main' | 'refetch']>(['main']);
 
   const dispose = useTrackedSubscriptions(subscription);
 
@@ -98,7 +96,7 @@ export function useSuspenseQuery_experimental<
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
-      setChannel(['fetchMore']);
+      setChannel(['refetch']);
       return subscription.fetchMore(options);
     },
     [subscription]

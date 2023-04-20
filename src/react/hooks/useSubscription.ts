@@ -160,7 +160,18 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
     });
 
     return () => {
+      // immediately stop receiving subscription values, but do not unsubscribe
+      // until after a short delay in case another useSubscription hook is
+      // reusing the same underlying observable and is about to subscribe
+      const ignoredSubscription = observable.subscribe({
+        next() {},
+        error() {},
+        complete() {},
+      });
       subscription.unsubscribe();
+      setTimeout(() => {
+        ignoredSubscription.unsubscribe();
+      });
     };
   }, [observable]);
 

@@ -152,39 +152,14 @@ export class Concast<T> extends Observable<T> {
   // easy way to observe the final state of the Concast.
   private resolve: (result?: T | PromiseLike<T>) => void;
   private reject: (reason: any) => void;
-  private internalPromise = new Promise<T>((resolve, reject) => {
+  public readonly promise = new Promise<T>((resolve, reject) => {
     this.resolve = resolve;
     this.reject = reject;
   });
-  public get promise() {
-    return this.internalPromise;
-  }
 
   // Name and argument of the most recently invoked observer method, used
   // to deliver latest results immediately to new observers.
   private latest?: ["next", T] | ["error", any];
-
-  // Delay unsubscribing from the underlying subscription slightly,
-  // so that immediately subscribing another observer can keep the
-  // subscription active.
-  private deferredUnsubscribe() {
-    const { sub } = this;
-    this.sub = null;
-    const isError = this.latest?.[0] === 'error';
-    if (sub) {
-      setTimeout(() => {
-        if (this.observers.size > 0 && !sub.closed && !isError) {
-          this.sub = sub;
-          this.internalPromise = new Promise<T>((resolve, reject) => {
-            this.resolve = resolve;
-            this.reject = reject;
-          });
-        } else {
-          sub.unsubscribe();
-        }
-      });
-    }
-  }
 
   // Bound handler functions that can be reused for every internal
   // subscription.
@@ -200,7 +175,11 @@ export class Concast<T> extends Observable<T> {
     error: (error: any) => {
       const { sub } = this;
       if (sub !== null) {
-        this.deferredUnsubscribe();
+        // Delay unsubscribing from the underlying subscription slightly,
+        // so that immediately subscribing another observer can keep the
+        // subscription active.
+        if (sub) setTimeout(() => sub.unsubscribe());
+        this.sub = null;
         this.latest = ["error", error];
         this.reject(error);
         this.notify("error", error);
@@ -218,7 +197,8 @@ export class Concast<T> extends Observable<T> {
         // eventually have been initialized to a non-empty array.
         const value = sources.shift();
         if (!value) {
-          this.deferredUnsubscribe();
+          if (sub) setTimeout(() => sub.unsubscribe());
+          this.sub = null;
           if (this.latest &&
               this.latest[0] === "next") {
             this.resolve(this.latest[1]);

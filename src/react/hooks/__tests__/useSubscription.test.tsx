@@ -996,4 +996,73 @@ describe('useSubscription Hook', () => {
       );
     });
   });
+
+  it('should handle simple subscription after old in-flight teardown immediately \
+followed by new in-flight setup', async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ['Audi', 'BMW'].map(make => ({
+      result: { data: { car: { make } } },
+    }));
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false })
+    });
+
+    const { result, unmount, rerender } = renderHook(
+      ({ coin }) => {
+        const heads = useSubscription(subscription, {
+          variables: {},
+          skip: coin === 'tails',
+          context: { coin: 'heads' }
+        });
+        const tails = useSubscription(subscription, {
+          variables: {},
+          skip: coin === 'heads',
+          context: { coin: 'tails' }
+        });
+        return { heads, tails };
+      },
+      {
+        initialProps: {
+          coin: 'heads'
+        },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        )
+      },
+    );
+
+    rerender({ coin: 'tails' });
+
+    await new Promise(resolve => setTimeout(() => resolve('wait'), 20));
+
+    link.simulateResult(results[0]);
+
+    await waitFor(() => {
+      expect(result.current.tails.data).toEqual(results[0].result.data);
+    }, { interval: 1 });
+    expect(result.current.heads.data).toBeUndefined();
+
+    rerender({ coin: 'heads' });
+
+    link.simulateResult(results[1]);
+
+    await waitFor(() => {
+      expect(result.current.heads.data).toEqual(results[1].result.data);
+    }, { interval: 1 });
+    expect(result.current.tails.data).toBeUndefined();
+
+    unmount();
+  });
 });

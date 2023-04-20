@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-Improve consistency when unsubscribing Concast with rollback when new observer subscribes to otherwise-active Concast right after last observer unsubscribes
+Delay Concast subscription teardown slightly in `useSubscription` to prevent unexpected Concast closure when one `useSubscription` hook tears down its in-flight Concast subscription immediately followed by another `useSubscription` hook reusing and subscribing to that same Concast

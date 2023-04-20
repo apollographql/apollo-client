@@ -100,6 +100,14 @@ export async function readMultipartBody<
               // we don't need to call observer.next as there is no data/errors
               observer.next?.(result);
             }
+          } else if (
+            // If the chunk contains only a "hasNext: false", we can call
+            // observer.complete() immediately.
+            Object.keys(result).length === 1 &&
+            "hasNext" in result &&
+            !result.hasNext
+          ) {
+            observer.complete?.();
           }
         } catch (err) {
           handleError(err, observer);

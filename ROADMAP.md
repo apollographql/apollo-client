@@ -15,7 +15,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ## [3.8.0](https://github.com/apollographql/apollo-client/milestone/30)
 
-_Approximate Date: 2023-04-21 (Beta), GA TBD after user feedback_
+_Approximate Date: 2023-05-05 (Beta), GA TBD after user feedback_
 
 Currently in active development and being shipped in a series alpha releases.  React 18 users will get a lot out of this release since it introduces support for Suspense and (for you server-side rendering enthusiasts) `renderToPipeableStream`.  There are also new features added to the core as well.  Here's a brief overview:
 

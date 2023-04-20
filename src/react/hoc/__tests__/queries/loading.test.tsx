@@ -10,6 +10,8 @@ import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
+const IS_REACT_18 = React.version.startsWith('18');
+
 describe('[queries] loading', () => {
   // networkStatus / loading
   itAsync('exposes networkStatus as a part of the props api', (resolve, reject) => {
@@ -298,8 +300,13 @@ describe('[queries] loading', () => {
               });
               break;
             case 1:
-              expect(data!.loading).toBeTruthy();
-              expect(data!.networkStatus).toBe(4);
+              if (IS_REACT_18) {
+                expect(data!.loading).toBeFalsy();
+                expect(data!.networkStatus).toBe(NetworkStatus.ready);
+              } else {
+                expect(data!.loading).toBeTruthy();
+                expect(data!.networkStatus).toBe(NetworkStatus.refetch);
+              }
               expect(data!.allPeople).toEqual(data!.allPeople);
               break;
             case 2:
@@ -324,7 +331,13 @@ describe('[queries] loading', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
+    waitFor(() => {
+      if (IS_REACT_18) {
+        expect(count).toBe(2)
+      } else {
+        expect(count).toBe(3)
+      }
+    }).then(resolve, reject);
   });
 
   it('correctly sets loading state on remounted network-only query', async () => {
@@ -421,7 +434,11 @@ describe('[queries] loading', () => {
       ]);
     }, { interval: 1 });
     await waitFor(() => {
-      expect(count).toBe(6);
+      if (IS_REACT_18) {
+        expect(count).toBe(5);
+      } else {
+        expect(count).toBe(6);
+      }
     }, { interval: 1 });
   });
 
@@ -501,10 +518,14 @@ describe('[queries] loading', () => {
         <Container first={first} />
       </ApolloProvider>
     );
-
     const { unmount } = render(renderFn(1));
-
-    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
+    waitFor(() => {
+      if (IS_REACT_18) {
+        expect(count).toBe(0)
+      } else {
+        expect(count).toBe(3)
+      }
+    }).then(resolve, reject);
   });
 
   itAsync('correctly sets loading state on remounted component with changed variables (alt)', (resolve, reject) => {

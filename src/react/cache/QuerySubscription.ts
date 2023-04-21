@@ -1,48 +1,21 @@
 import {
   ApolloError,
   ApolloQueryResult,
-  DocumentNode,
   NetworkStatus,
   ObservableQuery,
   OperationVariables,
 } from '../../core';
 import { isNetworkRequestSettled } from '../../core';
 import {
-  Concast,
   ObservableSubscription,
-  hasAnyDirectives,
   createFulfilledPromise,
 } from '../../utilities';
-import { invariant } from '../../utilities/globals';
-import { wrap } from 'optimism';
 
 type Listener = () => void;
 
 type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
 >[0];
-
-function wrapWithCustomPromise<TData>(
-  concast: Concast<ApolloQueryResult<TData>>
-) {
-  return new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
-    // Unlike `concast.promise`, we want to resolve the promise on the initial
-    // chunk of the deferred query. This allows the component to unsuspend
-    // when we get the initial set of data, rather than waiting until all
-    // chunks have been loaded.
-    const subscription = concast.subscribe({
-      next: (value) => {
-        resolve(value);
-        subscription.unsubscribe();
-      },
-      error: reject,
-    });
-  });
-}
-
-const isMultipartQuery = wrap((query: DocumentNode) => {
-  return hasAnyDirectives(['defer', 'stream'], query);
-});
 
 interface QuerySubscriptionOptions {
   onDispose?: () => void;
@@ -61,6 +34,10 @@ export class QuerySubscription<TData = unknown> {
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
+  private initialized = false;
+
+  private resolve: (result: ApolloQueryResult<TData>) => void;
+  private reject: (error: unknown) => void;
 
   constructor(
     observable: ObservableQuery<TData>,
@@ -83,6 +60,7 @@ export class QuerySubscription<TData = unknown> {
         (!this.result.partial || this.observable.options.returnPartialData))
     ) {
       this.promises = { main: createFulfilledPromise(this.result) };
+      this.initialized = true;
     }
 
     this.subscription = observable.subscribe({
@@ -90,23 +68,12 @@ export class QuerySubscription<TData = unknown> {
       error: this.handleError,
     });
 
-    // This error should never happen since the `.subscribe` call above
-    // will ensure a concast is set on the observable via the `reobserve`
-    // call. Unless something is going horribly wrong and completely messing
-    // around with the internals of the observable, there should always be a
-    // concast after subscribing.
-    invariant(
-      observable['concast'],
-      'Unexpected error: A concast was not found on the observable.'
-    );
-
-    const concast = observable['concast'];
-
     if (!this.promises) {
       this.promises = {
-        main: isMultipartQuery(observable.query)
-          ? wrapWithCustomPromise(concast)
-          : concast.promise,
+        main: new Promise((resolve, reject) => {
+          this.resolve = resolve;
+          this.reject = reject;
+        }),
       };
     }
 
@@ -159,6 +126,13 @@ export class QuerySubscription<TData = unknown> {
   }
 
   private handleNext(result: ApolloQueryResult<TData>) {
+    if (!this.initialized) {
+      this.initialized = true;
+      this.result = result;
+      this.resolve(result);
+      return;
+    }
+
     if (result.data === this.result.data) {
       return;
     }
@@ -181,6 +155,14 @@ export class QuerySubscription<TData = unknown> {
       error,
       networkStatus: NetworkStatus.error,
     };
+
+    this.result = result;
+
+    if (!this.initialized) {
+      this.initialized = true;
+      this.reject(error);
+      return;
+    }
 
     this.result = result;
     this.deliver();

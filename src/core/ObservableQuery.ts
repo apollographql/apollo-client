@@ -560,9 +560,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
   }
 
   /**
-   * This is for *internal* use only. Most users should instead use `refetch`
-   * in order to be properly notified of results even when they come from cache.
-   *
    * Update the variables of this observable query, and fetch the new results
    * if they've changed. If you want to force new results, use `refetch`.
    *

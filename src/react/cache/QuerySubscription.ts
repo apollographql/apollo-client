@@ -9,6 +9,7 @@ import { isNetworkRequestSettled } from '../../core';
 import {
   ObservableSubscription,
   createFulfilledPromise,
+  createRejectedPromise,
 } from '../../utilities';
 
 type Listener = () => void;
@@ -165,6 +166,9 @@ export class QuerySubscription<TData = unknown> {
     }
 
     this.result = result;
+    this.promises.main = result.data
+      ? createFulfilledPromise(result)
+      : createRejectedPromise(result);
     this.deliver();
   }
 

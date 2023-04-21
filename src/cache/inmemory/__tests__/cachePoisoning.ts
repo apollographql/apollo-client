@@ -52,31 +52,22 @@ test("a crafted query can overwrite Post:1 with what should be User:5", () => {
     },
   });
 
-  /** should be:
+  expect(cache.extract()["Post:1"]).toMatchInlineSnapshot(`
     Object {
       "__typename": "Post",
       "id": "1",
       "title": "Hello",
     }
-   */
-  expect(cache.extract()["Post:1"]).toMatchInlineSnapshot(`
+  `);
+
+
+  expect(cache.extract()["User:5"]).toMatchInlineSnapshot(`
     Object {
       "__typename": "User",
       "firstName": "Post",
-      "id": "1",
+      "id": "5",
       "lastName": "1",
       "title": "Poisoned!",
     }
   `);
-
-  /** should be
-    Object {
-      "__typename": "User",
-      "id": "5",
-      "title": "Poisoned!",
-      "firstName": "Post",
-      "lastName": "1",
-    }
-   */
-  expect(cache.extract()["User:5"]).toMatchInlineSnapshot(`undefined`);
 });

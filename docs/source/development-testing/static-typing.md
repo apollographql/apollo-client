@@ -44,6 +44,8 @@ export default config;
 
 > There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`, so pick whichever way works best for your project setup.
 
+> Your `documents` might exist in directories other than `src` and may include `ts` files, please adjust accordingly.  To catch everything, consider implementing: `documents: ['**/*.{ts,tsx}']`.
+
 Finally, we'll add the following scripts to our `package.json` file:
 
 ```json title="package.json"

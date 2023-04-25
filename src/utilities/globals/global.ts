@@ -34,4 +34,5 @@ export default (
   maybe(function() { return maybe.constructor("return this")() })
 ) as typeof globalThis & {
   __DEV__: typeof __DEV__;
+  HermesInternal?: boolean;
 };

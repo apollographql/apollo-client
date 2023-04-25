@@ -1,8 +1,9 @@
-import { maybe } from "../globals";
+import { global, maybe } from "../globals";
 
 export const canUseWeakMap =
-  typeof WeakMap === 'function' &&
-  maybe(() => navigator.product) !== 'ReactNative';
+  typeof WeakMap === 'function' && 
+    !maybe(() => navigator.product == 'ReactNative' && !global.HermesInternal)
+  ;
 
 export const canUseWeakSet = typeof WeakSet === 'function';
 

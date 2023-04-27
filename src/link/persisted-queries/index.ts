@@ -97,9 +97,9 @@ export const createPersistedQueryLink = (
   options: PersistedQueryLink.Options,
 ) => {
   const hashesByQuery = new WeakMap<
-  DocumentNode,
-  Promise<string>
->();
+    DocumentNode,
+    Promise<string>
+  >();
   // Ensure a SHA-256 hash function is provided, if a custom hash
   // generation function is not provided. We don't supply a SHA-256 hash
   // function by default, to avoid forcing one as a dependency. Developers

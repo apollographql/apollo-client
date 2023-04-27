@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.7.13
+
+### Patch Changes
+
+- [#10805](https://github.com/apollographql/apollo-client/pull/10805) [`a5503666c`](https://github.com/apollographql/apollo-client/commit/a5503666c2cc8220ac1d877e3296556e54e58ff6) Thanks [@phryneas](https://github.com/phryneas)! - Fix a potential memory leak in SSR scenarios when many `persistedQuery` instances were created over time.
+
+- [#10718](https://github.com/apollographql/apollo-client/pull/10718) [`577c68bdd`](https://github.com/apollographql/apollo-client/commit/577c68bdd26519f8341fd1188ea4b8aabe357856) Thanks [@Hsifnus](https://github.com/Hsifnus)! - Delay Concast subscription teardown slightly in `useSubscription` to prevent unexpected Concast teardown when one `useSubscription` hook tears down its in-flight Concast subscription immediately followed by another `useSubscription` hook reusing and subscribing to that same Concast
+
 ## 3.7.12
 
 ### Patch Changes

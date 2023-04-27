@@ -348,8 +348,8 @@ export class Policies {
     const policies = this;
 
     const typename = partialContext && (
-      partialContext.storeObject?.__typename ||
-      partialContext.typename
+      partialContext.typename ||
+      partialContext.storeObject?.__typename
     ) || object.__typename;
 
     // It should be possible to write root Query fields with writeFragment,

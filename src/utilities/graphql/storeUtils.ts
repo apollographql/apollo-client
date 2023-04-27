@@ -289,16 +289,18 @@ export function getTypenameFromResult(
   selectionSet: SelectionSetNode,
   fragmentMap?: FragmentMap,
 ): string | undefined {
-  if (typeof result.__typename === 'string') {
-    return result.__typename;
-  }
-
   for (const selection of selectionSet.selections) {
     if (isField(selection)) {
       if (selection.name.value === '__typename') {
         return result[resultKeyNameFromField(selection)];
       }
-    } else {
+    }
+  }
+  if (typeof result.__typename === 'string') {
+    return result.__typename;
+  }
+  for (const selection of selectionSet.selections) {
+    if (!isField(selection)) {
       const typename = getTypenameFromResult(
         result,
         getFragmentFromSelection(selection, fragmentMap)!.selectionSet,

@@ -348,8 +348,8 @@ export class Policies {
     const policies = this;
 
     const typename = partialContext && (
-      partialContext.typename ||
-      partialContext.storeObject?.__typename
+      partialContext.storeObject?.__typename ||
+      partialContext.typename
     ) || object.__typename;
 
     // It should be possible to write root Query fields with writeFragment,
@@ -382,7 +382,7 @@ export class Policies {
     const policy = typename && this.getTypePolicy(typename);
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
     while (keyFn) {
-      const specifierOrId = keyFn(storeObject, context);
+      const specifierOrId = keyFn({...object, ...storeObject}, context);
       if (isArray(specifierOrId)) {
         keyFn = keyFieldsFnFromSpecifier(specifierOrId);
       } else {

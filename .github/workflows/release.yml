@@ -13,6 +13,8 @@ jobs:
     # Prevents action from creating a PR on forks
     if: github.repository == 'apollographql/apollo-client'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3

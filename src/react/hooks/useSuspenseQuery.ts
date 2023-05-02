@@ -64,15 +64,23 @@ type SubscribeToMoreFunction<
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
 export function useSuspenseQuery_experimental<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TData,
+  TVariables extends OperationVariables,
+  TOptions extends Omit<SuspenseQueryHookOptions<TData>, 'variables'>
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
-    errorPolicy?: never;
-    returnPartialData?: never;
-  }
-): UseSuspenseQueryResult<TData, TVariables>;
+  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
+    TOptions
+): UseSuspenseQueryResult<
+  TOptions['errorPolicy'] extends 'ignore' | 'all'
+    ? TOptions['returnPartialData'] extends true
+      ? DeepPartial<TData> | undefined
+      : TData | undefined
+    : TOptions['returnPartialData'] extends true
+    ? DeepPartial<TData>
+    : TData,
+  TVariables
+>;
 
 export function useSuspenseQuery_experimental<
   TData = unknown,

@@ -136,6 +136,8 @@ export function useSuspenseQuery_experimental<
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
+  const [version, setVersion] = usePromiseVersion();
+
   const cacheKey = (
     [client, query, canonicalStringify(variables)] as any[]
   ).concat(queryKey);
@@ -146,12 +148,38 @@ export function useSuspenseQuery_experimental<
 
   useTrackedSubscriptions(subscription);
 
-  const { promise, refetch, fetchMore, subscribeToMore } = useSubscription<
-    TData,
-    TVariables
-  >(subscription);
+  useEffect(() => {
+    return subscription.listen(() => {
+      setVersion('main');
+    });
+  }, [subscription]);
 
+  const promise = subscription.promises[version] || subscription.promises.main;
   const result = __use(promise);
+
+  const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
+    (options) => {
+      const promise = subscription.fetchMore(options);
+      setVersion('network');
+      return promise;
+    },
+    [subscription]
+  );
+
+  const refetch: RefetchFunction<TData, TVariables> = useCallback(
+    (variables) => {
+      const promise = subscription.refetch(variables);
+      setVersion('network');
+      return promise;
+    },
+    [subscription]
+  );
+
+  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
+    useCallback(
+      (options) => subscription.observable.subscribeToMore(options),
+      [subscription]
+    );
 
   return useMemo(() => {
     return {
@@ -217,53 +245,19 @@ function useTrackedSubscriptions(subscription: QuerySubscription) {
   });
 }
 
-function useSubscription<TData, TVariables extends OperationVariables>(
-  subscription: QuerySubscription<TData>
-) {
+function usePromiseVersion() {
   // Use an object as state to force React to re-render when we publish an
   // update to the same version (such as sequential cache updates).
   const [{ version }, setState] = useState<{ version: Version }>({
     version: 'main',
   });
 
-  const setVersion = (version: Version) => setState({ version });
-
-  useEffect(() => {
-    return subscription.listen(() => {
-      setVersion('main');
-    });
-  }, [subscription]);
-
-  const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
-    (options) => {
-      const promise = subscription.fetchMore(options);
-      setVersion('network');
-      return promise;
-    },
-    [subscription]
+  const setVersion = useCallback(
+    (version: Version) => setState({ version }),
+    []
   );
 
-  const refetch: RefetchFunction<TData, TVariables> = useCallback(
-    (variables) => {
-      const promise = subscription.refetch(variables);
-      setVersion('network');
-      return promise;
-    },
-    [subscription]
-  );
-
-  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-    useCallback(
-      (options) => subscription.observable.subscribeToMore(options),
-      [subscription]
-    );
-
-  return {
-    promise: subscription.promises[version] || subscription.promises.main,
-    refetch,
-    fetchMore,
-    subscribeToMore,
-  };
+  return [version, setVersion] as const;
 }
 
 interface UseWatchQueryOptionsHookOptions<

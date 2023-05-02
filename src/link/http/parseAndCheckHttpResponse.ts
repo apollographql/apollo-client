@@ -205,10 +205,10 @@ export function handleError(err: any, observer: Observer<any>) {
 
 export function readJsonBody<T = Record<string, unknown>>(
   response: Response,
-  operation: Operation,
+  operations: Operation | Operation[],
   observer: Observer<T>
 ) {
-  parseAndCheckHttpResponse(operation)(response)
+  parseAndCheckHttpResponse(operations)(response)
     .then((result) => {
       observer.next?.(result);
       observer.complete?.();

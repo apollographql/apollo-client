@@ -7,13 +7,14 @@ import { QueryInfo } from './QueryInfo';
 import { NetworkStatus } from './networkStatus';
 import { Resolver } from './LocalState';
 import { ObservableQuery } from './ObservableQuery';
-import { QueryOptions } from './watchQueryOptions';
+import { QueryOptions, WatchQueryOptions } from "./watchQueryOptions";
 import { Cache } from '../cache';
-import { IsStrictlyAny } from '../utilities';
+import { IsStrictlyAny } from "../utilities";
+import { traceIdSymbol } from "./QueryManager";
 
 export { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-export interface DefaultContext extends Record<string, any> {};
+export interface DefaultContext extends Record<string, any> {[traceIdSymbol]?: string};
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
@@ -194,3 +195,5 @@ export interface Resolvers {
     [ field: string ]: Resolver;
   };
 }
+
+export type MetricsEvents = { type: 'request', cacheHit: boolean } & WatchQueryOptions;

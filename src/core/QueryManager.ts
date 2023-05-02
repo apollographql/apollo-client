@@ -30,9 +30,10 @@ import {
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
-} from '../utilities';
-import { mergeIncrementalData } from '../utilities/common/incrementalResult';
-import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from '../errors';
+  Subject,
+} from "../utilities";
+import { mergeIncrementalData } from "../utilities/common/incrementalResult";
+import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from "../errors";
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -40,9 +41,9 @@ import {
   MutationOptions,
   ErrorPolicy,
   MutationFetchPolicy,
-} from './watchQueryOptions';
-import { ObservableQuery, logMissingFieldErrors } from './ObservableQuery';
-import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
+} from "./watchQueryOptions";
+import { ObservableQuery, logMissingFieldErrors } from "./ObservableQuery";
+import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus";
 import {
   ApolloQueryResult,
   OperationVariables,
@@ -52,16 +53,12 @@ import {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
-} from './types';
-import { LocalState } from './LocalState';
+  MetricsEvents,
+} from "./types";
+import { LocalState } from "./LocalState";
 
-import {
-  QueryInfo,
-  QueryStoreValue,
-  shouldWriteResult,
-  CacheWriteBehavior,
-} from './QueryInfo';
-import { PROTOCOL_ERRORS_SYMBOL, ApolloErrorOptions } from '../errors';
+import { QueryInfo, QueryStoreValue, shouldWriteResult, CacheWriteBehavior } from "./QueryInfo";
+import { PROTOCOL_ERRORS_SYMBOL, ApolloErrorOptions } from "../errors";
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -86,10 +83,13 @@ interface TransformCacheEntry {
 
 type DefaultOptions = import("./ApolloClient").DefaultOptions;
 
+export const traceIdSymbol = Symbol.for("apollo-trace-id");
+
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
   public defaultOptions: DefaultOptions;
+  public readonly metrics = new Subject<MetricsEvents>();
 
   public readonly assumeImmutableResults: boolean;
   public readonly ssrMode: boolean;
@@ -735,6 +735,11 @@ export class QueryManager<TStore> {
     ).finally(() => this.stopQuery(queryId));
   }
 
+  private traceIdCounter = 1;
+  public generateTraceId() {
+    return String(this.traceIdCounter++);
+  }
+
   private queryIdCounter = 1;
   public generateQueryId() {
     return String(this.queryIdCounter++);
@@ -1187,6 +1192,7 @@ export class QueryManager<TStore> {
     const query = this.transform(options.query).document;
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
+    const traceId = this.generateTraceId()
 
     const defaults = this.defaultOptions.watchQuery;
     let {
@@ -1204,7 +1210,7 @@ export class QueryManager<TStore> {
       errorPolicy,
       returnPartialData,
       notifyOnNetworkStatusChange,
-      context,
+      context: Object.assign({}, context, { [traceIdSymbol]: traceId }),
     });
 
     const fromVariables = (variables: TVars) => {
@@ -1271,6 +1277,8 @@ export class QueryManager<TStore> {
     }
 
     concast.promise.then(cleanupCancelFn, cleanupCancelFn);
+
+    this.metrics.next({ ...normalized, type: 'request', cacheHit: !containsDataFromLink });
 
     return {
       concast,

@@ -376,6 +376,8 @@ Array [
   "compact",
   "concatPagination",
   "createFragmentMap",
+  "createFulfilledPromise",
+  "createRejectedPromise",
   "fixObservableSubclass",
   "getDefaultValues",
   "getDirectiveNames",

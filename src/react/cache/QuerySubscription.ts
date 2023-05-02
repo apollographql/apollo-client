@@ -36,6 +36,7 @@ export class QuerySubscription<TData = unknown> {
   private listeners = new Set<Listener>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
   private initialized = false;
+  private refetching = false;
 
   private resolve: (result: ApolloQueryResult<TData>) => void;
   private reject: (error: unknown) => void;
@@ -62,6 +63,7 @@ export class QuerySubscription<TData = unknown> {
     ) {
       this.promises = { main: createFulfilledPromise(this.result) };
       this.initialized = true;
+      this.refetching = false;
     }
 
     this.subscription = observable.subscribe({
@@ -102,6 +104,8 @@ export class QuerySubscription<TData = unknown> {
   }
 
   refetch(variables: OperationVariables | undefined) {
+    this.refetching = true;
+
     const promise = this.observable.refetch(variables);
 
     this.promises.network = promise;
@@ -159,8 +163,9 @@ export class QuerySubscription<TData = unknown> {
 
     this.result = result;
 
-    if (!this.initialized) {
+    if (!this.initialized || this.refetching) {
       this.initialized = true;
+      this.refetching = false;
       this.reject(error);
       return;
     }

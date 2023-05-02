@@ -4052,7 +4052,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it.skip('throws errors when errors are returned after calling `refetch`', async () => {
+  it('throws errors when errors are returned after calling `refetch`', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const query = gql`

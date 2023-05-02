@@ -13,6 +13,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { GraphQLError } from 'graphql';
 import { InvariantError } from 'ts-invariant';
 import { equal } from '@wry/equality';
+import { expectTypeOf } from 'expect-type';
 
 import {
   gql,
@@ -30,6 +31,7 @@ import {
   NetworkStatus,
 } from '../../../core';
 import {
+  DeepPartial,
   compact,
   concatPagination,
   getMainDefinition,
@@ -234,21 +236,24 @@ function useErrorCase<TData extends ErrorCaseData>(
   return { query, mocks: [mock] };
 }
 
+interface VariablesCaseData {
+  character: {
+    id: string;
+    name: string;
+  };
+}
+
+interface VariablesCaseVariables {
+  id: string;
+}
+
 function useVariablesQueryCase() {
   const CHARACTERS = ['Spider-Man', 'Black Widow', 'Iron Man', 'Hulk'];
 
-  interface QueryData {
-    character: {
-      id: string;
-      name: string;
-    };
-  }
-
-  interface QueryVariables {
-    id: string;
-  }
-
-  const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+  const query: TypedDocumentNode<
+    VariablesCaseData,
+    VariablesCaseVariables
+  > = gql`
     query CharacterQuery($id: ID!) {
       character(id: $id) {
         id
@@ -3129,7 +3134,7 @@ describe('useSuspenseQuery', () => {
   });
 
   it('can unset a globally defined variable', async () => {
-    const query = gql`
+    const query: TypedDocumentNode<{ vars: Record<string, any> }> = gql`
       query MergedVariablesQuery {
         vars
       }
@@ -7006,6 +7011,253 @@ describe('useSuspenseQuery', () => {
     // suspending.
     await waitFor(() => {
       expect(todo).toHaveTextContent('Take out trash (completed)');
+    });
+  });
+
+  describe.skip('type tests', () => {
+    it('returns unknown when TData cannot be inferred', () => {
+      const query = gql`
+        query {
+          hello
+        }
+      `;
+
+      const { data } = useSuspenseQuery(query);
+
+      expectTypeOf(data).toEqualTypeOf<unknown>();
+    });
+
+    it('disallows wider variables type than specified', () => {
+      const { query } = useVariablesQueryCase();
+
+      // @ts-expect-error should not allow wider TVariables type
+      useSuspenseQuery(query, { variables: { id: '1', foo: 'bar' } });
+    });
+
+    it('returns TData in default case', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query);
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+    });
+
+    it('returns TData | undefined with errorPolicy: "ignore"', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        errorPolicy: 'ignore',
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { errorPolicy: 'ignore' });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns TData | undefined with errorPolicy: "all"', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        errorPolicy: 'all',
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        errorPolicy: 'all',
+      });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns TData with errorPolicy: "none"', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { errorPolicy: 'none' });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+    });
+
+    it('returns DeepPartial<TData> with returnPartialData: true', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        returnPartialData: true,
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { returnPartialData: true });
+
+      expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns TData with returnPartialData: false', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        returnPartialData: false,
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: false,
+      });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+    });
+
+    it('returns TData when passing an option that does not affect TData', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        fetchPolicy: 'no-cache',
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { fetchPolicy: 'no-cache' });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+    });
+
+    it('handles combinations of options', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferredPartialDataIgnore } = useSuspenseQuery(query, {
+        returnPartialData: true,
+        errorPolicy: 'ignore',
+      });
+
+      expectTypeOf(inferredPartialDataIgnore).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(
+        inferredPartialDataIgnore
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicitPartialDataIgnore } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: true,
+        errorPolicy: 'ignore',
+      });
+
+      expectTypeOf(explicitPartialDataIgnore).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(
+        explicitPartialDataIgnore
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: inferredPartialDataNone } = useSuspenseQuery(query, {
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(inferredPartialDataNone).toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(
+        inferredPartialDataNone
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicitPartialDataNone } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(explicitPartialDataNone).toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(
+        explicitPartialDataNone
+      ).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns correct TData type when combined options that do not affect TData', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        fetchPolicy: 'no-cache',
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        fetchPolicy: 'no-cache',
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     });
   });
 });

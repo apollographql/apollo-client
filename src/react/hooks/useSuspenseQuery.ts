@@ -13,13 +13,14 @@ import {
   NetworkStatus,
   FetchMoreQueryOptions,
 } from '../../core';
-import { isNonEmptyArray } from '../../utilities';
+import { DeepPartial, isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
 import {
   SuspenseQueryHookFetchPolicy,
   SuspenseQueryHookOptions,
   ObservableQueryFields,
+  NoInfer,
 } from '../types/types';
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
@@ -28,7 +29,7 @@ import { QuerySubscription } from '../cache/QuerySubscription';
 import { canonicalStringify } from '../../cache';
 
 export interface UseSuspenseQueryResult<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 > {
   client: ApolloClient<any>;
@@ -63,11 +64,72 @@ type SubscribeToMoreFunction<
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
 export function useSuspenseQuery_experimental<
-  TData = any,
+  TData,
+  TVariables extends OperationVariables,
+  TOptions extends Omit<SuspenseQueryHookOptions<TData>, 'variables'>
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
+    TOptions
+): UseSuspenseQueryResult<
+  TOptions['errorPolicy'] extends 'ignore' | 'all'
+    ? TOptions['returnPartialData'] extends true
+      ? DeepPartial<TData> | undefined
+      : TData | undefined
+    : TOptions['returnPartialData'] extends true
+    ? DeepPartial<TData>
+    : TData,
+  TVariables
+>;
+
+export function useSuspenseQuery_experimental<
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: true;
+    errorPolicy: 'ignore' | 'all';
+  }
+): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
+
+export function useSuspenseQuery_experimental<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+    errorPolicy: 'ignore' | 'all';
+  }
+): UseSuspenseQueryResult<TData | undefined, TVariables>;
+
+export function useSuspenseQuery_experimental<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: true;
+  }
+): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
+
+export function useSuspenseQuery_experimental<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+): UseSuspenseQueryResult<TData, TVariables>;
+
+export function useSuspenseQuery_experimental<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>
+  > = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
   const didPreviouslySuspend = useRef(false);
   const client = useApolloClient(options.client);

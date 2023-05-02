@@ -9,7 +9,13 @@ jobs:
   release_next:
     name: release:next
     runs-on: ubuntu-latest
-
+    # Permissions necessary for Changesets to push a new branch and open PRs
+    # (for automated Version Packages PRs), and request the JWT for provenance.
+    # More info: https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#adding-permissions-settings
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     if: |
       github.repository == 'apollographql/apollo-client' &&
       github.event.issue.pull_request &&
@@ -36,9 +42,15 @@ jobs:
           ref: ${{ steps.comment-branch.outputs.head_ref }}
           fetch-depth: 0
 
+      - name: Detect new changesets
+        id: added-files
+        run: |
+          echo "changesets=$(git diff --name-only --diff-filter=A ${{ steps.comment-branch.outputs.base_sha }} ${{ steps.comment-branch.outputs.head_sha }} .changeset/*.md)" >> "$GITHUB_OUTPUT"
+
       - name: Append NPM token to .npmrc
         run: |
           cat << EOF > "$HOME/.npmrc"
+            provenance=true
             //registry.npmjs.org/:_authToken=$NPM_TOKEN
           EOF
         env:
@@ -66,8 +78,17 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'true'
         run: rm .changeset/pre.json
 
+      - name: Add comment if no new changesets exist
+        if: ${{ steps.added-files.outputs.changesets == '' }}
+        uses: peter-evans/create-or-update-comment@v2.1.0
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Please add a changeset via `npx changeset` before attempting a snapshot release.
+
       # https://github.com/atlassian/changesets/blob/master/docs/snapshot-releases.md
       - name: Release to pr tag
+        if: ${{ steps.added-files.outputs.changesets != '' }}
         run: |
           npx changeset version --snapshot pr-${{ github.event.issue.number }} && npm i
           npm run build
@@ -79,12 +100,14 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Get released version
-        id: version
-        run: echo ::set-output name=version::$(node -p "require('./dist/package.json').version")
+        if: ${{ steps.added-files.outputs.changesets != '' }}
+        id: get-version
+        run: echo "version=$(node -p "require('./dist/package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Create comment
+        if: ${{ steps.added-files.outputs.changesets != '' }}
         uses: peter-evans/create-or-update-comment@v3.0.0
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
-            A new release has been made for this PR. You can install it with `npm i @apollo/client@${{ steps.version.outputs.version }}`.
+            A new release has been made for this PR. You can install it with `npm i @apollo/client@${{ steps.get-version.outputs.version }}`.

@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.7.13
+
+### Patch Changes
+
+- [#10805](https://github.com/apollographql/apollo-client/pull/10805) [`a5503666c`](https://github.com/apollographql/apollo-client/commit/a5503666c2cc8220ac1d877e3296556e54e58ff6) Thanks [@phryneas](https://github.com/phryneas)! - Fix a potential memory leak in SSR scenarios when many `persistedQuery` instances were created over time.
+
+- [#10718](https://github.com/apollographql/apollo-client/pull/10718) [`577c68bdd`](https://github.com/apollographql/apollo-client/commit/577c68bdd26519f8341fd1188ea4b8aabe357856) Thanks [@Hsifnus](https://github.com/Hsifnus)! - Delay Concast subscription teardown slightly in `useSubscription` to prevent unexpected Concast teardown when one `useSubscription` hook tears down its in-flight Concast subscription immediately followed by another `useSubscription` hook reusing and subscribing to that same Concast
+
 ## 3.7.12
 
 ### Patch Changes
@@ -70,6 +78,22 @@
 ### Patch Changes
 
 - [#10470](https://github.com/apollographql/apollo-client/pull/10470) [`47435e879`](https://github.com/apollographql/apollo-client/commit/47435e879ebc867d9fc3de5b6fd5785204b4dbd4) Thanks [@alessbell](https://github.com/alessbell)! - Bumps TypeScript to `4.9.4` (previously `4.7.4`) and updates types to account for changes in TypeScript 4.8 by [propagating contstraints on generic types](https://devblogs.microsoft.com/typescript/announcing-typescript-4-8/#unconstrained-generics-no-longer-assignable-to). Technically this makes some types stricter as attempting to pass `null|undefined` into certain functions is now disallowed by TypeScript, but these were never expected runtime values in the first place.
+  This should only affect you if you are wrapping functions provided by Apollo Client with your own abstractions that pass in their generics as type arguments, in which case you might get an error like `error TS2344: Type 'YourGenericType' does not satisfy the constraint 'OperationVariables'`. In that case, make sure that `YourGenericType` is restricted to a type that only accepts objects via `extends`, like `Record<string, any>` or `@apollo/client`'s `OperationVariables`:
+  ```diff
+  import {
+    QueryHookOptions,
+    QueryResult,
+    useQuery,
+  + OperationVariables,
+  } from '@apollo/client';
+  - export function useWrappedQuery<T, TVariables>(
+  + export function useWrappedQuery<T, TVariables extends OperationVariables>(
+      query: DocumentNode,
+      queryOptions: QueryHookOptions<T, TVariables>
+    ): QueryResult<T, TVariables> {
+      const [execute, result] = useQuery<T, TVariables>(query);
+    }
+  ```
 
 - [#10408](https://github.com/apollographql/apollo-client/pull/10408) [`55ffafc58`](https://github.com/apollographql/apollo-client/commit/55ffafc585e9eb66314755b4f40804b8b8affb13) Thanks [@zlrlo](https://github.com/zlrlo)! - fix: modify BatchHttpLink to have a separate timer for each different batch key
 

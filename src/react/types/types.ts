@@ -118,7 +118,7 @@ export type SuspenseQueryHookFetchPolicy = Extract<
 >;
 
 export interface SuspenseQueryHookOptions<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 > extends Pick<
   QueryHookOptions<TData, TVariables>,

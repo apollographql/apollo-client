@@ -29,7 +29,7 @@ import { QuerySubscription } from '../cache/QuerySubscription';
 import { canonicalStringify } from '../../cache';
 
 export interface UseSuspenseQueryResult<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 > {
   client: ApolloClient<any>;

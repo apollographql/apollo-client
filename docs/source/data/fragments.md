@@ -94,6 +94,104 @@ export const GET_POST_DETAILS = gql`
 * We add our fragment definition to the `GET_POST_DETAILS` `gql` template literal via a placeholder (`${CORE_COMMENT_FIELDS}`)
 * We include the `CoreCommentFields` fragment in our query with standard `...` notation.
 
+## Registering named fragments using `createFragmentRegistry`
+
+Starting in Apollo Client 3.7, fragments can be registered with your `InMemoryCache` so that they can be referred to by name in any query or `InMemoryCache` operation (such as `cache.readFragment`, `cache.readQuery` and `cache.watch`) without needing to interpolate their declarations.
+
+Let's look at an example in React.
+
+```js title="index.js" {7-12}
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { createFragmentRegistry } from "@apollo/client/cache";
+
+const client = new ApolloClient({
+  uri: "http://localhost:4000/graphql"
+  cache: new InMemoryCache({
+    fragments: createFragmentRegistry(gql`
+      fragment ItemFragment on Item {
+        id
+        text
+      }
+    `)
+  })
+});
+```
+
+Since `ItemFragment` was registered with `InMemoryCache`, it can be referenced by name as seen below with the fragment spread inside of the `GetItemList` query.
+
+```jsx title="ItemList.jsx" {4,13}
+const listQuery = gql`
+  query GetItemList {
+    list {
+      ...ItemFragment
+    }
+  }
+`;
+function ToDoList() {
+  const { data } = useQuery(listQuery);
+  return (
+    <ol>
+      {data?.list.map(item => (
+        <Item key={item.id} text={item.text} />
+      ))}
+    </ol>
+  );
+}
+```
+
+### Overriding registered fragments with local versions
+
+Queries can declare their own local versions of named fragments which will take precendence over ones registered via `createFragmentRegistry`, even if the local fragment is only indirectly referenced by other registered fragments. Take the following example:
+
+```js title="index.js" {7-17}
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { createFragmentRegistry } from "@apollo/client/cache";
+
+const client = new ApolloClient({
+  uri: "http://localhost:4000/graphql"
+  cache: new InMemoryCache({
+    fragments: createFragmentRegistry(gql`
+      fragment ItemFragment on Item {
+        id
+        text
+        ...ExtraFields
+      }
+
+      fragment ExtraFields on Item {
+        isCompleted
+      }
+    `)
+  })
+});
+```
+
+The local version of the `ExtraFields` fragment declared in `ItemList.jsx` takes precedence over the `ExtraFields` originally registered with the `InMemoryCache`. Thus, its definition will be used when the `ExtraFields` fragment spread is parsed inside of the registered `ItemFragment` _only when `GetItemList` query is executed_, because explicit definitions take precedence over registered fragments.
+
+```jsx title="ItemList.jsx" {8-10,17}
+const listQuery = gql`
+  query GetItemList {
+    list {
+      ...ItemFragment
+    }
+  }
+
+  fragment ExtraFields on Item {
+    createdBy
+  }
+`;
+function ToDoList() {
+  const { data } = useQuery(listQuery);
+  return (
+    <ol>
+      {data?.list.map((item) => (
+        {/* `createdBy` exists on the returned items, `isCompleted` does not */}
+        <Item key={item.id} text={item.text} author={item.createdBy} />
+      ))}
+    </ol>
+  );
+}
+```
+
 ## Colocating fragments
 
 The tree-like structure of a GraphQL response resembles the hierarchy of a frontend's rendered components. Because of this similarity, you can use fragments to split query logic up _between_ components, so that each component requests exactly the fields that it uses. This helps you make your component logic more succinct.

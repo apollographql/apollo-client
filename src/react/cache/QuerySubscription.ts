@@ -165,6 +165,7 @@ export class QuerySubscription<TData = unknown> {
 
     if (!this.initialized || this.refetching) {
       this.initialized = true;
+      this.refetching = false;
       this.reject(error);
       return;
     }

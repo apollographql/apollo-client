@@ -353,6 +353,7 @@ Array [
   "DEV",
   "DeepMerger",
   "Observable",
+  "Subject",
   "addTypenameToDocument",
   "argumentsObjectFromField",
   "asyncMap",

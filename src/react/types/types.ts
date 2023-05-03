@@ -100,15 +100,6 @@ export interface LazyQueryHookExecOptions<
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-/**
- * suspensePolicy determines how suspense behaves for a refetch. The options are:
- * - always (default): Re-suspend a component when a refetch occurs
- * - initial: Only suspend on the first fetch
- */
-export type SuspensePolicy =
-  | 'always'
-  | 'initial'
-
 export type SuspenseQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
   | 'cache-first'
@@ -131,7 +122,6 @@ export interface SuspenseQueryHookOptions<
   | 'refetchWritePolicy'
 > {
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
-  suspensePolicy?: SuspensePolicy;
   suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
 }

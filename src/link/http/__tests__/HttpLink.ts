@@ -1409,6 +1409,11 @@ describe('HttpLink', () => {
       responseBody = JSON.parse(responseBodyText);
       return Promise.resolve(responseBodyText);
     });
+    const textWithStringError = jest.fn(() => {
+      const responseBodyText = 'Error! Foo bar';
+      responseBody = responseBodyText;
+      return Promise.resolve(responseBodyText);
+    });
     const textWithData = jest.fn(() => {
       responseBody = {
         data: { stub: { id: 1 } },
@@ -1477,6 +1482,20 @@ describe('HttpLink', () => {
         }),
       );
     });
+    itAsync('throws an error if response code is > 300 and handles string response body', (resolve, reject) => {
+      fetch.mockReturnValueOnce(Promise.resolve({ status: 302, text: textWithStringError }));
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+      execute(link, { query: sampleQuery }).subscribe(
+        result => {
+          reject('next should have been thrown from the network');
+        },
+        makeCallback(resolve, reject, (e: ServerError) => {
+          expect(e.message).toMatch(/Received status code 302/);
+          expect(e.statusCode).toBe(302);
+          expect(e.result).toEqual(responseBody);
+        }),
+      );
+    });
     itAsync('throws an error if response code is > 300 and returns data', (resolve, reject) => {
       fetch.mockReturnValueOnce(
         Promise.resolve({ status: 400, text: textWithData }),
@@ -1506,7 +1525,6 @@ describe('HttpLink', () => {
       );
 
       const link = createHttpLink({ uri: 'data', fetch: fetch as any });
-
       execute(link, { query: sampleQuery }).subscribe(
         result => {
           reject('should not have called result because we have no data');

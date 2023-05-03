@@ -177,10 +177,13 @@ export const createPersistedQueryLink = (
           }
 
           // Network errors can return GraphQL errors on for example a 403
-          const networkErrors =
-            networkError &&
-            networkError.result &&
-            networkError.result.errors as GraphQLError[];
+          let networkErrors;
+          if (typeof networkError?.result !== 'string') {
+            networkErrors =
+              networkError &&
+              networkError.result &&
+              networkError.result.errors as GraphQLError[];
+          }
           if (isNonEmptyArray(networkErrors)) {
             graphQLErrors.push(...networkErrors);
           }

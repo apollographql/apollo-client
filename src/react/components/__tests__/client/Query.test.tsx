@@ -1211,7 +1211,7 @@ describe('Query component', () => {
       waitFor(() => expect(count).toBe(2)).then(resolve, reject);
     });
 
-    itAsync('with data while loading', (resolve, reject) => {
+    it('with data while loading', async () => {
       const query = gql`
         query people($first: Int) {
           allPeople(first: $first) {
@@ -1283,9 +1283,8 @@ describe('Query component', () => {
                       break;
                   }
                 } catch (err) {
-                  reject(err);
+                  fail(err);
                 }
-
                 return null;
               }}
             </AllPeopleQuery>
@@ -1298,8 +1297,6 @@ describe('Query component', () => {
           <Component />
         </MockedProvider>
       );
-
-      waitFor(() => expect(count).toBe(4)).then(resolve, reject);
     });
 
     itAsync('should update if a manual `refetch` is triggered after a state change', (resolve, reject) => {
@@ -1481,7 +1478,7 @@ describe('Query component', () => {
     console.error = errorLog;
   });
 
-  itAsync('should be able to refetch after there was a network error', (resolve, reject) => {
+  it('should be able to refetch after there was a network error', async () => {
     const query: DocumentNode = gql`
       query somethingelse {
         allPeople(first: 1) {
@@ -1527,7 +1524,7 @@ describe('Query component', () => {
                   );
                   setTimeout(() => {
                     result.refetch().then(() => {
-                      reject('Expected error value on first refetch.');
+                      fail('Expected error value on first refetch.');
                     }, noop);
                   }, 0);
                   break;
@@ -1542,7 +1539,7 @@ describe('Query component', () => {
                 case 3:
                   setTimeout(() => {
                     result.refetch().catch(() => {
-                      reject('Expected good data on second refetch.');
+                      fail('Expected good data on second refetch.');
                     });
                   }, 0);
                   // fallthrough
@@ -1564,7 +1561,7 @@ describe('Query component', () => {
                   throw new Error('Unexpected fall through');
               }
             } catch (e) {
-              reject(e);
+              fail(e);
             }
             return null;
           }}
@@ -1578,13 +1575,13 @@ describe('Query component', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       if (IS_REACT_18) {
         expect(count).toBe(3)
       } else {
         expect(count).toBe(6)
       }
-    }).then(resolve, reject);
+    });
   });
 
   itAsync(

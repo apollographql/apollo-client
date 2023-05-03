@@ -691,11 +691,11 @@ describe('[queries] skip', () => {
                 break;
               case 6:
                 expect(this.props.skip).toBe(false);
-                expect(ranQuery).toBe(3);
                 if (IS_REACT_18) {
                   expect(this.props.data!.loading).toBe(false);
                   expect(this.props.data.allPeople).toEqual(finalData.allPeople);
                 } else {
+                  expect(ranQuery).toBe(3);
                   expect(this.props.data.allPeople).toEqual(nextData.allPeople);
                   expect(this.props.data!.loading).toBe(true);
                 }

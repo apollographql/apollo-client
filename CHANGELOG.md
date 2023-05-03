@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.8.0-alpha.13
+
+### Patch Changes
+
+- [#10766](https://github.com/apollographql/apollo-client/pull/10766) [`ffb179e55`](https://github.com/apollographql/apollo-client/commit/ffb179e5553fa6f9156ae0aaf782dfcbec7d08c7) Thanks [@jerelmiller](https://github.com/jerelmiller)! - More robust typings for the `data` property returned from `useSuspenseQuery` when using `returnPartialData: true` or an `errorPolicy` of `all` or `ignore`. `TData` now defaults to `unknown` instead of `any`.
+
+- [#10809](https://github.com/apollographql/apollo-client/pull/10809) [`49d28f764`](https://github.com/apollographql/apollo-client/commit/49d28f764980d132089ef8f6beca6e766b6120c0) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixed the ability to use `refetch` and `fetchMore` with React's `startTransition`. The hook will now behave correctly by allowing React to avoid showing the Suspense fallback when these functions are wrapped by `startTransition`. This change deprecates the `suspensePolicy` option in favor of `startTransition`.
+
 ## 3.8.0-alpha.12
 
 ### Minor Changes

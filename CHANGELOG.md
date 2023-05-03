@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 3.7.14
+
+### Patch Changes
+
+- [#10764](https://github.com/apollographql/apollo-client/pull/10764) [`1b0a61fe5`](https://github.com/apollographql/apollo-client/commit/1b0a61fe5a6593f319da26fec8692359232ccf9b) Thanks [@phryneas](https://github.com/phryneas)! - Deprecate `useFragment` `returnPartialData` option
+
+- [#10810](https://github.com/apollographql/apollo-client/pull/10810) [`a6252774f`](https://github.com/apollographql/apollo-client/commit/a6252774f43fd9a4be9c50b48b7a6d5a1c8e64ec) Thanks [@dleavitt](https://github.com/dleavitt)! - Fix type signature of `ServerError`.
+
+  In <3.7 `HttpLink` and `BatchHttpLink` would return a `ServerError.message` of e.g. `"Unexpected token 'E', \"Error! Foo bar\" is not valid JSON"` and a `ServerError.result` of `undefined` in the case where a server returned a >= 300 response code with a response body containing a string that could not be parsed as JSON.
+
+  In >=3.7, `message` became e.g. `Response not successful: Received status code 302` and `result` became the string from the response body, however the type in `ServerError.result` was not updated to include the `string` type, which is now properly reflected.
+
 ## 3.7.13
 
 ### Patch Changes
@@ -79,6 +91,7 @@
 
 - [#10470](https://github.com/apollographql/apollo-client/pull/10470) [`47435e879`](https://github.com/apollographql/apollo-client/commit/47435e879ebc867d9fc3de5b6fd5785204b4dbd4) Thanks [@alessbell](https://github.com/alessbell)! - Bumps TypeScript to `4.9.4` (previously `4.7.4`) and updates types to account for changes in TypeScript 4.8 by [propagating contstraints on generic types](https://devblogs.microsoft.com/typescript/announcing-typescript-4-8/#unconstrained-generics-no-longer-assignable-to). Technically this makes some types stricter as attempting to pass `null|undefined` into certain functions is now disallowed by TypeScript, but these were never expected runtime values in the first place.
   This should only affect you if you are wrapping functions provided by Apollo Client with your own abstractions that pass in their generics as type arguments, in which case you might get an error like `error TS2344: Type 'YourGenericType' does not satisfy the constraint 'OperationVariables'`. In that case, make sure that `YourGenericType` is restricted to a type that only accepts objects via `extends`, like `Record<string, any>` or `@apollo/client`'s `OperationVariables`:
+
   ```diff
   import {
     QueryHookOptions,

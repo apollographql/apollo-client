@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { equal } from "@wry/equality";
 
-import { mergeDeepArray } from "../../utilities";
+import { DeepPartial, mergeDeepArray } from "../../utilities";
 import {
   Cache,
   Reference,
@@ -54,11 +54,17 @@ extends Omit<
 //   canonizeResults?: boolean;
 // }
 
-export interface UseFragmentResult<TData> {
-  data: TData | undefined;
-  complete: boolean;
-  missing?: MissingTree;
-}
+export type UseFragmentResult<TData> =
+  | {
+      data: TData;
+      complete: true;
+      missing?: never;
+    }
+  | {
+      data: DeepPartial<TData>;
+      complete: false;
+      missing?: MissingTree;
+    };
 
 export function useFragment_experimental<
   TData = any,
@@ -116,10 +122,10 @@ export function useFragment_experimental<
 function diffToResult<TData>(
   diff: Cache.DiffResult<TData>,
 ): UseFragmentResult<TData> {
-  const result: UseFragmentResult<TData> = {
-    data: diff.result,
+  const result = {
+    data: diff.result!,
     complete: !!diff.complete,
-  };
+  } as UseFragmentResult<TData>;
 
   if (diff.missing) {
     result.missing = mergeDeepArray(

@@ -8,7 +8,7 @@ import { traceIdSymbol } from "../../core/QueryManager";
 
 interface RequestMetrics {
   endedAt: number;
-  responseCode: number;
+  responseCode: number | null;
   finishedAs: "success" | "error";
   errors?: readonly unknown[];
 }
@@ -25,17 +25,49 @@ export type MetricsLinkEvents =
   | ({ type: "cacheHit" } & BaseMetrics)
   | ({ type: "request" } & BaseMetrics & RequestMetrics);
 
-export class MetricsLink extends ApolloLink {
+type ExtractInfoData =
+  | {
+      type: "cacheHit";
+      context: DefaultContext;
+    }
+  | {
+      type: "request";
+      context: DefaultContext;
+      operation: Operation;
+    };
+
+type ExtractInfo<AdditionalMetrics extends Record<string, unknown>> = (
+  data: ExtractInfoData
+) => AdditionalMetrics;
+
+type MetricsLinkOptions<AdditionalMetrics extends Record<string, unknown>> =
+  keyof AdditionalMetrics extends never
+    ? {
+        extractInfo?: ExtractInfo<AdditionalMetrics>;
+      }
+    : {
+        extractInfo: ExtractInfo<AdditionalMetrics>;
+      };
+
+export class MetricsLink<AdditionalMetrics extends Record<string, unknown> = {}> extends ApolloLink {
   public metrics = new Subject<MetricsLinkEvents>();
   private clientSubscription: Subscription | undefined;
+  private runningRequests = new Map<string, BaseMetrics & Partial<RequestMetrics>>();
+  private extractInfo?: ExtractInfo<AdditionalMetrics>;
+
+  constructor(options: MetricsLinkOptions<AdditionalMetrics>) {
+    super();
+    if ("extractInfo" in options) {
+      this.extractInfo = options.extractInfo;
+    }
+  }
+
   public registerClient(client: ApolloClient<any>) {
     if (this.clientSubscription) {
       this.clientSubscription.unsubscribe();
     }
     client.metrics.subscribe(this.onClientRequest);
   }
-  private runningRequests = new Map<string, BaseMetrics & Partial<RequestMetrics>>();
-
   private onClientRequest = (ev: MetricsEvents) => {
     if (ev.type === "request") {
       const { query, cacheHit, context, variables } = ev;
@@ -52,7 +84,11 @@ export class MetricsLink extends ApolloLink {
       };
 
       if (cacheHit) {
-        this.metrics.next({ type: "cacheHit", ...baseMetrics });
+        const extractedInfo = this.extractInfo?.({
+          type: "cacheHit",
+          context,
+        });
+        this.metrics.next({ ...extractedInfo, type: "cacheHit", ...baseMetrics });
       } else {
         this.runningRequests.set(traceId, baseMetrics);
       }
@@ -67,6 +103,24 @@ export class MetricsLink extends ApolloLink {
     const request = forward(operation);
     let initialResponse: FetchResult | undefined;
 
+    const emitRequestMetric = (dynamicData: Omit<RequestMetrics, "endedAt">) => {
+      const metrics = this.runningRequests.get(traceId);
+      if (!metrics) return;
+      this.runningRequests.delete(traceId);
+      const extractedInfo = this.extractInfo?.({
+        type: "request",
+        context: operation.getContext(),
+        operation,
+      });
+      this.metrics.next({
+        ...extractedInfo,
+        type: "request",
+        ...metrics,
+        endedAt: Date.now(),
+        ...dynamicData,
+      });
+    };
+
     return new Observable<FetchResult>((observer) => {
       request.subscribe({
         next: (result) => {
@@ -75,34 +129,20 @@ export class MetricsLink extends ApolloLink {
         },
         error: (error) => {
           const { response } = operation.getContext();
-          const metrics = this.runningRequests.get(traceId);
-          if (metrics) {
-            this.runningRequests.delete(traceId);
-            this.metrics.next({
-              type: "request",
-              ...metrics,
-              endedAt: Date.now(),
-              responseCode: response?.status ?? null,
-              finishedAs: "error",
-              errors: [error]
-            });
-          }
+          emitRequestMetric({
+            responseCode: response?.status ?? null,
+            finishedAs: "error",
+            errors: [error],
+          });
           observer.error(error);
         },
         complete: () => {
           const { response } = operation.getContext();
-          const metrics = this.runningRequests.get(traceId);
-          if (metrics) {
-            this.runningRequests.delete(traceId);
-            this.metrics.next({
-              type: "request",
-              ...metrics,
-              endedAt: Date.now(),
-              responseCode: response.status,
-              finishedAs: "success",
-              errors: initialResponse!.errors,
-            });
-          }
+          emitRequestMetric({
+            responseCode: response.status,
+            finishedAs: "success",
+            errors: initialResponse!.errors,
+          });
           observer.complete();
         },
       });

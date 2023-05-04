@@ -196,4 +196,5 @@ export interface Resolvers {
   };
 }
 
-export type MetricsEvents = { type: 'request', cacheHit: boolean } & WatchQueryOptions;
+export type MetricsEvents = { type: "request"; cacheHit: boolean } & WatchQueryOptions &
+  Pick<Required<WatchQueryOptions>, "context">;

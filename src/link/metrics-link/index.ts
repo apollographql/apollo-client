@@ -57,7 +57,7 @@ export class MetricsLink<AdditionalMetrics extends Record<string, unknown> = {}>
 
   constructor(options: MetricsLinkOptions<AdditionalMetrics>) {
     super();
-    if ("extractInfo" in options) {
+    if (options && "extractInfo" in options) {
       this.extractInfo = options.extractInfo;
     }
   }

@@ -21,7 +21,6 @@ import { useQuery } from "../useQuery";
 import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import {expectTypeOf} from 'expect-type'
-import { NoInfer } from "../../types/types";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {

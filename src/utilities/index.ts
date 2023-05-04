@@ -83,6 +83,8 @@ export {
 
 export { 
   isStatefulPromise,
+  createFulfilledPromise,
+  createRejectedPromise,
   wrapPromiseWithState,
 } from './promises/decoration';
 

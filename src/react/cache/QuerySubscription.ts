@@ -1,61 +1,45 @@
 import {
   ApolloError,
   ApolloQueryResult,
-  DocumentNode,
   NetworkStatus,
   ObservableQuery,
   OperationVariables,
 } from '../../core';
 import { isNetworkRequestSettled } from '../../core';
 import {
-  Concast,
   ObservableSubscription,
-  hasAnyDirectives,
+  createFulfilledPromise,
+  createRejectedPromise,
 } from '../../utilities';
-import { invariant } from '../../utilities/globals';
-import { wrap } from 'optimism';
 
-type Listener<TData> = (result: ApolloQueryResult<TData>) => void;
+type Listener = () => void;
 
 type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
 >[0];
-
-function wrapWithCustomPromise<TData>(
-  concast: Concast<ApolloQueryResult<TData>>
-) {
-  return new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
-    // Unlike `concast.promise`, we want to resolve the promise on the initial
-    // chunk of the deferred query. This allows the component to unsuspend
-    // when we get the initial set of data, rather than waiting until all
-    // chunks have been loaded.
-    const subscription = concast.subscribe({
-      next: (value) => {
-        resolve(value);
-        subscription.unsubscribe();
-      },
-      error: reject,
-    });
-  });
-}
-
-const isMultipartQuery = wrap((query: DocumentNode) => {
-  return hasAnyDirectives(['defer', 'stream'], query);
-});
 
 interface QuerySubscriptionOptions {
   onDispose?: () => void;
   autoDisposeTimeoutMs?: number;
 }
 
-export class QuerySubscription<TData = any> {
+export class QuerySubscription<TData = unknown> {
   public result: ApolloQueryResult<TData>;
-  public promise: Promise<ApolloQueryResult<TData>>;
   public readonly observable: ObservableQuery<TData>;
 
+  public promises: {
+    main: Promise<ApolloQueryResult<TData>>;
+    network?: Promise<ApolloQueryResult<TData>>;
+  };
+
   private subscription: ObservableSubscription;
-  private listeners = new Set<Listener<TData>>();
+  private listeners = new Set<Listener>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
+  private initialized = false;
+  private refetching = false;
+
+  private resolve: (result: ApolloQueryResult<TData>) => void;
+  private reject: (error: unknown) => void;
 
   constructor(
     observable: ObservableQuery<TData>,
@@ -66,10 +50,20 @@ export class QuerySubscription<TData = any> {
     this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
-    this.result = observable.getCurrentResult();
+    this.result = observable.getCurrentResult(false);
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;
+    }
+
+    if (
+      isNetworkRequestSettled(this.result.networkStatus) ||
+      (this.result.data &&
+        (!this.result.partial || this.observable.options.returnPartialData))
+    ) {
+      this.promises = { main: createFulfilledPromise(this.result) };
+      this.initialized = true;
+      this.refetching = false;
     }
 
     this.subscription = observable.subscribe({
@@ -77,21 +71,14 @@ export class QuerySubscription<TData = any> {
       error: this.handleError,
     });
 
-    // This error should never happen since the `.subscribe` call above
-    // will ensure a concast is set on the observable via the `reobserve`
-    // call. Unless something is going horribly wrong and completely messing
-    // around with the internals of the observable, there should always be a
-    // concast after subscribing.
-    invariant(
-      observable['concast'],
-      'Unexpected error: A concast was not found on the observable.'
-    );
-
-    const concast = observable['concast'];
-
-    this.promise = isMultipartQuery(observable.query)
-      ? wrapWithCustomPromise(concast)
-      : concast.promise;
+    if (!this.promises) {
+      this.promises = {
+        main: new Promise((resolve, reject) => {
+          this.resolve = resolve;
+          this.reject = reject;
+        }),
+      };
+    }
 
     // Start a timer that will automatically dispose of the query if the
     // suspended resource does not use this subscription in the given time. This
@@ -103,7 +90,7 @@ export class QuerySubscription<TData = any> {
     );
   }
 
-  listen(listener: Listener<TData>) {
+  listen(listener: Listener) {
     // As soon as the component listens for updates, we know it has finished
     // suspending and is ready to receive updates, so we can remove the auto
     // dispose timer.
@@ -117,15 +104,21 @@ export class QuerySubscription<TData = any> {
   }
 
   refetch(variables: OperationVariables | undefined) {
-    this.promise = this.observable.refetch(variables);
+    this.refetching = true;
 
-    return this.promise;
+    const promise = this.observable.refetch(variables);
+
+    this.promises.network = promise;
+
+    return promise;
   }
 
   fetchMore(options: FetchMoreOptions<TData>) {
-    this.promise = this.observable.fetchMore<TData>(options);
+    const promise = this.observable.fetchMore<TData>(options);
 
-    return this.promise;
+    this.promises.network = promise;
+
+    return promise;
   }
 
   dispose() {
@@ -138,19 +131,27 @@ export class QuerySubscription<TData = any> {
   }
 
   private handleNext(result: ApolloQueryResult<TData>) {
+    if (!this.initialized) {
+      this.initialized = true;
+      this.result = result;
+      this.resolve(result);
+      return;
+    }
+
+    if (result.data === this.result.data) {
+      return;
+    }
+
     // If we encounter an error with the new result after we have successfully
-    // fetched a previous result, we should set the new result data to the last
-    // successful result.
-    if (
-      isNetworkRequestSettled(result.networkStatus) &&
-      this.result.data &&
-      result.data === void 0
-    ) {
+    // fetched a previous result, set the new result data to the last successful
+    // result.
+    if (this.result.data && result.data === void 0) {
       result.data = this.result.data;
     }
 
     this.result = result;
-    this.deliver(result);
+    this.promises.main = createFulfilledPromise(result);
+    this.deliver();
   }
 
   private handleError(error: ApolloError) {
@@ -161,10 +162,22 @@ export class QuerySubscription<TData = any> {
     };
 
     this.result = result;
-    this.deliver(result);
+
+    if (!this.initialized || this.refetching) {
+      this.initialized = true;
+      this.refetching = false;
+      this.reject(error);
+      return;
+    }
+
+    this.result = result;
+    this.promises.main = result.data
+      ? createFulfilledPromise(result)
+      : createRejectedPromise(result);
+    this.deliver();
   }
 
-  private deliver(result: ApolloQueryResult<TData>) {
-    this.listeners.forEach((listener) => listener(result));
+  private deliver() {
+    this.listeners.forEach((listener) => listener());
   }
 }

@@ -133,7 +133,7 @@ export function useBackgroundQuery_experimental<
   }, [subscription, fetchMore, refetch]);
 }
 
-export function useReadQuery<TData>(subscription: QuerySubscription<TData>) {
+export function useReadQuery_experimental<TData>(subscription: QuerySubscription<TData>) {
   const [, forceUpdate] = useState(0);
   const promise =
     subscription.promises[subscription.version] || subscription.promises.main;

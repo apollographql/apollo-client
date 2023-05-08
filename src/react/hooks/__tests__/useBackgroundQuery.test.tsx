@@ -13,7 +13,7 @@ import {
 import { MockedProvider, MockLink, mockSingleLink } from '../../../testing';
 import {
   useBackgroundQuery_experimental as useBackgroundQuery,
-  useReadQuery,
+  useReadQuery_experimental as useReadyQuery,
 } from '../useBackgroundQuery';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';

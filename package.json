@@ -100,7 +100,7 @@
     "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
-    "@babel/parser": "7.21.5",
+    "@babel/parser": "7.21.8",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.1",
     "@graphql-tools/schema": "9.0.19",

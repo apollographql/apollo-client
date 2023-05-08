@@ -1,5 +1,12 @@
 import React, { Suspense } from 'react';
-import { render, screen, renderHook, waitFor } from '@testing-library/react';
+import {
+  act,
+  render,
+  screen,
+  renderHook,
+  waitFor,
+} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ErrorBoundary, ErrorBoundaryProps } from 'react-error-boundary';
 import {
   gql,
@@ -10,7 +17,12 @@ import {
   ApolloLink,
   Observable,
 } from '../../../core';
-import { MockedProvider, MockLink, mockSingleLink } from '../../../testing';
+import {
+  MockedResponse,
+  MockedProvider,
+  MockLink,
+  mockSingleLink,
+} from '../../../testing';
 import {
   useBackgroundQuery_experimental as useBackgroundQuery,
   useReadQuery_experimental as useReadQuery,
@@ -574,15 +586,19 @@ describe('useBackgroundQuery', () => {
 
     const suspenseCache = new SuspenseCache();
 
-    const { result } = renderHook(() => useBackgroundQuery(query, {
-      context: { valueA: 'A', valueB: 'B' },
-    }), {
-      wrapper: ({ children }) => (
-        <MockedProvider link={link} suspenseCache={suspenseCache}>
-          {children}
-        </MockedProvider>
-      ),
-    });
+    const { result } = renderHook(
+      () =>
+        useBackgroundQuery(query, {
+          context: { valueA: 'A', valueB: 'B' },
+        }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider link={link} suspenseCache={suspenseCache}>
+            {children}
+          </MockedProvider>
+        ),
+      }
+    );
 
     const { subscription } = result.current;
 
@@ -637,15 +653,19 @@ describe('useBackgroundQuery', () => {
 
     const suspenseCache = new SuspenseCache();
 
-    const { result } = renderHook(() => useBackgroundQuery(query, {
-      canonizeResults: true,
-    }), {
-      wrapper: ({ children }) => (
-        <MockedProvider cache={cache} suspenseCache={suspenseCache}>
-          {children}
-        </MockedProvider>
-      ),
-    });
+    const { result } = renderHook(
+      () =>
+        useBackgroundQuery(query, {
+          canonizeResults: true,
+        }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider cache={cache} suspenseCache={suspenseCache}>
+            {children}
+          </MockedProvider>
+        ),
+      }
+    );
 
     const { subscription } = result.current;
 
@@ -698,15 +718,19 @@ describe('useBackgroundQuery', () => {
 
     const suspenseCache = new SuspenseCache();
 
-    const { result } = renderHook(() => useBackgroundQuery(query, {
-      canonizeResults: false,
-    }), {
-      wrapper: ({ children }) => (
-        <MockedProvider cache={cache} suspenseCache={suspenseCache}>
-          {children}
-        </MockedProvider>
-      ),
-    });
+    const { result } = renderHook(
+      () =>
+        useBackgroundQuery(query, {
+          canonizeResults: false,
+        }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider cache={cache} suspenseCache={suspenseCache}>
+            {children}
+          </MockedProvider>
+        ),
+      }
+    );
 
     const { subscription } = result.current;
 
@@ -718,5 +742,138 @@ describe('useBackgroundQuery', () => {
     expect(_result.data.results.length).toBe(6);
     expect(resultSet.size).toBe(6);
     expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+  });
+
+  it.only('works with startTransition to change variables', async () => {
+    type Variables = {
+      id: string;
+    };
+
+    interface Data {
+      todo: {
+        id: string;
+        name: string;
+        completed: boolean;
+      };
+    }
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query TodoItemQuery($id: ID!) {
+        todo(id: $id) {
+          id
+          name
+          completed
+        }
+      }
+    `;
+
+    const mocks: MockedResponse<Data, Variables>[] = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { todo: { id: '1', name: 'Clean room', completed: false } },
+        },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: {
+          data: { todo: { id: '2', name: 'Take out trash', completed: true } },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Parent />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function SuspenseFallback() {
+      return <p>Loading</p>;
+    }
+
+    function Parent() {
+      const [id, setId] = React.useState('1');
+      const { subscription } = useBackgroundQuery(query, { variables: { id } });
+      return <Todo subscription={subscription} onChange={setId} />;
+    }
+
+    function Todo({
+      subscription,
+      onChange,
+    }: {
+      subscription: QuerySubscription<Data>;
+      onChange: (id: string) => void;
+    }) {
+      const { data } = useReadQuery<Data>(subscription);
+      const [isPending, startTransition] = React.useTransition();
+      const { todo } = data;
+
+      return (
+        <>
+          <button
+            onClick={() => {
+              startTransition(() => {
+                onChange('2');
+              });
+            }}
+          >
+            Refresh
+          </button>
+          <div data-testid="todo" aria-busy={isPending}>
+            {todo.name}
+            {todo.completed && ' (completed)'}
+          </div>
+        </>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.getByText('Loading')).toBeInTheDocument();
+
+    expect(await screen.findByTestId('todo')).toBeInTheDocument();
+
+    const todo = screen.getByTestId('todo');
+    const button = screen.getByText('Refresh');
+
+    expect(todo).toHaveTextContent('Clean room');
+
+    await act(() => user.click(button));
+
+    // startTransition will avoid rendering the suspense fallback for already
+    // revealed content if the state update inside the transition causes the
+    // component to suspend.
+    //
+    // Here we should not see the suspense fallback while the component suspends
+    // until the todo is finished loading. Seeing the suspense fallback is an
+    // indication that we are suspending the component too late in the process.
+    expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+
+    // We can ensure this works with isPending from useTransition in the process
+    expect(todo).toHaveAttribute('aria-busy', 'true');
+
+    // Ensure we are showing the stale UI until the new todo has loaded
+    expect(todo).toHaveTextContent('Clean room');
+
+    // Eventually we should see the updated todo content once its done
+    // suspending.
+    await waitFor(() => {
+      expect(todo).toHaveTextContent('Take out trash (completed)');
+    });
   });
 });

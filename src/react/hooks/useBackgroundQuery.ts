@@ -117,9 +117,10 @@ export function useBackgroundQuery_experimental<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  // TODO: does `SuspenseQueryHookOptions` need to be narrowed here?
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseBackgroundQueryResult<TData> {
-  const suspenseCache = useSuspenseCache();
+  const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
   const watchQueryOptions = useWatchQueryOptions({ query, options, client });
   const { variables } = watchQueryOptions;
@@ -151,12 +152,11 @@ export function useBackgroundQuery_experimental<
     (variables) => subscription.refetch(variables),
     [subscription]
   );
-  // const version = 'main';
+
   subscription.version = version;
 
   return useMemo(() => {
     return {
-      // this won't work with refetch/fetchMore...
       subscription,
       fetchMore,
       refetch,

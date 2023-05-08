@@ -255,6 +255,10 @@ interface Renders<Result> {
   frames: Result[];
 }
 
+interface SimpleQueryData {
+  greeting: string;
+}
+
 function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
   options: RenderSuspenseHookOptions<Props> = Object.create(null)
@@ -356,6 +360,263 @@ describe('useBackgroundQuery', () => {
       data: { hello: 'world 1' },
       loading: false,
       networkStatus: 7,
+    });
+  });
+
+  describe('hook options', () => {
+    it('allows the client to be overridden', async () => {
+      const query: TypedDocumentNode<SimpleQueryData> = gql`
+        query UserQuery {
+          greeting
+        }
+      `;
+
+      const globalClient = new ApolloClient({
+        link: new ApolloLink(() =>
+          Observable.of({ data: { greeting: 'global hello' } })
+        ),
+        cache: new InMemoryCache(),
+      });
+
+      const localClient = new ApolloClient({
+        link: new ApolloLink(() =>
+          Observable.of({ data: { greeting: 'local hello' } })
+        ),
+        cache: new InMemoryCache(),
+      });
+
+      const { result } = renderSuspenseHook(
+        () => useBackgroundQuery(query, { client: localClient }),
+        { client: globalClient }
+      );
+
+      const { subscription } = result.current;
+
+      const _result = await subscription.promises.main;
+
+      await waitFor(() => {
+        expect(_result).toEqual({
+          data: { greeting: 'local hello' },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
+      });
+    });
+
+    it('prioritizes the `suspenseCache` option over the context value', () => {
+      const query: TypedDocumentNode<SimpleQueryData> = gql`
+        query UserQuery {
+          greeting
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello' } },
+        },
+      ];
+
+      const directSuspenseCache = new SuspenseCache();
+      const contextSuspenseCache = new SuspenseCache();
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache: new InMemoryCache(),
+      });
+
+      renderHook(
+        () => useBackgroundQuery(query, { suspenseCache: directSuspenseCache }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider
+              client={client}
+              suspenseCache={contextSuspenseCache}
+            >
+              {children}
+            </ApolloProvider>
+          ),
+        }
+      );
+
+      expect(directSuspenseCache['subscriptions'].size).toBe(1);
+      expect(contextSuspenseCache['subscriptions'].size).toBe(0);
+    });
+
+    it('passes context to the link', async () => {
+      const query = gql`
+        query ContextQuery {
+          context
+        }
+      `;
+
+      const link = new ApolloLink((operation) => {
+        return new Observable((observer) => {
+          const { valueA, valueB } = operation.getContext();
+
+          observer.next({ data: { context: { valueA, valueB } } });
+          observer.complete();
+        });
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      const { result } = renderHook(
+        () =>
+          useBackgroundQuery(query, {
+            context: { valueA: 'A', valueB: 'B' },
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider link={link} suspenseCache={suspenseCache}>
+              {children}
+            </MockedProvider>
+          ),
+        }
+      );
+
+      const { subscription } = result.current;
+
+      const _result = await subscription.promises.main;
+
+      await waitFor(() => {
+        expect(_result).toMatchObject({
+          data: { context: { valueA: 'A', valueB: 'B' } },
+          networkStatus: NetworkStatus.ready,
+          // TODO: determine whether we should be returning `error` here
+          // (it's present in equivalent useSuspenseQuery test)
+          // error: undefined,
+        });
+      });
+    });
+
+    it('enables canonical results when canonizeResults is "true"', async () => {
+      interface Result {
+        __typename: string;
+        value: number;
+      }
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Result: {
+            keyFields: false,
+          },
+        },
+      });
+
+      const query: TypedDocumentNode<{ results: Result[] }> = gql`
+        query {
+          results {
+            value
+          }
+        }
+      `;
+
+      const results: Result[] = [
+        { __typename: 'Result', value: 0 },
+        { __typename: 'Result', value: 1 },
+        { __typename: 'Result', value: 1 },
+        { __typename: 'Result', value: 2 },
+        { __typename: 'Result', value: 3 },
+        { __typename: 'Result', value: 5 },
+      ];
+
+      cache.writeQuery({
+        query,
+        data: { results },
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      const { result } = renderHook(
+        () =>
+          useBackgroundQuery(query, {
+            canonizeResults: true,
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider cache={cache} suspenseCache={suspenseCache}>
+              {children}
+            </MockedProvider>
+          ),
+        }
+      );
+
+      const { subscription } = result.current;
+
+      const _result = await subscription.promises.main;
+      const resultSet = new Set(_result.data.results);
+      const values = Array.from(resultSet).map((item) => item.value);
+
+      expect(_result.data).toEqual({ results });
+      expect(_result.data.results.length).toBe(6);
+      expect(resultSet.size).toBe(5);
+      expect(values).toEqual([0, 1, 2, 3, 5]);
+    });
+
+    it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
+      interface Result {
+        __typename: string;
+        value: number;
+      }
+
+      const cache = new InMemoryCache({
+        canonizeResults: true,
+        typePolicies: {
+          Result: {
+            keyFields: false,
+          },
+        },
+      });
+
+      const query: TypedDocumentNode<{ results: Result[] }> = gql`
+        query {
+          results {
+            value
+          }
+        }
+      `;
+
+      const results: Result[] = [
+        { __typename: 'Result', value: 0 },
+        { __typename: 'Result', value: 1 },
+        { __typename: 'Result', value: 1 },
+        { __typename: 'Result', value: 2 },
+        { __typename: 'Result', value: 3 },
+        { __typename: 'Result', value: 5 },
+      ];
+
+      cache.writeQuery({
+        query,
+        data: { results },
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      const { result } = renderHook(
+        () =>
+          useBackgroundQuery(query, {
+            canonizeResults: false,
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider cache={cache} suspenseCache={suspenseCache}>
+              {children}
+            </MockedProvider>
+          ),
+        }
+      );
+
+      const { subscription } = result.current;
+
+      const _result = await subscription.promises.main;
+      const resultSet = new Set(_result.data.results);
+      const values = Array.from(resultSet).map((item) => item.value);
+
+      expect(_result.data).toEqual({ results });
+      expect(_result.data.results.length).toBe(6);
+      expect(resultSet.size).toBe(6);
+      expect(values).toEqual([0, 1, 1, 2, 3, 5]);
     });
   });
 
@@ -607,6 +868,139 @@ describe('useBackgroundQuery', () => {
       expect(await screen.findByText('hello')).toBeInTheDocument();
       expect(renders.count).toBe(2);
     });
+
+    it('works with startTransition to change variables', async () => {
+      type Variables = {
+        id: string;
+      };
+
+      interface Data {
+        todo: {
+          id: string;
+          name: string;
+          completed: boolean;
+        };
+      }
+      const user = userEvent.setup();
+
+      const query: TypedDocumentNode<Data, Variables> = gql`
+        query TodoItemQuery($id: ID!) {
+          todo(id: $id) {
+            id
+            name
+            completed
+          }
+        }
+      `;
+
+      const mocks: MockedResponse<Data, Variables>[] = [
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            data: { todo: { id: '1', name: 'Clean room', completed: false } },
+          },
+          delay: 10,
+        },
+        {
+          request: { query, variables: { id: '2' } },
+          result: {
+            data: { todo: { id: '2', name: 'Take out trash', completed: true } },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache: new InMemoryCache(),
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      function App() {
+        return (
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Parent />
+            </Suspense>
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [id, setId] = React.useState('1');
+        const { subscription } = useBackgroundQuery(query, { variables: { id } });
+        return <Todo subscription={subscription} onChange={setId} />;
+      }
+
+      function Todo({
+        subscription,
+        onChange,
+      }: {
+        subscription: QuerySubscription<Data>;
+        onChange: (id: string) => void;
+      }) {
+        const { data } = useReadQuery<Data>(subscription);
+        const [isPending, startTransition] = React.useTransition();
+        const { todo } = data;
+
+        return (
+          <>
+            <button
+              onClick={() => {
+                startTransition(() => {
+                  onChange('2');
+                });
+              }}
+            >
+              Refresh
+            </button>
+            <div data-testid="todo" aria-busy={isPending}>
+              {todo.name}
+              {todo.completed && ' (completed)'}
+            </div>
+          </>
+        );
+      }
+
+      render(<App />);
+
+      expect(screen.getByText('Loading')).toBeInTheDocument();
+
+      expect(await screen.findByTestId('todo')).toBeInTheDocument();
+
+      const todo = screen.getByTestId('todo');
+      const button = screen.getByText('Refresh');
+
+      expect(todo).toHaveTextContent('Clean room');
+
+      await act(() => user.click(button));
+
+      // startTransition will avoid rendering the suspense fallback for already
+      // revealed content if the state update inside the transition causes the
+      // component to suspend.
+      //
+      // Here we should not see the suspense fallback while the component suspends
+      // until the todo is finished loading. Seeing the suspense fallback is an
+      // indication that we are suspending the component too late in the process.
+      expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+
+      // We can ensure this works with isPending from useTransition in the process
+      expect(todo).toHaveAttribute('aria-busy', 'true');
+
+      // Ensure we are showing the stale UI until the new todo has loaded
+      expect(todo).toHaveTextContent('Clean room');
+
+      // Eventually we should see the updated todo content once its done
+      // suspending.
+      await waitFor(() => {
+        expect(todo).toHaveTextContent('Take out trash (completed)');
+      });
+    });
   });
 
   it('reacts to cache updates', async () => {
@@ -657,316 +1051,7 @@ describe('useBackgroundQuery', () => {
     expect(await screen.findByText('2 - Black Widow')).toBeInTheDocument();
   });
 
-  it('passes context to the link', async () => {
-    const query = gql`
-      query ContextQuery {
-        context
-      }
-    `;
-
-    const link = new ApolloLink((operation) => {
-      return new Observable((observer) => {
-        const { valueA, valueB } = operation.getContext();
-
-        observer.next({ data: { context: { valueA, valueB } } });
-        observer.complete();
-      });
-    });
-
-    const suspenseCache = new SuspenseCache();
-
-    const { result } = renderHook(
-      () =>
-        useBackgroundQuery(query, {
-          context: { valueA: 'A', valueB: 'B' },
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider link={link} suspenseCache={suspenseCache}>
-            {children}
-          </MockedProvider>
-        ),
-      }
-    );
-
-    const { subscription } = result.current;
-
-    const _result = await subscription.promises.main;
-
-    await waitFor(() => {
-      expect(_result).toMatchObject({
-        data: { context: { valueA: 'A', valueB: 'B' } },
-        networkStatus: NetworkStatus.ready,
-        // TODO: determine whether we should be returning `error` here
-        // (it's present in equivalent useSuspenseQuery test)
-        // error: undefined,
-      });
-    });
-  });
-
-  it('enables canonical results when canonizeResults is "true"', async () => {
-    interface Result {
-      __typename: string;
-      value: number;
-    }
-
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Result: {
-          keyFields: false,
-        },
-      },
-    });
-
-    const query: TypedDocumentNode<{ results: Result[] }> = gql`
-      query {
-        results {
-          value
-        }
-      }
-    `;
-
-    const results: Result[] = [
-      { __typename: 'Result', value: 0 },
-      { __typename: 'Result', value: 1 },
-      { __typename: 'Result', value: 1 },
-      { __typename: 'Result', value: 2 },
-      { __typename: 'Result', value: 3 },
-      { __typename: 'Result', value: 5 },
-    ];
-
-    cache.writeQuery({
-      query,
-      data: { results },
-    });
-
-    const suspenseCache = new SuspenseCache();
-
-    const { result } = renderHook(
-      () =>
-        useBackgroundQuery(query, {
-          canonizeResults: true,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider cache={cache} suspenseCache={suspenseCache}>
-            {children}
-          </MockedProvider>
-        ),
-      }
-    );
-
-    const { subscription } = result.current;
-
-    const _result = await subscription.promises.main;
-    const resultSet = new Set(_result.data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
-
-    expect(_result.data).toEqual({ results });
-    expect(_result.data.results.length).toBe(6);
-    expect(resultSet.size).toBe(5);
-    expect(values).toEqual([0, 1, 2, 3, 5]);
-  });
-
-  it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
-    interface Result {
-      __typename: string;
-      value: number;
-    }
-
-    const cache = new InMemoryCache({
-      canonizeResults: true,
-      typePolicies: {
-        Result: {
-          keyFields: false,
-        },
-      },
-    });
-
-    const query: TypedDocumentNode<{ results: Result[] }> = gql`
-      query {
-        results {
-          value
-        }
-      }
-    `;
-
-    const results: Result[] = [
-      { __typename: 'Result', value: 0 },
-      { __typename: 'Result', value: 1 },
-      { __typename: 'Result', value: 1 },
-      { __typename: 'Result', value: 2 },
-      { __typename: 'Result', value: 3 },
-      { __typename: 'Result', value: 5 },
-    ];
-
-    cache.writeQuery({
-      query,
-      data: { results },
-    });
-
-    const suspenseCache = new SuspenseCache();
-
-    const { result } = renderHook(
-      () =>
-        useBackgroundQuery(query, {
-          canonizeResults: false,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider cache={cache} suspenseCache={suspenseCache}>
-            {children}
-          </MockedProvider>
-        ),
-      }
-    );
-
-    const { subscription } = result.current;
-
-    const _result = await subscription.promises.main;
-    const resultSet = new Set(_result.data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
-
-    expect(_result.data).toEqual({ results });
-    expect(_result.data.results.length).toBe(6);
-    expect(resultSet.size).toBe(6);
-    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-  });
-
-  it('works with startTransition to change variables', async () => {
-    type Variables = {
-      id: string;
-    };
-
-    interface Data {
-      todo: {
-        id: string;
-        name: string;
-        completed: boolean;
-      };
-    }
-    const user = userEvent.setup();
-
-    const query: TypedDocumentNode<Data, Variables> = gql`
-      query TodoItemQuery($id: ID!) {
-        todo(id: $id) {
-          id
-          name
-          completed
-        }
-      }
-    `;
-
-    const mocks: MockedResponse<Data, Variables>[] = [
-      {
-        request: { query, variables: { id: '1' } },
-        result: {
-          data: { todo: { id: '1', name: 'Clean room', completed: false } },
-        },
-        delay: 10,
-      },
-      {
-        request: { query, variables: { id: '2' } },
-        result: {
-          data: { todo: { id: '2', name: 'Take out trash', completed: true } },
-        },
-        delay: 10,
-      },
-    ];
-
-    const client = new ApolloClient({
-      link: new MockLink(mocks),
-      cache: new InMemoryCache(),
-    });
-
-    const suspenseCache = new SuspenseCache();
-
-    function App() {
-      return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
-          <Suspense fallback={<SuspenseFallback />}>
-            <Parent />
-          </Suspense>
-        </ApolloProvider>
-      );
-    }
-
-    function SuspenseFallback() {
-      return <p>Loading</p>;
-    }
-
-    function Parent() {
-      const [id, setId] = React.useState('1');
-      const { subscription } = useBackgroundQuery(query, { variables: { id } });
-      return <Todo subscription={subscription} onChange={setId} />;
-    }
-
-    function Todo({
-      subscription,
-      onChange,
-    }: {
-      subscription: QuerySubscription<Data>;
-      onChange: (id: string) => void;
-    }) {
-      const { data } = useReadQuery<Data>(subscription);
-      const [isPending, startTransition] = React.useTransition();
-      const { todo } = data;
-
-      return (
-        <>
-          <button
-            onClick={() => {
-              startTransition(() => {
-                onChange('2');
-              });
-            }}
-          >
-            Refresh
-          </button>
-          <div data-testid="todo" aria-busy={isPending}>
-            {todo.name}
-            {todo.completed && ' (completed)'}
-          </div>
-        </>
-      );
-    }
-
-    render(<App />);
-
-    expect(screen.getByText('Loading')).toBeInTheDocument();
-
-    expect(await screen.findByTestId('todo')).toBeInTheDocument();
-
-    const todo = screen.getByTestId('todo');
-    const button = screen.getByText('Refresh');
-
-    expect(todo).toHaveTextContent('Clean room');
-
-    await act(() => user.click(button));
-
-    // startTransition will avoid rendering the suspense fallback for already
-    // revealed content if the state update inside the transition causes the
-    // component to suspend.
-    //
-    // Here we should not see the suspense fallback while the component suspends
-    // until the todo is finished loading. Seeing the suspense fallback is an
-    // indication that we are suspending the component too late in the process.
-    expect(screen.queryByText('Loading')).not.toBeInTheDocument();
-
-    // We can ensure this works with isPending from useTransition in the process
-    expect(todo).toHaveAttribute('aria-busy', 'true');
-
-    // Ensure we are showing the stale UI until the new todo has loaded
-    expect(todo).toHaveTextContent('Clean room');
-
-    // Eventually we should see the updated todo content once its done
-    // suspending.
-    await waitFor(() => {
-      expect(todo).toHaveTextContent('Take out trash (completed)');
-    });
-  });
-
-  describe('`refetch`', () => {
+  describe('refetch', () => {
     it.skip('re-suspends when calling `refetch`', () => {});
     it('re-suspends when calling `refetch` with new variables', async () => {
       const query = gql`
@@ -993,7 +1078,7 @@ describe('useBackgroundQuery', () => {
         },
       ];
 
-      const { result, renders } = renderSuspenseHook(
+      const { result } = renderSuspenseHook(
         () => useBackgroundQuery(query, { variables: { id: '1' } }),
         { mocks }
       );
@@ -1048,7 +1133,7 @@ describe('useBackgroundQuery', () => {
     it.skip('`refetch` works with startTransition to allow React to show stale UI until finished suspending', () => {});
   });
 
-  describe.skip('`fetchMore`', () => {
+  describe.skip('fetchMore', () => {
     it('re-suspends when calling `fetchMore` with different variables', () => {});
     it('properly uses `updateQuery` when calling `fetchMore`', () => {});
     it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', () => {});

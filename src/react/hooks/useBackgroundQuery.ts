@@ -5,26 +5,19 @@ import {
   OperationVariables,
   TypedDocumentNode,
   WatchQueryOptions,
-  ApolloQueryResult,
-  ObservableQuery,
 } from '../../core';
-import { compact } from '../../utilities';
-import { invariant } from '../../utilities/globals';
 import { useApolloClient } from './useApolloClient';
 import { QuerySubscription } from '../cache/QuerySubscription';
-import { useSyncExternalStore } from './useSyncExternalStore';
 import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
 } from '../types/types';
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
-import { SuspenseCache } from '../cache';
 import { canonicalStringify } from '../../cache';
 
-const DEFAULT_FETCH_POLICY = 'cache-first';
-const DEFAULT_SUSPENSE_POLICY = 'always';
-const DEFAULT_ERROR_POLICY = 'none';
+// const DEFAULT_FETCH_POLICY = 'cache-first';
+// const DEFAULT_ERROR_POLICY = 'none';
 
 //////////////////////
 // ⌘C + ⌘P from uSQ //
@@ -85,12 +78,12 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
 /////////
 // End //
 /////////
+
 export interface UseBackgroundQueryResult<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
 > {
   subscription: QuerySubscription<TData>;
-  // observable: ObservableQuery<TData, TVariables>;
   fetchMore: ObservableQueryFields<TData, TVariables>['fetchMore'];
   refetch: ObservableQueryFields<TData, TVariables>['refetch'];
 }

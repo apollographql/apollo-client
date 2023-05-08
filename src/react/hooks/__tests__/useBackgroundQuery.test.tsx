@@ -1,12 +1,14 @@
 import React, { Suspense } from 'react';
-import { render, screen, renderHook } from '@testing-library/react';
+import { render, screen, renderHook, waitFor } from '@testing-library/react';
 import { ErrorBoundary, ErrorBoundaryProps } from 'react-error-boundary';
 import {
   gql,
   ApolloClient,
   NormalizedCacheObject,
-  ApolloQueryResult,
+  NetworkStatus,
   TypedDocumentNode,
+  ApolloLink,
+  Observable,
 } from '../../../core';
 import { MockedProvider, MockLink, mockSingleLink } from '../../../testing';
 import {
@@ -536,7 +538,7 @@ describe('useBackgroundQuery', () => {
     expect(renders.suspenseCount).toBe(1);
   });
 
-  it.only('reacts to variables updates', async () => {
+  it('reacts to variables updates', async () => {
     const { App, renders, rerender } = renderVariablesIntegrationTest({
       variables: { id: '1' },
     });
@@ -554,13 +556,167 @@ describe('useBackgroundQuery', () => {
     expect(await screen.findByText('2 - Black Widow')).toBeInTheDocument();
   });
 
-  // todo: do the same on refetch
-  // it('suspends when partial data is in the cache (test all cache policies)', async () => {
+  it('passes context to the link', async () => {
+    const query = gql`
+      query ContextQuery {
+        context
+      }
+    `;
 
-  // });
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        const { valueA, valueB } = operation.getContext();
 
-  // TODO: refetch + startTransition aren't working together... yet :D
-  // it('uses useTransition to determine whether to resuspend on refetch', async () => {
+        observer.next({ data: { context: { valueA, valueB } } });
+        observer.complete();
+      });
+    });
 
-  // });
+    const suspenseCache = new SuspenseCache();
+
+    const { result } = renderHook(() => useBackgroundQuery(query, {
+      context: { valueA: 'A', valueB: 'B' },
+    }), {
+      wrapper: ({ children }) => (
+        <MockedProvider link={link} suspenseCache={suspenseCache}>
+          {children}
+        </MockedProvider>
+      ),
+    });
+
+    const { subscription } = result.current;
+
+    const _result = await subscription.promises.main;
+
+    await waitFor(() => {
+      expect(_result).toMatchObject({
+        data: { context: { valueA: 'A', valueB: 'B' } },
+        networkStatus: NetworkStatus.ready,
+        // TODO: determine whether we should be returning `error` here
+        // (it's present in equivalent useSuspenseQuery test)
+        // error: undefined,
+      });
+    });
+  });
+
+  it('enables canonical results when canonizeResults is "true"', async () => {
+    interface Result {
+      __typename: string;
+      value: number;
+    }
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Result: {
+          keyFields: false,
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{ results: Result[] }> = gql`
+      query {
+        results {
+          value
+        }
+      }
+    `;
+
+    const results: Result[] = [
+      { __typename: 'Result', value: 0 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 2 },
+      { __typename: 'Result', value: 3 },
+      { __typename: 'Result', value: 5 },
+    ];
+
+    cache.writeQuery({
+      query,
+      data: { results },
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    const { result } = renderHook(() => useBackgroundQuery(query, {
+      canonizeResults: true,
+    }), {
+      wrapper: ({ children }) => (
+        <MockedProvider cache={cache} suspenseCache={suspenseCache}>
+          {children}
+        </MockedProvider>
+      ),
+    });
+
+    const { subscription } = result.current;
+
+    const _result = await subscription.promises.main;
+    const resultSet = new Set(_result.data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(_result.data).toEqual({ results });
+    expect(_result.data.results.length).toBe(6);
+    expect(resultSet.size).toBe(5);
+    expect(values).toEqual([0, 1, 2, 3, 5]);
+  });
+
+  it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
+    interface Result {
+      __typename: string;
+      value: number;
+    }
+
+    const cache = new InMemoryCache({
+      canonizeResults: true,
+      typePolicies: {
+        Result: {
+          keyFields: false,
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{ results: Result[] }> = gql`
+      query {
+        results {
+          value
+        }
+      }
+    `;
+
+    const results: Result[] = [
+      { __typename: 'Result', value: 0 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 2 },
+      { __typename: 'Result', value: 3 },
+      { __typename: 'Result', value: 5 },
+    ];
+
+    cache.writeQuery({
+      query,
+      data: { results },
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    const { result } = renderHook(() => useBackgroundQuery(query, {
+      canonizeResults: false,
+    }), {
+      wrapper: ({ children }) => (
+        <MockedProvider cache={cache} suspenseCache={suspenseCache}>
+          {children}
+        </MockedProvider>
+      ),
+    });
+
+    const { subscription } = result.current;
+
+    const _result = await subscription.promises.main;
+    const resultSet = new Set(_result.data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(_result.data).toEqual({ results });
+    expect(_result.data.results.length).toBe(6);
+    expect(resultSet.size).toBe(6);
+    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+  });
 });

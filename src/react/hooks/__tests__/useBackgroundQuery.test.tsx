@@ -1,9 +1,10 @@
-import React, { Suspense } from 'react';
+import React, { Fragment, StrictMode, Suspense } from 'react';
 import {
   act,
   render,
   screen,
   renderHook,
+  RenderHookOptions,
   waitFor,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -13,6 +14,7 @@ import {
   ApolloClient,
   NormalizedCacheObject,
   NetworkStatus,
+  ApolloCache,
   TypedDocumentNode,
   ApolloLink,
   Observable,
@@ -31,10 +33,6 @@ import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { InMemoryCache } from '../../../cache';
 import { QuerySubscription } from '../../cache/QuerySubscription';
-
-// function wait(delay: number) {
-//   return new Promise((resolve) => setTimeout(resolve, delay));
-// }
 
 function renderIntegrationTest({
   client,
@@ -235,6 +233,97 @@ function renderVariablesIntegrationTest({
 
   const { ...rest } = render(<App variables={variables} />);
   return { ...rest, query, App, client, renders };
+}
+
+type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
+  RenderHookOptions<Props>,
+  'wrapper'
+> & {
+  client?: ApolloClient<TSerializedCache>;
+  link?: ApolloLink;
+  cache?: ApolloCache<TSerializedCache>;
+  mocks?: MockedResponse[];
+  suspenseCache?: SuspenseCache;
+  strictMode?: boolean;
+};
+
+interface Renders<Result> {
+  errors: Error[];
+  errorCount: number;
+  suspenseCount: number;
+  count: number;
+  frames: Result[];
+}
+
+function renderSuspenseHook<Result, Props>(
+  render: (initialProps: Props) => Result,
+  options: RenderSuspenseHookOptions<Props> = Object.create(null)
+) {
+  function SuspenseFallback() {
+    renders.suspenseCount++;
+
+    return <div>loading</div>;
+  }
+
+  const renders: Renders<Result> = {
+    errors: [],
+    errorCount: 0,
+    suspenseCount: 0,
+    count: 0,
+    frames: [],
+  };
+
+  const {
+    mocks = [],
+    suspenseCache = new SuspenseCache(),
+    strictMode,
+    ...renderHookOptions
+  } = options;
+
+  const client =
+    options.client ||
+    new ApolloClient({
+      cache: options.cache || new InMemoryCache(),
+      link: options.link || new MockLink(mocks),
+    });
+
+  const view = renderHook(
+    (props) => {
+      renders.count++;
+
+      const view = render(props);
+
+      renders.frames.push(view);
+
+      return view;
+    },
+    {
+      ...renderHookOptions,
+      wrapper: ({ children }) => {
+        const Wrapper = strictMode ? StrictMode : Fragment;
+
+        return (
+          <Wrapper>
+            <Suspense fallback={<SuspenseFallback />}>
+              <ErrorBoundary
+                fallback={<div>Error</div>}
+                onError={(error) => {
+                  renders.errorCount++;
+                  renders.errors.push(error);
+                }}
+              >
+                <ApolloProvider client={client} suspenseCache={suspenseCache}>
+                  {children}
+                </ApolloProvider>
+              </ErrorBoundary>
+            </Suspense>
+          </Wrapper>
+        );
+      },
+    }
+  );
+
+  return { ...view, renders };
 }
 
 describe('useBackgroundQuery', () => {
@@ -744,7 +833,7 @@ describe('useBackgroundQuery', () => {
     expect(values).toEqual([0, 1, 1, 2, 3, 5]);
   });
 
-  it.only('works with startTransition to change variables', async () => {
+  it('works with startTransition to change variables', async () => {
     type Variables = {
       id: string;
     };
@@ -875,5 +964,94 @@ describe('useBackgroundQuery', () => {
     await waitFor(() => {
       expect(todo).toHaveTextContent('Take out trash (completed)');
     });
+  });
+
+  describe('`refetch`', () => {
+    it.skip('re-suspends when calling `refetch`', () => {});
+    it('re-suspends when calling `refetch` with new variables', async () => {
+      const query = gql`
+        query UserQuery($id: String!) {
+          user(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            data: { user: { id: '1', name: 'Captain Marvel' } },
+          },
+        },
+        {
+          request: { query, variables: { id: '2' } },
+          result: {
+            data: { user: { id: '2', name: 'Captain America' } },
+          },
+        },
+      ];
+
+      const { result, renders } = renderSuspenseHook(
+        () => useBackgroundQuery(query, { variables: { id: '1' } }),
+        { mocks }
+      );
+
+      const { subscription } = result.current;
+
+      const _result = await subscription.promises.main;
+
+      await waitFor(() => {
+        expect(_result).toMatchObject({
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          // TODO: should the result contain `error`?
+          // error: undefined,
+        });
+      });
+
+      act(() => {
+        result.current.refetch({ id: '2' });
+      });
+
+      const _result2 = await subscription.promises.network;
+
+      await waitFor(() => {
+        expect(_result2).toMatchObject({
+          ...mocks[1].result,
+          networkStatus: NetworkStatus.ready,
+          // TODO: should the result contain `error`?
+          // error: undefined,
+        });
+      });
+      // expect(renders.count).toBe(4);
+      // expect(renders.suspenseCount).toBe(2);
+      // expect(renders.frames).toMatchObject([
+      //   {
+      //     ...mocks[0].result,
+      //     networkStatus: NetworkStatus.ready,
+      //     error: undefined,
+      //   },
+      //   {
+      //     ...mocks[1].result,
+      //     networkStatus: NetworkStatus.ready,
+      //     error: undefined,
+      //   },
+      // ]);
+    });
+    it.skip('re-suspends multiple times when calling `refetch` multiple times', () => {});
+    it.skip('throws errors when errors are returned after calling `refetch`', () => {});
+    it.skip('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', () => {});
+    it.skip('returns errors after calling `refetch` when errorPolicy is set to "all"', () => {});
+    it.skip('handles partial data results after calling `refetch` when errorPolicy is set to "all"', () => {});
+    it.skip('`refetch` works with startTransition to allow React to show stale UI until finished suspending', () => {});
+  });
+
+  describe.skip('`fetchMore`', () => {
+    it('re-suspends when calling `fetchMore` with different variables', () => {});
+    it('properly uses `updateQuery` when calling `fetchMore`', () => {});
+    it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', () => {});
+    it('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', () => {});
   });
 });

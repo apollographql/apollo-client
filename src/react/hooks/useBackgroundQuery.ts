@@ -5,6 +5,8 @@ import {
   OperationVariables,
   TypedDocumentNode,
   WatchQueryOptions,
+  ApolloQueryResult,
+  FetchMoreQueryOptions,
 } from '../../core';
 import { useApolloClient } from './useApolloClient';
 import { QuerySubscription } from '../cache/QuerySubscription';
@@ -16,16 +18,20 @@ import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { canonicalStringify } from '../../cache';
 
-// const DEFAULT_FETCH_POLICY = 'cache-first';
-// const DEFAULT_ERROR_POLICY = 'none';
-
 //////////////////////
 // ⌘C + ⌘P from uSQ //
 //////////////////////
-type FetchMoreFunction<
-  TData,
-  TVariables extends OperationVariables
-> = ObservableQueryFields<TData, TVariables>['fetchMore'];
+type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
+  fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
+    updateQuery?: (
+      previousQueryResult: TData,
+      options: {
+        fetchMoreResult: TData;
+        variables: TVariables;
+      }
+    ) => TData;
+  }
+) => Promise<ApolloQueryResult<TData>>;
 
 type RefetchFunction<
   TData,
@@ -75,6 +81,24 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
 
   return watchQueryOptions;
 }
+
+type Version = 'main' | 'network';
+
+function usePromiseVersion() {
+  // Use an object as state to force React to re-render when we publish an
+  // update to the same version (such as sequential cache updates).
+  const [{ version }, setState] = useState<{ version: Version }>({
+    version: 'main',
+  });
+
+  const setVersion = useCallback(
+    (version: Version) => setState({ version }),
+    []
+  );
+
+  return [version, setVersion] as const;
+}
+
 /////////
 // End //
 /////////
@@ -84,7 +108,7 @@ export interface UseBackgroundQueryResult<
   TVariables extends OperationVariables = OperationVariables
 > {
   subscription: QuerySubscription<TData>;
-  fetchMore: ObservableQueryFields<TData, TVariables>['fetchMore'];
+  fetchMore: FetchMoreFunction<TData, TVariables>;
   refetch: ObservableQueryFields<TData, TVariables>['refetch'];
 }
 
@@ -101,6 +125,8 @@ export function useBackgroundQuery_experimental<
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
+  const [version, setVersion] = usePromiseVersion();
+
   const cacheKey = (
     [client, query, canonicalStringify(variables)] as any[]
   ).concat(queryKey);
@@ -113,7 +139,11 @@ export function useBackgroundQuery_experimental<
   useStrictModeSafeCleanupEffect(dispose);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
-    (options) => subscription.fetchMore(options) as any,
+    (options) => {
+      const promise = subscription.fetchMore(options);
+      setVersion('network');
+      return promise;
+    },
     [subscription]
   );
 
@@ -121,8 +151,9 @@ export function useBackgroundQuery_experimental<
     (variables) => subscription.refetch(variables),
     [subscription]
   );
-  const version = 'main';
+  // const version = 'main';
   subscription.version = version;
+
   return useMemo(() => {
     return {
       // this won't work with refetch/fetchMore...
@@ -133,7 +164,9 @@ export function useBackgroundQuery_experimental<
   }, [subscription, fetchMore, refetch]);
 }
 
-export function useReadQuery_experimental<TData>(subscription: QuerySubscription<TData>) {
+export function useReadQuery_experimental<TData>(
+  subscription: QuerySubscription<TData>
+) {
   const [, forceUpdate] = useState(0);
   const promise =
     subscription.promises[subscription.version] || subscription.promises.main;

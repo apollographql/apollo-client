@@ -18,6 +18,7 @@ import {
   NameNode,
   SelectionSetNode,
   DocumentNode,
+  FragmentSpreadNode,
 } from 'graphql';
 
 import { isNonNullObject } from '../common/objects';
@@ -289,16 +290,23 @@ export function getTypenameFromResult(
   selectionSet: SelectionSetNode,
   fragmentMap?: FragmentMap,
 ): string | undefined {
-  if (typeof result.__typename === 'string') {
-    return result.__typename;
-  }
-
+  let fragments: undefined | Array<InlineFragmentNode | FragmentSpreadNode>;
   for (const selection of selectionSet.selections) {
     if (isField(selection)) {
       if (selection.name.value === '__typename') {
         return result[resultKeyNameFromField(selection)];
       }
+    } else if (fragments) {
+      fragments.push(selection);
     } else {
+      fragments = [selection];
+    }
+  }
+  if (typeof result.__typename === 'string') {
+    return result.__typename;
+  }
+  if (fragments) {
+    for (const selection of fragments) {
       const typename = getTypenameFromResult(
         result,
         getFragmentFromSelection(selection, fragmentMap)!.selectionSet,

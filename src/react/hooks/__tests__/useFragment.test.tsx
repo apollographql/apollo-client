@@ -20,7 +20,7 @@ import {
 import { useQuery } from "../useQuery";
 import { concatPagination } from "../../../utilities";
 import assert from "assert";
-import {expectTypeOf} from 'expect-type'
+import { expectTypeOf } from 'expect-type'
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -1432,13 +1432,13 @@ describe.skip("Type Tests", () => {
 
   test("UseFragmentOptions interface shape", <TData, TVars>()=>{
     expectTypeOf<UseFragmentOptions<TData, TVars>>()
-    .toEqualTypeOf<{
-      from: string | StoreObject | Reference;
-      fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-      fragmentName?: string;
-      optimistic?: boolean;
-      variables?: TVars;
-      canonizeResults?: boolean;
-    }>();
+      .toEqualTypeOf<{
+        from: string | StoreObject | Reference;
+        fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+        fragmentName?: string;
+        optimistic?: boolean;
+        variables?: TVars;
+        canonizeResults?: boolean;
+      }>();
   })
 })

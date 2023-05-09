@@ -1,8 +1,7 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
 import { useRef, useCallback, useMemo, useEffect, useState } from 'react';
-import {
+import type {
   ApolloClient,
-  ApolloError,
   ApolloQueryResult,
   DocumentNode,
   OperationVariables,
@@ -10,19 +9,22 @@ import {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
   NetworkStatus,
-  FetchMoreQueryOptions,
+  FetchMoreQueryOptions} from '../../core';
+import {
+  ApolloError
 } from '../../core';
-import { DeepPartial, isNonEmptyArray } from '../../utilities';
+import type { DeepPartial} from '../../utilities';
+import { isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
-import {
+import type {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
   NoInfer,
 } from '../types/types';
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
-import { QuerySubscription } from '../cache/QuerySubscription';
+import type { QuerySubscription } from '../cache/QuerySubscription';
 import { canonicalStringify } from '../../cache';
 
 export interface UseSuspenseQueryResult<

@@ -1,24 +1,26 @@
 import { invariant } from '../../utilities/globals';
-import { dep, OptimisticDependencyFunction } from 'optimism';
+import type { OptimisticDependencyFunction } from 'optimism';
+import { dep } from 'optimism';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 
-import {
-  isReference,
+import type {
   StoreValue,
   StoreObject,
-  Reference,
+  Reference} from '../../utilities';
+import {
+  isReference,
   makeReference,
   DeepMerger,
   maybeDeepFreeze,
   canUseWeakMap,
   isNonNullObject,
 } from '../../utilities';
-import { NormalizedCache, NormalizedCacheObject } from './types';
+import type { NormalizedCache, NormalizedCacheObject } from './types';
 import { hasOwn, fieldNameFromStoreName } from './helpers';
-import { Policies, StorageType } from './policies';
-import { Cache } from '../core/types/Cache';
-import {
+import type { Policies, StorageType } from './policies';
+import type { Cache } from '../core/types/Cache';
+import type {
   SafeReadonly,
   Modifier,
   Modifiers,

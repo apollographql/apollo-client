@@ -1,6 +1,6 @@
 import { InvariantError } from '../globals';
 
-import {
+import type {
   DirectiveNode,
   FieldNode,
   IntValueNode,
@@ -21,7 +21,8 @@ import {
 } from 'graphql';
 
 import { isNonNullObject } from '../common/objects';
-import { FragmentMap, getFragmentFromSelection } from './fragments';
+import type { FragmentMap} from './fragments';
+import { getFragmentFromSelection } from './fragments';
 
 export interface Reference {
   readonly __ref: string;

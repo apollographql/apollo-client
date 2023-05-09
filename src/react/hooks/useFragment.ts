@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import { equal } from "@wry/equality";
 
-import { DeepPartial, mergeDeepArray } from "../../utilities";
-import {
+import type { DeepPartial} from "../../utilities";
+import { mergeDeepArray } from "../../utilities";
+import type {
   Cache,
   Reference,
   StoreObject,
@@ -11,8 +12,8 @@ import {
 
 import { useApolloClient } from "./useApolloClient";
 import { useSyncExternalStore } from "./useSyncExternalStore";
-import { OperationVariables } from "../../core";
-import { NoInfer } from "../types/types";
+import type { OperationVariables } from "../../core";
+import type { NoInfer } from "../types/types";
 
 export interface UseFragmentOptions<TData, TVars>
 extends Omit<

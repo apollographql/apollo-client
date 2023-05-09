@@ -1,6 +1,7 @@
-import { VariableDefinitionNode, visit } from "graphql";
+import type { VariableDefinitionNode} from "graphql";
+import { visit } from "graphql";
 
-import { Operation } from "../core";
+import type { Operation } from "../core";
 
 export function filterOperationVariables(variables: Record<string, any>, operation: Operation) {
   const result = { ...variables };

@@ -1,4 +1,4 @@
-import { Operation } from '../core';
+import type { Operation } from '../core';
 
 /**
  * Advanced mode: a function that implements the strategy for calculating delays

@@ -1,15 +1,17 @@
-import { DocumentNode, GraphQLError } from 'graphql';
+import type { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
-import { Cache, ApolloCache } from '../cache';
+import type { Cache, ApolloCache } from '../cache';
 import { DeepMerger } from "../utilities"
 import { mergeIncrementalData } from '../utilities';
-import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
-import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
-import { QueryListener, MethodKeys } from './types';
-import { FetchResult } from '../link/core';
+import type { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
+import type { ObservableQuery} from './ObservableQuery';
+import { reobserveCacheFirst } from './ObservableQuery';
+import type { QueryListener, MethodKeys } from './types';
+import type { FetchResult } from '../link/core';
+import type {
+  ObservableSubscription} from '../utilities';
 import {
-  ObservableSubscription,
   isNonEmptyArray,
   graphQLResultHasError,
   canUseWeakMap,
@@ -18,8 +20,8 @@ import {
   NetworkStatus,
   isNetworkRequestInFlight,
 } from './networkStatus';
-import { ApolloError } from '../errors';
-import { QueryManager } from './QueryManager';
+import type { ApolloError } from '../errors';
+import type { QueryManager } from './QueryManager';
 
 export type QueryStoreValue = Pick<QueryInfo,
   | "variables"

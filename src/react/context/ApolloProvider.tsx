@@ -2,9 +2,9 @@ import { invariant } from '../../utilities/globals';
 
 import * as React from 'react';
 
-import { ApolloClient } from '../../core';
+import type { ApolloClient } from '../../core';
 import { getApolloContext } from './ApolloContext';
-import { SuspenseCache } from '../cache';
+import type { SuspenseCache } from '../cache';
 
 export interface ApolloProviderProps<TCache> {
   client: ApolloClient<TCache>;

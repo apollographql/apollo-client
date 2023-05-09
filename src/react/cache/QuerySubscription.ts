@@ -1,13 +1,15 @@
-import {
+import type {
   ApolloError,
   ApolloQueryResult,
-  NetworkStatus,
   ObservableQuery,
-  OperationVariables,
+  OperationVariables} from '../../core';
+import {
+  NetworkStatus
 } from '../../core';
 import { isNetworkRequestSettled } from '../../core';
+import type {
+  ObservableSubscription} from '../../utilities';
 import {
-  ObservableSubscription,
   createFulfilledPromise,
   createRejectedPromise,
 } from '../../utilities';

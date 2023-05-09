@@ -1,4 +1,4 @@
-import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+import { DocumentNode } from 'graphql'; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { MissingFieldError } from './common';

@@ -911,4 +911,94 @@ describe("useFragment", () => {
       ]);
     });
   });
+
+  describe("tests with incomplete data", () => {
+    let cache: InMemoryCache, wrapper: React.FunctionComponent;
+    const ItemFragment = gql`
+      fragment ItemFragment on Item {
+        id
+        text
+      }
+    `;
+
+    beforeEach(() => {
+      cache = new InMemoryCache();
+
+      wrapper = ({ children }: any) => <MockedProvider cache={cache}>{children}</MockedProvider>;
+
+      // silence the console for the incomplete fragment write
+      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+        },
+      });
+      spy.mockRestore();
+    });
+
+    it("assumes `returnPartialData: true` per default", () => {
+      const { result } = renderHook(
+        () =>
+          useFragment({
+            fragment: ItemFragment,
+            from: { __typename: "Item", id: 5 },
+          }),
+        { wrapper }
+      );
+
+      expect(result.current.data).toEqual({ __typename: "Item", id: 5 });
+      expect(result.current.complete).toBe(false);
+    });
+
+    it("throws an exception with `returnPartialData: false` if only partial data is available", () => {
+      // this is actually not intended behavior, but it is the current behavior
+      // let's document it in a test until we remove `returnPartialData` in 3.8
+
+      let error: Error;
+
+      renderHook(
+        () => {
+          // we can't just `expect(() => renderHook(...)).toThrow(...)` because it will render a second time, resulting in an uncaught exception
+          try {
+            useFragment({
+              fragment: ItemFragment,
+              from: { __typename: "Item", id: 5 },
+              returnPartialData: false,
+            });
+          } catch (e) {
+            error = e;
+          }
+        },
+        { wrapper }
+      );
+
+      expect(error!.toString()).toMatch(`Error: Can't find field 'text' on Item:5 object`);
+    });
+
+    it("throws an exception with `returnPartialData: false` if no data is available", () => {
+      // this is actually not intended behavior, but it is the current behavior
+      // let's document it in a test until we remove `returnPartialData` in 3.8
+      let error: Error;
+
+      renderHook(
+        () => {
+          // we can't just `expect(() => renderHook(...)).toThrow(...)` because it will render a second time, resulting in an uncaught exception
+          try {
+            useFragment({
+              fragment: ItemFragment,
+              from: { __typename: "Item", id: 6 },
+              returnPartialData: false,
+            });
+          } catch (e) {
+            error = e;
+          }
+        },
+        { wrapper }
+      );
+
+      expect(error!.toString()).toMatch(`Error: Dangling reference to missing Item:6 object`);
+    });
+  });
 });

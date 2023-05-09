@@ -20,13 +20,22 @@ extends Omit<
   | "query"
   | "optimistic"
   | "previousResult"
->, Omit<
-  Cache.ReadFragmentOptions<TData, TVars>,
+  | "returnPartialData"
+>, Omit<Cache.ReadFragmentOptions<TData, TVars>,
   | "id"
+  | "returnPartialData"
 > {
   from: StoreObject | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
+
+  /**
+   * Whether to return incomplete data rather than null.
+   * Defaults to `true`.
+   * @deprecated This option will be removed in Apollo Client 3.8.
+   * Please check `result.missing` instead.
+   */
+  returnPartialData?: boolean;
 }
 
 // Since the above definition of UseFragmentOptions can be hard to parse without

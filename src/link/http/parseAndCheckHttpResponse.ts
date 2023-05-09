@@ -136,7 +136,7 @@ export function parseHeaders(headerText: string): Record<string, string> {
 export function parseJsonBody<T>(response: Response, bodyText: string): T {
   if (response.status >= 300) {
     // Network error
-    const getResult = () => {
+    const getResult = (): Record<string, unknown> | string => {
       try {
         return JSON.parse(bodyText);
       } catch (err) {

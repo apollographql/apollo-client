@@ -9,8 +9,11 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary, ErrorBoundaryProps } from 'react-error-boundary';
+import { GraphQLError } from 'graphql';
 import {
   gql,
+  ApolloError,
+  DocumentNode,
   ApolloClient,
   NormalizedCacheObject,
   NetworkStatus,
@@ -18,6 +21,8 @@ import {
   TypedDocumentNode,
   ApolloLink,
   Observable,
+  OperationVariables,
+  ApolloQueryResult,
 } from '../../../core';
 import {
   MockedResponse,
@@ -140,7 +145,9 @@ function renderIntegrationTest({
 
 function renderVariablesIntegrationTest({
   variables,
+  mocks,
 }: {
+  mocks?: { request: { query: DocumentNode; variables: { id: string;  } } }[];
   variables: { id: string };
 }) {
   const CHARACTERS = ['Spider-Man', 'Black Widow', 'Iron Man', 'Hulk'];
@@ -165,14 +172,33 @@ function renderVariablesIntegrationTest({
     }
   `;
 
-  const mocks = CHARACTERS.map((name, index) => ({
+  let _mocks = [...CHARACTERS].map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
     result: { data: { character: { id: String(index + 1), name } } },
   }));
+  // duplicate mocks with (updated) in the name for refetches
+  _mocks = [..._mocks, ..._mocks, ..._mocks].map(({ request, result }, index) => {
+    return {
+      request: request,
+      result: {
+        data: {
+          character: {
+            ...result.data.character,
+            name:
+              index > 3
+                ? index > 7
+                  ? `${result.data.character.name} (updated again)`
+                  : `${result.data.character.name} (updated)`
+                : result.data.character.name,
+          },
+        },
+      },
+    };
+  });
   const suspenseCache = new SuspenseCache();
   const client = new ApolloClient({
     cache: new InMemoryCache(),
-    link: new MockLink(mocks),
+    link: new MockLink(mocks || _mocks),
   });
   interface Renders {
     errors: Error[];
@@ -200,23 +226,42 @@ function renderVariablesIntegrationTest({
   }
 
   function Child({
+    refetch,
+    variables,
     subscription,
   }: {
+    variables: QueryVariables;
+    refetch: (
+      variables?: Partial<OperationVariables> | undefined
+    ) => Promise<ApolloQueryResult<QueryData>>;
     subscription: QuerySubscription<QueryData>;
   }) {
-    const result = useReadQuery<QueryData>(subscription);
+    const { data } = useReadQuery<QueryData>(subscription);
     return (
       <div>
-        {result?.data?.character.id} - {result?.data?.character.name}
+        <button
+          onClick={() => {
+            refetch(variables);
+          }}
+        >
+          Refetch
+        </button>
+        {data?.character.id} - {data?.character.name}
       </div>
     );
   }
 
   function ParentWithVariables({ variables }: { variables: QueryVariables }) {
-    const { subscription } = useBackgroundQuery(query, { variables });
+    const { subscription, refetch } = useBackgroundQuery(query, { variables });
     // count renders in the parent component
     renders.count++;
-    return <Child subscription={subscription} />;
+    return (
+      <Child
+        refetch={refetch}
+        variables={variables}
+        subscription={subscription}
+      />
+    );
   }
 
   function App({ variables }: { variables: QueryVariables }) {
@@ -904,7 +949,9 @@ describe('useBackgroundQuery', () => {
         {
           request: { query, variables: { id: '2' } },
           result: {
-            data: { todo: { id: '2', name: 'Take out trash', completed: true } },
+            data: {
+              todo: { id: '2', name: 'Take out trash', completed: true },
+            },
           },
           delay: 10,
         },
@@ -933,7 +980,9 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [id, setId] = React.useState('1');
-        const { subscription } = useBackgroundQuery(query, { variables: { id } });
+        const { subscription } = useBackgroundQuery(query, {
+          variables: { id },
+        });
         return <Todo subscription={subscription} onChange={setId} />;
       }
 
@@ -1052,93 +1101,138 @@ describe('useBackgroundQuery', () => {
   });
 
   describe('refetch', () => {
-    it.skip('re-suspends when calling `refetch`', () => {
+    it('re-suspends when calling `refetch`', async () => {
+      const { renders } = renderVariablesIntegrationTest({
+        variables: { id: '1' },
+      });
 
+      expect(renders.suspenseCount).toBe(1);
+      expect(screen.getByText('loading')).toBeInTheDocument();
+
+      expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
+
+      const button = screen.getByText('Refetch');
+      const user = userEvent.setup();
+      await act(() => user.click(button));
+
+      // parent component re-suspends
+      expect(renders.suspenseCount).toBe(2);
+      // TODO: investigate why this is 1 more render than equivalent
+      // useSuspenseQuery test
+      expect(renders.count).toBe(5);
+
+      expect(
+        await screen.findByText('1 - Spider-Man (updated)')
+      ).toBeInTheDocument();
     });
-    it('re-suspends when calling `refetch` with new variables', async () => {
-      // const query = gql`
-      //   query UserQuery($id: String!) {
-      //     user(id: $id) {
-      //       id
-      //       name
-      //     }
-      //   }
-      // `;
+    // it('re-suspends when calling `refetch` with new variables', async () => {
+    // });
+    it('re-suspends multiple times when calling `refetch` multiple times', async () => {
+      const { renders } = renderVariablesIntegrationTest({
+        variables: { id: '1' },
+      });
 
-      // const mocks = [
-      //   {
-      //     request: { query, variables: { id: '1' } },
-      //     result: {
-      //       data: { user: { id: '1', name: 'Captain Marvel' } },
-      //     },
-      //   },
-      //   {
-      //     request: { query, variables: { id: '2' } },
-      //     result: {
-      //       data: { user: { id: '2', name: 'Captain America' } },
-      //     },
-      //   },
-      // ];
+      expect(renders.suspenseCount).toBe(1);
+      expect(screen.getByText('loading')).toBeInTheDocument();
 
-      // const { result } = renderSuspenseHook(
-      //   () => useBackgroundQuery(query, { variables: { id: '1' } }),
-      //   { mocks }
-      // );
+      expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
 
-      // const { subscription } = result.current;
+      const button = screen.getByText('Refetch');
+      const user = userEvent.setup();
+      await act(() => user.click(button));
 
-      // const _result = await subscription.promises.main;
+      // parent component re-suspends
+      expect(renders.suspenseCount).toBe(2);
+      // TODO: investigate why this is +1 render than equivalent
+      // useSuspenseQuery test
+      expect(renders.count).toBe(5);
 
-      // await waitFor(() => {
-      //   expect(_result).toMatchObject({
-      //     ...mocks[0].result,
-      //     networkStatus: NetworkStatus.ready,
-      //     // TODO: should the result contain `error`?
-      //     // error: undefined,
-      //   });
-      // });
+      expect(
+        await screen.findByText('1 - Spider-Man (updated)')
+      ).toBeInTheDocument();
 
-      // act(() => {
-      //   result.current.refetch({ id: '2' });
-      // });
+      await act(() => user.click(button));
 
-      // const _result2 = await subscription.promises.network;
+      // parent component re-suspends
+      expect(renders.suspenseCount).toBe(3);
+      // TODO: investigate why this is now +2 renders than equivalent
+      // useSuspenseQuery test
+      expect(renders.count).toBe(8);
 
-      // await waitFor(() => {
-      //   expect(_result2).toMatchObject({
-      //     ...mocks[1].result,
-      //     networkStatus: NetworkStatus.ready,
-      //     // TODO: should the result contain `error`?
-      //     // error: undefined,
-      //   });
-      // });
-      // expect(renders.count).toBe(4);
-      // expect(renders.suspenseCount).toBe(2);
-      // expect(renders.frames).toMatchObject([
-      //   {
-      //     ...mocks[0].result,
-      //     networkStatus: NetworkStatus.ready,
-      //     error: undefined,
-      //   },
-      //   {
-      //     ...mocks[1].result,
-      //     networkStatus: NetworkStatus.ready,
-      //     error: undefined,
-      //   },
-      // ]);
+      expect(
+        await screen.findByText('1 - Spider-Man (updated again)')
+      ).toBeInTheDocument();
     });
-    it.skip('re-suspends multiple times when calling `refetch` multiple times', () => {});
-    it.skip('throws errors when errors are returned after calling `refetch`', () => {});
-    it.skip('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', () => {});
-    it.skip('returns errors after calling `refetch` when errorPolicy is set to "all"', () => {});
-    it.skip('handles partial data results after calling `refetch` when errorPolicy is set to "all"', () => {});
-    it.skip('`refetch` works with startTransition to allow React to show stale UI until finished suspending', () => {});
+    it('throws errors when errors are returned after calling `refetch`', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      interface QueryData {
+        character: {
+          id: string;
+          name: string;
+        };
+      }
+
+      interface QueryVariables {
+        id: string;
+      }
+      const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+      const mocks = [
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            data: { character: { id: '1', name: 'Captain Marvel' } },
+          },
+        },
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            errors: [new GraphQLError('Something went wrong')],
+          },
+        },
+      ];
+      const { renders } = renderVariablesIntegrationTest({
+        variables: { id: '1' },
+        mocks,
+      });
+
+      expect(renders.suspenseCount).toBe(1);
+      expect(screen.getByText('loading')).toBeInTheDocument();
+
+      expect(await screen.findByText('1 - Captain Marvel')).toBeInTheDocument();
+
+      const button = screen.getByText('Refetch');
+      const user = userEvent.setup();
+      await act(() => user.click(button));
+
+      await waitFor(() => {
+        expect(renders.errorCount).toBe(1);
+      });
+
+      expect(renders.errors).toEqual([
+        new ApolloError({
+          graphQLErrors: [new GraphQLError('Something went wrong')],
+        }),
+      ]);
+
+      consoleSpy.mockRestore();
+    });
+    it.skip('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {});
+    // it.skip('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {});
+    // it.skip('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {});
+    // it.skip('`refetch` works with startTransition to allow React to show stale UI until finished suspending', async () => {});
   });
 
-  describe.skip('fetchMore', () => {
-    it('re-suspends when calling `fetchMore` with different variables', () => {});
-    it('properly uses `updateQuery` when calling `fetchMore`', () => {});
-    it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', () => {});
-    it('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', () => {});
-  });
+  // describe.skip('fetchMore', () => {
+  //   it('re-suspends when calling `fetchMore` with different variables', async () => {});
+  //   it('properly uses `updateQuery` when calling `fetchMore`', async () => {});
+  //   it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {});
+  //   it('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', async () => {});
+  // });
 });

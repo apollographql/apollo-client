@@ -7,7 +7,6 @@
     "es2021": true
   },
   "parserOptions": {
-    "sourceType": "module",
     "ecmaVersion": "latest"
   },
   "overrides": [

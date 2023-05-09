@@ -2,29 +2,68 @@ import { Trie } from '@wry/trie';
 import { wrap } from 'optimism';
 import { DocumentNode, Kind, TypeNode, visit } from 'graphql';
 import { ApolloLink } from '../core';
-import { canUseWeakMap, stripTypename } from '../../utilities';
+import { canUseWeakMap, isPlainObject, stripTypename } from '../../utilities';
+
+interface PathConfig {
+  [key: string]: PathConfig | (string | PathConfig)[];
+}
 
 interface RemoveTypenameOptions {
   excludeScalars?: string[];
+  excludeScalarPaths?: PathConfig;
 }
 
 export function removeTypenameFromVariables(
   options: RemoveTypenameOptions = Object.create(null)
 ) {
+  const { excludeScalars, excludeScalarPaths } = options;
+
   const trie = new Trie<typeof stripTypename.BREAK>(
     canUseWeakMap,
     () => stripTypename.BREAK
   );
 
+  function collectPaths(
+    typename: string,
+    pathConfig: PathConfig[string],
+    path: string[] = [],
+    paths: string[][] = []
+  ) {
+    if (Array.isArray(pathConfig)) {
+      pathConfig.forEach((item) => {
+        if (typeof item === 'string') {
+          return paths.push([typename, ...path, item]);
+        } else if (isPlainObject(item)) {
+          collectPaths(typename, item, path, paths);
+        }
+      });
+    } else if (isPlainObject(pathConfig)) {
+      Object.keys(pathConfig).forEach((key) => {
+        collectPaths(typename, pathConfig[key], path.concat(key), paths);
+      });
+    }
+
+    return paths;
+  }
+
+  if (excludeScalarPaths) {
+    Object.keys(excludeScalarPaths).forEach((typename) => {
+      const paths = collectPaths(typename, excludeScalarPaths[typename]);
+
+      paths.forEach((path) => {
+        trie.lookupArray(path);
+      });
+    });
+  }
+
   return new ApolloLink((operation, forward) => {
     const { query, variables } = operation;
-    const { excludeScalars } = options;
 
     if (!variables) {
       return forward(operation);
     }
 
-    if (!excludeScalars) {
+    if (!excludeScalars && !excludeScalarPaths) {
       return forward({ ...operation, variables: stripTypename(variables) });
     }
 
@@ -34,10 +73,9 @@ export function removeTypenameFromVariables(
       ...operation,
       variables: stripTypename(variables, {
         keep: (path) => {
-          const [root] = path;
-          const typename = variableDefinitions[root];
+          const typename = variableDefinitions[path[0]];
 
-          if (excludeScalars.includes(typename)) {
+          if (excludeScalars?.includes(typename)) {
             return stripTypename.BREAK;
           }
 
@@ -45,7 +83,7 @@ export function removeTypenameFromVariables(
             (segment) => typeof segment === 'string'
           );
 
-          return trie.peekArray(keysOnly);
+          return trie.peekArray([typename, ...keysOnly.slice(1)]);
         },
       }),
     });

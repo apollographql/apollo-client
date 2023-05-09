@@ -189,3 +189,205 @@ test('keeps __typename in variables defined by `excludeScalars` declared as non 
     qux: { qux: true },
   });
 });
+
+test('keeps __typename at scalars defind by `excludePaths`', async () => {
+  const query = gql`
+    query Test($foo: FooInput) {
+      someField(foo: $foo)
+    }
+  `;
+
+  const link = removeTypenameFromVariables({
+    excludeScalarPaths: {
+      FooInput: ['bar', 'baz'],
+    },
+  });
+
+  const { variables } = await execute(link, {
+    query,
+    variables: {
+      foo: {
+        __typename: 'Foo',
+        aa: true,
+        bar: {
+          __typename: 'Bar',
+          bb: true,
+        },
+        baz: {
+          __typename: 'Baz',
+          cc: true,
+        },
+        qux: {
+          __typename: 'Qux',
+          dd: true,
+        },
+      },
+    },
+  });
+
+  expect(variables).toStrictEqual({
+    foo: {
+      aa: true,
+      bar: {
+        __typename: 'Bar',
+        bb: true,
+      },
+      baz: {
+        __typename: 'Baz',
+        cc: true,
+      },
+      qux: {
+        dd: true,
+      },
+    },
+  });
+});
+
+test('keeps __typename at scalars defined by deeply nested `excludePaths`', async () => {
+  const query = gql`
+    query Test($foo: FooInput) {
+      someField(foo: $foo)
+    }
+  `;
+
+  const link = removeTypenameFromVariables({
+    excludeScalarPaths: {
+      FooInput: {
+        bar: {
+          baz: ['qux'],
+        },
+      },
+    },
+  });
+
+  const { variables } = await execute(link, {
+    query,
+    variables: {
+      foo: {
+        __typename: 'Foo',
+        bar: {
+          __typename: 'Bar',
+          baz: {
+            __typename: 'Baz',
+            qux: {
+              __typename: 'Qux',
+              quux: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  expect(variables).toStrictEqual({
+    foo: {
+      bar: {
+        baz: {
+          qux: {
+            __typename: 'Qux',
+            quux: true,
+          },
+        },
+      },
+    },
+  });
+});
+
+test('handles `excludeScalarPaths` at varying nesting levels', async () => {
+  const query = gql`
+    query Test($foo: FooInput) {
+      someField(foo: $foo)
+    }
+  `;
+
+  const link = removeTypenameFromVariables({
+    excludeScalarPaths: {
+      FooInput: ['bar', { baz: ['qux'] }],
+    },
+  });
+
+  const { variables } = await execute(link, {
+    query,
+    variables: {
+      foo: {
+        __typename: 'Foo',
+        bar: {
+          __typename: 'Bar',
+          aa: true,
+        },
+        baz: {
+          __typename: 'Baz',
+          qux: {
+            __typename: 'Qux',
+            quux: true,
+          },
+        },
+      },
+    },
+  });
+
+  expect(variables).toStrictEqual({
+    foo: {
+      bar: {
+        __typename: 'Bar',
+        aa: true,
+      },
+      baz: {
+        qux: {
+          __typename: 'Qux',
+          quux: true,
+        },
+      },
+    },
+  });
+});
+
+test('handles `excludeScalarPaths` with multiple defined paths', async () => {
+  const query = gql`
+    query Test($foo: FooInput, $baz: BazInput) {
+      someField(foo: $foo, baz: $baz)
+    }
+  `;
+
+  const link = removeTypenameFromVariables({
+    excludeScalarPaths: {
+      FooInput: ['bar'],
+      BazInput: ['qux'],
+    },
+  });
+
+  const { variables } = await execute(link, {
+    query,
+    variables: {
+      foo: {
+        __typename: 'Foo',
+        bar: {
+          __typename: 'Bar',
+          aa: true,
+        },
+      },
+      baz: {
+        __typename: 'Bar',
+        qux: {
+          __typename: 'Qux',
+          bb: true,
+        },
+      },
+    },
+  });
+
+  expect(variables).toStrictEqual({
+    foo: {
+      bar: {
+        __typename: 'Bar',
+        aa: true,
+      },
+    },
+    baz: {
+      qux: {
+        __typename: 'Qux',
+        bb: true,
+      },
+    },
+  });
+});

@@ -50,6 +50,11 @@ src/utilities/common/__tests__/*
 !src/utilities/common/__tests__/omitDeep.ts
 !src/utilities/common/__tests__/stripTypename.ts
 
+# Allowed links
+!src/link
+src/link/*
+!src/link/remove-typename
+
 ## Allowed React Hooks
 !src/react/hooks/
 src/react/hooks/*

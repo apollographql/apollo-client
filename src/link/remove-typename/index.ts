@@ -1,0 +1,1 @@
+export { removeTypenameFromVariables } from './removeTypenameFromVariables';

@@ -38,7 +38,7 @@ export interface UseSuspenseQueryResult<
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
-type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
+export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
     updateQuery?: (
       previousQueryResult: TData,
@@ -50,7 +50,7 @@ type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   }
 ) => Promise<ApolloQueryResult<TData>>;
 
-type RefetchFunction<
+export type RefetchFunction<
   TData,
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['refetch'];
@@ -60,7 +60,7 @@ type SubscribeToMoreFunction<
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
-type Version = 'main' | 'network';
+export type Version = 'main' | 'network';
 
 export function useSuspenseQuery_experimental<
   TData,
@@ -229,13 +229,13 @@ function validatePartialDataReturn(
   }
 }
 
-function toApolloError(result: ApolloQueryResult<any>) {
+export function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
     : result.error;
 }
 
-function useTrackedSubscriptions(subscription: QuerySubscription) {
+export function useTrackedSubscriptions(subscription: QuerySubscription) {
   const trackedSubscriptions = useRef(new Set<QuerySubscription>());
 
   trackedSubscriptions.current.add(subscription);
@@ -245,7 +245,7 @@ function useTrackedSubscriptions(subscription: QuerySubscription) {
   });
 }
 
-function usePromiseVersion() {
+export function usePromiseVersion() {
   // Use an object as state to force React to re-render when we publish an
   // update to the same version (such as sequential cache updates).
   const [{ version }, setState] = useState<{ version: Version }>({
@@ -268,7 +268,7 @@ interface UseWatchQueryOptionsHookOptions<
   options: SuspenseQueryHookOptions<TData, TVariables>;
 }
 
-function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
+export function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   query,
   options,
 }: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<

@@ -1,4 +1,7 @@
-import { removeTypenameFromVariables } from '../removeTypenameFromVariables';
+import {
+  KEEP,
+  removeTypenameFromVariables,
+} from '../removeTypenameFromVariables';
 import { ApolloLink, Operation } from '../../core';
 import { Observable, gql } from '../../../core';
 import { createOperation, toPromise } from '../../utils';
@@ -91,7 +94,7 @@ test('does nothing when no variables are passed even if variables are declared i
   expect(resultOperation).toBe(operation);
 });
 
-test('keeps __typename in variables with scalars defined by `excludeScalars`', async () => {
+test('keeps __typename for variables with types defined by `except`', async () => {
   const query = gql`
     query Test($foo: JSON, $bar: BarInput) {
       someField(foo: $foo, bar: $bar)
@@ -99,7 +102,9 @@ test('keeps __typename in variables with scalars defined by `excludeScalars`', a
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalars: [{ scalar: 'JSON' }],
+    except: {
+      JSON: KEEP,
+    },
   });
 
   const { variables } = await execute(link, {
@@ -124,40 +129,7 @@ test('keeps __typename in variables with scalars defined by `excludeScalars`', a
   });
 });
 
-test('keeps __typename in variables with scalars defined by `excludeScalars` using the string short form', async () => {
-  const query = gql`
-    query Test($foo: JSON, $bar: BarInput) {
-      someField(foo: $foo, bar: $bar)
-    }
-  `;
-
-  const link = removeTypenameFromVariables({
-    excludeScalars: ['JSON'],
-  });
-
-  const { variables } = await execute(link, {
-    query,
-    variables: {
-      foo: {
-        __typename: 'Foo',
-        foo: true,
-        baz: { __typename: 'Baz', baz: true },
-      },
-      bar: { __typename: 'Bar', bar: true },
-    },
-  });
-
-  expect(variables).toStrictEqual({
-    foo: {
-      __typename: 'Foo',
-      foo: true,
-      baz: { __typename: 'Baz', baz: true },
-    },
-    bar: { bar: true },
-  });
-});
-
-test('keeps __typename in variables when defining multiple scalars excluded by `excludeScalars`', async () => {
+test('keeps __typename in all variables with types configured with `except`', async () => {
   const query = gql`
     query Test($foo: JSON, $bar: Config, $baz: BazInput) {
       someField(foo: $foo, bar: $bar, baz: $baz)
@@ -165,34 +137,10 @@ test('keeps __typename in variables when defining multiple scalars excluded by `
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalars: ['JSON', 'Config'],
-  });
-
-  const { variables } = await execute(link, {
-    query,
-    variables: {
-      foo: { __typename: 'Foo', foo: true },
-      bar: { __typename: 'Bar', bar: true },
-      baz: { __typename: 'Baz', baz: true },
+    except: {
+      JSON: KEEP,
+      Config: KEEP,
     },
-  });
-
-  expect(variables).toStrictEqual({
-    foo: { __typename: 'Foo', foo: true },
-    bar: { __typename: 'Bar', bar: true },
-    baz: { baz: true },
-  });
-});
-
-test('handles mixed configured scalar forms', async () => {
-  const query = gql`
-    query Test($foo: JSON, $bar: Config, $baz: BazInput) {
-      someField(foo: $foo, bar: $bar, baz: $baz)
-    }
-  `;
-
-  const link = removeTypenameFromVariables({
-    excludeScalars: ['JSON', { scalar: 'Config' }],
   });
 
   const { variables } = await execute(link, {
@@ -219,7 +167,9 @@ test('handles variable declarations declared as non null and list types', async 
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalars: ['JSON'],
+    except: {
+      JSON: KEEP,
+    },
   });
 
   const { variables } = await execute(link, {
@@ -250,7 +200,7 @@ test('handles variable declarations declared as non null and list types', async 
   });
 });
 
-test('keeps __typename at configured scalar paths', async () => {
+test('keeps __typename at configured fields under input object types', async () => {
   const query = gql`
     query Test($foo: FooInput) {
       someField(foo: $foo)
@@ -258,12 +208,12 @@ test('keeps __typename at configured scalar paths', async () => {
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalars: [
-      {
-        scalar: 'JSON',
-        paths: { FooInput: ['bar', 'baz'] },
+    except: {
+      FooInput: {
+        bar: KEEP,
+        baz: KEEP,
       },
-    ],
+    },
   });
 
   const { variables } = await execute(link, {
@@ -306,7 +256,7 @@ test('keeps __typename at configured scalar paths', async () => {
   });
 });
 
-test('keeps __typename at deeply nested configured scalar paths', async () => {
+test('keeps __typename at a deeply nested field', async () => {
   const query = gql`
     query Test($foo: FooInput) {
       someField(foo: $foo)
@@ -314,18 +264,15 @@ test('keeps __typename at deeply nested configured scalar paths', async () => {
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalars: [
-      {
-        scalar: 'JSON',
-        paths: {
-          FooInput: {
-            bar: {
-              baz: ['qux'],
-            },
+    except: {
+      FooInput: {
+        bar: {
+          baz: {
+            qux: KEEP,
           },
         },
       },
-    ],
+    },
   });
 
   const { variables } = await execute(link, {
@@ -361,7 +308,7 @@ test('keeps __typename at deeply nested configured scalar paths', async () => {
   });
 });
 
-test('handles configured scalar paths at varying nesting levels', async () => {
+test('handles configured fields varying nesting levels', async () => {
   const query = gql`
     query Test($foo: FooInput) {
       someField(foo: $foo)
@@ -369,14 +316,14 @@ test('handles configured scalar paths at varying nesting levels', async () => {
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalars: [
-      {
-        scalar: 'JSON',
-        paths: {
-          FooInput: ['bar', { baz: ['qux'] }],
+    except: {
+      FooInput: {
+        bar: KEEP,
+        baz: {
+          qux: KEEP,
         },
       },
-    ],
+    },
   });
 
   const { variables } = await execute(link, {
@@ -415,7 +362,7 @@ test('handles configured scalar paths at varying nesting levels', async () => {
   });
 });
 
-test('handles multiple defined scalar paths for a single scalar', async () => {
+test('handles multiple configured types with fields', async () => {
   const query = gql`
     query Test($foo: FooInput, $baz: BazInput) {
       someField(foo: $foo, baz: $baz)
@@ -423,15 +370,14 @@ test('handles multiple defined scalar paths for a single scalar', async () => {
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalars: [
-      {
-        scalar: 'JSON',
-        paths: {
-          FooInput: ['bar'],
-          BazInput: ['qux'],
-        },
+    except: {
+      FooInput: {
+        bar: KEEP,
       },
-    ],
+      BazInput: {
+        qux: KEEP,
+      },
+    },
   });
 
   const { variables } = await execute(link, {
@@ -465,65 +411,6 @@ test('handles multiple defined scalar paths for a single scalar', async () => {
       qux: {
         __typename: 'Qux',
         bb: true,
-      },
-    },
-  });
-});
-
-test('handles multiple defined scalars with mixed forms', async () => {
-  const query = gql`
-    query Test($foo: JSON, $bar: Raw, $baz: BazInput) {
-      someField(foo: $foo, baz: $baz)
-    }
-  `;
-
-  const link = removeTypenameFromVariables({
-    excludeScalars: [
-      'JSON',
-      { scalar: 'Raw' },
-      {
-        scalar: 'Config',
-        paths: {
-          BazInput: ['config'],
-        },
-      },
-    ],
-  });
-
-  const { variables } = await execute(link, {
-    query,
-    variables: {
-      foo: {
-        __typename: 'Foo',
-        aa: true,
-      },
-      bar: {
-        __typename: 'Bar',
-        bb: true,
-      },
-      baz: {
-        __typename: 'Baz',
-        config: {
-          __typename: 'Config',
-          cc: true,
-        },
-      },
-    },
-  });
-
-  expect(variables).toStrictEqual({
-    foo: {
-      __typename: 'Foo',
-      aa: true,
-    },
-    bar: {
-      __typename: 'Bar',
-      bb: true,
-    },
-    baz: {
-      config: {
-        __typename: 'Config',
-        cc: true,
       },
     },
   });

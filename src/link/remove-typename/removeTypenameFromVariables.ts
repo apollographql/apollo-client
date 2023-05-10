@@ -4,43 +4,31 @@ import { DocumentNode, Kind, TypeNode, visit } from 'graphql';
 import { ApolloLink } from '../core';
 import { canUseWeakMap, stripTypename } from '../../utilities';
 
-interface ScalarPathConfig {
-  [key: string]: ScalarPathConfig | (string | ScalarPathConfig)[];
-}
+export const KEEP = '__KEEP';
 
-interface ScalarConfig {
-  scalar: string;
-  paths?: ScalarPathConfig;
+interface KeepTypenameConfig {
+  [key: string]: typeof KEEP | KeepTypenameConfig;
 }
 
 export interface RemoveTypenameFromVariablesOptions {
-  excludeScalars?: (string | ScalarConfig)[];
+  except?: KeepTypenameConfig;
 }
 
 export function removeTypenameFromVariables(
   options: RemoveTypenameFromVariablesOptions = Object.create(null)
 ) {
-  const { excludeScalars } = options;
+  const { except } = options;
 
   const trie = new Trie<typeof stripTypename.BREAK>(
     canUseWeakMap,
     () => stripTypename.BREAK
   );
 
-  if (excludeScalars) {
-    excludeScalars.forEach((scalarConfig) => {
-      const scalar =
-        typeof scalarConfig === 'string' ? scalarConfig : scalarConfig.scalar;
-
-      // Use `lookupArray` to store the path in the `trie` ahead of time. We use
-      // `peekArray` when actually checking if a path is configured in the trie
-      // to avoid creating additional lookup paths in the trie.
-      trie.lookupArray([scalar]);
-
-      if (typeof scalarConfig === 'object' && scalarConfig.paths) {
-        collectPaths(scalarConfig.paths, (path) => trie.lookupArray(path));
-      }
-    });
+  if (except) {
+    // Use `lookupArray` to store the path in the `trie` ahead of time. We use
+    // `peekArray` when actually checking if a path is configured in the trie
+    // to avoid creating additional lookup paths in the trie.
+    collectPaths(except, (path) => trie.lookupArray(path));
   }
 
   return new ApolloLink((operation, forward) => {
@@ -50,7 +38,7 @@ export function removeTypenameFromVariables(
       return forward(operation);
     }
 
-    if (!excludeScalars) {
+    if (!except) {
       return forward({ ...operation, variables: stripTypename(variables) });
     }
 
@@ -102,21 +90,15 @@ function unwrapType(node: TypeNode): string {
 }
 
 function collectPaths(
-  scalarPathConfig: ScalarPathConfig[string],
+  config: KeepTypenameConfig,
   register: (path: string[]) => void,
   path: string[] = []
 ) {
-  if (Array.isArray(scalarPathConfig)) {
-    return scalarPathConfig.forEach((item) => {
-      if (typeof item === 'string') {
-        return register([...path, item]);
-      }
+  Object.entries(config).forEach(([key, value]) => {
+    if (value === KEEP) {
+      return register([...path, key]);
+    }
 
-      collectPaths(item, register, path);
-    });
-  }
-
-  Object.entries(scalarPathConfig).forEach(([key, config]) => {
-    collectPaths(config, register, path.concat(key));
+    collectPaths(value, register, path.concat(key));
   });
 }

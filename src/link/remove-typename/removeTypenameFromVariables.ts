@@ -50,15 +50,15 @@ export function removeTypenameFromVariables(
         keep: (variablePath) => {
           const typename = variableDefinitions[variablePath[0]];
 
-          // The scalar path configurations do not include array indexes, so we
+          // The path configurations do not include array indexes, so we
           // omit them when checking the `trie` for a configured path
           const withoutArrayIndexes = variablePath.filter(
             (segment) => typeof segment === 'string'
           );
 
-          // Our scalar path configurations configure paths using the typename
-          // so we need to replace the first segment in the variable path
-          // with the typename instead of the top-level variable name.
+          // Our path configurations use the typename as the root so we need to
+          // replace the first segment in the variable path with the typename
+          // instead of the top-level variable name.
           return trie.peekArray([typename, ...withoutArrayIndexes.slice(1)]);
         },
       }),

@@ -150,7 +150,7 @@
     "terser": "5.17.1",
     "ts-jest": "29.1.0",
     "ts-node": "10.9.1",
-    "typedoc": "0.22.18",
+    "typedoc": "0.24.7",
     "typescript": "5.0.4",
     "wait-for-observables": "1.0.3",
     "web-streams-polyfill": "3.2.1",

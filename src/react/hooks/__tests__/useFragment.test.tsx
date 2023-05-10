@@ -3,7 +3,7 @@ import { render, waitFor, screen, renderHook } from "@testing-library/react";
 import userEvent from '@testing-library/user-event';
 import { act } from "react-dom/test-utils";
 
-import { useFragment_experimental as useFragment } from "../useFragment";
+import { UseFragmentOptions, useFragment_experimental as useFragment } from "../useFragment";
 import { MockedProvider } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {
@@ -14,10 +14,13 @@ import {
   ApolloClient,
   Observable,
   ApolloLink,
+  StoreObject,
+  DocumentNode,
 } from "../../../core";
 import { useQuery } from "../useQuery";
 import { concatPagination } from "../../../utilities";
 import assert from "assert";
+import { expectTypeOf } from 'expect-type'
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -990,7 +993,6 @@ describe("useFragment", () => {
         fragment: ListAndItemFragments,
         fragmentName: "ListFragment",
         from: { __typename: "Query" },
-        returnPartialData: true,
       }),
       { wrapper },
     );
@@ -1327,56 +1329,8 @@ describe("useFragment", () => {
       expect(result.current.data).toEqual({ __typename: "Item", id: 5 });
       expect(result.current.complete).toBe(false);
     });
-
-    it("throws an exception with `returnPartialData: false` if only partial data is available", () => {
-      // this is actually not intended behavior, but it is the current behavior
-      // let's document it in a test until we remove `returnPartialData` in 3.8
-
-      let error: Error;
-
-      renderHook(
-        () => {
-          // we can't just `expect(() => renderHook(...)).toThrow(...)` because it will render a second time, resulting in an uncaught exception
-          try {
-            useFragment({
-              fragment: ItemFragment,
-              from: { __typename: "Item", id: 5 },
-              returnPartialData: false,
-            });
-          } catch (e) {
-            error = e;
-          }
-        },
-        { wrapper }
-      );
-
-      expect(error!.toString()).toMatch(`Error: Can't find field 'text' on Item:5 object`);
-    });
-
-    it("throws an exception with `returnPartialData: false` if no data is available", () => {
-      // this is actually not intended behavior, but it is the current behavior
-      // let's document it in a test until we remove `returnPartialData` in 3.8
-      let error: Error;
-
-      renderHook(
-        () => {
-          // we can't just `expect(() => renderHook(...)).toThrow(...)` because it will render a second time, resulting in an uncaught exception
-          try {
-            useFragment({
-              fragment: ItemFragment,
-              from: { __typename: "Item", id: 6 },
-              returnPartialData: false,
-            });
-          } catch (e) {
-            error = e;
-          }
-        },
-        { wrapper }
-      );
-
-      expect(error!.toString()).toMatch(`Error: Dangling reference to missing Item:6 object`);
-    });
   });
+
   describe("return value `complete` property", () => {
     let cache: InMemoryCache, wrapper: React.FunctionComponent;
     const ItemFragment = gql`
@@ -1474,5 +1428,17 @@ describe.skip("Type Tests", () => {
         nonExistingVariable: "string"
       }
     });
+  })
+
+  test("UseFragmentOptions interface shape", <TData, TVars>()=>{
+    expectTypeOf<UseFragmentOptions<TData, TVars>>()
+      .toEqualTypeOf<{
+        from: string | StoreObject | Reference;
+        fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+        fragmentName?: string;
+        optimistic?: boolean;
+        variables?: TVars;
+        canonizeResults?: boolean;
+      }>();
   })
 })

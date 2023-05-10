@@ -239,7 +239,7 @@ function renderVariablesIntegrationTest({
 
   function Child({
     refetch,
-    variables,
+    variables: _variables,
     subscription,
   }: {
     variables: QueryVariables;
@@ -250,7 +250,10 @@ function renderVariablesIntegrationTest({
   }) {
     const { data, error, networkStatus } =
       useReadQuery<QueryData>(subscription);
+    const [variables, setVariables] = React.useState(_variables);
+
     renders.frames.push({ data, networkStatus, error });
+
     return (
       <div>
         {error ? <div>{error.message}</div> : null}
@@ -260,6 +263,13 @@ function renderVariablesIntegrationTest({
           }}
         >
           Refetch
+        </button>
+        <button
+          onClick={() => {
+            setVariables({ id: '2' });
+          }}
+        >
+          Set variables to id: 2
         </button>
         {data?.character.id} - {data?.character.name}
       </div>
@@ -937,7 +947,7 @@ describe('useBackgroundQuery', () => {
     });
   });
 
-  describe('integration tests', () => {
+  describe('integration tests with useReadQuery', () => {
     it('suspends and renders hello', async () => {
       const { renders } = renderIntegrationTest();
       // ensure the hook suspends immediately
@@ -1160,8 +1170,88 @@ describe('useBackgroundQuery', () => {
         await screen.findByText('1 - Spider-Man (updated)')
       ).toBeInTheDocument();
     });
-    // it('re-suspends when calling `refetch` with new variables', async () => {
-    // });
+    it('re-suspends when calling `refetch` with new variables', async () => {
+      interface QueryData {
+        character: {
+          id: string;
+          name: string;
+        };
+      }
+
+      interface QueryVariables {
+        id: string;
+      }
+      const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            data: { character: { id: '1', name: 'Captain Marvel' } },
+          },
+        },
+        {
+          request: { query, variables: { id: '2' } },
+          result: {
+            data: { character: { id: '2', name: 'Captain America' } },
+          },
+        },
+      ];
+
+      const { renders } = renderVariablesIntegrationTest({
+        variables: { id: '1' },
+        mocks,
+      });
+
+      expect(renders.suspenseCount).toBe(1);
+      expect(screen.getByText('loading')).toBeInTheDocument();
+
+      expect(await screen.findByText('1 - Captain Marvel')).toBeInTheDocument();
+
+      const newVariablesRefetchButton = screen.getByText(
+        'Set variables to id: 2'
+      );
+      const refetchButton = screen.getByText('Refetch');
+      const user = userEvent.setup();
+      await act(() => user.click(newVariablesRefetchButton));
+      await act(() => user.click(refetchButton));
+
+      expect(
+        await screen.findByText('2 - Captain America')
+      ).toBeInTheDocument();
+
+      // parent component re-suspends
+      expect(renders.suspenseCount).toBe(2);
+      // TODO: investigate why this is 1 more render than equivalent
+      // useSuspenseQuery test
+      expect(renders.count).toBe(5);
+
+      // extra render puts an additional frame into the array
+      expect(renders.frames).toMatchObject([
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[1].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+      ]);
+    });
     it('re-suspends multiple times when calling `refetch` multiple times', async () => {
       const { renders } = renderVariablesIntegrationTest({
         variables: { id: '1' },
@@ -1360,7 +1450,7 @@ describe('useBackgroundQuery', () => {
         await screen.findByText('Something went wrong')
       ).toBeInTheDocument();
     });
-    it.only('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
+    it('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
       interface QueryData {
         character: {
           id: string;
@@ -1431,7 +1521,150 @@ describe('useBackgroundQuery', () => {
         },
       ]);
     });
-    // it.skip('`refetch` works with startTransition to allow React to show stale UI until finished suspending', async () => {});
+    it('`refetch` works with startTransition to allow React to show stale UI until finished suspending', async () => {
+      type Variables = {
+        id: string;
+      };
+
+      interface Data {
+        todo: {
+          id: string;
+          name: string;
+          completed: boolean;
+        };
+      }
+      const user = userEvent.setup();
+
+      const query: TypedDocumentNode<Data, Variables> = gql`
+        query TodoItemQuery($id: ID!) {
+          todo(id: $id) {
+            id
+            name
+            completed
+          }
+        }
+      `;
+
+      const mocks: MockedResponse<Data, Variables>[] = [
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            data: { todo: { id: '1', name: 'Clean room', completed: false } },
+          },
+          delay: 10,
+        },
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            data: { todo: { id: '1', name: 'Clean room', completed: true } },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache: new InMemoryCache(),
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      function App() {
+        return (
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Parent />
+            </Suspense>
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [id, setId] = React.useState('1');
+        const { subscription, refetch } = useBackgroundQuery(query, {
+          variables: { id },
+        });
+        return (
+          <Todo
+            refetch={refetch}
+            subscription={subscription}
+            onChange={setId}
+          />
+        );
+      }
+
+      function Todo({
+        subscription,
+        onChange,
+        refetch,
+      }: {
+        refetch: (
+          variables?: Partial<OperationVariables> | undefined
+        ) => Promise<ApolloQueryResult<Data>>;
+        subscription: QuerySubscription<Data>;
+        onChange: (id: string) => void;
+      }) {
+        const { data } = useReadQuery<Data>(subscription);
+        const [isPending, startTransition] = React.useTransition();
+        const { todo } = data;
+
+        return (
+          <>
+            <button
+              onClick={() => {
+                startTransition(() => {
+                  refetch();
+                });
+              }}
+            >
+              Refresh
+            </button>
+            <div data-testid="todo" aria-busy={isPending}>
+              {todo.name}
+              {todo.completed && ' (completed)'}
+            </div>
+          </>
+        );
+      }
+
+      render(<App />);
+
+      expect(screen.getByText('Loading')).toBeInTheDocument();
+
+      expect(await screen.findByTestId('todo')).toBeInTheDocument();
+
+      const todo = screen.getByTestId('todo');
+      const button = screen.getByText('Refresh');
+
+      expect(todo).toHaveTextContent('Clean room');
+
+      await act(() => user.click(button));
+
+      // startTransition will avoid rendering the suspense fallback for already
+      // revealed content if the state update inside the transition causes the
+      // component to suspend.
+      //
+      // Here we should not see the suspense fallback while the component suspends
+      // until the todo is finished loading. Seeing the suspense fallback is an
+      // indication that we are suspending the component too late in the process.
+      expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+
+      // We can ensure this works with isPending from useTransition in the process
+      expect(todo).toHaveAttribute('aria-busy', 'true');
+
+      // Ensure we are showing the stale UI until the new todo has loaded
+      expect(todo).toHaveTextContent('Clean room');
+
+      // Eventually we should see the updated todo content once its done
+      // suspending.
+      await waitFor(() => {
+        expect(todo).toHaveTextContent('Clean room (completed)');
+      });
+    });
   });
 
   // describe.skip('fetchMore', () => {

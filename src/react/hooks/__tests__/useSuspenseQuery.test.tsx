@@ -163,8 +163,8 @@ function useSimpleQueryCase() {
 function usePaginatedCase() {
   interface QueryData {
     letters: {
-      name: string;
-      position: string;
+      letter: string;
+      position: number;
     }[];
   }
 

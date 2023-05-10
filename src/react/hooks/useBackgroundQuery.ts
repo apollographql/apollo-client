@@ -36,12 +36,11 @@ export function useBackgroundQuery_experimental<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  // TODO: does `SuspenseQueryHookOptions` need to be narrowed here?
+  // TODO: narrow `SuspenseQueryHookOptions`
   options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseBackgroundQueryResult<TData> {
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
-  // TODO: why do we no longer need to pass `client` to `useWatchQueryOptions`?
   const watchQueryOptions = useWatchQueryOptions({ query, options });
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;

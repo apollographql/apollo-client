@@ -22,6 +22,7 @@ import {
   TypedDocumentNode,
   ApolloLink,
   Observable,
+  FetchMoreQueryOptions,
   OperationVariables,
   ApolloQueryResult,
 } from '../../../core';
@@ -38,6 +39,7 @@ import {
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { InMemoryCache } from '../../../cache';
+import { FetchMoreFunction } from '../../../react';
 import { QuerySubscription } from '../../cache/QuerySubscription';
 
 function renderIntegrationTest({
@@ -149,7 +151,17 @@ function renderVariablesIntegrationTest({
   mocks,
   errorPolicy,
 }: {
-  mocks?: { request: { query: DocumentNode; variables: { id: string } } }[];
+  mocks?: {
+    request: { query: DocumentNode; variables: { id: string } };
+    result: {
+      data?: {
+        character: {
+          id: string;
+          name: string | null;
+        };
+      };
+    };
+  }[];
   variables: { id: string };
   errorPolicy?: ErrorPolicy;
 }) {
@@ -323,6 +335,185 @@ function renderVariablesIntegrationTest({
     <App errorPolicy={errorPolicy} variables={variables} />
   );
   return { ...rest, query, App, client, renders };
+}
+
+function renderPaginatedIntegrationTest({
+  updateQuery,
+  mocks,
+}: {
+  updateQuery?: boolean;
+  mocks?: {
+    request: {
+      query: DocumentNode;
+      variables: { offset: number; limit: number };
+    };
+    result: {
+      data: {
+        letters: {
+          letter: string;
+          position: number;
+        }[];
+      };
+    };
+  }[];
+} = {}) {
+  interface QueryData {
+    letters: {
+      letter: string;
+      position: number;
+    }[];
+  }
+
+  interface Variables {
+    limit?: number;
+    offset?: number;
+  }
+
+  const query: TypedDocumentNode<QueryData, Variables> = gql`
+    query letters($limit: Int, $offset: Int) {
+      letters(limit: $limit) {
+        letter
+        position
+      }
+    }
+  `;
+
+  const data = 'ABCDEFG'
+    .split('')
+    .map((letter, index) => ({ letter, position: index + 1 }));
+
+  const _mocks = [
+    {
+      request: { query, variables: { offset: 0, limit: 2 } },
+      result: {
+        data: {
+          letters: [
+            { letter: 'A', position: 1 },
+            { letter: 'B', position: 2 },
+          ],
+        },
+      },
+    },
+    {
+      request: { query, variables: { offset: 0, limit: 2 } },
+      result: {
+        data: {
+          letters: [
+            { letter: 'C', position: 3 },
+            { letter: 'D', position: 4 },
+          ],
+        },
+      },
+    },
+  ];
+
+  const suspenseCache = new SuspenseCache();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks || _mocks),
+  });
+  interface Renders {
+    errors: Error[];
+    errorCount: number;
+    suspenseCount: number;
+    count: number;
+    frames: {
+      data: QueryData;
+      networkStatus: NetworkStatus;
+      error: ApolloError | undefined;
+    }[];
+  }
+  const renders: Renders = {
+    errors: [],
+    errorCount: 0,
+    suspenseCount: 0,
+    count: 0,
+    frames: [],
+  };
+
+  const errorBoundaryProps: ErrorBoundaryProps = {
+    fallback: <div>Error</div>,
+    onError: (error) => {
+      renders.errorCount++;
+      renders.errors.push(error);
+    },
+  };
+
+  function SuspenseFallback() {
+    renders.suspenseCount++;
+    return <div>loading</div>;
+  }
+
+  function Child({
+    subscription,
+    fetchMore,
+  }: {
+    fetchMore: FetchMoreFunction<QueryData, OperationVariables>;
+    subscription: QuerySubscription<QueryData>;
+  }) {
+    const { data, error, networkStatus } =
+      useReadQuery<QueryData>(subscription);
+
+    renders.frames.push({ data, networkStatus, error });
+
+    return (
+      <div>
+        {error ? <div>{error.message}</div> : null}
+        <button
+          onClick={() => {
+            const fetchMoreOpts: FetchMoreQueryOptions<Variables, QueryData> & {
+              updateQuery?: (
+                previousQueryResult: QueryData,
+                options: {
+                  fetchMoreResult: QueryData;
+                  variables: Variables;
+                }
+              ) => QueryData;
+            } = { variables: { offset: 0, limit: 2 } };
+
+            if (updateQuery) {
+              fetchMoreOpts.updateQuery = (prev, { fetchMoreResult }) => ({
+                letters: prev.letters.concat(fetchMoreResult.letters),
+              });
+            }
+
+            fetchMore(fetchMoreOpts);
+          }}
+        >
+          Fetch more
+        </button>
+        <ul>
+          {data.letters.map(({ letter, position }) => (
+            <li key={position}>Letter: {letter}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  function ParentWithVariables() {
+    const { subscription, fetchMore } = useBackgroundQuery(query, {
+      variables: { limit: 2, offset: 0 },
+    });
+    // count renders in the parent component
+    renders.count++;
+    return <Child fetchMore={fetchMore} subscription={subscription} />;
+  }
+
+  function App() {
+    return (
+      <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ErrorBoundary {...errorBoundaryProps}>
+          <Suspense fallback={<SuspenseFallback />}>
+            <ParentWithVariables />
+          </Suspense>
+        </ErrorBoundary>
+      </ApolloProvider>
+    );
+  }
+
+  const { ...rest } = render(<App />);
+  return { ...rest, data, query, App, client, renders };
 }
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
@@ -1667,10 +1858,148 @@ describe('useBackgroundQuery', () => {
     });
   });
 
-  // describe.skip('fetchMore', () => {
-  //   it('re-suspends when calling `fetchMore` with different variables', async () => {});
-  //   it('properly uses `updateQuery` when calling `fetchMore`', async () => {});
-  //   it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {});
-  //   it('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', async () => {});
-  // });
+  describe('fetchMore', () => {
+    it('re-suspends when calling `fetchMore` with different variables', async () => {
+      const { renders, data } = renderPaginatedIntegrationTest();
+
+      expect(renders.suspenseCount).toBe(1);
+      expect(screen.getByText('loading')).toBeInTheDocument();
+
+      const items = await screen.findAllByText(/Letter: /);
+      expect(items).toHaveLength(2);
+
+      expect(renders.frames).toMatchObject([
+        {
+          data: {
+            letters: data.slice(0, 2),
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      ]);
+
+      const button = screen.getByText('Fetch more');
+      const user = userEvent.setup();
+      await act(() => user.click(button));
+
+      // parent component re-suspends
+      expect(renders.suspenseCount).toBe(2);
+      expect(renders.count).toBe(4);
+
+      expect(renders.frames).toMatchObject([
+        {
+          data: { letters: data.slice(0, 2) },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+        {
+          data: { letters: data.slice(2, 4) },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+        {
+          data: { letters: data.slice(2, 4) },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      ]);
+    });
+    it('properly uses `updateQuery` when calling `fetchMore`', async () => {
+      interface QueryData {
+        letters: {
+          letter: string;
+          position: string;
+        }[];
+      }
+
+      interface Variables {
+        limit?: number;
+        offset?: number;
+      }
+
+      const query: TypedDocumentNode<QueryData, Variables> = gql`
+        query letters($limit: Int, $offset: Int) {
+          letters(limit: $limit) {
+            letter
+            position
+          }
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query, variables: { offset: 0, limit: 2 } },
+          result: {
+            data: {
+              letters: [
+                { letter: 'A', position: 1 },
+                { letter: 'B', position: 2 },
+              ],
+            },
+          },
+        },
+        {
+          request: { query, variables: { offset: 0, limit: 2 } },
+          result: {
+            data: {
+              letters: [
+                { letter: 'A', position: 1 },
+                { letter: 'B', position: 2 },
+                { letter: 'C', position: 3 },
+                { letter: 'D', position: 4 },
+              ],
+            },
+          },
+        },
+      ];
+      const { renders, data } = renderPaginatedIntegrationTest({
+        updateQuery: true,
+        mocks,
+      });
+
+      expect(renders.suspenseCount).toBe(1);
+      expect(screen.getByText('loading')).toBeInTheDocument();
+
+      const items = await screen.findAllByText(/Letter: /);
+      expect(items).toHaveLength(2);
+
+      expect(renders.frames).toMatchObject([
+        {
+          data: {
+            letters: data.slice(0, 2),
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      ]);
+
+      const button = screen.getByText('Fetch more');
+      const user = userEvent.setup();
+      await act(() => user.click(button));
+
+      // parent component re-suspends
+      expect(renders.suspenseCount).toBe(2);
+      expect(renders.count).toBe(4);
+
+      expect(renders.frames).toMatchObject([
+        {
+          data: { letters: data.slice(0, 2) },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+        {
+          data: { letters: data.slice(0, 4) },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+        {
+          data: { letters: data.slice(0, 4) },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      ]);
+    });
+    it.skip('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {});
+    it.skip('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', async () => {});
+  });
 });

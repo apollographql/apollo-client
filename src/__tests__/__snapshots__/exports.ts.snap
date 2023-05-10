@@ -206,6 +206,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/remove-typename 1`] = `
 Array [
+  "KEEP",
   "removeTypenameFromVariables",
 ]
 `;

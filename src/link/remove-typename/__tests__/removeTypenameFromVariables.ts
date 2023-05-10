@@ -32,7 +32,7 @@ test('strips all __typename keys by default', async () => {
 
   const link = removeTypenameFromVariables();
 
-  const operation = await execute(link, {
+  const { variables } = await execute(link, {
     query,
     variables: {
       foo: {
@@ -46,7 +46,7 @@ test('strips all __typename keys by default', async () => {
     },
   });
 
-  expect(operation.variables).toStrictEqual({
+  expect(variables).toStrictEqual({
     foo: {
       foo: true,
       bar: 'Bar',

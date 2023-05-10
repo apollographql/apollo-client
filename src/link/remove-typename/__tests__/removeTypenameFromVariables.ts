@@ -91,7 +91,7 @@ test('does nothing when no variables are passed even if variables are declared i
   expect(resultOperation).toBe(operation);
 });
 
-test('keeps __typename in variables with types defined by `excludeScalars`', async () => {
+test('keeps __typename in variables with scalars defined by `excludeScalars`', async () => {
   const query = gql`
     query Test($foo: JSON, $bar: BarInput) {
       someField(foo: $foo, bar: $bar)
@@ -184,7 +184,7 @@ test('keeps __typename in variables when defining multiple scalars excluded by `
   });
 });
 
-test('handles mixed scalar forms configured in `excludeScalars`', async () => {
+test('handles mixed configured scalar forms', async () => {
   const query = gql`
     query Test($foo: JSON, $bar: Config, $baz: BazInput) {
       someField(foo: $foo, bar: $bar, baz: $baz)
@@ -211,7 +211,7 @@ test('handles mixed scalar forms configured in `excludeScalars`', async () => {
   });
 });
 
-test('keeps __typename in variables defined by `excludeScalars` declared as non null and list types', async () => {
+test('handles variable declarations declared as non null and list types', async () => {
   const query = gql`
     query Test($foo: JSON!, $bar: [JSON], $baz: [JSON!]!, $qux: QuxInput!) {
       someField(foo: $foo, bar: $bar, baz: $baz)

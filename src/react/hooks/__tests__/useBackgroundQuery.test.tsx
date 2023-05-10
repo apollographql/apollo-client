@@ -15,6 +15,7 @@ import {
   ApolloError,
   DocumentNode,
   ApolloClient,
+  ErrorPolicy,
   NormalizedCacheObject,
   NetworkStatus,
   ApolloCache,
@@ -146,9 +147,11 @@ function renderIntegrationTest({
 function renderVariablesIntegrationTest({
   variables,
   mocks,
+  errorPolicy,
 }: {
-  mocks?: { request: { query: DocumentNode; variables: { id: string;  } } }[];
+  mocks?: { request: { query: DocumentNode; variables: { id: string } } }[];
   variables: { id: string };
+  errorPolicy?: ErrorPolicy;
 }) {
   const CHARACTERS = ['Spider-Man', 'Black Widow', 'Iron Man', 'Hulk'];
 
@@ -177,24 +180,26 @@ function renderVariablesIntegrationTest({
     result: { data: { character: { id: String(index + 1), name } } },
   }));
   // duplicate mocks with (updated) in the name for refetches
-  _mocks = [..._mocks, ..._mocks, ..._mocks].map(({ request, result }, index) => {
-    return {
-      request: request,
-      result: {
-        data: {
-          character: {
-            ...result.data.character,
-            name:
-              index > 3
-                ? index > 7
-                  ? `${result.data.character.name} (updated again)`
-                  : `${result.data.character.name} (updated)`
-                : result.data.character.name,
+  _mocks = [..._mocks, ..._mocks, ..._mocks].map(
+    ({ request, result }, index) => {
+      return {
+        request: request,
+        result: {
+          data: {
+            character: {
+              ...result.data.character,
+              name:
+                index > 3
+                  ? index > 7
+                    ? `${result.data.character.name} (updated again)`
+                    : `${result.data.character.name} (updated)`
+                  : result.data.character.name,
+            },
           },
         },
-      },
-    };
-  });
+      };
+    }
+  );
   const suspenseCache = new SuspenseCache();
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -205,13 +210,20 @@ function renderVariablesIntegrationTest({
     errorCount: number;
     suspenseCount: number;
     count: number;
+    frames: {
+      data: QueryData;
+      networkStatus: NetworkStatus;
+      error: ApolloError | undefined;
+    }[];
   }
   const renders: Renders = {
     errors: [],
     errorCount: 0,
     suspenseCount: 0,
     count: 0,
+    frames: [],
   };
+
   const errorBoundaryProps: ErrorBoundaryProps = {
     fallback: <div>Error</div>,
     onError: (error) => {
@@ -236,9 +248,12 @@ function renderVariablesIntegrationTest({
     ) => Promise<ApolloQueryResult<QueryData>>;
     subscription: QuerySubscription<QueryData>;
   }) {
-    const { data } = useReadQuery<QueryData>(subscription);
+    const { data, error, networkStatus } =
+      useReadQuery<QueryData>(subscription);
+    renders.frames.push({ data, networkStatus, error });
     return (
       <div>
+        {error ? <div>{error.message}</div> : null}
         <button
           onClick={() => {
             refetch(variables);
@@ -251,8 +266,17 @@ function renderVariablesIntegrationTest({
     );
   }
 
-  function ParentWithVariables({ variables }: { variables: QueryVariables }) {
-    const { subscription, refetch } = useBackgroundQuery(query, { variables });
+  function ParentWithVariables({
+    variables,
+    errorPolicy = 'none',
+  }: {
+    variables: QueryVariables;
+    errorPolicy?: ErrorPolicy;
+  }) {
+    const { subscription, refetch } = useBackgroundQuery(query, {
+      variables,
+      errorPolicy,
+    });
     // count renders in the parent component
     renders.count++;
     return (
@@ -264,19 +288,30 @@ function renderVariablesIntegrationTest({
     );
   }
 
-  function App({ variables }: { variables: QueryVariables }) {
+  function App({
+    variables,
+    errorPolicy,
+  }: {
+    variables: QueryVariables;
+    errorPolicy?: ErrorPolicy;
+  }) {
     return (
       <ApolloProvider client={client} suspenseCache={suspenseCache}>
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
-            <ParentWithVariables variables={variables} />
+            <ParentWithVariables
+              variables={variables}
+              errorPolicy={errorPolicy}
+            />
           </Suspense>
         </ErrorBoundary>
       </ApolloProvider>
     );
   }
 
-  const { ...rest } = render(<App variables={variables} />);
+  const { ...rest } = render(
+    <App errorPolicy={errorPolicy} variables={variables} />
+  );
   return { ...rest, query, App, client, renders };
 }
 
@@ -1176,13 +1211,13 @@ describe('useBackgroundQuery', () => {
         id: string;
       }
       const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
       const mocks = [
         {
           request: { query, variables: { id: '1' } },
@@ -1223,9 +1258,179 @@ describe('useBackgroundQuery', () => {
 
       consoleSpy.mockRestore();
     });
-    it.skip('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {});
-    // it.skip('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {});
-    // it.skip('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {});
+    it('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
+      interface QueryData {
+        character: {
+          id: string;
+          name: string;
+        };
+      }
+
+      interface QueryVariables {
+        id: string;
+      }
+      const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+      const mocks = [
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            data: { character: { id: '1', name: 'Captain Marvel' } },
+          },
+        },
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            errors: [new GraphQLError('Something went wrong')],
+          },
+        },
+      ];
+
+      const { renders } = renderVariablesIntegrationTest({
+        variables: { id: '1' },
+        errorPolicy: 'ignore',
+        mocks,
+      });
+
+      expect(await screen.findByText('1 - Captain Marvel')).toBeInTheDocument();
+
+      const button = screen.getByText('Refetch');
+      const user = userEvent.setup();
+      await act(() => user.click(button));
+
+      expect(renders.errorCount).toBe(0);
+      expect(renders.errors).toEqual([]);
+    });
+    it('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
+      interface QueryData {
+        character: {
+          id: string;
+          name: string;
+        };
+      }
+
+      interface QueryVariables {
+        id: string;
+      }
+      const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+      const mocks = [
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            data: { character: { id: '1', name: 'Captain Marvel' } },
+          },
+        },
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            errors: [new GraphQLError('Something went wrong')],
+          },
+        },
+      ];
+
+      const { renders } = renderVariablesIntegrationTest({
+        variables: { id: '1' },
+        errorPolicy: 'all',
+        mocks,
+      });
+
+      expect(await screen.findByText('1 - Captain Marvel')).toBeInTheDocument();
+
+      const button = screen.getByText('Refetch');
+      const user = userEvent.setup();
+      await act(() => user.click(button));
+
+      expect(renders.errorCount).toBe(0);
+      expect(renders.errors).toEqual([]);
+
+      expect(
+        await screen.findByText('Something went wrong')
+      ).toBeInTheDocument();
+    });
+    it.only('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
+      interface QueryData {
+        character: {
+          id: string;
+          name: string;
+        };
+      }
+
+      interface QueryVariables {
+        id: string;
+      }
+      const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+      const mocks = [
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            data: { character: { id: '1', name: 'Captain Marvel' } },
+          },
+        },
+        {
+          request: { query, variables: { id: '1' } },
+          result: {
+            data: { character: { id: '1', name: null } },
+            errors: [new GraphQLError('Something went wrong')],
+          },
+        },
+      ];
+
+      const { renders } = renderVariablesIntegrationTest({
+        variables: { id: '1' },
+        errorPolicy: 'all',
+        mocks,
+      });
+
+      expect(await screen.findByText('1 - Captain Marvel')).toBeInTheDocument();
+
+      const button = screen.getByText('Refetch');
+      const user = userEvent.setup();
+      await act(() => user.click(button));
+
+      expect(renders.errorCount).toBe(0);
+      expect(renders.errors).toEqual([]);
+
+      expect(
+        await screen.findByText('Something went wrong')
+      ).toBeInTheDocument();
+
+      const expectedError = new ApolloError({
+        graphQLErrors: [new GraphQLError('Something went wrong')],
+      });
+
+      expect(renders.frames).toMatchObject([
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          data: mocks[1].result.data,
+          networkStatus: NetworkStatus.error,
+          error: expectedError,
+        },
+      ]);
+    });
     // it.skip('`refetch` works with startTransition to allow React to show stale UI until finished suspending', async () => {});
   });
 

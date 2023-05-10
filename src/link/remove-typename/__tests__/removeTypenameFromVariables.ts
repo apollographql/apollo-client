@@ -469,3 +469,62 @@ test('handles multiple defined scalar paths for a single scalar', async () => {
     },
   });
 });
+
+test('handles multiple defined scalars with mixed forms', async () => {
+  const query = gql`
+    query Test($foo: JSON, $bar: Raw, $baz: BazInput) {
+      someField(foo: $foo, baz: $baz)
+    }
+  `;
+
+  const link = removeTypenameFromVariables({
+    excludeScalars: [
+      'JSON',
+      { scalar: 'Raw' },
+      {
+        scalar: 'Config',
+        paths: {
+          BazInput: ['config'],
+        },
+      },
+    ],
+  });
+
+  const { variables } = await execute(link, {
+    query,
+    variables: {
+      foo: {
+        __typename: 'Foo',
+        aa: true,
+      },
+      bar: {
+        __typename: 'Bar',
+        bb: true,
+      },
+      baz: {
+        __typename: 'Baz',
+        config: {
+          __typename: 'Config',
+          cc: true,
+        },
+      },
+    },
+  });
+
+  expect(variables).toStrictEqual({
+    foo: {
+      __typename: 'Foo',
+      aa: true,
+    },
+    bar: {
+      __typename: 'Bar',
+      bb: true,
+    },
+    baz: {
+      config: {
+        __typename: 'Config',
+        cc: true,
+      },
+    },
+  });
+});

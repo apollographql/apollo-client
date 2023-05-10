@@ -204,6 +204,12 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/link/remove-typename 1`] = `
+Array [
+  "removeTypenameFromVariables",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link/retry 1`] = `
 Array [
   "RetryLink",

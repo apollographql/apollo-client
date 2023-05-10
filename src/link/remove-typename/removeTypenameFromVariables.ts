@@ -38,9 +38,7 @@ export function removeTypenameFromVariables(
       trie.lookupArray([scalar]);
 
       if (typeof scalarConfig === 'object' && scalarConfig.paths) {
-        Object.entries(scalarConfig.paths).forEach(([typename, config]) => {
-          collectPaths(typename, config, (path) => trie.lookupArray(path));
-        });
+        collectPaths(scalarConfig.paths, (path) => trie.lookupArray(path));
       }
     });
   }
@@ -104,10 +102,9 @@ function unwrapType(node: TypeNode): string {
 }
 
 function collectPaths(
-  typename: string,
   scalarPathConfig: ScalarPathConfig[string],
   register: (path: string[]) => void,
-  path: string[] = [typename]
+  path: string[] = []
 ) {
   if (Array.isArray(scalarPathConfig)) {
     return scalarPathConfig.forEach((item) => {
@@ -115,11 +112,11 @@ function collectPaths(
         return register([...path, item]);
       }
 
-      collectPaths(typename, item, register, path);
+      collectPaths(item, register, path);
     });
   }
 
   Object.entries(scalarPathConfig).forEach(([key, config]) => {
-    collectPaths(typename, config, register, path.concat(key));
+    collectPaths(config, register, path.concat(key));
   });
 }

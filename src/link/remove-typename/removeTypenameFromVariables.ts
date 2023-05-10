@@ -2,7 +2,7 @@ import { Trie } from '@wry/trie';
 import { wrap } from 'optimism';
 import { DocumentNode, Kind, TypeNode, visit } from 'graphql';
 import { ApolloLink } from '../core';
-import { canUseWeakMap, isPlainObject, stripTypename } from '../../utilities';
+import { canUseWeakMap, stripTypename } from '../../utilities';
 
 interface ScalarPathConfig {
   [key: string]: ScalarPathConfig | (string | ScalarPathConfig)[];
@@ -27,29 +27,6 @@ export function removeTypenameFromVariables(
     () => stripTypename.BREAK
   );
 
-  function collectPaths(
-    typename: string,
-    pathConfig: ScalarPathConfig[string],
-    path: string[] = [],
-    paths: string[][] = []
-  ) {
-    if (Array.isArray(pathConfig)) {
-      pathConfig.forEach((item) => {
-        if (typeof item === 'string') {
-          return paths.push([typename, ...path, item]);
-        } else if (isPlainObject(item)) {
-          collectPaths(typename, item, path, paths);
-        }
-      });
-    } else if (isPlainObject(pathConfig)) {
-      Object.keys(pathConfig).forEach((key) => {
-        collectPaths(typename, pathConfig[key], path.concat(key), paths);
-      });
-    }
-
-    return paths;
-  }
-
   if (excludeScalars) {
     excludeScalars.forEach((scalarConfig) => {
       const scalar =
@@ -59,9 +36,7 @@ export function removeTypenameFromVariables(
 
       if (typeof scalarConfig === 'object' && scalarConfig.paths) {
         Object.entries(scalarConfig.paths).forEach(([typename, config]) => {
-          collectPaths(typename, config).forEach((path) => {
-            trie.lookupArray(path);
-          });
+          collectPaths(typename, config, (path) => trie.lookupArray(path));
         });
       }
     });
@@ -118,4 +93,25 @@ function unwrapType(node: TypeNode): string {
     case Kind.NAMED_TYPE:
       return node.name.value;
   }
+}
+
+function collectPaths(
+  typename: string,
+  scalarPathConfig: ScalarPathConfig[string],
+  register: (path: string[]) => void,
+  path: string[] = [typename]
+) {
+  if (Array.isArray(scalarPathConfig)) {
+    return scalarPathConfig.forEach((item) => {
+      if (typeof item === 'string') {
+        return register([...path, item]);
+      }
+
+      collectPaths(typename, item, register, path);
+    });
+  }
+
+  Object.entries(scalarPathConfig).forEach(([key, config]) => {
+    collectPaths(typename, config, register, path.concat(key));
+  });
 }

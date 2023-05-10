@@ -30,6 +30,7 @@ import {
   MockedResponse,
   MockedProvider,
   MockLink,
+  MockSubscriptionLink,
   mockSingleLink,
 } from '../../../testing';
 import {
@@ -1285,6 +1286,159 @@ describe('useBackgroundQuery', () => {
       await waitFor(() => {
         expect(todo).toHaveTextContent('Take out trash (completed)');
       });
+    });
+
+    it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
+      const query = gql`
+        query {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      interface Data {
+        greeting: {
+          message: string;
+          recipient: { name: string };
+        };
+      }
+
+      const link = new MockSubscriptionLink();
+      const cache = new InMemoryCache();
+      cache.writeQuery({
+        query,
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello cached',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+      });
+      const client = new ApolloClient({ cache, link });
+      const suspenseCache = new SuspenseCache();
+      let renders = 0;
+      let suspenseCount = 0;
+
+      function App() {
+        return (
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Parent />
+            </Suspense>
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        suspenseCount++;
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const { subscription } = useBackgroundQuery(query, {
+          fetchPolicy: 'cache-and-network',
+        });
+        return <Todo subscription={subscription} />;
+      }
+
+      function Todo({
+        subscription,
+      }: {
+        subscription: QuerySubscription<Data>;
+      }) {
+        const { data, networkStatus, error } = useReadQuery<Data>(subscription);
+        const { greeting } = data;
+        renders++;
+        // console.log({ greeting: JSON.stringify(greeting, null, 2) });
+
+        return (
+          <>
+            <div>Message: {greeting.message}</div>
+            <div>Recipient: {greeting.recipient.name}</div>
+            <div>Network status: {networkStatus}</div>
+            <div>Error: {error ? error.message : 'none'}</div>
+          </>
+        );
+      }
+
+      render(<App />);
+
+      expect(screen.getByText(/Message/i)).toHaveTextContent(
+        'Message: Hello cached'
+      );
+      expect(screen.getByText(/Recipient/i)).toHaveTextContent(
+        'Recipient: Cached Alice'
+      );
+      expect(screen.getByText(/Network status/i)).toHaveTextContent(
+        'Network status: 1' // loading
+      );
+      expect(screen.getByText(/Error/i)).toHaveTextContent(
+        'none'
+      );
+
+      link.simulateResult({
+        result: {
+          data: {
+            greeting: { __typename: 'Greeting', message: 'Hello world' },
+          },
+          hasNext: true,
+        },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Message/i)).toHaveTextContent(
+          'Message: Hello world'
+        );
+      });
+      expect(screen.getByText(/Recipient/i)).toHaveTextContent(
+        'Recipient: Cached Alice'
+      );
+      expect(screen.getByText(/Network status/i)).toHaveTextContent(
+        'Network status: 7' // ready
+      );
+      expect(screen.getByText(/Error/i)).toHaveTextContent(
+        'none'
+      );
+
+      link.simulateResult({
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: 'Alice', __typename: 'Person' },
+                __typename: 'Greeting',
+              },
+              path: ['greeting'],
+            },
+          ],
+          hasNext: false,
+        },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Recipient/i)).toHaveTextContent(
+          'Recipient: Alice'
+        );
+      });
+      expect(screen.getByText(/Message/i)).toHaveTextContent(
+        'Message: Hello world'
+      );
+      expect(screen.getByText(/Network status/i)).toHaveTextContent(
+        'Network status: 7' // ready
+      );
+      expect(screen.getByText(/Error/i)).toHaveTextContent(
+        'none'
+      );
+
+      expect(renders).toBe(3);
+      expect(suspenseCount).toBe(0);
     });
   });
 

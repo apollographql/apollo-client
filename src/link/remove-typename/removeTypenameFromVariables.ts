@@ -32,6 +32,9 @@ export function removeTypenameFromVariables(
       const scalar =
         typeof scalarConfig === 'string' ? scalarConfig : scalarConfig.scalar;
 
+      // Use `lookupArray` to store the path in the `trie` ahead of time. We use
+      // `peekArray` when actually checking if a path is configured in the trie
+      // to avoid creating additional lookup paths in the trie.
       trie.lookupArray([scalar]);
 
       if (typeof scalarConfig === 'object' && scalarConfig.paths) {
@@ -58,14 +61,19 @@ export function removeTypenameFromVariables(
     return forward({
       ...operation,
       variables: stripTypename(variables, {
-        keep: (path) => {
-          const typename = variableDefinitions[path[0]];
+        keep: (variablePath) => {
+          const typename = variableDefinitions[variablePath[0]];
 
-          const keysOnly = path.filter(
+          // The scalar path configurations do not include array indexes, so we
+          // omit them when checking the `trie` for a configured path
+          const withoutArrayIndexes = variablePath.filter(
             (segment) => typeof segment === 'string'
           );
 
-          return trie.peekArray([typename, ...keysOnly.slice(1)]);
+          // Our scalar path configurations configure paths using the typename
+          // so we need to replace the first segment in the variable path
+          // with the typename instead of the top-level variable name.
+          return trie.peekArray([typename, ...withoutArrayIndexes.slice(1)]);
         },
       }),
     });

@@ -13,12 +13,12 @@ interface ScalarConfig {
   paths?: ScalarPathConfig;
 }
 
-interface RemoveTypenameOptions {
+export interface RemoveTypenameFromVariablesOptions {
   excludeScalars?: (string | ScalarConfig)[];
 }
 
 export function removeTypenameFromVariables(
-  options: RemoveTypenameOptions = Object.create(null)
+  options: RemoveTypenameFromVariablesOptions = Object.create(null)
 ) {
   const { excludeScalars } = options;
 

@@ -1,1 +1,4 @@
-export { removeTypenameFromVariables } from './removeTypenameFromVariables';
+export {
+  removeTypenameFromVariables,
+  RemoveTypenameFromVariablesOptions,
+} from './removeTypenameFromVariables';

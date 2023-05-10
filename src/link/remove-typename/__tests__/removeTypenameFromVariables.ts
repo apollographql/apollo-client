@@ -99,6 +99,39 @@ test('keeps __typename in variables with types defined by `excludeScalars`', asy
   `;
 
   const link = removeTypenameFromVariables({
+    excludeScalars: [{ scalar: 'JSON' }],
+  });
+
+  const { variables } = await execute(link, {
+    query,
+    variables: {
+      foo: {
+        __typename: 'Foo',
+        foo: true,
+        baz: { __typename: 'Baz', baz: true },
+      },
+      bar: { __typename: 'Bar', bar: true },
+    },
+  });
+
+  expect(variables).toStrictEqual({
+    foo: {
+      __typename: 'Foo',
+      foo: true,
+      baz: { __typename: 'Baz', baz: true },
+    },
+    bar: { bar: true },
+  });
+});
+
+test('keeps __typename in variables with scalars defined by `excludeScalars` using the string short form', async () => {
+  const query = gql`
+    query Test($foo: JSON, $bar: BarInput) {
+      someField(foo: $foo, bar: $bar)
+    }
+  `;
+
+  const link = removeTypenameFromVariables({
     excludeScalars: ['JSON'],
   });
 
@@ -133,6 +166,33 @@ test('keeps __typename in variables when defining multiple scalars excluded by `
 
   const link = removeTypenameFromVariables({
     excludeScalars: ['JSON', 'Config'],
+  });
+
+  const { variables } = await execute(link, {
+    query,
+    variables: {
+      foo: { __typename: 'Foo', foo: true },
+      bar: { __typename: 'Bar', bar: true },
+      baz: { __typename: 'Baz', baz: true },
+    },
+  });
+
+  expect(variables).toStrictEqual({
+    foo: { __typename: 'Foo', foo: true },
+    bar: { __typename: 'Bar', bar: true },
+    baz: { baz: true },
+  });
+});
+
+test('handles mixed scalar forms configured in `excludeScalars`', async () => {
+  const query = gql`
+    query Test($foo: JSON, $bar: Config, $baz: BazInput) {
+      someField(foo: $foo, bar: $bar, baz: $baz)
+    }
+  `;
+
+  const link = removeTypenameFromVariables({
+    excludeScalars: ['JSON', { scalar: 'Config' }],
   });
 
   const { variables } = await execute(link, {
@@ -190,7 +250,7 @@ test('keeps __typename in variables defined by `excludeScalars` declared as non 
   });
 });
 
-test('keeps __typename at scalars defind by `excludePaths`', async () => {
+test('keeps __typename at configured scalar paths', async () => {
   const query = gql`
     query Test($foo: FooInput) {
       someField(foo: $foo)
@@ -198,9 +258,12 @@ test('keeps __typename at scalars defind by `excludePaths`', async () => {
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalarPaths: {
-      FooInput: ['bar', 'baz'],
-    },
+    excludeScalars: [
+      {
+        scalar: 'JSON',
+        paths: { FooInput: ['bar', 'baz'] },
+      },
+    ],
   });
 
   const { variables } = await execute(link, {
@@ -243,7 +306,7 @@ test('keeps __typename at scalars defind by `excludePaths`', async () => {
   });
 });
 
-test('keeps __typename at scalars defined by deeply nested `excludePaths`', async () => {
+test('keeps __typename at deeply nested configured scalar paths', async () => {
   const query = gql`
     query Test($foo: FooInput) {
       someField(foo: $foo)
@@ -251,13 +314,18 @@ test('keeps __typename at scalars defined by deeply nested `excludePaths`', asyn
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalarPaths: {
-      FooInput: {
-        bar: {
-          baz: ['qux'],
+    excludeScalars: [
+      {
+        scalar: 'JSON',
+        paths: {
+          FooInput: {
+            bar: {
+              baz: ['qux'],
+            },
+          },
         },
       },
-    },
+    ],
   });
 
   const { variables } = await execute(link, {
@@ -293,7 +361,7 @@ test('keeps __typename at scalars defined by deeply nested `excludePaths`', asyn
   });
 });
 
-test('handles `excludeScalarPaths` at varying nesting levels', async () => {
+test('handles configured scalar paths at varying nesting levels', async () => {
   const query = gql`
     query Test($foo: FooInput) {
       someField(foo: $foo)
@@ -301,9 +369,14 @@ test('handles `excludeScalarPaths` at varying nesting levels', async () => {
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalarPaths: {
-      FooInput: ['bar', { baz: ['qux'] }],
-    },
+    excludeScalars: [
+      {
+        scalar: 'JSON',
+        paths: {
+          FooInput: ['bar', { baz: ['qux'] }],
+        },
+      },
+    ],
   });
 
   const { variables } = await execute(link, {
@@ -342,7 +415,7 @@ test('handles `excludeScalarPaths` at varying nesting levels', async () => {
   });
 });
 
-test('handles `excludeScalarPaths` with multiple defined paths', async () => {
+test('handles multiple defined scalar paths for a single scalar', async () => {
   const query = gql`
     query Test($foo: FooInput, $baz: BazInput) {
       someField(foo: $foo, baz: $baz)
@@ -350,10 +423,15 @@ test('handles `excludeScalarPaths` with multiple defined paths', async () => {
   `;
 
   const link = removeTypenameFromVariables({
-    excludeScalarPaths: {
-      FooInput: ['bar'],
-      BazInput: ['qux'],
-    },
+    excludeScalars: [
+      {
+        scalar: 'JSON',
+        paths: {
+          FooInput: ['bar'],
+          BazInput: ['qux'],
+        },
+      },
+    ],
   });
 
   const { variables } = await execute(link, {

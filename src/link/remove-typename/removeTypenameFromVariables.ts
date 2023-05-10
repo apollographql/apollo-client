@@ -4,19 +4,23 @@ import { DocumentNode, Kind, TypeNode, visit } from 'graphql';
 import { ApolloLink } from '../core';
 import { canUseWeakMap, isPlainObject, stripTypename } from '../../utilities';
 
-interface PathConfig {
-  [key: string]: PathConfig | (string | PathConfig)[];
+interface ScalarPathConfig {
+  [key: string]: ScalarPathConfig | (string | ScalarPathConfig)[];
+}
+
+interface ScalarConfig {
+  scalar: string;
+  paths?: ScalarPathConfig;
 }
 
 interface RemoveTypenameOptions {
-  excludeScalars?: string[];
-  excludeScalarPaths?: PathConfig;
+  excludeScalars?: (string | ScalarConfig)[];
 }
 
 export function removeTypenameFromVariables(
   options: RemoveTypenameOptions = Object.create(null)
 ) {
-  const { excludeScalars, excludeScalarPaths } = options;
+  const { excludeScalars } = options;
 
   const trie = new Trie<typeof stripTypename.BREAK>(
     canUseWeakMap,
@@ -25,7 +29,7 @@ export function removeTypenameFromVariables(
 
   function collectPaths(
     typename: string,
-    pathConfig: PathConfig[string],
+    pathConfig: ScalarPathConfig[string],
     path: string[] = [],
     paths: string[][] = []
   ) {
@@ -46,13 +50,20 @@ export function removeTypenameFromVariables(
     return paths;
   }
 
-  if (excludeScalarPaths) {
-    Object.keys(excludeScalarPaths).forEach((typename) => {
-      const paths = collectPaths(typename, excludeScalarPaths[typename]);
+  if (excludeScalars) {
+    excludeScalars.forEach((scalarConfig) => {
+      const scalar =
+        typeof scalarConfig === 'string' ? scalarConfig : scalarConfig.scalar;
 
-      paths.forEach((path) => {
-        trie.lookupArray(path);
-      });
+      trie.lookupArray([scalar]);
+
+      if (typeof scalarConfig === 'object' && scalarConfig.paths) {
+        Object.entries(scalarConfig.paths).forEach(([typename, config]) => {
+          collectPaths(typename, config).forEach((path) => {
+            trie.lookupArray(path);
+          });
+        });
+      }
     });
   }
 
@@ -63,7 +74,7 @@ export function removeTypenameFromVariables(
       return forward(operation);
     }
 
-    if (!excludeScalars && !excludeScalarPaths) {
+    if (!excludeScalars) {
       return forward({ ...operation, variables: stripTypename(variables) });
     }
 
@@ -74,10 +85,6 @@ export function removeTypenameFromVariables(
       variables: stripTypename(variables, {
         keep: (path) => {
           const typename = variableDefinitions[path[0]];
-
-          if (excludeScalars?.includes(typename)) {
-            return stripTypename.BREAK;
-          }
 
           const keysOnly = path.filter(
             (segment) => typeof segment === 'string'

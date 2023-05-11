@@ -2284,4 +2284,18 @@ describe('useBackgroundQuery', () => {
       });
     });
   });
+  describe.skip('type tests', () => {
+    it('disallows returnPartialData in BackgroundQueryHookOptions', () => {
+      const { query } = renderIntegrationTest();
+
+      // @ts-expect-error should not allow returnPartialData in options
+      useBackgroundQuery(query, { returnPartialData: true });
+    });
+    it('disallows refetchWritePolicy in BackgroundQueryHookOptions', () => {
+      const { query } = renderIntegrationTest();
+
+      // @ts-expect-error should not allow refetchWritePolicy in options
+      useBackgroundQuery(query, { refetchWritePolicy: 'overwrite' });
+    });
+  });
 });

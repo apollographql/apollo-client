@@ -36,8 +36,10 @@ export function useBackgroundQuery_experimental<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  // TODO: narrow `SuspenseQueryHookOptions`
-  options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
+  options: Omit<
+    SuspenseQueryHookOptions<TData, TVariables>,
+    'returnPartialData' | 'refetchWritePolicy'
+  > = Object.create(null)
 ): UseBackgroundQueryResult<TData> {
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
@@ -90,8 +92,7 @@ export function useReadQuery_experimental<TData>(
   queryRef: QuerySubscription<TData>
 ) {
   const [, forceUpdate] = useState(0);
-  const promise =
-  queryRef.promises[queryRef.version] || queryRef.promises.main;
+  const promise = queryRef.promises[queryRef.version] || queryRef.promises.main;
 
   useEffect(() => {
     return queryRef.listen(() => {

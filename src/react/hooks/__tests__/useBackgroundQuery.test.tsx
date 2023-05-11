@@ -26,7 +26,6 @@ import {
   OperationVariables,
   ApolloQueryResult,
 } from '../../../core';
-import { concatPagination } from '../../../utilities';
 import {
   MockedResponse,
   MockedProvider,
@@ -34,6 +33,7 @@ import {
   MockSubscriptionLink,
   mockSingleLink,
 } from '../../../testing';
+import { concatPagination, offsetLimitPagination } from '../../../utilities';
 import {
   useBackgroundQuery_experimental as useBackgroundQuery,
   useReadQuery_experimental as useReadQuery,
@@ -479,7 +479,9 @@ function renderPaginatedIntegrationTest({
         </button>
         <ul>
           {data.letters.map(({ letter, position }) => (
-            <li data-testid="letter" key={position}>{letter}</li>
+            <li data-testid="letter" key={position}>
+              {letter}
+            </li>
           ))}
         </ul>
       </div>
@@ -2012,7 +2014,7 @@ describe('useBackgroundQuery', () => {
     function getItemTexts() {
       return screen.getAllByTestId(/letter/).map(
         // eslint-disable-next-line testing-library/no-node-access
-        li => li.firstChild!.textContent
+        (li) => li.firstChild!.textContent
       );
     }
     const mocks = [
@@ -2049,7 +2051,7 @@ describe('useBackgroundQuery', () => {
 
       const items = await screen.findAllByTestId(/letter/i);
       expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(['A','B']);
+      expect(getItemTexts()).toStrictEqual(['A', 'B']);
 
       const button = screen.getByText('Fetch more');
       const user = userEvent.setup();
@@ -2059,7 +2061,7 @@ describe('useBackgroundQuery', () => {
       expect(renders.suspenseCount).toBe(2);
       expect(renders.count).toBe(4);
 
-      expect(getItemTexts()).toStrictEqual(['C','D']);
+      expect(getItemTexts()).toStrictEqual(['C', 'D']);
     });
     it('properly uses `updateQuery` when calling `fetchMore`', async () => {
       const { renders } = renderPaginatedIntegrationTest({
@@ -2073,7 +2075,7 @@ describe('useBackgroundQuery', () => {
       const items = await screen.findAllByTestId(/letter/i);
 
       expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(['A','B']);
+      expect(getItemTexts()).toStrictEqual(['A', 'B']);
 
       const button = screen.getByText('Fetch more');
       const user = userEvent.setup();
@@ -2085,7 +2087,7 @@ describe('useBackgroundQuery', () => {
 
       const moreItems = await screen.findAllByTestId(/letter/i);
       expect(moreItems).toHaveLength(4);
-      expect(getItemTexts()).toStrictEqual(['A','B','C','D']);
+      expect(getItemTexts()).toStrictEqual(['A', 'B', 'C', 'D']);
     });
     it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
       const { renders } = renderPaginatedIntegrationTest({
@@ -2098,7 +2100,7 @@ describe('useBackgroundQuery', () => {
       const items = await screen.findAllByTestId(/letter/i);
 
       expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(['A','B']);
+      expect(getItemTexts()).toStrictEqual(['A', 'B']);
 
       const button = screen.getByText('Fetch more');
       const user = userEvent.setup();
@@ -2110,8 +2112,176 @@ describe('useBackgroundQuery', () => {
 
       const moreItems = await screen.findAllByTestId(/letter/i);
       expect(moreItems).toHaveLength(4);
-      expect(getItemTexts()).toStrictEqual(['A','B','C','D']);
+      expect(getItemTexts()).toStrictEqual(['A', 'B', 'C', 'D']);
     });
-    it.skip('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', async () => {});
+    it('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', async () => {
+      type Variables = {
+        offset: number;
+      };
+
+      interface Todo {
+        __typename: 'Todo';
+        id: string;
+        name: string;
+        completed: boolean;
+      }
+      interface Data {
+        todos: Todo[];
+      }
+      const user = userEvent.setup();
+
+      const query: TypedDocumentNode<Data, Variables> = gql`
+        query TodosQuery($offset: Int!) {
+          todos(offset: $offset) {
+            id
+            name
+            completed
+          }
+        }
+      `;
+
+      const mocks: MockedResponse<Data, Variables>[] = [
+        {
+          request: { query, variables: { offset: 0 } },
+          result: {
+            data: {
+              todos: [
+                {
+                  __typename: 'Todo',
+                  id: '1',
+                  name: 'Clean room',
+                  completed: false,
+                },
+              ],
+            },
+          },
+          delay: 10,
+        },
+        {
+          request: { query, variables: { offset: 1 } },
+          result: {
+            data: {
+              todos: [
+                {
+                  __typename: 'Todo',
+                  id: '2',
+                  name: 'Take out trash',
+                  completed: true,
+                },
+              ],
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache: new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                todos: offsetLimitPagination(),
+              },
+            },
+          },
+        }),
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      function App() {
+        return (
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Parent />
+            </Suspense>
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const { queryRef, fetchMore } = useBackgroundQuery(query, {
+          variables: { offset: 0 },
+        });
+        return <Todo fetchMore={fetchMore} queryRef={queryRef} />;
+      }
+
+      function Todo({
+        queryRef,
+        fetchMore,
+      }: {
+          fetchMore: FetchMoreFunction<Data, OperationVariables>;
+        queryRef: QuerySubscription<Data>;
+      }) {
+        const { data } = useReadQuery<Data>(queryRef);
+        const [isPending, startTransition] = React.useTransition();
+        const { todos } = data;
+
+        return (
+          <>
+            <button
+              onClick={() => {
+                startTransition(() => {
+                  fetchMore({ variables: { offset: 1 } });
+                });
+              }}
+            >
+              Load more
+            </button>
+            <div data-testid="todos" aria-busy={isPending}>
+            {todos.map((todo) => (
+              <div data-testid={`todo:${todo.id}`} key={todo.id}>
+                {todo.name}
+                {todo.completed && ' (completed)'}
+              </div>
+            ))}
+          </div>
+          </>
+        );
+      }
+
+      render(<App />);
+
+      expect(screen.getByText('Loading')).toBeInTheDocument();
+
+      expect(await screen.findByTestId('todos')).toBeInTheDocument();
+
+      const todos = screen.getByTestId('todos');
+      const todo1 = screen.getByTestId('todo:1');
+      const button = screen.getByText('Load more');
+
+      expect(todo1).toBeInTheDocument();
+
+      await act(() => user.click(button));
+
+      // startTransition will avoid rendering the suspense fallback for already
+      // revealed content if the state update inside the transition causes the
+      // component to suspend.
+      //
+      // Here we should not see the suspense fallback while the component suspends
+      // until the todo is finished loading. Seeing the suspense fallback is an
+      // indication that we are suspending the component too late in the process.
+      expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+
+      // We can ensure this works with isPending from useTransition in the process
+      expect(todos).toHaveAttribute('aria-busy', 'true');
+
+      // Ensure we are showing the stale UI until the new todo has loaded
+      expect(todo1).toHaveTextContent('Clean room');
+
+      // Eventually we should see the updated todos content once its done
+      // suspending.
+      await waitFor(() => {
+        expect(screen.getByTestId('todo:2')).toHaveTextContent(
+          'Take out trash (completed)'
+        );
+        expect(todo1).toHaveTextContent('Clean room');
+      });
+    });
   });
 });

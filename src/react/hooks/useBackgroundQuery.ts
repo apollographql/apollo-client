@@ -5,7 +5,7 @@ import {
   TypedDocumentNode,
 } from '../../core';
 import { useApolloClient } from './useApolloClient';
-import { QuerySubscription } from '../cache/QuerySubscription';
+import { QueryReference } from '../cache/QueryReference';
 import {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
@@ -26,7 +26,7 @@ export interface UseBackgroundQueryResult<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
 > {
-  queryRef: QuerySubscription<TData>;
+  queryRef: QueryReference<TData>;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   refetch: ObservableQueryFields<TData, TVariables>['refetch'];
 }
@@ -89,7 +89,7 @@ export function useBackgroundQuery_experimental<
 }
 
 export function useReadQuery_experimental<TData>(
-  queryRef: QuerySubscription<TData>
+  queryRef: QueryReference<TData>
 ) {
   const [, forceUpdate] = useState(0);
   const promise = queryRef.promises[queryRef.version] || queryRef.promises.main;

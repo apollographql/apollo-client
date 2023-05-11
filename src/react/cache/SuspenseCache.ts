@@ -1,7 +1,7 @@
 import { Trie } from '@wry/trie';
 import { ObservableQuery } from '../../core';
 import { canUseWeakMap } from '../../utilities';
-import { QuerySubscription } from './QuerySubscription';
+import { QueryReference } from './QueryReference';
 
 type CacheKey = any[];
 
@@ -25,7 +25,7 @@ export class SuspenseCache {
     (cacheKey: CacheKey) => cacheKey
   );
 
-  private subscriptions = new Map<CacheKey, QuerySubscription>();
+  private subscriptions = new Map<CacheKey, QueryReference>();
   private options: SuspenseCacheOptions;
 
   constructor(options: SuspenseCacheOptions = Object.create(null)) {
@@ -41,13 +41,13 @@ export class SuspenseCache {
     if (!this.subscriptions.has(stableCacheKey)) {
       this.subscriptions.set(
         stableCacheKey,
-        new QuerySubscription(createObservable(), {
+        new QueryReference(createObservable(), {
           autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
           onDispose: () => this.subscriptions.delete(stableCacheKey),
         })
       );
     }
 
-    return this.subscriptions.get(stableCacheKey)! as QuerySubscription<TData>;
+    return this.subscriptions.get(stableCacheKey)! as QueryReference<TData>;
   }
 }

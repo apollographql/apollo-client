@@ -42,7 +42,7 @@ import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { InMemoryCache } from '../../../cache';
 import { FetchMoreFunction } from '../../../react';
-import { QuerySubscription } from '../../cache/QuerySubscription';
+import { QueryReference } from '../../cache/QueryReference';
 
 function renderIntegrationTest({
   client,
@@ -101,7 +101,7 @@ function renderIntegrationTest({
     return <div>loading</div>;
   }
 
-  function Child({ queryRef }: { queryRef: QuerySubscription<QueryData> }) {
+  function Child({ queryRef }: { queryRef: QueryReference<QueryData> }) {
     const { data } = useReadQuery<QueryData>(queryRef);
     return <div>{data.foo.bar}</div>;
   }
@@ -256,7 +256,7 @@ function renderVariablesIntegrationTest({
     refetch: (
       variables?: Partial<OperationVariables> | undefined
     ) => Promise<ApolloQueryResult<QueryData>>;
-    queryRef: QuerySubscription<QueryData>;
+    queryRef: QueryReference<QueryData>;
   }) {
     const { data, error, networkStatus } = useReadQuery<QueryData>(queryRef);
     const [variables, setVariables] = React.useState(_variables);
@@ -447,7 +447,7 @@ function renderPaginatedIntegrationTest({
     fetchMore,
   }: {
     fetchMore: FetchMoreFunction<QueryData, OperationVariables>;
-    queryRef: QuerySubscription<QueryData>;
+    queryRef: QueryReference<QueryData>;
   }) {
     const { data, error } = useReadQuery<QueryData>(queryRef);
 
@@ -761,9 +761,6 @@ describe('useBackgroundQuery', () => {
         expect(_result).toMatchObject({
           data: { context: { valueA: 'A', valueB: 'B' } },
           networkStatus: NetworkStatus.ready,
-          // TODO: determine whether we should be returning `error` here
-          // (it's present in equivalent useSuspenseQuery test)
-          // error: undefined,
         });
       });
     });
@@ -1223,7 +1220,7 @@ describe('useBackgroundQuery', () => {
         queryRef,
         onChange,
       }: {
-        queryRef: QuerySubscription<Data>;
+        queryRef: QueryReference<Data>;
         onChange: (id: string) => void;
       }) {
         const { data } = useReadQuery<Data>(queryRef);
@@ -1344,7 +1341,7 @@ describe('useBackgroundQuery', () => {
         return <Todo queryRef={queryRef} />;
       }
 
-      function Todo({ queryRef }: { queryRef: QuerySubscription<Data> }) {
+      function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
         const { data, networkStatus, error } = useReadQuery<Data>(queryRef);
         const { greeting } = data;
         renders++;
@@ -1928,7 +1925,7 @@ describe('useBackgroundQuery', () => {
         refetch: (
           variables?: Partial<OperationVariables> | undefined
         ) => Promise<ApolloQueryResult<Data>>;
-        queryRef: QuerySubscription<Data>;
+        queryRef: QueryReference<Data>;
         onChange: (id: string) => void;
       }) {
         const { data } = useReadQuery<Data>(queryRef);
@@ -2216,7 +2213,7 @@ describe('useBackgroundQuery', () => {
         fetchMore,
       }: {
           fetchMore: FetchMoreFunction<Data, OperationVariables>;
-        queryRef: QuerySubscription<Data>;
+        queryRef: QueryReference<Data>;
       }) {
         const { data } = useReadQuery<Data>(queryRef);
         const [isPending, startTransition] = React.useTransition();

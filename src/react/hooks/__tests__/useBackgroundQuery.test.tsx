@@ -101,19 +101,19 @@ function renderIntegrationTest({
   }
 
   function Child({
-    subscription,
+    queryRef,
   }: {
-    subscription: QuerySubscription<QueryData>;
+    queryRef: QuerySubscription<QueryData>;
   }) {
-    const { data } = useReadQuery<QueryData>(subscription);
+    const { data } = useReadQuery<QueryData>(queryRef);
     return <div>{data.foo.bar}</div>;
   }
 
   function Parent() {
-    const { subscription } = useBackgroundQuery(query);
+    const { queryRef } = useBackgroundQuery(query);
     // count renders in the parent component
     renders.count++;
-    return <Child subscription={subscription} />;
+    return <Child queryRef={queryRef} />;
   }
 
   function ParentWithVariables({
@@ -121,10 +121,10 @@ function renderIntegrationTest({
   }: {
     variables: Record<string, unknown>;
   }) {
-    const { subscription } = useBackgroundQuery(query, { variables });
+    const { queryRef } = useBackgroundQuery(query, { variables });
     // count renders in the parent component
     renders.count++;
-    return <Child subscription={subscription} />;
+    return <Child queryRef={queryRef} />;
   }
 
   function App({ variables }: { variables?: Record<string, unknown> }) {
@@ -253,16 +253,16 @@ function renderVariablesIntegrationTest({
   function Child({
     refetch,
     variables: _variables,
-    subscription,
+    queryRef,
   }: {
     variables: QueryVariables;
     refetch: (
       variables?: Partial<OperationVariables> | undefined
     ) => Promise<ApolloQueryResult<QueryData>>;
-    subscription: QuerySubscription<QueryData>;
+    queryRef: QuerySubscription<QueryData>;
   }) {
     const { data, error, networkStatus } =
-      useReadQuery<QueryData>(subscription);
+      useReadQuery<QueryData>(queryRef);
     const [variables, setVariables] = React.useState(_variables);
 
     renders.frames.push({ data, networkStatus, error });
@@ -296,7 +296,7 @@ function renderVariablesIntegrationTest({
     variables: QueryVariables;
     errorPolicy?: ErrorPolicy;
   }) {
-    const { subscription, refetch } = useBackgroundQuery(query, {
+    const { queryRef, refetch } = useBackgroundQuery(query, {
       variables,
       errorPolicy,
     });
@@ -306,7 +306,7 @@ function renderVariablesIntegrationTest({
       <Child
         refetch={refetch}
         variables={variables}
-        subscription={subscription}
+        queryRef={queryRef}
       />
     );
   }
@@ -446,14 +446,14 @@ function renderPaginatedIntegrationTest({
   }
 
   function Child({
-    subscription,
+    queryRef,
     fetchMore,
   }: {
     fetchMore: FetchMoreFunction<QueryData, OperationVariables>;
-    subscription: QuerySubscription<QueryData>;
+    queryRef: QuerySubscription<QueryData>;
   }) {
     const { data, error, networkStatus } =
-      useReadQuery<QueryData>(subscription);
+      useReadQuery<QueryData>(queryRef);
 
     renders.frames.push({ data, networkStatus, error });
 
@@ -493,12 +493,12 @@ function renderPaginatedIntegrationTest({
   }
 
   function ParentWithVariables() {
-    const { subscription, fetchMore } = useBackgroundQuery(query, {
+    const { queryRef, fetchMore } = useBackgroundQuery(query, {
       variables: { limit: 2, offset: 0 },
     });
     // count renders in the parent component
     renders.count++;
-    return <Child fetchMore={fetchMore} subscription={subscription} />;
+    return <Child fetchMore={fetchMore} queryRef={queryRef} />;
   }
 
   function App() {
@@ -634,9 +634,9 @@ describe('useBackgroundQuery', () => {
       ),
     });
 
-    const { subscription } = result.current;
+    const { queryRef } = result.current;
 
-    const _result = await subscription.promises.main;
+    const _result = await queryRef.promises.main;
 
     expect(_result).toEqual({
       data: { hello: 'world 1' },
@@ -672,9 +672,9 @@ describe('useBackgroundQuery', () => {
         { client: globalClient }
       );
 
-      const { subscription } = result.current;
+      const { queryRef } = result.current;
 
-      const _result = await subscription.promises.main;
+      const _result = await queryRef.promises.main;
 
       await waitFor(() => {
         expect(_result).toEqual({
@@ -757,9 +757,9 @@ describe('useBackgroundQuery', () => {
         }
       );
 
-      const { subscription } = result.current;
+      const { queryRef } = result.current;
 
-      const _result = await subscription.promises.main;
+      const _result = await queryRef.promises.main;
 
       await waitFor(() => {
         expect(_result).toMatchObject({
@@ -824,9 +824,9 @@ describe('useBackgroundQuery', () => {
         }
       );
 
-      const { subscription } = result.current;
+      const { queryRef } = result.current;
 
-      const _result = await subscription.promises.main;
+      const _result = await queryRef.promises.main;
       const resultSet = new Set(_result.data.results);
       const values = Array.from(resultSet).map((item) => item.value);
 
@@ -889,9 +889,9 @@ describe('useBackgroundQuery', () => {
         }
       );
 
-      const { subscription } = result.current;
+      const { queryRef } = result.current;
 
-      const _result = await subscription.promises.main;
+      const _result = await queryRef.promises.main;
       const resultSet = new Set(_result.data.results);
       const values = Array.from(resultSet).map((item) => item.value);
 
@@ -937,9 +937,9 @@ describe('useBackgroundQuery', () => {
           }
         );
 
-        const { subscription } = result.current;
+        const { queryRef } = result.current;
 
-        const _result = await subscription.promises.main;
+        const _result = await queryRef.promises.main;
 
         expect(_result).toEqual({
           data: { hello: 'from link' },
@@ -981,9 +981,9 @@ describe('useBackgroundQuery', () => {
           }
         );
 
-        const { subscription } = result.current;
+        const { queryRef } = result.current;
 
-        const _result = await subscription.promises.main;
+        const _result = await queryRef.promises.main;
 
         expect(_result).toEqual({
           data: { hello: 'from cache' },
@@ -1031,9 +1031,9 @@ describe('useBackgroundQuery', () => {
           }
         );
 
-        const { subscription } = result.current;
+        const { queryRef } = result.current;
 
-        const _result = await subscription.promises.main;
+        const _result = await queryRef.promises.main;
 
         expect(_result).toEqual({
           data: { foo: 'bar', hello: 'from link' },
@@ -1075,9 +1075,9 @@ describe('useBackgroundQuery', () => {
           }
         );
 
-        const { subscription } = result.current;
+        const { queryRef } = result.current;
 
-        const _result = await subscription.promises.main;
+        const _result = await queryRef.promises.main;
 
         expect(_result).toEqual({
           data: { hello: 'from link' },
@@ -1122,9 +1122,9 @@ describe('useBackgroundQuery', () => {
           }
         );
 
-        const { subscription } = result.current;
+        const { queryRef } = result.current;
 
-        const _result = await subscription.promises.main;
+        const _result = await queryRef.promises.main;
 
         expect(_result).toEqual({
           data: { hello: 'from link' },
@@ -1217,20 +1217,20 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [id, setId] = React.useState('1');
-        const { subscription } = useBackgroundQuery(query, {
+        const { queryRef } = useBackgroundQuery(query, {
           variables: { id },
         });
-        return <Todo subscription={subscription} onChange={setId} />;
+        return <Todo queryRef={queryRef} onChange={setId} />;
       }
 
       function Todo({
-        subscription,
+        queryRef,
         onChange,
       }: {
-        subscription: QuerySubscription<Data>;
+        queryRef: QuerySubscription<Data>;
         onChange: (id: string) => void;
       }) {
-        const { data } = useReadQuery<Data>(subscription);
+        const { data } = useReadQuery<Data>(queryRef);
         const [isPending, startTransition] = React.useTransition();
         const { todo } = data;
 
@@ -1342,18 +1342,18 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const { subscription } = useBackgroundQuery(query, {
+        const { queryRef } = useBackgroundQuery(query, {
           fetchPolicy: 'cache-and-network',
         });
-        return <Todo subscription={subscription} />;
+        return <Todo queryRef={queryRef} />;
       }
 
       function Todo({
-        subscription,
+        queryRef,
       }: {
-        subscription: QuerySubscription<Data>;
+        queryRef: QuerySubscription<Data>;
       }) {
-        const { data, networkStatus, error } = useReadQuery<Data>(subscription);
+        const { data, networkStatus, error } = useReadQuery<Data>(queryRef);
         const { greeting } = data;
         renders++;
         // console.log({ greeting: JSON.stringify(greeting, null, 2) });
@@ -1930,30 +1930,29 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [id, setId] = React.useState('1');
-        const { subscription, refetch } = useBackgroundQuery(query, {
+        const { queryRef, refetch } = useBackgroundQuery(query, {
           variables: { id },
         });
         return (
           <Todo
             refetch={refetch}
-            subscription={subscription}
+            queryRef={queryRef}
             onChange={setId}
           />
         );
       }
 
       function Todo({
-        subscription,
-        onChange,
+        queryRef,
         refetch,
       }: {
         refetch: (
           variables?: Partial<OperationVariables> | undefined
         ) => Promise<ApolloQueryResult<Data>>;
-        subscription: QuerySubscription<Data>;
+        queryRef: QuerySubscription<Data>;
         onChange: (id: string) => void;
       }) {
-        const { data } = useReadQuery<Data>(subscription);
+        const { data } = useReadQuery<Data>(queryRef);
         const [isPending, startTransition] = React.useTransition();
         const { todo } = data;
 

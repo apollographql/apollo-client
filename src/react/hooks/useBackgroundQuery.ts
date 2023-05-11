@@ -26,7 +26,7 @@ export interface UseBackgroundQueryResult<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
 > {
-  subscription: QuerySubscription<TData>;
+  queryRef: QuerySubscription<TData>;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   refetch: ObservableQueryFields<TData, TVariables>['refetch'];
 }
@@ -51,53 +51,53 @@ export function useBackgroundQuery_experimental<
     [client, query, canonicalStringify(variables)] as any[]
   ).concat(queryKey);
 
-  const subscription = suspenseCache.getSubscription(cacheKey, () =>
+  const queryRef = suspenseCache.getSubscription(cacheKey, () =>
     client.watchQuery(watchQueryOptions)
   );
 
-  useTrackedSubscriptions(subscription);
+  useTrackedSubscriptions(queryRef);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
-      const promise = subscription.fetchMore(options);
+      const promise = queryRef.fetchMore(options);
       setVersion('network');
       return promise;
     },
-    [subscription]
+    [queryRef]
   );
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
-      const promise = subscription.refetch(variables);
+      const promise = queryRef.refetch(variables);
       setVersion('network');
       return promise;
     },
-    [subscription]
+    [queryRef]
   );
 
-  subscription.version = version;
+  queryRef.version = version;
 
   return useMemo(() => {
     return {
-      subscription,
+      queryRef,
       fetchMore,
       refetch,
     };
-  }, [subscription, fetchMore, refetch]);
+  }, [queryRef, fetchMore, refetch]);
 }
 
 export function useReadQuery_experimental<TData>(
-  subscription: QuerySubscription<TData>
+  queryRef: QuerySubscription<TData>
 ) {
   const [, forceUpdate] = useState(0);
   const promise =
-    subscription.promises[subscription.version] || subscription.promises.main;
+  queryRef.promises[queryRef.version] || queryRef.promises.main;
 
   useEffect(() => {
-    return subscription.listen(() => {
+    return queryRef.listen(() => {
       forceUpdate((prevState) => prevState + 1);
     });
-  }, [subscription]);
+  }, [queryRef]);
 
   const result = __use(promise);
 

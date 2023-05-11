@@ -26,6 +26,7 @@ import {
   OperationVariables,
   ApolloQueryResult,
 } from '../../../core';
+import { concatPagination } from '../../../utilities';
 import {
   MockedResponse,
   MockedProvider,
@@ -100,11 +101,7 @@ function renderIntegrationTest({
     return <div>loading</div>;
   }
 
-  function Child({
-    queryRef,
-  }: {
-    queryRef: QuerySubscription<QueryData>;
-  }) {
+  function Child({ queryRef }: { queryRef: QuerySubscription<QueryData> }) {
     const { data } = useReadQuery<QueryData>(queryRef);
     return <div>{data.foo.bar}</div>;
   }
@@ -261,8 +258,7 @@ function renderVariablesIntegrationTest({
     ) => Promise<ApolloQueryResult<QueryData>>;
     queryRef: QuerySubscription<QueryData>;
   }) {
-    const { data, error, networkStatus } =
-      useReadQuery<QueryData>(queryRef);
+    const { data, error, networkStatus } = useReadQuery<QueryData>(queryRef);
     const [variables, setVariables] = React.useState(_variables);
 
     renders.frames.push({ data, networkStatus, error });
@@ -303,11 +299,7 @@ function renderVariablesIntegrationTest({
     // count renders in the parent component
     renders.count++;
     return (
-      <Child
-        refetch={refetch}
-        variables={variables}
-        queryRef={queryRef}
-      />
+      <Child refetch={refetch} variables={variables} queryRef={queryRef} />
     );
   }
 
@@ -339,9 +331,11 @@ function renderVariablesIntegrationTest({
 }
 
 function renderPaginatedIntegrationTest({
-  updateQuery,
   mocks,
+  updateQuery,
+  fieldPolicies,
 }: {
+  fieldPolicies?: boolean;
   updateQuery?: boolean;
   mocks?: {
     request: {
@@ -408,9 +402,18 @@ function renderPaginatedIntegrationTest({
     },
   ];
 
+  const cacheWithTypePolicies = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          letters: concatPagination(),
+        },
+      },
+    },
+  });
   const suspenseCache = new SuspenseCache();
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: fieldPolicies ? cacheWithTypePolicies : new InMemoryCache(),
     link: new MockLink(mocks || _mocks),
   });
   interface Renders {
@@ -418,18 +421,12 @@ function renderPaginatedIntegrationTest({
     errorCount: number;
     suspenseCount: number;
     count: number;
-    frames: {
-      data: QueryData;
-      networkStatus: NetworkStatus;
-      error: ApolloError | undefined;
-    }[];
   }
   const renders: Renders = {
     errors: [],
     errorCount: 0,
     suspenseCount: 0,
     count: 0,
-    frames: [],
   };
 
   const errorBoundaryProps: ErrorBoundaryProps = {
@@ -452,10 +449,7 @@ function renderPaginatedIntegrationTest({
     fetchMore: FetchMoreFunction<QueryData, OperationVariables>;
     queryRef: QuerySubscription<QueryData>;
   }) {
-    const { data, error, networkStatus } =
-      useReadQuery<QueryData>(queryRef);
-
-    renders.frames.push({ data, networkStatus, error });
+    const { data, error } = useReadQuery<QueryData>(queryRef);
 
     return (
       <div>
@@ -485,7 +479,7 @@ function renderPaginatedIntegrationTest({
         </button>
         <ul>
           {data.letters.map(({ letter, position }) => (
-            <li key={position}>Letter: {letter}</li>
+            <li data-testid="letter" key={position}>{letter}</li>
           ))}
         </ul>
       </div>
@@ -1348,15 +1342,10 @@ describe('useBackgroundQuery', () => {
         return <Todo queryRef={queryRef} />;
       }
 
-      function Todo({
-        queryRef,
-      }: {
-        queryRef: QuerySubscription<Data>;
-      }) {
+      function Todo({ queryRef }: { queryRef: QuerySubscription<Data> }) {
         const { data, networkStatus, error } = useReadQuery<Data>(queryRef);
         const { greeting } = data;
         renders++;
-        // console.log({ greeting: JSON.stringify(greeting, null, 2) });
 
         return (
           <>
@@ -1379,9 +1368,7 @@ describe('useBackgroundQuery', () => {
       expect(screen.getByText(/Network status/i)).toHaveTextContent(
         'Network status: 1' // loading
       );
-      expect(screen.getByText(/Error/i)).toHaveTextContent(
-        'none'
-      );
+      expect(screen.getByText(/Error/i)).toHaveTextContent('none');
 
       link.simulateResult({
         result: {
@@ -1403,9 +1390,7 @@ describe('useBackgroundQuery', () => {
       expect(screen.getByText(/Network status/i)).toHaveTextContent(
         'Network status: 7' // ready
       );
-      expect(screen.getByText(/Error/i)).toHaveTextContent(
-        'none'
-      );
+      expect(screen.getByText(/Error/i)).toHaveTextContent('none');
 
       link.simulateResult({
         result: {
@@ -1433,9 +1418,7 @@ describe('useBackgroundQuery', () => {
       expect(screen.getByText(/Network status/i)).toHaveTextContent(
         'Network status: 7' // ready
       );
-      expect(screen.getByText(/Error/i)).toHaveTextContent(
-        'none'
-      );
+      expect(screen.getByText(/Error/i)).toHaveTextContent('none');
 
       expect(renders).toBe(3);
       expect(suspenseCount).toBe(0);
@@ -1933,13 +1916,7 @@ describe('useBackgroundQuery', () => {
         const { queryRef, refetch } = useBackgroundQuery(query, {
           variables: { id },
         });
-        return (
-          <Todo
-            refetch={refetch}
-            queryRef={queryRef}
-            onChange={setId}
-          />
-        );
+        return <Todo refetch={refetch} queryRef={queryRef} onChange={setId} />;
       }
 
       function Todo({
@@ -2012,24 +1989,67 @@ describe('useBackgroundQuery', () => {
   });
 
   describe('fetchMore', () => {
+    interface QueryData {
+      letters: {
+        letter: string;
+        position: string;
+      }[];
+    }
+
+    interface Variables {
+      limit?: number;
+      offset?: number;
+    }
+
+    const query: TypedDocumentNode<QueryData, Variables> = gql`
+      query letters($limit: Int, $offset: Int) {
+        letters(limit: $limit) {
+          letter
+          position
+        }
+      }
+    `;
+    function getItemTexts() {
+      return screen.getAllByTestId(/letter/).map(
+        // eslint-disable-next-line testing-library/no-node-access
+        li => li.firstChild!.textContent
+      );
+    }
+    const mocks = [
+      {
+        request: { query, variables: { offset: 0, limit: 2 } },
+        result: {
+          data: {
+            letters: [
+              { letter: 'A', position: 1 },
+              { letter: 'B', position: 2 },
+            ],
+          },
+        },
+      },
+      {
+        request: { query, variables: { offset: 0, limit: 2 } },
+        result: {
+          data: {
+            letters: [
+              { letter: 'A', position: 1 },
+              { letter: 'B', position: 2 },
+              { letter: 'C', position: 3 },
+              { letter: 'D', position: 4 },
+            ],
+          },
+        },
+      },
+    ];
     it('re-suspends when calling `fetchMore` with different variables', async () => {
-      const { renders, data } = renderPaginatedIntegrationTest();
+      const { renders } = renderPaginatedIntegrationTest();
 
       expect(renders.suspenseCount).toBe(1);
       expect(screen.getByText('loading')).toBeInTheDocument();
 
-      const items = await screen.findAllByText(/Letter: /);
+      const items = await screen.findAllByTestId(/letter/i);
       expect(items).toHaveLength(2);
-
-      expect(renders.frames).toMatchObject([
-        {
-          data: {
-            letters: data.slice(0, 2),
-          },
-          error: undefined,
-          networkStatus: NetworkStatus.ready,
-        },
-      ]);
+      expect(getItemTexts()).toStrictEqual(['A','B']);
 
       const button = screen.getByText('Fetch more');
       const user = userEvent.setup();
@@ -2039,73 +2059,10 @@ describe('useBackgroundQuery', () => {
       expect(renders.suspenseCount).toBe(2);
       expect(renders.count).toBe(4);
 
-      expect(renders.frames).toMatchObject([
-        {
-          data: { letters: data.slice(0, 2) },
-          error: undefined,
-          networkStatus: NetworkStatus.ready,
-        },
-        {
-          data: { letters: data.slice(2, 4) },
-          error: undefined,
-          networkStatus: NetworkStatus.ready,
-        },
-        {
-          data: { letters: data.slice(2, 4) },
-          error: undefined,
-          networkStatus: NetworkStatus.ready,
-        },
-      ]);
+      expect(getItemTexts()).toStrictEqual(['C','D']);
     });
     it('properly uses `updateQuery` when calling `fetchMore`', async () => {
-      interface QueryData {
-        letters: {
-          letter: string;
-          position: string;
-        }[];
-      }
-
-      interface Variables {
-        limit?: number;
-        offset?: number;
-      }
-
-      const query: TypedDocumentNode<QueryData, Variables> = gql`
-        query letters($limit: Int, $offset: Int) {
-          letters(limit: $limit) {
-            letter
-            position
-          }
-        }
-      `;
-
-      const mocks = [
-        {
-          request: { query, variables: { offset: 0, limit: 2 } },
-          result: {
-            data: {
-              letters: [
-                { letter: 'A', position: 1 },
-                { letter: 'B', position: 2 },
-              ],
-            },
-          },
-        },
-        {
-          request: { query, variables: { offset: 0, limit: 2 } },
-          result: {
-            data: {
-              letters: [
-                { letter: 'A', position: 1 },
-                { letter: 'B', position: 2 },
-                { letter: 'C', position: 3 },
-                { letter: 'D', position: 4 },
-              ],
-            },
-          },
-        },
-      ];
-      const { renders, data } = renderPaginatedIntegrationTest({
+      const { renders } = renderPaginatedIntegrationTest({
         updateQuery: true,
         mocks,
       });
@@ -2113,18 +2070,10 @@ describe('useBackgroundQuery', () => {
       expect(renders.suspenseCount).toBe(1);
       expect(screen.getByText('loading')).toBeInTheDocument();
 
-      const items = await screen.findAllByText(/Letter: /);
-      expect(items).toHaveLength(2);
+      const items = await screen.findAllByTestId(/letter/i);
 
-      expect(renders.frames).toMatchObject([
-        {
-          data: {
-            letters: data.slice(0, 2),
-          },
-          error: undefined,
-          networkStatus: NetworkStatus.ready,
-        },
-      ]);
+      expect(items).toHaveLength(2);
+      expect(getItemTexts()).toStrictEqual(['A','B']);
 
       const button = screen.getByText('Fetch more');
       const user = userEvent.setup();
@@ -2134,25 +2083,35 @@ describe('useBackgroundQuery', () => {
       expect(renders.suspenseCount).toBe(2);
       expect(renders.count).toBe(4);
 
-      expect(renders.frames).toMatchObject([
-        {
-          data: { letters: data.slice(0, 2) },
-          error: undefined,
-          networkStatus: NetworkStatus.ready,
-        },
-        {
-          data: { letters: data.slice(0, 4) },
-          error: undefined,
-          networkStatus: NetworkStatus.ready,
-        },
-        {
-          data: { letters: data.slice(0, 4) },
-          error: undefined,
-          networkStatus: NetworkStatus.ready,
-        },
-      ]);
+      const moreItems = await screen.findAllByTestId(/letter/i);
+      expect(moreItems).toHaveLength(4);
+      expect(getItemTexts()).toStrictEqual(['A','B','C','D']);
     });
-    it.skip('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {});
+    it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
+      const { renders } = renderPaginatedIntegrationTest({
+        fieldPolicies: true,
+        mocks,
+      });
+      expect(renders.suspenseCount).toBe(1);
+      expect(screen.getByText('loading')).toBeInTheDocument();
+
+      const items = await screen.findAllByTestId(/letter/i);
+
+      expect(items).toHaveLength(2);
+      expect(getItemTexts()).toStrictEqual(['A','B']);
+
+      const button = screen.getByText('Fetch more');
+      const user = userEvent.setup();
+      await act(() => user.click(button));
+
+      // parent component re-suspends
+      expect(renders.suspenseCount).toBe(2);
+      expect(renders.count).toBe(4);
+
+      const moreItems = await screen.findAllByTestId(/letter/i);
+      expect(moreItems).toHaveLength(4);
+      expect(getItemTexts()).toStrictEqual(['A','B','C','D']);
+    });
     it.skip('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', async () => {});
   });
 });

@@ -1489,8 +1489,6 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      // TODO: investigate why this is 1 more render than equivalent
-      // useSuspenseQuery test
       expect(renders.count).toBe(5);
 
       expect(
@@ -1556,8 +1554,6 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      // TODO: investigate why this is 1 more render than equivalent
-      // useSuspenseQuery test
       expect(renders.count).toBe(5);
 
       // extra render puts an additional frame into the array
@@ -1595,8 +1591,6 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      // TODO: investigate why this is +1 render than equivalent
-      // useSuspenseQuery test
       expect(renders.count).toBe(5);
 
       expect(
@@ -1607,8 +1601,6 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(3);
-      // TODO: investigate why this is now +2 renders than equivalent
-      // useSuspenseQuery test
       expect(renders.count).toBe(8);
 
       expect(

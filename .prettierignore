@@ -84,3 +84,8 @@ src/react/hooks/*
 src/react/hooks/__tests__/*
 !src/react/hooks/__tests__/useSuspenseQuery.test.tsx
 !src/react/hooks/__tests__/useBackgroundQuery.test.tsx
+
+## Allowed testing utils
+!src/testing
+src/testing/*
+!src/testing/matchers

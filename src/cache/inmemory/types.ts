@@ -133,8 +133,6 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCacheMaxSize?: number;
   canonizeResults?: boolean;
   fragments?: FragmentRegistryAPI;
-  documentTransforms?: DocumentTransform[]
-  documentTransformsForLink?: DocumentTransform[]
 }
 
 export interface MergeInfo {
@@ -154,5 +152,3 @@ export interface ReadMergeModifyContext {
   // A JSON.stringify-serialized version of context.variables.
   varString?: string;
 }
-
-export type DocumentTransform = (document: DocumentNode) => DocumentNode

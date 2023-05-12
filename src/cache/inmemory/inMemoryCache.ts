@@ -27,7 +27,6 @@ import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
 import { makeVar, forgetCache, recallCache } from './reactiveVars';
 import { Policies } from './policies';
-import { DocumentTransformer } from './documentTransformer';
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
 import type { OperationVariables } from '../../core';
@@ -64,26 +63,12 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // cache.policies.addPossibletypes.
   public readonly policies: Policies;
 
-  // Dynamically imported code can augment existing documentTransforms or
-  // documentTransformsForLink by calling cache.documentTransforms.add or 
-  // cache.documentTransformsForLink.add
-  public readonly documentTransforms: DocumentTransformer;
-  public readonly documentTransformsForLink: DocumentTransformer;
-
   public readonly makeVar = makeVar;
 
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = normalizeConfig(config);
     this.addTypename = !!this.config.addTypename;
-
-    this.documentTransforms = new DocumentTransformer({
-      transforms: [this.addTypenameToDocument.bind(this)]
-    }).add(...(this.config.documentTransforms ?? []));
-
-    this.documentTransformsForLink = new DocumentTransformer({
-      transforms: [this.addFragmentsToDocument.bind(this)]
-    }).add(...(this.config.documentTransformsForLink ?? []));
 
     this.policies = new Policies({
       cache: this,
@@ -527,27 +512,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    return this.documentTransforms.transform(document);
-  }
-
-  public transformForLink(document: DocumentNode): DocumentNode {
-    return this.documentTransformsForLink.transform(document);
-  }
-
-  protected broadcastWatches(options?: BroadcastOptions) {
-    if (!this.txCount) {
-      this.watches.forEach(c => this.maybeBroadcastWatch(c, options));
-    }
-  }
-
-  private addFragmentsToDocument(document: DocumentNode): DocumentNode {
-    const { fragments } = this.config;
-    return fragments
-      ? fragments.transform(document)
-      : document;
-  }
-
-  private addTypenameToDocument(document: DocumentNode): DocumentNode {
     if (this.addTypename) {
       let result = this.typenameDocumentCache.get(document);
       if (!result) {
@@ -561,6 +525,19 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       return result;
     }
     return document;
+  }
+
+  public transformForLink(document: DocumentNode): DocumentNode {
+    const { fragments } = this.config;
+    return fragments
+      ? fragments.transform(document)
+      : document;
+  }
+
+  protected broadcastWatches(options?: BroadcastOptions) {
+    if (!this.txCount) {
+      this.watches.forEach(c => this.maybeBroadcastWatch(c, options));
+    }
   }
 
   // This method is wrapped by maybeBroadcastWatch, which is called by

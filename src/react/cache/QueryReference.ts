@@ -33,7 +33,7 @@ export class QueryReference<TData = unknown> {
     network?: Promise<ApolloQueryResult<TData>>;
   };
 
-  private queryRef: ObservableSubscription;
+  private subscription: ObservableSubscription;
   private listeners = new Set<Listener>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
   private initialized = false;
@@ -67,7 +67,7 @@ export class QueryReference<TData = unknown> {
       this.refetching = false;
     }
 
-    this.queryRef = observable.subscribe({
+    this.subscription = observable.subscribe({
       next: this.handleNext,
       error: this.handleError,
     });
@@ -123,7 +123,7 @@ export class QueryReference<TData = unknown> {
   }
 
   dispose() {
-    this.queryRef.unsubscribe();
+    this.subscription.unsubscribe();
     this.onDispose();
   }
 

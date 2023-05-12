@@ -55,7 +55,7 @@ export type RefetchFunction<
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['refetch'];
 
-type SubscribeToMoreFunction<
+export type SubscribeToMoreFunction<
   TData,
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];

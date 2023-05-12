@@ -10,6 +10,9 @@ export * from './useFragment';
 export {
   useSuspenseQuery_experimental,
   UseSuspenseQueryResult,
+  FetchMoreFunction,
+  RefetchFunction,
+  SubscribeToMoreFunction,
 } from './useSuspenseQuery';
 export {
   useBackgroundQuery_experimental,

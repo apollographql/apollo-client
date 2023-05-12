@@ -602,7 +602,6 @@ describe('useBackgroundQuery', () => {
         hello
       }
     `;
-    const suspenseCache = new SuspenseCache();
     const mocks = [
       {
         request: { query },
@@ -611,7 +610,7 @@ describe('useBackgroundQuery', () => {
     ];
     const { result } = renderHook(() => useBackgroundQuery(query), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} suspenseCache={suspenseCache}>
+        <MockedProvider mocks={mocks}>
           {children}
         </MockedProvider>
       ),
@@ -628,304 +627,297 @@ describe('useBackgroundQuery', () => {
     });
   });
 
-  describe('hook options', () => {
-    it('allows the client to be overridden', async () => {
-      const query: TypedDocumentNode<SimpleQueryData> = gql`
-        query UserQuery {
-          greeting
-        }
-      `;
+  it('allows the client to be overridden', async () => {
+    const query: TypedDocumentNode<SimpleQueryData> = gql`
+      query UserQuery {
+        greeting
+      }
+    `;
 
-      const globalClient = new ApolloClient({
-        link: new ApolloLink(() =>
-          Observable.of({ data: { greeting: 'global hello' } })
-        ),
-        cache: new InMemoryCache(),
+    const globalClient = new ApolloClient({
+      link: new ApolloLink(() =>
+        Observable.of({ data: { greeting: 'global hello' } })
+      ),
+      cache: new InMemoryCache(),
+    });
+
+    const localClient = new ApolloClient({
+      link: new ApolloLink(() =>
+        Observable.of({ data: { greeting: 'local hello' } })
+      ),
+      cache: new InMemoryCache(),
+    });
+
+    const { result } = renderSuspenseHook(
+      () => useBackgroundQuery(query, { client: localClient }),
+      { client: globalClient }
+    );
+
+    const { queryRef } = result.current;
+
+    const _result = await queryRef.promises.main;
+
+    await waitFor(() => {
+      expect(_result).toEqual({
+        data: { greeting: 'local hello' },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
       });
+    });
+  });
 
-      const localClient = new ApolloClient({
-        link: new ApolloLink(() =>
-          Observable.of({ data: { greeting: 'local hello' } })
+  it('prioritizes the `suspenseCache` option over the context value', () => {
+    const query: TypedDocumentNode<SimpleQueryData> = gql`
+      query UserQuery {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const directSuspenseCache = new SuspenseCache();
+    const contextSuspenseCache = new SuspenseCache();
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    renderHook(
+      () => useBackgroundQuery(query, { suspenseCache: directSuspenseCache }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client} suspenseCache={contextSuspenseCache}>
+            {children}
+          </ApolloProvider>
         ),
-        cache: new InMemoryCache(),
-      });
+      }
+    );
 
-      const { result } = renderSuspenseHook(
-        () => useBackgroundQuery(query, { client: localClient }),
-        { client: globalClient }
-      );
+    expect(directSuspenseCache['queryRefs'].size).toBe(1);
+    expect(contextSuspenseCache['queryRefs'].size).toBe(0);
+  });
 
-      const { queryRef } = result.current;
+  it('passes context to the link', async () => {
+    const query = gql`
+      query ContextQuery {
+        context
+      }
+    `;
 
-      const _result = await queryRef.promises.main;
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        const { valueA, valueB } = operation.getContext();
 
-      await waitFor(() => {
-        expect(_result).toEqual({
-          data: { greeting: 'local hello' },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-        });
+        observer.next({ data: { context: { valueA, valueB } } });
+        observer.complete();
       });
     });
 
-    it('prioritizes the `suspenseCache` option over the context value', () => {
-      const query: TypedDocumentNode<SimpleQueryData> = gql`
-        query UserQuery {
-          greeting
+    const suspenseCache = new SuspenseCache();
+
+    const { result } = renderHook(
+      () =>
+        useBackgroundQuery(query, {
+          context: { valueA: 'A', valueB: 'B' },
+        }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider link={link} suspenseCache={suspenseCache}>
+            {children}
+          </MockedProvider>
+        ),
+      }
+    );
+
+    const { queryRef } = result.current;
+
+    const _result = await queryRef.promises.main;
+
+    await waitFor(() => {
+      expect(_result).toMatchObject({
+        data: { context: { valueA: 'A', valueB: 'B' } },
+        networkStatus: NetworkStatus.ready,
+      });
+    });
+  });
+
+  it('enables canonical results when canonizeResults is "true"', async () => {
+    interface Result {
+      __typename: string;
+      value: number;
+    }
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Result: {
+          keyFields: false,
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{ results: Result[] }> = gql`
+      query {
+        results {
+          value
+        }
+      }
+    `;
+
+    const results: Result[] = [
+      { __typename: 'Result', value: 0 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 2 },
+      { __typename: 'Result', value: 3 },
+      { __typename: 'Result', value: 5 },
+    ];
+
+    cache.writeQuery({
+      query,
+      data: { results },
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    const { result } = renderHook(
+      () =>
+        useBackgroundQuery(query, {
+          canonizeResults: true,
+        }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider cache={cache} suspenseCache={suspenseCache}>
+            {children}
+          </MockedProvider>
+        ),
+      }
+    );
+
+    const { queryRef } = result.current;
+
+    const _result = await queryRef.promises.main;
+    const resultSet = new Set(_result.data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(_result.data).toEqual({ results });
+    expect(_result.data.results.length).toBe(6);
+    expect(resultSet.size).toBe(5);
+    expect(values).toEqual([0, 1, 2, 3, 5]);
+  });
+
+  it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
+    interface Result {
+      __typename: string;
+      value: number;
+    }
+
+    const cache = new InMemoryCache({
+      canonizeResults: true,
+      typePolicies: {
+        Result: {
+          keyFields: false,
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{ results: Result[] }> = gql`
+      query {
+        results {
+          value
+        }
+      }
+    `;
+
+    const results: Result[] = [
+      { __typename: 'Result', value: 0 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 2 },
+      { __typename: 'Result', value: 3 },
+      { __typename: 'Result', value: 5 },
+    ];
+
+    cache.writeQuery({
+      query,
+      data: { results },
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    const { result } = renderHook(
+      () =>
+        useBackgroundQuery(query, {
+          canonizeResults: false,
+        }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider cache={cache} suspenseCache={suspenseCache}>
+            {children}
+          </MockedProvider>
+        ),
+      }
+    );
+
+    const { queryRef } = result.current;
+
+    const _result = await queryRef.promises.main;
+    const resultSet = new Set(_result.data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(_result.data).toEqual({ results });
+    expect(_result.data.results.length).toBe(6);
+    expect(resultSet.size).toBe(6);
+    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+  });
+
+  describe.skip('cache-and-network', () => {
+    // TODO: should return cache data first if it exists
+    it('returns initial cache data followed by network data', async () => {
+      const query = gql`
+        {
+          hello
         }
       `;
-
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { greeting: 'Hello' } },
-        },
-      ];
-
-      const directSuspenseCache = new SuspenseCache();
-      const contextSuspenseCache = new SuspenseCache();
-
-      const client = new ApolloClient({
-        link: new MockLink(mocks),
-        cache: new InMemoryCache(),
+      const suspenseCache = new SuspenseCache();
+      const cache = new InMemoryCache();
+      const link = mockSingleLink({
+        request: { query },
+        result: { data: { hello: 'from link' } },
+        delay: 20,
       });
 
-      renderHook(
-        () => useBackgroundQuery(query, { suspenseCache: directSuspenseCache }),
+      const client = new ApolloClient({
+        link,
+        cache,
+      });
+
+      cache.writeQuery({ query, data: { hello: 'from cache' } });
+
+      const { result } = renderHook(
+        () => useBackgroundQuery(query, { fetchPolicy: 'cache-and-network' }),
         {
           wrapper: ({ children }) => (
-            <ApolloProvider
-              client={client}
-              suspenseCache={contextSuspenseCache}
-            >
+            <ApolloProvider suspenseCache={suspenseCache} client={client}>
               {children}
             </ApolloProvider>
           ),
         }
       );
 
-      expect(directSuspenseCache['queryRefs'].size).toBe(1);
-      expect(contextSuspenseCache['queryRefs'].size).toBe(0);
-    });
-
-    it('passes context to the link', async () => {
-      const query = gql`
-        query ContextQuery {
-          context
-        }
-      `;
-
-      const link = new ApolloLink((operation) => {
-        return new Observable((observer) => {
-          const { valueA, valueB } = operation.getContext();
-
-          observer.next({ data: { context: { valueA, valueB } } });
-          observer.complete();
-        });
-      });
-
-      const suspenseCache = new SuspenseCache();
-
-      const { result } = renderHook(
-        () =>
-          useBackgroundQuery(query, {
-            context: { valueA: 'A', valueB: 'B' },
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider link={link} suspenseCache={suspenseCache}>
-              {children}
-            </MockedProvider>
-          ),
-        }
-      );
-
       const { queryRef } = result.current;
 
       const _result = await queryRef.promises.main;
 
-      await waitFor(() => {
-        expect(_result).toMatchObject({
-          data: { context: { valueA: 'A', valueB: 'B' } },
-          networkStatus: NetworkStatus.ready,
-        });
-      });
-    });
-
-    it('enables canonical results when canonizeResults is "true"', async () => {
-      interface Result {
-        __typename: string;
-        value: number;
-      }
-
-      const cache = new InMemoryCache({
-        typePolicies: {
-          Result: {
-            keyFields: false,
-          },
-        },
-      });
-
-      const query: TypedDocumentNode<{ results: Result[] }> = gql`
-        query {
-          results {
-            value
-          }
-        }
-      `;
-
-      const results: Result[] = [
-        { __typename: 'Result', value: 0 },
-        { __typename: 'Result', value: 1 },
-        { __typename: 'Result', value: 1 },
-        { __typename: 'Result', value: 2 },
-        { __typename: 'Result', value: 3 },
-        { __typename: 'Result', value: 5 },
-      ];
-
-      cache.writeQuery({
-        query,
-        data: { results },
-      });
-
-      const suspenseCache = new SuspenseCache();
-
-      const { result } = renderHook(
-        () =>
-          useBackgroundQuery(query, {
-            canonizeResults: true,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider cache={cache} suspenseCache={suspenseCache}>
-              {children}
-            </MockedProvider>
-          ),
-        }
-      );
-
-      const { queryRef } = result.current;
-
-      const _result = await queryRef.promises.main;
-      const resultSet = new Set(_result.data.results);
-      const values = Array.from(resultSet).map((item) => item.value);
-
-      expect(_result.data).toEqual({ results });
-      expect(_result.data.results.length).toBe(6);
-      expect(resultSet.size).toBe(5);
-      expect(values).toEqual([0, 1, 2, 3, 5]);
-    });
-
-    it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
-      interface Result {
-        __typename: string;
-        value: number;
-      }
-
-      const cache = new InMemoryCache({
-        canonizeResults: true,
-        typePolicies: {
-          Result: {
-            keyFields: false,
-          },
-        },
-      });
-
-      const query: TypedDocumentNode<{ results: Result[] }> = gql`
-        query {
-          results {
-            value
-          }
-        }
-      `;
-
-      const results: Result[] = [
-        { __typename: 'Result', value: 0 },
-        { __typename: 'Result', value: 1 },
-        { __typename: 'Result', value: 1 },
-        { __typename: 'Result', value: 2 },
-        { __typename: 'Result', value: 3 },
-        { __typename: 'Result', value: 5 },
-      ];
-
-      cache.writeQuery({
-        query,
-        data: { results },
-      });
-
-      const suspenseCache = new SuspenseCache();
-
-      const { result } = renderHook(
-        () =>
-          useBackgroundQuery(query, {
-            canonizeResults: false,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider cache={cache} suspenseCache={suspenseCache}>
-              {children}
-            </MockedProvider>
-          ),
-        }
-      );
-
-      const { queryRef } = result.current;
-
-      const _result = await queryRef.promises.main;
-      const resultSet = new Set(_result.data.results);
-      const values = Array.from(resultSet).map((item) => item.value);
-
-      expect(_result.data).toEqual({ results });
-      expect(_result.data.results.length).toBe(6);
-      expect(resultSet.size).toBe(6);
-      expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-    });
-  });
-
-  describe('fetch policy behaviors', () => {
-    describe.skip('cache-and-network', () => {
-      // TODO: should return cache data first if it exists
-      it('returns initial cache data followed by network data', async () => {
-        const query = gql`
-          {
-            hello
-          }
-        `;
-        const suspenseCache = new SuspenseCache();
-        const cache = new InMemoryCache();
-        const link = mockSingleLink({
-          request: { query },
-          result: { data: { hello: 'from link' } },
-          delay: 20,
-        });
-
-        const client = new ApolloClient({
-          link,
-          cache,
-        });
-
-        cache.writeQuery({ query, data: { hello: 'from cache' } });
-
-        const { result } = renderHook(
-          () => useBackgroundQuery(query, { fetchPolicy: 'cache-and-network' }),
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider suspenseCache={suspenseCache} client={client}>
-                {children}
-              </ApolloProvider>
-            ),
-          }
-        );
-
-        const { queryRef } = result.current;
-
-        const _result = await queryRef.promises.main;
-
-        expect(_result).toEqual({
-          data: { hello: 'from link' },
-          loading: false,
-          networkStatus: 7,
-        });
+      expect(_result).toEqual({
+        data: { hello: 'from link' },
+        loading: false,
+        networkStatus: 7,
       });
     });
     describe('cache-first', () => {
@@ -2151,7 +2143,7 @@ describe('useBackgroundQuery', () => {
         queryRef,
         fetchMore,
       }: {
-          fetchMore: FetchMoreFunction<Data, OperationVariables>;
+        fetchMore: FetchMoreFunction<Data, OperationVariables>;
         queryRef: QueryReference<Data>;
       }) {
         const { data } = useReadQuery<Data>(queryRef);
@@ -2170,13 +2162,13 @@ describe('useBackgroundQuery', () => {
               Load more
             </button>
             <div data-testid="todos" aria-busy={isPending}>
-            {todos.map((todo) => (
-              <div data-testid={`todo:${todo.id}`} key={todo.id}>
-                {todo.name}
-                {todo.completed && ' (completed)'}
-              </div>
-            ))}
-          </div>
+              {todos.map((todo) => (
+                <div data-testid={`todo:${todo.id}`} key={todo.id}>
+                  {todo.name}
+                  {todo.completed && ' (completed)'}
+                </div>
+              ))}
+            </div>
           </>
         );
       }

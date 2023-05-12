@@ -16,7 +16,7 @@ import {
   toApolloError,
   FetchMoreFunction,
   RefetchFunction,
-  useTrackedSubscriptions,
+  useTrackedQueryRefs,
   useWatchQueryOptions,
   usePromiseVersion,
 } from './useSuspenseQuery';
@@ -53,11 +53,11 @@ export function useBackgroundQuery_experimental<
     [client, query, canonicalStringify(variables)] as any[]
   ).concat(queryKey);
 
-  const queryRef = suspenseCache.getSubscription(cacheKey, () =>
+  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)
   );
 
-  useTrackedSubscriptions(queryRef);
+  useTrackedQueryRefs(queryRef);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {

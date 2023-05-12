@@ -142,43 +142,43 @@ export function useSuspenseQuery_experimental<
     [client, query, canonicalStringify(variables)] as any[]
   ).concat(queryKey);
 
-  const subscription = suspenseCache.getSubscription(cacheKey, () =>
+  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)
   );
 
-  useTrackedSubscriptions(subscription);
+  useTrackedQueryRefs(queryRef);
 
   useEffect(() => {
-    return subscription.listen(() => {
+    return queryRef.listen(() => {
       setVersion('main');
     });
-  }, [subscription]);
+  }, [queryRef]);
 
-  const promise = subscription.promises[version] || subscription.promises.main;
+  const promise = queryRef.promises[version] || queryRef.promises.main;
   const result = __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
-      const promise = subscription.fetchMore(options);
+      const promise = queryRef.fetchMore(options);
       setVersion('network');
       return promise;
     },
-    [subscription]
+    [queryRef]
   );
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
-      const promise = subscription.refetch(variables);
+      const promise = queryRef.refetch(variables);
       setVersion('network');
       return promise;
     },
-    [subscription]
+    [queryRef]
   );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
     useCallback(
-      (options) => subscription.observable.subscribeToMore(options),
-      [subscription]
+      (options) => queryRef.observable.subscribeToMore(options),
+      [queryRef]
     );
 
   return useMemo(() => {
@@ -235,13 +235,13 @@ export function toApolloError(result: ApolloQueryResult<any>) {
     : result.error;
 }
 
-export function useTrackedSubscriptions(subscription: QueryReference) {
-  const trackedSubscriptions = useRef(new Set<QueryReference>());
+export function useTrackedQueryRefs(queryRef: QueryReference) {
+  const trackedQueryRefs = useRef(new Set<QueryReference>());
 
-  trackedSubscriptions.current.add(subscription);
+  trackedQueryRefs.current.add(queryRef);
 
   useStrictModeSafeCleanupEffect(() => {
-    trackedSubscriptions.current.forEach((sub) => sub.dispose());
+    trackedQueryRefs.current.forEach((sub) => sub.dispose());
   });
 }
 

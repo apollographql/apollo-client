@@ -372,8 +372,8 @@ describe('useSuspenseQuery', () => {
       }
     );
 
-    expect(directSuspenseCache['subscriptions'].size).toBe(1);
-    expect(contextSuspenseCache['subscriptions'].size).toBe(0);
+    expect(directSuspenseCache['queryRefs'].size).toBe(1);
+    expect(contextSuspenseCache['queryRefs'].size).toBe(0);
   });
 
   it('ensures a valid fetch policy is used', () => {
@@ -672,7 +672,7 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['subscriptions'].size).toBe(1);
+    expect(suspenseCache['queryRefs'].size).toBe(1);
 
     unmount();
 
@@ -681,7 +681,7 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['queryRefs'].size).toBe(0);
   });
 
   it('tears down all queries when rendering with multiple variable sets', async () => {
@@ -710,7 +710,7 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(client.getObservableQueries().size).toBe(2);
-    expect(suspenseCache['subscriptions'].size).toBe(2);
+    expect(suspenseCache['queryRefs'].size).toBe(2);
 
     unmount();
 
@@ -719,7 +719,7 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['queryRefs'].size).toBe(0);
   });
 
   it('tears down all queries when multiple clients are used', async () => {
@@ -769,7 +769,7 @@ describe('useSuspenseQuery', () => {
 
     expect(client1.getObservableQueries().size).toBe(1);
     expect(client2.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['subscriptions'].size).toBe(2);
+    expect(suspenseCache['queryRefs'].size).toBe(2);
 
     unmount();
 
@@ -779,7 +779,7 @@ describe('useSuspenseQuery', () => {
 
     expect(client1.getObservableQueries().size).toBe(0);
     expect(client2.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['queryRefs'].size).toBe(0);
   });
 
   it('tears down the query if the component never renders again after suspending', async () => {
@@ -828,12 +828,12 @@ describe('useSuspenseQuery', () => {
     link.simulateComplete();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['subscriptions'].size).toBe(1);
+    expect(suspenseCache['queryRefs'].size).toBe(1);
 
     jest.advanceTimersByTime(30_000);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['queryRefs'].size).toBe(0);
 
     jest.useRealTimers();
 
@@ -889,12 +889,12 @@ describe('useSuspenseQuery', () => {
     link.simulateComplete();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['subscriptions'].size).toBe(1);
+    expect(suspenseCache['queryRefs'].size).toBe(1);
 
     jest.advanceTimersByTime(5_000);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['queryRefs'].size).toBe(0);
 
     jest.useRealTimers();
 
@@ -951,7 +951,7 @@ describe('useSuspenseQuery', () => {
     jest.advanceTimersByTime(30_000);
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['subscriptions'].size).toBe(1);
+    expect(suspenseCache['queryRefs'].size).toBe(1);
 
     jest.useRealTimers();
   });

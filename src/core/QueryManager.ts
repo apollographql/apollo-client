@@ -105,7 +105,7 @@ export class QueryManager<TStore> {
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
   private localState: LocalState<TStore>;
-  private documentTransform?: DocumentTransform
+  private documentTransform: DocumentTransform
 
   private onBroadcast?: () => void;
   public mutationStore?: {
@@ -143,6 +143,15 @@ export class QueryManager<TStore> {
     localState?: LocalState<TStore>;
     assumeImmutableResults?: boolean;
   }) {
+    const defaultDocumentTransform = new DocumentTransform((document) =>
+      this.cache.transformDocument(document)
+    ).concat(
+      new DocumentTransform(
+        (document) => this.cache.transformForLink(document),
+        { cache: false }
+      )
+    );
+
     this.cache = cache;
     this.link = link;
     this.defaultOptions = defaultOptions || Object.create(null);
@@ -152,6 +161,9 @@ export class QueryManager<TStore> {
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = assumeImmutableResults;
     this.documentTransform = documentTransform
+      ? defaultDocumentTransform.concat(documentTransform)
+      : defaultDocumentTransform
+
     if ((this.onBroadcast = onBroadcast)) {
       this.mutationStore = Object.create(null);
     }
@@ -1619,9 +1631,7 @@ export class QueryManager<TStore> {
   }
 
   private transformDocument(document: DocumentNode) {
-    return this.documentTransform 
-      ? this.documentTransform.transformDocument(document) 
-      : document;
+    return this.documentTransform.transformDocument(document) 
   }
 }
 

@@ -48,9 +48,15 @@ src/react/context/__tests__/*
 # Allow src/react/cache
 !src/react/cache/
 
-# Allow certain core tests
+# Allow certain core files
+!src/core
+src/core/*
+!src/core/__tests__/
+src/core/tests/*
 !src/core/__tests__/equalByQuery.ts
+!src/core/__tests__/DocumentTransform.ts
 !src/core/equalByQuery.ts
+!src/core/DocumentTransform.ts
 
 # Allowed utilities
 !src/utilities/

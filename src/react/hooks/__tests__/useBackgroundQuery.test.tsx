@@ -46,10 +46,8 @@ import { QueryReference } from '../../cache/QueryReference';
 
 function renderIntegrationTest({
   client,
-  variables,
 }: {
   client?: ApolloClient<NormalizedCacheObject>;
-  variables?: Record<string, unknown>;
 } = {}) {
   const query: TypedDocumentNode<QueryData> = gql`
     query SimpleQuery {
@@ -113,12 +111,8 @@ function renderIntegrationTest({
     return <Child queryRef={queryRef} />;
   }
 
-  function ParentWithVariables({
-    variables,
-  }: {
-    variables: Record<string, unknown>;
-  }) {
-    const { queryRef } = useBackgroundQuery(query, { variables });
+  function ParentWithVariables() {
+    const { queryRef } = useBackgroundQuery(query);
     // count renders in the parent component
     renders.count++;
     return <Child queryRef={queryRef} />;
@@ -130,7 +124,7 @@ function renderIntegrationTest({
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
             {variables ? (
-              <ParentWithVariables variables={variables} />
+              <ParentWithVariables />
             ) : (
               <Parent />
             )}
@@ -140,7 +134,7 @@ function renderIntegrationTest({
     );
   }
 
-  const { ...rest } = render(<App variables={variables} />);
+  const { ...rest } = render(<App />);
   return { ...rest, query, client: _client, renders };
 }
 

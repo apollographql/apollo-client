@@ -10,6 +10,7 @@ import { version } from '../version';
 import type { UriFunction } from '../link/http';
 import { HttpLink } from '../link/http';
 
+import { DocumentTransform } from './DocumentTransform';
 import { QueryManager } from './QueryManager';
 import type { ObservableQuery } from './ObservableQuery';
 
@@ -63,6 +64,7 @@ export type ApolloClientOptions<TCacheShape> = {
   fragmentMatcher?: FragmentMatcher;
   name?: string;
   version?: string;
+  documentTransform?: DocumentTransform
 };
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
@@ -141,6 +143,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       credentials,
       headers,
       cache,
+      documentTransform,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       connectToDevTools =
@@ -236,6 +239,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       cache: this.cache,
       link: this.link,
       defaultOptions: this.defaultOptions,
+      documentTransform,
       queryDeduplication,
       ssrMode,
       clientAwareness: {

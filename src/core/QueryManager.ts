@@ -57,6 +57,7 @@ import type {
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
 } from './types';
+import { DocumentTransform } from './DocumentTransform';
 import { LocalState } from './LocalState';
 
 import type {
@@ -104,6 +105,7 @@ export class QueryManager<TStore> {
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
   private localState: LocalState<TStore>;
+  private documentTransform?: DocumentTransform
 
   private onBroadcast?: () => void;
   public mutationStore?: {
@@ -122,6 +124,7 @@ export class QueryManager<TStore> {
     cache,
     link,
     defaultOptions,
+    documentTransform,
     queryDeduplication = false,
     onBroadcast,
     ssrMode = false,
@@ -132,6 +135,7 @@ export class QueryManager<TStore> {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
     defaultOptions?: DefaultOptions;
+    documentTransform?: DocumentTransform;
     queryDeduplication?: boolean;
     onBroadcast?: () => void;
     ssrMode?: boolean;
@@ -147,6 +151,7 @@ export class QueryManager<TStore> {
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = assumeImmutableResults;
+    this.documentTransform = documentTransform
     if ((this.onBroadcast = onBroadcast)) {
       this.mutationStore = Object.create(null);
     }

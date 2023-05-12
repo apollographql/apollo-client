@@ -317,11 +317,13 @@ function renderVariablesIntegrationTest({
   const { ...rest } = render(
     <App errorPolicy={errorPolicy} variables={variables} />
   );
-  return { ...rest, query, App, client, renders };
+    const rerender = ({ variables }: { variables: QueryVariables }) => {
+    return rest.rerender(<App variables={variables} />);
+  };
+  return { ...rest, query, rerender, client, renders };
 }
 
 function renderPaginatedIntegrationTest({
-  mocks,
   updateQuery,
   fieldPolicies,
 }: {
@@ -487,7 +489,7 @@ function renderPaginatedIntegrationTest({
   }
 
   const { ...rest } = render(<App />);
-  return { ...rest, data, query, App, client, renders };
+  return { ...rest, data, query, client, renders };
 }
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
@@ -1417,7 +1419,7 @@ describe('useBackgroundQuery', () => {
   });
 
   it('reacts to variables updates', async () => {
-    const { App, renders, rerender } = renderVariablesIntegrationTest({
+    const { renders, rerender } = renderVariablesIntegrationTest({
       variables: { id: '1' },
     });
 
@@ -1426,7 +1428,7 @@ describe('useBackgroundQuery', () => {
 
     expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
 
-    rerender(<App variables={{ id: '2' }} />);
+    rerender({ variables: { id: '2' }});
 
     expect(renders.suspenseCount).toBe(2);
     expect(screen.getByText('loading')).toBeInTheDocument();
@@ -1970,7 +1972,6 @@ describe('useBackgroundQuery', () => {
 
       expect(getItemTexts()).toStrictEqual(['C', 'D']);
     });
-    // TODO(FIXME): failing test
     it('properly uses `updateQuery` when calling `fetchMore`', async () => {
       const { renders } = renderPaginatedIntegrationTest({
         updateQuery: true,
@@ -1998,7 +1999,6 @@ describe('useBackgroundQuery', () => {
       expect(moreItems).toHaveLength(4);
       expect(getItemTexts()).toStrictEqual(['A', 'B', 'C', 'D']);
     });
-    // TODO(FIXME): failing test
     it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
       const { renders } = renderPaginatedIntegrationTest({
         fieldPolicies: true,

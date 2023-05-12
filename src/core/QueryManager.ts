@@ -211,7 +211,7 @@ export class QueryManager<TStore> {
     const {
       document,
       hasClientExports,
-    } = this.transform(mutation);
+    } = this.transform(this.transformDocument(mutation));
     mutation = this.cache.transformForLink(document);
 
     variables = this.getVariables(mutation, variables) as TVariables;
@@ -1202,7 +1202,7 @@ export class QueryManager<TStore> {
     // or setVariables.
     networkStatus = NetworkStatus.loading
   ): ConcastAndInfo<TData> {
-    const query = this.transform(options.query).document;
+    const query = this.transform(this.transformDocument(options.query)).document;
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
 
@@ -1617,6 +1617,12 @@ export class QueryManager<TStore> {
       ...newContext,
       clientAwareness: this.clientAwareness,
     };
+  }
+
+  private transformDocument(document: DocumentNode) {
+    return this.documentTransform 
+      ? this.documentTransform.transformDocument(document) 
+      : document;
   }
 }
 

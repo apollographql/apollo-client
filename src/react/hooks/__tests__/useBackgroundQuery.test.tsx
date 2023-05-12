@@ -123,11 +123,7 @@ function renderIntegrationTest({
       <ApolloProvider client={_client} suspenseCache={suspenseCache}>
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
-            {variables ? (
-              <ParentWithVariables />
-            ) : (
-              <Parent />
-            )}
+            {variables ? <ParentWithVariables /> : <Parent />}
           </Suspense>
         </ErrorBoundary>
       </ApolloProvider>
@@ -604,9 +600,7 @@ describe('useBackgroundQuery', () => {
     ];
     const { result } = renderHook(() => useBackgroundQuery(query), {
       wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>
-          {children}
-        </MockedProvider>
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
       ),
     });
 
@@ -870,238 +864,233 @@ describe('useBackgroundQuery', () => {
     expect(values).toEqual([0, 1, 1, 2, 3, 5]);
   });
 
-  describe.skip('cache-and-network', () => {
-    // TODO: should return cache data first if it exists
-    it('returns initial cache data followed by network data when the fetch policy is `cache-and-network`', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const suspenseCache = new SuspenseCache();
-      const cache = new InMemoryCache();
-      const link = mockSingleLink({
-        request: { query },
-        result: { data: { hello: 'from link' } },
-        delay: 20,
-      });
-
-      const client = new ApolloClient({
-        link,
-        cache,
-      });
-
-      cache.writeQuery({ query, data: { hello: 'from cache' } });
-
-      const { result } = renderHook(
-        () => useBackgroundQuery(query, { fetchPolicy: 'cache-and-network' }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider suspenseCache={suspenseCache} client={client}>
-              {children}
-            </ApolloProvider>
-          ),
-        }
-      );
-
-      const { queryRef } = result.current;
-
-      const _result = await queryRef.promises.main;
-
-      expect(_result).toEqual({
-        data: { hello: 'from link' },
-        loading: false,
-        networkStatus: 7,
-      });
+  // TODO(FIXME): test fails, should return cache data first if it exists
+  it.skip('returns initial cache data followed by network data when the fetch policy is `cache-and-network`', async () => {
+    const query = gql`
+      {
+        hello
+      }
+    `;
+    const suspenseCache = new SuspenseCache();
+    const cache = new InMemoryCache();
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: { hello: 'from link' } },
+      delay: 20,
     });
-    describe('cache-first', () => {
-      it('all data is present in the cache, no network request is made', async () => {
-        const query = gql`
-          {
-            hello
-          }
-        `;
-        const suspenseCache = new SuspenseCache();
-        const cache = new InMemoryCache();
-        const link = mockSingleLink({
-          request: { query },
-          result: { data: { hello: 'from link' } },
-          delay: 20,
-        });
 
-        const client = new ApolloClient({
-          link,
-          cache,
-        });
-
-        cache.writeQuery({ query, data: { hello: 'from cache' } });
-
-        const { result } = renderHook(
-          () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider suspenseCache={suspenseCache} client={client}>
-                {children}
-              </ApolloProvider>
-            ),
-          }
-        );
-
-        const { queryRef } = result.current;
-
-        const _result = await queryRef.promises.main;
-
-        expect(_result).toEqual({
-          data: { hello: 'from cache' },
-          loading: false,
-          networkStatus: 7,
-        });
-      });
-      it('partial data is present in the cache so it is ignored and network request is made', async () => {
-        const query = gql`
-          {
-            hello
-            foo
-          }
-        `;
-        const suspenseCache = new SuspenseCache();
-        const cache = new InMemoryCache();
-        const link = mockSingleLink({
-          request: { query },
-          result: { data: { hello: 'from link', foo: 'bar' } },
-          delay: 20,
-        });
-
-        const client = new ApolloClient({
-          link,
-          cache,
-        });
-
-        // we expect a "Missing field 'foo' while writing result..." error
-        // when writing hello to the cache, so we'll silence the console.error
-        const originalConsoleError = console.error;
-        console.error = () => {
-          /* noop */
-        };
-        cache.writeQuery({ query, data: { hello: 'from cache' } });
-        console.error = originalConsoleError;
-
-        const { result } = renderHook(
-          () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider suspenseCache={suspenseCache} client={client}>
-                {children}
-              </ApolloProvider>
-            ),
-          }
-        );
-
-        const { queryRef } = result.current;
-
-        const _result = await queryRef.promises.main;
-
-        expect(_result).toEqual({
-          data: { foo: 'bar', hello: 'from link' },
-          loading: false,
-          networkStatus: 7,
-        });
-      });
+    const client = new ApolloClient({
+      link,
+      cache,
     });
-    describe('network-only', () => {
-      it('existing data in the cache is ignored', async () => {
-        const query = gql`
-          {
-            hello
-          }
-        `;
-        const suspenseCache = new SuspenseCache();
-        const cache = new InMemoryCache();
-        const link = mockSingleLink({
-          request: { query },
-          result: { data: { hello: 'from link' } },
-          delay: 20,
-        });
 
-        const client = new ApolloClient({
-          link,
-          cache,
-        });
+    cache.writeQuery({ query, data: { hello: 'from cache' } });
 
-        cache.writeQuery({ query, data: { hello: 'from cache' } });
+    const { result } = renderHook(
+      () => useBackgroundQuery(query, { fetchPolicy: 'cache-and-network' }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider suspenseCache={suspenseCache} client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      }
+    );
 
-        const { result } = renderHook(
-          () => useBackgroundQuery(query, { fetchPolicy: 'network-only' }),
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider suspenseCache={suspenseCache} client={client}>
-                {children}
-              </ApolloProvider>
-            ),
-          }
-        );
+    const { queryRef } = result.current;
 
-        const { queryRef } = result.current;
+    const _result = await queryRef.promises.main;
 
-        const _result = await queryRef.promises.main;
-
-        expect(_result).toEqual({
-          data: { hello: 'from link' },
-          loading: false,
-          networkStatus: 7,
-        });
-        expect(client.cache.extract()).toEqual({
-          ROOT_QUERY: { __typename: 'Query', hello: 'from link' },
-        });
-      });
+    expect(_result).toEqual({
+      data: { hello: 'from link' },
+      loading: false,
+      networkStatus: 7,
     });
-    describe('no-cache', () => {
-      it('fetches data from the network but does not update the cache', async () => {
-        const query = gql`
-          {
-            hello
-          }
-        `;
-        const suspenseCache = new SuspenseCache();
-        const cache = new InMemoryCache();
-        const link = mockSingleLink({
-          request: { query },
-          result: { data: { hello: 'from link' } },
-          delay: 20,
-        });
+  });
 
-        const client = new ApolloClient({
-          link,
-          cache,
-        });
+  it('all data is present in the cache, no network request is made', async () => {
+    const query = gql`
+      {
+        hello
+      }
+    `;
+    const suspenseCache = new SuspenseCache();
+    const cache = new InMemoryCache();
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: { hello: 'from link' } },
+      delay: 20,
+    });
 
-        cache.writeQuery({ query, data: { hello: 'from cache' } });
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
 
-        const { result } = renderHook(
-          () => useBackgroundQuery(query, { fetchPolicy: 'no-cache' }),
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider suspenseCache={suspenseCache} client={client}>
-                {children}
-              </ApolloProvider>
-            ),
-          }
-        );
+    cache.writeQuery({ query, data: { hello: 'from cache' } });
 
-        const { queryRef } = result.current;
+    const { result } = renderHook(
+      () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider suspenseCache={suspenseCache} client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      }
+    );
 
-        const _result = await queryRef.promises.main;
+    const { queryRef } = result.current;
 
-        expect(_result).toEqual({
-          data: { hello: 'from link' },
-          loading: false,
-          networkStatus: 7,
-        });
-        // ...but not updated in the cache
-        expect(client.cache.extract()).toEqual({
-          ROOT_QUERY: { __typename: 'Query', hello: 'from cache' },
-        });
-      });
+    const _result = await queryRef.promises.main;
+
+    expect(_result).toEqual({
+      data: { hello: 'from cache' },
+      loading: false,
+      networkStatus: 7,
+    });
+  });
+  it('partial data is present in the cache so it is ignored and network request is made', async () => {
+    const query = gql`
+      {
+        hello
+        foo
+      }
+    `;
+    const suspenseCache = new SuspenseCache();
+    const cache = new InMemoryCache();
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: { hello: 'from link', foo: 'bar' } },
+      delay: 20,
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
+
+    // we expect a "Missing field 'foo' while writing result..." error
+    // when writing hello to the cache, so we'll silence the console.error
+    const originalConsoleError = console.error;
+    console.error = () => {
+      /* noop */
+    };
+    cache.writeQuery({ query, data: { hello: 'from cache' } });
+    console.error = originalConsoleError;
+
+    const { result } = renderHook(
+      () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider suspenseCache={suspenseCache} client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      }
+    );
+
+    const { queryRef } = result.current;
+
+    const _result = await queryRef.promises.main;
+
+    expect(_result).toEqual({
+      data: { foo: 'bar', hello: 'from link' },
+      loading: false,
+      networkStatus: 7,
+    });
+  });
+
+  it('existing data in the cache is ignored', async () => {
+    const query = gql`
+      {
+        hello
+      }
+    `;
+    const suspenseCache = new SuspenseCache();
+    const cache = new InMemoryCache();
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: { hello: 'from link' } },
+      delay: 20,
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
+
+    cache.writeQuery({ query, data: { hello: 'from cache' } });
+
+    const { result } = renderHook(
+      () => useBackgroundQuery(query, { fetchPolicy: 'network-only' }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider suspenseCache={suspenseCache} client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      }
+    );
+
+    const { queryRef } = result.current;
+
+    const _result = await queryRef.promises.main;
+
+    expect(_result).toEqual({
+      data: { hello: 'from link' },
+      loading: false,
+      networkStatus: 7,
+    });
+    expect(client.cache.extract()).toEqual({
+      ROOT_QUERY: { __typename: 'Query', hello: 'from link' },
+    });
+  });
+
+  it('fetches data from the network but does not update the cache', async () => {
+    const query = gql`
+      {
+        hello
+      }
+    `;
+    const suspenseCache = new SuspenseCache();
+    const cache = new InMemoryCache();
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: { hello: 'from link' } },
+      delay: 20,
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
+
+    cache.writeQuery({ query, data: { hello: 'from cache' } });
+
+    const { result } = renderHook(
+      () => useBackgroundQuery(query, { fetchPolicy: 'no-cache' }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider suspenseCache={suspenseCache} client={client}>
+            {children}
+          </ApolloProvider>
+        ),
+      }
+    );
+
+    const { queryRef } = result.current;
+
+    const _result = await queryRef.promises.main;
+
+    expect(_result).toEqual({
+      data: { hello: 'from link' },
+      loading: false,
+      networkStatus: 7,
+    });
+    // ...but not updated in the cache
+    expect(client.cache.extract()).toEqual({
+      ROOT_QUERY: { __typename: 'Query', hello: 'from cache' },
     });
   });
 

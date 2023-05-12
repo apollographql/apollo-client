@@ -245,7 +245,12 @@ test('allows non cached transforms to be run when concatenated', async () => {
     cache: false,
   });
 
-  const documentTransform = stripClientTransform.concat(
+  // Try ordering the transforms both ways to ensure the cached transform has
+  // no effect on whether the non-cached transform runs
+  const documentTransform =
+    stripNonReactiveTransform.concat(stripClientTransform);
+
+  const reversedTransform = stripClientTransform.concat(
     stripNonReactiveTransform
   );
 
@@ -258,6 +263,26 @@ test('allows non cached transforms to be run when concatenated', async () => {
   const result2 = documentTransform.transformDocument(query);
 
   expect(print(result2)).toEqual(print(expected));
+  // Even though stripClient is cached, it is called a second time because
+  // stripNonReactive returns a new document instance each time it runs.
+  expect(stripClient).toHaveBeenCalledTimes(2);
+  expect(stripNonReactive).toHaveBeenCalledTimes(2);
+
+  stripClient.mockClear();
+  stripNonReactive.mockClear();
+
+  const reversed = reversedTransform.transformDocument(query);
+
+  expect(print(reversed)).toEqual(print(expected));
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+
+  const reversed2 = reversedTransform.transformDocument(query);
+
+  expect(print(reversed2)).toEqual(print(expected));
+  // Now that the cached transform is first, we can make sure it doesn't run
+  // again. We verify the non-cached that is run after the cached transform does
+  // get a chance to execute.
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(2);
 });

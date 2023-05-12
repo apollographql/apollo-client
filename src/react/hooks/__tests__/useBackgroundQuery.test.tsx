@@ -102,7 +102,7 @@ function renderIntegrationTest({
   }
 
   function Child({ queryRef }: { queryRef: QueryReference<QueryData> }) {
-    const { data } = useReadQuery<QueryData>(queryRef);
+    const { data } = useReadQuery(queryRef);
     return <div>{data.foo.bar}</div>;
   }
 
@@ -258,7 +258,7 @@ function renderVariablesIntegrationTest({
     ) => Promise<ApolloQueryResult<QueryData>>;
     queryRef: QueryReference<QueryData>;
   }) {
-    const { data, error, networkStatus } = useReadQuery<QueryData>(queryRef);
+    const { data, error, networkStatus } = useReadQuery(queryRef);
     const [variables, setVariables] = React.useState(_variables);
 
     renders.frames.push({ data, networkStatus, error });
@@ -436,7 +436,7 @@ function renderPaginatedIntegrationTest({
     fetchMore: FetchMoreFunction<QueryData, OperationVariables>;
     queryRef: QueryReference<QueryData>;
   }) {
-    const { data, error } = useReadQuery<QueryData>(queryRef);
+    const { data, error } = useReadQuery(queryRef);
 
     return (
       <div>
@@ -878,7 +878,7 @@ describe('useBackgroundQuery', () => {
 
   describe.skip('cache-and-network', () => {
     // TODO: should return cache data first if it exists
-    it('returns initial cache data followed by network data', async () => {
+    it('returns initial cache data followed by network data when the fetch policy is `cache-and-network`', async () => {
       const query = gql`
         {
           hello
@@ -1202,7 +1202,7 @@ describe('useBackgroundQuery', () => {
         queryRef: QueryReference<Data>;
         onChange: (id: string) => void;
       }) {
-        const { data } = useReadQuery<Data>(queryRef);
+        const { data } = useReadQuery(queryRef);
         const [isPending, startTransition] = React.useTransition();
         const { todo } = data;
 
@@ -1321,7 +1321,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
-        const { data, networkStatus, error } = useReadQuery<Data>(queryRef);
+        const { data, networkStatus, error } = useReadQuery(queryRef);
         const { greeting } = data;
         renders++;
 
@@ -1899,7 +1899,7 @@ describe('useBackgroundQuery', () => {
         queryRef: QueryReference<Data>;
         onChange: (id: string) => void;
       }) {
-        const { data } = useReadQuery<Data>(queryRef);
+        const { data } = useReadQuery(queryRef);
         const [isPending, startTransition] = React.useTransition();
         const { todo } = data;
 
@@ -2146,7 +2146,7 @@ describe('useBackgroundQuery', () => {
         fetchMore: FetchMoreFunction<Data, OperationVariables>;
         queryRef: QueryReference<Data>;
       }) {
-        const { data } = useReadQuery<Data>(queryRef);
+        const { data } = useReadQuery(queryRef);
         const [isPending, startTransition] = React.useTransition();
         const { todos } = data;
 

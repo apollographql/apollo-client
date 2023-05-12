@@ -77,6 +77,9 @@ export function useBackgroundQuery_experimental<
     [queryRef]
   );
 
+  // TODO(FIXME): refactor
+  // @ts-ignore
+  queryRef.setVersion = setVersion;
   queryRef.version = version;
 
   return useMemo(() => {
@@ -96,6 +99,9 @@ export function useReadQuery_experimental<TData>(
 
   useEffect(() => {
     return queryRef.listen(() => {
+      // TODO(FIXME): refactor
+      // @ts-ignore
+      queryRef.setVersion('main');
       forceUpdate((prevState) => prevState + 1);
     });
   }, [queryRef]);

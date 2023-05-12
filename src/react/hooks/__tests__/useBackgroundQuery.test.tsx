@@ -1451,7 +1451,7 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.count).toBe(5);
+      expect(renders.count).toBe(4);
 
       expect(
         await screen.findByText('1 - Spider-Man (updated)')
@@ -1516,7 +1516,7 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.count).toBe(5);
+      expect(renders.count).toBe(4);
 
       // extra render puts an additional frame into the array
       expect(renders.frames).toMatchObject([
@@ -1553,7 +1553,7 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.count).toBe(5);
+      expect(renders.count).toBe(4);
 
       expect(
         await screen.findByText('1 - Spider-Man (updated)')
@@ -1563,7 +1563,7 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(3);
-      expect(renders.count).toBe(8);
+      expect(renders.count).toBe(6);
 
       expect(
         await screen.findByText('1 - Spider-Man (updated again)')
@@ -1970,8 +1970,8 @@ describe('useBackgroundQuery', () => {
 
       expect(getItemTexts()).toStrictEqual(['C', 'D']);
     });
-    // TODO: failing test
-    it.skip('properly uses `updateQuery` when calling `fetchMore`', async () => {
+    // TODO(FIXME): failing test
+    it('properly uses `updateQuery` when calling `fetchMore`', async () => {
       const { renders } = renderPaginatedIntegrationTest({
         updateQuery: true,
       });
@@ -1998,8 +1998,8 @@ describe('useBackgroundQuery', () => {
       expect(moreItems).toHaveLength(4);
       expect(getItemTexts()).toStrictEqual(['A', 'B', 'C', 'D']);
     });
-    // TODO: failing test
-    it.skip('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
+    // TODO(FIXME): failing test
+    it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
       const { renders } = renderPaginatedIntegrationTest({
         fieldPolicies: true,
       });

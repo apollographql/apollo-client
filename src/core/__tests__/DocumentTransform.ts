@@ -4,11 +4,33 @@ import {
   removeDirectivesFromDocument,
 } from '../../utilities';
 import { gql } from 'graphql-tag';
-import { DocumentNode, OperationTypeNode, print } from 'graphql';
+import { DocumentNode, OperationTypeNode, print, visit, Kind } from 'graphql';
 
 function stripDirective(directive: string) {
   return (document: DocumentNode) => {
     return removeDirectivesFromDocument([{ name: directive }], document)!;
+  };
+}
+
+function addClientDirectiveToField(fieldName: string) {
+  return (document: DocumentNode) => {
+    return visit(document, {
+      Field: {
+        leave: (node) => {
+          if (node.name.value === fieldName) {
+            return {
+              ...node,
+              directives: [
+                {
+                  kind: Kind.DIRECTIVE,
+                  name: { kind: Kind.NAME, value: 'client' },
+                },
+              ],
+            };
+          }
+        },
+      },
+    });
   };
 }
 
@@ -138,6 +160,48 @@ test('can combine 2 transforms with `concat`', async () => {
   const stripClient = new DocumentTransform(stripDirective('client'));
   const stripNonReactive = new DocumentTransform(stripDirective('nonreactive'));
   const documentTransform = stripClient.concat(stripNonReactive);
+
+  const result = documentTransform.transformDocument(query);
+
+  expect(print(result)).toEqual(print(expected));
+});
+
+test('runs concatenated transform after original transform', () => {
+  const query = gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const expected = gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn
+      }
+    }
+  `;
+
+  const addClientDirectiveToName = new DocumentTransform(
+    addClientDirectiveToField('name')
+  );
+
+  expect(print(addClientDirectiveToName.transformDocument(query))).toEqual(
+    print(gql`
+      query TestQuery {
+        user {
+          name @client
+          isLoggedIn @client
+        }
+      }
+    `)
+  );
+
+  const stripClient = new DocumentTransform(stripDirective('client'));
+  const documentTransform = addClientDirectiveToName.concat(stripClient);
 
   const result = documentTransform.transformDocument(query);
 

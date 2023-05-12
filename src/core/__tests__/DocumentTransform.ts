@@ -4,7 +4,7 @@ import {
   removeDirectivesFromDocument,
 } from '../../utilities';
 import { gql } from 'graphql-tag';
-import { DocumentNode, OperationTypeNode, print, visit, Kind } from 'graphql';
+import { DocumentNode, OperationTypeNode, visit, Kind } from 'graphql';
 
 function stripDirective(directive: string) {
   return (document: DocumentNode) => {
@@ -56,20 +56,18 @@ test('can transform a document', () => {
     }
   `;
 
-  const expected = gql`
+  const transform = new DocumentTransform(stripDirective('client'));
+
+  const result = transform.transformDocument(query);
+
+  expect(result).toMatchDocument(gql`
     query TestQuery {
       user {
         name
         isLoggedIn
       }
     }
-  `;
-
-  const transform = new DocumentTransform(stripDirective('client'));
-
-  const result = transform.transformDocument(query);
-
-  expect(print(result)).toEqual(print(expected));
+  `);
 });
 
 test('caches the result of the transform by default', () => {
@@ -96,12 +94,12 @@ test('caches the result of the transform by default', () => {
 
   const result1 = documentTransform.transformDocument(query);
 
-  expect(print(result1)).toEqual(print(expected));
+  expect(result1).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
 
   const result2 = documentTransform.transformDocument(query);
 
-  expect(print(result2)).toEqual(print(expected));
+  expect(result2).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
 });
 
@@ -129,12 +127,12 @@ test('can disable caching the result output', () => {
 
   const result1 = documentTransform.transformDocument(query);
 
-  expect(print(result1)).toEqual(print(expected));
+  expect(result1).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
 
   const result2 = documentTransform.transformDocument(query);
 
-  expect(print(result2)).toEqual(print(expected));
+  expect(result2).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(2);
 });
 
@@ -148,22 +146,20 @@ test('can combine 2 transforms with `concat`', async () => {
     }
   `;
 
-  const expected = gql`
-    query TestQuery {
-      user {
-        name
-        isLoggedIn
-      }
-    }
-  `;
-
   const stripClient = new DocumentTransform(stripDirective('client'));
   const stripNonReactive = new DocumentTransform(stripDirective('nonreactive'));
   const documentTransform = stripClient.concat(stripNonReactive);
 
   const result = documentTransform.transformDocument(query);
 
-  expect(print(result)).toEqual(print(expected));
+  expect(result).toMatchDocument(gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn
+      }
+    }
+  `);
 });
 
 test('runs concatenated transform after original transform', () => {
@@ -189,23 +185,21 @@ test('runs concatenated transform after original transform', () => {
     addClientDirectiveToField('name')
   );
 
-  expect(print(addClientDirectiveToName.transformDocument(query))).toEqual(
-    print(gql`
-      query TestQuery {
-        user {
-          name @client
-          isLoggedIn @client
-        }
+  expect(addClientDirectiveToName.transformDocument(query)).toMatchDocument(gql`
+    query TestQuery {
+      user {
+        name @client
+        isLoggedIn @client
       }
-    `)
-  );
+    }
+  `);
 
   const stripClient = new DocumentTransform(stripDirective('client'));
   const documentTransform = addClientDirectiveToName.concat(stripClient);
 
   const result = documentTransform.transformDocument(query);
 
-  expect(print(result)).toEqual(print(expected));
+  expect(result).toMatchDocument(expected);
 });
 
 test('can combine multiple transforms with `concat`', async () => {
@@ -214,15 +208,6 @@ test('can combine multiple transforms with `concat`', async () => {
       user @nonreactive {
         name @connection
         isLoggedIn @client
-      }
-    }
-  `;
-
-  const expected = gql`
-    query TestQuery {
-      user {
-        name
-        isLoggedIn
       }
     }
   `;
@@ -236,7 +221,14 @@ test('can combine multiple transforms with `concat`', async () => {
 
   const result = documentTransform.transformDocument(query);
 
-  expect(print(result)).toEqual(print(expected));
+  expect(result).toMatchDocument(gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn
+      }
+    }
+  `);
 });
 
 test('caches the result output from a combined transform when both transforms are cached', async () => {
@@ -269,13 +261,13 @@ test('caches the result output from a combined transform when both transforms ar
 
   const result = documentTransform.transformDocument(query);
 
-  expect(print(result)).toEqual(print(expected));
+  expect(result).toMatchDocument(expected);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
 
   const result2 = documentTransform.transformDocument(query);
 
-  expect(print(result2)).toEqual(print(expected));
+  expect(result2).toMatchDocument(expected);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
 });
@@ -320,13 +312,13 @@ test('allows non cached transforms to be run when concatenated', async () => {
 
   const result = documentTransform.transformDocument(query);
 
-  expect(print(result)).toEqual(print(expected));
+  expect(result).toMatchDocument(expected);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
 
   const result2 = documentTransform.transformDocument(query);
 
-  expect(print(result2)).toEqual(print(expected));
+  expect(result2).toMatchDocument(expected);
   // Even though stripClient is cached, it is called a second time because
   // stripNonReactive returns a new document instance each time it runs.
   expect(stripClient).toHaveBeenCalledTimes(2);
@@ -337,13 +329,13 @@ test('allows non cached transforms to be run when concatenated', async () => {
 
   const reversed = reversedTransform.transformDocument(query);
 
-  expect(print(reversed)).toEqual(print(expected));
+  expect(reversed).toMatchDocument(expected);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
 
   const reversed2 = reversedTransform.transformDocument(query);
 
-  expect(print(reversed2)).toEqual(print(expected));
+  expect(reversed2).toMatchDocument(expected);
   // Now that the cached transform is first, we can make sure it doesn't run
   // again. We verify the non-cached that is run after the cached transform does
   // get a chance to execute.
@@ -369,15 +361,6 @@ test('can conditionally run transforms using `filter`', () => {
     }
   `;
 
-  const expected = gql`
-    query TestQuery {
-      user {
-        name
-        isLoggedIn
-      }
-    }
-  `;
-
   const documentTransform = new DocumentTransform(
     stripDirective('client')
   ).filter(isQuery);
@@ -385,8 +368,16 @@ test('can conditionally run transforms using `filter`', () => {
   const queryResult = documentTransform.transformDocument(query);
   const mutationResult = documentTransform.transformDocument(mutation);
 
-  expect(print(queryResult)).toEqual(print(expected));
-  expect(print(mutationResult)).toEqual(print(mutationResult));
+  expect(queryResult).toMatchDocument(gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn
+      }
+    }
+  `);
+
+  expect(mutationResult).toMatchDocument(mutation);
 });
 
 test('properly caches the result of `filter` when the original transform is cached', () => {
@@ -415,12 +406,12 @@ test('properly caches the result of `filter` when the original transform is cach
 
   const result = documentTransform.transformDocument(query);
 
-  expect(print(result)).toEqual(print(expected));
+  expect(result).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
 
   const result2 = documentTransform.transformDocument(query);
 
-  expect(print(result2)).toEqual(print(expected));
+  expect(result2).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
 });
 
@@ -450,12 +441,12 @@ test('reruns transform returned from `filter` when the original transform is not
 
   const result = documentTransform.transformDocument(query);
 
-  expect(print(result)).toEqual(print(expected));
+  expect(result).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
 
   const result2 = documentTransform.transformDocument(query);
 
-  expect(print(result2)).toEqual(print(expected));
+  expect(result2).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(2);
 });
 
@@ -490,42 +481,34 @@ test('properly handles combinations of `concat` and `filter`', () => {
     .filter(isMutation)
     .concat(stripNonReactive);
 
-  expect(print(queryOnlyTransform.transformDocument(query)))
-    .toMatchInlineSnapshot(`
-    "query TestQuery {
+  expect(queryOnlyTransform.transformDocument(query)).toMatchDocument(gql`
+    query TestQuery {
       user {
         name
         isLoggedIn
       }
-    }"
+    }
   `);
 
-  expect(print(queryOnlyTransform.transformDocument(mutation)))
-    .toMatchInlineSnapshot(`
-    "mutation TestMutation {
-      incrementCounter @client {
-        count @nonreactive
-      }
-    }"
-  `);
+  expect(queryOnlyTransform.transformDocument(mutation)).toMatchDocument(
+    mutation
+  );
 
-  expect(print(conditionalStrip.transformDocument(query)))
-    .toMatchInlineSnapshot(`
-    "query TestQuery {
+  expect(conditionalStrip.transformDocument(query)).toMatchDocument(gql`
+    query TestQuery {
       user {
         name
         isLoggedIn @client
       }
-    }"
+    }
   `);
 
-  expect(print(conditionalStrip.transformDocument(mutation)))
-    .toMatchInlineSnapshot(`
-    "mutation TestMutation {
+  expect(conditionalStrip.transformDocument(mutation)).toMatchDocument(gql`
+    mutation TestMutation {
       incrementCounter {
         count
       }
-    }"
+    }
   `);
 });
 
@@ -552,17 +535,17 @@ test('can invalidate a cached document with `invalidateDocument`', () => {
 
   const result = documentTransform.transformDocument(query);
 
-  expect(print(result)).toEqual(print(expected));
+  expect(result).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
 
   const result2 = documentTransform.transformDocument(query);
 
-  expect(print(result2)).toEqual(print(expected));
+  expect(result2).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
 
   documentTransform.invalidateDocument(query);
   const result3 = documentTransform.transformDocument(query);
 
-  expect(print(result3)).toEqual(print(expected));
+  expect(result3).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(2);
 });

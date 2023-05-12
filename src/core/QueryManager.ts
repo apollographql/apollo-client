@@ -1040,7 +1040,7 @@ export class QueryManager<TStore> {
   ): Observable<FetchResult<T>> {
     let observable: Observable<FetchResult<T>>;
 
-    const { serverQuery } = this.transform(query);
+    const { serverQuery, clientQuery } = this.transform(query);
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
@@ -1090,7 +1090,6 @@ export class QueryManager<TStore> {
       context = this.prepareContext(context);
     }
 
-    const { clientQuery } = this.transform(query);
     if (clientQuery) {
       observable = asyncMap(observable, result => {
         return this.localState.runResolvers({

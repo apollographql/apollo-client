@@ -31,6 +31,7 @@ export {
   FragmentMatcher,
 } from './LocalState';
 export { isApolloError, ApolloError } from '../errors';
+export { DocumentTransform } from './DocumentTransform';
 
 /* Cache */
 

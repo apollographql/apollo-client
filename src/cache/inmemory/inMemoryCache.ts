@@ -29,6 +29,7 @@ import { makeVar, forgetCache, recallCache } from './reactiveVars';
 import { Policies } from './policies';
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
+import { DocumentTransform } from '../../core';
 import type { OperationVariables } from '../../core';
 
 type BroadcastOptions = Pick<
@@ -45,9 +46,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
 
-  private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
+  private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
   private maybeBroadcastWatch: OptimisticWrapperFunction<
     [Cache.WatchOptions, BroadcastOptions?],
@@ -513,16 +514,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public transformDocument(document: DocumentNode): DocumentNode {
     if (this.addTypename) {
-      let result = this.typenameDocumentCache.get(document);
-      if (!result) {
-        result = addTypenameToDocument(document);
-        this.typenameDocumentCache.set(document, result);
-        // If someone calls transformDocument and then mistakenly passes the
-        // result back into an API that also calls transformDocument, make sure
-        // we don't keep creating new query documents.
-        this.typenameDocumentCache.set(result, result);
-      }
-      return result;
+      return this.addTypenameTransform.transformDocument(document);
     }
     return document;
   }

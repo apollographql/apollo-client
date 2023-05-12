@@ -1108,6 +1108,7 @@ export class QueryManager<TStore> {
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
     options: Pick<WatchQueryOptions<TVars, TData>,
+      | "query"
       | "variables"
       | "context"
       | "fetchPolicy"
@@ -1118,10 +1119,7 @@ export class QueryManager<TStore> {
     // Performing transformForLink here gives this.cache a chance to fill in
     // missing fragment definitions (for example) before sending this document
     // through the link chain.
-    const linkDocument = this.cache.transformForLink(
-      // Use same document originally produced by this.cache.transformDocument.
-      this.transform(queryInfo.document!).document
-    );
+    const linkDocument = this.cache.transformForLink(options.query);
 
     return asyncMap(
       this.getObservableFromLink(
@@ -1535,6 +1533,7 @@ export class QueryManager<TStore> {
       queryInfo,
       cacheWriteBehavior,
       {
+        query: this.transform(query).document,
         variables,
         context,
         fetchPolicy,

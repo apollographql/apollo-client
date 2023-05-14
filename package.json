@@ -124,7 +124,7 @@
     "acorn": "8.8.2",
     "blob-polyfill": "7.0.20220408",
     "bytes": "3.1.2",
-    "cross-fetch": "3.1.5",
+    "cross-fetch": "3.1.6",
     "eslint": "8.40.0",
     "eslint-plugin-testing-library": "5.10.3",
     "fetch-mock": "9.11.0",

@@ -19,6 +19,7 @@ import {
 } from './useSuspenseQuery';
 import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery';
 import { canonicalStringify } from '../../cache';
+import { invariant } from '../../utilities/globals';
 
 export type UseBackgroundQueryResult<
   TData = any,
@@ -104,13 +105,19 @@ export function useReadQuery_experimental<TData>(
   queryRef: QueryReference<TData>
 ) {
   const [, forceUpdate] = useState(0);
-  const promiseCache = queryRef.promiseCache!;
 
-  let promise = promiseCache.get(queryRef.key);
+  invariant(
+    queryRef.promiseCache,
+    'It appears that `useReadQuery` was used outside of `useBackgroundQuery`. ' +
+      '`useReadQuery` is only supported for use with `useBackgroundQuery`. ' +
+      'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
+  );
+
+  let promise = queryRef.promiseCache.get(queryRef.key);
 
   if (!promise) {
     promise = queryRef.promise;
-    promiseCache.set(queryRef.key, promise);
+    queryRef.promiseCache.set(queryRef.key, promise);
   }
 
   useEffect(() => {

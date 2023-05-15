@@ -25,6 +25,15 @@ src/*
 !src/react/
 src/react/*
 
+
+# Allow src/react/cache/ApolloProvider
+!src/react/context/
+src/react/context/*
+!src/react/context/ApolloProvider.tsx
+!src/react/context/__tests__/
+src/react/context/__tests__/*
+!src/react/context/__tests__/ApolloProvider.test.tsx
+
 # Allow src/react/cache
 !src/react/cache/
 

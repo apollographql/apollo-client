@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { getApolloContext } from '../context';
 import { invariant } from '../../utilities/globals';
-import { SuspenseCache } from '../cache';
+import type { SuspenseCache } from '../cache';
 
 export function useSuspenseCache(override?: SuspenseCache) {
   const context = useContext(getApolloContext());

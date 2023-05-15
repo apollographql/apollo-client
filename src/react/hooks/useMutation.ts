@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DocumentNode } from 'graphql';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import {
+import type { DocumentNode } from 'graphql';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type {
   MutationFunctionOptions,
   MutationHookOptions,
   MutationResult,
@@ -9,11 +9,12 @@ import {
   NoInfer,
 } from '../types/types';
 
-import {
+import type {
   ApolloCache,
   DefaultContext,
-  mergeOptions,
-  OperationVariables,
+  OperationVariables} from '../../core';
+import {
+  mergeOptions
 } from '../../core';
 import { equal } from '@wry/equality';
 import { DocumentType, verifyDocumentType } from '../parser';

@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
 import { parser } from '../parser';
-import { DefaultContext, OperationVariables } from '../../core/types';
-import {
+import type { DefaultContext, OperationVariables } from '../../core/types';
+import type {
   BaseMutationOptions,
   MutationFunction,
   MutationResult
@@ -17,8 +17,8 @@ import {
   calculateVariablesFromProps,
   GraphQLBase
 } from './hoc-utils';
-import { OperationOption, OptionProps, MutateProps } from './types';
-import { ApolloCache } from '../../core';
+import type { OperationOption, OptionProps, MutateProps } from './types';
+import type { ApolloCache } from '../../core';
 
 export function withMutation<
   TProps extends TGraphQLVariables | {} = {},

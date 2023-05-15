@@ -2,7 +2,7 @@ import { invariant } from '../globals';
 
 // Provides the methods that allow QueryManager to handle the `skip` and
 // `include` directives within GraphQL.
-import {
+import type {
   SelectionNode,
   VariableNode,
   BooleanValueNode,
@@ -10,7 +10,8 @@ import {
   DocumentNode,
   ArgumentNode,
   ValueNode,
-  ASTNode,
+  ASTNode} from 'graphql';
+import {
   visit,
   BREAK,
 } from 'graphql';

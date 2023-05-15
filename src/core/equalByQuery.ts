@@ -1,6 +1,6 @@
 import equal from "@wry/equality";
 
-import {
+import type {
   DirectiveNode,
   DocumentNode,
   FieldNode,
@@ -11,14 +11,15 @@ import {
   SelectionSetNode,
 } from "graphql";
 
-import {
+import type {
   ApolloQueryResult,
   OperationVariables,
 } from "./types";
 
+import type {
+  FragmentMap} from "../utilities";
 import {
   createFragmentMap,
-  FragmentMap,
   getFragmentDefinitions,
   getFragmentFromSelection,
   getMainDefinition,

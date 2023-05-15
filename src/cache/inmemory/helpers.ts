@@ -1,26 +1,27 @@
-import { DocumentNode, FragmentDefinitionNode, SelectionSetNode } from 'graphql';
+import type { DocumentNode, FragmentDefinitionNode, SelectionSetNode } from 'graphql';
 
-import {
+import type {
   NormalizedCache,
   InMemoryCacheConfig,
 } from './types';
 
-import { KeyFieldsContext } from './policies';
-import { FragmentRegistryAPI } from './fragmentRegistry';
+import type { KeyFieldsContext } from './policies';
+import type { FragmentRegistryAPI } from './fragmentRegistry';
 
-import {
+import type {
   Reference,
-  isReference,
   StoreValue,
   StoreObject,
+  FragmentMap,
+  FragmentMapFunction} from '../../utilities';
+import {
+  isReference,
   isField,
   DeepMerger,
   resultKeyNameFromField,
   shouldInclude,
   isNonNullObject,
   compact,
-  FragmentMap,
-  FragmentMapFunction,
   createFragmentMap,
   getFragmentDefinitions,
   isArray,

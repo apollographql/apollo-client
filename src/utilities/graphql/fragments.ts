@@ -1,6 +1,6 @@
 import { invariant, InvariantError } from '../globals';
 
-import {
+import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,

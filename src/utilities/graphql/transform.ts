@@ -1,6 +1,6 @@
 import { invariant } from '../globals';
 
-import {
+import type {
   DocumentNode,
   SelectionNode,
   SelectionSetNode,
@@ -11,11 +11,12 @@ import {
   ArgumentNode,
   FragmentSpreadNode,
   VariableDefinitionNode,
-  visit,
   ASTNode,
-  Kind,
   ASTVisitor,
-  InlineFragmentNode,
+  InlineFragmentNode} from 'graphql';
+import {
+  visit,
+  Kind
 } from 'graphql';
 
 import {
@@ -26,9 +27,10 @@ import {
   getMainDefinition,
 } from './getFromAST';
 import { isField } from './storeUtils';
+import type {
+  FragmentMap} from './fragments';
 import {
-  createFragmentMap,
-  FragmentMap,
+  createFragmentMap
 } from './fragments';
 import { isArray, isNonEmptyArray } from '../common/arrays';
 

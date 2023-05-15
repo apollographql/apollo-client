@@ -1,4 +1,4 @@
-import { DeepOmit } from '../types/DeepOmit';
+import type { DeepOmit } from '../types/DeepOmit';
 import { isPlainObject } from './objects';
 
 export function omitDeep<T, K extends string>(value: T, key: K) {

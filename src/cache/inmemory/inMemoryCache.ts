@@ -3,20 +3,22 @@ import { invariant } from '../../utilities/globals';
 // Make builtins like Map and Set safe to use with non-extensible objects.
 import './fixPolyfills';
 
-import { DocumentNode } from 'graphql';
-import { OptimisticWrapperFunction, wrap } from 'optimism';
+import type { DocumentNode } from 'graphql';
+import type { OptimisticWrapperFunction} from 'optimism';
+import { wrap } from 'optimism';
 import { equal } from '@wry/equality';
 
 import { ApolloCache } from '../core/cache';
-import { Cache } from '../core/types/Cache';
+import type { Cache } from '../core/types/Cache';
 import { MissingFieldError } from '../core/types/common';
+import type {
+  StoreObject,
+  Reference} from '../../utilities';
 import {
   addTypenameToDocument,
-  StoreObject,
-  Reference,
   isReference,
 } from '../../utilities';
-import { InMemoryCacheConfig, NormalizedCacheObject } from './types';
+import type { InMemoryCacheConfig, NormalizedCacheObject } from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
@@ -24,7 +26,7 @@ import { makeVar, forgetCache, recallCache } from './reactiveVars';
 import { Policies } from './policies';
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
-import { OperationVariables } from '../../core';
+import type { OperationVariables } from '../../core';
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,

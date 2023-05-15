@@ -1,25 +1,26 @@
 import { invariant, InvariantError, __DEV__ } from '../../utilities/globals';
 
-import {
+import type {
   InlineFragmentNode,
   FragmentDefinitionNode,
   SelectionSetNode,
   FieldNode,
 } from 'graphql';
 
-import {
+import type {
   FragmentMap,
-  storeKeyNameFromField,
   StoreValue,
   StoreObject,
+  Reference} from '../../utilities';
+import {
+  storeKeyNameFromField,
   argumentsObjectFromField,
-  Reference,
   isReference,
   getStoreKeyName,
   isNonNullObject,
   stringifyForDisplay,
 } from '../../utilities';
-import {
+import type {
   IdGetter,
   MergeInfo,
   NormalizedCache,
@@ -35,8 +36,8 @@ import {
   isArray,
 } from './helpers';
 import { cacheSlot } from './reactiveVars';
-import { InMemoryCache } from './inMemoryCache';
-import {
+import type { InMemoryCache } from './inMemoryCache';
+import type {
   SafeReadonly,
   FieldSpecifier,
   ToReferenceFunction,
@@ -44,7 +45,7 @@ import {
   ReadFieldOptions,
   CanReadFunction,
 } from '../core/types/common';
-import { WriteContext } from './writeToStore';
+import type { WriteContext } from './writeToStore';
 
 // Upgrade to a faster version of the default stable JSON.stringify function
 // used by getStoreKeyName. This function is used when computing storeFieldName

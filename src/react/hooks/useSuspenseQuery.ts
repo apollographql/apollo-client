@@ -171,13 +171,10 @@ export function useSuspenseQuery_experimental<
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
       const promise = queryRef.fetchMore(options);
-      setPromiseCache((previousPromiseCache) => {
-        const promiseCache = new Map(previousPromiseCache);
 
-        promiseCache.delete(queryRef.key);
-
-        return promiseCache;
-      });
+      setPromiseCache((previousPromiseCache) =>
+        new Map(previousPromiseCache).set(queryRef.key, promise)
+      );
 
       return promise;
     },
@@ -187,13 +184,10 @@ export function useSuspenseQuery_experimental<
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
       const promise = queryRef.refetch(variables);
-      setPromiseCache((previousPromiseCache) => {
-        const promiseCache = new Map(previousPromiseCache);
 
-        promiseCache.delete(queryRef.key);
-
-        return promiseCache;
-      });
+      setPromiseCache((previousPromiseCache) =>
+        new Map(previousPromiseCache).set(queryRef.key, promise)
+      );
 
       return promise;
     },

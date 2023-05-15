@@ -21,7 +21,74 @@ Beginning with version `3.8.0-alpha.14`, Apollo Client Web has alpha support for
 
 ### Using `useBackgroundQuery_experimental` and `useReadQuery_experimental`
 
-TODO: fill in.
+Create and provide a `SuspenseCache` instance to your `ApolloProvider`.
+
+```js
+import { SuspenseCache } from '@apollo/client';
+
+const suspenseCache = new SuspenseCache();
+
+<ApolloProvider suspenseCache={suspenseCache} />
+```
+
+`useBackgroundQuery_experimental` allows a user to initiate a query outside of the component that will read and render the data with `useReadQuery_experimental`, which triggers the nearest Suspense boundary while the query is pending. This means a query can be initiated higher up in the React render tree and your application can begin requesting data before the component that has a dependency on those data begins rendering.
+
+Ensure the component tree is wrapped with React's [`Suspense`](https://react.dev/reference/react/Suspense) component. Note that the `useReadQuery_experimental` hook returns only `data` and `error` (and `networkStatus`, though it should rarely be needed): since Suspense provides the tools to manage our application's loading states, `useReadQuery_experimental` does not return a `loading` boolean.
+
+See the API references for [`useBackgroundQuery_experimental`](#usebackgroundquery_experimental-api) and [`useReadQuery_experimental`](#usereadquery_experimental-api) for supported options.
+
+```jsx
+import { Suspense } from 'react';
+import {
+  ApolloClient,
+  InMemoryCache,
+  SuspenseCache,
+  useBackgroundQuery_experimental as useBackgroundQuery,
+  useReadQuery_experimental as useReadQuery,
+} from '@apollo/client';
+
+const query = gql`
+  foo {
+    bar
+  }
+`;
+
+const suspenseCache = new SuspenseCache();
+
+const client = new ApolloClient({
+  uri: "http://localhost:4000/graphql",
+  cache: new InMemoryCache()
+});
+
+function SuspenseFallback() {
+  return <div>Loading...</div>;
+}
+
+function Child({ queryRef }) {
+  const { data } = useReadQuery(queryRef);
+
+  return <div>{data.foo.bar}</div>;
+}
+
+function Parent() {
+  const [queryRef] = useBackgroundQuery(query);
+
+  return <Child queryRef={queryRef} />;
+}
+
+function App() {
+  return (
+    <ApolloProvider client={client} suspenseCache={suspenseCache}>
+      <ErrorBoundary fallback={<div>Error</div>}>
+        <Suspense fallback={<SuspenseFallback />}>
+          <Parent />
+        </Suspense>
+      </ErrorBoundary>
+    </ApolloProvider>
+  );
+}
+
+```
 
 ### `useBackgroundQuery_experimental` API
 

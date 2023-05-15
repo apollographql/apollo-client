@@ -16,7 +16,6 @@ import {
   toApolloError,
   useTrackedQueryRefs,
   useWatchQueryOptions,
-  usePromiseVersion,
 } from './useSuspenseQuery';
 import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery';
 import { canonicalStringify } from '../../cache';
@@ -48,8 +47,6 @@ export function useBackgroundQuery_experimental<
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
-  const [version, setVersion] = usePromiseVersion();
-
   const cacheKey = (
     [client, query, canonicalStringify(variables)] as any[]
   ).concat(queryKey);
@@ -58,12 +55,20 @@ export function useBackgroundQuery_experimental<
     client.watchQuery(watchQueryOptions)
   );
 
+  const [promiseCache, setPromiseCache] = useState(
+    () => new Map([[queryRef.key, queryRef.promise]])
+  );
+
   useTrackedQueryRefs(queryRef);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
       const promise = queryRef.fetchMore(options);
-      setVersion('network');
+
+      setPromiseCache((promiseCache) =>
+        new Map(promiseCache).set(queryRef.key, promise)
+      );
+
       return promise;
     },
     [queryRef]
@@ -72,16 +77,17 @@ export function useBackgroundQuery_experimental<
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
       const promise = queryRef.refetch(variables);
-      setVersion('network');
+
+      setPromiseCache((promiseCache) =>
+        new Map(promiseCache).set(queryRef.key, promise)
+      );
+
       return promise;
     },
     [queryRef]
   );
 
-  // TODO(FIXME): refactor
-  // @ts-ignore
-  queryRef.setVersion = setVersion;
-  queryRef.version = version;
+  queryRef.promiseCache = promiseCache;
 
   return useMemo(() => {
     return [
@@ -98,13 +104,18 @@ export function useReadQuery_experimental<TData>(
   queryRef: QueryReference<TData>
 ) {
   const [, forceUpdate] = useState(0);
-  const promise = queryRef.promises[queryRef.version] || queryRef.promises.main;
+  const promiseCache = queryRef.promiseCache!;
+
+  let promise = promiseCache.get(queryRef.key);
+
+  if (!promise) {
+    promise = queryRef.promise;
+    promiseCache.set(queryRef.key, promise);
+  }
 
   useEffect(() => {
-    return queryRef.listen(() => {
-      // TODO(FIXME): refactor
-      // @ts-ignore
-      queryRef.setVersion('main');
+    return queryRef.listen((promise) => {
+      promiseCache.set(queryRef.key, promise);
       forceUpdate((prevState) => prevState + 1);
     });
   }, [queryRef]);

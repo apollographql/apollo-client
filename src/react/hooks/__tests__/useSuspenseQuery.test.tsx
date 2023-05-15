@@ -6901,17 +6901,17 @@ describe('useSuspenseQuery', () => {
     it('returns TData | undefined with errorPolicy: "ignore"', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferred } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
+      const { data: inferred } = useSuspenseQuery(query, {
         errorPolicy: 'ignore',
       });
 
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: explicit } = useSuspenseQuery(query, {
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         errorPolicy: 'ignore',
       });
 

@@ -128,11 +128,20 @@ export class QueryReference<TData = unknown> {
   }
 
   private handleNext(result: ApolloQueryResult<TData>) {
-    if (!this.initialized) {
+    if (!this.initialized || this.refetching) {
       if (!isNetworkRequestSettled(result.networkStatus)) {
         return;
       }
+
+      // If we encounter an error with the new result after we have successfully
+      // fetched a previous result, set the new result data to the last successful
+      // result.
+      if (this.result.data && result.data === void 0) {
+        result.data = this.result.data;
+      }
+
       this.initialized = true;
+      this.refetching = false;
       this.result = result;
       this.resolve(result);
       return;
@@ -140,13 +149,6 @@ export class QueryReference<TData = unknown> {
 
     if (result.data === this.result.data) {
       return;
-    }
-
-    // If we encounter an error with the new result after we have successfully
-    // fetched a previous result, set the new result data to the last successful
-    // result.
-    if (this.result.data && result.data === void 0) {
-      result.data = this.result.data;
     }
 
     this.result = result;

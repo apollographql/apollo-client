@@ -24,7 +24,6 @@ export class QueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
   public readonly observable: ObservableQuery<TData>;
 
-  public version: 'main' | 'network' = 'main';
   public promise: Promise<ApolloQueryResult<TData>>;
 
   private subscription: ObservableSubscription;

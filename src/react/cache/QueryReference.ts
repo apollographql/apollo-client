@@ -2,17 +2,12 @@ import type {
   ApolloError,
   ApolloQueryResult,
   ObservableQuery,
-  OperationVariables} from '../../core';
-import {
-  NetworkStatus
+  OperationVariables,
 } from '../../core';
+import { NetworkStatus } from '../../core';
 import { isNetworkRequestSettled } from '../../core';
-import type {
-  ObservableSubscription} from '../../utilities';
-import {
-  createFulfilledPromise,
-  createRejectedPromise,
-} from '../../utilities';
+import type { ObservableSubscription } from '../../utilities';
+import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
 
 type Listener = () => void;
 
@@ -30,10 +25,7 @@ export class QueryReference<TData = unknown> {
   public readonly observable: ObservableQuery<TData>;
 
   public version: 'main' | 'network' = 'main';
-  public promises: {
-    main: Promise<ApolloQueryResult<TData>>;
-    network?: Promise<ApolloQueryResult<TData>>;
-  };
+  public promise: Promise<ApolloQueryResult<TData>>;
 
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener>();
@@ -64,7 +56,7 @@ export class QueryReference<TData = unknown> {
       (this.result.data &&
         (!this.result.partial || this.observable.options.returnPartialData))
     ) {
-      this.promises = { main: createFulfilledPromise(this.result) };
+      this.promise = createFulfilledPromise(this.result);
       this.initialized = true;
       this.refetching = false;
     }
@@ -74,13 +66,11 @@ export class QueryReference<TData = unknown> {
       error: this.handleError,
     });
 
-    if (!this.promises) {
-      this.promises = {
-        main: new Promise((resolve, reject) => {
-          this.resolve = resolve;
-          this.reject = reject;
-        }),
-      };
+    if (!this.promise) {
+      this.promise = new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+      });
     }
 
     // Start a timer that will automatically dispose of the query if the
@@ -111,7 +101,7 @@ export class QueryReference<TData = unknown> {
 
     const promise = this.observable.refetch(variables);
 
-    this.promises.network = promise;
+    this.promise = promise;
 
     return promise;
   }
@@ -119,7 +109,7 @@ export class QueryReference<TData = unknown> {
   fetchMore(options: FetchMoreOptions<TData>) {
     const promise = this.observable.fetchMore<TData>(options);
 
-    this.promises.network = promise;
+    this.promise = promise;
 
     return promise;
   }
@@ -135,6 +125,9 @@ export class QueryReference<TData = unknown> {
 
   private handleNext(result: ApolloQueryResult<TData>) {
     if (!this.initialized) {
+      if (!isNetworkRequestSettled(result.networkStatus)) {
+        return;
+      }
       this.initialized = true;
       this.result = result;
       this.resolve(result);
@@ -153,7 +146,7 @@ export class QueryReference<TData = unknown> {
     }
 
     this.result = result;
-    this.promises.main = createFulfilledPromise(result);
+    this.promise = createFulfilledPromise(result);
     this.deliver();
   }
 
@@ -174,7 +167,7 @@ export class QueryReference<TData = unknown> {
     }
 
     this.result = result;
-    this.promises.main = result.data
+    this.promise = result.data
       ? createFulfilledPromise(result)
       : createRejectedPromise(result);
     this.deliver();

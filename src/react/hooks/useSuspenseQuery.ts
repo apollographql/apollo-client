@@ -9,11 +9,10 @@ import type {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
   NetworkStatus,
-  FetchMoreQueryOptions} from '../../core';
-import {
-  ApolloError
+  FetchMoreQueryOptions,
 } from '../../core';
-import type { DeepPartial} from '../../utilities';
+import { ApolloError } from '../../core';
+import type { DeepPartial } from '../../utilities';
 import { isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
@@ -138,31 +137,48 @@ export function useSuspenseQuery_experimental<
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
-  const [version, setVersion] = usePromiseVersion();
-
-  const cacheKey = (
-    [client, query, canonicalStringify(variables)] as any[]
-  ).concat(queryKey);
+  const cacheKey = suspenseCache.getStableCacheKey(
+    ([client, query, canonicalStringify(variables)] as any[]).concat(queryKey)
+  );
 
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)
   );
 
+  const [promiseCache, setPromiseCache] = useState(
+    () => new Map([[cacheKey, queryRef.promise]])
+  );
+
+  let promise = promiseCache.get(cacheKey);
+
+  if (!promise) {
+    promise = queryRef.promise;
+    promiseCache.set(cacheKey, promise);
+  }
+
   useTrackedQueryRefs(queryRef);
 
   useEffect(() => {
     return queryRef.listen(() => {
-      setVersion('main');
+      setPromiseCache((promiseCache) =>
+        new Map(promiseCache).set(cacheKey, queryRef.promise)
+      );
     });
   }, [queryRef]);
 
-  const promise = queryRef.promises[version] || queryRef.promises.main;
   const result = __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
       const promise = queryRef.fetchMore(options);
-      setVersion('network');
+      setPromiseCache((previousPromiseCache) => {
+        const promiseCache = new Map(previousPromiseCache);
+
+        promiseCache.delete(cacheKey);
+
+        return promiseCache;
+      });
+
       return promise;
     },
     [queryRef]
@@ -171,7 +187,14 @@ export function useSuspenseQuery_experimental<
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
       const promise = queryRef.refetch(variables);
-      setVersion('network');
+      setPromiseCache((previousPromiseCache) => {
+        const promiseCache = new Map(previousPromiseCache);
+
+        promiseCache.delete(cacheKey);
+
+        return promiseCache;
+      });
+
       return promise;
     },
     [queryRef]
@@ -270,7 +293,10 @@ interface UseWatchQueryOptionsHookOptions<
   options: SuspenseQueryHookOptions<TData, TVariables>;
 }
 
-export function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
+export function useWatchQueryOptions<
+  TData,
+  TVariables extends OperationVariables
+>({
   query,
   options,
 }: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<

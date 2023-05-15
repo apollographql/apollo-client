@@ -6889,7 +6889,10 @@ describe('useSuspenseQuery', () => {
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
 
-      const { data: explicit } = useSuspenseQuery(query);
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query);
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
@@ -6898,7 +6901,10 @@ describe('useSuspenseQuery', () => {
     it('returns TData | undefined with errorPolicy: "ignore"', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferred } = useSuspenseQuery(query, {
+      const { data: inferred } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         errorPolicy: 'ignore',
       });
 
@@ -6916,7 +6922,10 @@ describe('useSuspenseQuery', () => {
     it('returns TData | undefined with errorPolicy: "all"', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferred } = useSuspenseQuery(query, {
+      const { data: inferred } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         errorPolicy: 'all',
       });
 
@@ -6934,7 +6943,10 @@ describe('useSuspenseQuery', () => {
     it('returns TData with errorPolicy: "none"', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferred } = useSuspenseQuery(query, {
+      const { data: inferred } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         errorPolicy: 'none',
       });
 
@@ -6952,7 +6964,10 @@ describe('useSuspenseQuery', () => {
     it('returns DeepPartial<TData> with returnPartialData: true', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferred } = useSuspenseQuery(query, {
+      const { data: inferred } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         returnPartialData: true,
       });
 
@@ -6979,7 +6994,10 @@ describe('useSuspenseQuery', () => {
         DeepPartial<VariablesCaseData>
       >();
 
-      const { data: explicit } = useSuspenseQuery(query, {
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         returnPartialData: false,
       });
 
@@ -6992,7 +7010,10 @@ describe('useSuspenseQuery', () => {
     it('returns TData when passing an option that does not affect TData', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferred } = useSuspenseQuery(query, {
+      const { data: inferred } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         fetchPolicy: 'no-cache',
       });
 
@@ -7014,7 +7035,10 @@ describe('useSuspenseQuery', () => {
     it('handles combinations of options', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferredPartialDataIgnore } = useSuspenseQuery(query, {
+      const { data: inferredPartialDataIgnore } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         returnPartialData: true,
         errorPolicy: 'ignore',
       });
@@ -7038,7 +7062,10 @@ describe('useSuspenseQuery', () => {
         explicitPartialDataIgnore
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: inferredPartialDataNone } = useSuspenseQuery(query, {
+      const { data: inferredPartialDataNone } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         returnPartialData: true,
         errorPolicy: 'none',
       });
@@ -7075,7 +7102,10 @@ describe('useSuspenseQuery', () => {
       expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: explicit } = useSuspenseQuery(query, {
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         fetchPolicy: 'no-cache',
         returnPartialData: true,
         errorPolicy: 'none',

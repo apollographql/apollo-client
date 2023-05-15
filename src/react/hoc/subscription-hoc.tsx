@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
 import { parser } from '../parser';
-import { BaseQueryOptions } from '../types/types';
+import type { BaseQueryOptions } from '../types/types';
 import { Subscription } from '../components';
 import {
   getDisplayName,
@@ -12,7 +12,7 @@ import {
   defaultMapPropsToOptions,
   defaultMapPropsToSkip
 } from './hoc-utils';
-import { OperationOption, OptionProps, DataProps } from './types';
+import type { OperationOption, OptionProps, DataProps } from './types';
 
 export function withSubscription<
   TProps extends TGraphQLVariables | {} = {},

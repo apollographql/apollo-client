@@ -1,5 +1,5 @@
 import { Trie } from '@wry/trie';
-import { ObservableQuery } from '../../core';
+import type { ObservableQuery } from '../../core';
 import { canUseWeakMap } from '../../utilities';
 import { QueryReference } from './QueryReference';
 

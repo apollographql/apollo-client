@@ -1,36 +1,37 @@
 import { invariant, __DEV__ } from '../utilities/globals';
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
 
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-import {
+import type {
   Concast,
+  Observer,
+  ObservableSubscription} from '../utilities';
+import {
   cloneDeep,
   compact,
   getOperationDefinition,
   Observable,
-  Observer,
-  ObservableSubscription,
   iterateObserversSafely,
   fixObservableSubclass,
   getQueryDefinition,
 } from '../utilities';
-import { ApolloError } from '../errors';
-import { QueryManager } from './QueryManager';
-import {
+import type { ApolloError } from '../errors';
+import type { QueryManager } from './QueryManager';
+import type {
   ApolloQueryResult,
   OperationVariables,
   TypedDocumentNode,
 } from './types';
-import {
+import type {
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
 } from './watchQueryOptions';
-import { QueryInfo } from './QueryInfo';
-import { MissingFieldError } from '../cache';
-import { MissingTree } from '../cache/core/types/common';
+import type { QueryInfo } from './QueryInfo';
+import type { MissingFieldError } from '../cache';
+import type { MissingTree } from '../cache/core/types/common';
 import { equalByQuery } from './equalByQuery';
 
 const {

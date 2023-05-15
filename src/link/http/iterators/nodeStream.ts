@@ -3,7 +3,7 @@
  * https://github.com/kmalakoff/response-iterator/blob/master/src/iterators/nodeStream.ts
  */
 
-import { Readable as NodeReadableStream } from "stream";
+import type { Readable as NodeReadableStream } from "stream";
 import { canUseAsyncIteratorSymbol } from "../../../utilities";
 
 interface NodeStreamIterator<T> {

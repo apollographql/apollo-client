@@ -11,6 +11,18 @@
   },
   "overrides": [
     {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "excludedFiles": ["**/__tests__/**/*.*"],
+      "rules": {
+        "@typescript-eslint/consistent-type-imports": ["error", { 
+          "prefer": "type-imports",
+          "disallowTypeAnnotations": false,
+          "fixStyle": "separate-type-imports"
+        }],
+        "@typescript-eslint/no-import-type-side-effects": "error"
+      }
+    },
+    {
       "files": ["**/__tests__/**/*.[jt]sx", "**/?(*.)+(test).[jt]sx"],
       "extends": ["plugin:testing-library/react"],
       "rules": {
@@ -18,5 +30,5 @@
         "testing-library/no-wait-for-multiple-assertions": "off"
       }
     }
-  ]
+  ],
 }

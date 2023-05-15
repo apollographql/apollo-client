@@ -1,8 +1,9 @@
-import { ExecutionResult } from 'graphql';
+import type { ExecutionResult } from 'graphql';
 
-import { NetworkError, GraphQLErrors } from '../../errors';
+import type { NetworkError, GraphQLErrors } from '../../errors';
 import { Observable } from '../../utilities';
-import { ApolloLink, Operation, FetchResult, NextLink } from '../core';
+import type { Operation, FetchResult, NextLink } from '../core';
+import { ApolloLink } from '../core';
 
 export interface ErrorResponse {
   graphQLErrors?: GraphQLErrors;

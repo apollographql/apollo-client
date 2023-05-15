@@ -1,15 +1,20 @@
 import { invariant, InvariantError, __DEV__ } from '../../utilities/globals';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
-import {
+import type {
   SelectionSetNode,
-  FieldNode,
+  FieldNode} from 'graphql';
+import {
   Kind,
 } from 'graphql';
 
-import {
+import type {
   FragmentMap,
   FragmentMapFunction,
+  StoreValue,
+  StoreObject,
+  Reference} from '../../utilities';
+import {
   getFragmentFromSelection,
   getDefaultValues,
   getOperationDefinition,
@@ -17,9 +22,6 @@ import {
   makeReference,
   isField,
   resultKeyNameFromField,
-  StoreValue,
-  StoreObject,
-  Reference,
   isReference,
   shouldInclude,
   cloneDeep,
@@ -28,15 +30,15 @@ import {
   argumentsObjectFromField,
 } from '../../utilities';
 
-import { NormalizedCache, ReadMergeModifyContext, MergeTree, InMemoryCacheConfig } from './types';
+import type { NormalizedCache, ReadMergeModifyContext, MergeTree, InMemoryCacheConfig } from './types';
 import { isArray, makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject, extractFragmentContext } from './helpers';
-import { StoreReader } from './readFromStore';
-import { InMemoryCache } from './inMemoryCache';
-import { EntityStore } from './entityStore';
-import { Cache } from '../../core';
+import type { StoreReader } from './readFromStore';
+import type { InMemoryCache } from './inMemoryCache';
+import type { EntityStore } from './entityStore';
+import type { Cache } from '../../core';
 import { canonicalStringify } from './object-canon';
 import { normalizeReadFieldOptions } from './policies';
-import { ReadFieldFunction } from '../core/types/common';
+import type { ReadFieldFunction } from '../core/types/common';
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {

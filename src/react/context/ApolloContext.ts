@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { ApolloClient } from '../../core';
+import type { ApolloClient } from '../../core';
 import { canUseSymbol } from '../../utilities';
-import { SuspenseCache } from '../cache';
+import type { SuspenseCache } from '../cache';
 import type { RenderPromises } from '../ssr';
 
 export interface ApolloContextValue {

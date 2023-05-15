@@ -1,6 +1,6 @@
-import { ApolloCache, ApolloClient } from '../../core';
-import { ApolloError } from '../../errors';
-import {
+import type { ApolloCache, ApolloClient } from '../../core';
+import type { ApolloError } from '../../errors';
+import type {
   ApolloQueryResult,
   OperationVariables,
   FetchMoreOptions,
@@ -9,7 +9,7 @@ import {
   SubscribeToMoreOptions,
   DefaultContext,
 } from '../../core';
-import {
+import type {
   MutationFunction,
   BaseQueryOptions,
   BaseMutationOptions,

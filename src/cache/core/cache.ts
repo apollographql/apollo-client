@@ -1,13 +1,14 @@
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
 
-import {
+import type {
   StoreObject,
-  Reference,
+  Reference} from '../../utilities';
+import {
   getFragmentQueryDocument,
 } from '../../utilities';
-import { DataProxy } from './types/DataProxy';
-import { Cache } from './types/Cache';
+import type { DataProxy } from './types/DataProxy';
+import type { Cache } from './types/Cache';
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 

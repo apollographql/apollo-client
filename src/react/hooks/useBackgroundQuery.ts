@@ -115,7 +115,7 @@ export function useReadQuery_experimental<TData>(
 
   useEffect(() => {
     return queryRef.listen((promise) => {
-      promiseCache.set(queryRef.key, promise);
+      queryRef.promiseCache!.set(queryRef.key, promise);
       forceUpdate((prevState) => prevState + 1);
     });
   }, [queryRef]);

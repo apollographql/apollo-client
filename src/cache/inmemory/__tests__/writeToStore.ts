@@ -3784,4 +3784,77 @@ describe('writing to the store', () => {
       });
     });
   });
+
+  test("prevent that a crafted query can overwrite Post:1 with what should be User:5", () => {
+    const postFragment = gql`
+      fragment PostFragment on Post {
+        id
+        title
+      }
+    `;
+  
+    const cache = new InMemoryCache();
+    cache.writeFragment({
+      fragment: postFragment,
+      data: {
+        __typename: "Post",
+        id: "1",
+        title: "Hello",
+      },
+    });
+  
+    expect(cache.extract()["Post:1"]).toMatchInlineSnapshot(`
+      Object {
+        "__typename": "Post",
+        "id": "1",
+        "title": "Hello",
+      }
+    `);
+  
+    const injectingQuery = gql`
+      query ($id: String) {
+        user(id: $id) {
+          __typename: firstName
+          id: lastName
+          title
+          ignore: __typename
+          ignore2: id
+        }
+      }
+    `;
+    cache.write({
+      query: injectingQuery,
+      variables: { id: 5 },
+      dataId: "ROOT_QUERY",
+      result: {
+        user: {
+          __typename: "Post",
+          id: "1",
+          title: "Incorrect!",
+          ignore: "User",
+          ignore2: "5",
+        },
+      },
+    });
+  
+    expect(cache.extract()["Post:1"]).toMatchInlineSnapshot(`
+      Object {
+        "__typename": "Post",
+        "id": "1",
+        "title": "Hello",
+      }
+    `);
+  
+  
+    expect(cache.extract()["User:5"]).toMatchInlineSnapshot(`
+      Object {
+        "__typename": "User",
+        "firstName": "Post",
+        "id": "5",
+        "lastName": "1",
+        "title": "Incorrect!",
+      }
+    `);
+  });
+  
 });

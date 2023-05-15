@@ -9,7 +9,7 @@ import { isNetworkRequestSettled } from '../../core';
 import type { ObservableSubscription } from '../../utilities';
 import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
 
-type Listener = () => void;
+type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
 type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
@@ -28,7 +28,7 @@ export class QueryReference<TData = unknown> {
   public promise: Promise<ApolloQueryResult<TData>>;
 
   private subscription: ObservableSubscription;
-  private listeners = new Set<Listener>();
+  private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
   private initialized = false;
   private refetching = false;
@@ -83,7 +83,7 @@ export class QueryReference<TData = unknown> {
     );
   }
 
-  listen(listener: Listener) {
+  listen(listener: Listener<TData>) {
     // As soon as the component listens for updates, we know it has finished
     // suspending and is ready to receive updates, so we can remove the auto
     // dispose timer.
@@ -147,7 +147,7 @@ export class QueryReference<TData = unknown> {
 
     this.result = result;
     this.promise = createFulfilledPromise(result);
-    this.deliver();
+    this.deliver(this.promise);
   }
 
   private handleError(error: ApolloError) {
@@ -170,10 +170,10 @@ export class QueryReference<TData = unknown> {
     this.promise = result.data
       ? createFulfilledPromise(result)
       : createRejectedPromise(result);
-    this.deliver();
+    this.deliver(this.promise);
   }
 
-  private deliver() {
-    this.listeners.forEach((listener) => listener());
+  private deliver(promise: Promise<ApolloQueryResult<TData>>) {
+    this.listeners.forEach((listener) => listener(promise));
   }
 }

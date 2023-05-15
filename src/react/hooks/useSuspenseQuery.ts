@@ -159,9 +159,9 @@ export function useSuspenseQuery_experimental<
   useTrackedQueryRefs(queryRef);
 
   useEffect(() => {
-    return queryRef.listen(() => {
+    return queryRef.listen((promise) => {
       setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(cacheKey, queryRef.promise)
+        new Map(promiseCache).set(cacheKey, promise)
       );
     });
   }, [queryRef]);

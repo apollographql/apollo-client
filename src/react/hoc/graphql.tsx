@@ -1,11 +1,11 @@
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 
 import { parser, DocumentType } from '../parser';
 import { withQuery } from './query-hoc';
 import { withMutation } from './mutation-hoc';
 import { withSubscription } from './subscription-hoc';
-import { OperationOption, DataProps, MutateProps } from './types';
-import { OperationVariables } from '../../core';
+import type { OperationOption, DataProps, MutateProps } from './types';
+import type { OperationVariables } from '../../core';
 
 export function graphql<
   TProps extends TGraphQLVariables | {} = {},

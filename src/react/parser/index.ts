@@ -1,6 +1,6 @@
 import { invariant } from '../../utilities/globals';
 
-import {
+import type {
   DocumentNode,
   DefinitionNode,
   VariableDefinitionNode,

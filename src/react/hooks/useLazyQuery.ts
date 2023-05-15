@@ -1,10 +1,10 @@
-import { DocumentNode } from 'graphql';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentNode } from 'graphql';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { useCallback, useMemo, useRef } from 'react';
 
-import { OperationVariables } from '../../core';
+import type { OperationVariables } from '../../core';
 import { mergeOptions } from '../../utilities';
-import {
+import type {
   LazyQueryHookExecOptions,
   LazyQueryHookOptions,
   LazyQueryResultTuple,

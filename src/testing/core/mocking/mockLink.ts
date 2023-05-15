@@ -3,11 +3,12 @@ import { invariant } from '../../../utilities/globals';
 import { print } from 'graphql';
 import { equal } from '@wry/equality';
 
-import {
-  ApolloLink,
+import type {
   Operation,
   GraphQLRequest,
-  FetchResult,
+  FetchResult} from '../../../link/core';
+import {
+  ApolloLink
 } from '../../../link/core';
 
 import {

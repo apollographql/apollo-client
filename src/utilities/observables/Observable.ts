@@ -1,8 +1,9 @@
-import {
-  Observable,
+import type {
   Observer,
   Subscription as ObservableSubscription,
-  Subscriber,
+  Subscriber} from 'zen-observable-ts';
+import {
+  Observable
 } from 'zen-observable-ts';
 
 // This simplified polyfill attempts to follow the ECMAScript Observable

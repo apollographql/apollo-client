@@ -1,11 +1,11 @@
-import { ReactNode } from 'react';
-import { DocumentNode } from 'graphql';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { ReactNode } from 'react';
+import type { DocumentNode } from 'graphql';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { Observable, ObservableSubscription } from '../../utilities';
-import { FetchResult } from '../../link/core';
-import { ApolloError } from '../../errors';
-import {
+import type { Observable, ObservableSubscription } from '../../utilities';
+import type { FetchResult } from '../../link/core';
+import type { ApolloError } from '../../errors';
+import type {
   ApolloCache,
   ApolloClient,
   DefaultContext,
@@ -18,7 +18,7 @@ import {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
 } from '../../core';
-import { SuspenseCache } from '../cache';
+import type { SuspenseCache } from '../cache';
 
 /* Common types */
 

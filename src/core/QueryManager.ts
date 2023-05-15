@@ -1,19 +1,24 @@
 import { invariant, InvariantError, __DEV__ } from '../utilities/globals';
 
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
-import { ApolloLink, execute, FetchResult } from '../link/core';
+import type { ApolloLink, FetchResult } from '../link/core';
+import { execute } from '../link/core';
 import {
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
   removeDirectivesFromDocument,
 } from '../utilities';
-import { Cache, ApolloCache, canonicalStringify } from '../cache';
+import type { Cache, ApolloCache} from '../cache';
+import { canonicalStringify } from '../cache';
 
+import type {
+  ObservableSubscription,
+  ConcastSourcesArray} from '../utilities';
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -22,19 +27,17 @@ import {
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
   canUseWeakMap,
-  ObservableSubscription,
   Observable,
   asyncMap,
   isNonEmptyArray,
   Concast,
-  ConcastSourcesArray,
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
 } from '../utilities';
 import { mergeIncrementalData } from '../utilities/common/incrementalResult';
 import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from '../errors';
-import {
+import type {
   QueryOptions,
   WatchQueryOptions,
   SubscriptionOptions,
@@ -44,7 +47,7 @@ import {
 } from './watchQueryOptions';
 import { ObservableQuery, logMissingFieldErrors } from './ObservableQuery';
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-import {
+import type {
   ApolloQueryResult,
   OperationVariables,
   MutationUpdaterFunction,
@@ -56,13 +59,15 @@ import {
 } from './types';
 import { LocalState } from './LocalState';
 
+import type {
+  QueryStoreValue} from './QueryInfo';
 import {
   QueryInfo,
-  QueryStoreValue,
   shouldWriteResult,
   CacheWriteBehavior,
 } from './QueryInfo';
-import { PROTOCOL_ERRORS_SYMBOL, ApolloErrorOptions } from '../errors';
+import type { ApolloErrorOptions } from '../errors';
+import { PROTOCOL_ERRORS_SYMBOL } from '../errors';
 
 const { hasOwnProperty } = Object.prototype;
 

@@ -1,6 +1,6 @@
 import { __rest } from "tslib";
 
-import { FieldPolicy, Reference } from '../../cache';
+import type { FieldPolicy, Reference } from '../../cache';
 import { mergeDeep } from '../common/mergeDeep';
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];

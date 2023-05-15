@@ -31,7 +31,8 @@
 import { print } from "graphql";
 import type { Client } from "graphql-ws";
 
-import { ApolloLink, Operation, FetchResult } from "../core";
+import type { Operation, FetchResult } from "../core";
+import { ApolloLink } from "../core";
 import { isNonNullObject, Observable } from "../../utilities";
 import { ApolloError } from "../../errors";
 

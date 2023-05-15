@@ -1,13 +1,13 @@
-import { DocumentNode, FieldNode } from 'graphql';
+import type { DocumentNode, FieldNode } from 'graphql';
 
-import {
+import type {
   Reference,
   StoreObject,
   StoreValue,
   isReference,
 } from '../../../utilities';
 
-import { StorageType } from '../../inmemory/policies';
+import type { StorageType } from '../../inmemory/policies';
 
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when

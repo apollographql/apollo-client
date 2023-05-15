@@ -1,4 +1,4 @@
-import { DeepOmit } from '../types/DeepOmit';
+import type { DeepOmit } from '../types/DeepOmit';
 import { isPlainObject } from './objects';
 
 const BREAK: unique symbol = Symbol('BREAK');

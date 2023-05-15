@@ -31,29 +31,7 @@ extends Omit<
   from: StoreObject | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
-
-  /**
-   * Whether to return incomplete data rather than null.
-   * Defaults to `true`.
-   * @deprecated This option will be removed in Apollo Client 3.8.
-   * Please check `result.missing` instead.
-   */
-  returnPartialData?: boolean;
 }
-
-// Since the above definition of UseFragmentOptions can be hard to parse without
-// help from TypeScript/VSCode, here are the intended fields and their types.
-// Uncomment this code to check that it's consistent with the definition above.
-//
-// export interface UseFragmentOptions<TData, TVars> {
-//   from: string | StoreObject | Reference;
-//   fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-//   fragmentName?: string;
-//   optimistic?: boolean;
-//   variables?: TVars;
-//   returnPartialData?: boolean;
-//   canonizeResults?: boolean;
-// }
 
 export type UseFragmentResult<TData> =
   | {
@@ -85,9 +63,10 @@ export function useFragment_experimental<
 
   const diffOptions: Cache.DiffOptions<TData, TVars> = {
     ...rest,
+    returnPartialData: true,
     id: typeof from === "string" ? from : cache.identify(from),
     query: cache["getFragmentDoc"](fragment, fragmentName),
-    optimistic,
+    optimistic
   };
 
   const resultRef = useRef<UseFragmentResult<TData>>();

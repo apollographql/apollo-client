@@ -137,23 +137,23 @@ export function useSuspenseQuery_experimental<
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
-  const cacheKey = suspenseCache.getStableCacheKey(
-    ([client, query, canonicalStringify(variables)] as any[]).concat(queryKey)
-  );
+  const cacheKey = (
+    [client, query, canonicalStringify(variables)] as any[]
+  ).concat(queryKey);
 
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)
   );
 
   const [promiseCache, setPromiseCache] = useState(
-    () => new Map([[cacheKey, queryRef.promise]])
+    () => new Map([[queryRef.key, queryRef.promise]])
   );
 
-  let promise = promiseCache.get(cacheKey);
+  let promise = promiseCache.get(queryRef.key);
 
   if (!promise) {
     promise = queryRef.promise;
-    promiseCache.set(cacheKey, promise);
+    promiseCache.set(queryRef.key, promise);
   }
 
   useTrackedQueryRefs(queryRef);

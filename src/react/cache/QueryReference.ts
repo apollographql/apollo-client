@@ -8,6 +8,7 @@ import { NetworkStatus } from '../../core';
 import { isNetworkRequestSettled } from '../../core';
 import type { ObservableSubscription } from '../../utilities';
 import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
+import type { CacheKey } from './types';
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
@@ -16,14 +17,17 @@ type FetchMoreOptions<TData> = Parameters<
 >[0];
 
 interface QueryReferenceOptions {
+  key: CacheKey;
   onDispose?: () => void;
   autoDisposeTimeoutMs?: number;
 }
 
 export class QueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
+  public readonly key: CacheKey;
   public readonly observable: ObservableQuery<TData>;
 
+  public promiseCache?: Map<any[], Promise<ApolloQueryResult<TData>>>;
   public promise: Promise<ApolloQueryResult<TData>>;
 
   private subscription: ObservableSubscription;
@@ -37,7 +41,7 @@ export class QueryReference<TData = unknown> {
 
   constructor(
     observable: ObservableQuery<TData>,
-    options: QueryReferenceOptions = Object.create(null)
+    options: QueryReferenceOptions
   ) {
     this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
@@ -45,6 +49,7 @@ export class QueryReference<TData = unknown> {
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult(false);
+    this.key = options.key;
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;

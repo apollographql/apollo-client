@@ -1,4 +1,5 @@
-import { omitDeep, OmitDeepOptions } from './omitDeep';
+import type { OmitDeepOptions } from './omitDeep';
+import { omitDeep } from './omitDeep';
 
 interface StripTypenameOptions {
   keep?: OmitDeepOptions['keep'];

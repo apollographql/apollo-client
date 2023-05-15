@@ -1,6 +1,7 @@
 import { Trie } from '@wry/trie';
 import { wrap } from 'optimism';
-import { DocumentNode, Kind, TypeNode, visit } from 'graphql';
+import type { DocumentNode, TypeNode } from 'graphql';
+import { Kind, visit } from 'graphql';
 import { ApolloLink } from '../core';
 import { canUseWeakMap, stripTypename } from '../../utilities';
 

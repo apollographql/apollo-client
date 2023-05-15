@@ -1,5 +1,5 @@
 ---
-'@apollo/client': patch
+'@apollo/client': minor
 ---
 
 Introduce the new `removeTypenameFromVariables` link. This link will automatically remove `__typename` fields from `variables` for all operations. This link can be configured to exclude JSON-scalars for scalars that utilize `__typename`. 

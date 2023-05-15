@@ -20,15 +20,16 @@ type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
 >[0];
 
-interface QuerySubscriptionOptions {
+interface QueryReferenceOptions {
   onDispose?: () => void;
   autoDisposeTimeoutMs?: number;
 }
 
-export class QuerySubscription<TData = unknown> {
+export class QueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
   public readonly observable: ObservableQuery<TData>;
 
+  public version: 'main' | 'network' = 'main';
   public promises: {
     main: Promise<ApolloQueryResult<TData>>;
     network?: Promise<ApolloQueryResult<TData>>;
@@ -45,7 +46,7 @@ export class QuerySubscription<TData = unknown> {
 
   constructor(
     observable: ObservableQuery<TData>,
-    options: QuerySubscriptionOptions = Object.create(null)
+    options: QueryReferenceOptions = Object.create(null)
   ) {
     this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
@@ -83,7 +84,7 @@ export class QuerySubscription<TData = unknown> {
     }
 
     // Start a timer that will automatically dispose of the query if the
-    // suspended resource does not use this subscription in the given time. This
+    // suspended resource does not use this queryRef in the given time. This
     // helps prevent memory leaks when a component has unmounted before the
     // query has finished loading.
     this.autoDisposeTimeoutId = setTimeout(

@@ -1,7 +1,7 @@
 const checks = [
   {
     path: "dist/apollo-client.min.cjs",
-    limit: "36.68kb"
+    limit: "36.84kb"
   },
   {
     path: "dist/main.cjs",
@@ -19,6 +19,8 @@ const checks = [
     "useMutation",
     "useSubscription",
     "useSuspenseQuery_experimental",
+    "useBackgroundQuery_experimental",
+    "useReadQuery_experimental",
     "useFragment_experimental"
   ].map((name) => ({ path: "dist/react/index.js", import: `{ ${name} }` })),
 ].map((config) => ({

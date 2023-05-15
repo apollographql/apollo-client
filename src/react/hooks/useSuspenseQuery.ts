@@ -161,7 +161,7 @@ export function useSuspenseQuery_experimental<
   useEffect(() => {
     return queryRef.listen((promise) => {
       setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(cacheKey, promise)
+        new Map(promiseCache).set(queryRef.key, promise)
       );
     });
   }, [queryRef]);
@@ -174,7 +174,7 @@ export function useSuspenseQuery_experimental<
       setPromiseCache((previousPromiseCache) => {
         const promiseCache = new Map(previousPromiseCache);
 
-        promiseCache.delete(cacheKey);
+        promiseCache.delete(queryRef.key);
 
         return promiseCache;
       });
@@ -190,7 +190,7 @@ export function useSuspenseQuery_experimental<
       setPromiseCache((previousPromiseCache) => {
         const promiseCache = new Map(previousPromiseCache);
 
-        promiseCache.delete(cacheKey);
+        promiseCache.delete(queryRef.key);
 
         return promiseCache;
       });

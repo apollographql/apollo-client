@@ -1,12 +1,12 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import {
+import type {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
 } from '../../core';
 import { useApolloClient } from './useApolloClient';
-import { QueryReference } from '../cache/QueryReference';
-import {
+import type { QueryReference } from '../cache/QueryReference';
+import type {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
 } from '../types/types';
@@ -14,12 +14,11 @@ import { __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import {
   toApolloError,
-  FetchMoreFunction,
-  RefetchFunction,
   useTrackedQueryRefs,
   useWatchQueryOptions,
   usePromiseVersion,
 } from './useSuspenseQuery';
+import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery';
 import { canonicalStringify } from '../../cache';
 
 export interface UseBackgroundQueryResult<

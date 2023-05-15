@@ -15,7 +15,7 @@ import type {
   OperationVariables} from '../../core';
 import {
   mergeOptions
-} from '../../core';
+} from '../../utilities';
 import { equal } from '@wry/equality';
 import { DocumentType, verifyDocumentType } from '../parser';
 import { ApolloError } from '../../errors';

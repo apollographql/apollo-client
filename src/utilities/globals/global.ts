@@ -1,5 +1,11 @@
 import { maybe } from "./maybe";
 
+declare global {
+	interface Window {
+		__DEV__?: boolean;
+	}
+}
+
 export default (
   maybe(() => globalThis) ||
   maybe(() => window) ||
@@ -12,6 +18,4 @@ export default (
   // improve your static analysis to detect this obfuscation, think again. This
   // is an arms race you cannot win, at least not in JavaScript.
   maybe(function() { return maybe.constructor("return this")() })
-) as typeof globalThis & {
-  __DEV__?: boolean;
-};
+) as typeof globalThis & Window;

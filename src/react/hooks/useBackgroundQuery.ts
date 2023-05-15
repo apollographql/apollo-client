@@ -21,14 +21,16 @@ import {
 import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery';
 import { canonicalStringify } from '../../cache';
 
-export interface UseBackgroundQueryResult<
+export type UseBackgroundQueryResult<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
-> {
-  queryRef: QueryReference<TData>;
-  fetchMore: FetchMoreFunction<TData, TVariables>;
-  refetch: ObservableQueryFields<TData, TVariables>['refetch'];
-}
+> = [
+  QueryReference<TData>,
+  {
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    refetch: ObservableQueryFields<TData, TVariables>['refetch'];
+  }
+];
 
 export function useBackgroundQuery_experimental<
   TData = any,
@@ -82,11 +84,13 @@ export function useBackgroundQuery_experimental<
   queryRef.version = version;
 
   return useMemo(() => {
-    return {
+    return [
       queryRef,
-      fetchMore,
-      refetch,
-    };
+      {
+        fetchMore,
+        refetch,
+      },
+    ];
   }, [queryRef, fetchMore, refetch]);
 }
 

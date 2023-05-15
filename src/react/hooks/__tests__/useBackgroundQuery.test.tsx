@@ -105,14 +105,14 @@ function renderIntegrationTest({
   }
 
   function Parent() {
-    const { queryRef } = useBackgroundQuery(query);
+    const [queryRef] = useBackgroundQuery(query);
     // count renders in the parent component
     renders.count++;
     return <Child queryRef={queryRef} />;
   }
 
   function ParentWithVariables() {
-    const { queryRef } = useBackgroundQuery(query);
+    const [queryRef] = useBackgroundQuery(query);
     // count renders in the parent component
     renders.count++;
     return <Child queryRef={queryRef} />;
@@ -282,7 +282,7 @@ function renderVariablesIntegrationTest({
     variables: QueryVariables;
     errorPolicy?: ErrorPolicy;
   }) {
-    const { queryRef, refetch } = useBackgroundQuery(query, {
+    const [queryRef, { refetch }] = useBackgroundQuery(query, {
       variables,
       errorPolicy,
     });
@@ -317,7 +317,7 @@ function renderVariablesIntegrationTest({
   const { ...rest } = render(
     <App errorPolicy={errorPolicy} variables={variables} />
   );
-    const rerender = ({ variables }: { variables: QueryVariables }) => {
+  const rerender = ({ variables }: { variables: QueryVariables }) => {
     return rest.rerender(<App variables={variables} />);
   };
   return { ...rest, query, rerender, client, renders };
@@ -468,7 +468,7 @@ function renderPaginatedIntegrationTest({
   }
 
   function ParentWithVariables() {
-    const { queryRef, fetchMore } = useBackgroundQuery(query, {
+    const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
       variables: { limit: 2, offset: 0 },
     });
     // count renders in the parent component
@@ -606,7 +606,7 @@ describe('useBackgroundQuery', () => {
       ),
     });
 
-    const { queryRef } = result.current;
+    const [queryRef] = result.current;
 
     const _result = await queryRef.promises.main;
 
@@ -643,7 +643,7 @@ describe('useBackgroundQuery', () => {
       { client: globalClient }
     );
 
-    const { queryRef } = result.current;
+    const [queryRef] = result.current;
 
     const _result = await queryRef.promises.main;
 
@@ -725,7 +725,7 @@ describe('useBackgroundQuery', () => {
       }
     );
 
-    const { queryRef } = result.current;
+    const [queryRef] = result.current;
 
     const _result = await queryRef.promises.main;
 
@@ -789,7 +789,7 @@ describe('useBackgroundQuery', () => {
       }
     );
 
-    const { queryRef } = result.current;
+    const [queryRef] = result.current;
 
     const _result = await queryRef.promises.main;
     const resultSet = new Set(_result.data.results);
@@ -854,7 +854,7 @@ describe('useBackgroundQuery', () => {
       }
     );
 
-    const { queryRef } = result.current;
+    const [queryRef] = result.current;
 
     const _result = await queryRef.promises.main;
     const resultSet = new Set(_result.data.results);
@@ -899,7 +899,7 @@ describe('useBackgroundQuery', () => {
       }
     );
 
-    const { queryRef } = result.current;
+    const [queryRef] = result.current;
 
     const _result = await queryRef.promises.main;
 
@@ -942,7 +942,7 @@ describe('useBackgroundQuery', () => {
       }
     );
 
-    const { queryRef } = result.current;
+    const [queryRef] = result.current;
 
     const _result = await queryRef.promises.main;
 
@@ -992,7 +992,7 @@ describe('useBackgroundQuery', () => {
       }
     );
 
-    const { queryRef } = result.current;
+    const [queryRef] = result.current;
 
     const _result = await queryRef.promises.main;
 
@@ -1035,7 +1035,7 @@ describe('useBackgroundQuery', () => {
       }
     );
 
-    const { queryRef } = result.current;
+    const [queryRef] = result.current;
 
     const _result = await queryRef.promises.main;
 
@@ -1081,7 +1081,7 @@ describe('useBackgroundQuery', () => {
       }
     );
 
-    const { queryRef } = result.current;
+    const [queryRef] = result.current;
 
     const _result = await queryRef.promises.main;
 
@@ -1174,7 +1174,7 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [id, setId] = React.useState('1');
-        const { queryRef } = useBackgroundQuery(query, {
+        const [queryRef] = useBackgroundQuery(query, {
           variables: { id },
         });
         return <Todo queryRef={queryRef} onChange={setId} />;
@@ -1299,7 +1299,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const { queryRef } = useBackgroundQuery(query, {
+        const [queryRef] = useBackgroundQuery(query, {
           fetchPolicy: 'cache-and-network',
         });
         return <Todo queryRef={queryRef} />;
@@ -1428,7 +1428,7 @@ describe('useBackgroundQuery', () => {
 
     expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
 
-    rerender({ variables: { id: '2' }});
+    rerender({ variables: { id: '2' } });
 
     expect(renders.suspenseCount).toBe(2);
     expect(screen.getByText('loading')).toBeInTheDocument();
@@ -1868,7 +1868,7 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [id, setId] = React.useState('1');
-        const { queryRef, refetch } = useBackgroundQuery(query, {
+        const [queryRef, { refetch }] = useBackgroundQuery(query, {
           variables: { id },
         });
         return <Todo refetch={refetch} queryRef={queryRef} onChange={setId} />;
@@ -2116,7 +2116,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const { queryRef, fetchMore } = useBackgroundQuery(query, {
+        const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
           variables: { offset: 0 },
         });
         return <Todo fetchMore={fetchMore} queryRef={queryRef} />;

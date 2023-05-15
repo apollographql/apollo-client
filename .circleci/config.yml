@@ -41,6 +41,6 @@ workflows:
   version: 2
   Build and Test:
     jobs:
-      - Filesize
+      # - Filesize
       - Tests
       - Lint

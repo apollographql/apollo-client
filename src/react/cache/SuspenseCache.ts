@@ -32,11 +32,15 @@ export class SuspenseCache {
     this.options = options;
   }
 
+  getStableCacheKey(cacheKey: CacheKey) {
+    return this.cacheKeys.lookupArray(cacheKey);
+  }
+
   getQueryRef<TData = any>(
     cacheKey: CacheKey,
     createObservable: () => ObservableQuery<TData>
   ) {
-    const stableCacheKey = this.cacheKeys.lookupArray(cacheKey);
+    const stableCacheKey = this.getStableCacheKey(cacheKey);
 
     if (!this.queryRefs.has(stableCacheKey)) {
       this.queryRefs.set(

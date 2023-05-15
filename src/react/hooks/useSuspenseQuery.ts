@@ -264,21 +264,6 @@ export function useTrackedQueryRefs(queryRef: QueryReference) {
   });
 }
 
-export function usePromiseVersion() {
-  // Use an object as state to force React to re-render when we publish an
-  // update to the same version (such as sequential cache updates).
-  const [{ version }, setState] = useState<{ version: Version }>({
-    version: 'main',
-  });
-
-  const setVersion = useCallback(
-    (version: Version) => setState({ version }),
-    []
-  );
-
-  return [version, setVersion] as const;
-}
-
 interface UseWatchQueryOptionsHookOptions<
   TData,
   TVariables extends OperationVariables

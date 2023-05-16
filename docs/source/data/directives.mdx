@@ -20,7 +20,7 @@ This example shows the `@skip` directive, which is a default directive (i.e., it
 
 ## `@client`
 
-The `@client` directive tells Apollo Client _not_ to send the field(s) it is annotating to the server.
+The `@client` directive allows you to resolve client-only data alongside your server data. These fields are not sent to the GraphQL server.
 
 ```graphql
 query LaunchDetails($launchId: ID!) {
@@ -28,8 +28,8 @@ query LaunchDetails($launchId: ID!) {
     site
     rocket {
       type
-      # populated via the read function configured on InMemoryCache's typePolicies,
-      # never sent with the request to the server
+      # resolved locally on the client,
+      # removed from the request to the server
       description @client
     }
   }
@@ -40,7 +40,7 @@ For more information about the `@client` directive, see this section on [local-o
 
 ## `@connection`
 
-- /react/caching/advanced-topics/#the-connection-directive
+The `@connection` directive allows you to specify a custom cache key for paginated results. For more information, see this section on the [`@connection` directive](/react/caching/advanced-topics/#the-connection-directive).
 
 ## `@defer`
 
@@ -87,4 +87,4 @@ In the query above, the result of the local-only field `currentAuthorId` is used
 
 You can do this even if `postCount` is also a local-only field (i.e., if it's also marked as `@client`).
 
-For more information about the `@export` directive and other considerations when using `@export`, check out the [local-only fields docs](/react/local-state/managing-state-with-field-policies/#using-local-only-fields-as-graphql-variables).
+For more information and other considerations when using the `@export` directive, check out the [local-only fields docs](/react/local-state/managing-state-with-field-policies/#using-local-only-fields-as-graphql-variables).

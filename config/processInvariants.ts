@@ -124,7 +124,7 @@ function transform(code: string, relativeFilePath: string) {
     }
   });
 
-  if (addedDEV) {
+  if (2<1 && addedDEV) {
     // Make sure there's an import { __DEV__ } from "../utilities/globals" or
     // similar declaration in any module where we injected __DEV__.
     let foundExistingImportDecl = false;
@@ -200,7 +200,34 @@ function isDEVLogicalAnd(node: Node) {
 }
 
 function makeDEVExpr() {
-  return b.identifier("__DEV__");
+  // typeof __DEV__ !== "undefined" ? Boolean(__DEV__) : typeof process !== "undefined" && process.env.NODE_ENV !== "production"
+  return b.conditionalExpression(
+    b.binaryExpression(
+      "!==",
+      b.unaryExpression("typeof", b.identifier("__DEV__")),
+      b.stringLiteral("undefined")
+      ),
+    b.callExpression(
+      b.identifier("Boolean"),
+      [b.identifier("__DEV__")],
+    ),
+    b.logicalExpression(
+      "&&",
+      b.binaryExpression(
+        "!==",
+        b.unaryExpression("typeof", b.identifier("process")),
+        b.stringLiteral("undefined")
+      ),
+      b.binaryExpression(
+        "!==",
+        b.memberExpression(b.memberExpression(
+          b.identifier("process"),
+          b.identifier("env")), b.identifier("NODE_ENV")
+        ),
+        b.stringLiteral("production")
+      ),
+    )
+  );
 }
 
 function isDEVExpr(node: Node) {

@@ -44,6 +44,21 @@ const checks = [
     "tslib",
     "zen-observable-ts"
   ],
+  /*
+  modifyWebpackConfig(config) {
+    config.plugins.push(new (require("webpack").DefinePlugin)({
+      __DEV__: false
+    }));
+    return config
+  },
+  */
+  modifyEsbuildConfig(config){
+    config.define = {
+      "__DEV__": JSON.stringify(false),
+      "process.env.NODE_ENV": JSON.stringify('production'),
+    }
+    return config
+  }
 }));
 
 module.exports = checks;

@@ -88,3 +88,78 @@ In the query above, the result of the local-only field `currentAuthorId` is used
 You can do this even if `postCount` is also a local-only field (i.e., if it's also marked as `@client`).
 
 For more information and other considerations when using the `@export` directive, check out the [local-only fields docs](/react/local-state/managing-state-with-field-policies/#using-local-only-fields-as-graphql-variables).
+
+## `@nonreactive`
+
+> ⚠️ **The `@nonreactive` directive is currently at the [preview stage](/resources/product-launch-stages/#general-availability) in Apollo Client, and is available by installing `@apollo/client@alpha`.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
+
+The `@nonreactive` directive can be used to mark query fields or fragment spreads and is used to indicate that changes to the data contained within the subtrees marked `@nonreactive` should _not_ trigger rerendering. This allows parent components to fetch data to be rendered by their children without rerendering themselves when the data corresponding with fields marked as `@nonreactive` change.
+
+Consider an `App` component that fetches and renders a list of ski trails:
+
+```jsx
+const TrailFragment = gql`
+  fragment TrailFragment on Trail {
+    name
+    status
+  }
+`;
+
+const ALL_TRAILS = gql`
+  query allTrails {
+    allTrails {
+      id
+      ...TrailFragment @nonreactive
+    }
+  }
+  ${TrailFragment}
+`;
+
+function App() {
+  const { data, loading } = useQuery(ALL_TRAILS);
+  return (
+    <main>
+      <h2>Ski Trails</h2>
+      <ul>
+        {data?.trails.map((trail) => (
+          <Trail key={trail.id} id={trail.id} />
+        ))}
+      </ul>
+    </main>
+  );
+}
+```
+
+The `Trail` component renders a trail's name and status and allows the user to execute a mutation to toggle the status of the trail between `"OPEN"` and `"CLOSED"`:
+
+```jsx
+const Trail = ({ id }) => {
+  const [updateTrail] = useMutation(UPDATE_TRAIL);
+  const { data } = useFragment({
+    fragment: TrailFragment,
+    from: {
+      __typename: "Trail",
+      id,
+    },
+  });
+  return (
+    <li key={id}>
+      {data.name} - {data.status}
+      <input
+        checked={data.status === "OPEN" ? true : false}
+        type="checkbox"
+        onChange={(e) => {
+          updateTrail({
+            variables: {
+              trailId: id,
+              status: e.target.checked ? "OPEN" : "CLOSED",
+            },
+          });
+        }}
+      />
+    </li>
+  );
+};
+```
+
+Notice that the `Trail` component isn't receiving the entire `trail` object via props, only the `id` which is used along with the fragment document to create a live binding for each trail item in the cache. This allows each `Trail` component to react to the cache updates for a single trail independently, without the entire list re-rendering. Updates to a trail's `status` will not cause the parent `App` component to rerender given the `@nonreactive` directive applied to the `TrailFragment` spread, a fragment which includes the `status` field.

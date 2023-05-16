@@ -1,4 +1,4 @@
-import { FetchResult } from "../../link/core";
+import type { FetchResult } from "../../link/core";
 import { isNonEmptyArray } from "../../utilities/common/arrays";
 import { isExecutionPatchIncrementalResult } from "../../utilities/common/incrementalResult";
 

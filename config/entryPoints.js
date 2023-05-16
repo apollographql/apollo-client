@@ -11,6 +11,7 @@ const entryPoints = [
   { dirs: ['link', 'http'] },
   { dirs: ['link', 'persisted-queries'] },
   { dirs: ['link', 'retry'] },
+  { dirs: ['link', 'remove-typename'] },
   { dirs: ['link', 'schema'] },
   { dirs: ['link', 'subscriptions'] },
   { dirs: ['link', 'utils'] },

@@ -1,7 +1,8 @@
 import { InvariantError, invariant } from '../../utilities/globals';
 
-import { Observable, Observer } from '../../utilities';
-import {
+import type { Observer } from '../../utilities';
+import { Observable } from '../../utilities';
+import type {
   NextLink,
   Operation,
   RequestHandler,

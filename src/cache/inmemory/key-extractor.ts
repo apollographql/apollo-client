@@ -8,7 +8,7 @@ import {
 } from "../../utilities";
 
 import { hasOwn, isArray } from "./helpers";
-import {
+import type {
   KeySpecifier,
   KeyFieldsFunction,
   KeyArgsFunction,

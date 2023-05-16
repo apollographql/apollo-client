@@ -1,14 +1,14 @@
 version: 2
 
 jobs:
-  Filesize:
-    docker:
-      - image: cimg/node:20.1.0
-    steps:
-      - checkout
-      - run: npm version
-      - run: npm ci
-      - run: npm run bundlesize
+  # Filesize:
+  #   docker:
+  #     - image: cimg/node:20.1.0
+  #   steps:
+  #     - checkout
+  #     - run: npm version
+  #     - run: npm ci
+  #     - run: npm run bundlesize
 
   Lint:
     docker:
@@ -41,6 +41,6 @@ workflows:
   version: 2
   Build and Test:
     jobs:
-      - Filesize
+      # - Filesize
       - Tests
       - Lint

@@ -163,8 +163,8 @@ function useSimpleQueryCase() {
 function usePaginatedCase() {
   interface QueryData {
     letters: {
-      name: string;
-      position: string;
+      letter: string;
+      position: number;
     }[];
   }
 
@@ -372,8 +372,8 @@ describe('useSuspenseQuery', () => {
       }
     );
 
-    expect(directSuspenseCache['subscriptions'].size).toBe(1);
-    expect(contextSuspenseCache['subscriptions'].size).toBe(0);
+    expect(directSuspenseCache['queryRefs'].size).toBe(1);
+    expect(contextSuspenseCache['queryRefs'].size).toBe(0);
   });
 
   it('ensures a valid fetch policy is used', () => {
@@ -672,7 +672,7 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['subscriptions'].size).toBe(1);
+    expect(suspenseCache['queryRefs'].size).toBe(1);
 
     unmount();
 
@@ -681,7 +681,7 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['queryRefs'].size).toBe(0);
   });
 
   it('tears down all queries when rendering with multiple variable sets', async () => {
@@ -710,7 +710,7 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(client.getObservableQueries().size).toBe(2);
-    expect(suspenseCache['subscriptions'].size).toBe(2);
+    expect(suspenseCache['queryRefs'].size).toBe(2);
 
     unmount();
 
@@ -719,7 +719,7 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['queryRefs'].size).toBe(0);
   });
 
   it('tears down all queries when multiple clients are used', async () => {
@@ -769,7 +769,7 @@ describe('useSuspenseQuery', () => {
 
     expect(client1.getObservableQueries().size).toBe(1);
     expect(client2.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['subscriptions'].size).toBe(2);
+    expect(suspenseCache['queryRefs'].size).toBe(2);
 
     unmount();
 
@@ -779,7 +779,7 @@ describe('useSuspenseQuery', () => {
 
     expect(client1.getObservableQueries().size).toBe(0);
     expect(client2.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['queryRefs'].size).toBe(0);
   });
 
   it('tears down the query if the component never renders again after suspending', async () => {
@@ -828,12 +828,12 @@ describe('useSuspenseQuery', () => {
     link.simulateComplete();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['subscriptions'].size).toBe(1);
+    expect(suspenseCache['queryRefs'].size).toBe(1);
 
     jest.advanceTimersByTime(30_000);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['queryRefs'].size).toBe(0);
 
     jest.useRealTimers();
 
@@ -889,12 +889,12 @@ describe('useSuspenseQuery', () => {
     link.simulateComplete();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['subscriptions'].size).toBe(1);
+    expect(suspenseCache['queryRefs'].size).toBe(1);
 
     jest.advanceTimersByTime(5_000);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['subscriptions'].size).toBe(0);
+    expect(suspenseCache['queryRefs'].size).toBe(0);
 
     jest.useRealTimers();
 
@@ -951,7 +951,7 @@ describe('useSuspenseQuery', () => {
     jest.advanceTimersByTime(30_000);
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['subscriptions'].size).toBe(1);
+    expect(suspenseCache['queryRefs'].size).toBe(1);
 
     jest.useRealTimers();
   });
@@ -6911,7 +6911,9 @@ describe('useSuspenseQuery', () => {
       const { data: explicit } = useSuspenseQuery<
         VariablesCaseData,
         VariablesCaseVariables
-      >(query, { errorPolicy: 'ignore' });
+      >(query, {
+        errorPolicy: 'ignore',
+      });
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
@@ -6920,17 +6922,17 @@ describe('useSuspenseQuery', () => {
     it('returns TData | undefined with errorPolicy: "all"', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferred } = useSuspenseQuery(query, {
+      const { data: inferred } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         errorPolicy: 'all',
       });
 
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: explicit } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
+      const { data: explicit } = useSuspenseQuery(query, {
         errorPolicy: 'all',
       });
 
@@ -6941,17 +6943,19 @@ describe('useSuspenseQuery', () => {
     it('returns TData with errorPolicy: "none"', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferred } = useSuspenseQuery(query, {
+      const { data: inferred } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         errorPolicy: 'none',
       });
 
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
 
-      const { data: explicit } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, { errorPolicy: 'none' });
+      const { data: explicit } = useSuspenseQuery(query, {
+        errorPolicy: 'none',
+      });
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
@@ -6960,17 +6964,19 @@ describe('useSuspenseQuery', () => {
     it('returns DeepPartial<TData> with returnPartialData: true', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferred } = useSuspenseQuery(query, {
+      const { data: inferred } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         returnPartialData: true,
       });
 
       expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: explicit } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, { returnPartialData: true });
+      const { data: explicit } = useSuspenseQuery(query, {
+        returnPartialData: true,
+      });
 
       expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
@@ -7004,7 +7010,10 @@ describe('useSuspenseQuery', () => {
     it('returns TData when passing an option that does not affect TData', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferred } = useSuspenseQuery(query, {
+      const { data: inferred } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         fetchPolicy: 'no-cache',
       });
 
@@ -7013,10 +7022,9 @@ describe('useSuspenseQuery', () => {
         DeepPartial<VariablesCaseData>
       >();
 
-      const { data: explicit } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, { fetchPolicy: 'no-cache' });
+      const { data: explicit } = useSuspenseQuery(query, {
+        fetchPolicy: 'no-cache',
+      });
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
       expectTypeOf(explicit).not.toEqualTypeOf<
@@ -7027,7 +7035,10 @@ describe('useSuspenseQuery', () => {
     it('handles combinations of options', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferredPartialDataIgnore } = useSuspenseQuery(query, {
+      const { data: inferredPartialDataIgnore } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         returnPartialData: true,
         errorPolicy: 'ignore',
       });
@@ -7039,10 +7050,7 @@ describe('useSuspenseQuery', () => {
         inferredPartialDataIgnore
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: explicitPartialDataIgnore } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
+      const { data: explicitPartialDataIgnore } = useSuspenseQuery(query, {
         returnPartialData: true,
         errorPolicy: 'ignore',
       });
@@ -7054,7 +7062,10 @@ describe('useSuspenseQuery', () => {
         explicitPartialDataIgnore
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: inferredPartialDataNone } = useSuspenseQuery(query, {
+      const { data: inferredPartialDataNone } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         returnPartialData: true,
         errorPolicy: 'none',
       });
@@ -7066,10 +7077,7 @@ describe('useSuspenseQuery', () => {
         inferredPartialDataNone
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: explicitPartialDataNone } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
+      const { data: explicitPartialDataNone } = useSuspenseQuery(query, {
         returnPartialData: true,
         errorPolicy: 'none',
       });

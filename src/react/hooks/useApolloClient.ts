@@ -1,6 +1,6 @@
 import { invariant } from '../../utilities/globals';
 import { useContext } from 'react';
-import { ApolloClient } from '../../core';
+import type { ApolloClient } from '../../core';
 import { getApolloContext } from '../context';
 
 export function useApolloClient(

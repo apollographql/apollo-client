@@ -1,4 +1,4 @@
-import { ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { getMarkupFromTree } from './getDataFromTree';
 import { renderToString } from 'react-dom/server';
 

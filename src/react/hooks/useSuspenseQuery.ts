@@ -1,8 +1,7 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
 import { useRef, useCallback, useMemo, useEffect, useState } from 'react';
-import {
+import type {
   ApolloClient,
-  ApolloError,
   ApolloQueryResult,
   DocumentNode,
   OperationVariables,
@@ -10,19 +9,22 @@ import {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
   NetworkStatus,
-  FetchMoreQueryOptions,
+  FetchMoreQueryOptions} from '../../core';
+import {
+  ApolloError
 } from '../../core';
-import { DeepPartial, isNonEmptyArray } from '../../utilities';
+import type { DeepPartial} from '../../utilities';
+import { isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
-import {
+import type {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
   NoInfer,
 } from '../types/types';
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
-import { QuerySubscription } from '../cache/QuerySubscription';
+import type { QueryReference } from '../cache/QueryReference';
 import { canonicalStringify } from '../../cache';
 
 export interface UseSuspenseQueryResult<
@@ -38,7 +40,7 @@ export interface UseSuspenseQueryResult<
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
-type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
+export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
     updateQuery?: (
       previousQueryResult: TData,
@@ -50,17 +52,17 @@ type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   }
 ) => Promise<ApolloQueryResult<TData>>;
 
-type RefetchFunction<
+export type RefetchFunction<
   TData,
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['refetch'];
 
-type SubscribeToMoreFunction<
+export type SubscribeToMoreFunction<
   TData,
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
-type Version = 'main' | 'network';
+export type Version = 'main' | 'network';
 
 export function useSuspenseQuery_experimental<
   TData,
@@ -142,43 +144,43 @@ export function useSuspenseQuery_experimental<
     [client, query, canonicalStringify(variables)] as any[]
   ).concat(queryKey);
 
-  const subscription = suspenseCache.getSubscription(cacheKey, () =>
+  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)
   );
 
-  useTrackedSubscriptions(subscription);
+  useTrackedQueryRefs(queryRef);
 
   useEffect(() => {
-    return subscription.listen(() => {
+    return queryRef.listen(() => {
       setVersion('main');
     });
-  }, [subscription]);
+  }, [queryRef]);
 
-  const promise = subscription.promises[version] || subscription.promises.main;
+  const promise = queryRef.promises[version] || queryRef.promises.main;
   const result = __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
-      const promise = subscription.fetchMore(options);
+      const promise = queryRef.fetchMore(options);
       setVersion('network');
       return promise;
     },
-    [subscription]
+    [queryRef]
   );
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
-      const promise = subscription.refetch(variables);
+      const promise = queryRef.refetch(variables);
       setVersion('network');
       return promise;
     },
-    [subscription]
+    [queryRef]
   );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
     useCallback(
-      (options) => subscription.observable.subscribeToMore(options),
-      [subscription]
+      (options) => queryRef.observable.subscribeToMore(options),
+      [queryRef]
     );
 
   return useMemo(() => {
@@ -229,23 +231,23 @@ function validatePartialDataReturn(
   }
 }
 
-function toApolloError(result: ApolloQueryResult<any>) {
+export function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
     : result.error;
 }
 
-function useTrackedSubscriptions(subscription: QuerySubscription) {
-  const trackedSubscriptions = useRef(new Set<QuerySubscription>());
+export function useTrackedQueryRefs(queryRef: QueryReference) {
+  const trackedQueryRefs = useRef(new Set<QueryReference>());
 
-  trackedSubscriptions.current.add(subscription);
+  trackedQueryRefs.current.add(queryRef);
 
   useStrictModeSafeCleanupEffect(() => {
-    trackedSubscriptions.current.forEach((sub) => sub.dispose());
+    trackedQueryRefs.current.forEach((sub) => sub.dispose());
   });
 }
 
-function usePromiseVersion() {
+export function usePromiseVersion() {
   // Use an object as state to force React to re-render when we publish an
   // update to the same version (such as sequential cache updates).
   const [{ version }, setState] = useState<{ version: Version }>({
@@ -268,7 +270,7 @@ interface UseWatchQueryOptionsHookOptions<
   options: SuspenseQueryHookOptions<TData, TVariables>;
 }
 
-function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
+export function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   query,
   options,
 }: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<

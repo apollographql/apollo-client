@@ -7,4 +7,15 @@ export { useQuery } from './useQuery';
 export * from './useSubscription';
 export * from './useReactiveVar';
 export * from './useFragment';
-export * from './useSuspenseQuery';
+export {
+  useSuspenseQuery_experimental,
+  UseSuspenseQueryResult,
+  FetchMoreFunction,
+  RefetchFunction,
+  SubscribeToMoreFunction,
+} from './useSuspenseQuery';
+export {
+  useBackgroundQuery_experimental,
+  useReadQuery_experimental,
+  UseBackgroundQueryResult,
+} from './useBackgroundQuery';

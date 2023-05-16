@@ -1,7 +1,7 @@
-import { ASTNode, print } from 'graphql';
-import { stripTypename } from '../../utilities';
+import type { ASTNode} from 'graphql';
+import { print } from 'graphql';
 
-import { Operation } from '../core';
+import type { Operation } from '../core';
 
 export interface Printer {
   (node: ASTNode, originalPrint: typeof print): string
@@ -180,7 +180,7 @@ export function selectHttpOptionsAndBodyInternal(
 
   //The body depends on the http options
   const { operationName, extensions, variables, query } = operation;
-  const body: Body = { operationName, variables: stripTypename(variables) };
+  const body: Body = { operationName, variables };
 
   if (http.includeExtensions) (body as any).extensions = extensions;
 

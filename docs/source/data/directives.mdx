@@ -46,7 +46,7 @@ For more information about the `@client` directive, see this section on [local-o
 
 Beginning with version `3.7.0`, Apollo Client Web provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
 
-To use the `@defer` directive, we apply it to a field or fragment (in-line or named) that contains all slow-resolving fields:
+To use the `@defer` directive, we apply it to an inline or named fragment that contains all slow-resolving fields:
 
 ```graphql
 query PersonQuery($personId: ID!) {

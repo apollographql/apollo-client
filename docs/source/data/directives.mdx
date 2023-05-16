@@ -13,7 +13,7 @@ query myQuery($someTest: Boolean) {
 }
 ```
 
-This example shows the `@skip` directive, which is a default directive (i.e., it's part of the [GraphQL specification](http://spec.graphql.org/June2018/#sec--deprecated)). It demonstrates the following about directives:
+This example shows the `@skip` directive, which is a built-in directive (i.e., it's part of the [GraphQL specification](http://spec.graphql.org/June2018/#sec-Type-System.Directives)). It demonstrates the following about directives:
 
 - Directives can take arguments of their own (`if` in this case).
 - Directives appear after the declaration of what they decorate (the `experimentalField` field in this case).
@@ -46,7 +46,7 @@ The `@connection` directive allows you to specify a custom cache key for paginat
 
 Beginning with version `3.7.0`, Apollo Client Web provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
 
-To use the `@defer` directive, we apply it to a field or fragment (in-line or named) that contains all slow-resolving fields:
+To use the `@defer` directive, we apply it to an inline or named fragment that contains all slow-resolving fields:
 
 ```graphql
 query PersonQuery($personId: ID!) {

@@ -608,7 +608,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef.promises.main;
+    const _result = await queryRef.promise;
 
     expect(_result).toEqual({
       data: { hello: 'world 1' },
@@ -645,7 +645,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef.promises.main;
+    const _result = await queryRef.promise;
 
     await waitFor(() => {
       expect(_result).toEqual({
@@ -727,7 +727,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef.promises.main;
+    const _result = await queryRef.promise;
 
     await waitFor(() => {
       expect(_result).toMatchObject({
@@ -791,7 +791,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef.promises.main;
+    const _result = await queryRef.promise;
     const resultSet = new Set(_result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -856,7 +856,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef.promises.main;
+    const _result = await queryRef.promise;
     const resultSet = new Set(_result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -901,7 +901,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef.promises.main;
+    const _result = await queryRef.promise;
 
     expect(_result).toEqual({
       data: { hello: 'from link' },
@@ -944,7 +944,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef.promises.main;
+    const _result = await queryRef.promise;
 
     expect(_result).toEqual({
       data: { hello: 'from cache' },
@@ -994,7 +994,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef.promises.main;
+    const _result = await queryRef.promise;
 
     expect(_result).toEqual({
       data: { foo: 'bar', hello: 'from link' },
@@ -1037,7 +1037,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef.promises.main;
+    const _result = await queryRef.promise;
 
     expect(_result).toEqual({
       data: { hello: 'from link' },
@@ -1083,7 +1083,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef.promises.main;
+    const _result = await queryRef.promise;
 
     expect(_result).toEqual({
       data: { hello: 'from link' },

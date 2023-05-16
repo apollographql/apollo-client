@@ -9,11 +9,10 @@ import type {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
   NetworkStatus,
-  FetchMoreQueryOptions} from '../../core';
-import {
-  ApolloError
+  FetchMoreQueryOptions,
 } from '../../core';
-import type { DeepPartial} from '../../utilities';
+import { ApolloError } from '../../core';
+import type { DeepPartial } from '../../utilities';
 import { isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
@@ -138,8 +137,6 @@ export function useSuspenseQuery_experimental<
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
-  const [version, setVersion] = usePromiseVersion();
-
   const cacheKey = (
     [client, query, canonicalStringify(variables)] as any[]
   ).concat(queryKey);
@@ -148,21 +145,37 @@ export function useSuspenseQuery_experimental<
     client.watchQuery(watchQueryOptions)
   );
 
+  const [promiseCache, setPromiseCache] = useState(
+    () => new Map([[queryRef.key, queryRef.promise]])
+  );
+
+  let promise = promiseCache.get(queryRef.key);
+
+  if (!promise) {
+    promise = queryRef.promise;
+    promiseCache.set(queryRef.key, promise);
+  }
+
   useTrackedQueryRefs(queryRef);
 
   useEffect(() => {
-    return queryRef.listen(() => {
-      setVersion('main');
+    return queryRef.listen((promise) => {
+      setPromiseCache((promiseCache) =>
+        new Map(promiseCache).set(queryRef.key, promise)
+      );
     });
   }, [queryRef]);
 
-  const promise = queryRef.promises[version] || queryRef.promises.main;
   const result = __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
       const promise = queryRef.fetchMore(options);
-      setVersion('network');
+
+      setPromiseCache((previousPromiseCache) =>
+        new Map(previousPromiseCache).set(queryRef.key, promise)
+      );
+
       return promise;
     },
     [queryRef]
@@ -171,7 +184,11 @@ export function useSuspenseQuery_experimental<
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
       const promise = queryRef.refetch(variables);
-      setVersion('network');
+
+      setPromiseCache((previousPromiseCache) =>
+        new Map(previousPromiseCache).set(queryRef.key, promise)
+      );
+
       return promise;
     },
     [queryRef]
@@ -247,21 +264,6 @@ export function useTrackedQueryRefs(queryRef: QueryReference) {
   });
 }
 
-export function usePromiseVersion() {
-  // Use an object as state to force React to re-render when we publish an
-  // update to the same version (such as sequential cache updates).
-  const [{ version }, setState] = useState<{ version: Version }>({
-    version: 'main',
-  });
-
-  const setVersion = useCallback(
-    (version: Version) => setState({ version }),
-    []
-  );
-
-  return [version, setVersion] as const;
-}
-
 interface UseWatchQueryOptionsHookOptions<
   TData,
   TVariables extends OperationVariables
@@ -270,7 +272,10 @@ interface UseWatchQueryOptionsHookOptions<
   options: SuspenseQueryHookOptions<TData, TVariables>;
 }
 
-export function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
+export function useWatchQueryOptions<
+  TData,
+  TVariables extends OperationVariables
+>({
   query,
   options,
 }: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<

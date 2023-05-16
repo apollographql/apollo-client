@@ -2,41 +2,35 @@ import type {
   ApolloError,
   ApolloQueryResult,
   ObservableQuery,
-  OperationVariables} from '../../core';
-import {
-  NetworkStatus
+  OperationVariables,
 } from '../../core';
-import { isNetworkRequestSettled } from '../../core';
-import type {
-  ObservableSubscription} from '../../utilities';
-import {
-  createFulfilledPromise,
-  createRejectedPromise,
-} from '../../utilities';
+import { NetworkStatus, isNetworkRequestSettled } from '../../core';
+import type { ObservableSubscription } from '../../utilities';
+import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
+import type { CacheKey } from './types';
 
-type Listener = () => void;
+type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
 type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
 >[0];
 
 interface QueryReferenceOptions {
+  key: CacheKey;
   onDispose?: () => void;
   autoDisposeTimeoutMs?: number;
 }
 
 export class QueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
+  public readonly key: CacheKey;
   public readonly observable: ObservableQuery<TData>;
 
-  public version: 'main' | 'network' = 'main';
-  public promises: {
-    main: Promise<ApolloQueryResult<TData>>;
-    network?: Promise<ApolloQueryResult<TData>>;
-  };
+  public promiseCache?: Map<any[], Promise<ApolloQueryResult<TData>>>;
+  public promise: Promise<ApolloQueryResult<TData>>;
 
   private subscription: ObservableSubscription;
-  private listeners = new Set<Listener>();
+  private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
   private initialized = false;
   private refetching = false;
@@ -46,7 +40,7 @@ export class QueryReference<TData = unknown> {
 
   constructor(
     observable: ObservableQuery<TData>,
-    options: QueryReferenceOptions = Object.create(null)
+    options: QueryReferenceOptions
   ) {
     this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
@@ -54,6 +48,7 @@ export class QueryReference<TData = unknown> {
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult(false);
+    this.key = options.key;
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;
@@ -64,7 +59,7 @@ export class QueryReference<TData = unknown> {
       (this.result.data &&
         (!this.result.partial || this.observable.options.returnPartialData))
     ) {
-      this.promises = { main: createFulfilledPromise(this.result) };
+      this.promise = createFulfilledPromise(this.result);
       this.initialized = true;
       this.refetching = false;
     }
@@ -74,13 +69,11 @@ export class QueryReference<TData = unknown> {
       error: this.handleError,
     });
 
-    if (!this.promises) {
-      this.promises = {
-        main: new Promise((resolve, reject) => {
-          this.resolve = resolve;
-          this.reject = reject;
-        }),
-      };
+    if (!this.promise) {
+      this.promise = new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+      });
     }
 
     // Start a timer that will automatically dispose of the query if the
@@ -93,7 +86,7 @@ export class QueryReference<TData = unknown> {
     );
   }
 
-  listen(listener: Listener) {
+  listen(listener: Listener<TData>) {
     // As soon as the component listens for updates, we know it has finished
     // suspending and is ready to receive updates, so we can remove the auto
     // dispose timer.
@@ -111,7 +104,7 @@ export class QueryReference<TData = unknown> {
 
     const promise = this.observable.refetch(variables);
 
-    this.promises.network = promise;
+    this.promise = promise;
 
     return promise;
   }
@@ -119,7 +112,7 @@ export class QueryReference<TData = unknown> {
   fetchMore(options: FetchMoreOptions<TData>) {
     const promise = this.observable.fetchMore<TData>(options);
 
-    this.promises.network = promise;
+    this.promise = promise;
 
     return promise;
   }
@@ -134,8 +127,20 @@ export class QueryReference<TData = unknown> {
   }
 
   private handleNext(result: ApolloQueryResult<TData>) {
-    if (!this.initialized) {
+    if (!this.initialized || this.refetching) {
+      if (!isNetworkRequestSettled(result.networkStatus)) {
+        return;
+      }
+
+      // If we encounter an error with the new result after we have successfully
+      // fetched a previous result, set the new result data to the last successful
+      // result.
+      if (this.result.data && result.data === void 0) {
+        result.data = this.result.data;
+      }
+
       this.initialized = true;
+      this.refetching = false;
       this.result = result;
       this.resolve(result);
       return;
@@ -145,16 +150,9 @@ export class QueryReference<TData = unknown> {
       return;
     }
 
-    // If we encounter an error with the new result after we have successfully
-    // fetched a previous result, set the new result data to the last successful
-    // result.
-    if (this.result.data && result.data === void 0) {
-      result.data = this.result.data;
-    }
-
     this.result = result;
-    this.promises.main = createFulfilledPromise(result);
-    this.deliver();
+    this.promise = createFulfilledPromise(result);
+    this.deliver(this.promise);
   }
 
   private handleError(error: ApolloError) {
@@ -174,13 +172,13 @@ export class QueryReference<TData = unknown> {
     }
 
     this.result = result;
-    this.promises.main = result.data
+    this.promise = result.data
       ? createFulfilledPromise(result)
       : createRejectedPromise(result);
-    this.deliver();
+    this.deliver(this.promise);
   }
 
-  private deliver() {
-    this.listeners.forEach((listener) => listener());
+  private deliver(promise: Promise<ApolloQueryResult<TData>>) {
+    this.listeners.forEach((listener) => listener(promise));
   }
 }

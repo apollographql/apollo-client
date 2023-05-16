@@ -2,8 +2,7 @@ import { Trie } from '@wry/trie';
 import type { ObservableQuery } from '../../core';
 import { canUseWeakMap } from '../../utilities';
 import { QueryReference } from './QueryReference';
-
-type CacheKey = any[];
+import type { CacheKey } from './types';
 
 interface SuspenseCacheOptions {
   /**
@@ -42,6 +41,7 @@ export class SuspenseCache {
       this.queryRefs.set(
         stableCacheKey,
         new QueryReference(createObservable(), {
+          key: stableCacheKey,
           autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
           onDispose: () => this.queryRefs.delete(stableCacheKey),
         })

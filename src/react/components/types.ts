@@ -1,8 +1,8 @@
-import { DocumentNode } from 'graphql';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentNode } from 'graphql';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { OperationVariables, DefaultContext, ApolloCache } from '../../core';
-import {
+import type { OperationVariables, DefaultContext, ApolloCache } from '../../core';
+import type {
   QueryFunctionOptions,
   QueryResult,
   BaseMutationOptions,

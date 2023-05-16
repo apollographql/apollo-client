@@ -10,19 +10,22 @@ import {
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { equal } from '@wry/equality';
 
-import { mergeOptions, OperationVariables, WatchQueryFetchPolicy } from '../../core';
-import { ApolloContextValue, getApolloContext } from '../context';
+import type { OperationVariables, WatchQueryFetchPolicy } from '../../core';
+import { mergeOptions } from '../../utilities';
+import type { ApolloContextValue} from '../context';
+import { getApolloContext } from '../context';
 import { ApolloError } from '../../errors';
-import {
+import type {
   ApolloClient,
   ApolloQueryResult,
-  NetworkStatus,
   ObservableQuery,
   DocumentNode,
   TypedDocumentNode,
-  WatchQueryOptions,
-} from '../../core';
+  WatchQueryOptions} from '../../core';
 import {
+  NetworkStatus
+} from '../../core';
+import type {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,

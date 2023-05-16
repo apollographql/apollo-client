@@ -1,8 +1,8 @@
 import { responseIterator } from "./responseIterator";
-import { Operation } from "../core";
+import type { Operation } from "../core";
 import { throwServerError } from "../utils";
 import { PROTOCOL_ERRORS_SYMBOL } from '../../errors';
-import { Observer } from "../../utilities";
+import type { Observer } from "../../utilities";
 import {
   isApolloPayloadResult
 } from '../../utilities/common/incrementalResult';

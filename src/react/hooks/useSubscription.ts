@@ -1,16 +1,16 @@
 import { invariant } from '../../utilities/globals';
 import { useState, useRef, useEffect } from 'react';
-import { DocumentNode } from 'graphql';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentNode } from 'graphql';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { equal } from '@wry/equality';
 
 import { DocumentType, verifyDocumentType } from '../parser';
-import {
+import type {
   NoInfer,
   SubscriptionHookOptions,
   SubscriptionResult
 } from '../types/types';
-import { OperationVariables } from '../../core';
+import type { OperationVariables } from '../../core';
 import { useApolloClient } from './useApolloClient';
 
 export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(

@@ -2,7 +2,7 @@ import { invariant } from '../../utilities/globals';
 
 import * as React from 'react';
 
-import { ApolloClient } from '../../core';
+import type { ApolloClient } from '../../core';
 import { getApolloContext } from './ApolloContext';
 
 export interface ApolloConsumerProps {

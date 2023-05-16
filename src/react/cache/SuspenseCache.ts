@@ -1,7 +1,7 @@
 import { Trie } from '@wry/trie';
-import { ObservableQuery } from '../../core';
+import type { ObservableQuery } from '../../core';
 import { canUseWeakMap } from '../../utilities';
-import { QuerySubscription } from './QuerySubscription';
+import { QueryReference } from './QueryReference';
 
 type CacheKey = any[];
 
@@ -25,29 +25,29 @@ export class SuspenseCache {
     (cacheKey: CacheKey) => cacheKey
   );
 
-  private subscriptions = new Map<CacheKey, QuerySubscription>();
+  private queryRefs = new Map<CacheKey, QueryReference>();
   private options: SuspenseCacheOptions;
 
   constructor(options: SuspenseCacheOptions = Object.create(null)) {
     this.options = options;
   }
 
-  getSubscription<TData = any>(
+  getQueryRef<TData = any>(
     cacheKey: CacheKey,
     createObservable: () => ObservableQuery<TData>
   ) {
     const stableCacheKey = this.cacheKeys.lookupArray(cacheKey);
 
-    if (!this.subscriptions.has(stableCacheKey)) {
-      this.subscriptions.set(
+    if (!this.queryRefs.has(stableCacheKey)) {
+      this.queryRefs.set(
         stableCacheKey,
-        new QuerySubscription(createObservable(), {
+        new QueryReference(createObservable(), {
           autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
-          onDispose: () => this.subscriptions.delete(stableCacheKey),
+          onDispose: () => this.queryRefs.delete(stableCacheKey),
         })
       );
     }
 
-    return this.subscriptions.get(stableCacheKey)! as QuerySubscription<TData>;
+    return this.queryRefs.get(stableCacheKey)! as QueryReference<TData>;
   }
 }

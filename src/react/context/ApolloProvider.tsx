@@ -2,9 +2,9 @@ import { invariant } from '../../utilities/globals';
 
 import * as React from 'react';
 
-import { ApolloClient } from '../../core';
+import type { ApolloClient } from '../../core';
 import { getApolloContext } from './ApolloContext';
-import { SuspenseCache } from '../cache';
+import type { SuspenseCache } from '../cache';
 
 export interface ApolloProviderProps<TCache> {
   client: ApolloClient<TCache>;
@@ -20,25 +20,22 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   const ApolloContext = getApolloContext();
   const parentContext = React.useContext(ApolloContext);
 
-  const newContext = React.useMemo(() => {
-    let context = parentContext;
-    if (client && parentContext.client !== client) {
-      context = Object.assign({}, context, { client });
+  const context = React.useMemo(() => {
+    return {
+      ...parentContext,
+      client: client || parentContext.client,
+      suspenseCache: suspenseCache || parentContext.suspenseCache
     }
-    if (suspenseCache && parentContext.suspenseCache !== suspenseCache) {
-      context = Object.assign({}, context, { suspenseCache });
-    }
-    return context;
   }, [parentContext, client, suspenseCache]);
 
   invariant(
-    newContext.client,
+    context.client,
     'ApolloProvider was not passed a client instance. Make ' +
       'sure you pass in your client via the "client" prop.'
   );
 
   return (
-    <ApolloContext.Provider value={newContext}>
+    <ApolloContext.Provider value={context}>
       {children}
     </ApolloContext.Provider>
   );

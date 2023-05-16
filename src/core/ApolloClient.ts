@@ -1,17 +1,19 @@
 import { invariant, InvariantError, __DEV__ } from '../utilities/globals';
 
-import { ExecutionResult, DocumentNode } from 'graphql';
+import type { ExecutionResult, DocumentNode } from 'graphql';
 
-import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
-import { ApolloCache, DataProxy, Reference } from '../cache';
-import { Observable } from '../utilities';
+import type { FetchResult, GraphQLRequest} from '../link/core';
+import { ApolloLink, execute } from '../link/core';
+import type { ApolloCache, DataProxy, Reference } from '../cache';
+import type { Observable } from '../utilities';
 import { version } from '../version';
-import { HttpLink, UriFunction } from '../link/http';
+import type { UriFunction } from '../link/http';
+import { HttpLink } from '../link/http';
 
 import { QueryManager } from './QueryManager';
-import { ObservableQuery } from './ObservableQuery';
+import type { ObservableQuery } from './ObservableQuery';
 
-import {
+import type {
   ApolloQueryResult,
   DefaultContext,
   OperationVariables,
@@ -23,7 +25,7 @@ import {
   TransformQueryOptions,
 } from './types';
 
-import {
+import type {
   QueryOptions,
   WatchQueryOptions,
   MutationOptions,
@@ -31,9 +33,10 @@ import {
   WatchQueryFetchPolicy,
 } from './watchQueryOptions';
 
+import type {
+  FragmentMatcher} from './LocalState';
 import {
-  LocalState,
-  FragmentMatcher,
+  LocalState
 } from './LocalState';
 
 export interface DefaultOptions {

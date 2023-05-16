@@ -1,4 +1,5 @@
-import { Observable, Observer, ObservableSubscription, Subscriber } from "./Observable";
+import type { Observer, ObservableSubscription, Subscriber } from "./Observable";
+import { Observable } from "./Observable";
 import { iterateObserversSafely } from "./iteration";
 import { fixObservableSubclass } from "./subclassing";
 

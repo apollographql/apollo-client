@@ -1,7 +1,7 @@
 import * as PropTypes from 'prop-types';
 
-import { OperationVariables } from '../../core';
-import { SubscriptionComponentOptions } from './types';
+import type { OperationVariables } from '../../core';
+import type { SubscriptionComponentOptions } from './types';
 import { useSubscription } from '../hooks';
 
 export function Subscription<TData = any, TVariables extends OperationVariables = OperationVariables>(

@@ -1,6 +1,6 @@
 import { DataProxy } from './DataProxy';
-import { Modifier, Modifiers } from './common';
-import { ApolloCache } from '../cache';
+import type { Modifier, Modifiers } from './common';
+import type { ApolloCache } from '../cache';
 
 export namespace Cache {
   export type WatchCallback<TData = any> = (

@@ -42,6 +42,14 @@ For more information about the `@client` directive, see this section on [local-o
 
 The `@connection` directive allows you to specify a custom cache key for paginated results. For more information, see this section on the [`@connection` directive](/react/caching/advanced-topics/#the-connection-directive).
 
+```graphql
+query Feed($offset: Int, $limit: Int) {
+  feed(offset: $offset, limit: $limit) @connection(key: "feed") {
+    ...FeedFields
+  }
+}
+```
+
 ## `@defer`
 
 Beginning with version `3.7.0`, Apollo Client provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.

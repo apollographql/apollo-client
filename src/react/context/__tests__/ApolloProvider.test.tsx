@@ -4,14 +4,23 @@ import { render, screen } from '@testing-library/react';
 import { ApolloLink } from '../../../link/core';
 import { ApolloClient } from '../../../core';
 import { InMemoryCache as Cache } from '../../../cache';
-import { ApolloProvider } from '../ApolloProvider';
-import { getApolloContext } from '../ApolloContext';
+import { ApolloProvider, ApolloProviderProps } from '../ApolloProvider';
+import { ApolloContextValue, getApolloContext } from '../ApolloContext';
+import { SuspenseCache } from '../../cache';
 
 describe('<ApolloProvider /> Component', () => {
   const client = new ApolloClient({
     cache: new Cache(),
-    link: new ApolloLink((o, f) => (f ? f(o) : null))
+    link: new ApolloLink((o, f) => (f ? f(o) : null)),
   });
+
+  const anotherClient = new ApolloClient({
+    cache: new Cache(),
+    link: new ApolloLink((o, f) => (f ? f(o) : null)),
+  });
+
+  const suspenseCache = new SuspenseCache();
+  const anotherSuspenseCache = new SuspenseCache();
 
   it('should render children components', () => {
     render(
@@ -95,7 +104,7 @@ describe('<ApolloProvider /> Component', () => {
 
     const newClient = new ApolloClient({
       cache: new Cache(),
-      link: new ApolloLink((o, f) => (f ? f(o) : null))
+      link: new ApolloLink((o, f) => (f ? f(o) : null)),
     });
     clientToCheck = newClient;
     rerender(
@@ -103,5 +112,79 @@ describe('<ApolloProvider /> Component', () => {
         <TestChild />
       </ApolloProvider>
     );
+  });
+
+  describe.each<
+    [
+      string,
+      Omit<ApolloProviderProps<any>, 'children'>,
+      Omit<ApolloProviderProps<any>, 'children'>
+    ]
+  >([
+    ['client', { client }, { client: anotherClient }],
+    [
+      'suspenseCache',
+      { client, suspenseCache },
+      { client, suspenseCache: anotherSuspenseCache },
+    ],
+    [
+      'suspenseCache and client',
+      { client, suspenseCache },
+      { suspenseCache: anotherSuspenseCache, client: anotherClient },
+    ],
+  ])('context value stability, %s prop', (prop, value, childValue) => {
+    it(`should not recreate the context value if the ${prop} prop didn't change`, () => {
+      let lastContext: ApolloContextValue | undefined;
+
+      const TestChild = () => {
+        lastContext = useContext(getApolloContext());
+        return null;
+      };
+
+      const { rerender } = render(
+        <ApolloProvider {...value}>
+          <TestChild />
+        </ApolloProvider>
+      );
+
+      const firstContextValue = lastContext;
+
+      rerender(
+        <ApolloProvider {...value}>
+          <TestChild />
+        </ApolloProvider>
+      );
+
+      expect(lastContext).toBe(firstContextValue);
+    });
+
+    it(`should not recreate the context if the parent context value differs, but the ${prop} prop didn't change`, () => {
+      let lastContext: ApolloContextValue | undefined;
+
+      const TestChild = () => {
+        lastContext = useContext(getApolloContext());
+        return null;
+      };
+
+      const { rerender } = render(
+        <ApolloProvider {...value}>
+          <ApolloProvider {...childValue}>
+            <TestChild />
+          </ApolloProvider>
+        </ApolloProvider>
+      );
+
+      const firstContextValue = lastContext;
+
+      rerender(
+        <ApolloProvider {...value}>
+          <ApolloProvider {...childValue}>
+            <TestChild />
+          </ApolloProvider>
+        </ApolloProvider>
+      );
+
+      expect(lastContext).toBe(firstContextValue);
+    });
   });
 });

@@ -1,0 +1,90 @@
+---
+title: "Using GraphQL directives in Apollo Client"
+description: Configure GraphQL fields and fragments
+---
+
+A directive decorates part of a GraphQL schema or operation with additional configuration. Tools like Apollo Client can read a GraphQL document's directives and perform custom logic as appropriate.
+
+Directives are preceded by the `@` character, like so:
+
+```graphql
+query myQuery($someTest: Boolean) {
+  experimentalField @skip(if: $someTest)
+}
+```
+
+This example shows the `@skip` directive, which is a default directive (i.e., it's part of the [GraphQL specification](http://spec.graphql.org/June2018/#sec--deprecated)). It demonstrates the following about directives:
+
+- Directives can take arguments of their own (`if` in this case).
+- Directives appear after the declaration of what they decorate (the `experimentalField` field in this case).
+
+## `@client`
+
+The `@client` directive tells Apollo Client _not_ to send the field(s) it is annotating to the server.
+
+```graphql
+query LaunchDetails($launchId: ID!) {
+  launch(id: $launchId) {
+    site
+    rocket {
+      type
+      # populated via the read function configured on InMemoryCache's typePolicies,
+      # never sent with the request to the server
+      description @client
+    }
+  }
+}
+```
+
+For more information about the `@client` directive, see this section on [local-only fields](/react/local-state/managing-state-with-field-policies/). The `@client` directive is also useful for [client schema mocking](/react/development-testing/client-schema-mocking/#3-query-with-the-client-directive) before a given field is supported in the GraphQL API your application is consuming.
+
+## `@connection`
+
+- /react/caching/advanced-topics/#the-connection-directive
+
+## `@defer`
+
+Beginning with version `3.7.0`, Apollo Client Web provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
+
+To use the `@defer` directive, we apply it to a field or fragment (in-line or named) that contains all slow-resolving fields:
+
+```graphql
+query PersonQuery($personId: ID!) {
+  person(id: $personId) {
+    # Basic fields (fast)
+    id
+    firstName
+    lastName
+
+    # Friend fields (slower)
+    ... @defer {
+      friends {
+        id
+      }
+    }
+  }
+}
+```
+
+For more information about the `@defer` directive, check out the [`@defer` docs](/react/data/defer).
+
+## `@export`
+
+If your GraphQL query uses variables, the local-only fields of that query can provide the values of those variables.
+
+To do so, you apply the `@export(as: "variableName")` directive, like so:
+
+```js
+const GET_CURRENT_AUTHOR_POST_COUNT = gql`
+  query CurrentAuthorPostCount($authorId: Int!) {
+    currentAuthorId @client @export(as: "authorId")
+    postCount(authorId: $authorId)
+  }
+`;
+```
+
+In the query above, the result of the local-only field `currentAuthorId` is used as the value of the `$authorId` variable that's passed to `postCount`.
+
+You can do this even if `postCount` is also a local-only field (i.e., if it's also marked as `@client`).
+
+For more information about the `@export` directive and other considerations when using `@export`, check out the [local-only fields docs](/react/local-state/managing-state-with-field-policies/#using-local-only-fields-as-graphql-variables).

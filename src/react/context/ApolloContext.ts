@@ -30,11 +30,6 @@ const contextKey: unique symbol = canUseSymbol
   : ('__APOLLO_CONTEXT__' as any);
 
 export function getApolloContext(): React.Context<ApolloContextValue> {
-  let contextStorage = global[contextKey];
-  if (!contextStorage) {
-    contextStorage = global[contextKey] = new Map();
-  }
-
   invariant(
     'createContext' in React,
     'Invoking `getApolloContext` in an environment where `React.createContext` is not available.\n' +
@@ -44,13 +39,18 @@ export function getApolloContext(): React.Context<ApolloContextValue> {
       'For more information, see https://nextjs.org/docs/getting-started/react-essentials#client-components'
   );
 
+  let contextStorage = global[contextKey];
+  if (!contextStorage) {
+    contextStorage = global[contextKey] = new Map();
+  }
+
   let context = contextStorage.get(React);
   if (!context) {
     context = React.createContext<ApolloContextValue>({});
     context.displayName = 'ApolloContext';
     contextStorage.set(React, context);
   }
-  return context!;
+  return context;
 }
 
 /**

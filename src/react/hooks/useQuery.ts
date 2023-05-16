@@ -11,7 +11,7 @@ import { useSyncExternalStore } from './useSyncExternalStore';
 import { equal } from '@wry/equality';
 
 import type { OperationVariables, WatchQueryFetchPolicy } from '../../core';
-import { mergeOptions } from '../../core';
+import { mergeOptions } from '../../utilities';
 import type { ApolloContextValue} from '../context';
 import { getApolloContext } from '../context';
 import { ApolloError } from '../../errors';

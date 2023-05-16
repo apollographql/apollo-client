@@ -25,6 +25,16 @@ src/*
 !src/react/
 src/react/*
 
+
+# Allow src/react/cache/ApolloProvider
+!src/react/context/
+src/react/context/*
+!src/react/context/ApolloProvider.tsx
+!src/react/context/ApolloContext.ts
+!src/react/context/__tests__/
+src/react/context/__tests__/*
+!src/react/context/__tests__/ApolloProvider.test.tsx
+
 # Allow src/react/cache
 !src/react/cache/
 
@@ -49,6 +59,11 @@ src/utilities/common/*
 src/utilities/common/__tests__/*
 !src/utilities/common/__tests__/omitDeep.ts
 !src/utilities/common/__tests__/stripTypename.ts
+
+# Allowed links
+!src/link
+src/link/*
+!src/link/remove-typename
 
 ## Allowed React Hooks
 !src/react/hooks/

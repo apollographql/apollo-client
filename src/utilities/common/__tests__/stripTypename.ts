@@ -1,3 +1,4 @@
+import equal from '@wry/equality';
 import { stripTypename } from '../stripTypename';
 
 test('omits __typename from a shallow object', () => {
@@ -57,4 +58,54 @@ test('returns primitives unchanged', () => {
   expect(stripTypename(true)).toBe(true);
   expect(stripTypename(null)).toBe(null);
   expect(stripTypename(undefined)).toBe(undefined);
+});
+
+test('keeps __typename for paths allowed by the `keep` option', () => {
+  const variables = {
+    __typename: 'Foo',
+    bar: {
+      __typename: 'Bar',
+      aa: true,
+    },
+    baz: {
+      __typename: 'Baz',
+      bb: true,
+    },
+    deeply: {
+      __typename: 'Deeply',
+      nested: {
+        __typename: 'Nested',
+        value: 'value',
+      },
+    },
+  };
+
+  const result = stripTypename(variables, {
+    keep: (path) => {
+      if (equal(path, ['bar', '__typename'])) {
+        return true;
+      }
+
+      if (equal(path, ['deeply'])) {
+        return stripTypename.BREAK;
+      }
+    },
+  });
+
+  expect(result).toStrictEqual({
+    bar: {
+      __typename: 'Bar',
+      aa: true,
+    },
+    baz: {
+      bb: true,
+    },
+    deeply: {
+      __typename: 'Deeply',
+      nested: {
+        __typename: 'Nested',
+        value: 'value',
+      },
+    },
+  });
 });

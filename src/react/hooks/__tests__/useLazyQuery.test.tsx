@@ -12,7 +12,7 @@ import {
   TypedDocumentNode 
 } from '../../../core';
 import { Observable } from '../../../utilities';
-import { ApolloProvider, resetApolloContext } from '../../../react';
+import { ApolloProvider } from '../../../react';
 import { 
   MockedProvider,
   mockSingleLink,
@@ -26,9 +26,6 @@ import { QueryResult } from '../../types/types';
 const IS_REACT_18 = React.version.startsWith("18");
 
 describe('useLazyQuery Hook', () => {
-  afterEach(() => {
-    resetApolloContext();
-  });
   const helloQuery: TypedDocumentNode<{
     hello: string;
   }> = gql`query { hello }`;

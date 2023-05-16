@@ -21,14 +21,11 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   const parentContext = React.useContext(ApolloContext);
 
   const newContext = React.useMemo(() => {
-    let context = parentContext;
-    if (client && parentContext.client !== client) {
-      context = Object.assign({}, context, { client });
+    return {
+      ...parentContext,
+      client: client || parentContext.client,
+      suspenseCache: suspenseCache || parentContext.suspenseCache
     }
-    if (suspenseCache && parentContext.suspenseCache !== suspenseCache) {
-      context = Object.assign({}, context, { suspenseCache });
-    }
-    return context;
   }, [parentContext, client, suspenseCache]);
 
   invariant(

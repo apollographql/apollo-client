@@ -20,7 +20,7 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   const ApolloContext = getApolloContext();
   const parentContext = React.useContext(ApolloContext);
 
-  const newContext = React.useMemo(() => {
+  const context = React.useMemo(() => {
     return {
       ...parentContext,
       client: client || parentContext.client,
@@ -29,13 +29,13 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   }, [parentContext, client, suspenseCache]);
 
   invariant(
-    newContext.client,
+    context.client,
     'ApolloProvider was not passed a client instance. Make ' +
       'sure you pass in your client via the "client" prop.'
   );
 
   return (
-    <ApolloContext.Provider value={newContext}>
+    <ApolloContext.Provider value={context}>
       {children}
     </ApolloContext.Provider>
   );

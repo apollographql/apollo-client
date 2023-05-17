@@ -28,12 +28,12 @@ import { SuspenseCache } from '@apollo/client';
 
 const suspenseCache = new SuspenseCache();
 
-<ApolloProvider suspenseCache={suspenseCache} />
+<ApolloProvider suspenseCache={suspenseCache} />;
 ```
 
 `useBackgroundQuery_experimental` allows a user to initiate a query outside of the component that will read and render the data with `useReadQuery_experimental`, which triggers the nearest Suspense boundary while the query is pending. This means a query can be initiated higher up in the React render tree and your application can begin requesting data before the component that has a dependency on that data begins rendering.
 
-Ensure the component tree is wrapped with React's [`Suspense`](https://react.dev/reference/react/Suspense) component. Note that the `useReadQuery_experimental` hook returns only `data` and `error` (and `networkStatus`, though it should rarely be needed): since Suspense provides the tools to manage our application's loading states, `useReadQuery_experimental` does not return a `loading` boolean.
+Ensure the component tree that uses `useReadQuery_experimental` is wrapped with React's [`Suspense`](https://react.dev/reference/react/Suspense) component. Note that the `useReadQuery_experimental` hook returns only `data`, `error` and `networkStatus` (though `networkStatus` should rarely be needed). Since Suspense provides the tools to manage our application's loading states, `useReadQuery_experimental` does not return a `loading` boolean.
 
 See the API references for [`useBackgroundQuery_experimental`](#usebackgroundquery_experimental-api) and [`useReadQuery_experimental`](#usereadquery_experimental-api) for supported options.
 
@@ -73,16 +73,18 @@ function Child({ queryRef }) {
 function Parent() {
   const [queryRef] = useBackgroundQuery(query);
 
-  return <Child queryRef={queryRef} />;
+  return (
+    <Suspense fallback={<SuspenseFallback />}>
+      <Child queryRef={queryRef} />
+    </Suspense>
+  );
 }
 
 function App() {
   return (
     <ApolloProvider client={client} suspenseCache={suspenseCache}>
       <ErrorBoundary fallback={<div>Error</div>}>
-        <Suspense fallback={<SuspenseFallback />}>
           <Parent />
-        </Suspense>
       </ErrorBoundary>
     </ApolloProvider>
   );
@@ -245,7 +247,7 @@ import { SuspenseCache } from '@apollo/client';
 
 const suspenseCache = new SuspenseCache();
 
-<ApolloProvider suspenseCache={suspenseCache} />
+<ApolloProvider suspenseCache={suspenseCache} />;
 ```
 
 Write queries using `useSuspenseQuery_experimental`. Ensure the component is wrapped with React's [`Suspense`](https://react.dev/reference/react/Suspense) component. Note that the hook returns only `data` and `error`: since Suspense provides the tools to manage our application's loading states, `useSuspenseQuery_experimental` does not return a `loading` boolean.

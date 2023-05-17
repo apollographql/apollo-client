@@ -27,11 +27,15 @@ class InvariantError extends IE {
   }
 }
 
-function getErrorMsg(message?: string | number, getArgsLazy?: () => unknown) {
+function getErrorMsg(message?: string | number, getArgsLazy?: () => unknown[]) {
+  const args = getArgsLazy ? getArgsLazy() : [];
+  if (typeof message === "string") {
+    return args.reduce<string>((msg, arg) => msg.replace("%s", String(arg)), message)
+  }
   return `An error occured! For more details, see the full error text at http://someLink#${encodeURIComponent(JSON.stringify({
     version,
     message,
-    args: getArgsLazy ? getArgsLazy() : []
+    args
   }))}`
 }
 

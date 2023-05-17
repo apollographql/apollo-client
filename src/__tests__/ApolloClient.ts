@@ -15,7 +15,7 @@ import { HttpLink } from '../link/http';
 import { InMemoryCache } from '../cache';
 import { itAsync, withErrorSpy } from '../testing';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { invariant } from 'ts-invariant';
+import { invariant } from '../utilities/globals';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {

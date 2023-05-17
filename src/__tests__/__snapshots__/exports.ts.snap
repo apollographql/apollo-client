@@ -457,6 +457,12 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/utilities/errors 1`] = `
+Array [
+  "loadErrorMessages",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
 Array [
   "DEV",

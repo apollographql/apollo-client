@@ -31,6 +31,7 @@ import * as testing from "../testing";
 import * as testingCore from "../testing/core";
 import * as utilities from "../utilities";
 import * as utilitiesGlobals from "../utilities/globals";
+import * as utilitiesErrors from '../utilities/errors';
 
 const entryPoints = require("../../config/entryPoints.js");
 
@@ -74,6 +75,7 @@ describe('exports of public entry points', () => {
   check("@apollo/client/testing/core", testingCore);
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
+  check('@apollo/client/utilities/errors', utilitiesErrors)
 
   it("completeness", () => {
     const { join } = require("path").posix;

@@ -29,13 +29,13 @@ export function removeTypenameFromVariables(
     return forward({
       ...operation,
       variables: except
-        ? maybeStripTypenameFromConfig(query, variables, except)
+        ? maybeStripTypenameUsingConfig(query, variables, except)
         : stripTypename(variables),
     });
   });
 }
 
-function maybeStripTypenameFromConfig(
+function maybeStripTypenameUsingConfig(
   query: DocumentNode,
   variables: OperationVariables,
   config: KeepTypenameConfig

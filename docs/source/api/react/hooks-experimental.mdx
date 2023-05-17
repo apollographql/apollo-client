@@ -31,7 +31,7 @@ const suspenseCache = new SuspenseCache();
 <ApolloProvider suspenseCache={suspenseCache} />
 ```
 
-`useBackgroundQuery_experimental` allows a user to initiate a query outside of the component that will read and render the data with `useReadQuery_experimental`, which triggers the nearest Suspense boundary while the query is pending. This means a query can be initiated higher up in the React render tree and your application can begin requesting data before the component that has a dependency on those data begins rendering.
+`useBackgroundQuery_experimental` allows a user to initiate a query outside of the component that will read and render the data with `useReadQuery_experimental`, which triggers the nearest Suspense boundary while the query is pending. This means a query can be initiated higher up in the React render tree and your application can begin requesting data before the component that has a dependency on that data begins rendering.
 
 Ensure the component tree is wrapped with React's [`Suspense`](https://react.dev/reference/react/Suspense) component. Note that the `useReadQuery_experimental` hook returns only `data` and `error` (and `networkStatus`, though it should rarely be needed): since Suspense provides the tools to manage our application's loading states, `useReadQuery_experimental` does not return a `loading` boolean.
 

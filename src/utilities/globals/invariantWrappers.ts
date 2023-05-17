@@ -1,5 +1,6 @@
 import { invariant as i, InvariantError as IE } from "ts-invariant";
 import { version } from "../../version";
+import global from "./global";
 
 type WrappedInvariant = {
   (condition: any, message?: string | number, args?: () => unknown[]): asserts condition
@@ -27,15 +28,19 @@ class InvariantError extends IE {
   }
 }
 
+const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler')
+declare global {
+	interface Window {
+		[ApolloErrorMessageHandler]?(message?: string | number, getArgsLazy?: () => unknown[]): string
+	}
+}
+
 function getErrorMsg(message?: string | number, getArgsLazy?: () => unknown[]) {
-  const args = getArgsLazy ? getArgsLazy() : [];
-  if (typeof message === "string") {
-    return args.reduce<string>((msg, arg) => msg.replace("%s", String(arg)), message)
-  }
-  return `An error occured! For more details, see the full error text at http://someLink#${encodeURIComponent(JSON.stringify({
+  return global[ApolloErrorMessageHandler] ? global[ApolloErrorMessageHandler](message, getArgsLazy) :
+  `An error occured! For more details, see the full error text at http://someLink#${encodeURIComponent(JSON.stringify({
     version,
     message,
-    args
+    args: getArgsLazy ? getArgsLazy() : []
   }))}`
 }
 

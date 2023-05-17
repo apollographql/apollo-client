@@ -156,7 +156,7 @@ function useReadQuery_experimental<TData>(
 
 > ⚠️ **The `useFragment_experimental` hook is currently at the [preview stage](https://www.apollographql.com/docs/resources/release-stages/#preview) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
-Beginning with version `3.7.0`, Apollo Client Web has preview support for the `useFragment_experimental` hook, which represents a lightweight live binding into the Apollo Client Cache. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment_experimental` never triggers network requests of its own.
+Beginning with version `3.7.0`, Apollo Client has preview support for the `useFragment_experimental` hook, which represents a lightweight live binding into the Apollo Client Cache. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment_experimental` never triggers network requests of its own.
 
 `useFragment_experimental` enables Apollo Client to broadcast very specific fragment results to individual components. Note that the `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment_experimental` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
 
@@ -210,6 +210,8 @@ function Item(props: { id: number }) {
 }
 ```
 
+> `useFragment_experimental` can be used in combination with the `@nonreactive` directive in cases where list items should react to individual cache updates without rerendering the entire list. For more information, see the [`@nonreactive` docs](/react/data/directives#nonreactive).
+
 ### `useFragment_experimental` API
 
 Supported options and result fields for the `useFragment_experimental` hook are listed below.
@@ -230,9 +232,9 @@ The `useFragment_experimental` hook accepts the following options:
 
 ### Installation
 
-> ⚠️ **The `useSuspenseQuery_experimental` hook is currently at the [alpha stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
+> ⚠️ **The `useSuspenseQuery_experimental` hook is currently at the [preview stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
-Beginning with version `3.8.0-alpha.0`, Apollo Client Web has alpha support for the `useSuspenseQuery_experimental` hook, which works with React's [Suspense](https://react.dev/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@alpha`.
+Beginning with version `3.8.0-alpha.0`, Apollo Client has alpha support for the `useSuspenseQuery_experimental` hook, which works with React's [Suspense](https://react.dev/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@alpha`.
 
 ### Using `useSuspenseQuery_experimental`
 

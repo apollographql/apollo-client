@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import { posix, join as osPathJoin } from "path";
 import { distDir, eachFile, reparse, reprint } from './helpers';
+import type {ExpressionKind} from 'ast-types/lib/gen/kinds';
 
 eachFile(distDir, (file, relPath) => {
   const source = fs.readFileSync(file, "utf8");
@@ -25,13 +26,18 @@ type NumericLiteral = recast.types.namedTypes.NumericLiteral;
 type CallExpression = recast.types.namedTypes.CallExpression;
 type NewExpression = recast.types.namedTypes.NewExpression;
 let nextErrorCode = 1;
-
-const errorCodeManifest = b.objectExpression([
+const packageVersion = require("../package.json").version
+const errorCodes = b.objectExpression([
   b.property("init",
     b.stringLiteral("@apollo/client version"),
-    b.stringLiteral(require("../package.json").version),
+    b.stringLiteral(packageVersion),
   ),
 ]);
+const errorCodeManifest = b.expressionStatement(
+  b.assignmentExpression('=',
+  b.memberExpression(b.identifier('globalThis'), b.stringLiteral(`ApolloErrorCodes_${packageVersion}`), true),
+  errorCodes
+));
 
 errorCodeManifest.comments = [
   b.commentLine(' This file is meant to help with looking up the source of errors like', true),
@@ -47,11 +53,34 @@ function getErrorCode(
   expr: CallExpression | NewExpression,
 ): NumericLiteral {
   const numLit = b.numericLiteral(nextErrorCode++);
-  errorCodeManifest.properties.push(
-    b.property("init", numLit, b.objectExpression([
-      b.property("init", b.identifier("file"), b.stringLiteral("@apollo/client/" + file)),
-      b.property("init", b.identifier("node"), expr),
-    ])),
+
+  const objProperties = [
+    b.property("init", b.identifier("file"), b.stringLiteral("@apollo/client/" + file)),
+  ]
+
+  if (expr.type === 'CallExpression') {
+    objProperties.push(
+      b.property("init", b.identifier("condition"), b.stringLiteral(reprint(expr.arguments[0])))
+    );
+  }
+
+  let messageArg = expr.type === 'NewExpression' ? expr.arguments[0] : expr.arguments[1];
+  if (messageArg) {
+    if (!isStringOnly(messageArg)) {
+      console.dir(messageArg, {depth: 1});
+      throw new Error(`invariant minification error: node cannot have dynamical error argument!
+      file: ${posix.join(distDir, file)}:${expr.loc?.start.line}
+      code:
+  
+      ${reprint(messageArg)}
+      `);
+    }
+
+    objProperties.push(b.property("init", b.identifier("message"), messageArg))
+  }  
+
+  errorCodes.properties.push(
+    b.property("init", numLit, b.objectExpression(objProperties)),
   );
   return numLit;
 }
@@ -76,18 +105,13 @@ function transform(code: string, relativeFilePath: string) {
           return;
         }
 
-        const newArgs = node.arguments.slice(0, 1);
-        newArgs.push(getErrorCode(relativeFilePath, node));
+        const newArgs = [...node.arguments]
+        newArgs.splice(1, 1, getErrorCode(relativeFilePath, node));
 
-        addedDEV = true;
-        return b.conditionalExpression(
-          makeDEVExpr(),
-          node,
-          b.callExpression.from({
-            ...node,
-            arguments: newArgs,
-          }),
-        );
+        return b.callExpression.from({
+          ...node,
+          arguments: newArgs,
+        });
       }
 
       if (node.callee.type === "MemberExpression" &&
@@ -205,4 +229,17 @@ function makeDEVExpr() {
 
 function isDEVExpr(node: Node) {
   return isIdWithName(node, "__DEV__");
+}
+
+function isStringOnly(node: recast.types.namedTypes.ASTNode): node is ExpressionKind {
+  switch (node.type) {
+    case "StringLiteral":
+    case "Literal":
+      return true;
+    case "TemplateLiteral":
+      return ((node.expressions as recast.types.namedTypes.ASTNode[]).every(isStringOnly))
+    case "BinaryExpression":
+      return node.operator == '+' && isStringOnly(node.left) && isStringOnly(node.right);
+  }
+  return false;
 }

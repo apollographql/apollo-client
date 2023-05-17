@@ -1,4 +1,4 @@
-import { invariant, InvariantError } from "ts-invariant";
+import { invariant, InvariantError } from "./invariantWrappers";
 
 // Just in case the graphql package switches from process.env.NODE_ENV to
 // __DEV__, make sure __DEV__ is polyfilled before importing graphql.

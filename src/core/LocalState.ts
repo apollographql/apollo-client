@@ -350,7 +350,7 @@ export class LocalState<TCacheShape> {
       } else {
         // This is a named fragment.
         fragment = fragmentMap[selection.name.value];
-        invariant(fragment, `No fragment named ${selection.name.value}`);
+        invariant(fragment, `No fragment named %s`, () => [selection.name.value]);
       }
 
       if (fragment && fragment.typeCondition) {
@@ -515,7 +515,7 @@ export class LocalState<TCacheShape> {
           },
           FragmentSpread(spread: FragmentSpreadNode, _, __, ___, ancestors) {
             const fragment = fragmentMap[spread.name.value];
-            invariant(fragment, `No fragment named ${spread.name.value}`);
+            invariant(fragment, `No fragment named %s`, () =>[spread.name.value]);
 
             const fragmentSelections = collectByDefinition(fragment);
             if (fragmentSelections.size > 0) {

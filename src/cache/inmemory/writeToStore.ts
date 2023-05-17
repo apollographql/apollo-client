@@ -150,7 +150,7 @@ export class StoreWriter {
     });
 
     if (!isReference(ref)) {
-      throw new InvariantError(`Could not identify object ${JSON.stringify(result)}`);
+      throw new InvariantError(`Could not identify object %s`, () => [JSON.stringify(result)]);
     }
 
     // So far, the store has not been modified, so now it's time to process
@@ -570,7 +570,7 @@ export class StoreWriter {
           );
 
           if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
-            throw new InvariantError(`No fragment named ${selection.name.value}`);
+            throw new InvariantError(`No fragment named %s`, () => [selection.name.value]);
           }
 
           if (fragment &&

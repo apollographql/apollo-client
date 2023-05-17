@@ -513,7 +513,7 @@ export class Policies {
     const rootId = "ROOT_" + which.toUpperCase();
     const old = this.rootTypenamesById[rootId];
     if (typename !== old) {
-      invariant(!old || old === which, `Cannot change root ${which} __typename more than once`);
+      invariant(!old || old === which, `Cannot change root %s __typename more than once`, () => [which]);
       // First, delete any old __typename associated with this rootId from
       // rootIdsByTypename.
       if (old) delete this.rootIdsByTypename[old];

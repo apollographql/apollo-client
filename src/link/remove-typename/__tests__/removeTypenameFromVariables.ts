@@ -415,3 +415,105 @@ test('handles multiple configured types with fields', async () => {
     },
   });
 });
+
+test('handles when __typename is not present in all paths', async () => {
+  const query = gql`
+    query Test($foo: JSON, $bar: BarInput) {
+      someField(foo: $foo, bar: $bar)
+    }
+  `;
+
+  const link = removeTypenameFromVariables({
+    except: {
+      JSON: KEEP,
+    },
+  });
+
+  const { variables } = await execute(link, {
+    query,
+    variables: {
+      foo: {
+        foo: true,
+        baz: { __typename: 'Baz', baz: true },
+      },
+      bar: { bar: true },
+      qux: { __typename: 'Qux', bar: true },
+    },
+  });
+
+  expect(variables).toStrictEqual({
+    foo: {
+      foo: true,
+      baz: { __typename: 'Baz', baz: true },
+    },
+    bar: { bar: true },
+    qux: { bar: true },
+  });
+});
+
+test('handles when __typename is not present in variables', async () => {
+  const query = gql`
+    query Test($foo: JSON, $bar: BarInput) {
+      someField(foo: $foo, bar: $bar)
+    }
+  `;
+
+  const link = removeTypenameFromVariables({
+    except: {
+      JSON: KEEP,
+    },
+  });
+
+  const { variables } = await execute(link, {
+    query,
+    variables: {
+      foo: {
+        foo: true,
+        baz: { baz: true },
+      },
+      bar: { bar: true },
+      qux: [{ foo: true }],
+    },
+  });
+
+  expect(variables).toStrictEqual({
+    foo: {
+      foo: true,
+      baz: { baz: true },
+    },
+    bar: { bar: true },
+    qux: [{ foo: true }],
+  });
+});
+
+test('handles when declared variables are unused', async () => {
+  const query = gql`
+    query Test($foo: FooInput, $unused: JSON) {
+      someField(foo: $foo, bar: $bar)
+    }
+  `;
+
+  const link = removeTypenameFromVariables({
+    except: {
+      JSON: KEEP,
+    },
+  });
+
+  const { variables } = await execute(link, {
+    query,
+    variables: {
+      foo: {
+        __typename: 'Foo',
+        foo: true,
+        baz: { __typename: 'Bar', baz: true },
+      },
+    },
+  });
+
+  expect(variables).toStrictEqual({
+    foo: {
+      foo: true,
+      baz: { baz: true },
+    },
+  });
+});

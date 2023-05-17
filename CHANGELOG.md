@@ -1,5 +1,18 @@
 # @apollo/client
 
+## 3.8.0-alpha.15
+
+### Patch Changes
+
+- [#10888](https://github.com/apollographql/apollo-client/pull/10888) [`1562a2f5a`](https://github.com/apollographql/apollo-client/commit/1562a2f5a91cf577d9c89c4e84088a6bccc73c28) Thanks [@alessbell](https://github.com/alessbell)! - Updates dependency versions in `package.json` by bumping:
+
+  - `@wry/context` to `^0.7.3`
+  - `@wry/equality` to `^0.5.6`
+  - `@wry/trie` to `^0.4.3`
+  - `optimism` to `^0.17.4`
+
+  to 1. [fix sourcemap warnings](https://github.com/benjamn/wryware/pull/497) and 2. a Codesandbox [sandpack (in-browser) bundler transpilation bug](https://github.com/codesandbox/sandpack/issues/940) with an [upstream optimism workaround](https://github.com/benjamn/optimism/pull/550).
+
 ## 3.8.0-alpha.14
 
 ### Minor Changes

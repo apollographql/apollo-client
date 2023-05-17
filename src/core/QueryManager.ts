@@ -145,12 +145,7 @@ export class QueryManager<TStore> {
   }) {
     const defaultDocumentTransform = new DocumentTransform((document) =>
       this.cache.transformDocument(document)
-    ).concat(
-      new DocumentTransform(
-        (document) => this.cache.transformForLink(document),
-        { cache: false }
-      )
-    );
+    )
 
     this.cache = cache;
     this.link = link;
@@ -1631,7 +1626,7 @@ export class QueryManager<TStore> {
   }
 
   private transformDocument(document: DocumentNode) {
-    return this.documentTransform.transformDocument(document) 
+    return this.documentTransform.transformDocument(document)
   }
 }
 

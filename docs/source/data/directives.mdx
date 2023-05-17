@@ -170,4 +170,4 @@ const Trail = ({ id }) => {
 };
 ```
 
-Notice that the `Trail` component isn't receiving the entire `trail` object via props, only the `id` which is used along with the fragment document to create a live binding for each trail item in the cache. This allows each `Trail` component to react to the cache updates for a single trail independently, without the entire list rerendering. Updates to a trail's `status` will not cause the parent `App` component to rerender given the `@nonreactive` directive applied to the `TrailFragment` spread, a fragment which includes the `status` field.
+Notice that the `Trail` component isn't receiving the entire `trail` object via props, only the `id` which is used along with the fragment document to create a live binding for each trail item in the cache. This allows each `Trail` component to react to the cache updates for a single trail independently. Updates to a trail's `status` will not cause the parent `App` component to rerender since the `@nonreactive` directive is applied to the `TrailFragment` spread, a fragment that includes the `status` field.

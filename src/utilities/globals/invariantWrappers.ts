@@ -28,7 +28,7 @@ class InvariantError extends IE {
   }
 }
 
-const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler')
+export const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler')
 declare global {
 	interface Window {
 		[ApolloErrorMessageHandler]?(message?: string | number, getArgsLazy?: () => unknown[]): string
@@ -37,7 +37,7 @@ declare global {
 
 function getErrorMsg(message?: string | number, getArgsLazy?: () => unknown[]) {
   return global[ApolloErrorMessageHandler] ? global[ApolloErrorMessageHandler](message, getArgsLazy) :
-  `An error occured! For more details, see the full error text at http://someLink#${encodeURIComponent(JSON.stringify({
+  `An error occured! For more details, see the full error text at https://phryneas.github.io/apollo-error-message-viewer/#${encodeURIComponent(JSON.stringify({
     version,
     message,
     args: getArgsLazy ? getArgsLazy() : []

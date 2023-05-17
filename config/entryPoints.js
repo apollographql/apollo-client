@@ -27,6 +27,7 @@ const entryPoints = [
   { dirs: ['testing', 'core'] },
   { dirs: ['utilities'] },
   { dirs: ['utilities', 'globals'], sideEffects: true },
+  { dirs: ['utilities', 'errors'] },
 ];
 
 const lookupTrie = Object.create(null);

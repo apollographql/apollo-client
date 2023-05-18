@@ -38,7 +38,7 @@ import { useBackgroundQuery, useReadQuery } from '../useBackgroundQuery';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { InMemoryCache } from '../../../cache';
-import { FetchMoreFunction } from '../../../react';
+import { FetchMoreFunction, RefetchFunction } from '../../../react';
 import { QueryReference } from '../../cache/QueryReference';
 
 function renderIntegrationTest({
@@ -1875,9 +1875,7 @@ describe('useBackgroundQuery', () => {
         queryRef,
         refetch,
       }: {
-        refetch: (
-          variables?: Partial<OperationVariables> | undefined
-        ) => Promise<ApolloQueryResult<Data>>;
+        refetch: RefetchFunction<Data, OperationVariables>;
         queryRef: QueryReference<Data>;
         onChange: (id: string) => void;
       }) {

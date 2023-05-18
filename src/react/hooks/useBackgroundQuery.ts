@@ -6,10 +6,7 @@ import type {
 } from '../../core';
 import { useApolloClient } from './useApolloClient';
 import type { QueryReference } from '../cache/QueryReference';
-import type {
-  SuspenseQueryHookOptions,
-  ObservableQueryFields,
-} from '../types/types';
+import type { SuspenseQueryHookOptions } from '../types/types';
 import { __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import {
@@ -28,7 +25,7 @@ export type UseBackgroundQueryResult<
   QueryReference<TData>,
   {
     fetchMore: FetchMoreFunction<TData, TVariables>;
-    refetch: ObservableQueryFields<TData, TVariables>['refetch'];
+    refetch: RefetchFunction<TData, TVariables>;
   }
 ];
 

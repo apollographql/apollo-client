@@ -1,28 +1,14 @@
 import type { DeepOmit } from '../types/DeepOmit';
 import { isPlainObject } from './objects';
 
-const BREAK: unique symbol = Symbol('BREAK');
-
-export interface OmitDeepOptions {
-  keep?: (path: (string | number)[]) => boolean | typeof BREAK | undefined;
+export function omitDeep<T, K extends string>(value: T, key: K) {
+  return __omitDeep(value, key);
 }
-
-export function omitDeep<T, K extends string>(
-  value: T,
-  key: K,
-  options: OmitDeepOptions = Object.create(null)
-) {
-  return __omitDeep(value, key, options);
-}
-
-omitDeep.BREAK = BREAK;
 
 function __omitDeep<T, K extends string>(
   value: T,
   key: K,
-  options: OmitDeepOptions,
-  known = new Map<any, any>(),
-  path = [] as (string | number)[]
+  known = new Map<any, any>()
 ): DeepOmit<T, K> {
   if (known.has(value)) {
     return known.get(value);
@@ -35,11 +21,7 @@ function __omitDeep<T, K extends string>(
     known.set(value, array);
 
     value.forEach((value, index) => {
-      const objectPath = path.concat(index);
-      const result =
-        options.keep?.(objectPath) === BREAK
-          ? value
-          : __omitDeep(value, key, options, known, objectPath);
+      const result = __omitDeep(value, key, known);
       modified ||= result !== value;
 
       array[index] = result;
@@ -53,19 +35,12 @@ function __omitDeep<T, K extends string>(
     known.set(value, obj);
 
     Object.keys(value).forEach((k) => {
-      const objectPath = path.concat(k);
-      const keep = options.keep?.(objectPath);
-
-      if (k === key && keep !== true) {
+      if (k === key) {
         modified = true;
         return;
       }
 
-      const result =
-        keep === BREAK
-          ? value[k]
-          : __omitDeep(value[k], key, options, known, objectPath);
-
+      const result = __omitDeep(value[k], key, known);
       modified ||= result !== value[k];
 
       obj[k] = result;

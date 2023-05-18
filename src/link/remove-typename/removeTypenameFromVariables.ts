@@ -1,9 +1,9 @@
-import { Trie } from '@wry/trie';
 import { wrap } from 'optimism';
 import type { DocumentNode, TypeNode } from 'graphql';
 import { Kind, visit } from 'graphql';
 import { ApolloLink } from '../core';
-import { canUseWeakMap, stripTypename } from '../../utilities';
+import { stripTypename, isPlainObject } from '../../utilities';
+import type { OperationVariables } from '../../core';
 
 export const KEEP = '__KEEP';
 
@@ -18,53 +18,81 @@ export interface RemoveTypenameFromVariablesOptions {
 export function removeTypenameFromVariables(
   options: RemoveTypenameFromVariablesOptions = Object.create(null)
 ) {
-  const { except } = options;
-
-  const trie = new Trie<typeof stripTypename.BREAK>(
-    canUseWeakMap,
-    () => stripTypename.BREAK
-  );
-
-  if (except) {
-    // Use `lookupArray` to store the path in the `trie` ahead of time. We use
-    // `peekArray` when actually checking if a path is configured in the trie
-    // to avoid creating additional lookup paths in the trie.
-    collectPaths(except, (path) => trie.lookupArray(path));
-  }
-
   return new ApolloLink((operation, forward) => {
+    const { except } = options;
     const { query, variables } = operation;
 
     if (!variables) {
       return forward(operation);
     }
 
-    if (!except) {
-      return forward({ ...operation, variables: stripTypename(variables) });
-    }
-
-    const variableDefinitions = getVariableDefinitions(query);
-
     return forward({
       ...operation,
-      variables: stripTypename(variables, {
-        keep: (variablePath) => {
-          const typename = variableDefinitions[variablePath[0]];
-
-          // The path configurations do not include array indexes, so we
-          // omit them when checking the `trie` for a configured path
-          const withoutArrayIndexes = variablePath.filter(
-            (segment) => typeof segment === 'string'
-          );
-
-          // Our path configurations use the typename as the root so we need to
-          // replace the first segment in the variable path with the typename
-          // instead of the top-level variable name.
-          return trie.peekArray([typename, ...withoutArrayIndexes.slice(1)]);
-        },
-      }),
+      variables: except
+        ? maybeStripTypenameUsingConfig(query, variables, except)
+        : stripTypename(variables),
     });
   });
+}
+
+function maybeStripTypenameUsingConfig(
+  query: DocumentNode,
+  variables: OperationVariables,
+  config: KeepTypenameConfig
+) {
+  const variableDefinitions = getVariableDefinitions(query);
+
+  return Object.fromEntries(
+    Object.entries(variables).map((keyVal) => {
+      const [key, value] = keyVal;
+      const typename = variableDefinitions[key];
+      const typenameConfig = config[typename];
+
+      keyVal[1] = typenameConfig
+        ? maybeStripTypename(value, typenameConfig)
+        : stripTypename(value);
+
+      return keyVal;
+    })
+  );
+}
+
+type JSONPrimitive = string | number | null | boolean;
+type JSONValue = JSONPrimitive | JSONValue[] | { [key: string]: JSONValue };
+
+function maybeStripTypename(
+  value: JSONValue,
+  config: KeepTypenameConfig[string]
+): JSONValue {
+  if (config === KEEP) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => maybeStripTypename(item, config));
+  }
+
+  if (isPlainObject(value)) {
+    const modified: Record<string, any> = {};
+
+    Object.keys(value).forEach((key) => {
+      const child = value[key];
+
+      if (key === '__typename') {
+        return;
+      }
+
+      const fieldConfig = config[key];
+
+      modified[key] = fieldConfig
+        ? maybeStripTypename(child, fieldConfig)
+        : stripTypename(child);
+    });
+
+    return modified;
+  }
+
+  return value;
 }
 
 const getVariableDefinitions = wrap((document: DocumentNode) => {
@@ -88,18 +116,4 @@ function unwrapType(node: TypeNode): string {
     case Kind.NAMED_TYPE:
       return node.name.value;
   }
-}
-
-function collectPaths(
-  config: KeepTypenameConfig,
-  register: (path: string[]) => void,
-  path: string[] = []
-) {
-  Object.entries(config).forEach(([key, value]) => {
-    if (value === KEEP) {
-      return register([...path, key]);
-    }
-
-    collectPaths(value, register, path.concat(key));
-  });
 }

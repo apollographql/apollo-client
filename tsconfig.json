@@ -11,7 +11,7 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "target": "es5",
+    "target": "esnext",
     "module": "es2015",
     "esModuleInterop": true,
     "experimentalDecorators": true,

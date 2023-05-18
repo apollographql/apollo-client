@@ -75,7 +75,9 @@ function maybeStripTypename(
   if (isPlainObject(value)) {
     const modified: Record<string, any> = {};
 
-    Object.entries(value).forEach(([key, value]) => {
+    Object.keys(value).forEach((key) => {
+      const child = value[key];
+
       if (key === '__typename') {
         return;
       }
@@ -83,8 +85,8 @@ function maybeStripTypename(
       const fieldConfig = config[key];
 
       modified[key] = fieldConfig
-        ? maybeStripTypename(value, fieldConfig)
-        : stripTypename(value);
+        ? maybeStripTypename(child, fieldConfig)
+        : stripTypename(child);
     });
 
     return modified;

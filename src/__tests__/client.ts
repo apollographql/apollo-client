@@ -1,9 +1,10 @@
 import { cloneDeep, assign } from 'lodash';
-import { GraphQLError, ExecutionResult, DocumentNode, print } from 'graphql';
+import { GraphQLError, ExecutionResult, DocumentNode, Kind, print, visit } from 'graphql';
 import gql from 'graphql-tag';
 
 import {
   ApolloClient,
+  DocumentTransform,
   FetchPolicy,
   WatchQueryFetchPolicy,
   QueryOptions,
@@ -12,7 +13,7 @@ import {
   TypedDocumentNode,
 } from '../core';
 
-import { Observable, ObservableSubscription } from '../utilities';
+import { Observable, ObservableSubscription, removeDirectivesFromDocument } from '../utilities';
 import { ApolloLink } from '../link/core';
 import { InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
 import { ApolloError } from '../errors';
@@ -3591,6 +3592,288 @@ describe('@connection', () => {
         expect(result.data).toEqual(data);
       }).then(resolve, reject);
     });
+  });
+});
+
+describe('custom document transforms', () => {
+  it('runs custom document transform when calling `query`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        dogs {
+          id
+          name
+          breed @custom
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({ 
+        data: { 
+          dogs: [
+            { 
+              id: 1,
+              name: 'Buddy',
+              breed: 'German Shepard',
+              __typename: 'Dog' 
+            }
+          ],
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        dogs {
+          id
+          name
+          breed
+          __typename
+        }
+      }
+    `);
+
+    expect(data).toEqual({
+      dogs: [
+        { 
+          id: 1,
+          name: 'Buddy',
+          breed: 'German Shepard',
+          __typename: 'Dog',
+        }
+      ]
+    });
+  });
+
+  it('requests and caches fields added from custom document transforms when calling `query`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        dogs {
+          name
+          breed
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'dogs' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  {
+                    kind: Kind.FIELD,
+                    name: { kind: Kind.NAME, value: 'id' },
+                  },
+                  ...node.selectionSet.selections,
+                ]
+              }
+            }
+          }
+        }
+      })
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({ 
+        data: { 
+          dogs: [
+            { 
+              id: 1,
+              name: 'Buddy',
+              breed: 'German Shepard',
+              __typename: 'Dog' 
+            }
+          ],
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        dogs {
+          id
+          name
+          breed
+          __typename
+        }
+      }
+    `);
+
+    expect(data).toEqual({
+      dogs: [
+        { 
+          id: 1,
+          name: 'Buddy',
+          breed: 'German Shepard',
+          __typename: 'Dog' 
+        }
+      ]
+    });
+
+    const cache = client.cache.extract();
+
+    expect(cache['Dog:1']).toEqual({
+      id: 1,
+      name: 'Buddy',
+      breed: 'German Shepard',
+      __typename: 'Dog',
+    });
+  });
+
+  it('runs @client directives added from custom transforms through local state', async ()  => {
+    const query = gql`
+      query TestQuery {
+        currentUser {
+          id
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'currentUser' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  ...node.selectionSet.selections,
+                  {
+                    kind: Kind.FIELD,
+                    name: { kind: Kind.NAME, value: 'isLoggedIn' },
+                    directives: [
+                      {
+                        kind: Kind.DIRECTIVE,
+                        name: { kind: Kind.NAME, value: 'client' }
+                      }
+                    ]
+                  },
+                ]
+              }
+            }
+          }
+        }
+      })
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({ 
+        data: { 
+          currentUser: { 
+            id: 1,
+            __typename: 'User' ,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache({
+        typePolicies: {
+          User: {
+            fields: {
+              isLoggedIn: {
+                read() {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }),
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        currentUser {
+          id
+          __typename
+        }
+      }
+    `);
+
+    expect(data).toEqual({
+      currentUser: { 
+        id: 1,
+        isLoggedIn: true,
+        __typename: 'User' 
+      }
+    });
+  });
+
+  it('runs custom transform only once when calling `query`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        currentUser {
+          id
+        }
+      }
+    `;
+
+    const transform = jest.fn((document: DocumentNode) => document);
+    const documentTransform = new DocumentTransform(transform)
+
+    const link = new ApolloLink(() => {
+      return Observable.of({ 
+        data: { 
+          currentUser: { 
+            id: 1,
+            __typename: 'User' ,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    await client.query({ query });
+
+    expect(transform).toHaveBeenCalledTimes(1);
   });
 });
 

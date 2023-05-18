@@ -3875,6 +3875,187 @@ describe('custom document transforms', () => {
 
     expect(transform).toHaveBeenCalledTimes(1);
   });
+
+  it('runs custom transform when calling `mutate`', async ()  => {
+    const mutation = gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username @custom
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({ 
+        data: { 
+          changeUsername: { 
+            id: 1,
+            username: operation.variables.username,
+            __typename: 'User' ,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const { data } = await client.mutate({ 
+      mutation,
+      variables: { username: 'foo' } 
+    });
+
+    expect(document!).toMatchDocument(gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+
+    expect(data).toEqual({
+      changeUsername: { 
+        id: 1,
+        username: 'foo',
+        __typename: 'User' ,
+      },
+    })
+  });
+
+  it('requests and caches fields added from custom document transforms when calling `mutate`', async ()  => {
+    const mutation = gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          username
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'changeUsername' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  {
+                    kind: Kind.FIELD,
+                    name: { kind: Kind.NAME, value: 'id' }
+                  },
+                  ...node.selectionSet.selections,
+                ]
+              }
+            }
+          }
+        }
+      })
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({ 
+        data: { 
+          changeUsername: { 
+            id: 1,
+            username: operation.variables.username,
+            __typename: 'User' ,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const { data } = await client.mutate({ 
+      mutation,
+      variables: { username: 'foo' } 
+    });
+
+    expect(document!).toMatchDocument(gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+
+    expect(data).toEqual({
+      changeUsername: { 
+        id: 1,
+        username: 'foo',
+        __typename: 'User' ,
+      },
+    });
+
+    const cache = client.cache.extract();
+
+    expect(cache['User:1']).toEqual({
+      __typename: 'User',
+      id: 1,
+      username: 'foo'
+    });
+  });
+
+  it('runs custom transforms only once when running `mutation`', async ()  => {
+    const mutation = gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username
+        }
+      }
+    `;
+
+    const transform = jest.fn((document: DocumentNode) => document);
+    const documentTransform = new DocumentTransform(transform)
+
+    const link = new ApolloLink((operation) => {
+      return Observable.of({ 
+        data: { 
+          changeUsername: { 
+            id: 1,
+            username: operation.variables.username,
+            __typename: 'User' ,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    await client.mutate({ mutation, variables: { username: 'foo' } });
+
+    expect(transform).toHaveBeenCalledTimes(1);
+  });
 });
 
 function clientRoundtrip(

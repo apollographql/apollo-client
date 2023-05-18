@@ -1,6 +1,6 @@
-import { DocumentNode } from '../../core';
 import { checkDocument } from '../../utilities';
 import { print } from 'graphql';
+import type { DocumentNode } from '../../core';
 import type { MatcherFunction } from 'expect';
 
 export const toMatchDocument: MatcherFunction<[document: DocumentNode]> =

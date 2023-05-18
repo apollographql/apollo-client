@@ -1,5 +1,5 @@
-import { DocumentNode } from 'graphql';
 import { canUseWeakMap } from '../utilities';
+import type { DocumentNode } from 'graphql';
 
 type TransformFn = (document: DocumentNode) => DocumentNode;
 

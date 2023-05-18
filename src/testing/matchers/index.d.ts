@@ -1,4 +1,4 @@
-import { DocumentNode } from '../../core';
+import type { DocumentNode } from '../../core';
 
 interface ApolloCustomMatchers<R = void> {
   /**

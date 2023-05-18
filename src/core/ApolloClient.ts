@@ -10,7 +10,7 @@ import { version } from '../version';
 import type { UriFunction } from '../link/http';
 import { HttpLink } from '../link/http';
 
-import { DocumentTransform } from './DocumentTransform';
+import type { DocumentTransform } from './DocumentTransform';
 import { QueryManager } from './QueryManager';
 import type { ObservableQuery } from './ObservableQuery';
 

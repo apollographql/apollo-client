@@ -43,16 +43,16 @@ function maybeStripTypenameUsingConfig(
   const variableDefinitions = getVariableDefinitions(query);
 
   return Object.fromEntries(
-    Object.entries(variables).map(([key, value]) => {
+    Object.entries(variables).map((keyVal) => {
+      const [key, value] = keyVal;
       const typename = variableDefinitions[key];
       const typenameConfig = config[typename];
 
-      return [
-        key,
-        typenameConfig
-          ? maybeStripTypename(value, typenameConfig)
-          : stripTypename(value),
-      ];
+      keyVal[1] = typenameConfig
+        ? maybeStripTypename(value, typenameConfig)
+        : stripTypename(value);
+
+      return keyVal;
     })
   );
 }

@@ -3853,7 +3853,7 @@ describe('custom document transforms', () => {
     `;
 
     const transform = jest.fn((document: DocumentNode) => document);
-    const documentTransform = new DocumentTransform(transform)
+    const documentTransform = new DocumentTransform(transform, { cache: false });
 
     const link = new ApolloLink(() => {
       return Observable.of({ 
@@ -4033,7 +4033,7 @@ describe('custom document transforms', () => {
     `;
 
     const transform = jest.fn((document: DocumentNode) => document);
-    const documentTransform = new DocumentTransform(transform)
+    const documentTransform = new DocumentTransform(transform, { cache: false });
 
     const link = new ApolloLink((operation) => {
       return Observable.of({ 
@@ -4216,7 +4216,7 @@ describe('custom document transforms', () => {
     `;
 
     const transform = jest.fn((document: DocumentNode) => document);
-    const documentTransform = new DocumentTransform(transform);
+    const documentTransform = new DocumentTransform(transform, { cache: false });
 
     const client = new ApolloClient({
       link: ApolloLink.empty(),

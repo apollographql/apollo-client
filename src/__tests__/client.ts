@@ -3879,6 +3879,48 @@ describe('custom document transforms', () => {
     expect(transform).toHaveBeenCalledTimes(1);
   });
 
+  it('runs default transforms with no custom document transform when calling `query`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        currentUser @nonreactive {
+          id
+          isLoggedIn @client
+          favoriteFlavors @connection {
+            flavor
+          }
+        }
+      }
+    `;
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of();
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        currentUser {
+          id
+          favoriteFlavors {
+            flavor
+            __typename
+          }
+          __typename
+        }
+      }
+    `);
+  });
+
   it('runs custom transform when calling `mutate`', async ()  => {
     const mutation = gql`
       mutation TestMutation($username: String) {
@@ -4060,6 +4102,56 @@ describe('custom document transforms', () => {
     expect(transform).toHaveBeenCalledTimes(1);
   });
 
+  it('runs default transforms with no custom document transform when calling `mutate`', async ()  => {
+    const mutation = gql`
+      mutation TestMutation {
+        updateProfile @nonreactive {
+          id
+          isLoggedIn @client
+          favoriteFlavors @connection {
+            flavor
+          }
+        }
+      }
+    `;
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          updateProfile: {
+            __typename: 'Profile',
+            id: 1,
+            favoriteFlavors: [{ __typename: 'Flavor', flavor: 'Strawberry '}]
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await client.mutate({ mutation });
+
+    expect(document!).toMatchDocument(gql`
+      mutation TestMutation {
+        updateProfile {
+          id
+          favoriteFlavors {
+            flavor
+            __typename
+          }
+          __typename
+        }
+      }
+    `);
+  });
+
   it('runs custom document transforms when calling `subscribe`', async () => {
     const query = gql`
       subscription TestSubscription {
@@ -4235,6 +4327,60 @@ describe('custom document transforms', () => {
     expect(transform).toHaveBeenCalledTimes(1);
   });
 
+  it('runs default transforms with no custom document transform when calling `subscribe`', async ()  => {
+    const query = gql`
+      subscription TestSubscription {
+        profileUpdated @nonreactive {
+          id
+          isLoggedIn @client
+          favoriteFlavors @connection {
+            flavor
+          }
+        }
+      }
+    `;
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          profileUpdated: {
+            __typename: 'Profile',
+            id: 1,
+            favoriteFlavors: [{ __typename: 'Flavor', flavor: 'Strawberry '}]
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const subscription = client
+      .subscribe({ query })
+      .subscribe(jest.fn());
+
+    await waitFor(() => subscription.closed);
+
+    expect(document!).toMatchDocument(gql`
+      subscription TestSubscription {
+        profileUpdated {
+          id
+          favoriteFlavors {
+            flavor
+            __typename
+          }
+          __typename
+        }
+      }
+    `);
+  });
+
   it('runs custom document transforms when subscribing to observable after calling `watchQuery`', async () => {
     const query = gql`
       query TestQuery {
@@ -4303,6 +4449,60 @@ describe('custom document transforms', () => {
       expect(document).toMatchDocument(transformedQuery);
       expect(observable.options.query).toMatchDocument(query);
       expect(observable.query).toMatchDocument(transformedQuery);
+    });
+  });
+
+  it('runs default transforms with no custom document transform when calling `watchQuery`', async ()  => {
+    const query = gql`
+      query TestQuery @nonreactive {
+        currentUser {
+          id
+          isLoggedIn @client
+          favorites @connection {
+            id
+          }
+        }
+      }
+    `;
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          currentUser: {
+            __typename: 'User',
+            id: 1,
+            favorites: [{ __typename: 'Favorite', id: 1 }]
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const observable = client.watchQuery({ query })
+
+    observable.subscribe(jest.fn());
+
+    await waitFor(() => {
+      expect(document!).toMatchDocument(gql`
+        query TestQuery {
+          currentUser {
+            id
+            favorites {
+              id
+              __typename
+            }
+            __typename
+          }
+        }
+      `);
     });
   });
 

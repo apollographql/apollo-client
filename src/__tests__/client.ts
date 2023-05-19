@@ -4295,7 +4295,7 @@ describe('custom document transforms', () => {
     });
   });
 
-  it('re-runs custom document transforms on `refetch`', async () => {
+  it('re-runs custom document transforms when calling `refetch`', async () => {
     const query = gql`
       query TestQuery {
         product {

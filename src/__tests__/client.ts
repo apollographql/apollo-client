@@ -24,6 +24,7 @@ import {
   mockSingleLink,
   withErrorSpy,
 } from '../testing';
+import { waitFor } from '@testing-library/react';
 
 describe('client', () => {
   it('can be loaded via require', () => {
@@ -4053,6 +4054,181 @@ describe('custom document transforms', () => {
     });
 
     await client.mutate({ mutation, variables: { username: 'foo' } });
+
+    expect(transform).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs custom document transforms when calling `subscribe`', async () => {
+    const query = gql`
+      subscription TestSubscription {
+        profileUpdated {
+          id
+          username @custom
+        }
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          profileUpdated: {
+            id: 1,
+            username: 'foo',
+            __typename: 'Profile'
+          }
+        }
+      })
+    }); 
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const onNext = jest.fn()
+
+    const subscription = client
+      .subscribe({ query })
+      .subscribe(onNext);
+
+    await waitFor(() => subscription.closed);
+
+    expect(document!).toMatchDocument(gql`
+      subscription TestSubscription {
+        profileUpdated {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+
+    expect(onNext).toHaveBeenCalledWith({ 
+      data: { 
+        profileUpdated: { id: 1, username: 'foo', __typename: 'Profile', }
+      }
+    });
+  });
+
+  it('requests and caches fields added from custom document transforms when calling `subscribe`', async ()  => {
+    const query = gql`
+      subscription TestSubscription {
+        profileUpdated {
+          username
+        }
+      }
+    `;
+
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'profileUpdated' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  {
+                    kind: Kind.FIELD,
+                    name: { kind: Kind.NAME, value: 'id' }
+                  },
+                  ...node.selectionSet.selections,
+                ]
+              }
+            }
+          }
+        }
+      })
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({ 
+        data: { 
+          profileUpdated: { 
+            id: 1,
+            username: 'foo',
+            __typename: 'Profile',
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const onNext = jest.fn();
+
+    const subscription = client
+      .subscribe({ query })
+      .subscribe(onNext);
+
+    await waitFor(() => subscription.closed);
+
+    expect(document!).toMatchDocument(gql`
+      subscription TestSubscription {
+        profileUpdated {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+
+    expect(onNext).toHaveBeenCalledWith({ 
+      data: { 
+        profileUpdated: { id: 1, username: 'foo', __typename: 'Profile', }
+      }
+    });
+
+    const cache = client.cache.extract();
+
+    expect(cache['Profile:1']).toEqual({
+      __typename: 'Profile',
+      id: 1,
+      username: 'foo'
+    });
+  });
+
+  it('runs custom transforms only once when calling `subscribe`', async ()  => {
+    const query = gql`
+      subscription TestSubscription {
+        profileUpdated {
+          username
+        }
+      }
+    `;
+
+    const transform = jest.fn((document: DocumentNode) => document);
+    const documentTransform = new DocumentTransform(transform);
+
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const subscription = client
+      .subscribe({ query })
+      .subscribe(jest.fn());
+
+    await waitFor(() => subscription.closed);
 
     expect(transform).toHaveBeenCalledTimes(1);
   });

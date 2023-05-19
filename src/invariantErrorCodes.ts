@@ -1,9 +1,9 @@
-import { version } from "./version"
-
-const errorObj: {
-    "@apollo/client version": string,
+interface ErrorCodes {
     [key: number]: { file: string, condition?: string, message?: string }
-} = {
-    "@apollo/client version": version
-};
-export default errorObj
+}
+
+export const errorCodes: ErrorCodes = {};
+export const devDebug: ErrorCodes = {};
+export const devLog: ErrorCodes = {};
+export const devWarn: ErrorCodes = {};
+export const devError: ErrorCodes = {};

@@ -12,7 +12,7 @@ eachFile(distDir, (file, relPath) => {
 }).then(() => {
   fs.writeFileSync(
     osPathJoin(distDir, "invariantErrorCodes.js"),
-    recast.print(errorCodeManifest, {
+    recast.print(program, {
       tabWidth: 2,
     }).code + "\n",
   );
@@ -22,61 +22,106 @@ import * as recast from "recast";
 const b = recast.types.builders;
 const n = recast.types.namedTypes;
 type Node = recast.types.namedTypes.Node;
-type NumericLiteral = recast.types.namedTypes.NumericLiteral;
 type CallExpression = recast.types.namedTypes.CallExpression;
 type NewExpression = recast.types.namedTypes.NewExpression;
 let nextErrorCode = 1;
-const packageVersion = require("../package.json").version
-const errorCodes = b.objectExpression([
-  b.property("init",
-    b.stringLiteral("@apollo/client version"),
-    b.stringLiteral(packageVersion),
-  ),
-]);
 
-const errorCodeManifest = b.exportDefaultDeclaration(errorCodes);
+const program = b.program([])
+const allExports = {
+  errorCodes: getExportObject("errorCodes"),
+  devDebug: getExportObject("devDebug"),
+  devLog: getExportObject("devLog"),
+  devWarn: getExportObject("devWarn"),
+  devError: getExportObject("devError"),
+}
+type ExportName = keyof typeof allExports
 
-errorCodeManifest.comments = [
+allExports.errorCodes.comments = [
   b.commentLine(' This file is used by the error message display website and the', true),
   b.commentLine(' @apollo/client/includeErrors entry point.', true),
   b.commentLine(' This file is not meant to be imported manually.', true),
 ];
 
+function getExportObject(exportName: string){
+  const object = b.objectExpression([])
+    program.body.push(
+      b.exportNamedDeclaration(
+    b.variableDeclaration(
+        "const",
+       [
+        b.variableDeclarator(
+          b.identifier(exportName),
+          object,
+        ),
+      ]
+    ),
+  )
+  );
+  return object;
+}
+
+
 function getErrorCode(
   file: string,
   expr: CallExpression | NewExpression,
-): NumericLiteral {
-  const numLit = b.numericLiteral(nextErrorCode++);
-
-  const objProperties = [
-    b.property("init", b.identifier("file"), b.stringLiteral("@apollo/client/" + file)),
-  ]
-
-  if (expr.type === 'CallExpression') {
-    objProperties.push(
-      b.property("init", b.identifier("condition"), b.stringLiteral(reprint(expr.arguments[0])))
+  type: keyof typeof allExports
+): ExpressionKind {
+  if (type == 'errorCodes' && expr.type !== 'NewExpression') {
+    return extractString(
+      file,
+      allExports[type].properties,
+      expr.arguments[1],
+      expr.arguments[0]
     );
+  } else {
+    return extractString(file, allExports[type].properties, expr.arguments[0]);
   }
 
-  let messageArg = expr.type === 'NewExpression' ? expr.arguments[0] : expr.arguments[1];
-  if (messageArg) {
-    if (!isStringOnly(messageArg)) {
-      console.dir(messageArg, {depth: 1});
-      throw new Error(`invariant minification error: node cannot have dynamical error argument!
-      file: ${posix.join(distDir, file)}:${expr.loc?.start.line}
-      code:
+  function extractString(
+    file: string,
+    target: typeof allExports[ExportName]['properties'],
+    message: recast.types.namedTypes.SpreadElement | ExpressionKind,
+    condition?: recast.types.namedTypes.SpreadElement | ExpressionKind
+  ): ExpressionKind {
+    if (message.type === 'ConditionalExpression') {
+      return b.conditionalExpression(message.test, extractString(file, target, message.consequent, condition), extractString(file, target, message.alternate, condition));
+    } else if (isStringOnly(message)) {
+      const obj = b.objectExpression([]);
+      const numLit = b.numericLiteral(nextErrorCode++);
+      target.push(b.property('init', numLit, obj));
 
-      ${reprint(messageArg)}
+      obj.properties.push(b.property(
+          'init',
+          b.identifier('file'),
+          b.stringLiteral('@apollo/client/' + file)
+        ),
+      );
+      if (condition) {
+        obj.properties.push(
+          b.property(
+            'init',
+            b.identifier('condition'),
+            b.stringLiteral(reprint(expr.arguments[0]))
+          )
+        );
+      }
+      obj.properties.push(
+        b.property('init', 
+        b.identifier('message'), 
+        message)
+      );
+
+      return numLit;
+    } else {
+      console.dir(message, { depth: 1 });
+      throw new Error(`invariant minification error: node cannot have dynamical error argument!
+        file: ${posix.join(distDir, file)}:${expr.loc?.start.line}
+        code:
+  
+        ${reprint(message)}
       `);
     }
-
-    objProperties.push(b.property("init", b.identifier("message"), messageArg))
   }
-
-  errorCodes.properties.push(
-    b.property("init", numLit, b.objectExpression(objProperties)),
-  );
-  return numLit;
 }
 
 function transform(code: string, relativeFilePath: string) {
@@ -94,9 +139,13 @@ function transform(code: string, relativeFilePath: string) {
       this.traverse(path);
       const node = path.node;
 
-      if (isCallWithLength(node, "invariant", 1)) {
-        const newArgs = [...node.arguments]
-        newArgs.splice(1, 1, getErrorCode(relativeFilePath, node));
+      if (isCallWithLength(node, 'invariant', 1)) {
+        const newArgs = [...node.arguments];
+        newArgs.splice(
+          1,
+          1,
+          getErrorCode(relativeFilePath, node, 'errorCodes')
+        );
 
         return b.callExpression.from({
           ...node,
@@ -104,28 +153,51 @@ function transform(code: string, relativeFilePath: string) {
         });
       }
 
-      if (node.callee.type === "MemberExpression" &&
-          isIdWithName(node.callee.object, "invariant") &&
-          isIdWithName(node.callee.property, "debug", "log", "warn", "error")) {
+      if (
+        node.callee.type === 'MemberExpression' &&
+        isIdWithName(node.callee.object, 'invariant') &&
+        isIdWithName(node.callee.property, 'debug', 'log', 'warn', 'error')
+      ) {
+        let newNode = node;
+        if (node.arguments[0].type == 'Identifier') { /* nothing to do, just printing a variable */ } else {
+          const prop = node.callee.property;
+          if (!n.Identifier.check(prop)) throw new Error('unexpected type');
+
+          const newArgs = [...node.arguments];
+          newArgs.splice(
+            0,
+            1,
+            getErrorCode(
+              relativeFilePath,
+              node,
+              ('dev' + ucFirst(prop.name)) as ExportName
+            )
+          );
+          newNode = b.callExpression.from({
+            ...node,
+            arguments: newArgs,
+          });
+        }
+
         if (isDEVLogicalAnd(path.parent.node)) {
-          return;
+          return newNode;
         }
         addedDEV = true;
-        return b.logicalExpression("&&", makeDEVExpr(), node);
+        return b.logicalExpression('&&', makeDEVExpr(), newNode);
       }
     },
 
     visitNewExpression(path) {
       this.traverse(path);
       const node = path.node;
-      if (isCallWithLength(node, "InvariantError", 0)) {
-        const newArgs = [getErrorCode(relativeFilePath, node)];
+      if (isCallWithLength(node, 'InvariantError', 0)) {
+        const newArgs = [getErrorCode(relativeFilePath, node, 'errorCodes')];
         return b.newExpression.from({
-            ...node,
-            arguments: newArgs,
-          });
+          ...node,
+          arguments: newArgs,
+        });
       }
-    }
+    },
   });
 
   if (addedDEV) {
@@ -217,4 +289,8 @@ function isStringOnly(node: recast.types.namedTypes.ASTNode): node is Expression
       return node.operator == '+' && isStringOnly(node.left) && isStringOnly(node.right);
   }
   return false;
+}
+
+function ucFirst(str: string) {
+  return str[0].toUpperCase() + str.slice(1);
 }

@@ -219,7 +219,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         if (url) {
           invariant.log(
             "Download the Apollo DevTools for a better development " +
-              "experience: " + url
+              "experience: %s", url
           );
         }
       }
@@ -572,7 +572,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     // result.queries and result.results instead, you shouldn't have to worry
     // about preventing uncaught rejections for the Promise.all result.
     result.catch(error => {
-      invariant.debug(`In client.refetchQueries, Promise.all promise rejected with error ${error}`);
+      invariant.debug(`In client.refetchQueries, Promise.all promise rejected with error %o`, error);
     });
 
     return result;

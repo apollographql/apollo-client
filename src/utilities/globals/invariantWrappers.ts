@@ -2,6 +2,12 @@ import { invariant as i, InvariantError as IE } from "ts-invariant";
 import { version } from "../../version";
 import global from "./global";
 
+function wrap(fn: (msg: string, ...args: any[]) => void) {
+  return function (message?: string | number, ...args: any[]) {
+    fn(getErrorMsg(message, () => []), ...args);
+  }
+}
+
 type WrappedInvariant = {
   (condition: any, message?: string | number, args?: () => unknown[]): asserts condition
   debug: typeof i["debug"];
@@ -9,7 +15,6 @@ type WrappedInvariant = {
   warn: typeof i["warn"];
   error: typeof i["error"];
 }
-
 const invariant: WrappedInvariant = Object.assign(
   function invariant(condition: any, message?: string | number, getArgsLazy?: () => unknown[]): asserts condition {
     if (!condition) {
@@ -18,7 +23,12 @@ const invariant: WrappedInvariant = Object.assign(
         getErrorMsg(message, getArgsLazy))
     }
   },
-  i
+  {
+    debug: wrap(i.debug),
+    log: wrap(i.log),
+    warn: wrap(i.warn),
+    error: wrap(i.error)
+  }
 );
 
 class InvariantError extends IE {

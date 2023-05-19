@@ -359,11 +359,7 @@ export class StoreWriter {
         // not be cause for alarm.
         !policies.getReadFunction(typename, field.name.value)
       ) {
-        invariant.error(`Missing field '${
-          resultKeyNameFromField(field)
-        }' while writing result ${
-          JSON.stringify(result, null, 2)
-        }`.substring(0, 1000));
+        invariant.error(`Missing field %s while writing result %s`, resultKeyNameFromField(field), JSON.stringify(result, null, 2).substring(0, 1000));
       }
     });
 
@@ -815,23 +811,25 @@ function warnAboutDataLoss(
   }
 
   invariant.warn(
-`Cache data may be lost when replacing the ${fieldName} field of a ${parentType} object.
+`Cache data may be lost when replacing the %s field of a %s object.
 
-To address this problem (which is not a bug in Apollo Client), ${
-  childTypenames.length
-    ? "either ensure all objects of type " +
-        childTypenames.join(" and ") + " have an ID or a custom merge function, or "
-    : ""
-}define a custom merge function for the ${
-  typeDotName
-} field, so InMemoryCache can safely merge these objects:
+To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
 
-  existing: ${JSON.stringify(existing).slice(0, 1000)}
-  incoming: ${JSON.stringify(incoming).slice(0, 1000)}
+  existing: %s
+  incoming: %s
 
 For more information about these options, please refer to the documentation:
 
   * Ensuring entity objects have IDs: https://go.apollo.dev/c/generating-unique-identifiers
   * Defining custom merge functions: https://go.apollo.dev/c/merging-non-normalized-objects
-`);
+`, 
+  fieldName, 
+  parentType, 
+  childTypenames.length
+    ? "either ensure all objects of type " + childTypenames.join(" and ") + " have an ID or a custom merge function, or "
+    : "",
+  typeDotName,
+  JSON.stringify(existing).slice(0, 1000),
+  JSON.stringify(incoming).slice(0, 1000)
+);
 }

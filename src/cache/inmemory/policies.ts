@@ -687,7 +687,7 @@ export class Policies {
         if (supertypeSet.has(supertype)) {
           if (!typenameSupertypeSet.has(supertype)) {
             if (checkingFuzzySubtypes) {
-              invariant.warn(`Inferring subtype ${typename} of supertype ${supertype}`);
+              invariant.warn(`Inferring subtype %s of supertype %s`, typename, supertype);
             }
             // Record positive results for faster future lookup.
             // Unfortunately, we cannot safely cache negative results,
@@ -974,9 +974,7 @@ export function normalizeReadFieldOptions(
   }
 
   if (__DEV__ && options.from === void 0) {
-    invariant.warn(`Undefined 'from' passed to readField with arguments ${
-      stringifyForDisplay(Array.from(readFieldArgs))
-    }`);
+    invariant.warn(`Undefined 'from' passed to readField with arguments %s`, stringifyForDisplay(Array.from(readFieldArgs)));
   }
 
   if (void 0 === options.variables) {

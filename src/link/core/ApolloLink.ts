@@ -27,14 +27,6 @@ function isTerminating(link: ApolloLink): boolean {
   return link.request.length <= 1;
 }
 
-class LinkError extends Error {
-  public link?: ApolloLink;
-  constructor(message?: string, link?: ApolloLink) {
-    super(message);
-    this.link = link;
-  }
-}
-
 export class ApolloLink {
   public static empty(): ApolloLink {
     return new ApolloLink(() => Observable.of());
@@ -89,10 +81,8 @@ export class ApolloLink {
     const firstLink = toLink(first);
     if (isTerminating(firstLink)) {
       invariant.warn(
-        new LinkError(
-          `You are calling concat on a terminating link, which will have no effect`,
+          `You are calling concat on a terminating link, which will have no effect %o`,
           firstLink,
-        ),
       );
       return firstLink;
     }

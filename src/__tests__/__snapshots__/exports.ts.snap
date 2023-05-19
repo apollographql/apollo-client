@@ -135,6 +135,14 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/dev 1`] = `
+Array [
+  "loadDevMessages",
+  "loadErrorMessageHandler",
+  "loadErrorMessages",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/errors 1`] = `
 Array [
   "ApolloError",
@@ -457,12 +465,6 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/utilities/errors 1`] = `
-Array [
-  "loadErrorMessages",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
 Array [
   "DEV",
@@ -471,5 +473,6 @@ Array [
   "global",
   "invariant",
   "maybe",
+  "newInvariantError",
 ]
 `;

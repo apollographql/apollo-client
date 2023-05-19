@@ -1,9 +1,10 @@
 import { invariant as i, InvariantError } from "ts-invariant";
 import { version } from "../../version";
 import global from "./global";
+import type { ErrorCodes } from "../../invariantErrorCodes";
 
-function wrap(fn: (msg: string, ...args: any[]) => void) {
-  return function (message?: string | number, ...args: any[]) {
+function wrap(fn: (msg?: string, ...args: any[]) => void) {
+  return function (message: string | number, ...args: any[]) {
     fn(getErrorMsg(message, () => []), ...args);
   }
 }
@@ -38,17 +39,22 @@ function newInvariantError(message?: string | number, getArgsLazy?: () => unknow
 const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler')
 declare global {
 	interface Window {
-		[ApolloErrorMessageHandler]?(message?: string | number, getArgsLazy?: () => unknown[]): string
+		[ApolloErrorMessageHandler]?: {
+      (message: string | number, args: unknown[]): string | undefined
+    } & ErrorCodes
 	}
 }
 
 function getErrorMsg(message?: string | number, getArgsLazy?: () => unknown[]) {
-  return global[ApolloErrorMessageHandler] ? global[ApolloErrorMessageHandler](message, getArgsLazy) :
-  `An error occured! For more details, see the full error text at https://phryneas.github.io/apollo-error-message-viewer/#${encodeURIComponent(JSON.stringify({
-    version,
-    message,
-    args: getArgsLazy ? getArgsLazy() : []
-  }))}`
+  if (!message) return;
+  const args = getArgsLazy ? getArgsLazy() : [];
+  return global[ApolloErrorMessageHandler] 
+    && global[ApolloErrorMessageHandler](message, args) 
+    || `An error occured! For more details, see the full error text at https://phryneas.github.io/apollo-error-message-viewer/#${encodeURIComponent(JSON.stringify({
+      version,
+      message,
+      args
+    }))}`
 }
 
 export { invariant, InvariantError, newInvariantError, ApolloErrorMessageHandler }

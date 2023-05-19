@@ -1,4 +1,4 @@
-interface ErrorCodes {
+export interface ErrorCodes {
     [key: number]: { file: string, condition?: string, message?: string }
 }
 

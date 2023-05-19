@@ -2,6 +2,7 @@ const entryPoints = [
   { dirs: [], bundleName: "main" },
   { dirs: ['cache'] },
   { dirs: ['core'] },
+  { dirs: ['dev'] },
   { dirs: ['errors'] },
   { dirs: ['link', 'batch'] },
   { dirs: ['link', 'batch-http'] },
@@ -27,7 +28,6 @@ const entryPoints = [
   { dirs: ['testing', 'core'] },
   { dirs: ['utilities'] },
   { dirs: ['utilities', 'globals'], sideEffects: true },
-  { dirs: ['utilities', 'errors'] },
 ];
 
 const lookupTrie = Object.create(null);

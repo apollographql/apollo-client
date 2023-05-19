@@ -6,6 +6,7 @@
 import * as cache from "../cache";
 import * as client from "..";
 import * as core from "../core";
+import * as dev from '../dev';
 import * as errors from "../errors";
 import * as linkBatch from "../link/batch";
 import * as linkBatchHTTP from "../link/batch-http";
@@ -31,7 +32,6 @@ import * as testing from "../testing";
 import * as testingCore from "../testing/core";
 import * as utilities from "../utilities";
 import * as utilitiesGlobals from "../utilities/globals";
-import * as utilitiesErrors from '../utilities/errors';
 
 const entryPoints = require("../../config/entryPoints.js");
 
@@ -50,6 +50,7 @@ describe('exports of public entry points', () => {
   check("@apollo/client", client);
   check("@apollo/client/cache", cache);
   check("@apollo/client/core", core);
+  check("@apollo/client/dev", dev);
   check("@apollo/client/errors", errors);
   check("@apollo/client/link/batch", linkBatch);
   check("@apollo/client/link/batch-http", linkBatchHTTP);
@@ -75,7 +76,6 @@ describe('exports of public entry points', () => {
   check("@apollo/client/testing/core", testingCore);
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
-  check('@apollo/client/utilities/errors', utilitiesErrors)
 
   it("completeness", () => {
     const { join } = require("path").posix;

@@ -13,7 +13,7 @@ import {
   TypedDocumentNode,
 } from '../core';
 
-import { Observable, ObservableSubscription, removeDirectivesFromDocument } from '../utilities';
+import { Observable, ObservableSubscription, offsetLimitPagination, removeDirectivesFromDocument } from '../utilities';
 import { ApolloLink } from '../link/core';
 import { InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
 import { ApolloError } from '../errors';
@@ -4397,6 +4397,339 @@ describe('custom document transforms', () => {
       expect.objectContaining({
         data: {
           product: { __typename: 'Product', id: 1 }
+        }
+      })
+    );
+  });
+
+  // TODO: Fix error with missing field on write
+  it('re-runs custom document transforms when calling `fetchMore`', async () => {
+    const query = gql`
+      query TestQuery($offset: Int) {
+        products(offset: $offset) {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const enabledQuery = gql`
+      query TestQuery($offset: Int) {
+        products(offset: $offset) {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const disabledQuery = gql`
+      query TestQuery($offset: Int) {
+        products(offset: $offset) {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: enabledQuery, variables: { offset: 0 } },
+        result: {
+          data: {
+            products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
+          }
+        }
+      },
+      {
+        request: { query: disabledQuery, variables: { offset: 1 } },
+        result: {
+          data: {
+            products: [{ __typename: 'Product', id: 2 }]
+          }
+        }
+      }
+    ];
+
+    let enabled = true;
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument(
+        [{ name: 'whenEnabled', remove: !enabled }],
+        document
+      )!;
+    }, { cache: false });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              products: offsetLimitPagination()
+            }
+          }
+        }
+      }),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query, variables: { offset: 0 } });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: {
+            products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
+          },
+        })
+      );
+
+      expect(document).toMatchDocument(enabledQuery);
+    });
+
+    enabled = false;
+
+    const { data } = await observable.fetchMore({ variables: { offset: 1 }});
+
+    expect(document!).toMatchDocument(disabledQuery);
+
+    expect(data).toEqual({
+      products: [{ __typename: 'Product', id: 2 }]
+    })
+
+    expect(handleNext).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        data: { 
+          products: [
+            { __typename: 'Product', id: 1 },
+            { __typename: 'Product', id: 2 }
+          ]
+        }
+      })
+    );
+  });
+
+  it('re-runs custom document transforms when calling `setVariables`', async () => {
+    const query = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const enabledQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const disabledQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: enabledQuery, variables: { id: 1 } },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          }
+        }
+      },
+      {
+        request: { query: disabledQuery, variables: { id: 2 } },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 2 }
+          }
+        }
+      }
+    ];
+
+    let enabled = true;
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument(
+        [{ name: 'whenEnabled', remove: !enabled }],
+        document
+      )!;
+    }, { cache: false });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          },
+        })
+      );
+
+      expect(document).toMatchDocument(enabledQuery);
+    });
+
+    enabled = false;
+
+    const result = await observable.setVariables({ id: 2 });
+
+    expect(document!).toMatchDocument(disabledQuery);
+
+    expect(result!.data).toEqual({
+      product: { __typename: 'Product', id: 2 }
+    })
+
+    expect(handleNext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          product: { __typename: 'Product', id: 2 }
+        }
+      })
+    );
+  });
+
+  it('re-runs custom document transforms when calling `setOptions`', async () => {
+    const query = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const enabledQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const disabledQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: enabledQuery, variables: { id: 1 } },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          }
+        }
+      },
+      {
+        request: { query: disabledQuery, variables: { id: 2 } },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 2 }
+          }
+        }
+      }
+    ];
+
+    let enabled = true;
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument(
+        [{ name: 'whenEnabled', remove: !enabled }],
+        document
+      )!;
+    }, { cache: false });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          },
+        })
+      );
+
+      expect(document).toMatchDocument(enabledQuery);
+    });
+
+    enabled = false;
+
+    const { data } = await observable.setOptions({ variables: { id: 2 }});
+
+    expect(document!).toMatchDocument(disabledQuery);
+
+    expect(data).toEqual({
+      product: { __typename: 'Product', id: 2 }
+    })
+
+    expect(handleNext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          product: { __typename: 'Product', id: 2 }
         }
       })
     );

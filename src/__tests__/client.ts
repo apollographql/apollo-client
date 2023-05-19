@@ -4232,6 +4232,43 @@ describe('custom document transforms', () => {
 
     expect(transform).toHaveBeenCalledTimes(1);
   });
+
+  it('sets the transformed document from custom document transforms on the observable when calling `watchQuery`', async () => {
+    const query = gql`
+      query TestQuery {
+        currentUser {
+          id 
+          name @custom
+        }
+      }
+    `;
+
+    const expected = gql`
+      query TestQuery {
+        currentUser {
+          id 
+          name
+          __typename
+        }
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query });
+
+    expect(observable.options.query).toMatchDocument(expected);
+    // Ensure the computed `query` property has the correct value
+    expect(observable.query).toMatchDocument(expected);
+  });
 });
 
 function clientRoundtrip(

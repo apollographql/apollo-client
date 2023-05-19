@@ -702,6 +702,7 @@ export class QueryManager<TStore> {
     // assign variable default values if supplied
     options = {
       ...options,
+      query: this.transformDocument(options.query),
       variables: this.getVariables(
         options.query,
         options.variables,

@@ -3617,14 +3617,14 @@ describe('custom document transforms', () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({ 
-        data: { 
+      return Observable.of({
+        data: {
           dogs: [
-            { 
+            {
               id: 1,
               name: 'Buddy',
               breed: 'German Shepard',
-              __typename: 'Dog' 
+              __typename: 'Dog'
             }
           ],
         }
@@ -3652,7 +3652,7 @@ describe('custom document transforms', () => {
 
     expect(data).toEqual({
       dogs: [
-        { 
+        {
           id: 1,
           name: 'Buddy',
           breed: 'German Shepard',
@@ -3699,14 +3699,14 @@ describe('custom document transforms', () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({ 
-        data: { 
+      return Observable.of({
+        data: {
           dogs: [
-            { 
+            {
               id: 1,
               name: 'Buddy',
               breed: 'German Shepard',
-              __typename: 'Dog' 
+              __typename: 'Dog'
             }
           ],
         }
@@ -3734,11 +3734,11 @@ describe('custom document transforms', () => {
 
     expect(data).toEqual({
       dogs: [
-        { 
+        {
           id: 1,
           name: 'Buddy',
           breed: 'German Shepard',
-          __typename: 'Dog' 
+          __typename: 'Dog'
         }
       ]
     });
@@ -3795,9 +3795,9 @@ describe('custom document transforms', () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({ 
-        data: { 
-          currentUser: { 
+      return Observable.of({
+        data: {
+          currentUser: {
             id: 1,
             __typename: 'User' ,
           },
@@ -3835,10 +3835,10 @@ describe('custom document transforms', () => {
     `);
 
     expect(data).toEqual({
-      currentUser: { 
+      currentUser: {
         id: 1,
         isLoggedIn: true,
-        __typename: 'User' 
+        __typename: 'User'
       }
     });
   });
@@ -3856,9 +3856,9 @@ describe('custom document transforms', () => {
     const documentTransform = new DocumentTransform(transform, { cache: false });
 
     const link = new ApolloLink(() => {
-      return Observable.of({ 
-        data: { 
-          currentUser: { 
+      return Observable.of({
+        data: {
+          currentUser: {
             id: 1,
             __typename: 'User' ,
           },
@@ -3896,9 +3896,9 @@ describe('custom document transforms', () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({ 
-        data: { 
-          changeUsername: { 
+      return Observable.of({
+        data: {
+          changeUsername: {
             id: 1,
             username: operation.variables.username,
             __typename: 'User' ,
@@ -3913,9 +3913,9 @@ describe('custom document transforms', () => {
       cache: new InMemoryCache(),
     });
 
-    const { data } = await client.mutate({ 
+    const { data } = await client.mutate({
       mutation,
-      variables: { username: 'foo' } 
+      variables: { username: 'foo' }
     });
 
     expect(document!).toMatchDocument(gql`
@@ -3929,7 +3929,7 @@ describe('custom document transforms', () => {
     `);
 
     expect(data).toEqual({
-      changeUsername: { 
+      changeUsername: {
         id: 1,
         username: 'foo',
         __typename: 'User' ,
@@ -3973,9 +3973,9 @@ describe('custom document transforms', () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({ 
-        data: { 
-          changeUsername: { 
+      return Observable.of({
+        data: {
+          changeUsername: {
             id: 1,
             username: operation.variables.username,
             __typename: 'User' ,
@@ -3990,9 +3990,9 @@ describe('custom document transforms', () => {
       cache: new InMemoryCache(),
     });
 
-    const { data } = await client.mutate({ 
+    const { data } = await client.mutate({
       mutation,
-      variables: { username: 'foo' } 
+      variables: { username: 'foo' }
     });
 
     expect(document!).toMatchDocument(gql`
@@ -4006,7 +4006,7 @@ describe('custom document transforms', () => {
     `);
 
     expect(data).toEqual({
-      changeUsername: { 
+      changeUsername: {
         id: 1,
         username: 'foo',
         __typename: 'User' ,
@@ -4036,9 +4036,9 @@ describe('custom document transforms', () => {
     const documentTransform = new DocumentTransform(transform, { cache: false });
 
     const link = new ApolloLink((operation) => {
-      return Observable.of({ 
-        data: { 
-          changeUsername: { 
+      return Observable.of({
+        data: {
+          changeUsername: {
             id: 1,
             username: operation.variables.username,
             __typename: 'User' ,
@@ -4086,7 +4086,7 @@ describe('custom document transforms', () => {
           }
         }
       })
-    }); 
+    });
 
     const client = new ApolloClient({
       link,
@@ -4112,8 +4112,8 @@ describe('custom document transforms', () => {
       }
     `);
 
-    expect(onNext).toHaveBeenCalledWith({ 
-      data: { 
+    expect(onNext).toHaveBeenCalledWith({
+      data: {
         profileUpdated: { id: 1, username: 'foo', __typename: 'Profile', }
       }
     });
@@ -4156,9 +4156,9 @@ describe('custom document transforms', () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({ 
-        data: { 
-          profileUpdated: { 
+      return Observable.of({
+        data: {
+          profileUpdated: {
             id: 1,
             username: 'foo',
             __typename: 'Profile',
@@ -4191,8 +4191,8 @@ describe('custom document transforms', () => {
       }
     `);
 
-    expect(onNext).toHaveBeenCalledWith({ 
-      data: { 
+    expect(onNext).toHaveBeenCalledWith({
+      data: {
         profileUpdated: { id: 1, username: 'foo', __typename: 'Profile', }
       }
     });
@@ -4237,7 +4237,7 @@ describe('custom document transforms', () => {
     const query = gql`
       query TestQuery {
         currentUser {
-          id 
+          id
           name @custom
         }
       }
@@ -4250,7 +4250,7 @@ describe('custom document transforms', () => {
     const documentTransform = new DocumentTransform(transform);
 
     let document: DocumentNode;
-    
+
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
@@ -4285,7 +4285,7 @@ describe('custom document transforms', () => {
       expect(document).toMatchDocument(gql`
         query TestQuery {
           currentUser {
-            id 
+            id
             name
             __typename
           }

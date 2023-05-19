@@ -2,7 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core';
-import { Cache } from '../../../cache';
+import { Cache, Modifiers } from '../../../cache';
 import { InMemoryCache } from '../inMemoryCache';
 import { InMemoryCacheConfig } from '../types';
 
@@ -3905,18 +3905,43 @@ describe('TypedDocumentNode<Data, Variables>', () => {
     }
   `;
 
-  it('should determine Data and Variables types of {write,read}{Query,Fragment}', () => {
-    const cache = new InMemoryCache({
+  // We need to define these objects separately from calling writeQuery,
+  // because passing them directly to writeQuery will trigger excess property
+  // warnings due to the extra __typename and isbn fields. Internally, we
+  // almost never pass object literals to writeQuery or writeFragment, so
+  // excess property checks should not be a problem in practice.
+  const jcmAuthor = {
+    __typename: "Author",
+    name: "John C. Mitchell",
+  };
+
+  const ffplBook = {
+    __typename: "Book",
+    isbn: "0262133210",
+    title: "Foundations for Programming Languages",
+    author: jcmAuthor,
+  };
+
+  const ffplVariables = {
+    isbn: "0262133210",
+  };
+
+  function getBookCache() {
+    return new InMemoryCache({
       typePolicies: {
         Query: {
           fields: {
             book(existing, { args, toReference }) {
-              return existing ?? (args && toReference({
-                __typename: "Book",
-                isbn: args.isbn,
-              }));
-            }
-          }
+              return (
+                existing ??
+                (args &&
+                  toReference({
+                    __typename: "Book",
+                    isbn: args.isbn,
+                  }))
+              );
+            },
+          },
         },
 
         Book: {
@@ -3928,27 +3953,10 @@ describe('TypedDocumentNode<Data, Variables>', () => {
         },
       },
     });
+  }
 
-    // We need to define these objects separately from calling writeQuery,
-    // because passing them directly to writeQuery will trigger excess property
-    // warnings due to the extra __typename and isbn fields. Internally, we
-    // almost never pass object literals to writeQuery or writeFragment, so
-    // excess property checks should not be a problem in practice.
-    const jcmAuthor = {
-      __typename: "Author",
-      name: "John C. Mitchell",
-    };
-
-    const ffplBook = {
-      __typename: "Book",
-      isbn: "0262133210",
-      title: "Foundations for Programming Languages",
-      author: jcmAuthor,
-    };
-
-    const ffplVariables = {
-      isbn: "0262133210",
-    };
+  it("should determine Data and Variables types of {write,read}{Query,Fragment}", () => {
+    const cache = getBookCache();
 
     cache.writeQuery({
       query,
@@ -4026,6 +4034,50 @@ describe('TypedDocumentNode<Data, Variables>', () => {
           name: "Harold Abelson",
         },
       },
+    });
+  });
+
+  it("should infer the types of modifier fields", () => {
+    const cache = getBookCache();
+
+    cache.writeQuery({
+      query,
+      variables: ffplVariables,
+      data: {
+        book: ffplBook,
+      },
+    });
+
+    /** Asserts the inferred TypeScript type of a value matches the expected type */
+    const assertType =
+      <ExpectedType>() =>
+      <ActualType extends ExpectedType>(
+        _value: ActualType
+      ): ExpectedType extends ActualType ? void : never =>
+        void 0 as any;
+
+    cache.modify({
+      id: cache.identify(ffplBook),
+      fields: {
+        isbn: (value) => {
+          assertType<string>()(value);
+          return value;
+        },
+        title: (value, { INVALIDATE }) => {
+          assertType<string>()(value);
+          return INVALIDATE;
+        },
+        author: (value, { DELETE, isReference }) => {
+          assertType<Reference | Book["author"]>()(value);
+          if (isReference(value)) {
+            assertType<Reference>()(value);
+          } else {
+            assertType<Book["author"]>()(value);
+          }
+
+          return DELETE;
+        },
+      } satisfies Modifiers<Book>,
     });
   });
 });

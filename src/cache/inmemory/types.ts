@@ -49,7 +49,7 @@ export interface NormalizedCache {
   merge(olderId: string, newerObject: StoreObject): void;
   merge(olderObject: StoreObject, newerId: string): void;
 
-  modify(dataId: string, fields: Modifiers | Modifier<any>): boolean;
+  modify(dataId: string, fields: Modifiers<Record<string, any>> | Modifier<any>): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 

@@ -59,7 +59,7 @@ export namespace Cache {
 
   export interface ModifyOptions {
     id?: string;
-    fields: Modifiers | Modifier<any>;
+    fields: Modifiers<Record<string, any>> | Modifier<any>;
     optimistic?: boolean;
     broadcast?: boolean;
   }

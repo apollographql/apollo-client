@@ -27,11 +27,14 @@ import type {
   ReadFieldOptions,
   ToReferenceFunction,
   CanReadFunction,
+  InvalidateModifier,
+  DeleteModifier,
+  ModifierDetails,
 } from '../core/types/common';
 
-const DELETE: any = Object.create(null);
+const DELETE: DeleteModifier = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;
-const INVALIDATE: any = Object.create(null);
+const INVALIDATE: InvalidateModifier = Object.create(null);
 
 export abstract class EntityStore implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
@@ -217,7 +220,7 @@ export abstract class EntityStore implements NormalizedCache {
           } : fieldNameOrOptions,
           { store: this },
         ),
-      };
+      } satisfies Partial<ModifierDetails>;
 
       Object.keys(storeObject).forEach(storeFieldName => {
         const fieldName = fieldNameFromStoreName(storeFieldName);

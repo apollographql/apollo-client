@@ -76,9 +76,14 @@ export type ToReferenceFunction = (
 
 export type CanReadFunction = (value: StoreValue) => boolean;
 
+declare const _deleteModifier: unique symbol;
+export type DeleteModifier = typeof _deleteModifier
+declare const _invalidateModifier: unique symbol;
+export type InvalidateModifier = typeof _invalidateModifier
+
 export type ModifierDetails = {
-  DELETE: any;
-  INVALIDATE: any;
+  DELETE: DeleteModifier;
+  INVALIDATE: InvalidateModifier;
   fieldName: string;
   storeFieldName: string;
   readField: ReadFieldFunction;
@@ -88,7 +93,10 @@ export type ModifierDetails = {
   storage: StorageType;
 }
 
-export type Modifier<T> = (value: T, details: ModifierDetails) => T;
+export type Modifier<T> = (
+  value: T,
+  details: ModifierDetails
+) => T | DeleteModifier | InvalidateModifier;
 
 export type Modifiers = {
   [fieldName: string]: Modifier<any>;

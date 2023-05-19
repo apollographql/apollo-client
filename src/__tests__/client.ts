@@ -4245,6 +4245,16 @@ describe('custom document transforms', () => {
       }
     `;
 
+    const transformedQuery = gql`
+      query TestQuery {
+        currentUser {
+          id
+          name
+          __typename
+        }
+      }
+    `;
+
     const transform = jest.fn((document: DocumentNode) => {
       return removeDirectivesFromDocument([{ name: 'custom' }], document)!
     });
@@ -4270,6 +4280,12 @@ describe('custom document transforms', () => {
     const observable = client.watchQuery({ query });
 
     expect(transform).not.toHaveBeenCalled();
+    // `options.query` should always reflect the raw, untransformed query 
+    expect(observable.options.query).toMatchDocument(query);
+    // The computed `query` property should always reflect the last requested 
+    // transformed document. We haven't run the query yet, so it remains the 
+    // same as the raw query.
+    expect(observable.query).toMatchDocument(query);
 
     const handleNext = jest.fn();
 
@@ -4284,15 +4300,9 @@ describe('custom document transforms', () => {
         networkStatus: NetworkStatus.ready,
       });
 
-      expect(document).toMatchDocument(gql`
-        query TestQuery {
-          currentUser {
-            id
-            name
-            __typename
-          }
-        }
-      `);
+      expect(document).toMatchDocument(transformedQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(transformedQuery);
     });
   });
 
@@ -4382,6 +4392,8 @@ describe('custom document transforms', () => {
       });
 
       expect(document).toMatchDocument(enabledQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(enabledQuery);
     });
 
     enabled = false;
@@ -4389,6 +4401,8 @@ describe('custom document transforms', () => {
     const { data } = await observable.refetch();
 
     expect(document!).toMatchDocument(disabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(disabledQuery);
 
     expect(data).toEqual({
       product: { __typename: 'Product', id: 1 }
@@ -4498,6 +4512,8 @@ describe('custom document transforms', () => {
       });
 
       expect(document).toMatchDocument(enabledQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(enabledQuery);
     });
 
     enabled = false;
@@ -4505,6 +4521,8 @@ describe('custom document transforms', () => {
     const { data } = await observable.fetchMore({ variables: { offset: 1 }});
 
     expect(document!).toMatchDocument(disabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(disabledQuery);
 
     expect(data).toEqual({
       products: [{ __typename: 'Product', id: 2 }]
@@ -4637,6 +4655,8 @@ describe('custom document transforms', () => {
       });
 
       expect(document).toMatchDocument(transformedInitialQuery);
+      expect(observable.options.query).toMatchDocument(initialQuery);
+      expect(observable.query).toMatchDocument(transformedInitialQuery);
     });
 
     enabled = false;
@@ -4647,6 +4667,8 @@ describe('custom document transforms', () => {
     });
 
     expect(document!).toMatchDocument(transformedProductsQuery);
+    expect(observable.options.query).toMatchDocument(initialQuery);
+    expect(observable.query).toMatchDocument(transformedProductsQuery);
 
     expect(data).toEqual({
       products: [{ __typename: 'Product', id: 2 }]
@@ -4751,6 +4773,8 @@ describe('custom document transforms', () => {
       });
 
       expect(document).toMatchDocument(enabledQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(enabledQuery);
     });
 
     enabled = false;
@@ -4758,6 +4782,8 @@ describe('custom document transforms', () => {
     const result = await observable.setVariables({ id: 2 });
 
     expect(document!).toMatchDocument(disabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(disabledQuery);
 
     expect(result!.data).toEqual({
       product: { __typename: 'Product', id: 2 }
@@ -4858,6 +4884,8 @@ describe('custom document transforms', () => {
       });
 
       expect(document).toMatchDocument(enabledQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(enabledQuery);
     });
 
     enabled = false;
@@ -4865,6 +4893,8 @@ describe('custom document transforms', () => {
     const { data } = await observable.setOptions({ variables: { id: 2 }});
 
     expect(document!).toMatchDocument(disabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(disabledQuery);
 
     expect(data).toEqual({
       product: { __typename: 'Product', id: 2 }

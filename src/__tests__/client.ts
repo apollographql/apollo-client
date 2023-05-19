@@ -4276,13 +4276,13 @@ describe('custom document transforms', () => {
     observable.subscribe(handleNext);
 
     await waitFor(() => {
-      expect(handleNext).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: {
-            currentUser: { __typename: 'User', id: 1, name: 'John Doe' }
-          },
-        })
-      );
+      expect(handleNext).toHaveBeenCalledWith({
+        data: {
+          currentUser: { __typename: 'User', id: 1, name: 'John Doe' }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       expect(document).toMatchDocument(gql`
         query TestQuery {
@@ -4373,13 +4373,13 @@ describe('custom document transforms', () => {
     observable.subscribe(handleNext);
 
     await waitFor(() => {
-      expect(handleNext).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: {
-            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
-          },
-        })
-      );
+      expect(handleNext).toHaveBeenCalledWith({
+        data: {
+          product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       expect(document).toMatchDocument(enabledQuery);
     });
@@ -4394,13 +4394,13 @@ describe('custom document transforms', () => {
       product: { __typename: 'Product', id: 1 }
     })
 
-    expect(handleNext).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: {
-          product: { __typename: 'Product', id: 1 }
-        }
-      })
-    );
+    expect(handleNext).toHaveBeenCalledWith({
+      data: {
+        product: { __typename: 'Product', id: 1 }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   // TODO: Fix error with missing field on write
@@ -4489,13 +4489,13 @@ describe('custom document transforms', () => {
     observable.subscribe(handleNext);
 
     await waitFor(() => {
-      expect(handleNext).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          data: {
-            products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
-          },
-        })
-      );
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       expect(document).toMatchDocument(enabledQuery);
     });
@@ -4510,16 +4510,16 @@ describe('custom document transforms', () => {
       products: [{ __typename: 'Product', id: 2 }]
     })
 
-    expect(handleNext).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        data: {
-          products: [
-            { __typename: 'Product', id: 1 },
-            { __typename: 'Product', id: 2 }
-          ]
-        }
-      })
-    );
+    expect(handleNext).toHaveBeenLastCalledWith({
+      data: {
+        products: [
+          { __typename: 'Product', id: 1 },
+          { __typename: 'Product', id: 2 }
+        ]
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it('re-runs custom document transforms when calling `fetchMore` with a different query', async () => {
@@ -4627,14 +4627,14 @@ describe('custom document transforms', () => {
     observable.subscribe(handleNext);
 
     await waitFor(() => {
-      expect(handleNext).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          data: {
-            currentUser: { id: 1 },
-            products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
-          },
-        })
-      );
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          currentUser: { id: 1 },
+          products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       expect(document).toMatchDocument(transformedInitialQuery);
     });
@@ -4742,13 +4742,13 @@ describe('custom document transforms', () => {
     observable.subscribe(handleNext);
 
     await waitFor(() => {
-      expect(handleNext).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          data: {
-            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
-          },
-        })
-      );
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       expect(document).toMatchDocument(enabledQuery);
     });
@@ -4763,13 +4763,13 @@ describe('custom document transforms', () => {
       product: { __typename: 'Product', id: 2 }
     })
 
-    expect(handleNext).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: {
-          product: { __typename: 'Product', id: 2 }
-        }
-      })
-    );
+    expect(handleNext).toHaveBeenCalledWith({
+      data: {
+        product: { __typename: 'Product', id: 2 }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it('re-runs custom document transforms when calling `setOptions`', async () => {
@@ -4849,13 +4849,13 @@ describe('custom document transforms', () => {
     observable.subscribe(handleNext);
 
     await waitFor(() => {
-      expect(handleNext).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: {
-            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
-          },
-        })
-      );
+      expect(handleNext).toHaveBeenCalledWith({
+        data: {
+          product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       expect(document).toMatchDocument(enabledQuery);
     });
@@ -4870,13 +4870,13 @@ describe('custom document transforms', () => {
       product: { __typename: 'Product', id: 2 }
     })
 
-    expect(handleNext).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: {
-          product: { __typename: 'Product', id: 2 }
-        }
-      })
-    );
+    expect(handleNext).toHaveBeenCalledWith({
+      data: {
+        product: { __typename: 'Product', id: 2 }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 });
 

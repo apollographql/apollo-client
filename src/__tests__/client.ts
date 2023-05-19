@@ -23,6 +23,7 @@ import {
   subscribeAndCount,
   mockSingleLink,
   withErrorSpy,
+  MockLink,
 } from '../testing';
 import { waitFor } from '@testing-library/react';
 
@@ -4292,6 +4293,113 @@ describe('custom document transforms', () => {
         }
       `);
     });
+  });
+
+  it('re-runs custom document transforms on `refetch`', async () => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const enabledQuery = gql`
+      query TestQuery {
+        product {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const disabledQuery = gql`
+      query TestQuery {
+        product {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: enabledQuery },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          }
+        }
+      },
+      {
+        request: { query: disabledQuery },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 1 }
+          }
+        }
+      }
+    ];
+
+    let enabled = true;
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument(
+        [{ name: 'whenEnabled', remove: !enabled }],
+        document
+      )!;
+    }, { cache: false });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          },
+        })
+      );
+
+      expect(document).toMatchDocument(enabledQuery);
+    });
+
+    enabled = false;
+
+    const { data } = await observable.refetch();
+
+    expect(document!).toMatchDocument(disabledQuery);
+
+    expect(data).toEqual({
+      product: { __typename: 'Product', id: 1 }
+    })
+
+    expect(handleNext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          product: { __typename: 'Product', id: 1 }
+        }
+      })
+    );
   });
 });
 

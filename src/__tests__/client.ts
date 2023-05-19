@@ -4233,7 +4233,7 @@ describe('custom document transforms', () => {
     expect(transform).toHaveBeenCalledTimes(1);
   });
 
-  it('sets the transformed document from custom document transforms on the observable when calling `watchQuery`', async () => {
+  it('runs custom document transforms when subscribing to observable after calling `watchQuery`', async () => {
     const query = gql`
       query TestQuery {
         currentUser {
@@ -4243,31 +4243,55 @@ describe('custom document transforms', () => {
       }
     `;
 
-    const expected = gql`
-      query TestQuery {
-        currentUser {
-          id 
-          name
-          __typename
-        }
-      }
-    `;
-
-    const documentTransform = new DocumentTransform((document) => {
+    const transform = jest.fn((document: DocumentNode) => {
       return removeDirectivesFromDocument([{ name: 'custom' }], document)!
     });
 
+    const documentTransform = new DocumentTransform(transform);
+
+    let document: DocumentNode;
+    
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: { currentUser: { __typename: 'User', id: 1, name: 'John Doe' }}
+      })
+    });
+
     const client = new ApolloClient({
-      link: ApolloLink.empty(),
+      link,
       cache: new InMemoryCache(),
       documentTransform,
     });
 
     const observable = client.watchQuery({ query });
 
-    expect(observable.options.query).toMatchDocument(expected);
-    // Ensure the computed `query` property has the correct value
-    expect(observable.query).toMatchDocument(expected);
+    expect(transform).not.toHaveBeenCalled();
+
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            currentUser: { __typename: 'User', id: 1, name: 'John Doe' }
+          },
+        })
+      );
+
+      expect(document).toMatchDocument(gql`
+        query TestQuery {
+          currentUser {
+            id 
+            name
+            __typename
+          }
+        }
+      `);
+    });
   });
 });
 

@@ -95,10 +95,6 @@ function transform(code: string, relativeFilePath: string) {
       const node = path.node;
 
       if (isCallWithLength(node, "invariant", 1)) {
-        if (isDEVConditional(path.parent.node)) {
-          return;
-        }
-
         const newArgs = [...node.arguments]
         newArgs.splice(1, 1, getErrorCode(relativeFilePath, node));
 
@@ -123,21 +119,11 @@ function transform(code: string, relativeFilePath: string) {
       this.traverse(path);
       const node = path.node;
       if (isCallWithLength(node, "InvariantError", 0)) {
-        if (isDEVConditional(path.parent.node)) {
-          return;
-        }
-
         const newArgs = [getErrorCode(relativeFilePath, node)];
-
-        addedDEV = true;
-        return b.conditionalExpression(
-          makeDEVExpr(),
-          node,
-          b.newExpression.from({
+        return b.newExpression.from({
             ...node,
             arguments: newArgs,
-          }),
-        );
+          });
       }
     }
   });
@@ -204,11 +190,6 @@ function isCallWithLength(
 ) {
   return isIdWithName(node.callee, name) &&
     node.arguments.length > length;
-}
-
-function isDEVConditional(node: Node) {
-  return n.ConditionalExpression.check(node) &&
-    isDEVExpr(node.test);
 }
 
 function isDEVLogicalAnd(node: Node) {

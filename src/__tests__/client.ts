@@ -11,6 +11,7 @@ import {
   ObservableQuery,
   Operation,
   TypedDocumentNode,
+  NetworkStatus,
 } from '../core';
 
 import { Observable, ObservableSubscription, offsetLimitPagination, removeDirectivesFromDocument } from '../utilities';
@@ -4511,7 +4512,7 @@ describe('custom document transforms', () => {
 
     expect(handleNext).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        data: { 
+        data: {
           products: [
             { __typename: 'Product', id: 1 },
             { __typename: 'Product', id: 2 }
@@ -4519,6 +4520,149 @@ describe('custom document transforms', () => {
         }
       })
     );
+  });
+
+  it('re-runs custom document transforms when calling `fetchMore` with a different query', async () => {
+    const initialQuery = gql`
+      query TestQuery($offset: Int) {
+        currentUser {
+          id
+        }
+        products(offset: $offset) {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const transformedInitialQuery = gql`
+      query TestQuery($offset: Int) {
+        currentUser {
+          id
+          __typename
+        }
+        products(offset: $offset) {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const productsQuery = gql`
+      query TestQuery($offset: Int) {
+        products(offset: $offset) {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const transformedProductsQuery = gql`
+      query TestQuery($offset: Int) {
+        products(offset: $offset) {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: transformedInitialQuery, variables: { offset: 0 } },
+        result: {
+          data: {
+            currentUser: { id: 1 },
+            products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
+          }
+        }
+      },
+      {
+        request: { query: transformedProductsQuery, variables: { offset: 1 } },
+        result: {
+          data: {
+            products: [{ __typename: 'Product', id: 2 }]
+          }
+        }
+      }
+    ];
+
+    let enabled = true;
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument(
+        [{ name: 'whenEnabled', remove: !enabled }],
+        document
+      )!;
+    }, { cache: false });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              products: offsetLimitPagination()
+            }
+          }
+        }
+      }),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({
+      query: initialQuery,
+      variables: { offset: 0 },
+    });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: {
+            currentUser: { id: 1 },
+            products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
+          },
+        })
+      );
+
+      expect(document).toMatchDocument(transformedInitialQuery);
+    });
+
+    enabled = false;
+
+    const { data } = await observable.fetchMore({
+      query: productsQuery,
+      variables: { offset: 1 },
+    });
+
+    expect(document!).toMatchDocument(transformedProductsQuery);
+
+    expect(data).toEqual({
+      products: [{ __typename: 'Product', id: 2 }]
+    })
+
+    expect(handleNext).toHaveBeenLastCalledWith({
+      data: {
+        currentUser: { id: 1 },
+        products: [
+          { __typename: 'Product', id: 1 },
+          { __typename: 'Product', id: 2 }
+        ]
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it('re-runs custom document transforms when calling `setVariables`', async () => {

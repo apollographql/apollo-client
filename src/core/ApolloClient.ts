@@ -1,4 +1,4 @@
-import { invariant, InvariantError, __DEV__ } from '../utilities/globals';
+import { invariant, newInvariantError, __DEV__ } from '../utilities/globals';
 
 import type { ExecutionResult, DocumentNode } from 'graphql';
 
@@ -131,7 +131,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     if (!options.cache) {
-      throw new InvariantError(
+      throw newInvariantError(
         "To initialize Apollo Client, you must specify a 'cache' property " +
         "in the options object. \n" +
         "For more information, please visit: https://go.apollo.dev/c/docs"

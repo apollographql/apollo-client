@@ -1,4 +1,4 @@
-import { invariant, InvariantError } from "./invariantWrappers";
+import { invariant, newInvariantError, InvariantError } from "./invariantWrappers";
 
 // Just in case the graphql package switches from process.env.NODE_ENV to
 // __DEV__, make sure __DEV__ is polyfilled before importing graphql.
@@ -16,4 +16,4 @@ removeTemporaryGlobals();
 
 export { maybe } from "./maybe";
 export { default as global } from "./global";
-export { invariant, InvariantError }
+export { invariant, newInvariantError, InvariantError }

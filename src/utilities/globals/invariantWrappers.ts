@@ -1,4 +1,4 @@
-import { invariant as i, InvariantError as IE } from "ts-invariant";
+import { invariant as i, InvariantError } from "ts-invariant";
 import { version } from "../../version";
 import global from "./global";
 
@@ -31,14 +31,11 @@ const invariant: WrappedInvariant = Object.assign(
   }
 );
 
-class InvariantError extends IE {
-  constructor(message?: string | number, getArgsLazy?: () => unknown[]) {
-    super(getErrorMsg(message, getArgsLazy));
-    (this as any).__proto__ = InvariantError.prototype;
-  }
+function newInvariantError(message?: string | number, getArgsLazy?: () => unknown[]) {
+  return new InvariantError(getErrorMsg(message, getArgsLazy));
 }
 
-export const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler')
+const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler')
 declare global {
 	interface Window {
 		[ApolloErrorMessageHandler]?(message?: string | number, getArgsLazy?: () => unknown[]): string
@@ -54,4 +51,4 @@ function getErrorMsg(message?: string | number, getArgsLazy?: () => unknown[]) {
   }))}`
 }
 
-export { invariant, InvariantError }
+export { invariant, InvariantError, newInvariantError, ApolloErrorMessageHandler }

@@ -19,6 +19,10 @@
 # Do not format anything automatically except files listed below
 /*
 
+!config/
+config/*
+!config/processInvariants.ts
+
 #####  PATHS TO BE FORMATTED #####
 !src/
 src/*

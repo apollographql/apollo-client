@@ -1,4 +1,4 @@
-import { invariant, InvariantError, __DEV__ } from '../../utilities/globals';
+import { invariant, newInvariantError, __DEV__ } from '../../utilities/globals';
 
 import type {
   InlineFragmentNode,
@@ -989,7 +989,7 @@ function makeMergeObjectsFunction(
 ): MergeObjectsFunction {
   return function mergeObjects(existing, incoming) {
     if (isArray(existing) || isArray(incoming)) {
-      throw new InvariantError("Cannot automatically merge arrays");
+      throw newInvariantError("Cannot automatically merge arrays");
     }
 
     // These dynamic checks are necessary because the parameters of a

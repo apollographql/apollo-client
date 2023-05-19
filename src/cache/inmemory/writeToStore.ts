@@ -1,4 +1,4 @@
-import { invariant, InvariantError, __DEV__ } from '../../utilities/globals';
+import { invariant, newInvariantError, __DEV__ } from '../../utilities/globals';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 import type {
@@ -150,7 +150,7 @@ export class StoreWriter {
     });
 
     if (!isReference(ref)) {
-      throw new InvariantError(`Could not identify object %s`, () => [JSON.stringify(result)]);
+      throw newInvariantError(`Could not identify object %s`, () => [JSON.stringify(result)]);
     }
 
     // So far, the store has not been modified, so now it's time to process
@@ -566,7 +566,7 @@ export class StoreWriter {
           );
 
           if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
-            throw new InvariantError(`No fragment named %s`, () => [selection.name.value]);
+            throw newInvariantError(`No fragment named %s`, () => [selection.name.value]);
           }
 
           if (fragment &&
@@ -822,9 +822,9 @@ For more information about these options, please refer to the documentation:
 
   * Ensuring entity objects have IDs: https://go.apollo.dev/c/generating-unique-identifiers
   * Defining custom merge functions: https://go.apollo.dev/c/merging-non-normalized-objects
-`, 
-  fieldName, 
-  parentType, 
+`,
+  fieldName,
+  parentType,
   childTypenames.length
     ? "either ensure all objects of type " + childTypenames.join(" and ") + " have an ID or a custom merge function, or "
     : "",

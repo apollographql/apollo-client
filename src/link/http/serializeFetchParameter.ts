@@ -1,4 +1,5 @@
-import { InvariantError } from '../../utilities/globals';
+import { newInvariantError } from '../../utilities/globals';
+import type { InvariantError } from '../../utilities/globals';
 
 export type ClientParseError = InvariantError & {
   parseError: Error;
@@ -9,7 +10,7 @@ export const serializeFetchParameter = (p: any, label: string) => {
   try {
     serialized = JSON.stringify(p);
   } catch (e) {
-    const parseError = new InvariantError(
+    const parseError = newInvariantError(
       `Network request failed. %s is not serializable: %s`,
       () => [label, e.message]
     ) as ClientParseError;

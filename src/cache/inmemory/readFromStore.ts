@@ -1,4 +1,4 @@
-import { invariant, InvariantError, __DEV__ } from '../../utilities/globals';
+import { invariant, newInvariantError, __DEV__ } from '../../utilities/globals';
 
 import type {
   DocumentNode,
@@ -412,7 +412,7 @@ export class StoreReader {
         );
 
         if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
-          throw new InvariantError(`No fragment named %s`, () => [selection.name.value]);
+          throw newInvariantError(`No fragment named %s`, () => [selection.name.value]);
         }
 
         if (fragment && policies.fragmentMatches(fragment, typename)) {

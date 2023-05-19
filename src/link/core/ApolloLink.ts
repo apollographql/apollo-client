@@ -1,4 +1,4 @@
-import { InvariantError, invariant } from '../../utilities/globals';
+import { newInvariantError, invariant } from '../../utilities/globals';
 
 import type { Observer } from '../../utilities';
 import { Observable } from '../../utilities';
@@ -129,7 +129,7 @@ export class ApolloLink {
     operation: Operation,
     forward?: NextLink,
   ): Observable<FetchResult> | null {
-    throw new InvariantError('request is not implemented');
+    throw newInvariantError('request is not implemented');
   }
 
   protected onError(

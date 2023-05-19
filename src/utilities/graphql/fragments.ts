@@ -1,4 +1,4 @@
-import { invariant, InvariantError } from '../globals';
+import { invariant, newInvariantError } from '../globals';
 
 import type {
   DocumentNode,
@@ -46,7 +46,7 @@ export function getFragmentQueryDocument(
     // Throw an error if we encounter an operation definition because we will
     // define our own operation definition later on.
     if (definition.kind === 'OperationDefinition') {
-      throw new InvariantError(
+      throw newInvariantError(
         `Found a %s operation%s. ` +
           'No operations are allowed when using a fragment as a query. Only fragments are allowed.',
         () => [definition.operation, definition.name ? ` named '${definition.name.value}'` : '']

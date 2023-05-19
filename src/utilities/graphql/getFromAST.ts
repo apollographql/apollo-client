@@ -1,4 +1,4 @@
-import { invariant, InvariantError } from '../globals';
+import { invariant, newInvariantError } from '../globals';
 
 import type {
   DocumentNode,
@@ -25,7 +25,7 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
     .filter(d => d.kind !== 'FragmentDefinition')
     .map(definition => {
       if (definition.kind !== 'OperationDefinition') {
-        throw new InvariantError(
+        throw newInvariantError(
           `Schema type definitions not allowed in queries. Found: "%s"`,
           () => [definition.kind]
         );
@@ -142,7 +142,7 @@ export function getMainDefinition(
     return fragmentDefinition;
   }
 
-  throw new InvariantError(
+  throw newInvariantError(
     'Expected a parsed GraphQL query with a query, mutation, subscription, or a fragment.',
   );
 }

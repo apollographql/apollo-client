@@ -66,7 +66,7 @@ function getErrorCode(
   expr: CallExpression | NewExpression,
   type: keyof typeof allExports
 ): ExpressionKind {
-  if (type == 'errorCodes' && expr.type !== 'NewExpression') {
+  if (isIdWithName(expr.callee, 'invariant')) {
     return extractString(
       file,
       allExports[type].properties,
@@ -153,6 +153,20 @@ function transform(code: string, relativeFilePath: string) {
         });
       }
 
+      if (isCallWithLength(node, 'newInvariantError', 0)) {
+        const newArgs = [...node.arguments];
+        newArgs.splice(
+          0,
+          1,
+          getErrorCode(relativeFilePath, node, 'errorCodes')
+        );
+
+        return b.callExpression.from({
+          ...node,
+          arguments: newArgs,
+        });
+      }
+
       if (
         node.callee.type === 'MemberExpression' &&
         isIdWithName(node.callee.object, 'invariant') &&
@@ -184,18 +198,6 @@ function transform(code: string, relativeFilePath: string) {
         }
         addedDEV = true;
         return b.logicalExpression('&&', makeDEVExpr(), newNode);
-      }
-    },
-
-    visitNewExpression(path) {
-      this.traverse(path);
-      const node = path.node;
-      if (isCallWithLength(node, 'InvariantError', 0)) {
-        const newArgs = [getErrorCode(relativeFilePath, node, 'errorCodes')];
-        return b.newExpression.from({
-          ...node,
-          arguments: newArgs,
-        });
       }
     },
   });

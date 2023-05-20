@@ -16,7 +16,7 @@ import {
 
 import { Observable, ObservableSubscription, offsetLimitPagination, removeDirectivesFromDocument } from '../utilities';
 import { ApolloLink } from '../link/core';
-import { InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
+import { createFragmentRegistry, InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
 import { ApolloError } from '../errors';
 
 import {
@@ -5106,6 +5106,237 @@ describe('custom document transforms', () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+    });
+  });
+
+  it('runs custom document transforms with fragments defined in the fragment registery', async ()  => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          name @custom
+          ...ProductFields
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          product: {
+            id: 1,
+            name: 'Product',
+            description: 'Product description',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(gql`
+          fragment ProductFields on Product {
+            description @custom 
+          }
+        `)
+      }),
+      documentTransform,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        product {
+          id
+          name
+          ...ProductFields
+          __typename
+        }
+      }
+
+      fragment ProductFields on Product {
+        description
+        __typename
+      }
+    `);
+
+    expect(data).toEqual({
+      product: {
+        id: 1,
+        name: 'Product',
+        description: 'Product description',
+      }
+    });
+  });
+
+  it('runs custom document transforms on fragments that override registered fragments in the fragment registery', async ()  => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          name @custom
+          ...ProductFields
+        }
+      }
+
+      fragment ProductFields on Product {
+        description @custom
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          product: {
+            id: 1,
+            name: 'Product',
+            description: 'Product description',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(gql`
+          fragment ProductFields on Product {
+            unused @custom
+          }
+        `)
+      }),
+      documentTransform,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        product {
+          id
+          name
+          ...ProductFields
+          __typename
+        }
+      }
+
+      fragment ProductFields on Product {
+        description
+        __typename
+      }
+    `);
+
+    expect(data).toEqual({
+      product: {
+        id: 1,
+        name: 'Product',
+        description: 'Product description',
+      }
+    });
+  });
+
+  it.only('adds fragment definitions to the query for fragment spreads added from custom document transforms', async ()  => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          name
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'product' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  ...node.selectionSet.selections,
+                  {
+                    kind: Kind.FRAGMENT_SPREAD,
+                    name: { kind: Kind.NAME, value: 'ProductFields' }
+                  }
+                ]
+              }
+            }
+          }
+        } 
+      });
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          product: {
+            id: 1,
+            name: 'Product',
+            description: 'Product description',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(gql`
+          fragment ProductFields on Product {
+            description
+          }
+        `)
+      }),
+      documentTransform,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        product {
+          id
+          name
+          __typename
+          ...ProductFields
+        }
+      }
+
+      fragment ProductFields on Product {
+        description
+        __typename
+      }
+    `);
+
+    expect(data).toEqual({
+      product: {
+        id: 1,
+        name: 'Product',
+        description: 'Product description',
+      }
     });
   });
 });

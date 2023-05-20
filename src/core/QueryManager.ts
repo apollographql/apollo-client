@@ -143,9 +143,11 @@ export class QueryManager<TStore> {
     localState?: LocalState<TStore>;
     assumeImmutableResults?: boolean;
   }) {
-    const defaultDocumentTransform = new DocumentTransform((document) =>
-      this.cache.transformDocument(document)
-    )
+    const defaultDocumentTransform = new DocumentTransform(
+      (document) => this.cache.transformDocument(document), 
+      // Allow the cache to manage its own transform caches
+      { cache: false }
+    );
 
     this.cache = cache;
     this.link = link;
@@ -156,7 +158,13 @@ export class QueryManager<TStore> {
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = assumeImmutableResults;
     this.documentTransform = documentTransform
-      ? defaultDocumentTransform.concat(documentTransform)
+      ? defaultDocumentTransform
+          .concat(documentTransform)
+          // The custom document transform may add new fragment spreads or new
+          // field selections, so we want to give the cache a chance to run 
+          // again to add e.g. __typename or fragments from the fragment 
+          // registry.
+          .concat(defaultDocumentTransform)
       : defaultDocumentTransform
 
     if ((this.onBroadcast = onBroadcast)) {

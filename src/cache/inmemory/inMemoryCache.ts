@@ -513,23 +513,27 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    if (this.addTypename) {
-      return this.addTypenameTransform.transformDocument(document);
-    }
-    return document;
-  }
-
-  public transformForLink(document: DocumentNode): DocumentNode {
-    const { fragments } = this.config;
-    return fragments
-      ? fragments.transform(document)
-      : document;
+    return this.addTypenameToDocument(this.addFragmentsToDocument(document));
   }
 
   protected broadcastWatches(options?: BroadcastOptions) {
     if (!this.txCount) {
       this.watches.forEach(c => this.maybeBroadcastWatch(c, options));
     }
+  }
+
+  private addFragmentsToDocument(document: DocumentNode) {
+    const { fragments } = this.config;
+    return fragments
+      ? fragments.transform(document)
+      : document;
+  }
+
+  private addTypenameToDocument(document: DocumentNode) {
+    if (this.addTypename) {
+      return this.addTypenameTransform.transformDocument(document);
+    }
+    return document;
   }
 
   // This method is wrapped by maybeBroadcastWatch, which is called by

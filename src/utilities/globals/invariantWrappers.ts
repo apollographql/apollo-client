@@ -38,14 +38,14 @@ type WrappedInvariant = {
    * be replaced with a message number.
    *
    * The user will either be presented with a link to the documentation for the message,
-   * or they can use the `loadDevMessages` to add the message strings to the bundle.
+   * or they can use the `loadErrorMessages` to add the message strings to the bundle.
    * The documentation will display the message with the arguments substituted.
    *
-   * The n-th string `%s` in the message will be replaced with the n-th element
-   * of the array returned by the optional `args` function.  
-   * Objects will be pretty-stringified with a maximum length of 1000 characters.
+   * String substitutions with %s are supported and will also return 
+   * pretty-stringified objects.  
+   * Excess `optionalParams` will be swallowed.
    */
-  (condition: any, message?: string | number, ...args: unknown[]): asserts condition
+  (condition: any, message?: string | number, ...optionalParams: unknown[]): asserts condition
   
   debug: LogFunction;
   log: LogFunction;
@@ -74,11 +74,12 @@ const invariant: WrappedInvariant = Object.assign(
  * `message` can only be a string, a concatenation of strings, or a ternary statement
  * that results in a string. This will be enforced on build, where the message will
  * be replaced with a message number.
- * The n-th string `%s` in the message will be replaced with the n-th element
- * of the array returned by the optional `args` function.
+ * String substitutions with %s are supported and will also return 
+ * pretty-stringified objects.  
+ * Excess `optionalParams` will be swallowed.
  */
-function newInvariantError(message?: string | number, ...args: unknown[]) {
-  return new InvariantError(getErrorMsg(message, args));
+function newInvariantError(message?: string | number, ...optionalParams: unknown[]) {
+  return new InvariantError(getErrorMsg(message, optionalParams));
 }
 
 const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler')

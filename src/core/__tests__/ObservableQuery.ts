@@ -21,18 +21,16 @@ import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
-  const fetchQueryObservable = queryManager.fetchQueryObservable;
   const fetchConcastWithInfo = queryManager['fetchConcastWithInfo'];
   const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (queryManager as any)
     .fetchQueryByPolicy;
 
-  const mock = <T extends typeof fetchQueryObservable | typeof fetchConcastWithInfo | typeof fetchQueryByPolicy>(original: T) =>
+  const mock = <T extends typeof fetchConcastWithInfo | typeof fetchQueryByPolicy>(original: T) =>
     jest.fn<ReturnType<T>, Parameters<T>>(function () {
       return original.apply(queryManager, arguments);
     });
 
   const mocks = {
-    fetchQueryObservable: mock(fetchQueryObservable),
     fetchConcastWithInfo: mock(fetchConcastWithInfo),
     fetchQueryByPolicy: mock(fetchQueryByPolicy),
   };

@@ -604,11 +604,11 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
-    return this.fetchQueryObservable<TData, TVars>(
+    return this.fetchConcastWithInfo(
       queryId,
       options,
       networkStatus,
-    ).promise;
+    ).concast.promise;
   }
 
   public getQueryStore() {
@@ -1190,21 +1190,6 @@ export class QueryManager<TStore> {
         throw error;
       },
     );
-  }
-
-  public fetchQueryObservable<TData, TVars extends OperationVariables>(
-    queryId: string,
-    options: WatchQueryOptions<TVars, TData>,
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
-    networkStatus?: NetworkStatus,
-  ): Concast<ApolloQueryResult<TData>> {
-    return this.fetchConcastWithInfo(
-      queryId,
-      options,
-      networkStatus,
-    ).concast;
   }
 
   private fetchConcastWithInfo<TData, TVars extends OperationVariables>(

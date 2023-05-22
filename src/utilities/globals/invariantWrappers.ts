@@ -45,7 +45,7 @@ type WrappedInvariant = {
    * of the array returned by the optional `args` function.  
    * Objects will be pretty-stringified with a maximum length of 1000 characters.
    */
-  (condition: any, message?: string | number, args?: () => unknown[]): asserts condition
+  (condition: any, message?: string | number, ...args: unknown[]): asserts condition
   
   debug: LogFunction;
   log: LogFunction;
@@ -53,11 +53,11 @@ type WrappedInvariant = {
   error: LogFunction;
 }
 const invariant: WrappedInvariant = Object.assign(
-  function invariant(condition: any, message?: string | number, getArgsLazy?: () => unknown[]): asserts condition {
+  function invariant(condition: any, message?: string | number, ...args: unknown[]): asserts condition {
     if (!condition) {
       i(
         condition,
-        getErrorMsg(message, getArgsLazy))
+        getErrorMsg(message, args))
     }
   },
   {
@@ -77,8 +77,8 @@ const invariant: WrappedInvariant = Object.assign(
  * The n-th string `%s` in the message will be replaced with the n-th element
  * of the array returned by the optional `args` function.
  */
-function newInvariantError(message?: string | number, getArgsLazy?: () => unknown[]) {
-  return new InvariantError(getErrorMsg(message, getArgsLazy));
+function newInvariantError(message?: string | number, ...args: unknown[]) {
+  return new InvariantError(getErrorMsg(message, args));
 }
 
 const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler')
@@ -90,9 +90,9 @@ declare global {
 	}
 }
 
-function getErrorMsg(message?: string | number, getArgsLazy?: () => unknown[]) {
+function getErrorMsg(message?: string | number, messageArgs: unknown[] = []) {
   if (!message) return;
-  const args = (getArgsLazy ? getArgsLazy() : []).map(arg => typeof arg == "string" ? arg : stringifyForDisplay(arg, 2).slice(0, 1000));
+  const args = messageArgs.map(arg => typeof arg == "string" ? arg : stringifyForDisplay(arg, 2).slice(0, 1000));
   return global[ApolloErrorMessageHandler]
     && global[ApolloErrorMessageHandler](message, args)
     || `An error occured! For more details, see the full error text at https://go.apollo.dev/c/err#${encodeURIComponent(JSON.stringify({

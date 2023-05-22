@@ -234,7 +234,7 @@ function validateFetchPolicy(
   invariant(
     supportedFetchPolicies.includes(fetchPolicy),
     `The fetch policy \`%s\` is not supported with suspense.`,
-    () => [fetchPolicy]
+    fetchPolicy
   );
 }
 

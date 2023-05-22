@@ -27,7 +27,7 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
       if (definition.kind !== 'OperationDefinition') {
         throw newInvariantError(
           `Schema type definitions not allowed in queries. Found: "%s"`,
-          () => [definition.kind]
+          definition.kind
         );
       }
       return definition;
@@ -36,7 +36,7 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
   invariant(
     operations.length <= 1,
     `Ambiguous GraphQL document: contains %s operations`,
-    () => [operations.length]
+    operations.length
   );
 
   return doc;

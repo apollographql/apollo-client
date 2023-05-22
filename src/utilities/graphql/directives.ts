@@ -36,7 +36,7 @@ export function shouldInclude(
       invariant(
         evaledValue !== void 0,
         `Invalid variable referenced in @%s directive.`,
-        () => [directive.name.value]
+        directive.name.value
       );
     } else {
       evaledValue = (ifArgument.value as BooleanValueNode).value;
@@ -119,14 +119,14 @@ export function getInclusionDirectives(
       invariant(
         directiveArguments && directiveArguments.length === 1,
         `Incorrect number of arguments for the @%s directive.`,
-        () => [directiveName]
+        directiveName
       );
 
       const ifArgument = directiveArguments![0];
       invariant(
         ifArgument.name && ifArgument.name.value === 'if',
         `Invalid argument for the @%s directive.`,
-        () => [directiveName]
+        directiveName
       );
 
       const ifValue: ValueNode = ifArgument.value;
@@ -136,7 +136,7 @@ export function getInclusionDirectives(
         ifValue &&
           (ifValue.kind === 'Variable' || ifValue.kind === 'BooleanValue'),
         `Argument for the @%s directive must be a variable or a boolean value.`,
-        () => [directiveName]
+        directiveName
       );
 
       result.push({ directive, ifArgument });

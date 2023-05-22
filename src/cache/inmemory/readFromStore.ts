@@ -412,7 +412,7 @@ export class StoreReader {
         );
 
         if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
-          throw newInvariantError(`No fragment named %s`, () => [selection.name.value]);
+          throw newInvariantError(`No fragment named %s`, selection.name.value);
         }
 
         if (fragment && policies.fragmentMatches(fragment, typename)) {
@@ -522,7 +522,8 @@ function assertSelectionSetForIdValue(
         invariant(
           !isReference(value),
           `Missing selection set for object of type %s returned for query field %s`,
-          () => [getTypenameFromStoreObject(store, value)!, field.name.value]
+          getTypenameFromStoreObject(store, value), 
+          field.name.value
         );
         Object.values(value).forEach(workSet.add, workSet);
       }

@@ -49,7 +49,7 @@ export function parser(document: DocumentNode): IDocumentDefinition {
     `Argument of %s passed to parser was not a valid GraphQL ` +
       `DocumentNode. You may need to use 'graphql-tag' or another method ` +
       `to convert your operation into a document`,
-      () => [document]
+      document
   );
 
   const fragments: DefinitionNode[] = []
@@ -91,7 +91,10 @@ export function parser(document: DocumentNode): IDocumentDefinition {
       `%s had %s queries, %s ` +
       `subscriptions and %s mutations. ` +
       `You can use 'compose' to join multiple operation types to a component`,
-      () => [document, queries.length, subscriptions.length, mutations.length]
+      document,
+      queries.length,
+      subscriptions.length,
+      mutations.length
   );
 
   type = queries.length ? DocumentType.Query : DocumentType.Mutation;
@@ -108,7 +111,8 @@ export function parser(document: DocumentNode): IDocumentDefinition {
     `react-apollo only supports one definition per HOC. %s had ` +
       `%s definitions. ` +
       `You can use 'compose' to join multiple operation types to a component`,
-      () => [document, definitions.length]
+      document,
+      definitions.length
   );
 
   const definition = definitions[0] as OperationDefinitionNode;
@@ -133,7 +137,9 @@ export function verifyDocumentType(document: DocumentNode, type: DocumentType) {
     operation.type === type,
     `Running a %s requires a graphql ` +
       `%s, but a %s was used instead.`,
-      () => [requiredOperationName, requiredOperationName, usedOperationName]
+      requiredOperationName,
+      requiredOperationName,
+      usedOperationName
   );
 }
 

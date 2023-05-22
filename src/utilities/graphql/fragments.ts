@@ -49,7 +49,8 @@ export function getFragmentQueryDocument(
       throw newInvariantError(
         `Found a %s operation%s. ` +
           'No operations are allowed when using a fragment as a query. Only fragments are allowed.',
-        () => [definition.operation, definition.name ? ` named '${definition.name.value}'` : '']
+        definition.operation,
+        definition.name ? ` named '${definition.name.value}'` : ''
       );
     }
     // Add our definition to the fragments array if it is a fragment
@@ -65,7 +66,7 @@ export function getFragmentQueryDocument(
     invariant(
       fragments.length === 1,
       `Found %s fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
-      () => [fragments.length]
+      fragments.length
     );
     actualFragmentName = fragments[0].name.value;
   }
@@ -134,7 +135,7 @@ export function getFragmentFromSelection(
         return fragmentMap(fragmentName);
       }
       const fragment = fragmentMap && fragmentMap[fragmentName];
-      invariant(fragment, `No fragment named %s`, () => [fragmentName]);
+      invariant(fragment, `No fragment named %s`, fragmentName);
       return fragment || null;
     }
     default:

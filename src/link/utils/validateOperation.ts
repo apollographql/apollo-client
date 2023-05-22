@@ -11,7 +11,7 @@ export function validateOperation(operation: GraphQLRequest): GraphQLRequest {
   ];
   for (let key of Object.keys(operation)) {
     if (OPERATION_FIELDS.indexOf(key) < 0) {
-      throw newInvariantError(`illegal argument: %s`, () => [key]);
+      throw newInvariantError(`illegal argument: %s`, key);
     }
   }
 

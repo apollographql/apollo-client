@@ -223,10 +223,8 @@ export class QueryManager<TStore> {
 
     const mutationId = this.generateMutationId();
 
-    const {
-      document,
-      hasClientExports,
-    } = this.transform(this.transformDocument(mutation));
+    const document = this.transformDocument(mutation);
+    const { hasClientExports } = this.transform(mutation);
     mutation = this.cache.transformForLink(document);
 
     variables = this.getVariables(mutation, variables) as TVariables;

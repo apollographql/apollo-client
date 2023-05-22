@@ -5253,7 +5253,7 @@ describe('custom document transforms', () => {
     });
   });
 
-  it.only('adds fragment definitions to the query for fragment spreads added from custom document transforms', async ()  => {
+  it('adds fragment definitions to the query for fragment spreads added from custom document transforms', async ()  => {
     const query = gql`
       query TestQuery {
         product {

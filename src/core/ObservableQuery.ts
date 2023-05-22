@@ -71,9 +71,7 @@ export class ObservableQuery<
   public readonly queryName?: string;
 
   public get query(): TypedDocumentNode<TData, TVariables> {
-    // This transform is heavily cached, so it should not be expensive to
-    // transform the same this.options.query document repeatedly.
-    return this.queryManager.transform(this.options.query).document;
+    return this.lastQuery || this.options.query;
   }
 
   // Computed shorthand for this.options.variables, preserved for
@@ -88,6 +86,7 @@ export class ObservableQuery<
   private subscriptions = new Set<ObservableSubscription>();
 
   private last?: Last<TData, TVariables>;
+  private lastQuery?: DocumentNode;
 
   private queryInfo: QueryInfo;
 

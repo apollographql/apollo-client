@@ -359,7 +359,7 @@ export class StoreWriter {
         // not be cause for alarm.
         !policies.getReadFunction(typename, field.name.value)
       ) {
-        invariant.error(`Missing field %s while writing result %o`, resultKeyNameFromField(field), result);
+        invariant.error(`Missing field '%s' while writing result %o`, resultKeyNameFromField(field), result);
       }
     });
 

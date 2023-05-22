@@ -6,7 +6,7 @@ import { stringifyForDisplay } from "../common/stringifyForDisplay";
 
 function wrap(fn: (msg?: string, ...args: any[]) => void) {
   return function (message: string | number, ...args: any[]) {
-    fn(getErrorMsg(message, () => []), ...args);
+    fn(typeof message === "number" ? getErrorMsg(message) : message, ...args);
   }
 }
 

@@ -989,7 +989,7 @@ export class QueryManager<TStore> {
     variables,
     context = {},
   }: SubscriptionOptions): Observable<FetchResult<T>> {
-    query = this.transform(this.transformDocument(query)).document;
+    query = this.transformDocument(query);
     variables = this.getVariables(query, variables);
 
     const makeObservable = (variables: OperationVariables) =>

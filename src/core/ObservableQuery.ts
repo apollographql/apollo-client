@@ -825,9 +825,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       ? mergedOptions
       : assign(this.options, mergedOptions);
 
+    const query = this.queryManager['transformDocument'](options.query);
+
     if (!useDisposableConcast) {
       // We can skip calling updatePolling if we're not changing this.options.
       this.updatePolling();
+      this.lastQuery = query;
 
       // Reset options.fetchPolicy to its original value when variables change,
       // unless a new fetchPolicy was provided by newOptions.
@@ -849,7 +852,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     }
 
     const variables = options.variables && { ...options.variables };
-    const { concast, fromLink } = this.fetch(options, newNetworkStatus);
+    const { concast, fromLink } = this.fetch(
+      { ...options, query },
+      newNetworkStatus
+    );
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
         this.reportResult(result, variables);

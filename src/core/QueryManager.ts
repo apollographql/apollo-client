@@ -1244,7 +1244,7 @@ export class QueryManager<TStore> {
     // or setVariables.
     networkStatus = NetworkStatus.loading
   ): ConcastAndInfo<TData> {
-    const query = this.transformDocument(options.query);
+    const { query } = options;
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
 

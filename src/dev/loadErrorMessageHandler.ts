@@ -11,6 +11,8 @@ export function loadErrorMessageHandler(...errorCodes: ErrorCodes[]){
     Object.assign(global[ApolloErrorMessageHandler], codes)  
   }
 
+  return global[ApolloErrorMessageHandler];
+
   function handler(message: string | number, args: unknown[]) {
     if (typeof message === "number") {
       const definition = global[ApolloErrorMessageHandler]![message];

@@ -1,0 +1,68 @@
+<table class="field-table api-ref">
+
+<thead>
+  <tr>
+    <td>Name /<br/>Type</td>
+    <td>Description</td>
+  </tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td colspan="2">
+
+**Operation result**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `data`
+
+`TData`
+</td>
+<td>
+
+An object containing the result of your GraphQL query after it completes.
+
+This value might be `undefined` if a query results in one or more errors (depending on the query's `errorPolicy`).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `error`
+
+`ApolloError`
+</td>
+<td>
+
+If the query produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
+
+This property can be ignored when using the default `errorPolicy` or an `errorPolicy` of `none`. The hook will throw the error instead of setting this property.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `networkStatus`
+
+`NetworkStatus`
+</td>
+
+<td>
+
+A number indicating the current network state of the query's associated request. [See possible values.](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4)
+
+</td>
+</tr>
+
+</tbody>
+</table>

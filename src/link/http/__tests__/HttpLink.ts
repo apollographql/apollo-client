@@ -1430,7 +1430,10 @@ describe('HttpLink', () => {
         'Content-Type: application/json; charset=utf-8',
         'Content-Length: 58',
         '',
-        '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"],"extensions":{"timestamp":1633038919}}]}',
+        // Intentionally using the boundary value `---` within the “name” to
+        // validate that boundary delimiters are not parsed within the response
+        // data itself, only read at the beginning of each chunk.
+        '{"hasNext":false, "incremental": [{"data":{"name":"stubby---"},"path":["stub"],"extensions":{"timestamp":1633038919}}]}',
         '-----',
       ].join("\r\n");
 
@@ -1488,7 +1491,7 @@ describe('HttpLink', () => {
                 expect(result).toEqual({
                   incremental: [{
                     data: {
-                      name: 'stubby',
+                      name: 'stubby---',
                     },
                     extensions: {
                       timestamp: 1633038919,
@@ -1614,7 +1617,7 @@ describe('HttpLink', () => {
                 expect(result).toEqual({
                   incremental: [{
                     data: {
-                      name: 'stubby',
+                      name: 'stubby---',
                     },
                     extensions: {
                       timestamp: 1633038919,

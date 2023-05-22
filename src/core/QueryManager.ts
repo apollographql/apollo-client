@@ -8,6 +8,7 @@ import { equal } from '@wry/equality';
 import type { ApolloLink, FetchResult } from '../link/core';
 import { execute } from '../link/core';
 import {
+  checkDocument,
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
@@ -749,6 +750,7 @@ export class QueryManager<TStore> {
   public watchQuery<T, TVariables extends OperationVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
+    checkDocument(options.query);
     // assign variable default values if supplied
     options = {
       ...options,

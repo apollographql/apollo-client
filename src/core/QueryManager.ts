@@ -743,7 +743,7 @@ export class QueryManager<TStore> {
     variables?: TVariables,
   ): OperationVariables {
     return {
-      ...this.transform(document).defaultVars,
+      ...this.getDocumentInfo(document).defaultVars,
       ...variables,
     };
   }

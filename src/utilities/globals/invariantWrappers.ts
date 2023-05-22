@@ -2,6 +2,7 @@ import { invariant as i, InvariantError } from "ts-invariant";
 import { version } from "../../version";
 import global from "./global";
 import type { ErrorCodes } from "../../invariantErrorCodes";
+import { stringifyForDisplay } from "../common/stringifyForDisplay";
 
 function wrap(fn: (msg?: string, ...args: any[]) => void) {
   return function (message: string | number, ...args: any[]) {
@@ -47,10 +48,10 @@ declare global {
 
 function getErrorMsg(message?: string | number, getArgsLazy?: () => unknown[]) {
   if (!message) return;
-  const args = getArgsLazy ? getArgsLazy() : [];
+  const args = (getArgsLazy ? getArgsLazy() : []).map(arg => typeof arg == "string" ? arg : stringifyForDisplay(arg, 2).slice(0, 1000));
   return global[ApolloErrorMessageHandler] 
     && global[ApolloErrorMessageHandler](message, args) 
-    || `An error occured! For more details, see the full error text at https://phryneas.github.io/apollo-error-message-viewer/#${encodeURIComponent(JSON.stringify({
+    || `An error occured! For more details, see the full error text at https://go.apollo.dev/c/err#${encodeURIComponent(JSON.stringify({
       version,
       message,
       args

@@ -884,7 +884,7 @@ export class QueryManager<TStore> {
     if (__DEV__ && queryNamesAndDocs.size) {
       queryNamesAndDocs.forEach((included, nameOrDoc) => {
         if (!included) {
-          invariant.warn(`Unknown query %s%s requested in refetchQueries options.include array`, typeof nameOrDoc === "string" ? "named " : "", JSON.stringify(nameOrDoc, null, 2));
+          invariant.warn(`Unknown query %s%s requested in refetchQueries options.include array`, typeof nameOrDoc === "string" ? "named " : "", nameOrDoc);
         }
       });
     }

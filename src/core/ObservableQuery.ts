@@ -389,10 +389,10 @@ export class ObservableQuery<
       const queryDef = getQueryDefinition(this.query);
       const vars = queryDef.variableDefinitions;
       if (!vars || !vars.some(v => v.variable.name.value === "variables")) {
-        invariant.warn(`Called refetch(%s) for query %s, which does not declare a $variables variable.
+        invariant.warn(`Called refetch(%o) for query %o, which does not declare a $variables variable.
 Did you mean to call refetch(variables) instead of refetch({ variables })?`, 
-          JSON.stringify(variables), 
-          queryDef.name?.value || JSON.stringify(queryDef)
+          variables, 
+          queryDef.name?.value || queryDef
         );
       }
     }

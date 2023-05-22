@@ -150,7 +150,7 @@ export class StoreWriter {
     });
 
     if (!isReference(ref)) {
-      throw newInvariantError(`Could not identify object %s`, () => [JSON.stringify(result)]);
+      throw newInvariantError(`Could not identify object %s`, () => [result]);
     }
 
     // So far, the store has not been modified, so now it's time to process
@@ -359,7 +359,7 @@ export class StoreWriter {
         // not be cause for alarm.
         !policies.getReadFunction(typename, field.name.value)
       ) {
-        invariant.error(`Missing field %s while writing result %s`, resultKeyNameFromField(field), JSON.stringify(result, null, 2).substring(0, 1000));
+        invariant.error(`Missing field %s while writing result %o`, resultKeyNameFromField(field), result);
       }
     });
 
@@ -829,7 +829,7 @@ For more information about these options, please refer to the documentation:
     ? "either ensure all objects of type " + childTypenames.join(" and ") + " have an ID or a custom merge function, or "
     : "",
   typeDotName,
-  JSON.stringify(existing).slice(0, 1000),
-  JSON.stringify(incoming).slice(0, 1000)
+  existing,
+  incoming
 );
 }

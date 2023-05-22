@@ -439,9 +439,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       fetchPolicy: "no-cache",
     } as WatchQueryOptions<TFetchVars, TFetchData>;
 
-    combinedOptions.query = this.queryManager['transformDocument'](
-      combinedOptions.query
-    );
+    combinedOptions.query = this.transformDocument(combinedOptions.query);
 
     const qid = this.queryManager.generateQueryId();
 
@@ -835,7 +833,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       ? mergedOptions
       : assign(this.options, mergedOptions);
 
-    const query = this.queryManager['transformDocument'](options.query);
+    const query = this.transformDocument(options.query);
 
     this.lastQuery = query;
 
@@ -968,6 +966,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     this.queryManager.stopQuery(this.queryId);
     this.observers.clear();
     this.isTornDown = true;
+  }
+
+  private transformDocument(document: DocumentNode) {
+    return this.queryManager['transformDocument'](document);
   }
 }
 

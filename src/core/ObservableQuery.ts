@@ -448,19 +448,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     // pagination. We will however run the transforms on the original document 
     // as well as the document passed in `fetchMoreOptions` to ensure the cache 
     // uses the most up-to-date document which may rely on runtime conditionals.
-    if (fetchMoreOptions.query) {
-      const query = this.transformDocument(this.options.query);
-      this.lastQuery = query;
-      this.queryInfo.init({ 
-        document: query,
-        variables: this.queryManager['getVariables'](
-          query,
-          combinedOptions.variables
-        )
-      });
-    } else {
-      this.lastQuery = combinedOptions.query;
-    }
+    this.lastQuery = fetchMoreOptions.query 
+      ? this.transformDocument(this.options.query)
+      : combinedOptions.query;
 
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.

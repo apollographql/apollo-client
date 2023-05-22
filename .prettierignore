@@ -17,7 +17,7 @@
 *.md
 
 # Do not format anything automatically except files listed below
-/*
+*
 
 #####  PATHS TO BE FORMATTED #####
 !src/

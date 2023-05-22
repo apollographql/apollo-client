@@ -313,7 +313,7 @@ export class ObservableQuery<
 
     const { query } = this.options;
     const resultIsDifferent =
-      this.queryManager.transform(query).hasNonreactiveDirective
+      this.queryManager.getDocumentInfo(query).hasNonreactiveDirective
         ? !equalByQuery(
             query,
             this.last.result,

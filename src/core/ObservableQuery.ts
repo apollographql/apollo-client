@@ -833,6 +833,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       ? mergedOptions
       : assign(this.options, mergedOptions);
 
+    // Don't update options.query with the transformed query to avoid 
+    // overwriting this.options.query when we aren't using a disposable concast. 
+    // We want to ensure we can re-run the custom document transforms the next 
+    // time a request is made against the original query.
     const query = this.transformDocument(options.query);
 
     this.lastQuery = query;
@@ -860,11 +864,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       }
     }
 
+    // If the transform doesn't change the document, leave `options` alone and
+    // use the original object.
+    const fetchOptions = query === options.query ? options : { ...options, query };
     const variables = options.variables && { ...options.variables };
-    const { concast, fromLink } = this.fetch(
-      { ...options, query },
-      newNetworkStatus
-    );
+    const { concast, fromLink } = this.fetch(fetchOptions, newNetworkStatus);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
         this.reportResult(result, variables);

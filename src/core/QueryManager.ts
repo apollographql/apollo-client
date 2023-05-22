@@ -606,7 +606,7 @@ export class QueryManager<TStore> {
   ): Promise<ApolloQueryResult<TData>> {
     return this.fetchConcastWithInfo(
       queryId,
-      options,
+      { ...options, query: this.transformDocument(options.query) },
       networkStatus,
     ).concast.promise;
   }

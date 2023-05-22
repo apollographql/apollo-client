@@ -25,6 +25,7 @@ import {
   mockSingleLink,
   withErrorSpy,
   MockLink,
+  wait,
 } from '../testing';
 import { waitFor } from '@testing-library/react';
 
@@ -4828,7 +4829,12 @@ describe('custom document transforms', () => {
         typePolicies: {
           Query: {
             fields: {
-              products: offsetLimitPagination()
+              products: {
+                keyArgs: false,
+                merge(existing = [], incoming) {
+                  return [...existing, ...incoming] 
+                }
+              }
             }
           }
         }
@@ -4854,6 +4860,7 @@ describe('custom document transforms', () => {
         networkStatus: NetworkStatus.ready,
       });
 
+      expect(handleNext).toHaveBeenCalledTimes(1);
       expect(document).toMatchDocument(transformedInitialQuery);
       expect(observable.options.query).toMatchDocument(initialQuery);
       expect(observable.query).toMatchDocument(transformedInitialQuery);
@@ -4866,14 +4873,21 @@ describe('custom document transforms', () => {
       variables: { offset: 1 },
     });
 
-    expect(document!).toMatchDocument(transformedProductsQuery);
-    expect(observable.options.query).toMatchDocument(initialQuery);
-    expect(observable.query).toMatchDocument(transformedProductsQuery);
-
     expect(data).toEqual({
       products: [{ __typename: 'Product', id: 2 }]
     })
 
+    // QueryInfo.notify is run in a setTimeout, so give time for it to run 
+    // before we make assertions on it.
+    await wait(0);
+
+    expect(document!).toMatchDocument(transformedProductsQuery);
+    expect(observable.options.query).toMatchDocument(initialQuery);
+      // Even though we pass a different query to `fetchMore`, we don't want to
+      // override the original query.
+    expect(observable.query).toMatchDocument(transformedInitialQuery);
+
+    expect(handleNext).toHaveBeenCalledTimes(2);
     expect(handleNext).toHaveBeenLastCalledWith({
       data: {
         currentUser: { id: 1 },

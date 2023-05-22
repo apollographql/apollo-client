@@ -4883,7 +4883,8 @@ describe('custom document transforms', () => {
       // override the original query. We do however run transforms on the 
       // initial query to ensure the broadcasted result and the cache match
       // the expected query document in case the transforms contain a runtime
-      // condition.
+      // condition that impacts the query in a significant way (such as removing 
+      // a field).
     expect(observable.query).toMatchDocument(gql`
       query TestQuery($offset: Int) {
         currentUser {

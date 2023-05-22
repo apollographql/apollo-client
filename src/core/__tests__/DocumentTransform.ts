@@ -549,3 +549,20 @@ test('can invalidate a cached document with `invalidateDocument`', () => {
   expect(result3).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(2);
 });
+
+test('errors when passing a document that has not been parsed with `gql`', () => {
+  const query = `
+    query TestQuery {
+      user {
+        name
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const documentTransform = new DocumentTransform((document) => document);
+
+  expect(() => {
+    documentTransform.transformDocument(query as unknown as DocumentNode);
+  }).toThrowError(/wrap the query string in a "gql" tag/);
+});

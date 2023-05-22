@@ -1,4 +1,4 @@
-import { canUseWeakMap } from '../utilities';
+import { canUseWeakMap, checkDocument } from '../utilities';
 import type { DocumentNode } from 'graphql';
 
 type TransformFn = (document: DocumentNode) => DocumentNode;
@@ -23,6 +23,8 @@ export class DocumentTransform {
   }
 
   transformDocument(document: DocumentNode) {
+    checkDocument(document);
+
     if (this.cacheOutput && this.documentCache.has(document)) {
       return this.documentCache.get(document)!;
     }

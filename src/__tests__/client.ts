@@ -4618,7 +4618,6 @@ describe('custom document transforms', () => {
     });
   });
 
-  // TODO: Fix error with missing field on write
   it('re-runs custom document transforms when calling `fetchMore`', async () => {
     const query = gql`
       query TestQuery($offset: Int) {

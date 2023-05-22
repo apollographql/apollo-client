@@ -424,7 +424,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : {
         ...this.options,
-        query: this.query,
+        query: this.options.query,
         ...fetchMoreOptions,
         variables: {
           ...this.options.variables,
@@ -439,7 +439,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       fetchPolicy: "no-cache",
     } as WatchQueryOptions<TFetchVars, TFetchData>;
 
+    combinedOptions.query = this.queryManager['transformDocument'](
+      combinedOptions.query
+    );
+
     const qid = this.queryManager.generateQueryId();
+
+    // If a temporary query is passed to `fetchMore`, we don't want to store it
+    // as the last query result since it may not be a full query document.
+    if (!fetchMoreOptions.query) {
+      this.lastQuery = combinedOptions.query;
+    }
 
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.

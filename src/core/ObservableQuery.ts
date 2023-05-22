@@ -247,7 +247,7 @@ export class ObservableQuery<
       // trust diff.result, since it was read from the cache without running
       // local resolvers (and it's too late to run resolvers now, since we must
       // return a result synchronously).
-      this.queryManager.transform(this.options.query).hasForcedResolvers
+      this.queryManager.getDocumentInfo(this.options.query).hasForcedResolvers
     ) {
       // Fall through.
     } else {

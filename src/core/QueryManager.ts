@@ -224,7 +224,7 @@ export class QueryManager<TStore> {
     const mutationId = this.generateMutationId();
 
     const document = this.transformDocument(mutation);
-    const { hasClientExports } = this.transform(mutation);
+    const { hasClientExports } = this.getDocumentInfo(mutation);
     mutation = this.cache.transformForLink(document);
 
     variables = this.getVariables(mutation, variables) as TVariables;
@@ -401,7 +401,7 @@ export class QueryManager<TStore> {
           // The cache complains if passed a mutation where it expects a
           // query, so we transform mutations and subscriptions to queries
           // (only once, thanks to this.transformCache).
-          query: this.transform(mutation.document).asQuery,
+          query: this.getDocumentInfo(mutation.document).asQuery,
           variables: mutation.variables,
           optimistic: false,
           returnPartialData: true,
@@ -499,7 +499,7 @@ export class QueryManager<TStore> {
                 // The cache complains if passed a mutation where it expects a
                 // query, so we transform mutations and subscriptions to queries
                 // (only once, thanks to this.transformCache).
-                query: this.transform(mutation.document).asQuery,
+                query: this.getDocumentInfo(mutation.document).asQuery,
                 variables: mutation.variables,
                 optimistic: false,
                 returnPartialData: true,
@@ -1029,7 +1029,7 @@ export class QueryManager<TStore> {
         return result;
       });
 
-    if (this.transform(query).hasClientExports) {
+    if (this.getDocumentInfo(query).hasClientExports) {
       const observablePromise = this.localState.addExportedVariables(
         query,
         variables,
@@ -1097,7 +1097,7 @@ export class QueryManager<TStore> {
   ): Observable<FetchResult<T>> {
     let observable: Observable<FetchResult<T>>;
 
-    const { serverQuery, clientQuery } = this.transform(query);
+    const { serverQuery, clientQuery } = this.getDocumentInfo(query);
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
@@ -1310,7 +1310,7 @@ export class QueryManager<TStore> {
     // since the timing of result delivery is (unfortunately) important
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
-    if (this.transform(normalized.query).hasClientExports) {
+    if (this.getDocumentInfo(normalized.query).hasClientExports) {
       concast = new Concast(
         this.localState
           .addExportedVariables(normalized.query, normalized.variables, normalized.context)
@@ -1537,7 +1537,7 @@ export class QueryManager<TStore> {
         ...(diff.complete ? null : { partial: true }),
       } as ApolloQueryResult<TData>);
 
-      if (data && this.transform(query).hasForcedResolvers) {
+      if (data && this.getDocumentInfo(query).hasForcedResolvers) {
         return this.localState.runResolvers({
           document: query,
           remoteResult: { data },

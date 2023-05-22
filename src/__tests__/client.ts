@@ -5222,6 +5222,7 @@ describe('custom document transforms', () => {
       return Observable.of({
         data: {
           product: {
+            __typename: 'Product',
             id: 1,
             name: 'Product',
             description: 'Product description',
@@ -5262,6 +5263,7 @@ describe('custom document transforms', () => {
 
     expect(data).toEqual({
       product: {
+        __typename: 'Product',
         id: 1,
         name: 'Product',
         description: 'Product description',
@@ -5309,6 +5311,7 @@ describe('custom document transforms', () => {
       return Observable.of({
         data: {
           product: {
+            __typename: 'Product',
             id: 1,
             name: 'Product',
             description: 'Product description',
@@ -5349,6 +5352,7 @@ describe('custom document transforms', () => {
 
     expect(data).toEqual({
       product: {
+        __typename: 'Product',
         id: 1,
         name: 'Product',
         description: 'Product description',

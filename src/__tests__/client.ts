@@ -4438,7 +4438,7 @@ describe('custom document transforms', () => {
     observable.subscribe(handleNext);
 
     await waitFor(() => {
-      expect(handleNext).toHaveBeenCalledWith({
+      expect(handleNext).toHaveBeenLastCalledWith({
         data: {
           currentUser: { __typename: 'User', id: 1, name: 'John Doe' }
         },
@@ -4449,6 +4449,7 @@ describe('custom document transforms', () => {
       expect(document).toMatchDocument(transformedQuery);
       expect(observable.options.query).toMatchDocument(query);
       expect(observable.query).toMatchDocument(transformedQuery);
+      expect(transform).toHaveBeenCalledTimes(1);
     });
   });
 

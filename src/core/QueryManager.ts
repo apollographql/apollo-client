@@ -145,7 +145,7 @@ export class QueryManager<TStore> {
   }) {
     const defaultDocumentTransform = new DocumentTransform(
       (document) => this.cache.transformDocument(document), 
-      // Allow the cache to manage its own transform caches
+      // Allow the apollo cache to manage its own transform caches
       { cache: false }
     );
 
@@ -162,8 +162,8 @@ export class QueryManager<TStore> {
           .concat(documentTransform)
           // The custom document transform may add new fragment spreads or new
           // field selections, so we want to give the cache a chance to run 
-          // again to add e.g. __typename or fragments from the fragment 
-          // registry.
+          // again. For example, the InMemoryCache adds __typename to field 
+          // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform
 

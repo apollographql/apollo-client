@@ -5140,6 +5140,121 @@ describe('custom document transforms', () => {
     });
   });
 
+  it('runs custom document transforms when passing a new query to `setOptions`', async () => {
+    const query = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics @custom
+        }
+      }
+    `;
+
+    const transformedQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const updatedQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          name
+          metrics @custom
+        }
+      }
+    `;
+
+    const transformedUpdatedQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          name
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: transformedQuery, variables: { id: 1 } },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          }
+        }
+      },
+      {
+        request: { query: transformedUpdatedQuery, variables: { id: 1 } },
+        result: {
+          data: {
+            product: { 
+              __typename: 'Product',
+              id: 1,
+              name: 'Acme Inc Product',
+              metrics: '1000/vpm'
+            }
+          }
+        }
+      }
+    ];
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!;
+    });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: mocks[0].result.data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      expect(document).toMatchDocument(transformedQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(transformedQuery);
+    });
+
+    const { data } = await observable.setOptions({ query: updatedQuery });
+
+    expect(document!).toMatchDocument(transformedUpdatedQuery);
+    expect(observable.options.query).toMatchDocument(updatedQuery);
+    expect(observable.query).toMatchDocument(transformedUpdatedQuery);
+
+    expect(data).toEqual(mocks[1].result.data);
+
+    expect(handleNext).toHaveBeenLastCalledWith({
+      data: mocks[1].result.data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+  });
+
   it('runs custom document transforms with fragments defined in the fragment registery', async ()  => {
     const query = gql`
       query TestQuery {

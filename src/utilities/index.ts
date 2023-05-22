@@ -106,7 +106,7 @@ export * from './common/mergeOptions';
 export * from './common/responseIterator';
 export * from './common/incrementalResult';
 
-export { omitDeep, OmitDeepOptions } from './common/omitDeep';
+export { omitDeep } from './common/omitDeep';
 export { stripTypename } from './common/stripTypename';
 
 export * from './types/IsStrictlyAny';

@@ -4875,17 +4875,31 @@ describe('custom document transforms', () => {
 
     expect(data).toEqual({
       products: [{ __typename: 'Product', id: 2 }]
-    })
-
-    // QueryInfo.notify is run in a setTimeout, so give time for it to run 
-    // before we make assertions on it.
-    await wait(0);
+    });
 
     expect(document!).toMatchDocument(transformedProductsQuery);
     expect(observable.options.query).toMatchDocument(initialQuery);
       // Even though we pass a different query to `fetchMore`, we don't want to
-      // override the original query.
-    expect(observable.query).toMatchDocument(transformedInitialQuery);
+      // override the original query. We do however run transforms on the 
+      // initial query to ensure the broadcasted result and the cache match
+      // the expected query document in case the transforms contain a runtime
+      // condition.
+    expect(observable.query).toMatchDocument(gql`
+      query TestQuery($offset: Int) {
+        currentUser {
+          id
+          __typename
+        }
+        products(offset: $offset) {
+          id
+          __typename
+        }
+      }
+    `);
+
+    // QueryInfo.notify is run in a setTimeout, so give time for it to run 
+    // before we make assertions on it.
+    await wait(0);
 
     expect(handleNext).toHaveBeenCalledTimes(2);
     expect(handleNext).toHaveBeenLastCalledWith({

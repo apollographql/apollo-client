@@ -827,10 +827,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     const query = this.queryManager['transformDocument'](options.query);
 
+    this.lastQuery = query;
+
     if (!useDisposableConcast) {
       // We can skip calling updatePolling if we're not changing this.options.
       this.updatePolling();
-      this.lastQuery = query;
 
       // Reset options.fetchPolicy to its original value when variables change,
       // unless a new fetchPolicy was provided by newOptions.

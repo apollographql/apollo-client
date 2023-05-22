@@ -4741,7 +4741,7 @@ describe('custom document transforms', () => {
     });
   });
 
-  it('re-runs custom document transforms when calling `fetchMore` with a different query', async () => {
+  it('runs custom document transforms on the passed query and original query when calling `fetchMore` with a different query', async () => {
     const initialQuery = gql`
       query TestQuery($offset: Int) {
         currentUser {

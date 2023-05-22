@@ -694,6 +694,50 @@ export class QueryManager<TStore> {
     return transformCache.get(document)!;
   }
 
+  public getDocumentInfo(document: DocumentNode) {
+    const { transformCache } = this;
+
+    if (!transformCache.has(document)) {
+      const cacheEntry: TransformCacheEntry = {
+        // TODO: Remove document from TransformCacheEntry
+        document,
+        // TODO These three calls (hasClientExports, shouldForceResolvers, and
+        // usesNonreactiveDirective) are performing independent full traversals
+        // of the transformed document. We should consider merging these
+        // traversals into a single pass in the future, though the work is
+        // cached after the first time.
+        hasClientExports: hasClientExports(document),
+        hasForcedResolvers: this.localState.shouldForceResolvers(document),
+        hasNonreactiveDirective: hasDirectives(['nonreactive'], document),
+        clientQuery: this.localState.clientQuery(document),
+        serverQuery: removeDirectivesFromDocument([
+          { name: 'client', remove: true },
+          { name: 'connection' },
+          { name: 'nonreactive' },
+        ], document),
+        defaultVars: getDefaultValues(
+          getOperationDefinition(document)
+        ) as OperationVariables,
+        // Transform any mutation or subscription operations to query operations
+        // so we can read/write them from/to the cache.
+        asQuery: {
+          ...document,
+          definitions: document.definitions.map(def => {
+            if (def.kind === "OperationDefinition" &&
+                def.operation !== "query") {
+              return { ...def, operation: "query" as OperationTypeNode };
+            }
+            return def;
+          }),
+        }
+      };
+
+      transformCache.set(document, cacheEntry);
+    }
+
+    return transformCache.get(document)!;
+  }
+
   private getVariables<TVariables>(
     document: DocumentNode,
     variables?: TVariables,

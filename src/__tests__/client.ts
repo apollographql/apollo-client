@@ -4206,7 +4206,7 @@ describe('custom document transforms', () => {
       }
     `);
 
-    expect(onNext).toHaveBeenCalledWith({
+    expect(onNext).toHaveBeenLastCalledWith({
       data: {
         profileUpdated: { id: 1, username: 'foo', __typename: 'Profile', }
       }
@@ -4285,7 +4285,7 @@ describe('custom document transforms', () => {
       }
     `);
 
-    expect(onNext).toHaveBeenCalledWith({
+    expect(onNext).toHaveBeenLastCalledWith({
       data: {
         profileUpdated: { id: 1, username: 'foo', __typename: 'Profile', }
       }
@@ -4584,7 +4584,7 @@ describe('custom document transforms', () => {
     observable.subscribe(handleNext);
 
     await waitFor(() => {
-      expect(handleNext).toHaveBeenCalledWith({
+      expect(handleNext).toHaveBeenLastCalledWith({
         data: {
           product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
         },
@@ -4609,7 +4609,7 @@ describe('custom document transforms', () => {
       product: { __typename: 'Product', id: 1 }
     })
 
-    expect(handleNext).toHaveBeenCalledWith({
+    expect(handleNext).toHaveBeenLastCalledWith({
       data: {
         product: { __typename: 'Product', id: 1 }
       },
@@ -4990,7 +4990,7 @@ describe('custom document transforms', () => {
       product: { __typename: 'Product', id: 2 }
     })
 
-    expect(handleNext).toHaveBeenCalledWith({
+    expect(handleNext).toHaveBeenLastCalledWith({
       data: {
         product: { __typename: 'Product', id: 2 }
       },
@@ -5076,7 +5076,7 @@ describe('custom document transforms', () => {
     observable.subscribe(handleNext);
 
     await waitFor(() => {
-      expect(handleNext).toHaveBeenCalledWith({
+      expect(handleNext).toHaveBeenLastCalledWith({
         data: {
           product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
         },
@@ -5101,7 +5101,7 @@ describe('custom document transforms', () => {
       product: { __typename: 'Product', id: 2 }
     })
 
-    expect(handleNext).toHaveBeenCalledWith({
+    expect(handleNext).toHaveBeenLastCalledWith({
       data: {
         product: { __typename: 'Product', id: 2 }
       },

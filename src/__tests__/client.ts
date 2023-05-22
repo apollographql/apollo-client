@@ -4754,7 +4754,7 @@ describe('custom document transforms', () => {
       }
     `;
 
-    const transformedInitialQuery = gql`
+    const enabledInitialQuery = gql`
       query TestQuery($offset: Int) {
         currentUser {
           id
@@ -4763,6 +4763,19 @@ describe('custom document transforms', () => {
         products(offset: $offset) {
           id
           metrics
+          __typename
+        }
+      }
+    `;
+
+    const disabledInitialQuery = gql`
+      query TestQuery($offset: Int) {
+        currentUser {
+          id
+          __typename
+        }
+        products(offset: $offset) {
+          id
           __typename
         }
       }
@@ -4788,7 +4801,7 @@ describe('custom document transforms', () => {
 
     const mocks = [
       {
-        request: { query: transformedInitialQuery, variables: { offset: 0 } },
+        request: { query: enabledInitialQuery, variables: { offset: 0 } },
         result: {
           data: {
             currentUser: { id: 1 },
@@ -4861,9 +4874,9 @@ describe('custom document transforms', () => {
       });
 
       expect(handleNext).toHaveBeenCalledTimes(1);
-      expect(document).toMatchDocument(transformedInitialQuery);
+      expect(document).toMatchDocument(enabledInitialQuery);
       expect(observable.options.query).toMatchDocument(initialQuery);
-      expect(observable.query).toMatchDocument(transformedInitialQuery);
+      expect(observable.query).toMatchDocument(enabledInitialQuery);
     });
 
     enabled = false;
@@ -4885,18 +4898,7 @@ describe('custom document transforms', () => {
       // the expected query document in case the transforms contain a runtime
       // condition that impacts the query in a significant way (such as removing 
       // a field).
-    expect(observable.query).toMatchDocument(gql`
-      query TestQuery($offset: Int) {
-        currentUser {
-          id
-          __typename
-        }
-        products(offset: $offset) {
-          id
-          __typename
-        }
-      }
-    `);
+    expect(observable.query).toMatchDocument(disabledInitialQuery);
 
     // QueryInfo.notify is run in a setTimeout, so give time for it to run 
     // before we make assertions on it.

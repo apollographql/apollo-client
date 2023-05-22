@@ -1513,7 +1513,7 @@ export class QueryManager<TStore> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
-      document: this.transform(query).document,
+      document: query,
       variables,
       networkStatus,
     });
@@ -1577,7 +1577,7 @@ export class QueryManager<TStore> {
       queryInfo,
       cacheWriteBehavior,
       {
-        query: this.transform(query).document,
+        query,
         variables,
         context,
         fetchPolicy,

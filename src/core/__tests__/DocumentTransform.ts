@@ -7,6 +7,51 @@ import {
 import { gql } from 'graphql-tag';
 import { DocumentNode, visit, Kind } from 'graphql';
 
+// Disable weak maps for these tests so we can assert on the document cache size
+jest.mock('../../utilities', () => ({
+  ...jest.requireActual('../../utilities'),
+  canUseWeakMap: false,
+}));
+
+expect.extend({
+  toHaveCacheSize(documentTransform: DocumentTransform, size: number) {
+    const cache = documentTransform['documentCache'] as
+      | Map<DocumentNode, DocumentNode>
+      | undefined;
+
+    const pass = cache?.size === size;
+
+    return {
+      pass,
+      message: () => {
+        const formattedSize = this.utils.EXPECTED_COLOR(size);
+        const formattedCacheSize = this.utils.RECEIVED_COLOR(cache?.size);
+        const hint = this.utils.matcherHint(
+          'toHaveCacheSize',
+          'documentTransform',
+          'cacheSize',
+          { isNot: this.isNot }
+        );
+
+        return (
+          hint +
+          `\n\nExpected document transform to${
+            this.isNot ? ' not' : ''
+          } have cache size ${formattedSize}. Got ${formattedCacheSize}.`
+        );
+      },
+    };
+  },
+});
+
+declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toHaveCacheSize(size: number): R;
+    }
+  }
+}
+
 function stripDirective(directive: string) {
   return (document: DocumentNode) => {
     return removeDirectivesFromDocument([{ name: directive }], document)!;
@@ -577,17 +622,22 @@ test('can invalidate a cached document with `invalidateDocument`', () => {
 
   expect(result).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
+  expect(documentTransform).toHaveCacheSize(1);
 
   const result2 = documentTransform.transformDocument(query);
 
   expect(result2).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
+  expect(documentTransform).toHaveCacheSize(1);
 
   documentTransform.invalidateDocument(query);
+  expect(documentTransform).toHaveCacheSize(0);
+
   const result3 = documentTransform.transformDocument(query);
 
   expect(result3).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(2);
+  expect(documentTransform).toHaveCacheSize(1);
 });
 
 test('invalidates the entire chain of transforms created via `concat` by calling `invalidateDocument`', () => {
@@ -611,8 +661,11 @@ test('invalidates the entire chain of transforms created via `concat` by calling
   const stripClient = jest.fn(stripDirective('client'));
   const stripNonReactive = jest.fn(stripDirective('nonreactive'));
 
-  const documentTransform = new DocumentTransform(stripClient).concat(
-    new DocumentTransform(stripNonReactive)
+  const stripClientTransform = new DocumentTransform(stripClient);
+  const stripNonReactiveTransform = new DocumentTransform(stripNonReactive);
+
+  const documentTransform = stripClientTransform.concat(
+    stripNonReactiveTransform
   );
 
   const result = documentTransform.transformDocument(query);
@@ -620,19 +673,28 @@ test('invalidates the entire chain of transforms created via `concat` by calling
   expect(result).toMatchDocument(expected);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
 
   const result2 = documentTransform.transformDocument(query);
 
   expect(result2).toMatchDocument(expected);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
 
   documentTransform.invalidateDocument(query);
+  expect(stripClientTransform).toHaveCacheSize(0);
+  expect(stripNonReactiveTransform).toHaveCacheSize(0);
+
   const result3 = documentTransform.transformDocument(query);
 
   expect(result3).toMatchDocument(expected);
   expect(stripClient).toHaveBeenCalledTimes(2);
   expect(stripNonReactive).toHaveBeenCalledTimes(2);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
 });
 
 test('invalidates both left/right transforms created via `split` by calling `invalidateDocument`', () => {
@@ -674,10 +736,13 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   const stripClient = jest.fn(stripDirective('client'));
   const stripNonReactive = jest.fn(stripDirective('nonreactive'));
 
+  const queryTransform = new DocumentTransform(stripNonReactive);
+  const mutationTransform = new DocumentTransform(stripClient);
+
   const documentTransform = DocumentTransform.split(
     (document) => isQueryOperation(document),
-    new DocumentTransform(stripNonReactive),
-    new DocumentTransform(stripClient)
+    queryTransform,
+    mutationTransform
   );
 
   const queryResult = documentTransform.transformDocument(query);
@@ -687,6 +752,8 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   expect(mutationResult).toMatchDocument(transformedMutation);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(queryTransform).toHaveCacheSize(1);
+  expect(mutationTransform).toHaveCacheSize(1);
 
   const queryResult2 = documentTransform.transformDocument(query);
   const mutationResult2 = documentTransform.transformDocument(mutation);
@@ -695,8 +762,12 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   expect(mutationResult2).toMatchDocument(transformedMutation);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(queryTransform).toHaveCacheSize(1);
+  expect(mutationTransform).toHaveCacheSize(1);
 
   documentTransform.invalidateDocument(query);
+  expect(queryTransform).toHaveCacheSize(0);
+  expect(mutationTransform).toHaveCacheSize(1);
 
   const queryResult3 = documentTransform.transformDocument(query);
   const mutationResult3 = documentTransform.transformDocument(mutation);
@@ -705,8 +776,12 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   expect(mutationResult3).toMatchDocument(transformedMutation);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(2);
+  expect(queryTransform).toHaveCacheSize(1);
+  expect(mutationTransform).toHaveCacheSize(1);
 
   documentTransform.invalidateDocument(mutation);
+  expect(queryTransform).toHaveCacheSize(1);
+  expect(mutationTransform).toHaveCacheSize(0);
 
   const queryResult4 = documentTransform.transformDocument(query);
   const mutationResult4 = documentTransform.transformDocument(mutation);
@@ -715,6 +790,8 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   expect(mutationResult4).toMatchDocument(transformedMutation);
   expect(stripClient).toHaveBeenCalledTimes(2);
   expect(stripNonReactive).toHaveBeenCalledTimes(2);
+  expect(queryTransform).toHaveCacheSize(1);
+  expect(mutationTransform).toHaveCacheSize(1);
 });
 
 test('errors when passing a document that has not been parsed with `gql`', () => {

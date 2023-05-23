@@ -23,11 +23,11 @@ export class DocumentTransform {
   }
 
   transformDocument(document: DocumentNode) {
-    checkDocument(document);
-
     if (this.cacheResult && this.documentCache.has(document)) {
       return this.documentCache.get(document)!;
     }
+
+    checkDocument(document);
 
     const transformedDocument = this.transform(document);
 

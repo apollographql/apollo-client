@@ -697,13 +697,22 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
 
   documentTransform.invalidateDocument(query);
-  documentTransform.invalidateDocument(mutation);
 
   const queryResult3 = documentTransform.transformDocument(query);
   const mutationResult3 = documentTransform.transformDocument(mutation);
 
   expect(queryResult3).toMatchDocument(transformedQuery);
   expect(mutationResult3).toMatchDocument(transformedMutation);
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(2);
+
+  documentTransform.invalidateDocument(mutation);
+
+  const queryResult4 = documentTransform.transformDocument(query);
+  const mutationResult4 = documentTransform.transformDocument(mutation);
+
+  expect(queryResult4).toMatchDocument(transformedQuery);
+  expect(mutationResult4).toMatchDocument(transformedMutation);
   expect(stripClient).toHaveBeenCalledTimes(2);
   expect(stripNonReactive).toHaveBeenCalledTimes(2);
 });

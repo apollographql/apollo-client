@@ -182,9 +182,11 @@ function usePaginatedCase() {
     }
   `;
 
-  const data = 'ABCDEFG'
-    .split('')
-    .map((letter, index) => ({ letter, position: index + 1 }));
+  const data = 'ABCDEFG'.split('').map((letter, index) => ({
+    __typename: 'Letter',
+    letter,
+    position: index + 1,
+  }));
 
   const link = new ApolloLink((operation) => {
     const { offset = 0, limit = 2 } = operation.variables;
@@ -265,7 +267,11 @@ function useVariablesQueryCase() {
 
   const mocks = CHARACTERS.map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
-    result: { data: { character: { id: String(index + 1), name } } },
+    result: {
+      data: {
+        character: { __typename: 'Character', id: String(index + 1), name },
+      },
+    },
   }));
 
   return { query, mocks };

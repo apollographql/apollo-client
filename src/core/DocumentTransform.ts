@@ -9,7 +9,7 @@ interface DocumentTransformOptions {
 
 export class DocumentTransform {
   private readonly transform: TransformFn;
-  private readonly cacheOutput: boolean;
+  private readonly cacheResult: boolean;
   private readonly documentCache = canUseWeakMap
     ? new WeakMap<DocumentNode, DocumentNode>()
     : new Map<DocumentNode, DocumentNode>();
@@ -19,19 +19,19 @@ export class DocumentTransform {
     options: DocumentTransformOptions = Object.create(null)
   ) {
     this.transform = transform;
-    this.cacheOutput = options.cache ?? true;
+    this.cacheResult = options.cache ?? true;
   }
 
   transformDocument(document: DocumentNode) {
     checkDocument(document);
 
-    if (this.cacheOutput && this.documentCache.has(document)) {
+    if (this.cacheResult && this.documentCache.has(document)) {
       return this.documentCache.get(document)!;
     }
 
     const transformedDocument = this.transform(document);
 
-    if (this.cacheOutput) {
+    if (this.cacheResult) {
       this.documentCache.set(document, transformedDocument);
     }
 
@@ -47,7 +47,7 @@ export class DocumentTransform {
 
         return document;
       },
-      { cache: this.cacheOutput }
+      { cache: this.cacheResult }
     );
   }
 
@@ -58,7 +58,7 @@ export class DocumentTransform {
           this.transformDocument(document)
         );
       },
-      { cache: this.cacheOutput && otherTransform.cacheOutput }
+      { cache: this.cacheResult && otherTransform.cacheResult }
     );
   }
 

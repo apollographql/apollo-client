@@ -79,6 +79,6 @@ export class DocumentTransform {
   }
 
   invalidateDocument(document: DocumentNode) {
-    this.documentCache?.delete(document);
+    return this.documentCache?.delete(document) ?? false;
   }
 }

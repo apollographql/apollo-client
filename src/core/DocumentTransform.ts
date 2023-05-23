@@ -27,14 +27,12 @@ export class DocumentTransform {
   ) {
     return new DocumentTransform(
       (document) => {
-        if (predicate(document)) {
-          return left.transformDocument(document);
-        }
+        const documentTransform = predicate(document) ? left : right;
 
-        return right.transformDocument(document);
+        return documentTransform.transformDocument(document);
       },
       // Allow for runtime conditionals to determine which transform to use and
-      // rely on each transform to determine its own caching behavior
+      // rely on each transform to determine its own caching behavior.
       { cache: false }
     );
   }

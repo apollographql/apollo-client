@@ -83,7 +83,6 @@ interface MutationStoreValue {
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 interface TransformCacheEntry {
-  document: DocumentNode;
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
@@ -644,8 +643,6 @@ export class QueryManager<TStore> {
 
     if (!transformCache.has(document)) {
       const cacheEntry: TransformCacheEntry = {
-        // TODO: Remove document from TransformCacheEntry
-        document,
         // TODO These three calls (hasClientExports, shouldForceResolvers, and
         // usesNonreactiveDirective) are performing independent full traversals
         // of the transformed document. We should consider merging these

@@ -880,7 +880,7 @@ export class QueryManager<TStore> {
         if (typeof desc === "string") {
           queryNamesAndDocs.set(desc, false);
         } else if (isDocumentNode(desc)) {
-          queryNamesAndDocs.set(this.transform(desc).document, false);
+          queryNamesAndDocs.set(this.transformDocument(desc), false);
         } else if (isNonNullObject(desc) && desc.query) {
           legacyQueryOptions.add(desc);
         }

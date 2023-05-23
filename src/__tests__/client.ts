@@ -5666,6 +5666,341 @@ describe('custom document transforms', () => {
       }
     });
   });
+
+  it('runs custom transforms on active queries when calling `refetchQueries` with "include"', async () => {
+    const aQuery = gql`
+      query A { 
+        a @custom
+      }
+    `;
+    const bQuery = gql`
+      query B { 
+        b @custom
+      }
+    `;
+    const abQuery = gql`
+      query AB { 
+        a @custom
+        b
+      }
+    `;
+
+    const requests: Operation[] = []
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const client = new ApolloClient({
+      documentTransform,
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        requests.push(operation);
+
+        return Observable.of({
+          data: operation.operationName
+            .split('')
+            .reduce<Record<string, string>>(
+              (memo, letter) => ({ 
+                ...memo, 
+                [letter.toLowerCase()]: letter.toUpperCase()
+              }), 
+              {}
+            )
+        });
+      })
+    });
+
+    client.watchQuery({ query: aQuery }).subscribe(jest.fn());
+    client.watchQuery({ query: bQuery }).subscribe(jest.fn());
+    // purposely avoid subscribing to prevent it from being an "active" query
+    client.watchQuery({ query: abQuery });
+
+    await waitFor(() => {
+      return (
+        client.readQuery({ query: aQuery }) && 
+        client.readQuery({ query: bQuery })
+      );
+    });
+
+    expect(requests.length).toBe(2);
+    expect(requests[0].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[1].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+
+    const results = await client.refetchQueries({ include: 'active' });
+
+    expect(results.map(r => r.data)).toEqual([
+      { a: 'A' },
+      { b: 'B' }
+    ]);
+
+    expect(requests.length).toBe(4);
+    expect(requests[2].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[3].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+  });
+
+  it('runs custom transforms on all queries when calling `refetchQueries` with "all"', async () => {
+    const aQuery = gql`
+      query A { 
+        a @custom
+      }
+    `;
+    const bQuery = gql`
+      query B { 
+        b @custom
+      }
+    `;
+    const abQuery = gql`
+      query AB { 
+        a @custom
+        b
+      }
+    `;
+
+    const requests: Operation[] = []
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const client = new ApolloClient({
+      documentTransform,
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        requests.push(operation);
+
+        return Observable.of({
+          data: operation.operationName
+            .split('')
+            .reduce<Record<string, string>>(
+              (memo, letter) => ({ 
+                ...memo, 
+                [letter.toLowerCase()]: letter.toUpperCase()
+              }), 
+              {}
+            )
+        });
+      })
+    });
+
+    client.watchQuery({ query: aQuery }).subscribe(jest.fn());
+    client.watchQuery({ query: bQuery }).subscribe(jest.fn());
+    // purposely avoid subscribing to prevent it from being an "active" query
+    client.watchQuery({ query: abQuery });
+
+    await waitFor(() => {
+      return (
+        client.readQuery({ query: aQuery }) && 
+        client.readQuery({ query: bQuery })
+      );
+    });
+
+    expect(requests.length).toBe(2);
+    expect(requests[0].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[1].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+
+    const results = await client.refetchQueries({ include: 'all' });
+
+    expect(results.map(r => r.data)).toEqual([
+      { a: 'A' },
+      { b: 'B' },
+      { a: 'A', b: 'B' }
+    ]);
+
+    expect(requests.length).toBe(5);
+    expect(requests[2].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[3].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+    expect(requests[4].query).toMatchDocument(gql`
+      query AB {
+        a
+        b
+      }      
+    `);
+  });
+
+  it('runs custom transforms on matched queries when calling `refetchQueries` with string array', async () => {
+    const aQuery = gql`
+      query A { 
+        a @custom
+      }
+    `;
+    const bQuery = gql`
+      query B { 
+        b @custom
+      }
+    `;
+
+    const requests: Operation[] = []
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const client = new ApolloClient({
+      documentTransform,
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        requests.push(operation);
+
+        return Observable.of({
+          data: operation.operationName
+            .split('')
+            .reduce<Record<string, string>>(
+              (memo, letter) => ({ 
+                ...memo, 
+                [letter.toLowerCase()]: letter.toUpperCase()
+              }), 
+              {}
+            )
+        });
+      })
+    });
+
+    client.watchQuery({ query: aQuery }).subscribe(jest.fn());
+    client.watchQuery({ query: bQuery }).subscribe(jest.fn());
+
+    await waitFor(() => {
+      return (
+        client.readQuery({ query: aQuery }) && 
+        client.readQuery({ query: bQuery })
+      );
+    });
+
+    expect(requests.length).toBe(2);
+    expect(requests[0].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[1].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+
+    const results = await client.refetchQueries({ 
+      include: ['B']
+    });
+
+    expect(results.map(r => r.data)).toEqual([
+      { b: 'B' },
+    ]);
+
+    expect(requests.length).toBe(3);
+    expect(requests[2].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+  });
+
+  it('runs custom transforms on matched queries when calling `refetchQueries` with document nodes', async () => {
+    const aQuery = gql`
+      query A { 
+        a @custom
+      }
+    `;
+    const bQuery = gql`
+      query B { 
+        b @custom
+      }
+    `;
+
+    const requests: Operation[] = []
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const client = new ApolloClient({
+      documentTransform,
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        requests.push(operation);
+
+        return Observable.of({
+          data: operation.operationName
+            .split('')
+            .reduce<Record<string, string>>(
+              (memo, letter) => ({ 
+                ...memo, 
+                [letter.toLowerCase()]: letter.toUpperCase()
+              }), 
+              {}
+            )
+        });
+      })
+    });
+
+    client.watchQuery({ query: aQuery }).subscribe(jest.fn());
+    client.watchQuery({ query: bQuery }).subscribe(jest.fn());
+
+    await waitFor(() => {
+      return (
+        client.readQuery({ query: aQuery }) && 
+        client.readQuery({ query: bQuery })
+      );
+    });
+
+    expect(requests.length).toBe(2);
+    expect(requests[0].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[1].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+
+    const results = await client.refetchQueries({ 
+      include: [bQuery]
+    });
+
+    expect(results.map(r => r.data)).toEqual([
+      { b: 'B' },
+    ]);
+
+    expect(requests.length).toBe(3);
+    expect(requests[2].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+  });
 });
 
 function clientRoundtrip(

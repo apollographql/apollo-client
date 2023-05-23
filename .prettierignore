@@ -65,6 +65,9 @@ src/utilities/common/*
 src/utilities/common/__tests__/*
 !src/utilities/common/__tests__/omitDeep.ts
 !src/utilities/common/__tests__/stripTypename.ts
+!src/utilities/graphql
+src/utilities/graphql/*
+!src/utilities/graphql/operations.ts
 
 # Allowed links
 !src/link

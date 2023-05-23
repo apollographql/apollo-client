@@ -1,10 +1,11 @@
 import { DocumentTransform } from '../DocumentTransform';
 import {
-  getOperationDefinition,
+  isMutation,
+  isQuery,
   removeDirectivesFromDocument,
 } from '../../utilities';
 import { gql } from 'graphql-tag';
-import { DocumentNode, OperationTypeNode, visit, Kind } from 'graphql';
+import { DocumentNode, visit, Kind } from 'graphql';
 
 function stripDirective(directive: string) {
   return (document: DocumentNode) => {
@@ -32,18 +33,6 @@ function addClientDirectiveToField(fieldName: string) {
       },
     });
   };
-}
-
-function isOperation(document: DocumentNode, operation: OperationTypeNode) {
-  return getOperationDefinition(document)?.operation === operation;
-}
-
-function isQuery(document: DocumentNode) {
-  return isOperation(document, OperationTypeNode.QUERY);
-}
-
-function isMutation(document: DocumentNode) {
-  return isOperation(document, OperationTypeNode.MUTATION);
 }
 
 test('can transform a document', () => {

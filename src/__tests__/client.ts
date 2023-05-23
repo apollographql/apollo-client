@@ -4584,7 +4584,10 @@ describe('custom document transforms', () => {
       return removeDirectivesFromDocument([{ name: 'custom' }], document)!
     });
 
-    const documentTransform = new DocumentTransform(transform);
+    const documentTransform = new DocumentTransform(
+      transform,
+      { cache: false }
+    );
 
     let document: DocumentNode;
 
@@ -4604,13 +4607,12 @@ describe('custom document transforms', () => {
 
     const observable = client.watchQuery({ query });
 
-    expect(transform).not.toHaveBeenCalled();
+    expect(transform).toHaveBeenCalledTimes(1);
     // `options.query` should always reflect the raw, untransformed query 
     expect(observable.options.query).toMatchDocument(query);
     // The computed `query` property should always reflect the last requested 
-    // transformed document. We haven't run the query yet, so it remains the 
-    // same as the raw query.
-    expect(observable.query).toMatchDocument(query);
+    // transformed document.
+    expect(observable.query).toMatchDocument(transformedQuery);
 
     const handleNext = jest.fn();
 
@@ -4628,7 +4630,7 @@ describe('custom document transforms', () => {
       expect(document).toMatchDocument(transformedQuery);
       expect(observable.options.query).toMatchDocument(query);
       expect(observable.query).toMatchDocument(transformedQuery);
-      expect(transform).toHaveBeenCalledTimes(1);
+      expect(transform).toHaveBeenCalledTimes(2);
     });
   });
 

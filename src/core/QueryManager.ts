@@ -706,6 +706,8 @@ export class QueryManager<TStore> {
       ) as TVariables,
     };
 
+    const query = this.transform(options.query);
+
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
       options.notifyOnNetworkStatusChange = false;
     }
@@ -716,11 +718,14 @@ export class QueryManager<TStore> {
       queryInfo,
       options,
     });
+    observable['lastQuery'] = query;
 
     this.queries.set(observable.queryId, queryInfo);
 
+    // We give queryInfo the transformed query to ensure the first cache diff 
+    // uses the transformed query instead of the raw query
     queryInfo.init({
-      document: observable.query,
+      document: query,
       observableQuery: observable,
       variables: observable.variables,
     });

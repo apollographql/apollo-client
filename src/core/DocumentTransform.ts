@@ -14,7 +14,10 @@ export class DocumentTransform {
     | Map<DocumentNode, DocumentNode>;
 
   static identity() {
-    return new DocumentTransform((document) => document);
+    // No need to cache this transform since it just returns the document
+    // unchanged. This should save a bit of memory that would otherwise be
+    // needed to populate the `documentCache` of this transform.
+    return new DocumentTransform((document) => document, { cache: false });
   }
 
   static split(

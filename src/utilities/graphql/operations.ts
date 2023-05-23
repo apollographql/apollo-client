@@ -6,14 +6,14 @@ function isOperation(document: DocumentNode, operation: OperationTypeNode) {
   return getOperationDefinition(document)?.operation === operation;
 }
 
-export function isMutation(document: DocumentNode) {
+export function isMutationOperation(document: DocumentNode) {
   return isOperation(document, OperationTypeNode.MUTATION);
 }
 
-export function isQuery(document: DocumentNode) {
+export function isQueryOperation(document: DocumentNode) {
   return isOperation(document, OperationTypeNode.QUERY);
 }
 
-export function isSubscription(document: DocumentNode) {
+export function isSubscriptionOperation(document: DocumentNode) {
   return isOperation(document, OperationTypeNode.SUBSCRIPTION);
 }

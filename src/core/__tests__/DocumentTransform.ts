@@ -1,7 +1,7 @@
 import { DocumentTransform } from '../DocumentTransform';
 import {
-  isMutation,
-  isQuery,
+  isMutationOperation,
+  isQueryOperation,
   removeDirectivesFromDocument,
 } from '../../utilities';
 import { gql } from 'graphql-tag';
@@ -351,7 +351,7 @@ test('can conditionally run transforms using `DocumentTransform.split`', () => {
   `;
 
   const documentTransform = DocumentTransform.split(
-    isQuery,
+    isQueryOperation,
     new DocumentTransform(stripDirective('client'))
   );
 
@@ -391,7 +391,7 @@ test('properly caches the result of `filter` when the original transform is cach
 
   const transform = jest.fn(stripDirective('client'));
   const documentTransform = DocumentTransform.split(
-    isQuery,
+    isQueryOperation,
     new DocumentTransform(transform, { cache: true })
   );
 
@@ -427,7 +427,7 @@ test('reruns transform returned from `DocumentTransform.split` when the original
 
   const transform = jest.fn(stripDirective('client'));
   const documentTransform = DocumentTransform.split(
-    isQuery,
+    isQueryOperation,
     new DocumentTransform(transform, { cache: false })
   );
 
@@ -465,13 +465,13 @@ test('properly handles combinations of `DocumentTransform.split` and `filter`', 
 
   // Strip both @client and @nonreactive but only on query types
   const queryOnlyTransform = DocumentTransform.split(
-    isQuery,
+    isQueryOperation,
     stripClient.concat(stripNonReactive)
   );
 
   // Only strip @client from mutations but remove @nonreactive from all
   const conditionalStrip = DocumentTransform.split(
-    isMutation,
+    isMutationOperation,
     stripClient
   ).concat(stripNonReactive);
 
@@ -529,7 +529,7 @@ test('executes other transform when using `DocumentTransform.split` when conditi
 
   // strip both directives for queries, but only @nonreactive for mutations
   const documentTransform = DocumentTransform.split(
-    isQuery,
+    isQueryOperation,
     stripClient.concat(stripNonReactive),
     stripNonReactive
   );
@@ -675,7 +675,7 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   const stripNonReactive = jest.fn(stripDirective('nonreactive'));
 
   const documentTransform = DocumentTransform.split(
-    (document) => isQuery(document),
+    (document) => isQueryOperation(document),
     new DocumentTransform(stripNonReactive),
     new DocumentTransform(stripClient)
   );

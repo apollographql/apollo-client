@@ -70,9 +70,9 @@ export {
 } from './graphql/transform';
 
 export {
-  isMutation,
-  isQuery,
-  isSubscription,
+  isMutationOperation,
+  isQueryOperation,
+  isSubscriptionOperation,
 } from './graphql/operations';
 
 export {

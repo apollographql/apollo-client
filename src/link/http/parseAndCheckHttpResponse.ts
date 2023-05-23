@@ -39,7 +39,7 @@ export async function readMultipartBody<
         .trim()
     : "-";
 
-  let boundary = `--${boundaryVal}`;
+  const boundary = `\r\n--${boundaryVal}`;
   let buffer = "";
   const iterator = responseIterator(response);
   let running = true;
@@ -47,9 +47,10 @@ export async function readMultipartBody<
   while (running) {
     const { value, done } = await iterator.next();
     const chunk = typeof value === "string" ? value : decoder.decode(value);
+    const searchFrom = buffer.length - boundary.length + 1;
     running = !done;
     buffer += chunk;
-    let bi = buffer.indexOf(boundary);
+    let bi = buffer.indexOf(boundary, searchFrom);
 
     while (bi > -1) {
       let message: string;
@@ -57,22 +58,24 @@ export async function readMultipartBody<
         buffer.slice(0, bi),
         buffer.slice(bi + boundary.length),
       ];
-      if (message.trim()) {
-        const i = message.indexOf("\r\n\r\n");
-        const headers = parseHeaders(message.slice(0, i));
-        const contentType = headers["content-type"];
-        if (
-          contentType &&
-          contentType.toLowerCase().indexOf("application/json") === -1
-        ) {
-          throw new Error(
-            "Unsupported patch content type: application/json is required."
-          );
-        }
-        const body = message.slice(i);
+      const i = message.indexOf("\r\n\r\n");
+      const headers = parseHeaders(message.slice(0, i));
+      const contentType = headers["content-type"];
+      if (
+        contentType &&
+        contentType.toLowerCase().indexOf("application/json") === -1
+      ) {
+        throw new Error(
+          "Unsupported patch content type: application/json is required."
+        );
+      }
+      // nb: Technically you'd want to slice off the beginning "\r\n" but since
+      // this is going to be `JSON.parse`d there is no need.
+      const body = message.slice(i);
 
+      if (body) {
         try {
-          const result = parseJsonBody<T>(response, body.replace("\r\n", ""));
+          const result = parseJsonBody<T>(response, body);
           if (
             Object.keys(result).length > 1 ||
             "data" in result ||

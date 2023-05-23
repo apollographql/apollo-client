@@ -3756,6 +3756,89 @@ describe('custom document transforms', () => {
     });
   });
 
+  it('runs document transforms before reading from the cache when calling `query`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          name
+        }
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'product' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  ...node.selectionSet.selections,
+                  {
+                    kind: Kind.FRAGMENT_SPREAD,
+                    name: { kind: Kind.NAME, value: 'ProductFields' }
+                  }
+                ]
+              }
+            }
+          }
+        } 
+      });
+    });
+
+    const link = new ApolloLink(() => {
+      return Observable.of({
+        data: {
+          product: {
+            __typename: 'Product',
+            id: 2,
+            name: 'unused',
+            description: 'unused',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(gql`
+          fragment ProductFields on Product {
+            description
+          }
+        `)
+      }),
+      documentTransform,
+    });
+
+    // Use the transformed document to write to the cache to ensure it contains
+    // the fragment spread
+    client.writeQuery({
+      query: documentTransform.transformDocument(query),
+      data: {
+        product: {
+          __typename: 'Product',
+          id: 1,
+          name: 'Cached product',
+          description: 'Cached product description'
+        }
+      }
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(data).toEqual({
+      product: {
+        __typename: 'Product',
+        id: 1,
+        name: 'Cached product',
+        description: 'Cached product description',
+      }
+    });
+  });
+
   it('runs @client directives added from custom transforms through local state', async ()  => {
     const query = gql`
       query TestQuery {
@@ -4505,6 +4588,98 @@ describe('custom document transforms', () => {
           }
         }
       `);
+    });
+  });
+
+  it('runs document transforms before reading from the cache when calling `watchQuery`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          name
+        }
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'product' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  ...node.selectionSet.selections,
+                  {
+                    kind: Kind.FRAGMENT_SPREAD,
+                    name: { kind: Kind.NAME, value: 'ProductFields' }
+                  }
+                ]
+              }
+            }
+          }
+        } 
+      });
+    });
+
+    const link = new ApolloLink(() => {
+      return Observable.of({
+        data: {
+          product: {
+            __typename: 'Product',
+            id: 2,
+            name: 'unused',
+            description: 'unused',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(gql`
+          fragment ProductFields on Product {
+            description
+          }
+        `)
+      }),
+      documentTransform,
+    });
+
+    // Use the transformed document to write to the cache to ensure it contains
+    // the fragment spread
+    client.writeQuery({
+      query: documentTransform.transformDocument(query),
+      data: {
+        product: {
+          __typename: 'Product',
+          id: 1,
+          name: 'Cached product',
+          description: 'Cached product description'
+        }
+      }
+    });
+
+    const observable = client.watchQuery({ query });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          product: {
+            __typename: 'Product',
+            id: 1,
+            name: 'Cached product',
+            description: 'Cached product description'
+          }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      })
     });
   });
 

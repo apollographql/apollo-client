@@ -332,7 +332,7 @@ test('allows non cached transforms to be run when concatenated', async () => {
   expect(stripNonReactive).toHaveBeenCalledTimes(2);
 });
 
-test('can conditionally run transforms using `filter`', () => {
+test('can conditionally run transforms using `DocumentTransform.split`', () => {
   const mutation = gql`
     mutation TestMutation {
       incrementCounter @client {
@@ -350,9 +350,10 @@ test('can conditionally run transforms using `filter`', () => {
     }
   `;
 
-  const documentTransform = new DocumentTransform(
-    stripDirective('client')
-  ).filter(isQuery);
+  const documentTransform = DocumentTransform.split(
+    isQuery,
+    new DocumentTransform(stripDirective('client'))
+  );
 
   const queryResult = documentTransform.transformDocument(query);
   const mutationResult = documentTransform.transformDocument(mutation);
@@ -389,9 +390,10 @@ test('properly caches the result of `filter` when the original transform is cach
   `;
 
   const transform = jest.fn(stripDirective('client'));
-  const documentTransform = new DocumentTransform(transform, {
-    cache: true,
-  }).filter(isQuery);
+  const documentTransform = DocumentTransform.split(
+    isQuery,
+    new DocumentTransform(transform, { cache: true })
+  );
 
   const result = documentTransform.transformDocument(query);
 
@@ -404,7 +406,7 @@ test('properly caches the result of `filter` when the original transform is cach
   expect(transform).toHaveBeenCalledTimes(1);
 });
 
-test('reruns transform returned from `filter` when the original transform is not cached', () => {
+test('reruns transform returned from `DocumentTransform.split` when the original transform is not cached', () => {
   const query = gql`
     query TestQuery {
       user {
@@ -424,9 +426,10 @@ test('reruns transform returned from `filter` when the original transform is not
   `;
 
   const transform = jest.fn(stripDirective('client'));
-  const documentTransform = new DocumentTransform(transform, {
-    cache: false,
-  }).filter(isQuery);
+  const documentTransform = DocumentTransform.split(
+    isQuery,
+    new DocumentTransform(transform, { cache: false })
+  );
 
   const result = documentTransform.transformDocument(query);
 
@@ -439,7 +442,7 @@ test('reruns transform returned from `filter` when the original transform is not
   expect(transform).toHaveBeenCalledTimes(2);
 });
 
-test('properly handles combinations of `concat` and `filter`', () => {
+test('properly handles combinations of `DocumentTransform.split` and `filter`', () => {
   const mutation = gql`
     mutation TestMutation {
       incrementCounter @client {
@@ -461,14 +464,16 @@ test('properly handles combinations of `concat` and `filter`', () => {
   const stripNonReactive = new DocumentTransform(stripDirective('nonreactive'));
 
   // Strip both @client and @nonreactive but only on query types
-  const queryOnlyTransform = stripClient
-    .concat(stripNonReactive)
-    .filter(isQuery);
+  const queryOnlyTransform = DocumentTransform.split(
+    isQuery,
+    stripClient.concat(stripNonReactive)
+  );
 
   // Only strip @client from mutations but remove @nonreactive from all
-  const conditionalStrip = stripClient
-    .filter(isMutation)
-    .concat(stripNonReactive);
+  const conditionalStrip = DocumentTransform.split(
+    isMutation,
+    stripClient
+  ).concat(stripNonReactive);
 
   expect(queryOnlyTransform.transformDocument(query)).toMatchDocument(gql`
     query TestQuery {
@@ -495,6 +500,52 @@ test('properly handles combinations of `concat` and `filter`', () => {
   expect(conditionalStrip.transformDocument(mutation)).toMatchDocument(gql`
     mutation TestMutation {
       incrementCounter {
+        count
+      }
+    }
+  `);
+});
+
+test('executes other transform when using `DocumentTransform.split` when condition is false', () => {
+  const mutation = gql`
+    mutation TestMutation {
+      incrementCounter @client {
+        count @nonreactive
+      }
+    }
+  `;
+
+  const query = gql`
+    query TestQuery {
+      user {
+        name @nonreactive
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const stripClient = new DocumentTransform(stripDirective('client'));
+  const stripNonReactive = new DocumentTransform(stripDirective('nonreactive'));
+
+  // strip both directives for queries, but only @nonreactive for mutations
+  const documentTransform = DocumentTransform.split(
+    isQuery,
+    stripClient.concat(stripNonReactive),
+    stripNonReactive
+  );
+
+  expect(documentTransform.transformDocument(query)).toMatchDocument(gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn
+      }
+    }
+  `);
+
+  expect(documentTransform.transformDocument(mutation)).toMatchDocument(gql`
+    mutation TestMutation {
+      incrementCounter @client {
         count
       }
     }

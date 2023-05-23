@@ -14,6 +14,29 @@ export class DocumentTransform {
     ? new WeakMap<DocumentNode, DocumentNode>()
     : new Map<DocumentNode, DocumentNode>();
 
+  static identity() {
+    return new DocumentTransform((document) => document);
+  }
+
+  static split(
+    predicate: (document: DocumentNode) => boolean,
+    left: DocumentTransform,
+    right: DocumentTransform = DocumentTransform.identity()
+  ) {
+    return new DocumentTransform(
+      (document) => {
+        if (predicate(document)) {
+          return left.transformDocument(document);
+        }
+
+        return right.transformDocument(document);
+      },
+      // Allow for runtime conditionals to determine which transform to use and
+      // rely on each transform to determine its own caching behavior
+      { cache: false }
+    );
+  }
+
   constructor(
     transform: TransformFn,
     options: DocumentTransformOptions = Object.create(null)
@@ -36,19 +59,6 @@ export class DocumentTransform {
     }
 
     return transformedDocument;
-  }
-
-  filter(predicate: (document: DocumentNode) => boolean) {
-    return new DocumentTransform(
-      (document) => {
-        if (predicate(document)) {
-          return this.transformDocument(document);
-        }
-
-        return document;
-      },
-      { cache: this.cacheResult }
-    );
   }
 
   concat(otherTransform: DocumentTransform) {

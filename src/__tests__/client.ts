@@ -4065,6 +4065,101 @@ describe('custom document transforms', () => {
     })
   });
 
+  it('runs custom transform on queries defined in refetchQueries using legacy option when calling `mutate`', async ()  => {
+    const mutation = gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username @custom
+        }
+      }
+    `;
+
+    const query = gql`
+      query TestQuery {
+        currentUser {
+          id
+          username @custom
+        }
+      }
+    `;
+
+    const requests: Operation[] = [];
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const mocks = [
+      {
+        request: { 
+          query: documentTransform.transformDocument(mutation),
+          variables: { username: 'foo' }
+        },
+        result: {
+          data: {
+            changeUsername: { __typename: 'User', id: 1, username: 'foo' }
+          }
+        }
+      },
+      {
+        request: { query: documentTransform.transformDocument(query) },
+        result: {
+          data: {
+            currentUser: { __typename: 'User', id: 1, username: 'foo' }
+          }
+        }
+      }
+    ];
+
+    const link = new ApolloLink((operation, forward) => {
+      requests.push(operation);
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const { data } = await client.mutate({
+      mutation,
+      variables: { username: 'foo' },
+      refetchQueries: [{ query }],
+      awaitRefetchQueries: true,
+    });
+
+    expect(data).toEqual({
+      changeUsername: {
+        id: 1,
+        username: 'foo',
+        __typename: 'User' ,
+      },
+    })
+
+    expect(requests[0].query).toMatchDocument(gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+
+    expect(requests[1].query).toMatchDocument(gql`
+      query TestQuery {
+        currentUser {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+  });
+
   it('requests and caches fields added from custom document transforms when calling `mutate`', async ()  => {
     const mutation = gql`
       mutation TestMutation($username: String) {

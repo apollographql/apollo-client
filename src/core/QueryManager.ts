@@ -8,7 +8,6 @@ import { equal } from '@wry/equality';
 import type { ApolloLink, FetchResult } from '../link/core';
 import { execute } from '../link/core';
 import {
-  checkDocument,
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
@@ -692,17 +691,18 @@ export class QueryManager<TStore> {
   public watchQuery<T, TVariables extends OperationVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
-    checkDocument(options.query);
+    const query = this.transform(options.query);
+
     // assign variable default values if supplied
+    // NOTE: We don't modify options.query here with the transformed query to 
+    // ensure observable.options.query is set to the raw untransformed query.
     options = {
       ...options,
       variables: this.getVariables(
-        options.query,
+        query,
         options.variables,
       ) as TVariables,
     };
-
-    const query = this.transform(options.query);
 
     if (typeof options.notifyOnNetworkStatusChange === 'undefined') {
       options.notifyOnNetworkStatusChange = false;

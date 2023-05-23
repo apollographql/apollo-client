@@ -224,7 +224,7 @@ export class QueryManager<TStore> {
 
     const mutationId = this.generateMutationId();
 
-    const document = this.transformDocument(mutation);
+    const document = this.transform(mutation);
     const { hasClientExports } = this.getDocumentInfo(mutation);
     mutation = this.cache.transformForLink(document);
 
@@ -631,67 +631,13 @@ export class QueryManager<TStore> {
     }
   }
 
+  public transform(document: DocumentNode) {
+    return this.documentTransform.transformDocument(document);
+  }
+
   private transformCache = new (
     canUseWeakMap ? WeakMap : Map
   )<DocumentNode, TransformCacheEntry>();
-
-  public transform(document: DocumentNode) {
-    const { transformCache } = this;
-
-    if (!transformCache.has(document)) {
-      const transformed = this.cache.transformDocument(document);
-      const serverQuery = removeDirectivesFromDocument([
-        { name: 'client', remove: true },
-        { name: 'connection' },
-        { name: 'nonreactive' },
-      ], transformed);
-      const clientQuery = this.localState.clientQuery(transformed);
-
-      const cacheEntry: TransformCacheEntry = {
-        document: transformed,
-        // TODO These three calls (hasClientExports, shouldForceResolvers, and
-        // usesNonreactiveDirective) are performing independent full traversals
-        // of the transformed document. We should consider merging these
-        // traversals into a single pass in the future, though the work is
-        // cached after the first time.
-        hasClientExports: hasClientExports(transformed),
-        hasForcedResolvers: this.localState.shouldForceResolvers(transformed),
-        hasNonreactiveDirective: hasDirectives(['nonreactive'], transformed),
-        clientQuery,
-        serverQuery,
-        defaultVars: getDefaultValues(
-          getOperationDefinition(transformed)
-        ) as OperationVariables,
-        // Transform any mutation or subscription operations to query operations
-        // so we can read/write them from/to the cache.
-        asQuery: {
-          ...transformed,
-          definitions: transformed.definitions.map(def => {
-            if (def.kind === "OperationDefinition" &&
-                def.operation !== "query") {
-              return { ...def, operation: "query" as OperationTypeNode };
-            }
-            return def;
-          }),
-        }
-      };
-
-      const add = (doc: DocumentNode | null) => {
-        if (doc && !transformCache.has(doc)) {
-          transformCache.set(doc, cacheEntry);
-        }
-      }
-      // Add cacheEntry to the transformCache using several different keys,
-      // since any one of these documents could end up getting passed to the
-      // transform method again in the future.
-      add(document);
-      add(transformed);
-      add(clientQuery);
-      add(serverQuery);
-    }
-
-    return transformCache.get(document)!;
-  }
 
   public getDocumentInfo(document: DocumentNode) {
     const { transformCache } = this;
@@ -809,7 +755,7 @@ export class QueryManager<TStore> {
 
     return this.fetchQuery<TData, TVars>(
       queryId,
-      { ...options, query: this.transformDocument(options.query) },
+      { ...options, query: this.transform(options.query) },
     ).finally(() => this.stopQuery(queryId));
   }
 
@@ -880,7 +826,7 @@ export class QueryManager<TStore> {
         if (typeof desc === "string") {
           queryNamesAndDocs.set(desc, false);
         } else if (isDocumentNode(desc)) {
-          queryNamesAndDocs.set(this.transformDocument(desc), false);
+          queryNamesAndDocs.set(this.transform(desc), false);
         } else if (isNonNullObject(desc) && desc.query) {
           legacyQueryOptions.add(desc);
         }
@@ -991,7 +937,7 @@ export class QueryManager<TStore> {
     variables,
     context = {},
   }: SubscriptionOptions): Observable<FetchResult<T>> {
-    query = this.transformDocument(query);
+    query = this.transform(query);
     variables = this.getVariables(query, variables);
 
     const makeObservable = (variables: OperationVariables) =>
@@ -1660,10 +1606,6 @@ export class QueryManager<TStore> {
       ...newContext,
       clientAwareness: this.clientAwareness,
     };
-  }
-
-  private transformDocument(document: DocumentNode) {
-    return this.documentTransform.transformDocument(document)
   }
 }
 

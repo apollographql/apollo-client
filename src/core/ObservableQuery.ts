@@ -980,7 +980,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
   }
 
   private transformDocument(document: DocumentNode) {
-    return this.queryManager['transformDocument'](document);
+    return this.queryManager.transform(document);
   }
 }
 

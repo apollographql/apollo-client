@@ -90,6 +90,7 @@ describe("FragmentRegistry", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           data: {
+            __typename: 'Query',
             source: "local",
           },
         });
@@ -99,6 +100,7 @@ describe("FragmentRegistry", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
+            __typename: 'Query',
             source: "link",
           },
         });

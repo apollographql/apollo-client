@@ -68,7 +68,9 @@ export class DocumentTransform {
           this.transformDocument(document)
         );
       },
-      { cache: this.cacheResult && otherTransform.cacheResult }
+      // Allow each transform to determine its own cache behavior without
+      // filling up another `Map` for this new transform.
+      { cache: false }
     );
   }
 

@@ -2,28 +2,19 @@
 '@apollo/client': minor
 ---
 
-Add the ability to specify custom GraphQL document transforms. These transforms are run before local state is resolved and before the document is sent through the link chain. 
+Add the ability to specify custom GraphQL document transforms. These transforms are run before reading data from the cache, before local state is resolved, and before the query document is sent through the link chain.
 
-To register a custom transform, use the `documentTransforms` and `documentTransformsForLink` config option on `InMemoryCache`.
+To register a custom document transform, create a transform using the `DocumentTransform` class and pass it to the `documentTransform` option on `ApolloClient`.
 
 ```ts
-const cache = new InMemoryCache({
-  documentTransforms: [customTransform],
-  documentTransformsForLink: [customTransformForLink]
+import { DocumentTransform } from '@apollo/client';
+
+const documentTransform = new DocumentTransform((document) => {
+  // do something with `document`
+  return transformedDocument;
 });
+
+const client = new ApolloClient({ documentTransform: documentTransform });
 ```
 
-These two differ in the frequency at which they are called. 
-
-* `documentTransforms` will be called once per unique query document and subsequently cached. These are useful to provide a transform that occurs for every query document.
-* `documentTransformsForLink` will be called for every request. These are useful if you need to conditionally transform the document.
-
-These transforms can also be dynamically added after the creation of the cache. Use the `add` method on each property to add these transforms after the creation of the cache.
-
-
-```ts
-const cache = new InMemoryCache();
-
-cache.documentTransforms.add(customTransform, customTransform2);
-cache.documentTransformsForLink.add(customTransformForLink, customTransformForLink2);
-```
+For additional documentation on the behavior and API of `DocumentTransform`, see the [pull request](https://github.com/apollographql/apollo-client/pull/10509).

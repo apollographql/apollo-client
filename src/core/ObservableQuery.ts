@@ -70,6 +70,10 @@ export class ObservableQuery<
   public readonly queryId: string;
   public readonly queryName?: string;
 
+  // The `query` computed property will always reflect the document transformed
+  // by the last run query. `this.options.query` will always reflect the raw
+  // untransformed query to ensure document transforms with runtime conditionals
+  // are run on the original document.
   public get query(): TypedDocumentNode<TData, TVariables> {
     return this.lastQuery || this.options.query;
   }

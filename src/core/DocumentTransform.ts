@@ -9,10 +9,9 @@ interface DocumentTransformOptions {
 
 export class DocumentTransform {
   private readonly transform: TransformFn;
-  private readonly cacheResult: boolean;
-  private readonly documentCache = canUseWeakMap
-    ? new WeakMap<DocumentNode, DocumentNode>()
-    : new Map<DocumentNode, DocumentNode>();
+  private readonly documentCache?:
+    | WeakMap<DocumentNode, DocumentNode>
+    | Map<DocumentNode, DocumentNode>;
 
   static identity() {
     return new DocumentTransform((document) => document);
@@ -42,11 +41,16 @@ export class DocumentTransform {
     options: DocumentTransformOptions = Object.create(null)
   ) {
     this.transform = transform;
-    this.cacheResult = options.cache ?? true;
+
+    if (options.cache ?? true) {
+      this.documentCache = canUseWeakMap
+        ? new WeakMap<DocumentNode, DocumentNode>()
+        : new Map<DocumentNode, DocumentNode>();
+    }
   }
 
   transformDocument(document: DocumentNode) {
-    if (this.cacheResult && this.documentCache.has(document)) {
+    if (this.documentCache?.has(document)) {
       return this.documentCache.get(document)!;
     }
 
@@ -54,7 +58,7 @@ export class DocumentTransform {
 
     const transformedDocument = this.transform(document);
 
-    if (this.cacheResult) {
+    if (this.documentCache) {
       this.documentCache.set(document, transformedDocument);
     }
 
@@ -75,6 +79,6 @@ export class DocumentTransform {
   }
 
   invalidateDocument(document: DocumentNode) {
-    this.documentCache.delete(document);
+    this.documentCache?.delete(document);
   }
 }

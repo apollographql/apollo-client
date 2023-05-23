@@ -13,6 +13,8 @@ export class DocumentTransform {
     | WeakMap<DocumentNode, DocumentNode>
     | Map<DocumentNode, DocumentNode>;
 
+  private readonly linkedTransforms = new Set<DocumentTransform>();
+
   static identity() {
     // No need to cache this transform since it just returns the document
     // unchanged. This should save a bit of memory that would otherwise be
@@ -25,7 +27,7 @@ export class DocumentTransform {
     left: DocumentTransform,
     right: DocumentTransform = DocumentTransform.identity()
   ) {
-    return new DocumentTransform(
+    const transform = new DocumentTransform(
       (document) => {
         const documentTransform = predicate(document) ? left : right;
 
@@ -35,6 +37,11 @@ export class DocumentTransform {
       // rely on each transform to determine its own caching behavior.
       { cache: false }
     );
+
+    transform.link(left);
+    transform.link(right);
+
+    return transform;
   }
 
   constructor(
@@ -67,7 +74,9 @@ export class DocumentTransform {
   }
 
   concat(otherTransform: DocumentTransform) {
-    return new DocumentTransform(
+    this.link(otherTransform);
+
+    const transform = new DocumentTransform(
       (document) => {
         return otherTransform.transformDocument(
           this.transformDocument(document)
@@ -77,9 +86,22 @@ export class DocumentTransform {
       // filling up another `Map` for this new transform.
       { cache: false }
     );
+
+    transform.link(this);
+
+    return transform;
   }
 
   invalidateDocument(document: DocumentNode) {
-    return this.documentCache?.delete(document) ?? false;
+    const transformedDocument = this.documentCache?.get(document) ?? document;
+
+    this.documentCache?.delete(document);
+    this.linkedTransforms.forEach((transform) => {
+      transform.invalidateDocument(transformedDocument);
+    });
+  }
+
+  private link(transform: DocumentTransform) {
+    this.linkedTransforms.add(transform);
   }
 }

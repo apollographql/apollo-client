@@ -590,6 +590,124 @@ test('can invalidate a cached document with `invalidateDocument`', () => {
   expect(transform).toHaveBeenCalledTimes(2);
 });
 
+test('invalidates the entire chain of transforms created via `concat` by calling `invalidateDocument`', () => {
+  const query = gql`
+    query TestQuery {
+      user @nonreactive {
+        name
+        isLoggedIn @client
+      }
+    }
+  `;
+  const expected = gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn
+      }
+    }
+  `;
+
+  const stripClient = jest.fn(stripDirective('client'));
+  const stripNonReactive = jest.fn(stripDirective('nonreactive'));
+
+  const documentTransform = new DocumentTransform(stripClient).concat(
+    new DocumentTransform(stripNonReactive)
+  );
+
+  const result = documentTransform.transformDocument(query);
+
+  expect(result).toMatchDocument(expected);
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+
+  const result2 = documentTransform.transformDocument(query);
+
+  expect(result2).toMatchDocument(expected);
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+
+  documentTransform.invalidateDocument(query);
+  const result3 = documentTransform.transformDocument(query);
+
+  expect(result3).toMatchDocument(expected);
+  expect(stripClient).toHaveBeenCalledTimes(2);
+  expect(stripNonReactive).toHaveBeenCalledTimes(2);
+});
+
+test('invalidates both left/right transforms created via `split` by calling `invalidateDocument`', () => {
+  const query = gql`
+    query TestQuery {
+      user @nonreactive {
+        name
+        isLoggedIn @client
+      }
+    }
+  `;
+  const mutation = gql`
+    mutation TestMutation {
+      changeUsername {
+        username
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const transformedQuery = gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const transformedMutation = gql`
+    mutation TestMutation {
+      changeUsername {
+        username
+        isLoggedIn
+      }
+    }
+  `;
+
+  const stripClient = jest.fn(stripDirective('client'));
+  const stripNonReactive = jest.fn(stripDirective('nonreactive'));
+
+  const documentTransform = DocumentTransform.split(
+    (document) => isQuery(document),
+    new DocumentTransform(stripNonReactive),
+    new DocumentTransform(stripClient)
+  );
+
+  const queryResult = documentTransform.transformDocument(query);
+  const mutationResult = documentTransform.transformDocument(mutation);
+
+  expect(queryResult).toMatchDocument(transformedQuery);
+  expect(mutationResult).toMatchDocument(transformedMutation);
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+
+  const queryResult2 = documentTransform.transformDocument(query);
+  const mutationResult2 = documentTransform.transformDocument(mutation);
+
+  expect(queryResult2).toMatchDocument(transformedQuery);
+  expect(mutationResult2).toMatchDocument(transformedMutation);
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+
+  documentTransform.invalidateDocument(query);
+  documentTransform.invalidateDocument(mutation);
+
+  const queryResult3 = documentTransform.transformDocument(query);
+  const mutationResult3 = documentTransform.transformDocument(mutation);
+
+  expect(queryResult3).toMatchDocument(transformedQuery);
+  expect(mutationResult3).toMatchDocument(transformedMutation);
+  expect(stripClient).toHaveBeenCalledTimes(2);
+  expect(stripNonReactive).toHaveBeenCalledTimes(2);
+});
+
 test('errors when passing a document that has not been parsed with `gql`', () => {
   const query = `
     query TestQuery {

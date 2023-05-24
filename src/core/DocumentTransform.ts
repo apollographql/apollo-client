@@ -59,7 +59,7 @@ export class DocumentTransform {
     options: DocumentTransformOptions = Object.create(null)
   ) {
     this.transform = transform;
-    this.invalidate = options.invalidate || noop;
+    this.invalidate = options.invalidate || this.defaultInvalidate;
 
     if (options.cache ?? true) {
       this.documentCache = canUseWeakMap
@@ -112,10 +112,15 @@ export class DocumentTransform {
     return this.invalidate(document, noop);
   }
 
-  private removeFromCache(
-    document: DocumentNode,
-    next: (document: DocumentNode) => void
-  ) {
+  private defaultInvalidate: InvalidateFn = (document, next) => {
+    const transformedDocument = this.transformDocument(document);
+
+    next(transformedDocument);
+
+    return transformedDocument;
+  };
+
+  private removeFromCache: InvalidateFn = (document, next) => {
     const transformedDocument = this.documentCache?.get(document);
     this.documentCache?.delete(document);
 
@@ -124,5 +129,5 @@ export class DocumentTransform {
     }
 
     return transformedDocument;
-  }
+  };
 }

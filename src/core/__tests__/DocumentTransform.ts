@@ -951,7 +951,7 @@ test('allows uncached transforms to customize its own invalidation when calling 
   expect(customCache.size).toBe(1);
 });
 
-test("terminates invalidation if uncached transform doesn't specify custom `invalidate` function", () => {
+test("runs transform during invalidation if uncached transform doesn't specify custom `invalidate` function", () => {
   const query = gql`
     query TestQuery {
       user @nonreactive {
@@ -1010,8 +1010,9 @@ test("terminates invalidation if uncached transform doesn't specify custom `inva
 
   documentTransform.invalidateDocument(query);
 
+  expect(stripCustom).toHaveBeenCalledTimes(3);
   expect(stripClientTransform).toHaveCacheSize(0);
-  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(0);
   expect(customCache.size).toBe(1);
 });
 

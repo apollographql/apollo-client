@@ -5,8 +5,25 @@ import type { MatcherFunction } from 'expect';
 
 export const toMatchDocument: MatcherFunction<[document: DocumentNode]> =
   function (actual, document) {
-    const actualDocument = print(checkDocument(actual as DocumentNode));
-    const expectedDocument = print(checkDocument(document));
+    const hint = this.utils.matcherHint('toMatchDocument');
+    const actualDocument = print(
+      validateDocument(
+        actual,
+        hint +
+          `\n\n${this.utils.RECEIVED_COLOR(
+            'received'
+          )} document must be a parsed document.`
+      )
+    );
+    const expectedDocument = print(
+      validateDocument(
+        document,
+        hint +
+          `\n\n${this.utils.EXPECTED_COLOR(
+            'expected'
+          )} document must be a parsed document.`
+      )
+    );
 
     const pass = actualDocument === expectedDocument;
 
@@ -35,3 +52,13 @@ export const toMatchDocument: MatcherFunction<[document: DocumentNode]> =
       },
     };
   };
+
+function validateDocument(document: unknown, message: string) {
+  try {
+    checkDocument(document as DocumentNode);
+  } catch (e) {
+    throw new Error(message);
+  }
+
+  return document as DocumentNode;
+}

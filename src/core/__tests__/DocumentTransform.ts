@@ -1172,6 +1172,18 @@ test('can invalidate multiple documents from uncached transform when calling `ne
   expect(stripCustomTransform).toHaveCacheSize(0);
 });
 
+test('does not blow up when invalidating a transform with nothing cached', () => {
+  const transform = new DocumentTransform((document) => document);
+
+  expect(() => {
+    transform.invalidateDocument(gql`
+      query {
+        noop
+      }
+    `);
+  }).not.toThrow();
+});
+
 test('errors when passing a document that has not been parsed with `gql`', () => {
   const query = `
     query TestQuery {

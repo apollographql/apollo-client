@@ -99,7 +99,7 @@ export class DocumentTransform {
         // filling up another `Map` for this new transform.
         cache: false,
         invalidate: (document, next) => {
-          this.invalidate(document, (transformedDocument) => {
+          return this.invalidate(document, (transformedDocument) => {
             otherTransform.invalidate(transformedDocument, next);
           });
         },
@@ -109,16 +109,20 @@ export class DocumentTransform {
 
   invalidateDocument(document: DocumentNode) {
     // This is the terminating invalidator so we pass a `noop`.
-    this.invalidate(document, noop);
+    return this.invalidate(document, noop);
   }
 
   private removeFromCache(
     document: DocumentNode,
     next: (document: DocumentNode) => void
   ) {
-    if (this.documentCache?.has(document)) {
-      next(this.documentCache.get(document)!);
-      this.documentCache.delete(document);
+    const transformedDocument = this.documentCache?.get(document);
+    this.documentCache?.delete(document);
+
+    if (transformedDocument) {
+      next(transformedDocument);
     }
+
+    return transformedDocument;
   }
 }

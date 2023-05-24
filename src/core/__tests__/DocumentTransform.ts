@@ -1082,6 +1082,96 @@ test("terminates invalidation if uncached transform `invalidate` doesn't call `n
   expect(customCache.size).toBe(0);
 });
 
+test('can invalidate multiple documents from uncached transform when calling `next` function multiple times', () => {
+  let online = true;
+
+  const query = gql`
+    query TestQuery {
+      user @network {
+        name @custom
+      }
+    }
+  `;
+
+  const onlineQuery = gql`
+    query TestQuery {
+      user {
+        name
+      }
+    }
+  `;
+
+  const offlineQuery = gql`
+    query TestQuery {
+      user @client {
+        name
+      }
+    }
+  `;
+
+  const stripCustomTransform = new DocumentTransform(stripDirective('custom'));
+  const onlineTransform = new DocumentTransform(stripDirective('network'));
+  const offlineTransform = new DocumentTransform((document) => {
+    return visit(document, {
+      Directive(node) {
+        if (node.name.value === 'network') {
+          return {
+            ...node,
+            name: { kind: Kind.NAME, value: 'client' },
+          };
+        }
+      },
+    });
+  });
+
+  const networkTransform = new DocumentTransform(
+    (document) => {
+      return online
+        ? onlineTransform.transformDocument(document)
+        : offlineTransform.transformDocument(document);
+    },
+    {
+      cache: false,
+      invalidate: (document, next) => {
+        const onlineDoc = onlineTransform.invalidateDocument(document);
+        const offlineDoc = offlineTransform.invalidateDocument(document);
+
+        if (onlineDoc) {
+          next(onlineDoc);
+        }
+
+        if (offlineDoc) {
+          next(offlineDoc);
+        }
+      },
+    }
+  );
+
+  const documentTransform = networkTransform.concat(stripCustomTransform);
+
+  const onlineResult = documentTransform.transformDocument(query);
+
+  expect(onlineResult).toMatchDocument(onlineQuery);
+  expect(onlineTransform).toHaveCacheSize(1);
+  expect(offlineTransform).toHaveCacheSize(0);
+  expect(stripCustomTransform).toHaveCacheSize(1);
+
+  online = false;
+
+  const offlineResult = documentTransform.transformDocument(query);
+
+  expect(offlineResult).toMatchDocument(offlineQuery);
+  expect(onlineTransform).toHaveCacheSize(1);
+  expect(offlineTransform).toHaveCacheSize(1);
+  expect(stripCustomTransform).toHaveCacheSize(2);
+
+  documentTransform.invalidateDocument(query);
+
+  expect(onlineTransform).toHaveCacheSize(0);
+  expect(offlineTransform).toHaveCacheSize(0);
+  expect(stripCustomTransform).toHaveCacheSize(0);
+});
+
 test('errors when passing a document that has not been parsed with `gql`', () => {
   const query = `
     query TestQuery {

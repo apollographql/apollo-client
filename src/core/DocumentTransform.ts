@@ -67,7 +67,7 @@ export class DocumentTransform {
         : new Map<DocumentNode, DocumentNode>();
 
       // Always use our own cache invalidation function when using the cache
-      this.invalidate = this.defaultInvalidate;
+      this.invalidate = this.removeFromCache;
     }
   }
 
@@ -112,7 +112,7 @@ export class DocumentTransform {
     this.invalidate(document, noop);
   }
 
-  private defaultInvalidate(
+  private removeFromCache(
     document: DocumentNode,
     next: (document: DocumentNode) => void
   ) {

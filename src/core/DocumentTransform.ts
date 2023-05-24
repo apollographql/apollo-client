@@ -4,7 +4,7 @@ import type { DocumentNode } from 'graphql';
 type TransformFn = (document: DocumentNode) => DocumentNode;
 type InvalidateFn = (
   document: DocumentNode,
-  next: (document: DocumentNode) => void
+  next: (document: DocumentNode) => DocumentNode | void
 ) => DocumentNode | void;
 
 interface DocumentTransformOptions {
@@ -12,7 +12,9 @@ interface DocumentTransformOptions {
   invalidate?: InvalidateFn;
 }
 
-const noop = () => {};
+function identity(document: DocumentNode) {
+  return document;
+}
 
 export class DocumentTransform {
   private readonly transform: TransformFn;
@@ -26,7 +28,7 @@ export class DocumentTransform {
     // No need to cache this transform since it just returns the document
     // unchanged. This should save a bit of memory that would otherwise be
     // needed to populate the `documentCache` of this transform.
-    return new DocumentTransform((document) => document, { cache: false });
+    return new DocumentTransform(identity, { cache: false });
   }
 
   static split(
@@ -100,7 +102,7 @@ export class DocumentTransform {
         cache: false,
         invalidate: (document, next) => {
           return this.invalidate(document, (transformedDocument) => {
-            otherTransform.invalidate(transformedDocument, next);
+            return otherTransform.invalidate(transformedDocument, next);
           });
         },
       }
@@ -108,16 +110,13 @@ export class DocumentTransform {
   }
 
   invalidateDocument(document: DocumentNode) {
-    // This is the terminating invalidator so we pass a `noop`.
-    return this.invalidate(document, noop);
+    return this.invalidate(document, identity);
   }
 
   private defaultInvalidate: InvalidateFn = (document, next) => {
     const transformedDocument = this.transformDocument(document);
 
-    next(transformedDocument);
-
-    return transformedDocument;
+    return next(transformedDocument);
   };
 
   private removeFromCache: InvalidateFn = (document, next) => {
@@ -125,9 +124,7 @@ export class DocumentTransform {
     this.documentCache?.delete(document);
 
     if (transformedDocument) {
-      next(transformedDocument);
+      return next(transformedDocument);
     }
-
-    return transformedDocument;
   };
 }

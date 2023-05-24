@@ -78,18 +78,25 @@ test('returns unmodified document if trying to transform an already computed res
   const query = gql`
     query TestQuery {
       user {
-        name
+        name @custom
         isLoggedIn @client
       }
     }
   `;
 
-  const transform = new DocumentTransform(stripDirective('client'));
+  const cachedTransform = new DocumentTransform(stripDirective('client'));
+  const uncachedTransform = new DocumentTransform(stripDirective('custom'), {
+    cache: false,
+  });
 
-  const result = transform.transformDocument(query);
-  const result2 = transform.transformDocument(result);
+  const withoutClient = cachedTransform.transformDocument(query);
+  const withoutCustom = uncachedTransform.transformDocument(query);
 
-  expect(result2).toBe(result);
+  expect(cachedTransform.transformDocument(withoutClient)).toBe(withoutClient);
+
+  expect(uncachedTransform.transformDocument(withoutCustom)).toBe(
+    withoutCustom
+  );
 });
 
 test('caches the result of the transform by default', () => {

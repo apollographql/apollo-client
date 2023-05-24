@@ -1,4 +1,4 @@
-import React, { useState, useReducer, Fragment } from 'react';
+import React, { useState, useReducer, Fragment, useEffect, useRef } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { render, cleanup, wait } from '@testing-library/react';
@@ -11,7 +11,7 @@ import { ApolloLink } from '../../../link/core';
 import { itAsync, MockLink, MockedProvider, mockSingleLink } from '../../../testing';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
-import { QueryFunctionOptions } from '../..';
+import { QueryFunctionOptions, useApolloClient } from '../..';
 
 describe('useQuery Hook', () => {
   const CAR_QUERY: DocumentNode = gql`
@@ -466,6 +466,125 @@ describe('useQuery Hook', () => {
       return wait(() => {
         expect(renderCount).toBe(8);
       }).then(resolve, reject);
+    });
+
+    itAsync('keeps cache consistency when a call to refetchQueries is interrupted with another query caused by changing variables and the second query returns before the first one', async resolve => {
+      const CAR_QUERY_BY_ID = gql`
+        query Car($id: Int) {
+          car(id: $id) {
+            make
+            model
+          }
+        }
+      `;
+
+      const mocks = {
+        1: [
+          {
+            car: {
+              make: 'Audi',
+              model: 'A4',
+              __typename: 'Car'
+            }
+          },
+          {
+            car: {
+              make: 'Audi',
+              model: 'A3', // Changed
+              __typename: 'Car'
+            }
+          }
+        ],
+        2: [
+          {
+            car: {
+              make: 'Audi',
+              model: 'RS8',
+              __typename: 'Car'
+            }
+          }
+        ]
+      };
+
+      const link = new ApolloLink(
+        operation =>
+          new Observable(observer => {
+            if (operation.variables.id === 1) {
+              // Queries for this ID return after a delay
+              setTimeout(() => {
+                const data = mocks[1].splice(0, 1).pop();
+                observer.next({ data });
+                observer.complete();
+              }, 100);
+            } else if (operation.variables.id === 2) {
+              // Queries for this ID return immediately
+              const data = mocks[2].splice(0, 1).pop();
+              observer.next({ data });
+              observer.complete();
+            } else {
+              observer.error(new Error('Unexpected query'));
+            }
+          })
+      );
+
+      const hookResponse = jest.fn().mockReturnValue(null);
+
+      function Component({ children, id }: any) {
+        const result = useQuery(CAR_QUERY_BY_ID, {
+          variables: { id },
+          notifyOnNetworkStatusChange: true,
+          fetchPolicy: 'network-only'
+        });
+        const client = useApolloClient();
+        const hasRefetchedRef = useRef(false);
+
+        useEffect(() => {
+          if (
+            result.networkStatus === NetworkStatus.ready &&
+            !hasRefetchedRef.current
+          ) {
+            client.reFetchObservableQueries();
+            hasRefetchedRef.current = true;
+          }
+        }, [result.networkStatus]);
+
+        return children(result);
+      }
+
+      const { rerender } = render(
+        <MockedProvider link={link}>
+          <Component id={1}>{hookResponse}</Component>
+        </MockedProvider>
+      );
+
+      await wait(() => {
+        // Resolves as soon as reFetchObservableQueries is
+        // called, but before the result is returned
+        expect(hookResponse).toHaveBeenCalledTimes(3);
+      });
+
+      rerender(
+        <MockedProvider link={link}>
+          <Component id={2}>{hookResponse}</Component>
+        </MockedProvider>
+      );
+
+      await wait(() => {
+        // All results are returned
+        expect(hookResponse).toHaveBeenCalledTimes(7);
+      });
+
+      expect(hookResponse.mock.calls.map(call => call[0].data)).toEqual([
+        undefined,
+        { car: { __typename: 'Car', make: 'Audi', model: 'A4' } },
+        { car: { __typename: 'Car', make: 'Audi', model: 'A4' } },
+        { car: { __typename: 'Car', make: 'Audi', model: 'A4' } },
+        {},
+        { car: { __typename: 'Car', make: 'Audi', model: 'RS8' } },
+        { car: { __typename: 'Car', make: 'Audi', model: 'RS8' } },
+      ]);
+
+      resolve();
     });
   });
 

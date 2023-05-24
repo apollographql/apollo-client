@@ -2,11 +2,16 @@ import gql from "graphql-tag";
 import { GraphQLError } from "graphql";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import { ApolloClient, NetworkStatus, WatchQueryFetchPolicy } from "../../core";
+import { 
+  ApolloClient,
+  DocumentTransform,
+  NetworkStatus,
+  WatchQueryFetchPolicy
+} from "../../core";
 import { ObservableQuery } from "../ObservableQuery";
 import { QueryManager } from "../QueryManager";
 
-import { Observable } from "../../utilities";
+import { Observable, removeDirectivesFromDocument } from "../../utilities";
 import { ApolloLink, FetchResult } from "../../link/core";
 import { InMemoryCache, NormalizedCacheObject } from "../../cache";
 import { ApolloError } from "../../errors";
@@ -2385,6 +2390,132 @@ describe("ObservableQuery", () => {
           resolve();
         },
       });
+    });
+  });
+
+  describe('.query computed property', () => {
+    it('is equal to transformed query when instantiating via `watchQuery`', () => {
+      const query = gql`
+        query {
+          currentUser {
+            id
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      const observable = client.watchQuery({ query });
+
+      expect(observable.query).toMatchDocument(gql`
+        query {
+          currentUser {
+            id
+            __typename
+          }
+        }
+      `);
+    });
+
+    it('is referentially stable', () => {
+      const query = gql`
+        query {
+          currentUser {
+            id
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      const observable = client.watchQuery({ query });
+      const result = observable.query;
+
+      expect(observable.query).toBe(result);
+    });
+
+    it('is updated with transformed query when `setOptions` changes the query', () => {
+      const query = gql`
+        query {
+          currentUser {
+            id
+          }
+        }
+      `;
+
+      const updatedQuery = gql`
+        query {
+          product {
+            id
+          }
+        }
+      `
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      const observable = client.watchQuery({ query });
+
+      expect(observable.query).toMatchDocument(gql`
+        query {
+          currentUser {
+            id
+            __typename
+          }
+        }
+      `);
+
+      observable.setOptions({ query: updatedQuery });
+
+      expect(observable.query).toMatchDocument(gql`
+        query {
+          product {
+            id
+            __typename
+          }
+        }
+      `);
+    });
+
+    it('reflects query run through custom transforms', () => {
+      const query = gql`
+        query {
+          currentUser {
+            id
+            name @client
+          }
+        }
+      `;
+
+      const documentTransform = new DocumentTransform((document) => {
+        return removeDirectivesFromDocument([{ name: 'client' }], document)!
+      });
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+        documentTransform,
+      });
+
+      const observable = client.watchQuery({ query });
+
+      expect(observable.query).toMatchDocument(gql`
+        query {
+          currentUser {
+            id
+            name
+            __typename
+          }
+        }
+      `);
     });
   });
 

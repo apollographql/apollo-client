@@ -30,7 +30,7 @@ export const toMatchDocument: MatcherFunction<[document: DocumentNode]> =
         }
 
         return (
-          hint + '\n\n' + this.utils.diff(actualDocument, expectedDocument)
+          hint + '\n\n' + this.utils.diff(expectedDocument, actualDocument)
         );
       },
     };

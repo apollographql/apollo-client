@@ -858,7 +858,7 @@ test('invalidates both left/right concatenated transforms created via `split` by
   expect(stripCustomTransform).toHaveCacheSize(0);
 });
 
-test('allows uncached transformed to specify document used to invalidate the cache when calling `invalidateDocument`', () => {
+test('allows uncached transforms to customize its own invalidation when calling `invalidateDocument`', () => {
   const query = gql`
     query TestQuery {
       user @nonreactive {

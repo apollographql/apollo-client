@@ -951,6 +951,137 @@ test('allows uncached transforms to customize its own invalidation when calling 
   expect(customCache.size).toBe(1);
 });
 
+test("terminates invalidation if uncached transform doesn't specify custom `invalidate` function", () => {
+  const query = gql`
+    query TestQuery {
+      user @nonreactive {
+        name @custom
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const customCache = new Map<DocumentNode, DocumentNode>();
+
+  const stripClient = jest.fn(stripDirective('client'));
+  const stripCustom = jest.fn((document) => {
+    // While this functionality is built into the transform, we want to
+    // demonstrate the ability to custom invalidate a transform that invalidates
+    // the whole chain.
+    if (customCache.has(document)) {
+      return customCache.get(document)!;
+    }
+
+    const result = stripDirective('custom')(document);
+
+    customCache.set(document, result);
+
+    return result;
+  });
+  const stripNonReactive = jest.fn(stripDirective('nonreactive'));
+
+  const stripClientTransform = new DocumentTransform(stripClient);
+  const stripNonReactiveTransform = new DocumentTransform(stripNonReactive);
+  const stripCustomTransform = new DocumentTransform(stripCustom, {
+    cache: false,
+  });
+
+  const documentTransform = stripClientTransform
+    .concat(stripCustomTransform)
+    .concat(stripNonReactiveTransform);
+
+  documentTransform.transformDocument(query);
+
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(stripCustom).toHaveBeenCalledTimes(1);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(customCache.size).toBe(1);
+
+  documentTransform.transformDocument(query);
+
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(stripCustom).toHaveBeenCalledTimes(2);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(customCache.size).toBe(1);
+
+  documentTransform.invalidateDocument(query);
+
+  expect(stripClientTransform).toHaveCacheSize(0);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(customCache.size).toBe(1);
+});
+
+test("terminates invalidation if uncached transform `invalidate` doesn't call `next`", () => {
+  const query = gql`
+    query TestQuery {
+      user @nonreactive {
+        name @custom
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const customCache = new Map<DocumentNode, DocumentNode>();
+
+  const stripClient = jest.fn(stripDirective('client'));
+  const stripCustom = jest.fn((document) => {
+    // While this functionality is built into the transform, we want to
+    // demonstrate the ability to custom invalidate a transform that invalidates
+    // the whole chain.
+    if (customCache.has(document)) {
+      return customCache.get(document)!;
+    }
+
+    const result = stripDirective('custom')(document);
+
+    customCache.set(document, result);
+
+    return result;
+  });
+  const stripNonReactive = jest.fn(stripDirective('nonreactive'));
+
+  const stripClientTransform = new DocumentTransform(stripClient);
+  const stripNonReactiveTransform = new DocumentTransform(stripNonReactive);
+  const stripCustomTransform = new DocumentTransform(stripCustom, {
+    cache: false,
+    invalidate: (document) => {
+      customCache.delete(document);
+    },
+  });
+
+  const documentTransform = stripClientTransform
+    .concat(stripCustomTransform)
+    .concat(stripNonReactiveTransform);
+
+  documentTransform.transformDocument(query);
+
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(stripCustom).toHaveBeenCalledTimes(1);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(customCache.size).toBe(1);
+
+  documentTransform.transformDocument(query);
+
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(stripCustom).toHaveBeenCalledTimes(2);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(customCache.size).toBe(1);
+
+  documentTransform.invalidateDocument(query);
+
+  expect(stripClientTransform).toHaveCacheSize(0);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(customCache.size).toBe(0);
+});
+
 test('errors when passing a document that has not been parsed with `gql`', () => {
   const query = `
     query TestQuery {

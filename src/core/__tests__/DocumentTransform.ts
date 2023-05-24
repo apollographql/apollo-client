@@ -1015,7 +1015,7 @@ test("terminates invalidation if uncached transform doesn't specify custom `inva
   expect(customCache.size).toBe(1);
 });
 
-test("terminates invalidation if uncached transform `invalidate` doesn't call `next`", () => {
+test("terminates invalidation chain if uncached transform `invalidate` doesn't call `next`", () => {
   const query = gql`
     query TestQuery {
       user @nonreactive {

@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.7.15
+
+### Patch Changes
+
+- [#10891](https://github.com/apollographql/apollo-client/pull/10891) [`ab42a5c08`](https://github.com/apollographql/apollo-client/commit/ab42a5c08840193cb915f4e66d71fac3834fec68) Thanks [@laverdet](https://github.com/laverdet)! - Fixes a bug in how multipart responses are read when using `@defer`. When reading a multipart body, `HttpLink` no longer attempts to parse the boundary (e.g. `"---"` or other boundary string) within the response data itself, only when reading the beginning of each mulitpart chunked message.
+
+- [#10789](https://github.com/apollographql/apollo-client/pull/10789) [`23a4e1578`](https://github.com/apollographql/apollo-client/commit/23a4e15786fe99658d741585366f3b02bcffb97f) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where other fields could be aliased to `__typename` or `id`, in which case an incoming result would be merged into the wrong cache entry.
+
 ## 3.7.14
 
 ### Patch Changes

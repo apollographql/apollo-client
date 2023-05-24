@@ -1198,16 +1198,68 @@ test('can invalidate multiple documents from uncached transform when calling `ne
   expect(stripCustomTransform).toHaveCacheSize(0);
 });
 
-test('does not blow up when invalidating a transform with nothing cached', () => {
-  const transform = new DocumentTransform((document) => document);
-
-  expect(() => {
-    transform.invalidateDocument(gql`
-      query {
-        noop
+test('calling `invalidateDocument` with an uncached query results in a noop', () => {
+  const query = gql`
+    query {
+      currentUser {
+        name @client
       }
-    `);
-  }).not.toThrow();
+    }
+  `;
+
+  const documentTransform = new DocumentTransform(stripDirective('client'));
+
+  const invalidateResult = documentTransform.invalidateDocument(query);
+
+  expect(invalidateResult).toBeUndefined();
+  expect(documentTransform).toHaveCacheSize(0);
+});
+
+test('ensures `invalidateDocument` invalidates the right query', () => {
+  const query = gql`
+    query {
+      currentUser {
+        name @client
+      }
+    }
+  `;
+
+  const expected = gql`
+    query {
+      currentUser {
+        name
+      }
+    }
+  `;
+
+  const uncachedQuery = gql`
+    query {
+      product {
+        id
+        name @client
+      }
+    }
+  `;
+
+  const transform = jest.fn(stripDirective('client'));
+  const documentTransform = new DocumentTransform(transform);
+
+  const result = documentTransform.transformDocument(query);
+
+  expect(result).toMatchDocument(expected);
+  expect(transform).toHaveBeenCalledTimes(1);
+  expect(documentTransform).toHaveCacheSize(1);
+
+  const invalidateResult = documentTransform.invalidateDocument(uncachedQuery);
+
+  expect(invalidateResult).toBeUndefined();
+  expect(documentTransform).toHaveCacheSize(1);
+
+  const result2 = documentTransform.transformDocument(query);
+
+  expect(result2).toMatchDocument(expected);
+  expect(transform).toHaveBeenCalledTimes(1);
+  expect(documentTransform).toHaveCacheSize(1);
 });
 
 test('errors when passing a document that has not been parsed with `gql`', () => {

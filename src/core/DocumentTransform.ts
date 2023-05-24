@@ -1,5 +1,5 @@
 import { Trie } from '@wry/trie';
-import { canUseWeakMap, checkDocument } from '../utilities';
+import { canUseWeakMap, canUseWeakSet, checkDocument } from '../utilities';
 import { invariant } from '../utilities/globals';
 import type { DocumentNode } from 'graphql';
 
@@ -21,6 +21,10 @@ export class DocumentTransform {
   private readonly documentCache?:
     | WeakMap<DocumentTransformCacheKey, DocumentNode>
     | Map<DocumentTransformCacheKey, DocumentNode>;
+
+  private readonly resultCache = canUseWeakSet
+    ? new WeakSet<DocumentNode>()
+    : new Set<DocumentNode>();
 
   private readonly stableCacheKeys = new Trie<DocumentTransformCacheKey>(
     canUseWeakMap,
@@ -67,6 +71,12 @@ export class DocumentTransform {
   }
 
   transformDocument(document: DocumentNode) {
+    // If a user passes an already transformed result back to this function,
+    // immediately return it.
+    if (this.resultCache.has(document)) {
+      return document;
+    }
+
     const cacheKey = this.getStableCacheKey(document);
 
     if (this.documentCache?.has(cacheKey)) {
@@ -76,6 +86,8 @@ export class DocumentTransform {
     checkDocument(document);
 
     const transformedDocument = this.transform(document);
+
+    this.resultCache.add(transformedDocument);
 
     if (this.documentCache) {
       this.documentCache.set(cacheKey, transformedDocument);

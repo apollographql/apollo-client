@@ -74,6 +74,24 @@ test('can transform a document', () => {
   `);
 });
 
+test('returns unmodified document if trying to transform an already computed result', () => {
+  const query = gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const transform = new DocumentTransform(stripDirective('client'));
+
+  const result = transform.transformDocument(query);
+  const result2 = transform.transformDocument(result);
+
+  expect(result2).toBe(result);
+});
+
 test('caches the result of the transform by default', () => {
   const query = gql`
     query TestQuery {

@@ -99,12 +99,12 @@ export class QueryManager<TStore> {
   public defaultOptions: DefaultOptions;
 
   public readonly assumeImmutableResults: boolean;
+  public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
 
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
   private localState: LocalState<TStore>;
-  private documentTransform: DocumentTransform
 
   private onBroadcast?: () => void;
   public mutationStore?: {

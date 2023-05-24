@@ -264,6 +264,15 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   /**
+   * The `DocumentTransform` used to modify GraphQL documents before a request
+   * is made. If a custom `DocumentTransform` is not provided, this will be the
+   * default document transform.
+   */
+  get documentTransform() {
+    return this.queryManager.documentTransform;
+  }
+
+  /**
    * Call this method to terminate any active client processes, making it safe
    * to dispose of this `ApolloClient` instance.
    */

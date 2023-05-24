@@ -2,9 +2,14 @@ import { canUseWeakMap, checkDocument } from '../utilities';
 import type { DocumentNode } from 'graphql';
 
 type TransformFn = (document: DocumentNode) => DocumentNode;
+type InvalidateFn = (
+  document: DocumentNode,
+  next: (document: DocumentNode) => void
+) => DocumentNode | void;
 
 interface DocumentTransformOptions {
   cache?: boolean;
+  invalidate?: InvalidateFn;
 }
 
 export class DocumentTransform {
@@ -13,7 +18,7 @@ export class DocumentTransform {
     | WeakMap<DocumentNode, DocumentNode>
     | Map<DocumentNode, DocumentNode>;
 
-  private readonly linkedTransforms = new Set<DocumentTransform>();
+  private readonly invalidate: InvalidateFn;
 
   static identity() {
     // No need to cache this transform since it just returns the document
@@ -33,13 +38,16 @@ export class DocumentTransform {
 
         return documentTransform.transformDocument(document);
       },
-      // Allow for runtime conditionals to determine which transform to use and
-      // rely on each transform to determine its own caching behavior.
-      { cache: false }
+      {
+        // Allow for runtime conditionals to determine which transform to use
+        // and rely on each transform to determine its own caching behavior.
+        cache: false,
+        invalidate: (document, next) => {
+          left.invalidate(document, next);
+          right.invalidate(document, next);
+        },
+      }
     );
-
-    transform.link(left);
-    transform.link(right);
 
     return transform;
   }
@@ -49,11 +57,15 @@ export class DocumentTransform {
     options: DocumentTransformOptions = Object.create(null)
   ) {
     this.transform = transform;
+    this.invalidate = options.invalidate || this.defaultInvalidate;
 
     if (options.cache ?? true) {
       this.documentCache = canUseWeakMap
         ? new WeakMap<DocumentNode, DocumentNode>()
         : new Map<DocumentNode, DocumentNode>();
+
+      // Always use our own cache invalidation function when using the cache
+      this.invalidate = this.defaultInvalidate;
     }
   }
 
@@ -74,34 +86,38 @@ export class DocumentTransform {
   }
 
   concat(otherTransform: DocumentTransform) {
-    this.link(otherTransform);
-
-    const transform = new DocumentTransform(
+    return new DocumentTransform(
       (document) => {
         return otherTransform.transformDocument(
           this.transformDocument(document)
         );
       },
-      // Allow each transform to determine its own cache behavior without
-      // filling up another `Map` for this new transform.
-      { cache: false }
+      {
+        // Allow each transform to determine its own cache behavior without
+        // filling up another `Map` for this new transform.
+        cache: false,
+        invalidate: (document, next) => {
+          this.invalidate(document, (transformedDocument) => {
+            otherTransform.invalidate(transformedDocument, next);
+          });
+        },
+      }
     );
-
-    transform.link(this);
-
-    return transform;
   }
 
   invalidateDocument(document: DocumentNode) {
-    const transformedDocument = this.documentCache?.get(document) ?? document;
-
-    this.documentCache?.delete(document);
-    this.linkedTransforms.forEach((transform) => {
-      transform.invalidateDocument(transformedDocument);
+    this.invalidate(document, () => {
+      // Do nothing since this is the terminating function.
     });
   }
 
-  private link(transform: DocumentTransform) {
-    this.linkedTransforms.add(transform);
+  private defaultInvalidate(
+    document: DocumentNode,
+    next: (document: DocumentNode) => void
+  ) {
+    if (this.documentCache?.has(document)) {
+      next(this.documentCache.get(document)!);
+      this.documentCache.delete(document);
+    }
   }
 }

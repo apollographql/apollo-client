@@ -644,7 +644,7 @@ test('invalidates the entire chain of transforms created via `concat` by calling
   const query = gql`
     query TestQuery {
       user @nonreactive {
-        name
+        name @custom
         isLoggedIn @client
       }
     }
@@ -660,41 +660,50 @@ test('invalidates the entire chain of transforms created via `concat` by calling
 
   const stripClient = jest.fn(stripDirective('client'));
   const stripNonReactive = jest.fn(stripDirective('nonreactive'));
+  const stripCustom = jest.fn(stripDirective('custom'));
 
   const stripClientTransform = new DocumentTransform(stripClient);
   const stripNonReactiveTransform = new DocumentTransform(stripNonReactive);
+  const stripCustomTransform = new DocumentTransform(stripCustom);
 
-  const documentTransform = stripClientTransform.concat(
-    stripNonReactiveTransform
-  );
+  const documentTransform = stripClientTransform
+    .concat(stripNonReactiveTransform)
+    .concat(stripCustomTransform);
 
   const result = documentTransform.transformDocument(query);
 
   expect(result).toMatchDocument(expected);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(stripCustom).toHaveBeenCalledTimes(1);
   expect(stripClientTransform).toHaveCacheSize(1);
   expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(stripCustomTransform).toHaveCacheSize(1);
 
   const result2 = documentTransform.transformDocument(query);
 
   expect(result2).toMatchDocument(expected);
   expect(stripClient).toHaveBeenCalledTimes(1);
   expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(stripCustom).toHaveBeenCalledTimes(1);
   expect(stripClientTransform).toHaveCacheSize(1);
   expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(stripCustomTransform).toHaveCacheSize(1);
 
   documentTransform.invalidateDocument(query);
   expect(stripClientTransform).toHaveCacheSize(0);
   expect(stripNonReactiveTransform).toHaveCacheSize(0);
+  expect(stripCustomTransform).toHaveCacheSize(0);
 
   const result3 = documentTransform.transformDocument(query);
 
   expect(result3).toMatchDocument(expected);
   expect(stripClient).toHaveBeenCalledTimes(2);
   expect(stripNonReactive).toHaveBeenCalledTimes(2);
+  expect(stripCustom).toHaveBeenCalledTimes(2);
   expect(stripClientTransform).toHaveCacheSize(1);
   expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(stripCustomTransform).toHaveCacheSize(1);
 });
 
 test('invalidates both left/right transforms created via `split` by calling `invalidateDocument`', () => {
@@ -792,6 +801,99 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   expect(stripNonReactive).toHaveBeenCalledTimes(2);
   expect(queryTransform).toHaveCacheSize(1);
   expect(mutationTransform).toHaveCacheSize(1);
+});
+
+test('allows uncached transformed to specify document used to invalidate the cache when calling `invalidateDocument`', () => {
+  const query = gql`
+    query TestQuery {
+      user @nonreactive {
+        name @custom
+        isLoggedIn @client
+      }
+    }
+  `;
+  const expected = gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn
+      }
+    }
+  `;
+
+  const customCache = new Map<DocumentNode, DocumentNode>();
+
+  const stripClient = jest.fn(stripDirective('client'));
+  const stripCustom = jest.fn((document) => {
+    // While this functionality is built into the transform, we want to
+    // demonstrate the ability to custom invalidate a transform that invalidates
+    // the whole chain.
+    if (customCache.has(document)) {
+      return customCache.get(document)!;
+    }
+
+    const result = stripDirective('custom')(document);
+
+    customCache.set(document, result);
+
+    return result;
+  });
+  const stripNonReactive = jest.fn(stripDirective('nonreactive'));
+
+  const stripClientTransform = new DocumentTransform(stripClient);
+  const stripNonReactiveTransform = new DocumentTransform(stripNonReactive);
+  const stripCustomTransform = new DocumentTransform(stripCustom, {
+    cache: false,
+    invalidate: (document, next) => {
+      if (customCache.has(document)) {
+        const transformedDocument = customCache.get(document)!;
+        customCache.delete(document);
+        next(transformedDocument);
+      }
+    },
+  });
+
+  const documentTransform = stripClientTransform
+    // Add the uncached transform in the middle of the chain to demonstrate that
+    // calling `next` in the custom `invalidate` function will invalidate the
+    // last transform
+    .concat(stripCustomTransform)
+    .concat(stripNonReactiveTransform);
+
+  const result = documentTransform.transformDocument(query);
+
+  expect(result).toMatchDocument(expected);
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(stripCustom).toHaveBeenCalledTimes(1);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(customCache.size).toBe(1);
+
+  const result2 = documentTransform.transformDocument(query);
+
+  expect(result2).toMatchDocument(expected);
+  expect(stripClient).toHaveBeenCalledTimes(1);
+  expect(stripNonReactive).toHaveBeenCalledTimes(1);
+  expect(stripCustom).toHaveBeenCalledTimes(2);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(customCache.size).toBe(1);
+
+  documentTransform.invalidateDocument(query);
+  expect(stripClientTransform).toHaveCacheSize(0);
+  expect(stripNonReactiveTransform).toHaveCacheSize(0);
+  expect(customCache.size).toBe(0);
+
+  const result3 = documentTransform.transformDocument(query);
+
+  expect(result3).toMatchDocument(expected);
+  expect(stripClient).toHaveBeenCalledTimes(2);
+  expect(stripNonReactive).toHaveBeenCalledTimes(2);
+  expect(stripCustom).toHaveBeenCalledTimes(3);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(customCache.size).toBe(1);
 });
 
 test('errors when passing a document that has not been parsed with `gql`', () => {

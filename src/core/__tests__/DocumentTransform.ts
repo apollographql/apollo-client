@@ -803,6 +803,61 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   expect(mutationTransform).toHaveCacheSize(1);
 });
 
+test('invalidates both left/right concatenated transforms created via `split` by calling `invalidateDocument`', () => {
+  const query = gql`
+    query TestQuery {
+      user @nonreactive {
+        name @custom
+        isLoggedIn @client
+      }
+    }
+  `;
+  const mutation = gql`
+    mutation TestMutation {
+      changeUsername {
+        username @custom
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const stripClient = jest.fn(stripDirective('client'));
+  const stripNonReactive = jest.fn(stripDirective('nonreactive'));
+  const stripCustom = jest.fn(stripDirective('custom'));
+
+  const stripClientTransform = new DocumentTransform(stripClient);
+  const stripNonReactiveTransform = new DocumentTransform(stripNonReactive);
+  const stripCustomTransform = new DocumentTransform(stripCustom);
+
+  const queryTransform = stripNonReactiveTransform.concat(stripCustomTransform);
+  const mutationTransform = stripClientTransform.concat(stripCustomTransform);
+
+  const documentTransform = DocumentTransform.split(
+    (document) => isQueryOperation(document),
+    queryTransform,
+    mutationTransform
+  );
+
+  documentTransform.transformDocument(query);
+  documentTransform.transformDocument(mutation);
+
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripNonReactiveTransform).toHaveCacheSize(1);
+  expect(stripCustomTransform).toHaveCacheSize(2);
+
+  documentTransform.invalidateDocument(query);
+
+  expect(stripNonReactiveTransform).toHaveCacheSize(0);
+  expect(stripClientTransform).toHaveCacheSize(1);
+  expect(stripCustomTransform).toHaveCacheSize(1);
+
+  documentTransform.invalidateDocument(mutation);
+
+  expect(stripNonReactiveTransform).toHaveCacheSize(0);
+  expect(stripClientTransform).toHaveCacheSize(0);
+  expect(stripCustomTransform).toHaveCacheSize(0);
+});
+
 test('allows uncached transformed to specify document used to invalidate the cache when calling `invalidateDocument`', () => {
   const query = gql`
     query TestQuery {

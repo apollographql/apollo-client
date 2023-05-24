@@ -630,7 +630,9 @@ test('can invalidate a cached document with `invalidateDocument`', () => {
   expect(transform).toHaveBeenCalledTimes(1);
   expect(documentTransform).toHaveCacheSize(1);
 
-  documentTransform.invalidateDocument(query);
+  const invalidateResult = documentTransform.invalidateDocument(query);
+
+  expect(invalidateResult).toMatchDocument(expected);
   expect(documentTransform).toHaveCacheSize(0);
 
   const result3 = documentTransform.transformDocument(query);
@@ -690,7 +692,9 @@ test('invalidates the entire chain of transforms created via `concat` by calling
   expect(stripNonReactiveTransform).toHaveCacheSize(1);
   expect(stripCustomTransform).toHaveCacheSize(1);
 
-  documentTransform.invalidateDocument(query);
+  const invalidateResult = documentTransform.invalidateDocument(query);
+
+  expect(invalidateResult).toMatchDocument(expected);
   expect(stripClientTransform).toHaveCacheSize(0);
   expect(stripNonReactiveTransform).toHaveCacheSize(0);
   expect(stripCustomTransform).toHaveCacheSize(0);
@@ -774,7 +778,9 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   expect(queryTransform).toHaveCacheSize(1);
   expect(mutationTransform).toHaveCacheSize(1);
 
-  documentTransform.invalidateDocument(query);
+  const invalidateQueryResult = documentTransform.invalidateDocument(query);
+
+  expect(invalidateQueryResult).toBeUndefined();
   expect(queryTransform).toHaveCacheSize(0);
   expect(mutationTransform).toHaveCacheSize(1);
 
@@ -788,7 +794,10 @@ test('invalidates both left/right transforms created via `split` by calling `inv
   expect(queryTransform).toHaveCacheSize(1);
   expect(mutationTransform).toHaveCacheSize(1);
 
-  documentTransform.invalidateDocument(mutation);
+  const invalidateMutationResult =
+    documentTransform.invalidateDocument(mutation);
+
+  expect(invalidateMutationResult).toBeUndefined();
   expect(queryTransform).toHaveCacheSize(1);
   expect(mutationTransform).toHaveCacheSize(0);
 
@@ -845,14 +854,17 @@ test('invalidates both left/right concatenated transforms created via `split` by
   expect(stripNonReactiveTransform).toHaveCacheSize(1);
   expect(stripCustomTransform).toHaveCacheSize(2);
 
-  documentTransform.invalidateDocument(query);
+  const invalidateQueryResult = documentTransform.invalidateDocument(query);
 
+  expect(invalidateQueryResult).toBeUndefined();
   expect(stripNonReactiveTransform).toHaveCacheSize(0);
   expect(stripClientTransform).toHaveCacheSize(1);
   expect(stripCustomTransform).toHaveCacheSize(1);
 
-  documentTransform.invalidateDocument(mutation);
+  const invalidateMutationResult =
+    documentTransform.invalidateDocument(mutation);
 
+  expect(invalidateMutationResult).toBeUndefined();
   expect(stripNonReactiveTransform).toHaveCacheSize(0);
   expect(stripClientTransform).toHaveCacheSize(0);
   expect(stripCustomTransform).toHaveCacheSize(0);
@@ -903,7 +915,8 @@ test('allows uncached transforms to customize its own invalidation when calling 
       if (customCache.has(document)) {
         const transformedDocument = customCache.get(document)!;
         customCache.delete(document);
-        next(transformedDocument);
+
+        return next(transformedDocument);
       }
     },
   });
@@ -935,7 +948,9 @@ test('allows uncached transforms to customize its own invalidation when calling 
   expect(stripNonReactiveTransform).toHaveCacheSize(1);
   expect(customCache.size).toBe(1);
 
-  documentTransform.invalidateDocument(query);
+  const invalidateResult = documentTransform.invalidateDocument(query);
+
+  expect(invalidateResult).toMatchDocument(expected);
   expect(stripClientTransform).toHaveCacheSize(0);
   expect(stripNonReactiveTransform).toHaveCacheSize(0);
   expect(customCache.size).toBe(0);
@@ -1008,8 +1023,16 @@ test("runs transform during invalidation if uncached transform doesn't specify c
   expect(stripNonReactiveTransform).toHaveCacheSize(1);
   expect(customCache.size).toBe(1);
 
-  documentTransform.invalidateDocument(query);
+  const invalidateResult = documentTransform.invalidateDocument(query);
 
+  expect(invalidateResult).toMatchDocument(gql`
+    query TestQuery {
+      user {
+        name
+        isLoggedIn
+      }
+    }
+  `);
   expect(stripCustom).toHaveBeenCalledTimes(3);
   expect(stripClientTransform).toHaveCacheSize(0);
   expect(stripNonReactiveTransform).toHaveCacheSize(0);
@@ -1076,8 +1099,9 @@ test("terminates invalidation chain if uncached transform `invalidate` doesn't c
   expect(stripNonReactiveTransform).toHaveCacheSize(1);
   expect(customCache.size).toBe(1);
 
-  documentTransform.invalidateDocument(query);
+  const invalidateResult = documentTransform.invalidateDocument(query);
 
+  expect(invalidateResult).toBeUndefined();
   expect(stripClientTransform).toHaveCacheSize(0);
   expect(stripNonReactiveTransform).toHaveCacheSize(1);
   expect(customCache.size).toBe(0);
@@ -1166,8 +1190,9 @@ test('can invalidate multiple documents from uncached transform when calling `ne
   expect(offlineTransform).toHaveCacheSize(1);
   expect(stripCustomTransform).toHaveCacheSize(2);
 
-  documentTransform.invalidateDocument(query);
+  const invalidateResult = documentTransform.invalidateDocument(query);
 
+  expect(invalidateResult).toBeUndefined();
   expect(onlineTransform).toHaveCacheSize(0);
   expect(offlineTransform).toHaveCacheSize(0);
   expect(stripCustomTransform).toHaveCacheSize(0);

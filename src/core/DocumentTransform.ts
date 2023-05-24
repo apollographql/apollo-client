@@ -12,6 +12,8 @@ interface DocumentTransformOptions {
   invalidate?: InvalidateFn;
 }
 
+const noop = () => {};
+
 export class DocumentTransform {
   private readonly transform: TransformFn;
   private readonly documentCache?:
@@ -57,7 +59,7 @@ export class DocumentTransform {
     options: DocumentTransformOptions = Object.create(null)
   ) {
     this.transform = transform;
-    this.invalidate = options.invalidate || this.defaultInvalidate;
+    this.invalidate = options.invalidate || noop;
 
     if (options.cache ?? true) {
       this.documentCache = canUseWeakMap
@@ -106,9 +108,8 @@ export class DocumentTransform {
   }
 
   invalidateDocument(document: DocumentNode) {
-    this.invalidate(document, () => {
-      // Do nothing since this is the terminating function.
-    });
+    // This is the terminating invalidator so we pass a `noop`.
+    this.invalidate(document, noop);
   }
 
   private defaultInvalidate(

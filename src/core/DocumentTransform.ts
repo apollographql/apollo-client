@@ -1,10 +1,15 @@
+import { Trie } from '@wry/trie';
 import { canUseWeakMap, checkDocument } from '../utilities';
+import { invariant } from '../utilities/globals';
 import type { DocumentNode } from 'graphql';
+
+export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 
 type TransformFn = (document: DocumentNode) => DocumentNode;
 
 interface DocumentTransformOptions {
   cache?: boolean;
+  getCacheKey?: (document: DocumentNode) => DocumentTransformCacheKey;
 }
 
 function identity(document: DocumentNode) {
@@ -14,8 +19,15 @@ function identity(document: DocumentNode) {
 export class DocumentTransform {
   private readonly transform: TransformFn;
   private readonly documentCache?:
-    | WeakMap<DocumentNode, DocumentNode>
-    | Map<DocumentNode, DocumentNode>;
+    | WeakMap<DocumentTransformCacheKey, DocumentNode>
+    | Map<DocumentTransformCacheKey, DocumentNode>;
+
+  private readonly stableCacheKeys = new Trie<DocumentTransformCacheKey>(
+    canUseWeakMap,
+    (cacheKey) => cacheKey
+  );
+
+  private getCacheKey?: (document: DocumentNode) => DocumentTransformCacheKey;
 
   static identity() {
     // No need to cache this transform since it just returns the document
@@ -35,8 +47,7 @@ export class DocumentTransform {
 
         return documentTransform.transformDocument(document);
       },
-      // Allow for runtime conditionals to determine which transform to use
-      // and rely on each transform to determine its own caching behavior.
+      // Reasonably assume both `left` and `right` transforms are cached
       { cache: false }
     );
 
@@ -48,17 +59,18 @@ export class DocumentTransform {
     options: DocumentTransformOptions = Object.create(null)
   ) {
     this.transform = transform;
+    this.getCacheKey = options.getCacheKey;
 
     if (options.cache ?? true) {
-      this.documentCache = canUseWeakMap
-        ? new WeakMap<DocumentNode, DocumentNode>()
-        : new Map<DocumentNode, DocumentNode>();
+      this.documentCache = canUseWeakMap ? new WeakMap() : new Map();
     }
   }
 
   transformDocument(document: DocumentNode) {
-    if (this.documentCache?.has(document)) {
-      return this.documentCache.get(document)!;
+    const cacheKey = this.getStableCacheKey(document);
+
+    if (this.documentCache?.has(cacheKey)) {
+      return this.documentCache.get(cacheKey)!;
     }
 
     checkDocument(document);
@@ -66,7 +78,7 @@ export class DocumentTransform {
     const transformedDocument = this.transform(document);
 
     if (this.documentCache) {
-      this.documentCache.set(document, transformedDocument);
+      this.documentCache.set(cacheKey, transformedDocument);
     }
 
     return transformedDocument;
@@ -79,9 +91,16 @@ export class DocumentTransform {
           this.transformDocument(document)
         );
       },
-      // Allow each transform to determine its own cache behavior without
-      // filling up another `Map` for this new transform.
+      // Reasonably assume both transforms are cached
       { cache: false }
     );
+  }
+
+  getStableCacheKey(document: DocumentNode) {
+    const cacheKey = this.getCacheKey?.(document) ?? [document];
+
+    invariant(Array.isArray(cacheKey), '`getCacheKey` must return an array');
+
+    return this.stableCacheKeys.lookupArray(cacheKey);
   }
 }

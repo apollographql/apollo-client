@@ -13,6 +13,21 @@ function stripDirective(directive: string) {
   };
 }
 
+function renameDirective(target: string, replacement: string) {
+  return (document: DocumentNode) => {
+    return visit(document, {
+      Directive(node) {
+        if (node.name.value === target) {
+          return {
+            ...node,
+            name: { kind: Kind.NAME, value: replacement },
+          };
+        }
+      },
+    });
+  };
+}
+
 function addClientDirectiveToField(fieldName: string) {
   return (document: DocumentNode) => {
     return visit(document, {
@@ -90,6 +105,75 @@ test('caches the result of the transform by default', () => {
 
   expect(result2).toMatchDocument(expected);
   expect(transform).toHaveBeenCalledTimes(1);
+});
+
+test('allows custom cache keys to be defined', () => {
+  const query = gql`
+    query TestQuery {
+      user @network {
+        name
+      }
+    }
+  `;
+
+  const onlineQuery = gql`
+    query TestQuery {
+      user {
+        name
+      }
+    }
+  `;
+
+  const offlineQuery = gql`
+    query TestQuery {
+      user @client {
+        name
+      }
+    }
+  `;
+
+  let online = true;
+
+  const onlineTransform = new DocumentTransform(stripDirective('network'));
+  const offlineTransform = new DocumentTransform(
+    renameDirective('network', 'client')
+  );
+
+  const transform = jest.fn((document: DocumentNode) => {
+    return online
+      ? onlineTransform.transformDocument(document)
+      : offlineTransform.transformDocument(document);
+  });
+
+  const documentTransform = new DocumentTransform(transform, {
+    getCacheKey: (document) => [document, online],
+  });
+
+  const result1 = documentTransform.transformDocument(query);
+
+  expect(result1).toMatchDocument(onlineQuery);
+  expect(transform).toHaveBeenCalledTimes(1);
+
+  online = false;
+
+  const result2 = documentTransform.transformDocument(query);
+
+  expect(result2).toMatchDocument(offlineQuery);
+  expect(transform).toHaveBeenCalledTimes(2);
+
+  online = true;
+
+  const result3 = documentTransform.transformDocument(query);
+
+  expect(result3).toMatchDocument(onlineQuery);
+  expect(transform).toHaveBeenCalledTimes(2);
+
+  online = false;
+
+  const result4 = documentTransform.transformDocument(query);
+
+  expect(result4).toMatchDocument(offlineQuery);
+  expect(transform).toHaveBeenCalledTimes(2);
 });
 
 test('can disable caching the result output', () => {

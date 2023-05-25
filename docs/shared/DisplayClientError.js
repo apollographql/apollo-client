@@ -1,53 +1,52 @@
-import React, {useEffect} from 'react';
+// @ts-check
+// this whole file
+
+import React, {useEffect, useState, useMemo} from 'react';
+// @ts-ignore
+import {useHash} from 'react-use';
 import {useMDXComponents} from '@mdx-js/react';
 
-/** @returns {{ file: string, condition?: string, errorMessage?: string }} */
-async function getErrorMessage(
-  /** @type {string} */ version,
-  /** @type {number} */ id,
-  /** @type {unknown[]} */ args
-) {
-  /** @type {{ [key: string]: { [key: number]: { file: string, condition?: string, message?: string } }}} */
-  const invariantErrorCodes = await window[
+/**
+ * @typedef {{ [key: number]: { file: string, condition?: string, message?: string }}} Messages
+ */
+
+async function loadData(version) {
+  /** @type {{[key: string]: Messages}} */
+  const invariantErrorCodes = await globalThis[
     Symbol.for('importInvariantErrorCodes')
   ](version);
 
-  /** @type { [key: number]: { file: string, condition?: string, message?: string }} */
+  /** @type {Messages} */
   const data = {};
   for (const codes of Object.values(invariantErrorCodes)) {
     Object.assign(data, codes);
   }
-  if (!data[id]) {
-    throw 'Error message could not be found!';
-  }
-  // eslint-disable-next-line prefer-const
-  let {file, condition, message: errorMessage} = data[id];
-
-  if (errorMessage) {
-    errorMessage = /** @type{string} */ (
-      args.reduce(
-        (/** @type{string} */ acc, arg) => acc.replace('%s', String(arg)),
-        String(errorMessage)
-      )
-    );
-  }
-  return {file, condition, errorMessage};
+  return data;
 }
 
-export default function DisplayClientError() {
-
-  const MDX = useMDXComponents()
-
-  const [{file, errorMessage, condition, error}, updateErrorDetails] =
-    React.useState({
-      file: '',
-      errorMessage: '',
-      condition: ''
-    });
-  const scriptRef = React.useRef(null);
+function useInjectLoaderScript(){
+  const scriptLoader = globalThis[Symbol.for("importInvariantErrorCodes")];
+  const [scriptInitialized, setScriptInitialized] = useState(!!scriptLoader);
   useEffect(() => {
-    if (scriptRef.current.children.length === 0) {
+    if (scriptInitialized) {
+     return;
+    }
+    if (scriptLoader) {
+      setScriptInitialized(true);
+      return;
+    }
+    addEventListener('importInvariantErrorCodes', () => {
+      setScriptInitialized(true);
+    }, {once: true});
+    addScript();
+  }, []);
+
+  return scriptInitialized;
+
+  function addScript() {
+    if (!document.querySelector('script#importInvariantErrorCodes')) {
       const script = document.createElement('script');
+      script.id = 'importInvariantErrorCodes';
       script.type = 'module';
       script.textContent =`
         globalThis[Symbol.for("importInvariantErrorCodes")] = (version) => {
@@ -56,41 +55,92 @@ export default function DisplayClientError() {
           }
           return import("https://cdn.jsdelivr.net/npm/@apollo/client@" + version + "/invariantErrorCodes.js");
         }
+        dispatchEvent(new CustomEvent('importInvariantErrorCodes'));
         `;
-      scriptRef.current.appendChild(script);
+      document.body.appendChild(script);
     }
+  }
+}
 
-    let mounted = true;
-    const listener = async () => {
-      const hash = decodeURIComponent(location.hash.substring(1)) || '{}';
-      const parsedHash = JSON.parse(hash);
+export default function DisplayClientError() {
+    const MDX = /** @type {any} */ (useMDXComponents());
 
-      const {version = 'latest', message = -1, args = []} = parsedHash;
-
+    const [hash] = useHash();
+    const parsedHash = useMemo(() => {
       try {
-        const data = await getErrorMessage(version, message, args)
-        if (!mounted) return;
-        updateErrorDetails(data);
-      } catch (e) {
-        updateErrorDetails({error: String(e)});
+        return JSON.parse(decodeURIComponent(hash.substring(1)) || '{}');
+      } catch {
+        return { parsingError: 'Could not parse Url.' }
       }
-    };
-    addEventListener('hashchange', listener);
-    listener();
-    return () => {
-      mounted = false;
-      removeEventListener('hashchange', listener);
+    }, [hash]);
+    const {version = 'latest', message: id = -1, args = [], parsingError} = parsedHash;
+
+    const [data, setData] = useState(/** @type {null | Messages | { dataError: string }} */ (null))
+    const scriptInitialized = useInjectLoaderScript();
+    useEffect(() => {
+      if (!scriptInitialized) return;
+      let active = true;
+      loadData(version).then(data => { if (active) setData(data)}).catch(dataError => setData({dataError}));
+      return () => {
+        active = false;
+      }
+    }, [version, scriptInitialized]);
+
+    const {file, errorMessage, condition, error: dataError} = useMemo(() => {
+      if (!data) return {
+        file: 'Loading...',
+        errorMessage: 'Loading...',
+        condition: 'Loading...'
+      }
+
+      if ('dataError' in data) {
+        return { error: data.dataError };
+      }
+
+      if (!data[id]) {
+        return { error: 'Error message could not be found!' };
+      }
+      let {file, condition, message: errorMessage} = data[id];
+
+      if (errorMessage) {
+        errorMessage = /** @type{string} */ (
+          args.reduce(
+            (/** @type{string} */ acc, arg) => acc.replace('%s', String(arg)),
+            String(errorMessage)
+          )
+        );
+      }
+
+      return {file, condition, errorMessage};
+    }, [data, id, args])
+
+
+  useEffect(() => {
+    // replacing all links within this help page with spans to prevent them
+    // from navigating the user to a different anchor
+    for (const link of [...document.querySelectorAll('main h2 a, main h3 a')]) {
+      var replacement = document.createElement('span');
+      replacement.innerHTML = link.innerHTML;
+      link.replaceWith(replacement)
     }
-  }, []);
+  }, [])
+
+  if (hash.length <= 0) {
+    // the page was loaded without a hash, so we don't know what to display
+    // just display the page itself without error information
+    return null;
+  }
+
+  const error = dataError || parsingError;
+
   return (
-    <div>
-      <div ref={scriptRef}></div>
-      {error ? (
+    <div style={errorMessage == 'Loading...'? {filter: "blur(5px)"} : undefined}>
+      { error ? (
         <>
           <MDX.h3>
             Error loading error codes
           </MDX.h3>
-          <MDX.blockquote>{error}</MDX.blockquote>
+          <MDX.blockquote>{error.toString()}</MDX.blockquote>
         </>
       ) : (
         <>

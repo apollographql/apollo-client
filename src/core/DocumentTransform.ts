@@ -18,20 +18,24 @@ function identity(document: DocumentNode) {
 
 export class DocumentTransform {
   private readonly transform: TransformFn;
-  private readonly documentCache?:
-    | WeakMap<DocumentTransformCacheKey, DocumentNode>
-    | Map<DocumentTransformCacheKey, DocumentNode>;
 
   private readonly resultCache = canUseWeakSet
     ? new WeakSet<DocumentNode>()
     : new Set<DocumentNode>();
 
-  private readonly stableCacheKeys = new Trie<DocumentTransformCacheKey>(
-    canUseWeakMap,
-    (cacheKey) => cacheKey
-  );
+  private stableCacheKeys: Trie<{
+    key: DocumentTransformCacheKey;
+    value?: DocumentNode;
+  }> | undefined;
 
-  private getCacheKey?: (document: DocumentNode) => DocumentTransformCacheKey;
+  // This default implementation of getCacheKey can be overridden by providing
+  // options.getCacheKey to the DocumentTransform constructor. In general, a
+  // getCacheKey function may either return an array of keys (often including
+  // the document) to be used as a cache key, or undefined to indicate the
+  // transform for this document should not be cached.
+  private getCacheKey(document: DocumentNode): DocumentTransformCacheKey | undefined {
+    return [document];
+  }
 
   static identity() {
     // No need to cache this transform since it just returns the document
@@ -63,10 +67,14 @@ export class DocumentTransform {
     options: DocumentTransformOptions = Object.create(null)
   ) {
     this.transform = transform;
-    this.getCacheKey = options.getCacheKey;
 
-    if (options.cache ?? true) {
-      this.documentCache = canUseWeakMap ? new WeakMap() : new Map();
+    if (options.getCacheKey) {
+      // Override default `getCacheKey` function, which returns [document].
+      this.getCacheKey = options.getCacheKey;
+    }
+
+    if (options.cache !== false) {
+      this.stableCacheKeys = new Trie(canUseWeakMap, key => ({ key }));
     }
   }
 
@@ -77,10 +85,10 @@ export class DocumentTransform {
       return document;
     }
 
-    const cacheKey = this.getStableCacheKey(document);
+    const cacheEntry = this.getStableCacheEntry(document);
 
-    if (this.documentCache?.has(cacheKey)) {
-      return this.documentCache.get(cacheKey)!;
+    if (cacheEntry && cacheEntry.value) {
+      return cacheEntry.value;
     }
 
     checkDocument(document);
@@ -89,8 +97,8 @@ export class DocumentTransform {
 
     this.resultCache.add(transformedDocument);
 
-    if (this.documentCache) {
-      this.documentCache.set(cacheKey, transformedDocument);
+    if (cacheEntry) {
+      cacheEntry.value = transformedDocument;
     }
 
     return transformedDocument;
@@ -108,11 +116,15 @@ export class DocumentTransform {
     );
   }
 
-  getStableCacheKey(document: DocumentNode) {
-    const cacheKey = this.getCacheKey?.(document) ?? [document];
-
-    invariant(Array.isArray(cacheKey), '`getCacheKey` must return an array');
-
-    return this.stableCacheKeys.lookupArray(cacheKey);
+  getStableCacheEntry(document: DocumentNode) {
+    if (!this.stableCacheKeys) return;
+    const cacheKeys = this.getCacheKey(document);
+    if (cacheKeys) {
+      invariant(
+        Array.isArray(cacheKeys),
+        '`getCacheKey` must return an array or undefined'
+      );
+      return this.stableCacheKeys.lookupArray(cacheKeys);
+    }
   }
 }

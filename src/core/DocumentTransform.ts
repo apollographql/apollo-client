@@ -25,17 +25,18 @@ export class DocumentTransform {
     ? new WeakSet<DocumentNode>()
     : new Set<DocumentNode>();
 
-  private stableCacheKeys: Trie<{
-    key: DocumentTransformCacheKey;
-    value?: DocumentNode;
-  }> | undefined;
+  private stableCacheKeys:
+    | Trie<{ key: DocumentTransformCacheKey; value?: DocumentNode }>
+    | undefined;
 
   // This default implementation of getCacheKey can be overridden by providing
   // options.getCacheKey to the DocumentTransform constructor. In general, a
   // getCacheKey function may either return an array of keys (often including
   // the document) to be used as a cache key, or undefined to indicate the
   // transform for this document should not be cached.
-  private getCacheKey(document: DocumentNode): DocumentTransformCacheKey | undefined {
+  private getCacheKey(
+    document: DocumentNode
+  ): DocumentTransformCacheKey | undefined {
     return [document];
   }
 
@@ -74,7 +75,7 @@ export class DocumentTransform {
     }
 
     if (options.cache !== false) {
-      this.stableCacheKeys = new Trie(canUseWeakMap, key => ({ key }));
+      this.stableCacheKeys = new Trie(canUseWeakMap, (key) => ({ key }));
     }
   }
 

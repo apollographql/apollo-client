@@ -25,6 +25,9 @@ async function loadData(version) {
 }
 
 function useInjectLoaderScript(){
+  // do not do this in SSR
+  if (typeof window === "undefined") return false;
+
   const scriptLoader = globalThis[Symbol.for("importInvariantErrorCodes")];
   const [scriptInitialized, setScriptInitialized] = useState(!!scriptLoader);
   useEffect(() => {

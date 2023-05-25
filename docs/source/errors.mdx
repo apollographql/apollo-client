@@ -1,5 +1,5 @@
 ---
-title: Error Code Details
+title: Error code details
 ---
 import DisplayClientError from '../shared/DisplayClientError.js';
 
@@ -7,22 +7,16 @@ import DisplayClientError from '../shared/DisplayClientError.js';
 
 ## Why am I seeing this?
 
-Since Apollo Client 3.8, we are shipping the error messages separately to save
-bundle size.<br/>
-You can still load them manually, but this is an opt-in mechanism.
+In Apollo Client 3.8 and later, we are shipping the error messages separately to save bundle size. You can still load them manually, but this is an opt-in mechanism.
 
-### Opt-in into shipping error messages
+### Opting in to error message inclusion
 
 You can call the `loadErrorMessages` function from `"@apollo/client/dev"` to
-load error messages.<br/>
-Similarly, you can use `loadDevMessages` to import development-time console
-messages.
+load error messages. Similarly, you can use `loadDevMessages` to import development-time console messages.
 
-### Only shipping error messages in development builds
+### Limiting error message inclusion to development builds
 
-In most environments, you can check for `__DEV__`
-to make sure that you are in a development environment.
-So your code to load the error messages conditionally could for example look like this:
+In most environments, you can check for `__DEV__` to make sure that you are in a development environment. So your code to load the error messages conditionally could for example look like this:
 
 ```js
 import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
@@ -32,5 +26,4 @@ if (__DEV__) {
 }
 ```
 
-Not all environments support `__DEV__`, so if that doesn't work, you maybe want to
-check for `process.env.NODE_ENV !== "production"` instead.
+Not all environments support `__DEV__`, so if that doesn't work, you maybe want to check for `process.env.NODE_ENV !== "production"` instead.

@@ -3,8 +3,10 @@
 
 import React, {useEffect, useState, useMemo} from 'react';
 // @ts-ignore
-import {useHash} from 'react-use';
+import {useHash as _useHash} from 'react-use';
 import {useMDXComponents} from '@mdx-js/react';
+
+const useHash = typeof window !== "undefined" ? _useHash : () => "#{}";
 
 /**
  * @typedef {{ [key: number]: { file: string, condition?: string, message?: string }}} Messages

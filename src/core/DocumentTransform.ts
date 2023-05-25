@@ -55,7 +55,7 @@ export class DocumentTransform {
 
         return documentTransform.transformDocument(document);
       },
-      // Reasonably assume both `left` and `right` transforms are cached
+      // Reasonably assume both `left` and `right` transforms handle their own caching
       { cache: false }
     );
 
@@ -111,7 +111,7 @@ export class DocumentTransform {
           this.transformDocument(document)
         );
       },
-      // Reasonably assume both transforms are cached
+      // Reasonably assume both transforms handle their own caching
       { cache: false }
     );
   }

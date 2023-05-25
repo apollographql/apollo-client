@@ -9,7 +9,9 @@ type TransformFn = (document: DocumentNode) => DocumentNode;
 
 interface DocumentTransformOptions {
   cache?: boolean;
-  getCacheKey?: (document: DocumentNode) => DocumentTransformCacheKey;
+  getCacheKey?: (
+    document: DocumentNode
+  ) => DocumentTransformCacheKey | undefined;
 }
 
 function identity(document: DocumentNode) {

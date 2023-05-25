@@ -51,7 +51,7 @@ export class DocumentTransform {
     left: DocumentTransform,
     right: DocumentTransform = DocumentTransform.identity()
   ) {
-    const transform = new DocumentTransform(
+    return new DocumentTransform(
       (document) => {
         const documentTransform = predicate(document) ? left : right;
 
@@ -60,8 +60,6 @@ export class DocumentTransform {
       // Reasonably assume both `left` and `right` transforms handle their own caching
       { cache: false }
     );
-
-    return transform;
   }
 
   constructor(

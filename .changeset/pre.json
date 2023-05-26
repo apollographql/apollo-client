@@ -5,6 +5,7 @@
     "@apollo/client": "3.7.2"
   },
   "changesets": [
+    "angry-weeks-marry",
     "curvy-dragons-talk",
     "curvy-monkeys-kneel",
     "cyan-insects-love",
@@ -16,11 +17,13 @@
     "funny-peas-change",
     "grumpy-tips-know",
     "heavy-ties-sneeze",
+    "hungry-chairs-live",
     "hungry-eagles-kick",
     "lazy-teachers-sell",
     "light-ravens-wait",
     "modern-peaches-marry",
     "neat-rockets-sleep",
+    "nine-boxes-happen",
     "odd-students-crash",
     "old-moles-run",
     "polite-birds-rescue",
@@ -39,6 +42,7 @@
     "smooth-forks-shop",
     "strange-drinks-report",
     "twelve-files-promise",
+    "warm-pandas-cry",
     "wild-mice-nail"
   ]
 }

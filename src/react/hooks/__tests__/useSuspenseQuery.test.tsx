@@ -46,7 +46,7 @@ import {
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { SuspenseQueryHookFetchPolicy } from '../../../react';
-import { useSuspenseQuery_experimental as useSuspenseQuery } from '../useSuspenseQuery';
+import { useSuspenseQuery } from '../useSuspenseQuery';
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,

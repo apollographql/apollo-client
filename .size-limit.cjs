@@ -18,10 +18,10 @@ const checks = [
     "useLazyQuery",
     "useMutation",
     "useSubscription",
-    "useSuspenseQuery_experimental",
-    "useBackgroundQuery_experimental",
-    "useReadQuery_experimental",
-    "useFragment_experimental"
+    "useSuspenseQuery",
+    "useBackgroundQuery",
+    "useReadQuery",
+    "useFragment"
   ].map((name) => ({ path: "dist/react/index.js", import: `{ ${name} }` })),
 ].map((config) => ({
   ...config,

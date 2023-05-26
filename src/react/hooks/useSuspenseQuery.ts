@@ -63,7 +63,7 @@ export type SubscribeToMoreFunction<
 
 export type Version = 'main' | 'network';
 
-export function useSuspenseQuery_experimental<
+export function useSuspenseQuery<
   TData,
   TVariables extends OperationVariables,
   TOptions extends Omit<SuspenseQueryHookOptions<TData>, 'variables'>
@@ -82,7 +82,7 @@ export function useSuspenseQuery_experimental<
   TVariables
 >;
 
-export function useSuspenseQuery_experimental<
+export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
@@ -93,7 +93,7 @@ export function useSuspenseQuery_experimental<
   }
 ): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
-export function useSuspenseQuery_experimental<
+export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
@@ -103,7 +103,7 @@ export function useSuspenseQuery_experimental<
   }
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
-export function useSuspenseQuery_experimental<
+export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
@@ -113,7 +113,7 @@ export function useSuspenseQuery_experimental<
   }
 ): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
 
-export function useSuspenseQuery_experimental<
+export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
@@ -121,7 +121,7 @@ export function useSuspenseQuery_experimental<
   options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): UseSuspenseQueryResult<TData, TVariables>;
 
-export function useSuspenseQuery_experimental<
+export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(

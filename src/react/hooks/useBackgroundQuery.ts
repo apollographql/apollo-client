@@ -32,7 +32,7 @@ export type UseBackgroundQueryResult<
   }
 ];
 
-export function useBackgroundQuery_experimental<
+export function useBackgroundQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
 >(
@@ -101,9 +101,7 @@ export function useBackgroundQuery_experimental<
   }, [queryRef, fetchMore, refetch]);
 }
 
-export function useReadQuery_experimental<TData>(
-  queryRef: QueryReference<TData>
-) {
+export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   const [, forceUpdate] = useState(0);
 
   invariant(

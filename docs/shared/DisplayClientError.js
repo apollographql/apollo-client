@@ -100,17 +100,15 @@ function useLoadedErrorMessage(version, messageId) {
 
         const details = data[messageId];
 
-        setTimeout(() => {
-          setState(
-            details
-              ? { loading: false, error: null, data: details }
-              : {
-                  loading: false,
-                  error: new Error('Error message could not be found.'),
-                  data: null,
-                }
-          );
-        }, 5000);
+        setState(
+          details
+            ? { loading: false, error: null, data: details }
+            : {
+                loading: false,
+                error: new Error('Error message could not be found.'),
+                data: null,
+              }
+        );
       })
       .catch((error) => setState({ error, loading: false, data: null }));
 

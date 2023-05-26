@@ -80,7 +80,7 @@ export default function DisplayClientError() {
     try {
       return JSON.parse(decodeURIComponent(hash.substring(1)) || '{}');
     } catch {
-      return { parsingError: 'Could not parse Url.' };
+      return { parsingError: 'Could not parse URL.' };
     }
   }, [hash]);
   const {

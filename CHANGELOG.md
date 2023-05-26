@@ -1,5 +1,47 @@
 # @apollo/client
 
+## 3.8.0-beta.0
+
+### Minor Changes
+
+- [#10887](https://github.com/apollographql/apollo-client/pull/10887) [`f8c0b965d`](https://github.com/apollographql/apollo-client/commit/f8c0b965d49fb7d802371bb9cc3cb0b60cf05e5d) Thanks [@phryneas](https://github.com/phryneas)! - Add a new mechanism for Error Extraction to reduce bundle size by including
+  error message texts on an opt-in basis.
+  By default, errors will link to an error page with the entire error message.
+  This replaces "development" and "production" errors and works without
+  additional bundler configuration.
+  Bundling the text of error messages and development warnings can be enabled by
+
+  ```js
+  import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
+  if (process.env.NODE_ENV !== 'production') {
+    loadErrorMessages();
+    loadDevMessages();
+  }
+  ```
+
+- [#10509](https://github.com/apollographql/apollo-client/pull/10509) [`79df2c7ba`](https://github.com/apollographql/apollo-client/commit/79df2c7ba55b7cfee69fd54024174f77099a2550) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to specify custom GraphQL document transforms. These transforms are run before reading data from the cache, before local state is resolved, and before the query document is sent through the link chain.
+
+  To register a custom document transform, create a transform using the `DocumentTransform` class and pass it to the `documentTransform` option on `ApolloClient`.
+
+  ```ts
+  import { DocumentTransform } from '@apollo/client';
+
+  const documentTransform = new DocumentTransform((document) => {
+    // do something with `document`
+    return transformedDocument;
+  });
+
+  const client = new ApolloClient({ documentTransform: documentTransform });
+  ```
+
+  For additional documentation on the behavior and API of `DocumentTransform`, see the [pull request](https://github.com/apollographql/apollo-client/pull/10509).
+
+### Patch Changes
+
+- [#10891](https://github.com/apollographql/apollo-client/pull/10891) [`ab42a5c08`](https://github.com/apollographql/apollo-client/commit/ab42a5c08840193cb915f4e66d71fac3834fec68) Thanks [@laverdet](https://github.com/laverdet)! - Fixes a bug in how multipart responses are read when using `@defer`. When reading a multipart body, `HttpLink` no longer attempts to parse the boundary (e.g. `"---"` or other boundary string) within the response data itself, only when reading the beginning of each mulitpart chunked message.
+
+- [#10916](https://github.com/apollographql/apollo-client/pull/10916) [`ea75e18de`](https://github.com/apollographql/apollo-client/commit/ea75e18dec3db090dd4ed3b2d249bf674b90ead4) Thanks [@alessbell](https://github.com/alessbell)! - Remove experimental labels from hooks, move to beta.
+
 ## 3.8.0-alpha.15
 
 ### Patch Changes

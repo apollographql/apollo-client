@@ -19,12 +19,17 @@
 # Do not format anything automatically except files listed below
 *
 
+!config/
+config/*
+!config/processInvariants.ts
+
 #####  PATHS TO BE FORMATTED #####
 !src/
 src/*
 !src/react/
 src/react/*
 
+!src/dev
 
 # Allow src/react/cache/ApolloProvider
 !src/react/context/
@@ -65,6 +70,9 @@ src/utilities/common/*
 src/utilities/common/__tests__/*
 !src/utilities/common/__tests__/omitDeep.ts
 !src/utilities/common/__tests__/stripTypename.ts
+!src/utilities/globals
+src/utilities/globals/*
+!src/utilities/globals/invariantWrappers.ts
 !src/utilities/graphql
 src/utilities/graphql/*
 !src/utilities/graphql/operations.ts

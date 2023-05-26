@@ -1,4 +1,4 @@
-import { invariant, InvariantError, __DEV__ } from '../utilities/globals';
+import { invariant, newInvariantError, __DEV__ } from '../utilities/globals';
 
 import type { DocumentNode } from 'graphql';
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
@@ -181,7 +181,7 @@ export class QueryManager<TStore> {
     });
 
     this.cancelPendingFetches(
-      new InvariantError('QueryManager stopped while query was in flight'),
+      newInvariantError('QueryManager stopped while query was in flight'),
     );
   }
 
@@ -793,7 +793,7 @@ export class QueryManager<TStore> {
     // depend on values that previously existed in the data portion of the
     // store. So, we cancel the promises and observers that we have issued
     // so far and not yet resolved (in the case of queries).
-    this.cancelPendingFetches(new InvariantError(
+    this.cancelPendingFetches(newInvariantError(
       'Store reset while query was in flight (not completed in link chain)',
     ));
 
@@ -892,11 +892,7 @@ export class QueryManager<TStore> {
     if (__DEV__ && queryNamesAndDocs.size) {
       queryNamesAndDocs.forEach((included, nameOrDoc) => {
         if (!included) {
-          invariant.warn(`Unknown query ${
-            typeof nameOrDoc === "string" ? "named " : ""
-          }${
-            JSON.stringify(nameOrDoc, null, 2)
-          } requested in refetchQueries options.include array`);
+          invariant.warn(typeof nameOrDoc === "string" ? `Unknown query named "%s" requested in refetchQueries options.include array` : `Unknown query %s requested in refetchQueries options.include array`, nameOrDoc);
         }
       });
     }

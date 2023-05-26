@@ -54,29 +54,33 @@ exports[`type policies complains about missing key fields 1`] = `
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'title' while writing result {
-  \\"year\\": 2011,
-  \\"theInformationBookData\\": {
-    \\"__typename\\": \\"Book\\",
-    \\"isbn\\": \\"1400096235\\",
-    \\"title\\": \\"The Information\\",
-    \\"subtitle\\": \\"A History, a Theory, a Flood\\",
-    \\"author\\": {
-      \\"name\\": \\"James Gleick\\"
-    }
-  }
-}",
+      "Missing field '%s' while writing result %o",
+      "title",
+      Object {
+        "theInformationBookData": Object {
+          "__typename": "Book",
+          "author": Object {
+            "name": "James Gleick",
+          },
+          "isbn": "1400096235",
+          "subtitle": "A History, a Theory, a Flood",
+          "title": "The Information",
+        },
+        "year": 2011,
+      },
     ],
     Array [
-      "Missing field 'year' while writing result {
-  \\"__typename\\": \\"Book\\",
-  \\"isbn\\": \\"1400096235\\",
-  \\"title\\": \\"The Information\\",
-  \\"subtitle\\": \\"A History, a Theory, a Flood\\",
-  \\"author\\": {
-    \\"name\\": \\"James Gleick\\"
-  }
-}",
+      "Missing field '%s' while writing result %o",
+      "year",
+      Object {
+        "__typename": "Book",
+        "author": Object {
+          "name": "James Gleick",
+        },
+        "isbn": "1400096235",
+        "subtitle": "A History, a Theory, a Flood",
+        "title": "The Information",
+      },
     ],
   ],
   "results": Array [
@@ -1280,11 +1284,13 @@ exports[`type policies field policies readField helper function calls custom rea
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'blockers' while writing result {
-  \\"__typename\\": \\"Task\\",
-  \\"id\\": 4,
-  \\"description\\": \\"grandchild task\\"
-}",
+      "Missing field '%s' while writing result %o",
+      "blockers",
+      Object {
+        "__typename": "Task",
+        "description": "grandchild task",
+        "id": 4,
+      },
     ],
   ],
   "results": Array [
@@ -1300,34 +1306,40 @@ exports[`type policies field policies runs nested merge functions as well as anc
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'time' while writing result {
-  \\"__typename\\": \\"Event\\",
-  \\"id\\": 123
-}",
+      "Missing field '%s' while writing result %o",
+      "time",
+      Object {
+        "__typename": "Event",
+        "id": 123,
+      },
     ],
     Array [
-      "Missing field 'time' while writing result {
-  \\"__typename\\": \\"Event\\",
-  \\"id\\": 345,
-  \\"name\\": \\"Rooftop dog party\\",
-  \\"attendees\\": [
-    {
-      \\"__typename\\": \\"Attendee\\",
-      \\"id\\": 456,
-      \\"name\\": \\"Inspector Beckett\\"
-    },
-    {
-      \\"__typename\\": \\"Attendee\\",
-      \\"id\\": 234
-    }
-  ]
-}",
+      "Missing field '%s' while writing result %o",
+      "time",
+      Object {
+        "__typename": "Event",
+        "attendees": Array [
+          Object {
+            "__typename": "Attendee",
+            "id": 456,
+            "name": "Inspector Beckett",
+          },
+          Object {
+            "__typename": "Attendee",
+            "id": 234,
+          },
+        ],
+        "id": 345,
+        "name": "Rooftop dog party",
+      },
     ],
     Array [
-      "Missing field 'name' while writing result {
-  \\"__typename\\": \\"Attendee\\",
-  \\"id\\": 234
-}",
+      "Missing field '%s' while writing result %o",
+      "name",
+      Object {
+        "__typename": "Attendee",
+        "id": 234,
+      },
     ],
   ],
   "results": Array [
@@ -1351,10 +1363,12 @@ exports[`type policies readField warns if explicitly passed undefined \`from\` o
 [MockFunction] {
   "calls": Array [
     Array [
-      "Undefined 'from' passed to readField with arguments [{\\"fieldName\\":\\"firstName\\",\\"from\\":<undefined>}]",
+      "Undefined 'from' passed to readField with arguments %s",
+      "[{\\"fieldName\\":\\"firstName\\",\\"from\\":<undefined>}]",
     ],
     Array [
-      "Undefined 'from' passed to readField with arguments [\\"lastName\\",<undefined>]",
+      "Undefined 'from' passed to readField with arguments %s",
+      "[\\"lastName\\",<undefined>]",
     ],
   ],
   "results": Array [

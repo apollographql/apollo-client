@@ -1474,9 +1474,11 @@ describe("ObservableQuery", () => {
               expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
               expect(consoleWarnSpy).toHaveBeenCalledWith(
                 [
-                  'Called refetch({"variables":["d","e"]}) for query QueryWithoutVariables, which does not declare a $variables variable.',
+                  'Called refetch(%o) for query %o, which does not declare a $variables variable.',
                   "Did you mean to call refetch(variables) instead of refetch({ variables })?",
-                ].join("\n")
+                ].join("\n"),
+                {"variables": ["d", "e"]}, 
+                "QueryWithoutVariables"
               );
               consoleWarnSpy.mockRestore();
 
@@ -1581,9 +1583,11 @@ describe("ObservableQuery", () => {
                       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
                       expect(consoleWarnSpy).toHaveBeenCalledWith(
                         [
-                          'Called refetch({"variables":{"vars":["d","e"]}}) for query QueryWithVarsVar, which does not declare a $variables variable.',
+                          'Called refetch(%o) for query %o, which does not declare a $variables variable.',
                           "Did you mean to call refetch(variables) instead of refetch({ variables })?",
-                        ].join("\n")
+                        ].join("\n"),
+                        {"variables":{"vars":["d","e"]}},
+                        "QueryWithVarsVar"
                       );
                       consoleWarnSpy.mockRestore();
 

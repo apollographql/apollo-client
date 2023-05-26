@@ -391,12 +391,11 @@ export class ObservableQuery<
       const queryDef = getQueryDefinition(this.query);
       const vars = queryDef.variableDefinitions;
       if (!vars || !vars.some(v => v.variable.name.value === "variables")) {
-        invariant.warn(`Called refetch(${
-          JSON.stringify(variables)
-        }) for query ${
-          queryDef.name?.value || JSON.stringify(queryDef)
-        }, which does not declare a $variables variable.
-Did you mean to call refetch(variables) instead of refetch({ variables })?`);
+        invariant.warn(`Called refetch(%o) for query %o, which does not declare a $variables variable.
+Did you mean to call refetch(variables) instead of refetch({ variables })?`, 
+          variables, 
+          queryDef.name?.value || queryDef
+        );
       }
     }
 
@@ -1033,8 +1032,6 @@ export function logMissingFieldErrors(
   missing: MissingFieldError[] | MissingTree | undefined,
 ) {
   if (__DEV__ && missing) {
-    invariant.debug(`Missing cache result fields: ${
-      JSON.stringify(missing)
-    }`, missing);
+    invariant.debug(`Missing cache result fields: %o`, missing);
   }
 }

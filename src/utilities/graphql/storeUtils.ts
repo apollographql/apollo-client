@@ -1,4 +1,4 @@
-import { InvariantError } from '../globals';
+import { newInvariantError } from '../globals';
 
 import type {
   DirectiveNode,
@@ -132,10 +132,11 @@ export function valueToObjectRepresentation(
   } else if (isNullValue(value)) {
     argObj[name.value] = null;
   } else {
-    throw new InvariantError(
-      `The inline argument "${name.value}" of kind "${(value as any).kind}"` +
+    throw newInvariantError(
+      `The inline argument "%s" of kind "%s"` +
         'is not supported. Use variables instead of inline arguments to ' +
         'overcome this limitation.',
+        name.value, (value as any).kind
     );
   }
 }

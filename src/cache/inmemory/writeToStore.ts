@@ -1,4 +1,4 @@
-import { invariant, InvariantError, __DEV__ } from '../../utilities/globals';
+import { invariant, newInvariantError, __DEV__ } from '../../utilities/globals';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 import type {
@@ -150,7 +150,7 @@ export class StoreWriter {
     });
 
     if (!isReference(ref)) {
-      throw new InvariantError(`Could not identify object ${JSON.stringify(result)}`);
+      throw newInvariantError(`Could not identify object %s`, result);
     }
 
     // So far, the store has not been modified, so now it's time to process
@@ -359,11 +359,7 @@ export class StoreWriter {
         // not be cause for alarm.
         !policies.getReadFunction(typename, field.name.value)
       ) {
-        invariant.error(`Missing field '${
-          resultKeyNameFromField(field)
-        }' while writing result ${
-          JSON.stringify(result, null, 2)
-        }`.substring(0, 1000));
+        invariant.error(`Missing field '%s' while writing result %o`, resultKeyNameFromField(field), result);
       }
     });
 
@@ -570,7 +566,7 @@ export class StoreWriter {
           );
 
           if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
-            throw new InvariantError(`No fragment named ${selection.name.value}`);
+            throw newInvariantError(`No fragment named %s`, selection.name.value);
           }
 
           if (fragment &&
@@ -815,23 +811,25 @@ function warnAboutDataLoss(
   }
 
   invariant.warn(
-`Cache data may be lost when replacing the ${fieldName} field of a ${parentType} object.
+`Cache data may be lost when replacing the %s field of a %s object.
 
-To address this problem (which is not a bug in Apollo Client), ${
-  childTypenames.length
-    ? "either ensure all objects of type " +
-        childTypenames.join(" and ") + " have an ID or a custom merge function, or "
-    : ""
-}define a custom merge function for the ${
-  typeDotName
-} field, so InMemoryCache can safely merge these objects:
+To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
 
-  existing: ${JSON.stringify(existing).slice(0, 1000)}
-  incoming: ${JSON.stringify(incoming).slice(0, 1000)}
+  existing: %s
+  incoming: %s
 
 For more information about these options, please refer to the documentation:
 
   * Ensuring entity objects have IDs: https://go.apollo.dev/c/generating-unique-identifiers
   * Defining custom merge functions: https://go.apollo.dev/c/merging-non-normalized-objects
-`);
+`,
+  fieldName,
+  parentType,
+  childTypenames.length
+    ? "either ensure all objects of type " + childTypenames.join(" and ") + " have an ID or a custom merge function, or "
+    : "",
+  typeDotName,
+  existing,
+  incoming
+);
 }

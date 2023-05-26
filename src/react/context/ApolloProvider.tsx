@@ -15,7 +15,7 @@ export interface ApolloProviderProps<TCache> {
 export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   client,
   suspenseCache,
-  children
+  children,
 }) => {
   const ApolloContext = getApolloContext();
   const parentContext = React.useContext(ApolloContext);
@@ -24,8 +24,8 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
     return {
       ...parentContext,
       client: client || parentContext.client,
-      suspenseCache: suspenseCache || parentContext.suspenseCache
-    }
+      suspenseCache: suspenseCache || parentContext.suspenseCache,
+    };
   }, [parentContext, client, suspenseCache]);
 
   invariant(
@@ -35,8 +35,6 @@ export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   );
 
   return (
-    <ApolloContext.Provider value={context}>
-      {children}
-    </ApolloContext.Provider>
+    <ApolloContext.Provider value={context}>{children}</ApolloContext.Provider>
   );
 };

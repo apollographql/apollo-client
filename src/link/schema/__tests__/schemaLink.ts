@@ -29,7 +29,7 @@ describe('SchemaLink', () => {
   it('raises warning if called with concat', () => {
     const link = new SchemaLink({ schema });
     const _warn = console.warn;
-    console.warn = (warning: any) => expect(warning['message']).toBeDefined();
+    console.warn = (...args) => expect(args).toEqual(["You are calling concat on a terminating link, which will have no effect %o", link]);
     expect(link.concat((operation, forward) => forward(operation))).toEqual(
       link,
     );

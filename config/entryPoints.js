@@ -2,6 +2,7 @@ const entryPoints = [
   { dirs: [], bundleName: "main" },
   { dirs: ['cache'] },
   { dirs: ['core'] },
+  { dirs: ['dev'] },
   { dirs: ['errors'] },
   { dirs: ['link', 'batch'] },
   { dirs: ['link', 'batch-http'] },

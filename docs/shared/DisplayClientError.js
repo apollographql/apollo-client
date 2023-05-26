@@ -143,7 +143,7 @@ export default function DisplayClientError() {
       { error ? (
         <>
           <MDX.h3>
-            Error loading error codes
+            ⚠️ Unable to fetch error code
           </MDX.h3>
           <MDX.blockquote>{error.toString()}</MDX.blockquote>
         </>
@@ -152,7 +152,7 @@ export default function DisplayClientError() {
           {!errorMessage ? null : (
             <>
               <MDX.h2>
-                Error Message
+                Error message
               </MDX.h2>
               <MDX.blockquote>{errorMessage}</MDX.blockquote>
             </>

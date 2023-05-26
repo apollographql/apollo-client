@@ -1,30 +1,36 @@
 ---
 title: Error code details
+description: For Apollo Client
 toc: false
 ---
 import DisplayClientError from '../shared/DisplayClientError.js';
 
 <DisplayClientError />
 
-## Why am I seeing this?
+## What is this page?
 
-In Apollo Client 3.8 and later, we are shipping the error messages separately to save bundle size. You can still load them manually, but this is an opt-in mechanism.
+Beginning with version 3.8, Apollo Client _omits_ error messages from its core bundle to reduce its bundle size. Instead, errors direct you to this page to view details.
 
-### Opting in to error message inclusion
+**If you prefer, you can add Apollo Client error messages to your app:**
 
-You can call the `loadErrorMessages` function from `"@apollo/client/dev"` to
-load error messages. Similarly, you can use `loadDevMessages` to import development-time console messages.
-
-### Limiting error message inclusion to development builds
-
-In most environments, you can check for `__DEV__` to make sure that you are in a development environment. So your code to load the error messages conditionally could for example look like this:
-
-```js
+```js title="App.js"
 import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
-if (__DEV__) {
-  loadErrorMessages();
+
+if (__DEV__) {  // Adds messages only in a dev environment
   loadDevMessages();
+  loadErrorMessages();
 }
 ```
 
-Not all environments support `__DEV__`, so if that doesn't work, you maybe want to check for `process.env.NODE_ENV !== "production"` instead.
+- `loadDevMessages()` loads messages for errors that are raised _only in a development environment_.
+- `loadErrorMessages()` loads messages for errors that are raised in _all_ environments.
+
+You can call either or both of these methods on application load.
+
+<blockquote>
+
+**Note:** The example above checks for the presence of the `__DEV__` variable and loads error messages only if it's present (indicating a dev environment). This can provide a helpful development experience while minimizing your bundle size in production.
+
+The `__DEV__` variable isn't available in all environments. As an alternative, you can check whether `process.env.NODE_ENV !== "production"`.
+
+</blockquote>

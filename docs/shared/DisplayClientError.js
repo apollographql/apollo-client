@@ -161,7 +161,9 @@ export default function DisplayClientError() {
 
   return (
     <div
-      style={errorMessage == 'Loading...' ? { filter: 'blur(5px)' } : undefined}
+      style={
+        errorMessage === 'Loading...' ? { filter: 'blur(5px)' } : undefined
+      }
     >
       {error ? (
         <>

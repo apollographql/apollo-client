@@ -198,11 +198,3 @@ export interface Resolvers {
     [ field: string ]: Resolver;
   };
 }
-
-export interface TransformQueryOptions {
-  /**
-  * Determines whether fields using the `@client` directive should be removed
-  * from the query before it is sent through the link chain. Defaults to `true`.
-  */
-  removeClientFields?: boolean
-}

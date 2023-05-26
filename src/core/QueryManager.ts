@@ -57,6 +57,7 @@ import type {
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
 } from './types';
+import { DocumentTransform } from './DocumentTransform';
 import { LocalState } from './LocalState';
 
 import type {
@@ -81,7 +82,6 @@ interface MutationStoreValue {
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 interface TransformCacheEntry {
-  document: DocumentNode;
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
@@ -99,6 +99,7 @@ export class QueryManager<TStore> {
   public defaultOptions: DefaultOptions;
 
   public readonly assumeImmutableResults: boolean;
+  public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
 
   private queryDeduplication: boolean;
@@ -122,6 +123,7 @@ export class QueryManager<TStore> {
     cache,
     link,
     defaultOptions,
+    documentTransform,
     queryDeduplication = false,
     onBroadcast,
     ssrMode = false,
@@ -132,6 +134,7 @@ export class QueryManager<TStore> {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
     defaultOptions?: DefaultOptions;
+    documentTransform?: DocumentTransform;
     queryDeduplication?: boolean;
     onBroadcast?: () => void;
     ssrMode?: boolean;
@@ -139,6 +142,12 @@ export class QueryManager<TStore> {
     localState?: LocalState<TStore>;
     assumeImmutableResults?: boolean;
   }) {
+    const defaultDocumentTransform = new DocumentTransform(
+      (document) => this.cache.transformDocument(document), 
+      // Allow the apollo cache to manage its own transform caches
+      { cache: false }
+    );
+
     this.cache = cache;
     this.link = link;
     this.defaultOptions = defaultOptions || Object.create(null);
@@ -147,6 +156,16 @@ export class QueryManager<TStore> {
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = assumeImmutableResults;
+    this.documentTransform = documentTransform
+      ? defaultDocumentTransform
+          .concat(documentTransform)
+          // The custom document transform may add new fragment spreads or new
+          // field selections, so we want to give the cache a chance to run 
+          // again. For example, the InMemoryCache adds __typename to field 
+          // selections and fragments from the fragment registry.
+          .concat(defaultDocumentTransform)
+      : defaultDocumentTransform
+
     if ((this.onBroadcast = onBroadcast)) {
       this.mutationStore = Object.create(null);
     }
@@ -203,11 +222,8 @@ export class QueryManager<TStore> {
 
     const mutationId = this.generateMutationId();
 
-    const {
-      document,
-      hasClientExports,
-    } = this.transform(mutation);
-    mutation = this.cache.transformForLink(document);
+    mutation = this.cache.transformForLink(this.transform(mutation));
+    const { hasClientExports } = this.getDocumentInfo(mutation);
 
     variables = this.getVariables(mutation, variables) as TVariables;
     if (hasClientExports) {
@@ -383,7 +399,7 @@ export class QueryManager<TStore> {
           // The cache complains if passed a mutation where it expects a
           // query, so we transform mutations and subscriptions to queries
           // (only once, thanks to this.transformCache).
-          query: this.transform(mutation.document).asQuery,
+          query: this.getDocumentInfo(mutation.document).asQuery,
           variables: mutation.variables,
           optimistic: false,
           returnPartialData: true,
@@ -481,7 +497,7 @@ export class QueryManager<TStore> {
                 // The cache complains if passed a mutation where it expects a
                 // query, so we transform mutations and subscriptions to queries
                 // (only once, thanks to this.transformCache).
-                query: this.transform(mutation.document).asQuery,
+                query: this.getDocumentInfo(mutation.document).asQuery,
                 variables: mutation.variables,
                 optimistic: false,
                 returnPartialData: true,
@@ -584,11 +600,11 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus,
   ): Promise<ApolloQueryResult<TData>> {
-    return this.fetchQueryObservable<TData, TVars>(
+    return this.fetchConcastWithInfo(
       queryId,
       options,
       networkStatus,
-    ).promise;
+    ).concast.promise;
   }
 
   public getQueryStore() {
@@ -612,45 +628,41 @@ export class QueryManager<TStore> {
     }
   }
 
+  public transform(document: DocumentNode) {
+    return this.documentTransform.transformDocument(document);
+  }
+
   private transformCache = new (
     canUseWeakMap ? WeakMap : Map
   )<DocumentNode, TransformCacheEntry>();
 
-  public transform(document: DocumentNode) {
+  public getDocumentInfo(document: DocumentNode) {
     const { transformCache } = this;
-    const {
-      removeClientFields = true
-    } = this.defaultOptions.transformQuery || Object.create(null);
 
     if (!transformCache.has(document)) {
-      const transformed = this.cache.transformDocument(document);
-      const serverQuery = removeDirectivesFromDocument([
-        removeClientFields ? { name: 'client', remove: true } : {},
-        { name: 'connection' },
-        { name: 'nonreactive' },
-      ], transformed);
-      const clientQuery = this.localState.clientQuery(transformed);
-
       const cacheEntry: TransformCacheEntry = {
-        document: transformed,
         // TODO These three calls (hasClientExports, shouldForceResolvers, and
         // usesNonreactiveDirective) are performing independent full traversals
         // of the transformed document. We should consider merging these
         // traversals into a single pass in the future, though the work is
         // cached after the first time.
-        hasClientExports: hasClientExports(transformed),
-        hasForcedResolvers: this.localState.shouldForceResolvers(transformed),
-        hasNonreactiveDirective: hasDirectives(['nonreactive'], transformed),
-        clientQuery,
-        serverQuery,
+        hasClientExports: hasClientExports(document),
+        hasForcedResolvers: this.localState.shouldForceResolvers(document),
+        hasNonreactiveDirective: hasDirectives(['nonreactive'], document),
+        clientQuery: this.localState.clientQuery(document),
+        serverQuery: removeDirectivesFromDocument([
+          { name: 'client', remove: true },
+          { name: 'connection' },
+          { name: 'nonreactive' },
+        ], document),
         defaultVars: getDefaultValues(
-          getOperationDefinition(transformed)
+          getOperationDefinition(document)
         ) as OperationVariables,
         // Transform any mutation or subscription operations to query operations
         // so we can read/write them from/to the cache.
         asQuery: {
-          ...transformed,
-          definitions: transformed.definitions.map(def => {
+          ...document,
+          definitions: document.definitions.map(def => {
             if (def.kind === "OperationDefinition" &&
                 def.operation !== "query") {
               return { ...def, operation: "query" as OperationTypeNode };
@@ -660,18 +672,7 @@ export class QueryManager<TStore> {
         }
       };
 
-      const add = (doc: DocumentNode | null) => {
-        if (doc && !transformCache.has(doc)) {
-          transformCache.set(doc, cacheEntry);
-        }
-      }
-      // Add cacheEntry to the transformCache using several different keys,
-      // since any one of these documents could end up getting passed to the
-      // transform method again in the future.
-      add(document);
-      add(transformed);
-      add(clientQuery);
-      add(serverQuery);
+      transformCache.set(document, cacheEntry);
     }
 
     return transformCache.get(document)!;
@@ -682,7 +683,7 @@ export class QueryManager<TStore> {
     variables?: TVariables,
   ): OperationVariables {
     return {
-      ...this.transform(document).defaultVars,
+      ...this.getDocumentInfo(document).defaultVars,
       ...variables,
     };
   }
@@ -690,11 +691,15 @@ export class QueryManager<TStore> {
   public watchQuery<T, TVariables extends OperationVariables = OperationVariables>(
     options: WatchQueryOptions<TVariables, T>,
   ): ObservableQuery<T, TVariables> {
+    const query = this.transform(options.query);
+
     // assign variable default values if supplied
+    // NOTE: We don't modify options.query here with the transformed query to 
+    // ensure observable.options.query is set to the raw untransformed query.
     options = {
       ...options,
       variables: this.getVariables(
-        options.query,
+        query,
         options.variables,
       ) as TVariables,
     };
@@ -709,11 +714,14 @@ export class QueryManager<TStore> {
       queryInfo,
       options,
     });
+    observable['lastQuery'] = query;
 
     this.queries.set(observable.queryId, queryInfo);
 
+    // We give queryInfo the transformed query to ensure the first cache diff 
+    // uses the transformed query instead of the raw query
     queryInfo.init({
-      document: observable.query,
+      document: query,
       observableQuery: observable,
       variables: observable.variables,
     });
@@ -748,7 +756,7 @@ export class QueryManager<TStore> {
 
     return this.fetchQuery<TData, TVars>(
       queryId,
-      options,
+      { ...options, query: this.transform(options.query) },
     ).finally(() => this.stopQuery(queryId));
   }
 
@@ -819,7 +827,7 @@ export class QueryManager<TStore> {
         if (typeof desc === "string") {
           queryNamesAndDocs.set(desc, false);
         } else if (isDocumentNode(desc)) {
-          queryNamesAndDocs.set(this.transform(desc).document, false);
+          queryNamesAndDocs.set(this.transform(desc), false);
         } else if (isNonNullObject(desc) && desc.query) {
           legacyQueryOptions.add(desc);
         }
@@ -926,7 +934,7 @@ export class QueryManager<TStore> {
     variables,
     context = {},
   }: SubscriptionOptions): Observable<FetchResult<T>> {
-    query = this.transform(query).document;
+    query = this.transform(query);
     variables = this.getVariables(query, variables);
 
     const makeObservable = (variables: OperationVariables) =>
@@ -966,7 +974,7 @@ export class QueryManager<TStore> {
         return result;
       });
 
-    if (this.transform(query).hasClientExports) {
+    if (this.getDocumentInfo(query).hasClientExports) {
       const observablePromise = this.localState.addExportedVariables(
         query,
         variables,
@@ -1034,7 +1042,7 @@ export class QueryManager<TStore> {
   ): Observable<FetchResult<T>> {
     let observable: Observable<FetchResult<T>>;
 
-    const { serverQuery } = this.transform(query);
+    const { serverQuery, clientQuery } = this.getDocumentInfo(query);
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
@@ -1084,7 +1092,6 @@ export class QueryManager<TStore> {
       context = this.prepareContext(context);
     }
 
-    const { clientQuery } = this.transform(query);
     if (clientQuery) {
       observable = asyncMap(observable, result => {
         return this.localState.runResolvers({
@@ -1103,6 +1110,7 @@ export class QueryManager<TStore> {
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
     options: Pick<WatchQueryOptions<TVars, TData>,
+      | "query"
       | "variables"
       | "context"
       | "fetchPolicy"
@@ -1113,10 +1121,7 @@ export class QueryManager<TStore> {
     // Performing transformForLink here gives this.cache a chance to fill in
     // missing fragment definitions (for example) before sending this document
     // through the link chain.
-    const linkDocument = this.cache.transformForLink(
-      // Use same document originally produced by this.cache.transformDocument.
-      this.transform(queryInfo.document!).document
-    );
+    const linkDocument = this.cache.transformForLink(options.query);
 
     return asyncMap(
       this.getObservableFromLink(
@@ -1174,21 +1179,6 @@ export class QueryManager<TStore> {
     );
   }
 
-  public fetchQueryObservable<TData, TVars extends OperationVariables>(
-    queryId: string,
-    options: WatchQueryOptions<TVars, TData>,
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
-    networkStatus?: NetworkStatus,
-  ): Concast<ApolloQueryResult<TData>> {
-    return this.fetchConcastWithInfo(
-      queryId,
-      options,
-      networkStatus,
-    ).concast;
-  }
-
   private fetchConcastWithInfo<TData, TVars extends OperationVariables>(
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
@@ -1197,7 +1187,7 @@ export class QueryManager<TStore> {
     // or setVariables.
     networkStatus = NetworkStatus.loading
   ): ConcastAndInfo<TData> {
-    const query = this.transform(options.query).document;
+    const { query } = options;
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
 
@@ -1265,7 +1255,7 @@ export class QueryManager<TStore> {
     // since the timing of result delivery is (unfortunately) important
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
-    if (this.transform(normalized.query).hasClientExports) {
+    if (this.getDocumentInfo(normalized.query).hasClientExports) {
       concast = new Concast(
         this.localState
           .addExportedVariables(normalized.query, normalized.variables, normalized.context)
@@ -1466,7 +1456,7 @@ export class QueryManager<TStore> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
-      document: this.transform(query).document,
+      document: query,
       variables,
       networkStatus,
     });
@@ -1492,7 +1482,7 @@ export class QueryManager<TStore> {
         ...(diff.complete ? null : { partial: true }),
       } as ApolloQueryResult<TData>);
 
-      if (data && this.transform(query).hasForcedResolvers) {
+      if (data && this.getDocumentInfo(query).hasForcedResolvers) {
         return this.localState.runResolvers({
           document: query,
           remoteResult: { data },
@@ -1530,6 +1520,7 @@ export class QueryManager<TStore> {
       queryInfo,
       cacheWriteBehavior,
       {
+        query,
         variables,
         context,
         fetchPolicy,

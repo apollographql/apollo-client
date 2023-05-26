@@ -1,13 +1,13 @@
-import { invariant as i, InvariantError } from "ts-invariant";
-import { version } from "../../version";
-import global from "./global";
-import type { ErrorCodes } from "../../invariantErrorCodes";
-import { stringifyForDisplay } from "../common/stringifyForDisplay";
+import { invariant as i, InvariantError } from 'ts-invariant';
+import { version } from '../../version';
+import global from './global';
+import type { ErrorCodes } from '../../invariantErrorCodes';
+import { stringifyForDisplay } from '../common/stringifyForDisplay';
 
 function wrap(fn: (msg?: string, ...args: any[]) => void) {
   return function (message: string | number, ...args: any[]) {
-    fn(typeof message === "number" ? getErrorMsg(message) : message, ...args);
-  }
+    fn(typeof message === 'number' ? getErrorMsg(message) : message, ...args);
+  };
 }
 
 type LogFunction = {
@@ -27,7 +27,7 @@ type LogFunction = {
    * String substitutions like %s, %o, %d or %f are supported.
    */
   (message?: any, ...optionalParams: unknown[]): void;
-}
+};
 
 type WrappedInvariant = {
   /**
@@ -41,30 +41,36 @@ type WrappedInvariant = {
    * or they can use the `loadErrorMessages` to add the message strings to the bundle.
    * The documentation will display the message with the arguments substituted.
    *
-   * String substitutions with %s are supported and will also return 
-   * pretty-stringified objects.  
+   * String substitutions with %s are supported and will also return
+   * pretty-stringified objects.
    * Excess `optionalParams` will be swallowed.
    */
-  (condition: any, message?: string | number, ...optionalParams: unknown[]): asserts condition
-  
+  (
+    condition: any,
+    message?: string | number,
+    ...optionalParams: unknown[]
+  ): asserts condition;
+
   debug: LogFunction;
   log: LogFunction;
   warn: LogFunction;
   error: LogFunction;
-}
+};
 const invariant: WrappedInvariant = Object.assign(
-  function invariant(condition: any, message?: string | number, ...args: unknown[]): asserts condition {
+  function invariant(
+    condition: any,
+    message?: string | number,
+    ...args: unknown[]
+  ): asserts condition {
     if (!condition) {
-      i(
-        condition,
-        getErrorMsg(message, args))
+      i(condition, getErrorMsg(message, args));
     }
   },
   {
     debug: wrap(i.debug),
     log: wrap(i.log),
     warn: wrap(i.warn),
-    error: wrap(i.error)
+    error: wrap(i.error),
   }
 );
 
@@ -74,33 +80,47 @@ const invariant: WrappedInvariant = Object.assign(
  * `message` can only be a string, a concatenation of strings, or a ternary statement
  * that results in a string. This will be enforced on build, where the message will
  * be replaced with a message number.
- * String substitutions with %s are supported and will also return 
- * pretty-stringified objects.  
+ * String substitutions with %s are supported and will also return
+ * pretty-stringified objects.
  * Excess `optionalParams` will be swallowed.
  */
-function newInvariantError(message?: string | number, ...optionalParams: unknown[]) {
+function newInvariantError(
+  message?: string | number,
+  ...optionalParams: unknown[]
+) {
   return new InvariantError(getErrorMsg(message, optionalParams));
 }
 
-const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler')
+const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler');
 declare global {
-	interface Window {
-		[ApolloErrorMessageHandler]?: {
-      (message: string | number, args: unknown[]): string | undefined
-    } & ErrorCodes
-	}
+  interface Window {
+    [ApolloErrorMessageHandler]?: {
+      (message: string | number, args: unknown[]): string | undefined;
+    } & ErrorCodes;
+  }
 }
 
 function getErrorMsg(message?: string | number, messageArgs: unknown[] = []) {
   if (!message) return;
-  const args = messageArgs.map(arg => typeof arg == "string" ? arg : stringifyForDisplay(arg, 2).slice(0, 1000));
-  return global[ApolloErrorMessageHandler]
-    && global[ApolloErrorMessageHandler](message, args)
-    || `An error occured! For more details, see the full error text at https://go.apollo.dev/c/err#${encodeURIComponent(JSON.stringify({
-      version,
-      message,
-      args
-    }))}`
+  const args = messageArgs.map((arg) =>
+    typeof arg == 'string' ? arg : stringifyForDisplay(arg, 2).slice(0, 1000)
+  );
+  return (
+    (global[ApolloErrorMessageHandler] &&
+      global[ApolloErrorMessageHandler](message, args)) ||
+    `An error occured! For more details, see the full error text at https://go.apollo.dev/c/err#${encodeURIComponent(
+      JSON.stringify({
+        version,
+        message,
+        args,
+      })
+    )}`
+  );
 }
 
-export { invariant, InvariantError, newInvariantError, ApolloErrorMessageHandler }
+export {
+  invariant,
+  InvariantError,
+  newInvariantError,
+  ApolloErrorMessageHandler,
+};

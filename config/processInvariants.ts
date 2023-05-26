@@ -1,24 +1,24 @@
-import * as fs from "fs";
-import { posix, join as osPathJoin } from "path";
+import * as fs from 'fs';
+import { posix, join as osPathJoin } from 'path';
 import { distDir, eachFile, reparse, reprint } from './helpers';
-import type {ExpressionKind} from 'ast-types/lib/gen/kinds';
+import type { ExpressionKind } from 'ast-types/lib/gen/kinds';
 
 eachFile(distDir, (file, relPath) => {
-  const source = fs.readFileSync(file, "utf8");
+  const source = fs.readFileSync(file, 'utf8');
   const output = transform(source, relPath);
   if (source !== output) {
-    fs.writeFileSync(file, output, "utf8");
+    fs.writeFileSync(file, output, 'utf8');
   }
 }).then(() => {
   fs.writeFileSync(
-    osPathJoin(distDir, "invariantErrorCodes.js"),
+    osPathJoin(distDir, 'invariantErrorCodes.js'),
     recast.print(program, {
       tabWidth: 2,
-    }).code + "\n",
+    }).code + '\n'
   );
 });
 
-import * as recast from "recast";
+import * as recast from 'recast';
 const b = recast.types.builders;
 const n = recast.types.namedTypes;
 type Node = recast.types.namedTypes.Node;
@@ -26,40 +26,36 @@ type CallExpression = recast.types.namedTypes.CallExpression;
 type NewExpression = recast.types.namedTypes.NewExpression;
 let nextErrorCode = 1;
 
-const program = b.program([])
+const program = b.program([]);
 const allExports = {
-  errorCodes: getExportObject("errorCodes"),
-  devDebug: getExportObject("devDebug"),
-  devLog: getExportObject("devLog"),
-  devWarn: getExportObject("devWarn"),
-  devError: getExportObject("devError"),
-}
-type ExportName = keyof typeof allExports
+  errorCodes: getExportObject('errorCodes'),
+  devDebug: getExportObject('devDebug'),
+  devLog: getExportObject('devLog'),
+  devWarn: getExportObject('devWarn'),
+  devError: getExportObject('devError'),
+};
+type ExportName = keyof typeof allExports;
 
 allExports.errorCodes.comments = [
-  b.commentLine(' This file is used by the error message display website and the', true),
+  b.commentLine(
+    ' This file is used by the error message display website and the',
+    true
+  ),
   b.commentLine(' @apollo/client/includeErrors entry point.', true),
   b.commentLine(' This file is not meant to be imported manually.', true),
 ];
 
-function getExportObject(exportName: string){
-  const object = b.objectExpression([])
-    program.body.push(
-      b.exportNamedDeclaration(
-    b.variableDeclaration(
-        "const",
-       [
-        b.variableDeclarator(
-          b.identifier(exportName),
-          object,
-        ),
-      ]
-    ),
-  )
+function getExportObject(exportName: string) {
+  const object = b.objectExpression([]);
+  program.body.push(
+    b.exportNamedDeclaration(
+      b.variableDeclaration('const', [
+        b.variableDeclarator(b.identifier(exportName), object),
+      ])
+    )
   );
   return object;
 }
-
 
 function getErrorCode(
   file: string,
@@ -84,17 +80,22 @@ function getErrorCode(
     condition?: recast.types.namedTypes.SpreadElement | ExpressionKind
   ): ExpressionKind {
     if (message.type === 'ConditionalExpression') {
-      return b.conditionalExpression(message.test, extractString(file, target, message.consequent, condition), extractString(file, target, message.alternate, condition));
+      return b.conditionalExpression(
+        message.test,
+        extractString(file, target, message.consequent, condition),
+        extractString(file, target, message.alternate, condition)
+      );
     } else if (isStringOnly(message)) {
       const obj = b.objectExpression([]);
       const numLit = b.numericLiteral(nextErrorCode++);
       target.push(b.property('init', numLit, obj));
 
-      obj.properties.push(b.property(
+      obj.properties.push(
+        b.property(
           'init',
           b.identifier('file'),
           b.stringLiteral('@apollo/client/' + file)
-        ),
+        )
       );
       if (condition) {
         obj.properties.push(
@@ -105,11 +106,7 @@ function getErrorCode(
           )
         );
       }
-      obj.properties.push(
-        b.property('init', 
-        b.identifier('message'), 
-        message)
-      );
+      obj.properties.push(b.property('init', b.identifier('message'), message));
 
       return numLit;
     } else {
@@ -214,24 +211,27 @@ function transform(code: string, relativeFilePath: string) {
 
         // Normalize node.source.value relative to the current file.
         if (
-          typeof importedModuleId === "string" &&
-          importedModuleId.startsWith(".")
+          typeof importedModuleId === 'string' &&
+          importedModuleId.startsWith('.')
         ) {
-          const normalized = posix.normalize(posix.join(
-            posix.dirname(relativeFilePath),
-            importedModuleId,
-          ));
-          if (normalized === "utilities/globals") {
+          const normalized = posix.normalize(
+            posix.join(posix.dirname(relativeFilePath), importedModuleId)
+          );
+          if (normalized === 'utilities/globals') {
             foundExistingImportDecl = true;
-            if (node.specifiers?.some(s => isIdWithName(s.local || s.id, "__DEV__"))) {
+            if (
+              node.specifiers?.some((s) =>
+                isIdWithName(s.local || s.id, '__DEV__')
+              )
+            ) {
               return false;
             }
             if (!node.specifiers) node.specifiers = [];
-            node.specifiers.push(b.importSpecifier(b.identifier("__DEV__")));
+            node.specifiers.push(b.importSpecifier(b.identifier('__DEV__')));
             return false;
           }
         }
-      }
+      },
     });
 
     if (!foundExistingImportDecl) {
@@ -239,12 +239,12 @@ function transform(code: string, relativeFilePath: string) {
       // this code is running at build time, we can simplify things by throwing
       // here, because we expect invariant and InvariantError to be imported
       // from the utilities/globals subpackage.
-      throw new Error(`Missing import from "${
-        posix.relative(
+      throw new Error(
+        `Missing import from "${posix.relative(
           posix.dirname(relativeFilePath),
-          "utilities/globals",
-        )
-       } in ${relativeFilePath}`);
+          'utilities/globals'
+        )} in ${relativeFilePath}`
+      );
     }
   }
 
@@ -252,42 +252,52 @@ function transform(code: string, relativeFilePath: string) {
 }
 
 function isIdWithName(node: Node | null | undefined, ...names: string[]) {
-  return node && n.Identifier.check(node) &&
-    names.some(name => name === node.name);
+  return (
+    node && n.Identifier.check(node) && names.some((name) => name === node.name)
+  );
 }
 
 function isCallWithLength(
   node: CallExpression | NewExpression,
   name: string,
-  length: number,
+  length: number
 ) {
-  return isIdWithName(node.callee, name) &&
-    node.arguments.length > length;
+  return isIdWithName(node.callee, name) && node.arguments.length > length;
 }
 
 function isDEVLogicalAnd(node: Node) {
-  return n.LogicalExpression.check(node) &&
-    node.operator === "&&" &&
-    isDEVExpr(node.left);
+  return (
+    n.LogicalExpression.check(node) &&
+    node.operator === '&&' &&
+    isDEVExpr(node.left)
+  );
 }
 
 function makeDEVExpr() {
-  return b.identifier("__DEV__");
+  return b.identifier('__DEV__');
 }
 
 function isDEVExpr(node: Node) {
-  return isIdWithName(node, "__DEV__");
+  return isIdWithName(node, '__DEV__');
 }
 
-function isStringOnly(node: recast.types.namedTypes.ASTNode): node is ExpressionKind {
+function isStringOnly(
+  node: recast.types.namedTypes.ASTNode
+): node is ExpressionKind {
   switch (node.type) {
-    case "StringLiteral":
-    case "Literal":
+    case 'StringLiteral':
+    case 'Literal':
       return true;
-    case "TemplateLiteral":
-      return ((node.expressions as recast.types.namedTypes.ASTNode[]).every(isStringOnly))
-    case "BinaryExpression":
-      return node.operator == '+' && isStringOnly(node.left) && isStringOnly(node.right);
+    case 'TemplateLiteral':
+      return (node.expressions as recast.types.namedTypes.ASTNode[]).every(
+        isStringOnly
+      );
+    case 'BinaryExpression':
+      return (
+        node.operator == '+' &&
+        isStringOnly(node.left) &&
+        isStringOnly(node.right)
+      );
   }
   return false;
 }

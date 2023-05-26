@@ -29,6 +29,7 @@ src/*
 !src/react/
 src/react/*
 
+!src/dev
 
 # Allow src/react/cache/ApolloProvider
 !src/react/context/
@@ -63,6 +64,9 @@ src/utilities/common/*
 src/utilities/common/__tests__/*
 !src/utilities/common/__tests__/omitDeep.ts
 !src/utilities/common/__tests__/stripTypename.ts
+!src/utilities/globals
+src/utilities/globals/*
+!src/utilities/globals/invariantWrappers.ts
 
 # Allowed links
 !src/link

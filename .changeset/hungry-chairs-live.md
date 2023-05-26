@@ -1,8 +1,8 @@
 ---
-'@apollo/client': minor
+'@apollo/client': patch
 ---
 
-Add a new mechanism for Error Extraction to reduce bundle size by including 
+Add a new mechanism for Error Extraction to reduce bundle size by including
 error message texts on an opt-in basis.
 By default, errors will link to an error page with the entire error message.
 This replaces "development" and "production" errors and works without

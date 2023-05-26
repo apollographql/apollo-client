@@ -1,5 +1,5 @@
 ---
-'@apollo/client': minor
+'@apollo/client': patch
 ---
 
 Add the ability to specify custom GraphQL document transforms. These transforms are run before reading data from the cache, before local state is resolved, and before the query document is sent through the link chain.

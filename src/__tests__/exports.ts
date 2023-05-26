@@ -6,6 +6,7 @@
 import * as cache from "../cache";
 import * as client from "..";
 import * as core from "../core";
+import * as dev from '../dev';
 import * as errors from "../errors";
 import * as linkBatch from "../link/batch";
 import * as linkBatchHTTP from "../link/batch-http";
@@ -49,6 +50,7 @@ describe('exports of public entry points', () => {
   check("@apollo/client", client);
   check("@apollo/client/cache", cache);
   check("@apollo/client/core", core);
+  check("@apollo/client/dev", dev);
   check("@apollo/client/errors", errors);
   check("@apollo/client/link/batch", linkBatch);
   check("@apollo/client/link/batch-http", linkBatchHTTP);

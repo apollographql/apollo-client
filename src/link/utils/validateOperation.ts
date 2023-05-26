@@ -1,4 +1,4 @@
-import { InvariantError } from '../../utilities/globals'
+import { newInvariantError } from '../../utilities/globals'
 import type { GraphQLRequest } from '../core';
 
 export function validateOperation(operation: GraphQLRequest): GraphQLRequest {
@@ -11,7 +11,7 @@ export function validateOperation(operation: GraphQLRequest): GraphQLRequest {
   ];
   for (let key of Object.keys(operation)) {
     if (OPERATION_FIELDS.indexOf(key) < 0) {
-      throw new InvariantError(`illegal argument: ${key}`);
+      throw newInvariantError(`illegal argument: %s`, key);
     }
   }
 

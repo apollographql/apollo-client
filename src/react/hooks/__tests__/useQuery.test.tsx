@@ -5016,13 +5016,13 @@ describe('useQuery Hook', () => {
 
       expect(errorSpy).toHaveBeenCalled();
       expect(errorSpy).toHaveBeenLastCalledWith(
-        `Missing field 'vin' while writing result ${JSON.stringify({
+        `Missing field '%s' while writing result %o`, 'vin', {
           id: 1,
           make: "Audi",
           model: "RS8",
           vine: "DOLLADOLLABILL",
           __typename: "Car"
-        }, null, 2)}`
+        }
       );
       errorSpy.mockRestore();
     });

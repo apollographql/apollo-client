@@ -73,9 +73,9 @@ export function keyFieldsFnFromSpecifier(
 
         invariant(
           extracted !== void 0,
-          `Missing field '${schemaKeyPath.join('.')}' while extracting keyFields from ${
-            JSON.stringify(object)
-          }`,
+          `Missing field '%s' while extracting keyFields from %s`, 
+          schemaKeyPath.join('.'), 
+          object,
         );
 
         return extracted;

@@ -113,7 +113,6 @@ function getErrorCode(
 
       return numLit;
     } else {
-      console.dir(message, { depth: 1 });
       throw new Error(`invariant minification error: node cannot have dynamical error argument!
         file: ${posix.join(distDir, file)}:${expr.loc?.start.line}
         code:
@@ -173,7 +172,7 @@ function transform(code: string, relativeFilePath: string) {
         isIdWithName(node.callee.property, 'debug', 'log', 'warn', 'error')
       ) {
         let newNode = node;
-        if (node.arguments[0].type == 'Identifier') { /* nothing to do, just printing a variable */ } else {
+        if (node.arguments[0].type !== 'Identifier') {
           const prop = node.callee.property;
           if (!n.Identifier.check(prop)) throw new Error('unexpected type');
 
@@ -184,7 +183,7 @@ function transform(code: string, relativeFilePath: string) {
             getErrorCode(
               relativeFilePath,
               node,
-              ('dev' + ucFirst(prop.name)) as ExportName
+              ('dev' + capitalize(prop.name)) as ExportName
             )
           );
           newNode = b.callExpression.from({
@@ -293,6 +292,6 @@ function isStringOnly(node: recast.types.namedTypes.ASTNode): node is Expression
   return false;
 }
 
-function ucFirst(str: string) {
+function capitalize(str: string) {
   return str[0].toUpperCase() + str.slice(1);
 }

@@ -1,4 +1,4 @@
-import { invariant as i, InvariantError } from 'ts-invariant';
+import { invariant as originalInvariant, InvariantError } from 'ts-invariant';
 import { version } from '../../version';
 import global from './global';
 import type { ErrorCodes } from '../../invariantErrorCodes';
@@ -63,14 +63,14 @@ const invariant: WrappedInvariant = Object.assign(
     ...args: unknown[]
   ): asserts condition {
     if (!condition) {
-      i(condition, getErrorMsg(message, args));
+      originalInvariant(condition, getErrorMsg(message, args));
     }
   },
   {
-    debug: wrap(i.debug),
-    log: wrap(i.log),
-    warn: wrap(i.warn),
-    error: wrap(i.error),
+    debug: wrap(originalInvariant.debug),
+    log: wrap(originalInvariant.log),
+    warn: wrap(originalInvariant.warn),
+    error: wrap(originalInvariant.error),
   }
 );
 

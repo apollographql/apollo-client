@@ -1,5 +1,5 @@
 ---
-'@apollo/client': patch
+'@apollo/client': minor
 ---
 
 Add a new mechanism for Error Extraction to reduce bundle size by including

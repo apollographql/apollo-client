@@ -34,10 +34,7 @@ import {
   mockSingleLink,
 } from '../../../testing';
 import { concatPagination, offsetLimitPagination } from '../../../utilities';
-import {
-  useBackgroundQuery_experimental as useBackgroundQuery,
-  useReadQuery_experimental as useReadQuery,
-} from '../useBackgroundQuery';
+import { useBackgroundQuery, useReadQuery } from '../useBackgroundQuery';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { InMemoryCache } from '../../../cache';

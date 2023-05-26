@@ -45,7 +45,7 @@ export type UseFragmentResult<TData> =
       missing?: MissingTree;
     };
 
-export function useFragment_experimental<
+export function useFragment<
   TData = any,
   TVars = OperationVariables
 >(

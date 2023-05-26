@@ -56,15 +56,15 @@ Array [
   "throwServerError",
   "toPromise",
   "useApolloClient",
-  "useBackgroundQuery_experimental",
-  "useFragment_experimental",
+  "useBackgroundQuery",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
   "useReactiveVar",
-  "useReadQuery_experimental",
+  "useReadQuery",
   "useSubscription",
-  "useSuspenseQuery_experimental",
+  "useSuspenseQuery",
 ]
 `;
 
@@ -263,15 +263,15 @@ Array [
   "parser",
   "resetApolloContext",
   "useApolloClient",
-  "useBackgroundQuery_experimental",
-  "useFragment_experimental",
+  "useBackgroundQuery",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
   "useReactiveVar",
-  "useReadQuery_experimental",
+  "useReadQuery",
   "useSubscription",
-  "useSuspenseQuery_experimental",
+  "useSuspenseQuery",
 ]
 `;
 
@@ -305,15 +305,15 @@ Array [
 exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
 Array [
   "useApolloClient",
-  "useBackgroundQuery_experimental",
-  "useFragment_experimental",
+  "useBackgroundQuery",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
   "useReactiveVar",
-  "useReadQuery_experimental",
+  "useReadQuery",
   "useSubscription",
-  "useSuspenseQuery_experimental",
+  "useSuspenseQuery",
 ]
 `;
 

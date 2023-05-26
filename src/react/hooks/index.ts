@@ -8,14 +8,14 @@ export * from './useSubscription';
 export * from './useReactiveVar';
 export * from './useFragment';
 export {
-  useSuspenseQuery_experimental,
+  useSuspenseQuery,
   UseSuspenseQueryResult,
   FetchMoreFunction,
   RefetchFunction,
   SubscribeToMoreFunction,
 } from './useSuspenseQuery';
 export {
-  useBackgroundQuery_experimental,
-  useReadQuery_experimental,
+  useBackgroundQuery,
+  useReadQuery,
   UseBackgroundQueryResult,
 } from './useBackgroundQuery';

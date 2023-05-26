@@ -11,15 +11,15 @@ import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx'
 import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
 import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
 
-## `useBackgroundQuery_experimental` and `useReadQuery_experimental`
+## `useBackgroundQuery` and `useReadQuery`
 
 ### Installation
 
-> ⚠️ **The `useBackgroundQuery_experimental` and `useReadQuery_experimental` hooks are currently at the [alpha stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in Apollo Client.** If you have feedback on them, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
+> ⚠️ **The `useBackgroundQuery` and `useReadQuery` hooks are currently at the [beta stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in Apollo Client.** If you have feedback on them, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
-Beginning with version `3.8.0-alpha.14`, Apollo Client has alpha support for the `useBackgroundQuery_experimental` and `useReadQuery_experimental` hooks, which work with React's [Suspense](https://react.dev/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@alpha`.
+Apollo Client has beta support for the `useBackgroundQuery` and `useReadQuery` hooks, which work with React's [Suspense](https://react.dev/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@beta`.
 
-### Using `useBackgroundQuery_experimental` and `useReadQuery_experimental`
+### Using `useBackgroundQuery` and `useReadQuery`
 
 Create and provide a `SuspenseCache` instance to your `ApolloProvider`.
 
@@ -31,11 +31,11 @@ const suspenseCache = new SuspenseCache();
 <ApolloProvider suspenseCache={suspenseCache} />;
 ```
 
-`useBackgroundQuery_experimental` allows a user to initiate a query outside of the component that will read and render the data with `useReadQuery_experimental`, which triggers the nearest Suspense boundary while the query is pending. This means a query can be initiated higher up in the React render tree and your application can begin requesting data before the component that has a dependency on that data begins rendering.
+`useBackgroundQuery` allows a user to initiate a query outside of the component that will read and render the data with `useReadQuery`, which triggers the nearest Suspense boundary while the query is pending. This means a query can be initiated higher up in the React render tree and your application can begin requesting data before the component that has a dependency on that data begins rendering.
 
-Ensure the component tree that uses `useReadQuery_experimental` is wrapped with React's [`Suspense`](https://react.dev/reference/react/Suspense) component. Note that the `useReadQuery_experimental` hook returns only `data`, `error` and `networkStatus` (though `networkStatus` should rarely be needed). Since Suspense provides the tools to manage our application's loading states, `useReadQuery_experimental` does not return a `loading` boolean.
+Ensure the component tree that uses `useReadQuery` is wrapped with React's [`Suspense`](https://react.dev/reference/react/Suspense) component. Note that the `useReadQuery` hook returns only `data`, `error` and `networkStatus` (though `networkStatus` should rarely be needed). Since Suspense provides the tools to manage our application's loading states, `useReadQuery` does not return a `loading` boolean.
 
-See the API references for [`useBackgroundQuery_experimental`](#usebackgroundquery_experimental-api) and [`useReadQuery_experimental`](#usereadquery_experimental-api) for supported options.
+See the API references for [`useBackgroundQuery`](#usebackgroundquery-api) and [`useReadQuery`](#usereadquery-api) for supported options.
 
 ```jsx
 import { Suspense } from 'react';
@@ -43,8 +43,8 @@ import {
   ApolloClient,
   InMemoryCache,
   SuspenseCache,
-  useBackgroundQuery_experimental as useBackgroundQuery,
-  useReadQuery_experimental as useReadQuery,
+  useBackgroundQuery,
+  useReadQuery,
 } from '@apollo/client';
 
 const query = gql`
@@ -92,12 +92,12 @@ function App() {
 
 ```
 
-### `useBackgroundQuery_experimental` API
+### `useBackgroundQuery` API
 
 #### Function Signature
 
 ```ts
-function useBackgroundQuery_experimental<
+function useBackgroundQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
 >(
@@ -126,12 +126,12 @@ function useBackgroundQuery_experimental<
 
 <UseBackgroundQueryResult />
 
-### `useReadQuery_experimental` API
+### `useReadQuery` API
 
 #### Function Signature
 
 ```ts
-function useReadQuery_experimental<TData>(
+function useReadQuery<TData>(
   queryRef: QueryReference<TData>
 ): {
   data: TData;
@@ -152,17 +152,19 @@ function useReadQuery_experimental<TData>(
 
 <UseReadQueryResult />
 
-## `useFragment_experimental`
+## `useFragment`
 
 ### Installation
 
-> ⚠️ **The `useFragment_experimental` hook is currently at the [preview stage](https://www.apollographql.com/docs/resources/release-stages/#preview) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
+> ⚠️ **The `useFragment` hook is currently at the [beta stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
-Beginning with version `3.7.0`, Apollo Client has preview support for the `useFragment_experimental` hook, which represents a lightweight live binding into the Apollo Client Cache. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment_experimental` never triggers network requests of its own.
+Beginning with version `3.7.0`, Apollo Client has preview support for the `useFragment` hook, which represents a lightweight live binding into the Apollo Client Cache. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
 
-`useFragment_experimental` enables Apollo Client to broadcast very specific fragment results to individual components. Note that the `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment_experimental` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
+> **Note**: this hook is named `useFragment_experimental` in `3.7.x` and `3.8.0-alpha.x` releases. In `3.8.0-beta.0` and greater it no longer has an `_experimental` suffix.
 
-### Using `useFragment_experimental`
+`useFragment` enables Apollo Client to broadcast very specific fragment results to individual components. Note that the `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
+
+### Using `useFragment`
 
 > A [GraphQL fragment](http://graphql.org/learn/queries/#fragments) defines a subset of fields on a GraphQL type that can be used to specify component-level data dependencies or allow re-use between multiple queries and mutations. [See the API reference.](../../data/fragments)
 
@@ -198,11 +200,11 @@ function List() {
 }
 ```
 
-We can then use `useFragment_experimental` from within the `<Item>` component to create a live binding for each item by providing the `fragment` document, `fragmentName` and object reference via `from`.
+We can then use `useFragment` from within the `<Item>` component to create a live binding for each item by providing the `fragment` document, `fragmentName` and object reference via `from`.
 
 ```jsx
 function Item(props: { id: number }) {
-  const { complete, data } = useFragment_experimental({
+  const { complete, data } = useFragment({
     fragment: ItemFragment,
     fragmentName: "ItemFragment",
     from: {
@@ -214,17 +216,17 @@ function Item(props: { id: number }) {
 }
 ```
 
-> `useFragment_experimental` can be used in combination with the `@nonreactive` directive in cases where list items should react to individual cache updates without rerendering the entire list. For more information, see the [`@nonreactive` docs](/react/data/directives#nonreactive).
+> `useFragment` can be used in combination with the `@nonreactive` directive in cases where list items should react to individual cache updates without rerendering the entire list. For more information, see the [`@nonreactive` docs](/react/data/directives#nonreactive).
 
-### `useFragment_experimental` API
+### `useFragment` API
 
-Supported options and result fields for the `useFragment_experimental` hook are listed below.
+Supported options and result fields for the `useFragment` hook are listed below.
 
-Most calls to `useFragment_experimental` can omit the majority of these options, but it's useful to know they exist.
+Most calls to `useFragment` can omit the majority of these options, but it's useful to know they exist.
 
 #### Options
 
-The `useFragment_experimental` hook accepts the following options:
+The `useFragment` hook accepts the following options:
 
 <UseFragmentOptions />
 
@@ -232,15 +234,15 @@ The `useFragment_experimental` hook accepts the following options:
 
 <UseFragmentResult />
 
-## `useSuspenseQuery_experimental`
+## `useSuspenseQuery`
 
 ### Installation
 
-> ⚠️ **The `useSuspenseQuery_experimental` hook is currently at the [preview stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
+> ⚠️ **The `useSuspenseQuery` hook is currently at the [beta stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
-Beginning with version `3.8.0-alpha.0`, Apollo Client has alpha support for the `useSuspenseQuery_experimental` hook, which works with React's [Suspense](https://react.dev/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@alpha`.
+Apollo Client has beta support for the `useSuspenseQuery` hook, which works with React's [Suspense](https://react.dev/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@beta`.
 
-### Using `useSuspenseQuery_experimental`
+### Using `useSuspenseQuery`
 
 Create and provide a `SuspenseCache` instance to your `ApolloProvider`.
 
@@ -252,13 +254,13 @@ const suspenseCache = new SuspenseCache();
 <ApolloProvider suspenseCache={suspenseCache} />;
 ```
 
-Write queries using `useSuspenseQuery_experimental`. Ensure the component is wrapped with React's [`Suspense`](https://react.dev/reference/react/Suspense) component. Note that the hook returns only `data` and `error`: since Suspense provides the tools to manage our application's loading states, `useSuspenseQuery_experimental` does not return a `loading` boolean.
+Write queries using `useSuspenseQuery`. Ensure the component is wrapped with React's [`Suspense`](https://react.dev/reference/react/Suspense) component. Note that the hook returns only `data` and `error`: since Suspense provides the tools to manage our application's loading states, `useSuspenseQuery` does not return a `loading` boolean.
 
-See the [API reference](#usesuspensequery_experimental-api) for supported options.
+See the [API reference](#usesuspensequery-api) for supported options.
 
 ```jsx
 import { Suspense } from 'react';
-import { useSuspenseQuery_experimental } from '@apollo/client';
+import { useSuspenseQuery } from '@apollo/client';
 
 const listQuery = gql`
   query {
@@ -277,7 +279,7 @@ function App() {
 }
 
 function List() {
-  const { data } = useSuspenseQuery_experimental(listQuery);
+  const { data } = useSuspenseQuery(listQuery);
 
   return (
     <ol>
@@ -288,12 +290,12 @@ function List() {
 
 ```
 
-### `useSuspenseQuery_experimental` API
+### `useSuspenseQuery` API
 
 #### Function Signature
 
 ```ts
-function useSuspenseQuery_experimental<
+function useSuspenseQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
 >(

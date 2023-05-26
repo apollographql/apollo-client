@@ -120,6 +120,7 @@ export interface SuspenseQueryHookOptions<
   | 'canonizeResults'
   | 'returnPartialData'
   | 'refetchWritePolicy'
+  | 'skip'
 > {
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
   suspenseCache?: SuspenseCache;

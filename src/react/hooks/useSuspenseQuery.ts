@@ -77,7 +77,11 @@ export function useSuspenseQuery<
       ? DeepPartial<TData> | undefined
       : TData | undefined
     : TOptions['returnPartialData'] extends true
-    ? DeepPartial<TData>
+    ? TOptions['skip'] extends true
+      ? DeepPartial<TData> | undefined
+      : DeepPartial<TData>
+    : TOptions['skip'] extends true
+    ? TData | undefined
     : TData,
   TVariables
 >;
@@ -109,9 +113,30 @@ export function useSuspenseQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+    skip: true;
+    returnPartialData: true;
+  }
+): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: true;
   }
 ): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+    skip: true;
+  }
+): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,

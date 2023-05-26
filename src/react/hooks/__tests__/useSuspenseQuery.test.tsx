@@ -7013,6 +7013,27 @@ describe('useSuspenseQuery', () => {
       >();
     });
 
+    it('returns TData | undefined with skip: true', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        skip: true,
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        skip: true,
+      });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
     it('returns TData when passing an option that does not affect TData', () => {
       const { query } = useVariablesQueryCase();
 
@@ -7041,10 +7062,7 @@ describe('useSuspenseQuery', () => {
     it('handles combinations of options', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: inferredPartialDataIgnore } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
+      const { data: inferredPartialDataIgnore } = useSuspenseQuery(query, {
         returnPartialData: true,
         errorPolicy: 'ignore',
       });
@@ -7056,7 +7074,10 @@ describe('useSuspenseQuery', () => {
         inferredPartialDataIgnore
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: explicitPartialDataIgnore } = useSuspenseQuery(query, {
+      const { data: explicitPartialDataIgnore } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         returnPartialData: true,
         errorPolicy: 'ignore',
       });
@@ -7068,10 +7089,7 @@ describe('useSuspenseQuery', () => {
         explicitPartialDataIgnore
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: inferredPartialDataNone } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
+      const { data: inferredPartialDataNone } = useSuspenseQuery(query, {
         returnPartialData: true,
         errorPolicy: 'none',
       });
@@ -7083,7 +7101,10 @@ describe('useSuspenseQuery', () => {
         inferredPartialDataNone
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: explicitPartialDataNone } = useSuspenseQuery(query, {
+      const { data: explicitPartialDataNone } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         returnPartialData: true,
         errorPolicy: 'none',
       });
@@ -7093,6 +7114,83 @@ describe('useSuspenseQuery', () => {
       >();
       expectTypeOf(
         explicitPartialDataNone
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: inferredSkipIgnore } = useSuspenseQuery(query, {
+        skip: true,
+        errorPolicy: 'ignore',
+      });
+
+      expectTypeOf(inferredSkipIgnore).toEqualTypeOf<
+        VariablesCaseData | undefined
+      >();
+      expectTypeOf(
+        inferredPartialDataIgnore
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicitSkipIgnore } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        skip: true,
+        errorPolicy: 'ignore',
+      });
+
+      expectTypeOf(explicitSkipIgnore).toEqualTypeOf<
+        VariablesCaseData | undefined
+      >();
+      expectTypeOf(explicitSkipIgnore).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: inferredSkipNone } = useSuspenseQuery(query, {
+        skip: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(inferredSkipNone).toEqualTypeOf<
+        VariablesCaseData | undefined
+      >();
+      expectTypeOf(inferredSkipNone).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicitSkipNone } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        skip: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(explicitSkipNone).toEqualTypeOf<
+        VariablesCaseData | undefined
+      >();
+      expectTypeOf(explicitSkipNone).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: inferredPartialDataNoneSkip } = useSuspenseQuery(query, {
+        skip: true,
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(inferredPartialDataNoneSkip).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(
+        inferredPartialDataNoneSkip
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicitPartialDataNoneSkip } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        skip: true,
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(explicitPartialDataNoneSkip).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(
+        explicitPartialDataNoneSkip
       ).not.toEqualTypeOf<VariablesCaseData>();
     });
 

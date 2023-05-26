@@ -159,37 +159,37 @@ export default function DisplayClientError() {
 
   const error = dataError || parsingError;
 
+  if (error) {
+    return (
+      <>
+        <MDX.h3>⚠️ Unable to fetch error code</MDX.h3>
+        <MDX.blockquote>{error.toString()}</MDX.blockquote>
+      </>
+    );
+  }
+
   return (
     <div
       style={{
         filter: errorMessage === 'Loading...' ? 'blur(5px)' : undefined,
       }}
     >
-      {error ? (
+      {!errorMessage ? null : (
         <>
-          <MDX.h3>⚠️ Unable to fetch error code</MDX.h3>
-          <MDX.blockquote>{error.toString()}</MDX.blockquote>
+          <MDX.h2>Error message</MDX.h2>
+          <MDX.blockquote>{errorMessage}</MDX.blockquote>
         </>
-      ) : (
+      )}
+      {!file ? null : (
         <>
-          {!errorMessage ? null : (
-            <>
-              <MDX.h2>Error message</MDX.h2>
-              <MDX.blockquote>{errorMessage}</MDX.blockquote>
-            </>
-          )}
-          {!file ? null : (
-            <>
-              <MDX.h3>File</MDX.h3>
-              <MDX.inlineCode>{file}</MDX.inlineCode>
-            </>
-          )}
-          {!condition ? null : (
-            <>
-              <MDX.h3>Condition</MDX.h3>
-              <MDX.inlineCode>{condition}</MDX.inlineCode>
-            </>
-          )}
+          <MDX.h3>File</MDX.h3>
+          <MDX.inlineCode>{file}</MDX.inlineCode>
+        </>
+      )}
+      {!condition ? null : (
+        <>
+          <MDX.h3>Condition</MDX.h3>
+          <MDX.inlineCode>{condition}</MDX.inlineCode>
         </>
       )}
     </div>

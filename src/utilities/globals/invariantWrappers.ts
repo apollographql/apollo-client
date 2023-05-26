@@ -91,7 +91,9 @@ function newInvariantError(
   return new InvariantError(getErrorMsg(message, optionalParams));
 }
 
-const ApolloErrorMessageHandler = Symbol.for('ApolloErrorMessageHandler');
+const ApolloErrorMessageHandler = Symbol.for(
+  'ApolloErrorMessageHandler_' + version
+);
 declare global {
   interface Window {
     [ApolloErrorMessageHandler]?: {

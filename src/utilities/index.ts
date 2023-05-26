@@ -70,6 +70,12 @@ export {
 } from './graphql/transform';
 
 export {
+  isMutationOperation,
+  isQueryOperation,
+  isSubscriptionOperation,
+} from './graphql/operations';
+
+export {
   concatPagination,
   offsetLimitPagination,
   relayStylePagination,

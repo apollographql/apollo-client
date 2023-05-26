@@ -10,6 +10,7 @@ import { version } from '../version';
 import type { UriFunction } from '../link/http';
 import { HttpLink } from '../link/http';
 
+import type { DocumentTransform } from './DocumentTransform';
 import { QueryManager } from './QueryManager';
 import type { ObservableQuery } from './ObservableQuery';
 
@@ -22,7 +23,6 @@ import type {
   RefetchQueriesResult,
   InternalRefetchQueriesResult,
   RefetchQueriesInclude,
-  TransformQueryOptions,
 } from './types';
 
 import type {
@@ -43,7 +43,6 @@ export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
   query?: Partial<QueryOptions<any, any>>;
   mutate?: Partial<MutationOptions<any, any, any>>;
-  transformQuery?: Partial<TransformQueryOptions>;
 }
 
 let hasSuggestedDevtools = false;
@@ -65,6 +64,7 @@ export type ApolloClientOptions<TCacheShape> = {
   fragmentMatcher?: FragmentMatcher;
   name?: string;
   version?: string;
+  documentTransform?: DocumentTransform
 };
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
@@ -143,6 +143,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       credentials,
       headers,
       cache,
+      documentTransform,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       connectToDevTools =
@@ -238,6 +239,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       cache: this.cache,
       link: this.link,
       defaultOptions: this.defaultOptions,
+      documentTransform,
       queryDeduplication,
       ssrMode,
       clientAwareness: {
@@ -259,6 +261,15 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         }
       } : void 0,
     });
+  }
+
+  /**
+   * The `DocumentTransform` used to modify GraphQL documents before a request
+   * is made. If a custom `DocumentTransform` is not provided, this will be the
+   * default document transform.
+   */
+  get documentTransform() {
+    return this.queryManager.documentTransform;
   }
 
   /**

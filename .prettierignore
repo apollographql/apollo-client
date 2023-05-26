@@ -17,7 +17,7 @@
 *.md
 
 # Do not format anything automatically except files listed below
-/*
+*
 
 #####  PATHS TO BE FORMATTED #####
 !src/
@@ -38,9 +38,15 @@ src/react/context/__tests__/*
 # Allow src/react/cache
 !src/react/cache/
 
-# Allow certain core tests
+# Allow certain core files
+!src/core
+src/core/*
+!src/core/__tests__/
+src/core/tests/*
 !src/core/__tests__/equalByQuery.ts
+!src/core/__tests__/DocumentTransform.ts
 !src/core/equalByQuery.ts
+!src/core/DocumentTransform.ts
 
 # Allowed utilities
 !src/utilities/
@@ -59,6 +65,9 @@ src/utilities/common/*
 src/utilities/common/__tests__/*
 !src/utilities/common/__tests__/omitDeep.ts
 !src/utilities/common/__tests__/stripTypename.ts
+!src/utilities/graphql
+src/utilities/graphql/*
+!src/utilities/graphql/operations.ts
 
 # Allowed links
 !src/link
@@ -78,3 +87,8 @@ src/react/hooks/*
 src/react/hooks/__tests__/*
 !src/react/hooks/__tests__/useSuspenseQuery.test.tsx
 !src/react/hooks/__tests__/useBackgroundQuery.test.tsx
+
+## Allowed testing utils
+!src/testing
+src/testing/*
+!src/testing/matchers

@@ -18,7 +18,10 @@ import {
   addTypenameToDocument,
   isReference,
 } from '../../utilities';
-import type { InMemoryCacheConfig, NormalizedCacheObject } from './types';
+import type {
+  InMemoryCacheConfig,
+  NormalizedCacheObject,
+} from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
@@ -26,6 +29,7 @@ import { makeVar, forgetCache, recallCache } from './reactiveVars';
 import { Policies } from './policies';
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
+import { DocumentTransform } from '../../core';
 import type { OperationVariables } from '../../core';
 
 type BroadcastOptions = Pick<
@@ -42,9 +46,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
 
-  private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
+  private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
   private maybeBroadcastWatch: OptimisticWrapperFunction<
     [Cache.WatchOptions, BroadcastOptions?],
@@ -509,32 +513,27 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    if (this.addTypename) {
-      let result = this.typenameDocumentCache.get(document);
-      if (!result) {
-        result = addTypenameToDocument(document);
-        this.typenameDocumentCache.set(document, result);
-        // If someone calls transformDocument and then mistakenly passes the
-        // result back into an API that also calls transformDocument, make sure
-        // we don't keep creating new query documents.
-        this.typenameDocumentCache.set(result, result);
-      }
-      return result;
-    }
-    return document;
-  }
-
-  public transformForLink(document: DocumentNode): DocumentNode {
-    const { fragments } = this.config;
-    return fragments
-      ? fragments.transform(document)
-      : document;
+    return this.addTypenameToDocument(this.addFragmentsToDocument(document));
   }
 
   protected broadcastWatches(options?: BroadcastOptions) {
     if (!this.txCount) {
       this.watches.forEach(c => this.maybeBroadcastWatch(c, options));
     }
+  }
+
+  private addFragmentsToDocument(document: DocumentNode) {
+    const { fragments } = this.config;
+    return fragments
+      ? fragments.transform(document)
+      : document;
+  }
+
+  private addTypenameToDocument(document: DocumentNode) {
+    if (this.addTypename) {
+      return this.addTypenameTransform.transformDocument(document);
+    }
+    return document;
   }
 
   // This method is wrapped by maybeBroadcastWatch, which is called by

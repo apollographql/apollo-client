@@ -70,10 +70,12 @@ export class ObservableQuery<
   public readonly queryId: string;
   public readonly queryName?: string;
 
+  // The `query` computed property will always reflect the document transformed
+  // by the last run query. `this.options.query` will always reflect the raw
+  // untransformed query to ensure document transforms with runtime conditionals
+  // are run on the original document.
   public get query(): TypedDocumentNode<TData, TVariables> {
-    // This transform is heavily cached, so it should not be expensive to
-    // transform the same this.options.query document repeatedly.
-    return this.queryManager.transform(this.options.query).document;
+    return this.lastQuery || this.options.query;
   }
 
   // Computed shorthand for this.options.variables, preserved for
@@ -88,6 +90,7 @@ export class ObservableQuery<
   private subscriptions = new Set<ObservableSubscription>();
 
   private last?: Last<TData, TVariables>;
+  private lastQuery?: DocumentNode;
 
   private queryInfo: QueryInfo;
 
@@ -248,7 +251,7 @@ export class ObservableQuery<
       // trust diff.result, since it was read from the cache without running
       // local resolvers (and it's too late to run resolvers now, since we must
       // return a result synchronously).
-      this.queryManager.transform(this.options.query).hasForcedResolvers
+      this.queryManager.getDocumentInfo(this.query).hasForcedResolvers
     ) {
       // Fall through.
     } else {
@@ -312,11 +315,10 @@ export class ObservableQuery<
       return true;
     }
 
-    const { query } = this.options;
     const resultIsDifferent =
-      this.queryManager.transform(query).hasNonreactiveDirective
+      this.queryManager.getDocumentInfo(this.query).hasNonreactiveDirective
         ? !equalByQuery(
-            query,
+            this.query,
             this.last.result,
             newResult,
             this.variables,
@@ -425,7 +427,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : {
         ...this.options,
-        query: this.query,
+        query: this.options.query,
         ...fetchMoreOptions,
         variables: {
           ...this.options.variables,
@@ -440,7 +442,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       fetchPolicy: "no-cache",
     } as WatchQueryOptions<TFetchVars, TFetchData>;
 
+    combinedOptions.query = this.transformDocument(combinedOptions.query);
+
     const qid = this.queryManager.generateQueryId();
+
+    // If a temporary query is passed to `fetchMore`, we don't want to store 
+    // it as the last query result since it may be an optimized query for 
+    // pagination. We will however run the transforms on the original document 
+    // as well as the document passed in `fetchMoreOptions` to ensure the cache 
+    // uses the most up-to-date document which may rely on runtime conditionals.
+    this.lastQuery = fetchMoreOptions.query 
+      ? this.transformDocument(this.options.query)
+      : combinedOptions.query;
 
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.
@@ -826,6 +839,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       ? mergedOptions
       : assign(this.options, mergedOptions);
 
+    // Don't update options.query with the transformed query to avoid 
+    // overwriting this.options.query when we aren't using a disposable concast. 
+    // We want to ensure we can re-run the custom document transforms the next 
+    // time a request is made against the original query.
+    const query = this.transformDocument(options.query);
+
+    this.lastQuery = query;
+
     if (!useDisposableConcast) {
       // We can skip calling updatePolling if we're not changing this.options.
       this.updatePolling();
@@ -849,8 +870,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       }
     }
 
+    // If the transform doesn't change the document, leave `options` alone and
+    // use the original object.
+    const fetchOptions = query === options.query ? options : { ...options, query };
     const variables = options.variables && { ...options.variables };
-    const { concast, fromLink } = this.fetch(options, newNetworkStatus);
+    const { concast, fromLink } = this.fetch(fetchOptions, newNetworkStatus);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
         this.reportResult(result, variables);
@@ -952,6 +976,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     this.queryManager.stopQuery(this.queryId);
     this.observers.clear();
     this.isTornDown = true;
+  }
+
+  private transformDocument(document: DocumentNode) {
+    return this.queryManager.transform(document);
   }
 }
 

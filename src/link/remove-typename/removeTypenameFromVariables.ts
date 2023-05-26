@@ -26,12 +26,11 @@ export function removeTypenameFromVariables(
       return forward(operation);
     }
 
-    return forward({
-      ...operation,
-      variables: except
-        ? maybeStripTypenameUsingConfig(query, variables, except)
-        : stripTypename(variables),
-    });
+    operation.variables = except
+      ? maybeStripTypenameUsingConfig(query, variables, except)
+      : stripTypename(variables);
+
+    return forward(operation);
   });
 }
 

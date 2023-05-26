@@ -113,7 +113,7 @@ function getErrorCode(
       throw new Error(`invariant minification error: node cannot have dynamical error argument!
         file: ${posix.join(distDir, file)}:${expr.loc?.start.line}
         code:
-  
+
         ${reprint(message)}
       `);
     }
@@ -121,12 +121,6 @@ function getErrorCode(
 }
 
 function transform(code: string, relativeFilePath: string) {
-  // If the code doesn't seem to contain anything invariant-related, we
-  // can skip parsing and transforming it.
-  if (!/invariant/i.test(code)) {
-    return code;
-  }
-
   const ast = reparse(code);
   let addedDEV = false;
 
@@ -198,55 +192,20 @@ function transform(code: string, relativeFilePath: string) {
     },
   });
 
-  if (addedDEV) {
-    // Make sure there's an import { __DEV__ } from "../utilities/globals" or
-    // similar declaration in any module where we injected __DEV__.
-    let foundExistingImportDecl = false;
+  recast.visit(ast, {
+    visitIdentifier(path) {
+      this.traverse(path);
+      const node = path.node;
+      if (isDEVExpr(node)) {
+        return b.memberExpression(
+          b.identifier('globalThis'),
+          b.identifier('__DEV__')
+        );
+      }
 
-    recast.visit(ast, {
-      visitImportDeclaration(path) {
-        this.traverse(path);
-        const node = path.node;
-        const importedModuleId = node.source.value;
-
-        // Normalize node.source.value relative to the current file.
-        if (
-          typeof importedModuleId === 'string' &&
-          importedModuleId.startsWith('.')
-        ) {
-          const normalized = posix.normalize(
-            posix.join(posix.dirname(relativeFilePath), importedModuleId)
-          );
-          if (normalized === 'utilities/globals') {
-            foundExistingImportDecl = true;
-            if (
-              node.specifiers?.some((s) =>
-                isIdWithName(s.local || s.id, '__DEV__')
-              )
-            ) {
-              return false;
-            }
-            if (!node.specifiers) node.specifiers = [];
-            node.specifiers.push(b.importSpecifier(b.identifier('__DEV__')));
-            return false;
-          }
-        }
-      },
-    });
-
-    if (!foundExistingImportDecl) {
-      // We could modify the AST to include a new import declaration, but since
-      // this code is running at build time, we can simplify things by throwing
-      // here, because we expect invariant and InvariantError to be imported
-      // from the utilities/globals subpackage.
-      throw new Error(
-        `Missing import from "${posix.relative(
-          posix.dirname(relativeFilePath),
-          'utilities/globals'
-        )} in ${relativeFilePath}`
-      );
-    }
-  }
+      return node;
+    },
+  });
 
   return reprint(ast);
 }

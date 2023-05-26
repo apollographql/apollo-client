@@ -151,7 +151,7 @@ export default function DisplayClientError() {
     }
   }, []);
 
-  if (hash.length <= 0) {
+  if (hash.length === 0) {
     // the page was loaded without a hash, so we don't know what to display
     // just display the page itself without error information
     return null;

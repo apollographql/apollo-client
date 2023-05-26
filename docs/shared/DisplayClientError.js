@@ -72,74 +72,119 @@ function useInjectLoaderScript() {
   }
 }
 
-export default function DisplayClientError() {
-  const MDX = /** @type {any} */ (useMDXComponents());
-
-  const [hash] = useHash();
-  const parsedHash = useMemo(() => {
-    try {
-      return JSON.parse(decodeURIComponent(hash.substring(1)) || '{}');
-    } catch {
-      return { parsingError: 'Could not parse URL.' };
-    }
-  }, [hash]);
-  const {
-    version = 'latest',
-    message: id = -1,
-    args = [],
-    parsingError,
-  } = parsedHash;
-
-  const [data, setData] = useState(
-    /** @type {null | Messages | { dataError: string }} */ (null)
+/**
+ * @param version {string}
+ * @param messageId {number}
+ * @returns {{data: null; loading: true; error: null} | {data: Messages[number]; loading: false; error: null}| {data: null; loading: false; error: Error}}
+ */
+function useLoadedErrorMessage(version, messageId) {
+  const [state, setState] = useState(
+    /** @type {{data: null; loading: true; error: null} | {data: Messages[number]; loading: false; error: null}| {data: null; loading: false; error: Error}} */ ({
+      data: null,
+      loading: true,
+      error: null,
+    })
   );
+
   const scriptInitialized = useInjectLoaderScript();
+
   useEffect(() => {
     if (!scriptInitialized) return;
     let active = true;
+
     loadData(version)
       .then((data) => {
-        if (active) setData(data);
+        if (!active) {
+          return;
+        }
+
+        const details = data[messageId];
+
+        setTimeout(() => {
+          setState(
+            details
+              ? { loading: false, error: null, data: details }
+              : {
+                  loading: false,
+                  error: new Error('Error message could not be found.'),
+                  data: null,
+                }
+          );
+        }, 5000);
       })
-      .catch((dataError) => setData({ dataError }));
+      .catch((error) => setState({ error, loading: false, data: null }));
+
     return () => {
       active = false;
     };
   }, [version, scriptInitialized]);
 
-  const {
-    file,
-    errorMessage,
-    condition,
-    error: dataError,
-  } = useMemo(() => {
-    if (!data)
-      return {
-        file: 'Loading...',
-        errorMessage: 'Loading...',
-        condition: 'Loading...',
-      };
+  return state;
+}
 
-    if ('dataError' in data) {
-      return { error: data.dataError };
-    }
+function UnexpectedError({ message }) {
+  const MDX = /** @type {any} */ (useMDXComponents());
 
-    if (!data[id]) {
-      return { error: 'Error message could not be found!' };
-    }
-    let { file, condition, message: errorMessage } = data[id];
+  return (
+    <>
+      <MDX.h3>⚠️ Unable to fetch error code</MDX.h3>
+      <MDX.blockquote>{message}</MDX.blockquote>
+    </>
+  );
+}
 
-    if (errorMessage) {
-      errorMessage = /** @type{string} */ (
-        args.reduce(
+function ErrorDetails({ version, messageId, args }) {
+  const MDX = /** @type {any} */ (useMDXComponents());
+  const { data, loading, error } = useLoadedErrorMessage(version, messageId);
+  const errorMessage = useMemo(() => {
+    return data?.message
+      ? args.reduce(
           (/** @type{string} */ acc, arg) => acc.replace('%s', String(arg)),
-          String(errorMessage)
+          String(data.message)
         )
-      );
-    }
+      : null;
+  }, [data]);
 
-    return { file, condition, errorMessage };
-  }, [data, id, args]);
+  if (error) {
+    return <UnexpectedError message={error.toString()} />;
+  }
+
+  return (
+    <div style={{ filter: loading ? 'blur(5px)' : undefined }}>
+      {(loading || errorMessage) && (
+        <>
+          <MDX.h2>Error message</MDX.h2>
+          <MDX.blockquote>{loading ? 'Loading' : errorMessage}</MDX.blockquote>
+        </>
+      )}
+
+      <MDX.h3>File</MDX.h3>
+      <MDX.inlineCode>{loading ? 'Loading' : data.file}</MDX.inlineCode>
+
+      <MDX.h3>Condition</MDX.h3>
+      <MDX.inlineCode>{loading ? 'Loading' : data.condition}</MDX.inlineCode>
+    </div>
+  );
+}
+
+/**
+ * @param hash {string}
+ */
+function useErrorDetailsFromHash(hash) {
+  return useMemo(() => {
+    try {
+      return {
+        data: JSON.parse(decodeURIComponent(hash.substring(1)) || '{}'),
+      };
+    } catch {
+      return { error: 'Could not parse URL.' };
+    }
+  }, [hash]);
+}
+
+export default function DisplayClientError() {
+  const [hash] = useHash();
+  const { data, error } = useErrorDetailsFromHash(hash);
 
   useEffect(() => {
     // replacing all links within this help page with spans to prevent them
@@ -157,41 +202,13 @@ export default function DisplayClientError() {
     return null;
   }
 
-  const error = dataError || parsingError;
-
-  if (error) {
-    return (
-      <>
-        <MDX.h3>⚠️ Unable to fetch error code</MDX.h3>
-        <MDX.blockquote>{error.toString()}</MDX.blockquote>
-      </>
-    );
-  }
-
-  return (
-    <div
-      style={{
-        filter: errorMessage === 'Loading...' ? 'blur(5px)' : undefined,
-      }}
-    >
-      {!errorMessage ? null : (
-        <>
-          <MDX.h2>Error message</MDX.h2>
-          <MDX.blockquote>{errorMessage}</MDX.blockquote>
-        </>
-      )}
-      {!file ? null : (
-        <>
-          <MDX.h3>File</MDX.h3>
-          <MDX.inlineCode>{file}</MDX.inlineCode>
-        </>
-      )}
-      {!condition ? null : (
-        <>
-          <MDX.h3>Condition</MDX.h3>
-          <MDX.inlineCode>{condition}</MDX.inlineCode>
-        </>
-      )}
-    </div>
+  return error ? (
+    <UnexpectedError message={error} />
+  ) : (
+    <ErrorDetails
+      version={data.version || 'latest'}
+      messageId={data.message || -1}
+      args={data.args || []}
+    />
   );
 }

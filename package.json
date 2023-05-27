@@ -150,7 +150,7 @@
     "rxjs": "7.8.1",
     "size-limit": "8.2.4",
     "subscriptions-transport-ws": "0.11.0",
-    "terser": "5.17.4",
+    "terser": "5.17.6",
     "ts-jest": "29.1.0",
     "ts-node": "10.9.1",
     "typedoc": "0.24.7",

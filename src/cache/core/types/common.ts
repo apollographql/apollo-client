@@ -107,7 +107,9 @@ type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<
   ? StoreVal | Reference
   : StoreVal;
 
-export type Modifiers<T extends Record<string, unknown>> = Partial<{
+export type Modifiers<
+  T extends Record<string, unknown> = Record<string, unknown>
+> = Partial<{
   [FieldName in keyof T]: Modifier<
     StoreObjectValueMaybeReference<Exclude<T[FieldName], undefined>>
   >;

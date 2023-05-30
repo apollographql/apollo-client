@@ -77,9 +77,9 @@ export type ToReferenceFunction = (
 export type CanReadFunction = (value: StoreValue) => boolean;
 
 declare const _deleteModifier: unique symbol;
-export type DeleteModifier = typeof _deleteModifier
+export interface DeleteModifier { [_deleteModifier]: true }
 declare const _invalidateModifier: unique symbol;
-export type InvalidateModifier = typeof _invalidateModifier
+export interface InvalidateModifier { [_invalidateModifier]: true}
 
 export type ModifierDetails = {
   DELETE: DeleteModifier;

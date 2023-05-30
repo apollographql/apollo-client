@@ -7031,7 +7031,7 @@ describe('useSuspenseQuery', () => {
       >();
     });
 
-    it('returns TData | undefined with skip: true', () => {
+    it('returns TData | undefined when skip is present', () => {
       const { query } = useVariablesQueryCase();
 
       const { data: inferred } = useSuspenseQuery(query, {
@@ -7050,6 +7050,20 @@ describe('useSuspenseQuery', () => {
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      // TypeScript is too smart and using a `const` or `let` boolean variable
+      // for the `skip` option results in a false positive. Using an options
+      // object allows us to properly check for a dynamic case.
+      const options = {
+        skip: true,
+      };
+
+      const { data: dynamic } = useSuspenseQuery(query, {
+        skip: options.skip,
+      });
+
+      expectTypeOf(dynamic).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
     });
 
     it('returns TData when passing an option that does not affect TData', () => {
@@ -7078,6 +7092,14 @@ describe('useSuspenseQuery', () => {
     });
 
     it('handles combinations of options', () => {
+      // TypeScript is too smart and using a `const` or `let` boolean variable
+      // for the `skip` option results in a false positive. Using an options
+      // object allows us to properly check for a dynamic case which is the
+      // typical usage of this option.
+      const options = {
+        skip: true,
+      };
+
       const { query } = useVariablesQueryCase();
 
       const { data: inferredPartialDataIgnore } = useSuspenseQuery(query, {
@@ -7135,7 +7157,7 @@ describe('useSuspenseQuery', () => {
       ).not.toEqualTypeOf<VariablesCaseData>();
 
       const { data: inferredSkipIgnore } = useSuspenseQuery(query, {
-        skip: true,
+        skip: options.skip,
         errorPolicy: 'ignore',
       });
 
@@ -7150,7 +7172,7 @@ describe('useSuspenseQuery', () => {
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
-        skip: true,
+        skip: options.skip,
         errorPolicy: 'ignore',
       });
 
@@ -7160,7 +7182,7 @@ describe('useSuspenseQuery', () => {
       expectTypeOf(explicitSkipIgnore).not.toEqualTypeOf<VariablesCaseData>();
 
       const { data: inferredSkipNone } = useSuspenseQuery(query, {
-        skip: true,
+        skip: options.skip,
         errorPolicy: 'none',
       });
 
@@ -7173,7 +7195,7 @@ describe('useSuspenseQuery', () => {
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
-        skip: true,
+        skip: options.skip,
         errorPolicy: 'none',
       });
 
@@ -7183,7 +7205,7 @@ describe('useSuspenseQuery', () => {
       expectTypeOf(explicitSkipNone).not.toEqualTypeOf<VariablesCaseData>();
 
       const { data: inferredPartialDataNoneSkip } = useSuspenseQuery(query, {
-        skip: true,
+        skip: options.skip,
         returnPartialData: true,
         errorPolicy: 'none',
       });
@@ -7199,7 +7221,7 @@ describe('useSuspenseQuery', () => {
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
-        skip: true,
+        skip: options.skip,
         returnPartialData: true,
         errorPolicy: 'none',
       });

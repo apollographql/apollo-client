@@ -4712,8 +4712,8 @@ describe('useSuspenseQuery', () => {
     const cache = new InMemoryCache();
 
     const { result, renders } = renderSuspenseHook(
-      ({ skip }) => useSuspenseQuery(query, { skip }),
-      { cache, mocks, initialProps: { skip: true } }
+      () => useSuspenseQuery(query, { skip: true }),
+      { cache, mocks }
     );
 
     expect(renders.suspenseCount).toBe(0);

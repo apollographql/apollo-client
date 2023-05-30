@@ -49,7 +49,8 @@ export interface NormalizedCache {
   merge(olderId: string, newerObject: StoreObject): void;
   merge(olderObject: StoreObject, newerId: string): void;
 
-  modify(dataId: string, fields: Modifiers<Record<string, any>> | Modifier<any>): boolean;
+  modify<Entity extends Record<string, any>>(dataId: string, fields: Modifiers<Entity>): boolean;
+  modify<Entity>(dataId: string, modifier: Modifier<Entity>): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 

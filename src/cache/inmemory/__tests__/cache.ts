@@ -4056,7 +4056,7 @@ describe('TypedDocumentNode<Data, Variables>', () => {
       ): ExpectedType extends ActualType ? void : never =>
         void 0 as any;
 
-    cache.modify({
+    cache.modify<Book>({
       id: cache.identify(ffplBook),
       fields: {
         isbn: (value) => {
@@ -4077,7 +4077,7 @@ describe('TypedDocumentNode<Data, Variables>', () => {
 
           return DELETE;
         },
-      } satisfies Modifiers<Book>,
+      },
     });
   });
 });

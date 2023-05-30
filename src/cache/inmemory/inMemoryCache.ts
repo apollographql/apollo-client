@@ -214,7 +214,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  public modify(options: Cache.ModifyOptions): boolean {
+  public modify<Entity = any>(options: Cache.ModifyOptions<Entity>): boolean {
     if (hasOwn.call(options, "id") && !options.id) {
       // To my knowledge, TypeScript does not currently provide a way to
       // enforce that an optional property?:type must *not* be undefined

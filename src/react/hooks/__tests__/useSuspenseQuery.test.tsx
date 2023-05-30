@@ -6291,7 +6291,7 @@ describe('useSuspenseQuery', () => {
 
     type UpdateQueryFn = NonNullable<
       SubscribeToMoreOptions<
-        QueryData,
+        QueryData | undefined,
         OperationVariables,
         SubscriptionData
       >['updateQuery']

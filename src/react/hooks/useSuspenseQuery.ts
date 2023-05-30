@@ -8,10 +8,9 @@ import type {
   TypedDocumentNode,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
-  NetworkStatus,
   FetchMoreQueryOptions,
 } from '../../core';
-import { ApolloError } from '../../core';
+import { ApolloError, NetworkStatus } from '../../core';
 import type { DeepPartial } from '../../utilities';
 import { isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
@@ -155,7 +154,7 @@ export function useSuspenseQuery<
     NoInfer<TData>,
     NoInfer<TVariables>
   > = Object.create(null)
-): UseSuspenseQueryResult<TData, TVariables> {
+): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options });
@@ -191,7 +190,10 @@ export function useSuspenseQuery<
     });
   }, [queryRef]);
 
-  const result = __use(promise);
+  const result =
+    options.skip || watchQueryOptions.fetchPolicy === 'standby'
+      ? SKIP_RESULT
+      : __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
@@ -274,6 +276,13 @@ function validatePartialDataReturn(
   }
 }
 
+const SKIP_RESULT: ApolloQueryResult<undefined> = {
+  loading: false,
+  networkStatus: NetworkStatus.ready,
+  data: void 0,
+  error: void 0,
+};
+
 export function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
@@ -320,6 +329,13 @@ export function useWatchQueryOptions<
 
   if (__DEV__) {
     validateOptions(watchQueryOptions);
+  }
+
+  if (options.skip) {
+    Object.assign(watchQueryOptions, {
+      initialFetchPolicy: options.fetchPolicy,
+      fetchPolicy: 'standby',
+    });
   }
 
   return watchQueryOptions;

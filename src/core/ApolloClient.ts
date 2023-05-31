@@ -5,12 +5,11 @@ import type { ExecutionResult, DocumentNode } from 'graphql';
 import type { FetchResult, GraphQLRequest} from '../link/core';
 import { ApolloLink, execute } from '../link/core';
 import type { ApolloCache, DataProxy, Reference } from '../cache';
-import type { Observable } from '../utilities';
+import type { DocumentTransform, Observable } from '../utilities';
 import { version } from '../version';
 import type { UriFunction } from '../link/http';
 import { HttpLink } from '../link/http';
 
-import type { DocumentTransform } from './DocumentTransform';
 import { QueryManager } from './QueryManager';
 import type { ObservableQuery } from './ObservableQuery';
 

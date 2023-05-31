@@ -17,6 +17,7 @@ import type {
 import {
   addTypenameToDocument,
   isReference,
+  DocumentTransform,
 } from '../../utilities';
 import type {
   InMemoryCacheConfig,
@@ -29,7 +30,6 @@ import { makeVar, forgetCache, recallCache } from './reactiveVars';
 import { Policies } from './policies';
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
-import { DocumentTransform } from '../../core';
 import type { OperationVariables } from '../../core';
 
 type BroadcastOptions = Pick<

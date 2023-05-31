@@ -49,9 +49,7 @@ src/core/*
 !src/core/__tests__/
 src/core/tests/*
 !src/core/__tests__/equalByQuery.ts
-!src/core/__tests__/DocumentTransform.ts
 !src/core/equalByQuery.ts
-!src/core/DocumentTransform.ts
 
 # Allowed utilities
 !src/utilities/
@@ -76,6 +74,10 @@ src/utilities/globals/*
 !src/utilities/graphql
 src/utilities/graphql/*
 !src/utilities/graphql/operations.ts
+!src/utilities/graphql/DocumentTransform.ts
+!src/utilities/graphql/__tests__/
+src/utilities/graphql/__tests__/*
+!src/utilities/graphql/__tests__/DocumentTransform.ts
 
 # Allowed links
 !src/link

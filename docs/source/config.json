@@ -16,7 +16,7 @@
       "Refetching": "/data/refetching",
       "Subscriptions": "/data/subscriptions",
       "Fragments": "/data/fragments",
-      "@defer support": "/data/defer",
+      "Directives": "/data/directives",
       "Error handling": "/data/error-handling",
       "Best practices": "/data/operation-best-practices"
     },

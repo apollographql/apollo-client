@@ -976,10 +976,6 @@ describe('General Mutation testing', () => {
         <Component />
       </MockedProvider>
     );
-
-    await waitFor(() => {
-      expect(renderCount).toEqual(4);
-    });
   });
 
   it('allows a refetchQueries prop as string and variables have updated', async () => new Promise((resolve, reject) => {

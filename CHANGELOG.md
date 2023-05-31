@@ -1,5 +1,62 @@
 # @apollo/client
 
+## 3.7.15
+
+### Patch Changes
+
+- [#10891](https://github.com/apollographql/apollo-client/pull/10891) [`ab42a5c08`](https://github.com/apollographql/apollo-client/commit/ab42a5c08840193cb915f4e66d71fac3834fec68) Thanks [@laverdet](https://github.com/laverdet)! - Fixes a bug in how multipart responses are read when using `@defer`. When reading a multipart body, `HttpLink` no longer attempts to parse the boundary (e.g. `"---"` or other boundary string) within the response data itself, only when reading the beginning of each mulitpart chunked message.
+
+- [#10789](https://github.com/apollographql/apollo-client/pull/10789) [`23a4e1578`](https://github.com/apollographql/apollo-client/commit/23a4e15786fe99658d741585366f3b02bcffb97f) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where other fields could be aliased to `__typename` or `id`, in which case an incoming result would be merged into the wrong cache entry.
+
+## 3.7.14
+
+### Patch Changes
+
+- [#10764](https://github.com/apollographql/apollo-client/pull/10764) [`1b0a61fe5`](https://github.com/apollographql/apollo-client/commit/1b0a61fe5a6593f319da26fec8692359232ccf9b) Thanks [@phryneas](https://github.com/phryneas)! - Deprecate `useFragment` `returnPartialData` option
+
+- [#10810](https://github.com/apollographql/apollo-client/pull/10810) [`a6252774f`](https://github.com/apollographql/apollo-client/commit/a6252774f43fd9a4be9c50b48b7a6d5a1c8e64ec) Thanks [@dleavitt](https://github.com/dleavitt)! - Fix type signature of `ServerError`.
+
+  In <3.7 `HttpLink` and `BatchHttpLink` would return a `ServerError.message` of e.g. `"Unexpected token 'E', \"Error! Foo bar\" is not valid JSON"` and a `ServerError.result` of `undefined` in the case where a server returned a >= 300 response code with a response body containing a string that could not be parsed as JSON.
+
+  In >=3.7, `message` became e.g. `Response not successful: Received status code 302` and `result` became the string from the response body, however the type in `ServerError.result` was not updated to include the `string` type, which is now properly reflected.
+
+## 3.7.13
+
+### Patch Changes
+
+- [#10805](https://github.com/apollographql/apollo-client/pull/10805) [`a5503666c`](https://github.com/apollographql/apollo-client/commit/a5503666c2cc8220ac1d877e3296556e54e58ff6) Thanks [@phryneas](https://github.com/phryneas)! - Fix a potential memory leak in SSR scenarios when many `persistedQuery` instances were created over time.
+
+- [#10718](https://github.com/apollographql/apollo-client/pull/10718) [`577c68bdd`](https://github.com/apollographql/apollo-client/commit/577c68bdd26519f8341fd1188ea4b8aabe357856) Thanks [@Hsifnus](https://github.com/Hsifnus)! - Delay Concast subscription teardown slightly in `useSubscription` to prevent unexpected Concast teardown when one `useSubscription` hook tears down its in-flight Concast subscription immediately followed by another `useSubscription` hook reusing and subscribing to that same Concast
+
+## 3.7.12
+
+### Patch Changes
+
+- [#10735](https://github.com/apollographql/apollo-client/pull/10735) [`895bcdcff`](https://github.com/apollographql/apollo-client/commit/895bcdcff146bc4575c8f3423c30fa9e885be16b) Thanks [@alessbell](https://github.com/alessbell)! - If a multipart chunk contains only `hasNext: false`, immediately complete the observable.
+
+## 3.7.11
+
+### Patch Changes
+
+- [#10586](https://github.com/apollographql/apollo-client/pull/10586) [`4175af594`](https://github.com/apollographql/apollo-client/commit/4175af59419dbb698c32c074f44229f3a5b3b83d) Thanks [@alessbell](https://github.com/alessbell)! - Improve WebSocket error handling for generic `Event` received on error. For more information see [https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/error_event](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/error_event).
+
+- [#10411](https://github.com/apollographql/apollo-client/pull/10411) [`152baac34`](https://github.com/apollographql/apollo-client/commit/152baac343b8b68c7a2d4691d5dc60d9e43e62bb) Thanks [@lovasoa](https://github.com/lovasoa)! - Simplify error message generation and make 'undefined' an impossible message string.
+
+- [#10592](https://github.com/apollographql/apollo-client/pull/10592) [`cdb98ae08`](https://github.com/apollographql/apollo-client/commit/cdb98ae082ae4c7da6cd6a0fd5ad8457810fceda) Thanks [@alessbell](https://github.com/alessbell)! - Adds support for multipart subscriptions in `HttpLink`.
+
+- [#10698](https://github.com/apollographql/apollo-client/pull/10698) [`38508a251`](https://github.com/apollographql/apollo-client/commit/38508a251423057fd8a0df50230f50e0a5dde5fd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Changes the behavior of `useLazyQuery` introduced in [#10427](https://github.com/apollographql/apollo-client/pull/10427) where unmounting a component before a query was resolved would reject the promise with an abort error. Instead, the promise will now resolve naturally with the result from the request.
+
+  Other notable fixes:
+
+  - Kicking off multiple requests in parallel with the execution function will now ensure each returned promise is resolved with the data from its request. Previously, each promise was resolved with data from the last execution.
+  - Re-rendering `useLazyQuery` with a different query document will now ensure the execution function uses the updated query document. Previously, only the query document rendered the first time would be used for the request.
+
+- [#10660](https://github.com/apollographql/apollo-client/pull/10660) [`364bee98f`](https://github.com/apollographql/apollo-client/commit/364bee98fe193a7915664c1a5b206fd52793f85a) Thanks [@alessbell](https://github.com/alessbell)! - Upgrades TypeScript to v5. This change is fully backward-compatible and transparent to users.
+
+- [#10597](https://github.com/apollographql/apollo-client/pull/10597) [`8fb9d190d`](https://github.com/apollographql/apollo-client/commit/8fb9d190dbf48147412517643e3e425a7d48c49c) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where an incoming cache update could prevent future updates from the active link.
+
+- [#10629](https://github.com/apollographql/apollo-client/pull/10629) [`02605bb3c`](https://github.com/apollographql/apollo-client/commit/02605bb3c9e148bf87a6e52b4a9ecc7d523ef9f6) Thanks [@phryneas](https://github.com/phryneas)! - `useQuery`: delay unsubscribe to fix race conditions
+
 ## 3.7.10
 
 ### Patch Changes
@@ -41,6 +98,23 @@
 ### Patch Changes
 
 - [#10470](https://github.com/apollographql/apollo-client/pull/10470) [`47435e879`](https://github.com/apollographql/apollo-client/commit/47435e879ebc867d9fc3de5b6fd5785204b4dbd4) Thanks [@alessbell](https://github.com/alessbell)! - Bumps TypeScript to `4.9.4` (previously `4.7.4`) and updates types to account for changes in TypeScript 4.8 by [propagating contstraints on generic types](https://devblogs.microsoft.com/typescript/announcing-typescript-4-8/#unconstrained-generics-no-longer-assignable-to). Technically this makes some types stricter as attempting to pass `null|undefined` into certain functions is now disallowed by TypeScript, but these were never expected runtime values in the first place.
+  This should only affect you if you are wrapping functions provided by Apollo Client with your own abstractions that pass in their generics as type arguments, in which case you might get an error like `error TS2344: Type 'YourGenericType' does not satisfy the constraint 'OperationVariables'`. In that case, make sure that `YourGenericType` is restricted to a type that only accepts objects via `extends`, like `Record<string, any>` or `@apollo/client`'s `OperationVariables`:
+
+  ```diff
+  import {
+    QueryHookOptions,
+    QueryResult,
+    useQuery,
+  + OperationVariables,
+  } from '@apollo/client';
+  - export function useWrappedQuery<T, TVariables>(
+  + export function useWrappedQuery<T, TVariables extends OperationVariables>(
+      query: DocumentNode,
+      queryOptions: QueryHookOptions<T, TVariables>
+    ): QueryResult<T, TVariables> {
+      const [execute, result] = useQuery<T, TVariables>(query);
+    }
+  ```
 
 - [#10408](https://github.com/apollographql/apollo-client/pull/10408) [`55ffafc58`](https://github.com/apollographql/apollo-client/commit/55ffafc585e9eb66314755b4f40804b8b8affb13) Thanks [@zlrlo](https://github.com/zlrlo)! - fix: modify BatchHttpLink to have a separate timer for each different batch key
 

@@ -562,11 +562,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
   }
 
   /**
-   * This is for *internal* use only. Most users should instead use `refetch`
-   * in order to be properly notified of results even when they come from cache.
-   *
    * Update the variables of this observable query, and fetch the new results
-   * if they've changed. If you want to force new results, use `refetch`.
+   * if they've changed. Most users should prefer `refetch` instead of
+   * `setVariables` in order to to be properly notified of results even when
+   * they come from the cache.
    *
    * Note: the `next` callback will *not* fire if the variables have not changed
    * or if the result is coming from cache.
@@ -694,11 +693,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
   private fetch(
     options: WatchQueryOptions<TVariables, TData>,
     newNetworkStatus?: NetworkStatus,
-  ): Concast<ApolloQueryResult<TData>> {
+  ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     this.queryManager.setObservableQuery(this);
-    return this.queryManager.fetchQueryObservable(
+    return this.queryManager['fetchConcastWithInfo'](
       this.queryId,
       options,
       newNetworkStatus,
@@ -784,10 +783,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     return this.last;
   }
 
-  public reobserve(
+  public reobserveAsConcast(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus,
-  ): Promise<ApolloQueryResult<TData>> {
+  ): Concast<ApolloQueryResult<TData>> {
     this.isTornDown = false;
 
     const useDisposableConcast =
@@ -844,7 +843,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     }
 
     const variables = options.variables && { ...options.variables };
-    const concast = this.fetch(options, newNetworkStatus);
+    const { concast, fromLink } = this.fetch(options, newNetworkStatus);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
         finishWaitingForOwnResult();
@@ -856,7 +855,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       },
     };
 
-    if (!useDisposableConcast) {
+    if (!useDisposableConcast && fromLink) {
       // We use the {add,remove}Observer methods directly to avoid wrapping
       // observer with an unnecessary SubscriptionObserver object.
       if (this.concast && this.observer) {
@@ -869,7 +868,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
 
     concast.addObserver(observer);
 
-    return concast.promise;
+    return concast;
+  }
+
+  public reobserve(
+    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
+    newNetworkStatus?: NetworkStatus,
+  ) {
+    return this.reobserveAsConcast(newOptions, newNetworkStatus).promise;
   }
 
   // (Re)deliver the current result to this.observers without applying fetch

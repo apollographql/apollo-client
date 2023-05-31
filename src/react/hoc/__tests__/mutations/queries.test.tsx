@@ -14,6 +14,8 @@ import {
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
+const IS_REACT_18 = React.version.startsWith('18');
+
 describe('graphql(mutation) query integration', () => {
   itAsync('allows for passing optimisticResponse for a mutation', (resolve, reject) => {
     const query: DocumentNode = gql`
@@ -192,6 +194,15 @@ describe('graphql(mutation) query integration', () => {
               mutationData.createTodo
             ]);
             break;
+          case 3:
+            if (IS_REACT_18) {
+              expect(this.props.data.todo_list.tasks).toEqual([
+                mutationData.createTodo
+              ]);
+            } else {
+              reject(`too many renders (${renderCount})`);
+            }
+            break;
           default:
             reject(`too many renders (${renderCount})`);
         }
@@ -209,7 +220,11 @@ describe('graphql(mutation) query integration', () => {
     );
 
     waitFor(() => {
-      expect(renderCount).toBe(2);
+      if (IS_REACT_18) {
+        expect(renderCount).toBe(3);
+      } else {
+        expect(renderCount).toBe(2);
+      }
     }).then(resolve, reject);
   });
 
@@ -310,7 +325,11 @@ describe('graphql(mutation) query integration', () => {
       class extends React.Component<ChildProps<Variables, Data>> {
         render() {
           if (count === 1) {
-            expect(this.props.data!.mini).toEqual(queryData.mini);
+            if (IS_REACT_18) {
+              expect(this.props.data!.mini).toEqual(mutationData.mini);
+            } else {
+              expect(this.props.data!.mini).toEqual(queryData.mini);
+            }
           }
           if (count === 2) {
             expect(this.props.data!.mini).toEqual(
@@ -335,7 +354,11 @@ describe('graphql(mutation) query integration', () => {
     );
 
     waitFor(() => {
-      expect(count).toBe(3);
+      if (IS_REACT_18) {
+        expect(count).toBe(2);
+      } else {
+        expect(count).toBe(3);
+      }
     }).then(resolve, reject);
   });
 

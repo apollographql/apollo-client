@@ -1,0 +1,22 @@
+name: "size"
+on:
+  pull_request:
+    branches:
+      - main
+      - release-*
+jobs:
+  size:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Setup Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: Install dependencies (with cache)
+        uses: bahmutov/npm-install@v1
+      - name: Run size-limit
+        uses: andresz1/size-limit-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

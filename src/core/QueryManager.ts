@@ -32,7 +32,7 @@ import {
   isNonNullObject,
 } from '../utilities';
 import { mergeIncrementalData } from '../utilities/common/incrementalResult';
-import { ApolloError, isApolloError } from '../errors';
+import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from '../errors';
 import {
   QueryOptions,
   WatchQueryOptions,
@@ -61,6 +61,7 @@ import {
   shouldWriteResult,
   CacheWriteBehavior,
 } from './QueryInfo';
+import { PROTOCOL_ERRORS_SYMBOL, ApolloErrorOptions } from '../errors';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -936,10 +937,17 @@ export class QueryManager<TStore> {
           this.broadcastQueries();
         }
 
-        if (graphQLResultHasError(result)) {
-          throw new ApolloError({
-            graphQLErrors: result.errors,
-          });
+        const hasErrors = graphQLResultHasError(result);
+        const hasProtocolErrors = graphQLResultHasProtocolErrors(result);
+        if (hasErrors || hasProtocolErrors) {
+          const errors: ApolloErrorOptions = {};
+          if (hasErrors) {
+            errors.graphQLErrors = result.errors;
+          }
+          if (hasProtocolErrors) {
+            errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
+          }
+          throw new ApolloError(errors);
         }
 
         return result;
@@ -1159,8 +1167,23 @@ export class QueryManager<TStore> {
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
-    networkStatus = NetworkStatus.loading,
+    networkStatus?: NetworkStatus,
   ): Concast<ApolloQueryResult<TData>> {
+    return this.fetchConcastWithInfo(
+      queryId,
+      options,
+      networkStatus,
+    ).concast;
+  }
+
+  private fetchConcastWithInfo<TData, TVars extends OperationVariables>(
+    queryId: string,
+    options: WatchQueryOptions<TVars, TData>,
+    // The initial networkStatus for this fetch, most often
+    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
+    // or setVariables.
+    networkStatus = NetworkStatus.loading
+  ): ConcastAndInfo<TData> {
     const query = this.transform(options.query).document;
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
@@ -1190,7 +1213,7 @@ export class QueryManager<TStore> {
       // WatchQueryOptions object.
       normalized.variables = variables;
 
-      const concastSources = this.fetchQueryByPolicy<TData, TVars>(
+      const sourcesWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
         networkStatus,
@@ -1202,13 +1225,13 @@ export class QueryManager<TStore> {
         normalized.fetchPolicy !== "standby" &&
         // The "standby" policy currently returns [] from fetchQueryByPolicy, so
         // this is another way to detect when nothing was done/fetched.
-        concastSources.length > 0 &&
+        sourcesWithInfo.sources.length > 0 &&
         queryInfo.observableQuery
       ) {
         queryInfo.observableQuery["applyNextFetchPolicy"]("after-fetch", options);
       }
 
-      return concastSources;
+      return sourcesWithInfo;
     };
 
     // This cancel function needs to be set before the concast is created,
@@ -1220,29 +1243,39 @@ export class QueryManager<TStore> {
       setTimeout(() => concast.cancel(reason));
     });
 
-    // A Concast<T> can be created either from an Iterable<Observable<T>>
-    // or from a PromiseLike<Iterable<Observable<T>>>, where T in this
-    // case is ApolloQueryResult<TData>.
-    const concast = new Concast(
-      // If the query has @export(as: ...) directives, then we need to
-      // process those directives asynchronously. When there are no
-      // @export directives (the common case), we deliberately avoid
-      // wrapping the result of this.fetchQueryByPolicy in a Promise,
-      // since the timing of result delivery is (unfortunately) important
-      // for backwards compatibility. TODO This code could be simpler if
-      // we deprecated and removed LocalState.
-      this.transform(normalized.query).hasClientExports
-        ? this.localState.addExportedVariables(
-          normalized.query,
-          normalized.variables,
-          normalized.context,
-        ).then(fromVariables)
-        : fromVariables(normalized.variables!)
-    );
+    let concast: Concast<ApolloQueryResult<TData>>,
+        containsDataFromLink: boolean;
+    // If the query has @export(as: ...) directives, then we need to
+    // process those directives asynchronously. When there are no
+    // @export directives (the common case), we deliberately avoid
+    // wrapping the result of this.fetchQueryByPolicy in a Promise,
+    // since the timing of result delivery is (unfortunately) important
+    // for backwards compatibility. TODO This code could be simpler if
+    // we deprecated and removed LocalState.
+    if (this.transform(normalized.query).hasClientExports) {
+      concast = new Concast(
+        this.localState
+          .addExportedVariables(normalized.query, normalized.variables, normalized.context)
+          .then(fromVariables).then(sourcesWithInfo => sourcesWithInfo.sources),
+      );
+      // there is just no way we can synchronously get the *right* value here,
+      // so we will assume `true`, which is the behaviour before the bug fix in
+      // #10597. This means that bug is not fixed in that case, and is probably
+      // un-fixable with reasonable effort for the edge case of @export as
+      // directives.
+      containsDataFromLink = true;
+    } else {
+      const sourcesWithInfo = fromVariables(normalized.variables);
+      containsDataFromLink = sourcesWithInfo.fromLink;
+      concast = new Concast(sourcesWithInfo.sources);
+    }
 
     concast.promise.then(cleanupCancelFn, cleanupCancelFn);
 
-    return concast;
+    return {
+      concast,
+      fromLink: containsDataFromLink,
+    };
   }
 
   public refetchQueries<TResult>({
@@ -1415,8 +1448,8 @@ export class QueryManager<TStore> {
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
-    networkStatus: NetworkStatus,
-  ): ConcastSourcesArray<ApolloQueryResult<TData>> {
+    networkStatus: NetworkStatus
+  ): SourcesAndInfo<TData> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
@@ -1498,72 +1531,58 @@ export class QueryManager<TStore> {
       isNetworkRequestInFlight(networkStatus);
 
     switch (fetchPolicy) {
-    default: case "cache-first": {
-      const diff = readCache();
+      default:  case "cache-first": {
+        const diff = readCache();
 
-      if (diff.complete) {
-        return [
-          resultsFromCache(diff, queryInfo.markReady()),
-        ];
+        if (diff.complete) {
+          return { fromLink: false, sources: [resultsFromCache(diff, queryInfo.markReady())] };
+        }
+
+        if (returnPartialData || shouldNotify) {
+          return { fromLink: true, sources: [resultsFromCache(diff), resultsFromLink()] };
+        }
+
+        return { fromLink: true, sources: [resultsFromLink()] };
       }
 
-      if (returnPartialData || shouldNotify) {
-        return [
-          resultsFromCache(diff),
-          resultsFromLink(),
-        ];
+      case "cache-and-network": {
+        const diff = readCache();
+
+        if (diff.complete || returnPartialData || shouldNotify) {
+          return { fromLink: true, sources: [resultsFromCache(diff), resultsFromLink()] };
+        }
+
+        return { fromLink: true, sources: [resultsFromLink()] };
       }
 
-      return [
-        resultsFromLink(),
-      ];
-    }
+      case "cache-only":
+        return { fromLink: false, sources: [resultsFromCache(readCache(), queryInfo.markReady())] };
 
-    case "cache-and-network": {
-      const diff = readCache();
+      case "network-only":
+        if (shouldNotify) {
+          return { fromLink: true, sources: [resultsFromCache(readCache()), resultsFromLink()] };
+        }
 
-      if (diff.complete || returnPartialData || shouldNotify) {
-        return [
-          resultsFromCache(diff),
-          resultsFromLink(),
-        ];
-      }
+        return { fromLink: true, sources: [resultsFromLink()] };
 
-      return [
-        resultsFromLink(),
-      ];
-    }
+      case "no-cache":
+        if (shouldNotify) {
+          return {
+            fromLink: true,
+            // Note that queryInfo.getDiff() for no-cache queries does not call
+            // cache.diff, but instead returns a { complete: false } stub result
+            // when there is no queryInfo.diff already defined.
+            sources: [
+              resultsFromCache(queryInfo.getDiff()),
+              resultsFromLink(),
+            ],
+          };
+        }
 
-    case "cache-only":
-      return [
-        resultsFromCache(readCache(), queryInfo.markReady()),
-      ];
+        return { fromLink: true, sources: [resultsFromLink()] };
 
-    case "network-only":
-      if (shouldNotify) {
-        return [
-          resultsFromCache(readCache()),
-          resultsFromLink(),
-        ];
-      }
-
-      return [resultsFromLink()];
-
-    case "no-cache":
-      if (shouldNotify) {
-        return [
-          // Note that queryInfo.getDiff() for no-cache queries does not call
-          // cache.diff, but instead returns a { complete: false } stub result
-          // when there is no queryInfo.diff already defined.
-          resultsFromCache(queryInfo.getDiff()),
-          resultsFromLink(),
-        ];
-      }
-
-      return [resultsFromLink()];
-
-    case "standby":
-      return [];
+      case "standby":
+        return { fromLink: false, sources: [] };
     }
   }
 
@@ -1581,4 +1600,16 @@ export class QueryManager<TStore> {
       clientAwareness: this.clientAwareness,
     };
   }
+}
+
+// Return types used by fetchQueryByPolicy and other private methods above.
+interface FetchConcastInfo {
+  // Metadata properties that can be returned in addition to the Concast.
+  fromLink: boolean;
+}
+interface SourcesAndInfo<TData> extends FetchConcastInfo {
+  sources: ConcastSourcesArray<ApolloQueryResult<TData>>;
+}
+interface ConcastAndInfo<TData> extends FetchConcastInfo {
+  concast: Concast<ApolloQueryResult<TData>>;
 }

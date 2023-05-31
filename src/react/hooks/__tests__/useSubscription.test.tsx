@@ -3,15 +3,13 @@ import { renderHook, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core';
+import { PROTOCOL_ERRORS_SYMBOL } from '../../../errors';
 import { InMemoryCache as Cache } from '../../../cache';
 import { ApolloProvider, resetApolloContext } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
 import { useSubscription } from '../useSubscription';
 
 describe('useSubscription Hook', () => {
-  beforeEach(() => {
-    jest.restoreAllMocks();
-  });
   afterEach(() => {
     resetApolloContext();
   });
@@ -931,5 +929,140 @@ describe('useSubscription Hook', () => {
 
     expect(warningSpy).toHaveBeenCalledTimes(1);
     warningSpy.mockRestore();
+  });
+
+  describe('multipart subscriptions', () => {
+    it('should handle a simple subscription properly', async () => {
+      const subscription = gql`
+        subscription ANewDieWasCreated {
+          aNewDieWasCreated {
+            die {
+              color
+              roll
+              sides
+            }
+          }
+        }
+      `;
+      const results = [
+        {
+          result: {
+            data: null,
+            extensions: {
+              [PROTOCOL_ERRORS_SYMBOL]: [
+                {
+                  message: 'cannot read message from websocket',
+                  extensions: [
+                    {
+                      code: "WEBSOCKET_MESSAGE_ERROR"
+                    }
+                  ],
+                },
+              ],
+            }
+          },
+        },
+      ]
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        link,
+        cache: new Cache({ addTypename: false })
+      });
+      let renderCount = 0;
+
+      const { result } = renderHook(
+        () => {
+          renderCount++;
+          return useSubscription(subscription)
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              {children}
+            </ApolloProvider>
+          ),
+        },
+      );
+      expect(result.current.loading).toBe(true);
+      expect(result.current.error).toBe(undefined);
+      expect(result.current.data).toBe(undefined);
+      link.simulateResult(results[0]);
+      expect(renderCount).toBe(1);
+      await waitFor(() => {
+        expect(result.current.error).toBeInstanceOf(ApolloError);
+      }, { interval: 1 });
+      expect(result.current.error!.protocolErrors[0].message).toBe(
+        "cannot read message from websocket"
+      );
+    });
+  });
+
+  it('should handle simple subscription after old in-flight teardown immediately \
+followed by new in-flight setup', async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ['Audi', 'BMW'].map(make => ({
+      result: { data: { car: { make } } },
+    }));
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false })
+    });
+
+    const { result, unmount, rerender } = renderHook(
+      ({ coin }) => {
+        const heads = useSubscription(subscription, {
+          variables: {},
+          skip: coin === 'tails',
+          context: { coin: 'heads' }
+        });
+        const tails = useSubscription(subscription, {
+          variables: {},
+          skip: coin === 'heads',
+          context: { coin: 'tails' }
+        });
+        return { heads, tails };
+      },
+      {
+        initialProps: {
+          coin: 'heads'
+        },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>
+            {children}
+          </ApolloProvider>
+        )
+      },
+    );
+
+    rerender({ coin: 'tails' });
+
+    await new Promise(resolve => setTimeout(() => resolve('wait'), 20));
+
+    link.simulateResult(results[0]);
+
+    await waitFor(() => {
+      expect(result.current.tails.data).toEqual(results[0].result.data);
+    }, { interval: 1 });
+    expect(result.current.heads.data).toBeUndefined();
+
+    rerender({ coin: 'heads' });
+
+    link.simulateResult(results[1]);
+
+    await waitFor(() => {
+      expect(result.current.heads.data).toEqual(results[1].result.data);
+    }, { interval: 1 });
+    expect(result.current.tails.data).toBeUndefined();
+
+    unmount();
   });
 });

@@ -13,7 +13,7 @@ body:
   - type: input
     attributes:
       label: Link to Reproduction
-      description: A link with runnable reproduction. You can fork our `react-apollo-error-template` to create one via [GitHub repository](https://github.com/apollographql/react-apollo-error-template) or [CodeSandbox](https://codesandbox.io/s/github/apollographql/react-apollo-error-template). Make sure this includes everything necessary (`package.json`, `tsconfig.json`, etc.) so we don't have to guess anything!
+      description: A link with runnable reproduction. For web projects, you can fork our `react-apollo-error-template` to create one via [GitHub repository](https://github.com/apollographql/react-apollo-error-template) or [CodeSandbox](https://codesandbox.io/s/github/apollographql/react-apollo-error-template). For React Native projects, you can fork our `rn-apollo-client-testbed` via [GitHub respository](https://github.com/apollographql/rn-apollo-client-testbed). Make sure this includes everything necessary (`package.json`, `tsconfig.json`, etc.) so we don't have to guess anything!
     validations:
       required: true
   - type: textarea

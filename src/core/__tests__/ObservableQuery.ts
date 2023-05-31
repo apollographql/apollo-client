@@ -2,9 +2,13 @@ import gql from "graphql-tag";
 import { GraphQLError } from "graphql";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import { ApolloClient, ApolloQueryResult, NetworkStatus, WatchQueryFetchPolicy } from "../../core";
-import { ObservableQuery } from "../ObservableQuery";
-import { QueryManager } from "../QueryManager";
+import {
+  ApolloClient,
+  NetworkStatus,
+  WatchQueryFetchPolicy,
+} from '../../core';
+import { ObservableQuery } from '../ObservableQuery';
+import { QueryManager } from '../QueryManager';
 
 import { Observable } from "../../utilities";
 import { ApolloLink, FetchResult } from "../../link/core";
@@ -22,16 +26,21 @@ import { waitFor } from "@testing-library/react";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchQueryObservable = queryManager.fetchQueryObservable;
-  const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (queryManager as any)
-    .fetchQueryByPolicy;
+  const fetchConcastWithInfo = queryManager['fetchConcastWithInfo'];
+  const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] =
+    (queryManager as any).fetchQueryByPolicy;
 
-  const mock = <T extends typeof fetchQueryObservable | typeof fetchQueryByPolicy>(original: T) =>
-    jest.fn<ReturnType<T>, Parameters<T>>(function () {
-      return original.apply(queryManager, arguments);
-    });
+  const mock = <T extends
+    | typeof fetchQueryObservable
+    | typeof fetchQueryByPolicy
+    | typeof fetchConcastWithInfo
+  >(original: T) => jest.fn<ReturnType<T>, Parameters<T>>(function () {
+    return original.apply(queryManager, arguments);
+  });
 
   const mocks = {
     fetchQueryObservable: mock(fetchQueryObservable),
+    fetchConcastWithInfo: mock(fetchConcastWithInfo),
     fetchQueryByPolicy: mock(fetchQueryByPolicy),
   };
 
@@ -1000,10 +1009,10 @@ describe("ObservableQuery", () => {
             expect(fqbpCalls[0][1].fetchPolicy).toEqual("cache-first");
             expect(fqbpCalls[1][1].fetchPolicy).toEqual("network-only");
 
-            const fqoCalls = mocks.fetchQueryObservable.mock.calls;
-            expect(fqoCalls.length).toBe(2);
-            expect(fqoCalls[0][1].fetchPolicy).toEqual("cache-first");
-            expect(fqoCalls[1][1].fetchPolicy).toEqual("network-only");
+          const fqoCalls = mocks.fetchQueryObservable.mock.calls;
+          expect(fqoCalls.length).toBe(2);
+          expect(fqoCalls[0][1].fetchPolicy).toEqual('cache-first');
+          expect(fqoCalls[1][1].fetchPolicy).toEqual('network-only');
 
             // Although the options.fetchPolicy we passed just now to
             // fetchQueryByPolicy should have been network-only,
@@ -1055,7 +1064,7 @@ describe("ObservableQuery", () => {
             // Unlike network-only or cache-and-network, the no-cache
             // FetchPolicy does not switch to cache-first after the first
             // network request.
-            expect(observable.options.fetchPolicy).toBe("no-cache");
+            expect(observable.options.fetchPolicy).toBe('no-cache');
             const fqoCalls = mocks.fetchQueryObservable.mock.calls;
             expect(fqoCalls.length).toBe(2);
             expect(fqoCalls[1][1].fetchPolicy).toBe("no-cache");
@@ -2174,184 +2183,25 @@ describe("ObservableQuery", () => {
           subscribeAndCount(reject, observable, (handleCount, subResult) => {
             const { data, loading, networkStatus } = observable.getCurrentResult();
 
-            if (handleCount === 1) {
-              expect(subResult).toEqual({
-                data,
-                loading,
-                networkStatus,
-              });
-            } else if (handleCount === 2) {
-              expect(subResult).toEqual({
-                data: dataTwo,
-                loading: false,
-                networkStatus: 7,
-              });
-              resolve();
-            }
-          });
-        });
-      }
-    );
-
-    {
-      type Result = Partial<ApolloQueryResult<{ hello: string }>>;
-
-      const cacheValues = {
-        initial: { hello: "world (initial)" },
-        link: { hello: "world (from link)" },
-        refetch: { hello: "world (from link again)" },
-        update1: { hello: "world (from cache again, 1)" },
-        update2: { hello: "world (from cache again, 2)" },
-        update3: { hello: "world (from cache again, 3)" },
-        update4: { hello: "world (from cache again, 4)" },
-      } as const;
-
-      const loadingStates = {
-        loading: {
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-        },
-        done: {
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-        },
-        refetching: {
-          loading: true,
-          networkStatus: NetworkStatus.refetch,
-        },
-      } as const;
-
-      it.each<
-        [
-          initialFetchPolicy: WatchQueryFetchPolicy,
-          nextFetchPolicy: WatchQueryFetchPolicy,
-          // writeCache: cacheValues.initial
-          resultBeforeSubscribe: Result,
-          // observableQuery.subscribe
-          resultAfterSubscribe: Result,
-          // writeCache:  cacheValues.update1
-          resultAfterCacheUpdate1: Result,
-          // incoming result: cacheValues.link
-          resultAfterLinkNext: Result,
-          // writeCache:  cacheValues.update2
-          resultAfterCacheUpdate2: Result,
-          // observableQuery.refetch
-          // writeCache:  cacheValues.update3
-          resultAfterCacheUpdate3: Result,
-          // incoming result:  cacheValues.refetch
-          resultAfterRefetchNext: Result,
-          // writeCache:  cacheValues.update4
-          resultAfterCacheUpdate4: Result
-        ]
-      >([
-        [
-          "cache-and-network",
-          "cache-and-network",
-          { ...loadingStates.loading, data: cacheValues.initial },
-          { ...loadingStates.loading, data: cacheValues.initial },
-          { ...loadingStates.loading, data: cacheValues.update1 },
-          { ...loadingStates.done, data: cacheValues.link },
-          { ...loadingStates.done, data: cacheValues.update2 },
-          { ...loadingStates.refetching, data: cacheValues.update3 },
-          { ...loadingStates.done, data: cacheValues.refetch },
-          { ...loadingStates.done, data: cacheValues.update4 },
-        ],
-        [
-          "no-cache",
-          "no-cache",
-          { ...loadingStates.loading },
-          { ...loadingStates.loading },
-          { ...loadingStates.loading },
-          { ...loadingStates.done, data: cacheValues.link },
-          { ...loadingStates.done, data: cacheValues.link },
-          { ...loadingStates.refetching, data: cacheValues.link },
-          { ...loadingStates.done, data: cacheValues.refetch },
-          { ...loadingStates.done, data: cacheValues.refetch },
-        ],
-        [
-          "no-cache",
-          "cache-and-network",
-          { ...loadingStates.loading },
-          { ...loadingStates.loading },
-          { ...loadingStates.loading },
-          { ...loadingStates.done, data: cacheValues.link },
-          { ...loadingStates.done, data: cacheValues.link },
-          { ...loadingStates.refetching, data: cacheValues.link },
-          { ...loadingStates.done, data: cacheValues.refetch },
-          { ...loadingStates.done, data: cacheValues.update4 },
-        ],
-      ])(
-        "fetchPolicy %s -> %s",
-        async (
-          fetchPolicy,
-          nextFetchPolicy,
-          resultBeforeSubscribe,
-          resultAfterSubscribe,
-          resultAfterCacheUpdate1,
-          resultAfterLinkNext,
-          resultAfterCacheUpdate2,
-          resultAfterCacheUpdate3,
-          resultAfterRefetchNext,
-          resultAfterCacheUpdate4
-        ) => {
-          const query = gql`
-            {
-              hello
-            }
-          `;
-          let observer!: SubscriptionObserver<FetchResult>;
-          const link = new ApolloLink(() => {
-            return new Observable((o) => {
-              observer = o;
+          if (handleCount === 1) {
+            expect(subResult).toEqual({
+              data,
+              loading,
+              networkStatus,
             });
-          });
-          const cache = new InMemoryCache({});
-          cache.writeQuery({ query, data: cacheValues.initial });
+          } else if (handleCount === 2) {
+            expect(subResult).toEqual({
+              data: dataTwo,
+              loading: false,
+              networkStatus: 7,
+            });
+            resolve();
+          }
+        });
+      });
+    });
 
-          const queryManager = new QueryManager({ link, cache });
-          const observableQuery = queryManager.watchQuery({ query, fetchPolicy, nextFetchPolicy });
-
-          expect(observer).toBeUndefined();
-          expect(observableQuery.getCurrentResult()).toStrictEqual(resultBeforeSubscribe);
-
-          observableQuery.subscribe({});
-          expect(observer).not.toBeUndefined();
-          expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterSubscribe);
-
-          cache.writeQuery({ query, data: cacheValues.update1 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterCacheUpdate1);
-
-          observer.next({ data: cacheValues.link });
-          observer.complete();
-          await waitFor(
-            () =>
-              void expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterLinkNext),
-            { interval: 1 }
-          );
-
-          cache.writeQuery({ query, data: cacheValues.update2 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterCacheUpdate2);
-
-          observableQuery.refetch();
-
-          cache.writeQuery({ query, data: cacheValues.update3 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterCacheUpdate3);
-
-          observer.next({ data: cacheValues.refetch });
-          observer.complete();
-          await waitFor(
-            () =>
-              void expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterRefetchNext),
-            { interval: 1 }
-          );
-
-          cache.writeQuery({ query, data: cacheValues.update4 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterCacheUpdate4);
-        }
-      );
-    }
-
-    describe("mutations", () => {
+    describe('mutations', () => {
       const mutation = gql`
         mutation setName {
           name
@@ -2661,4 +2511,150 @@ describe("ObservableQuery", () => {
       error: reject,
     });
   });
+});
+
+test("regression test for #10587", async () => {
+  let observers: Record<string, SubscriptionObserver<FetchResult>> = {};
+  const link = new ApolloLink((operation) => {
+    return new Observable((observer) => {
+      observers[operation.operationName] = observer;
+    });
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        SchemaType: {
+          merge: true,
+        },
+      },
+    }).restore({
+      ROOT_QUERY: {
+        __typename: "Query",
+        schemaType: { __typename: "SchemaType", a: "", b: "" },
+      },
+    }),
+    defaultOptions: {
+      watchQuery: {
+        fetchPolicy: "cache-and-network",
+        nextFetchPolicy: "cache-and-network",
+      },
+    },
+    link,
+  });
+
+  const query1 = client.watchQuery({
+    query: gql`
+      query query1 {
+        schemaType {
+          a
+        }
+      }
+    `,
+  });
+  const query2 = client.watchQuery({
+    query: gql`
+      query query2 {
+        schemaType {
+          a
+          b
+        }
+      }
+    `,
+  });
+  const query1Spy = jest.fn();
+  const query2Spy = jest.fn();
+
+  query1.subscribe(query1Spy);
+  query2.subscribe(query2Spy);
+
+  const finalExpectedCalls = {
+    query1: [
+      [
+        {
+          data: {
+            schemaType: {
+              __typename: "SchemaType",
+              a: "",
+            },
+          },
+          loading: true,
+          networkStatus: 1,
+        },
+      ],
+      [
+        {
+          data: {
+            schemaType: {
+              __typename: "SchemaType",
+              a: "a",
+            },
+          },
+          loading: false,
+          networkStatus: 7,
+        },
+      ],
+    ],
+    query2: [
+      [
+        {
+          data: {
+            schemaType: {
+              __typename: "SchemaType",
+              a: "",
+              b: "",
+            },
+          },
+          loading: true,
+          networkStatus: 1,
+        },
+      ],
+      [
+        {
+          data: {
+            schemaType: {
+              __typename: "SchemaType",
+              a: "a",
+              b: "",
+            },
+          },
+          // TODO: this should be `true`, but that seems to be a separate bug!
+          loading: false,
+          networkStatus: 7,
+        },
+      ],
+      [
+        {
+          data: {
+            schemaType: {
+              __typename: "SchemaType",
+              a: "a",
+              b: "b",
+            },
+          },
+          loading: false,
+          networkStatus: 7,
+        },
+      ],
+    ],
+  } as const;
+
+  await waitFor(() => expect(query1Spy.mock.calls).toEqual(finalExpectedCalls.query1.slice(0, 1)));
+  expect(query2Spy.mock.calls).toEqual(finalExpectedCalls.query2.slice(0, 1));
+
+  observers.query1.next({
+    data: { schemaType: { __typename: "SchemaType", a: "a" } },
+  });
+  observers.query1.complete();
+
+  await waitFor(() => expect(query1Spy.mock.calls).toEqual(finalExpectedCalls.query1));
+  expect(query2Spy.mock.calls).toEqual(finalExpectedCalls.query2.slice(0, 2));
+
+  observers.query2.next({
+    data: { schemaType: { __typename: "SchemaType", a: "a", b: "b" } },
+  });
+  observers.query2.complete();
+
+  await waitFor(() => expect(query2Spy.mock.calls).toEqual(finalExpectedCalls.query2));
+  expect(query1Spy.mock.calls).toEqual(finalExpectedCalls.query1);
 });

@@ -117,8 +117,13 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
       return;
     }
 
+    let subscriptionStopped = false;
     const subscription = observable.subscribe({
       next(fetchResult) {
+        if (subscriptionStopped) {
+          return;
+        }
+
         const result = {
           loading: false,
           // TODO: fetchResult.data can be null but SubscriptionResult.data
@@ -142,25 +147,35 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
         }
       },
       error(error) {
-        setResult({
-          loading: false,
-          data: void 0,
-          error,
-          variables: options?.variables,
-        });
-        ref.current.options?.onError?.(error);
+        if (!subscriptionStopped) {
+          setResult({
+            loading: false,
+            data: void 0,
+            error,
+            variables: options?.variables,
+          });
+          ref.current.options?.onError?.(error);
+        };
       },
       complete() {
-        if (ref.current.options?.onComplete) {
-          ref.current.options.onComplete();
-        } else if (ref.current.options?.onSubscriptionComplete) {
-          ref.current.options.onSubscriptionComplete();
+        if (!subscriptionStopped) {
+          if (ref.current.options?.onComplete) {
+            ref.current.options.onComplete();
+          } else if (ref.current.options?.onSubscriptionComplete) {
+            ref.current.options.onSubscriptionComplete();
+          }
         }
       },
     });
 
     return () => {
-      subscription.unsubscribe();
+      // immediately stop receiving subscription values, but do not unsubscribe
+      // until after a short delay in case another useSubscription hook is
+      // reusing the same underlying observable and is about to subscribe
+      subscriptionStopped = true;
+      setTimeout(() => {
+        subscription.unsubscribe();
+      });
     };
   }, [observable]);
 

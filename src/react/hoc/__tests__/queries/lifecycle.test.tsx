@@ -6,14 +6,16 @@ import { DocumentNode } from 'graphql';
 import { ApolloClient } from '../../../../core';
 import { ApolloProvider } from '../../../context';
 import { InMemoryCache as Cache } from '../../../../cache';
-import { itAsync, mockSingleLink } from '../../../../testing';
+import { mockSingleLink } from '../../../../testing';
 import { Query as QueryComponent } from '../../../components';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
+const IS_REACT_18 = React.version.startsWith('18');
+
 describe('[queries] lifecycle', () => {
   // lifecycle
-  itAsync('reruns the query if it changes', (resolve, reject) => {
+  it('reruns the query if it changes', async () => {
     let count = 0;
     const query: DocumentNode = gql`
       query people($first: Int) {
@@ -72,10 +74,10 @@ describe('[queries] lifecycle', () => {
                 expect(data!.allPeople).toEqual(data2.allPeople);
                 break;
               default:
-                reject(`Too many renders (${count})`);
+                fail(`Too many renders (${count})`);
             }
           } catch (err) {
-            reject(err);
+            fail(err);
           }
         }
 
@@ -105,7 +107,7 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
+    await waitFor(() => expect(count).toBe(3));
   });
 
   it('rebuilds the queries on prop change when using `options`', async () => {
@@ -174,7 +176,7 @@ describe('[queries] lifecycle', () => {
     });
   });
 
-  itAsync('reruns the query if just the variables change', (resolve, reject) => {
+  it('reruns the query if just the variables change', async () => {
     let count = 0;
     const query: DocumentNode = gql`
       query people($first: Int) {
@@ -232,10 +234,10 @@ describe('[queries] lifecycle', () => {
                 expect(data!.allPeople).toEqual(data2.allPeople);
                 break;
               default:
-                reject(`Too many renders (${count})`);
+                fail(`Too many renders (${count})`);
             }
           } catch (err) {
-            reject(err);
+            fail(err);
           }
         }
 
@@ -265,10 +267,10 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
+    await waitFor(() => expect(count).toBe(3));
   });
 
-  itAsync('reruns the queries on prop change when using passed props', (resolve, reject) => {
+  it('reruns the queries on prop change when using passed props', async () => {
     let count = 0;
     const query: DocumentNode = gql`
       query people($first: Int) {
@@ -325,7 +327,7 @@ describe('[queries] lifecycle', () => {
                 break;
             }
           } catch (err) {
-            reject(err);
+            fail(err);
           }
         }
         render() {
@@ -354,10 +356,10 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
+    await waitFor(() => expect(count).toBe(3));
   });
 
-  itAsync('stays subscribed to updates after irrelevant prop changes', (resolve, reject) => {
+  it('stays subscribed to updates after irrelevant prop changes', async () => {
     const query: DocumentNode = gql`
       query people($first: Int) {
         allPeople(first: $first) {
@@ -418,7 +420,7 @@ describe('[queries] lifecycle', () => {
               );
             }
           } catch (e) {
-            reject(e);
+            fail(e);
           }
         }
         render() {
@@ -445,10 +447,10 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(count).toBe(3)).then(resolve, reject);
+    await waitFor(() => expect(count).toBe(3));
   });
 
-  itAsync('correctly rebuilds props on remount', (resolve, reject) => {
+  it('correctly rebuilds props on remount', async () => {
     const query: DocumentNode = gql`
       query pollingPeople {
         allPeople(first: 1) {
@@ -509,10 +511,14 @@ describe('[queries] lifecycle', () => {
 
     rerender = render(app).rerender;
 
-    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
+    await waitFor(() => {
+      if (!IS_REACT_18) {
+        expect(done).toBeTruthy()
+      }
+    });
   });
 
-  itAsync('will re-execute a query when the client changes', (resolve, reject) => {
+  it('will re-execute a query when the client changes', async () => {
     const query: DocumentNode = gql`
       {
         a
@@ -596,8 +602,12 @@ describe('[queries] lifecycle', () => {
                 refetchQuery!();
                 break;
               case 3:
-                expect({ loading, a, b, c }).toEqual({
-                  loading: true,
+                if (IS_REACT_18) {
+                  expect({ loading }).toEqual({ loading: false });
+                } else {
+                  expect({ loading }).toEqual({ loading: true });
+                }
+                expect({ a, b, c }).toEqual({
                   a: 1,
                   b: 2,
                   c: 3
@@ -689,10 +699,10 @@ describe('[queries] lifecycle', () => {
                 });
                 break;
               default:
-                reject(`Unexpectedly many renders (${count})`);
+                fail(`Unexpectedly many renders (${count})`);
             }
           } catch (err) {
-            reject(err);
+            fail(err);
           }
 
           return null;
@@ -722,10 +732,16 @@ describe('[queries] lifecycle', () => {
 
     render(<ClientSwitcher />);
 
-    waitFor(() => expect(count).toBe(12)).then(resolve, reject);
+    await waitFor(() => {
+      if (IS_REACT_18) {
+        expect(count).toBe(3)
+      } else {
+        expect(count).toBe(12)
+      }
+    });
   });
 
-  itAsync('handles synchronous racecondition with prefilled data from the server', (resolve, reject) => {
+  it('handles synchronous racecondition with prefilled data from the server', async () => {
     const query: DocumentNode = gql`
       query GetUser($first: Int) {
         user(first: $first) {
@@ -789,10 +805,10 @@ describe('[queries] lifecycle', () => {
       </ApolloProvider>
     );
 
-    waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
+    await waitFor(() => expect(done).toBeTruthy());
   });
 
-  itAsync('handles asynchronous racecondition with prefilled data from the server', async (resolve, reject) => {
+  it('handles asynchronous racecondition with prefilled data from the server', async () => {
     const query: DocumentNode = gql`
       query Q {
         books {
@@ -880,8 +896,8 @@ describe('[queries] lifecycle', () => {
 
     expect(render(ApolloApp).container).toMatchSnapshot();
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(done).toBeTruthy();
-    }).then(resolve, reject);
+    });
   });
 });

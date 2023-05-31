@@ -1,7 +1,11 @@
 import { responseIterator } from "./responseIterator";
 import { Operation } from "../core";
 import { throwServerError } from "../utils";
+import { PROTOCOL_ERRORS_SYMBOL } from '../../errors';
 import { Observer } from "../../utilities";
+import {
+  isApolloPayloadResult
+} from '../../utilities/common/incrementalResult';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -20,7 +24,7 @@ export async function readMultipartBody<
     );
   }
   const decoder = new TextDecoder("utf-8");
-  const contentType = response.headers?.get('content-type');
+  const contentType = response.headers?.get("content-type");
   const delimiter = "boundary=";
 
   // parse boundary value and ignore any subsequent name/value pairs after ;
@@ -35,7 +39,7 @@ export async function readMultipartBody<
         .trim()
     : "-";
 
-  let boundary = `--${boundaryVal}`;
+  const boundary = `\r\n--${boundaryVal}`;
   let buffer = "";
   const iterator = responseIterator(response);
   let running = true;
@@ -43,9 +47,10 @@ export async function readMultipartBody<
   while (running) {
     const { value, done } = await iterator.next();
     const chunk = typeof value === "string" ? value : decoder.decode(value);
+    const searchFrom = buffer.length - boundary.length + 1;
     running = !done;
     buffer += chunk;
-    let bi = buffer.indexOf(boundary);
+    let bi = buffer.indexOf(boundary, searchFrom);
 
     while (bi > -1) {
       let message: string;
@@ -53,29 +58,59 @@ export async function readMultipartBody<
         buffer.slice(0, bi),
         buffer.slice(bi + boundary.length),
       ];
-      if (message.trim()) {
-        const i = message.indexOf("\r\n\r\n");
-        const headers = parseHeaders(message.slice(0, i));
-        const contentType = headers["content-type"];
-        if (
-          contentType &&
-          contentType.toLowerCase().indexOf("application/json") === -1
-        ) {
-          throw new Error("Unsupported patch content type: application/json is required.");
-        }
-        const body = message.slice(i);
+      const i = message.indexOf("\r\n\r\n");
+      const headers = parseHeaders(message.slice(0, i));
+      const contentType = headers["content-type"];
+      if (
+        contentType &&
+        contentType.toLowerCase().indexOf("application/json") === -1
+      ) {
+        throw new Error(
+          "Unsupported patch content type: application/json is required."
+        );
+      }
+      // nb: Technically you'd want to slice off the beginning "\r\n" but since
+      // this is going to be `JSON.parse`d there is no need.
+      const body = message.slice(i);
 
+      if (body) {
         try {
-          const result = parseJsonBody<T>(response, body.replace("\r\n", ""));
+          const result = parseJsonBody<T>(response, body);
           if (
             Object.keys(result).length > 1 ||
             "data" in result ||
             "incremental" in result ||
-            "errors" in result
+            "errors" in result ||
+            "payload" in result
           ) {
-            // for the last chunk with only `hasNext: false`,
-            // we don't need to call observer.next as there is no data/errors
-            observer.next?.(result);
+            if (isApolloPayloadResult(result)) {
+              let next = {};
+              if ("payload" in result) {
+                next = { ...result.payload };
+              }
+              if ("errors" in result) {
+                next = {
+                  ...next,
+                  extensions: {
+                    ...("extensions" in next ? next.extensions : null as any),
+                    [PROTOCOL_ERRORS_SYMBOL]: result.errors
+                  },
+                };
+              }
+              observer.next?.(next as T);
+            } else {
+              // for the last chunk with only `hasNext: false`
+              // we don't need to call observer.next as there is no data/errors
+              observer.next?.(result);
+            }
+          } else if (
+            // If the chunk contains only a "hasNext: false", we can call
+            // observer.complete() immediately.
+            Object.keys(result).length === 1 &&
+            "hasNext" in result &&
+            !result.hasNext
+          ) {
+            observer.complete?.();
           }
         } catch (err) {
           handleError(err, observer);
@@ -104,17 +139,17 @@ export function parseHeaders(headerText: string): Record<string, string> {
 export function parseJsonBody<T>(response: Response, bodyText: string): T {
   if (response.status >= 300) {
     // Network error
-    const getResult = () => {
+    const getResult = (): Record<string, unknown> | string => {
       try {
         return JSON.parse(bodyText);
       } catch (err) {
-        return bodyText
+        return bodyText;
       }
-    }
+    };
     throwServerError(
       response,
       getResult(),
-      `Response not successful: Received status code ${response.status}`,
+      `Response not successful: Received status code ${response.status}`
     );
   }
 

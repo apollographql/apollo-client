@@ -1009,10 +1009,10 @@ describe("ObservableQuery", () => {
             expect(fqbpCalls[0][1].fetchPolicy).toEqual("cache-first");
             expect(fqbpCalls[1][1].fetchPolicy).toEqual("network-only");
 
-          const fqoCalls = mocks.fetchQueryObservable.mock.calls;
-          expect(fqoCalls.length).toBe(2);
-          expect(fqoCalls[0][1].fetchPolicy).toEqual('cache-first');
-          expect(fqoCalls[1][1].fetchPolicy).toEqual('network-only');
+          const fcwiCalls = mocks.fetchConcastWithInfo.mock.calls;
+          expect(fcwiCalls.length).toBe(2);
+          expect(fcwiCalls[0][1].fetchPolicy).toEqual('cache-first');
+          expect(fcwiCalls[1][1].fetchPolicy).toEqual('network-only');
 
             // Although the options.fetchPolicy we passed just now to
             // fetchQueryByPolicy should have been network-only,
@@ -1065,9 +1065,9 @@ describe("ObservableQuery", () => {
             // FetchPolicy does not switch to cache-first after the first
             // network request.
             expect(observable.options.fetchPolicy).toBe('no-cache');
-            const fqoCalls = mocks.fetchQueryObservable.mock.calls;
-            expect(fqoCalls.length).toBe(2);
-            expect(fqoCalls[1][1].fetchPolicy).toBe("no-cache");
+            const fcwiCalls = mocks.fetchConcastWithInfo.mock.calls;
+            expect(fcwiCalls.length).toBe(2);
+            expect(fcwiCalls[1][1].fetchPolicy).toBe("no-cache");
 
             resolve();
           }

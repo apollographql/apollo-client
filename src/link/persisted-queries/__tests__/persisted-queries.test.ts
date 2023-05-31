@@ -99,17 +99,14 @@ describe('happy path', () => {
   itAsync('memoizes between requests', (resolve, reject) => {
     fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
     fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
-    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    const hashSpy = jest.fn(sha256)
+    const link = createPersistedQuery({ sha256: hashSpy }).concat(createHttpLink());
 
-    let start = new Date();
     execute(link, { query, variables }).subscribe(result => {
-      const firstRun = new Date().valueOf() - start.valueOf();
+      expect(hashSpy).toHaveBeenCalledTimes(1);
       expect(result.data).toEqual(data);
-      // this one should go faster becuase of memoization
-      let secondStart = new Date();
       execute(link, { query, variables }).subscribe(result2 => {
-        const secondRun = new Date().valueOf() - secondStart.valueOf();
-        expect(firstRun).toBeGreaterThan(secondRun);
+        expect(hashSpy).toHaveBeenCalledTimes(1);
         expect(result2.data).toEqual(data);
         resolve();
       }, reject);

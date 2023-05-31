@@ -50,9 +50,24 @@ This property can be ignored when using the default `errorPolicy` or an `errorPo
 </tr>
 
 <tr>
+<td>
+
+###### `networkStatus`
+
+`NetworkStatus`
+</td>
+
+<td>
+
+A number indicating the current network state of the query's associated request. [See possible values.](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4)
+
+</td>
+</tr>
+
+<tr>
 <td colspan="2">
 
-**Network info**
+**Client**
 
 </td>
 </tr>
@@ -94,9 +109,9 @@ Can be useful for manually executing followup queries or writing data to the cac
 
 A function that enables you to re-execute the query, optionally passing in new `variables`.
 
-To guarantee that the refetch performs a network request, its `fetchPolicy` is set to `network-only` (unless the original query's `fetchPolicy` is `no-cache` or `cache-and-network`, which also guarantee a network request). 
+To guarantee that the refetch performs a network request, its `fetchPolicy` is set to `network-only` (unless the original query's `fetchPolicy` is `no-cache` or `cache-and-network`, which also guarantee a network request).
 
-Calling this function will cause the component to re-suspend, unless the `suspensePolicy` option is set to `initial`.
+Calling this function will cause the component to re-suspend, , unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
 
 </td>
 </tr>
@@ -113,7 +128,7 @@ Calling this function will cause the component to re-suspend, unless the `suspen
 
 A function that helps you fetch the next set of results for a [paginated list field](/react/pagination/core-api/).
 
-Calling this function will cause the component to re-suspend, unless the `suspensePolicy` option is set to `initial`.
+Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
 
 </td>
 </tr>

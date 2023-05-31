@@ -1,6 +1,7 @@
 import { Trie } from '@wry/trie';
-import { canUseWeakMap, canUseWeakSet, checkDocument } from '../utilities';
-import { invariant } from '../utilities/globals';
+import { canUseWeakMap, canUseWeakSet } from '../common/canUse';
+import { checkDocument } from './getFromAST';
+import { invariant } from '../globals';
 import type { DocumentNode } from 'graphql';
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;

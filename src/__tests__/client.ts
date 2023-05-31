@@ -4,7 +4,6 @@ import gql from 'graphql-tag';
 
 import {
   ApolloClient,
-  DocumentTransform,
   FetchPolicy,
   WatchQueryFetchPolicy,
   QueryOptions,
@@ -14,7 +13,7 @@ import {
   NetworkStatus,
 } from '../core';
 
-import { Observable, ObservableSubscription, offsetLimitPagination, removeDirectivesFromDocument } from '../utilities';
+import { DocumentTransform, Observable, ObservableSubscription, offsetLimitPagination, removeDirectivesFromDocument } from '../utilities';
 import { ApolloLink } from '../link/core';
 import { createFragmentRegistry, InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
 import { ApolloError } from '../errors';

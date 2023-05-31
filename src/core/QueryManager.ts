@@ -34,6 +34,7 @@ import {
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
+  DocumentTransform,
 } from '../utilities';
 import { mergeIncrementalData } from '../utilities/common/incrementalResult';
 import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from '../errors';
@@ -57,7 +58,6 @@ import type {
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
 } from './types';
-import { DocumentTransform } from './DocumentTransform';
 import { LocalState } from './LocalState';
 
 import type {

@@ -1,9 +1,6 @@
 import { DocumentTransform } from '../DocumentTransform';
-import {
-  isMutationOperation,
-  isQueryOperation,
-  removeDirectivesFromDocument,
-} from '../../utilities';
+import { isMutationOperation, isQueryOperation } from '../operations';
+import { removeDirectivesFromDocument } from '../transform';
 import { gql } from 'graphql-tag';
 import { DocumentNode, visit, Kind } from 'graphql';
 

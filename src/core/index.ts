@@ -31,11 +31,6 @@ export {
   FragmentMatcher,
 } from './LocalState';
 export { isApolloError, ApolloError } from '../errors';
-export { 
-  DocumentTransform,
-  DocumentTransformCacheKey
-} from './DocumentTransform';
-
 /* Cache */
 
 export {
@@ -77,6 +72,8 @@ export {
 /* Utilities */
 
 export {
+  DocumentTransform,
+  DocumentTransformCacheKey,
   Observable,
   Observer,
   ObservableSubscription,

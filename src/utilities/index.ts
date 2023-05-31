@@ -12,6 +12,11 @@ export {
   getInclusionDirectives,
 } from './graphql/directives';
 
+export { 
+  DocumentTransform,
+  DocumentTransformCacheKey
+} from './graphql/DocumentTransform';
+
 export {
   FragmentMap,
   FragmentMapFunction,

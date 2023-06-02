@@ -4807,6 +4807,52 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('does not make network requests when `skip` is `true`', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.query, operation.query)
+        );
+
+        if (!mock) {
+          throw new Error('Could not find mock for operation');
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, { skip }),
+      { mocks, link, initialProps: { skip: true } }
+    );
+
+    expect(fetchCount).toBe(0);
+
+    rerender({ skip: false });
+
+    expect(fetchCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ skip: true });
+
+    expect(fetchCount).toBe(1);
+  });
+
   it('does not oversubscribe when suspending multiple times', async () => {
     const query = gql`
       query UserQuery($id: String!) {

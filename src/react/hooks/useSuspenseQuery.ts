@@ -157,7 +157,7 @@ export function useSuspenseQuery<
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
-  const watchQueryOptions = useWatchQueryOptions({ query, options });
+  const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
@@ -174,6 +174,12 @@ export function useSuspenseQuery<
   );
 
   let promise = promiseCache.get(queryRef.key);
+
+  if (queryRef.didChangeOptions(watchQueryOptions)) {
+    queryRef.setOptions(watchQueryOptions);
+    promise = queryRef.promise;
+    promiseCache.set(queryRef.key, promise);
+  }
 
   if (!promise) {
     promise = queryRef.promise;
@@ -303,6 +309,7 @@ interface UseWatchQueryOptionsHookOptions<
   TData,
   TVariables extends OperationVariables
 > {
+  client: ApolloClient<unknown>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   options: SuspenseQueryHookOptions<TData, TVariables>;
 }
@@ -311,31 +318,36 @@ export function useWatchQueryOptions<
   TData,
   TVariables extends OperationVariables
 >({
+  client,
   query,
   options,
 }: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
   TVariables,
   TData
 > {
-  const watchQueryOptions = useDeepMemo<WatchQueryOptions<TVariables, TData>>(
-    () => ({
+  const watchQueryOptions = useDeepMemo<
+    WatchQueryOptions<TVariables, TData>
+  >(() => {
+    const fetchPolicy =
+      options.fetchPolicy ||
+      client.defaultOptions.watchQuery?.fetchPolicy ||
+      'cache-first';
+
+    return {
       ...options,
+      fetchPolicy,
       query,
       notifyOnNetworkStatusChange: false,
       nextFetchPolicy: void 0,
-    }),
-    [options, query]
-  );
+    };
+  }, [client, options, query]);
 
   if (__DEV__) {
     validateOptions(watchQueryOptions);
   }
 
   if (options.skip) {
-    Object.assign(watchQueryOptions, {
-      initialFetchPolicy: options.fetchPolicy,
-      fetchPolicy: 'standby',
-    });
+    Object.assign(watchQueryOptions, { fetchPolicy: 'standby' });
   }
 
   return watchQueryOptions;

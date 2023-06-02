@@ -4724,6 +4724,47 @@ describe('useSuspenseQuery', () => {
     });
   });
 
+  it('suspends when `skip` becomes `false`', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, { skip }),
+      { cache, mocks, initialProps: { skip: true } }
+    );
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(result.current).toMatchObject({
+      data: undefined,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    rerender({ skip: false });
+
+    expect(renders.suspenseCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('does not oversubscribe when suspending multiple times', async () => {
     const query = gql`
       query UserQuery($id: String!) {

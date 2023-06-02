@@ -57,7 +57,7 @@ export namespace Cache {
     discardWatches?: boolean;
   }
 
-  export interface ModifyOptions<Entity = any> {
+  export interface ModifyOptions<Entity = Record<string, any>> {
     id?: string;
     fields: Entity extends Record<string, unknown>
       ? Modifiers<Entity> | Modifier<Entity>

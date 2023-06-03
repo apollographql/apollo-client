@@ -154,7 +154,7 @@
     "ts-jest": "29.1.0",
     "ts-node": "10.9.1",
     "typedoc": "0.24.7",
-    "typescript": "5.0.4",
+    "typescript": "5.1.3",
     "wait-for-observables": "1.0.3",
     "web-streams-polyfill": "3.2.1",
     "whatwg-fetch": "3.6.2"

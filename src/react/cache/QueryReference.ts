@@ -131,10 +131,7 @@ export class QueryReference<TData = unknown> {
   }
 
   setOptions(watchQueryOptions: WatchQueryOptions<OperationVariables, TData>) {
-    if (
-      this.watchQueryOptions.fetchPolicy === 'standby' &&
-      watchQueryOptions.fetchPolicy !== 'standby'
-    ) {
+    if (this.shouldTriggerRequest(watchQueryOptions)) {
       this.promise = this.observable.reobserve(watchQueryOptions);
     } else {
       this.observable.setOptionsSilent(watchQueryOptions);
@@ -206,5 +203,12 @@ export class QueryReference<TData = unknown> {
 
   private deliver(promise: Promise<ApolloQueryResult<TData>>) {
     this.listeners.forEach((listener) => listener(promise));
+  }
+
+  private shouldTriggerRequest(watchQueryOptions: WatchQueryOptions) {
+    return (
+      this.watchQueryOptions.fetchPolicy === 'standby' &&
+      watchQueryOptions.fetchPolicy !== 'standby'
+    );
   }
 }

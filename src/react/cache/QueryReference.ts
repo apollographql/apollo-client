@@ -132,10 +132,11 @@ export class QueryReference<TData = unknown> {
       watchQueryOptions.fetchPolicy !== 'standby'
     ) {
       this.promise = this.observable.reobserve(watchQueryOptions);
-      return;
+    } else {
+      this.observable.setOptionsSilent(watchQueryOptions);
     }
 
-    this.observable.setOptionsSilent(watchQueryOptions);
+    return this.promise;
   }
 
   dispose() {

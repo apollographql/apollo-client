@@ -123,6 +123,10 @@ export class QueryReference<TData = unknown> {
   }
 
   didChangeOptions(watchQueryOptions: WatchQueryOptions) {
+    // Unfortunately we can't compare observable.watchQueryOptions to the
+    // argument using `===` because `watchQuery` creates a new options object
+    // before setting `options` on the `ObservableQuery` instance. Instead we
+    // direct compare individual options to determine what has changed.
     return watchQueryOptions.fetchPolicy !== this.watchQueryOptions.fetchPolicy;
   }
 

@@ -7041,22 +7041,7 @@ describe('useSuspenseQuery', () => {
     it('handles combinations of options', () => {
       const { query } = useVariablesQueryCase();
 
-      const { data: explicitPartialDataIgnore } = useSuspenseQuery(query, {
-        returnPartialData: true,
-        errorPolicy: 'ignore',
-      });
-
-      expectTypeOf(explicitPartialDataIgnore).toEqualTypeOf<
-        DeepPartial<VariablesCaseData> | undefined
-      >();
-      expectTypeOf(
-        explicitPartialDataIgnore
-      ).not.toEqualTypeOf<VariablesCaseData>();
-
-      const { data: inferredPartialDataIgnore } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
+      const { data: inferredPartialDataIgnore } = useSuspenseQuery(query, {
         returnPartialData: true,
         errorPolicy: 'ignore',
       });
@@ -7068,10 +7053,22 @@ describe('useSuspenseQuery', () => {
         inferredPartialDataIgnore
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: inferredPartialDataNone } = useSuspenseQuery<
+      const { data: explicitPartialDataIgnore } = useSuspenseQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
+        returnPartialData: true,
+        errorPolicy: 'ignore',
+      });
+
+      expectTypeOf(explicitPartialDataIgnore).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(
+        explicitPartialDataIgnore
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: inferredPartialDataNone } = useSuspenseQuery(query, {
         returnPartialData: true,
         errorPolicy: 'none',
       });
@@ -7083,7 +7080,10 @@ describe('useSuspenseQuery', () => {
         inferredPartialDataNone
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const { data: explicitPartialDataNone } = useSuspenseQuery(query, {
+      const { data: explicitPartialDataNone } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
         returnPartialData: true,
         errorPolicy: 'none',
       });

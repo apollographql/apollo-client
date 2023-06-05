@@ -46,7 +46,9 @@ export function useBackgroundQuery<
     TOptions
 ): UseBackgroundQueryResult<
   TOptions['errorPolicy'] extends 'ignore' | 'all'
-    ? // TOptions['returnPartialData'] extends true
+    ? // TODO: support `returnPartialData` | `refetchWritePolicy`
+      // see https://github.com/apollographql/apollo-client/issues/10893
+      // TOptions['returnPartialData'] extends true
       // ? DeepPartial<TData> | undefined
       // : TData | undefined
       TData | undefined
@@ -82,6 +84,9 @@ export function useBackgroundQuery<
     errorPolicy: 'ignore' | 'all';
   }
 ): UseBackgroundQueryResult<TData | undefined, TVariables>;
+
+// TODO: support `returnPartialData` | `refetchWritePolicy`
+// see https://github.com/apollographql/apollo-client/issues/10893
 
 // export function useBackgroundQuery<
 //   TData = unknown,

@@ -2321,158 +2321,24 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
     });
 
+    // TODO: https://github.com/apollographql/apollo-client/issues/10893
     // it('returns DeepPartial<TData> with returnPartialData: true', () => {
-    //   const { query } = useVariablesQueryCase();
-
-    //   const { data: inferred } = useSuspenseQuery<
-    //     VariablesCaseData,
-    //     VariablesCaseVariables
-    //   >(query, {
-    //     returnPartialData: true,
-    //   });
-
-    //   expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-    //   expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
-
-    //   const { data: explicit } = useSuspenseQuery(query, {
-    //     returnPartialData: true,
-    //   });
-
-    //   expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-    //   expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     // });
 
+    // TODO: https://github.com/apollographql/apollo-client/issues/10893
     // it('returns TData with returnPartialData: false', () => {
-    //   const { query } = useVariablesQueryCase();
-
-    //   const { data: inferred } = useSuspenseQuery(query, {
-    //     returnPartialData: false,
-    //   });
-
-    //   expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
-    //   expectTypeOf(inferred).not.toEqualTypeOf<
-    //     DeepPartial<VariablesCaseData>
-    //   >();
-
-    //   const { data: explicit } = useSuspenseQuery<
-    //     VariablesCaseData,
-    //     VariablesCaseVariables
-    //   >(query, {
-    //     returnPartialData: false,
-    //   });
-
-    //   expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
-    //   expectTypeOf(explicit).not.toEqualTypeOf<
-    //     DeepPartial<VariablesCaseData>
-    //   >();
     // });
 
+    // TODO: https://github.com/apollographql/apollo-client/issues/10893
     // it('returns TData when passing an option that does not affect TData', () => {
-    //   const { query } = useVariablesQueryCase();
-
-    //   const { data: inferred } = useSuspenseQuery<
-    //     VariablesCaseData,
-    //     VariablesCaseVariables
-    //   >(query, {
-    //     fetchPolicy: 'no-cache',
-    //   });
-
-    //   expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
-    //   expectTypeOf(inferred).not.toEqualTypeOf<
-    //     DeepPartial<VariablesCaseData>
-    //   >();
-
-    //   const { data: explicit } = useSuspenseQuery(query, {
-    //     fetchPolicy: 'no-cache',
-    //   });
-
-    //   expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
-    //   expectTypeOf(explicit).not.toEqualTypeOf<
-    //     DeepPartial<VariablesCaseData>
-    //   >();
     // });
 
+    // TODO: https://github.com/apollographql/apollo-client/issues/10893
     // it('handles combinations of options', () => {
-    //   const { query } = useVariablesQueryCase();
-
-    //   const { data: inferredPartialDataIgnore } = useSuspenseQuery<
-    //     VariablesCaseData,
-    //     VariablesCaseVariables
-    //   >(query, {
-    //     returnPartialData: true,
-    //     errorPolicy: 'ignore',
-    //   });
-
-    //   expectTypeOf(inferredPartialDataIgnore).toEqualTypeOf<
-    //     DeepPartial<VariablesCaseData> | undefined
-    //   >();
-    //   expectTypeOf(
-    //     inferredPartialDataIgnore
-    //   ).not.toEqualTypeOf<VariablesCaseData>();
-
-    //   const { data: explicitPartialDataIgnore } = useSuspenseQuery(query, {
-    //     returnPartialData: true,
-    //     errorPolicy: 'ignore',
-    //   });
-
-    //   expectTypeOf(explicitPartialDataIgnore).toEqualTypeOf<
-    //     DeepPartial<VariablesCaseData> | undefined
-    //   >();
-    //   expectTypeOf(
-    //     explicitPartialDataIgnore
-    //   ).not.toEqualTypeOf<VariablesCaseData>();
-
-    //   const { data: inferredPartialDataNone } = useSuspenseQuery<
-    //     VariablesCaseData,
-    //     VariablesCaseVariables
-    //   >(query, {
-    //     returnPartialData: true,
-    //     errorPolicy: 'none',
-    //   });
-
-    //   expectTypeOf(inferredPartialDataNone).toEqualTypeOf<
-    //     DeepPartial<VariablesCaseData>
-    //   >();
-    //   expectTypeOf(
-    //     inferredPartialDataNone
-    //   ).not.toEqualTypeOf<VariablesCaseData>();
-
-    //   const { data: explicitPartialDataNone } = useSuspenseQuery(query, {
-    //     returnPartialData: true,
-    //     errorPolicy: 'none',
-    //   });
-
-    //   expectTypeOf(explicitPartialDataNone).toEqualTypeOf<
-    //     DeepPartial<VariablesCaseData>
-    //   >();
-    //   expectTypeOf(
-    //     explicitPartialDataNone
-    //   ).not.toEqualTypeOf<VariablesCaseData>();
     // });
 
+    // TODO: https://github.com/apollographql/apollo-client/issues/10893
     // it('returns correct TData type when combined options that do not affect TData', () => {
-    //   const { query } = useVariablesQueryCase();
-
-    //   const { data: inferred } = useSuspenseQuery(query, {
-    //     fetchPolicy: 'no-cache',
-    //     returnPartialData: true,
-    //     errorPolicy: 'none',
-    //   });
-
-    //   expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-    //   expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
-
-    //   const { data: explicit } = useSuspenseQuery<
-    //     VariablesCaseData,
-    //     VariablesCaseVariables
-    //   >(query, {
-    //     fetchPolicy: 'no-cache',
-    //     returnPartialData: true,
-    //     errorPolicy: 'none',
-    //   });
-
-    //   expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-    //   expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     // });
   });
 });

@@ -109,7 +109,20 @@ describe('relayStylePagination', () => {
         hasNextPage: true,
       });
     });
+
+    it("should not return empty edges if none existing", () => {
+      const resultWithTotalCount = policy.read!({
+        totalCount: 10
+      }, fakeReadOptions);
+
+      expect(
+        resultWithTotalCount,
+      ).toEqual({
+        totalCount: 10,
+      });
+    });
   });
+
 
   describe('merge', () => {
     const merge = policy.merge;
@@ -143,7 +156,6 @@ describe('relayStylePagination', () => {
       };
       const result = merge(undefined, incoming, options);
       expect(result).toEqual({
-        edges: [],
         pageInfo: {
           hasPreviousPage: false,
           hasNextPage: true,
@@ -234,6 +246,92 @@ describe('relayStylePagination', () => {
       );
 
       expect(result).toEqual(fakeExisting);
+    })
+
+    describe('when incoming has no edges', () => {
+      it('should not replace existing null with empty edges', () => {
+        const fakeExisting = null;
+
+        const fakeIncoming = {
+          totalCount: 10
+        };
+
+        const fakeOptions = {
+          ...options,
+        };
+
+        const result = merge(
+          fakeExisting,
+          fakeIncoming,
+          fakeOptions,
+        );
+
+        expect(result).toEqual({
+          totalCount: 10
+        });
+      })
+
+      it('should not merge existing with empty edges', () => {
+        const fakeExisting = {
+          totalCount: 10
+        };
+
+        const fakeIncoming = {
+          totalCount: 11
+        };
+
+        const fakeOptions = {
+          ...options,
+          args: {
+            after: 'alpha',
+          },
+        };
+
+        const result = merge(
+          fakeExisting,
+          fakeIncoming,
+          fakeOptions,
+        );
+
+        expect(result).toEqual({
+          totalCount: 11
+        });
+      })
+    })
+
+    describe('when existing has no edges', () => {
+      it('should add incoming edges', () => {
+        const fakeExisting = {
+          totalCount: 10
+        };
+
+        const incomingEdges = [
+          { cursor: 'alpha', node: makeReference("fakeAlpha") },
+        ];
+        const incoming = {
+          edges: incomingEdges,
+          pageInfo: {
+            hasPreviousPage: false,
+            hasNextPage: true,
+            startCursor: 'alpha',
+            endCursor: 'alpha'
+          },
+        };
+        const fakeOptions = {
+          ...options,
+        };
+
+        const result = merge(
+          fakeExisting,
+          incoming,
+          fakeOptions,
+        );
+
+        expect(result).toEqual({
+          ...incoming,
+          totalCount: 10
+        });
+      })
     })
 
     it('should replace existing null with incoming', () => {

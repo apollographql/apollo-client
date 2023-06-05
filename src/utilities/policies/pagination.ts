@@ -1,6 +1,7 @@
 import { __rest } from "tslib";
 
 import { FieldPolicy, Reference } from '../../cache';
+import { SafeReadonly } from "../../cache/core/types/common";
 import { mergeDeep } from '../common/mergeDeep';
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
@@ -74,13 +75,15 @@ export type TRelayPageInfo = {
 };
 
 export type TExistingRelay<TNode> = Readonly<{
-  edges: TRelayEdge<TNode>[];
-  pageInfo: TRelayPageInfo;
+  edges?: TRelayEdge<TNode>[];
+  pageInfo?: TRelayPageInfo;
+  [extra: string]: any;
 }>;
 
 export type TIncomingRelay<TNode> = {
   edges?: TRelayEdge<TNode>[];
   pageInfo?: TRelayPageInfo;
+  [extra: string]: any;
 };
 
 export type RelayFieldPolicy<TNode> = FieldPolicy<
@@ -101,63 +104,80 @@ export function relayStylePagination<TNode extends Reference = Reference>(
     read(existing, { canRead, readField }) {
       if (!existing) return existing;
 
-      const edges: TRelayEdge<TNode>[] = [];
-      let firstEdgeCursor = "";
-      let lastEdgeCursor = "";
-      existing.edges.forEach(edge => {
-        // Edges themselves could be Reference objects, so it's important
-        // to use readField to access the edge.edge.node property.
-        if (canRead(readField("node", edge))) {
-          edges.push(edge);
-          if (edge.cursor) {
-            firstEdgeCursor = firstEdgeCursor || edge.cursor || "";
-            lastEdgeCursor = edge.cursor || lastEdgeCursor;
-          }
-        }
-      });
-
-      const {
-        startCursor,
-        endCursor,
-      } = existing.pageInfo || {};
-
-      return {
+      let read: TIncomingRelay<TNode> = {
         // Some implementations return additional Connection fields, such
         // as existing.totalCount. These fields are saved by the merge
         // function, so the read function should also preserve them.
-        ...getExtras(existing),
-        edges,
-        pageInfo: {
-          ...existing.pageInfo,
-          // If existing.pageInfo.{start,end}Cursor are undefined or "", default
-          // to firstEdgeCursor and/or lastEdgeCursor.
-          startCursor: startCursor || firstEdgeCursor,
-          endCursor: endCursor || lastEdgeCursor,
-        },
-      };
+        ...getExtras(existing)
+      }
+
+      if (existing.pageInfo) {
+        read = { ...read, pageInfo: existing.pageInfo}
+      }
+
+      if (existing.edges) {
+        const edges: TRelayEdge<TNode>[] = [];
+        let firstEdgeCursor = "";
+        let lastEdgeCursor = "";
+        existing.edges.forEach(edge => {
+          // Edges themselves could be Reference objects, so it's important
+          // to use readField to access the edge.edge.node property.
+          if (canRead(readField("node", edge))) {
+            edges.push(edge);
+            if (edge.cursor) {
+              firstEdgeCursor = firstEdgeCursor || edge.cursor || "";
+              lastEdgeCursor = edge.cursor || lastEdgeCursor;
+            }
+          }
+        });
+
+        const {
+          startCursor,
+          endCursor,
+        } = existing?.pageInfo ?? { startCursor: null, endCursor: null};
+
+        read = {
+          ...read,
+          edges,
+          pageInfo: {
+            ...existing.pageInfo,
+            // If existing.pageInfo.{start,end}Cursor are undefined or "", default
+            // to firstEdgeCursor and/or lastEdgeCursor.
+            startCursor: startCursor || firstEdgeCursor,
+            endCursor: endCursor || lastEdgeCursor,
+          } as TRelayPageInfo,
+        }
+      }
+
+      return read
     },
 
     merge(existing, incoming, { args, isReference, readField }) {
-      if (!existing) {
-        existing = makeEmptyData();
-      }
-
       if (!incoming) {
-        return existing;
+        return existing ?? null;
       }
 
-      const incomingEdges = incoming.edges ? incoming.edges.map(edge => {
+      let merged: SafeReadonly<TExistingRelay<TNode>> = {
+        ...(existing || {}),
+        ...incoming,
+      }
+
+      if (!incoming.edges) {
+        return merged
+      }
+
+      const incomingEdges = incoming.edges.map(edge => {
         if (isReference(edge = { ...edge })) {
           // In case edge is a Reference, we read out its cursor field and
           // store it as an extra property of the Reference object.
           edge.cursor = readField<string>("cursor", edge);
         }
         return edge;
-      }) : [];
+      });
 
       if (incoming.pageInfo) {
         const { pageInfo } = incoming;
-        const { startCursor, endCursor } = pageInfo;
+        const { startCursor, endCursor } = pageInfo ?? {};
         const firstEdge = incomingEdges[0];
         const lastEdge = incomingEdges[incomingEdges.length - 1];
         // In case we did not request the cursor field for edges in this
@@ -188,7 +208,7 @@ export function relayStylePagination<TNode extends Reference = Reference>(
         }
       }
 
-      let prefix = existing.edges;
+      let prefix: TRelayEdge<TNode>[] = existing?.edges ?? [];
       let suffix: typeof prefix = [];
 
       if (args && args.after) {
@@ -211,34 +231,40 @@ export function relayStylePagination<TNode extends Reference = Reference>(
         prefix = [];
       }
 
-      const edges = [
-        ...prefix,
-        ...incomingEdges,
-        ...suffix,
-      ];
-
-      const pageInfo: TRelayPageInfo = {
-        // The ordering of these two ...spreads may be surprising, but it
-        // makes sense because we want to combine PageInfo properties with a
-        // preference for existing values, *unless* the existing values are
-        // overridden by the logic below, which is permitted only when the
-        // incoming page falls at the beginning or end of the data.
-        ...incoming.pageInfo,
-        ...existing.pageInfo,
+      merged = {
+        ...merged,
+        edges: [
+          ...prefix,
+          ...incomingEdges,
+          ...suffix,
+        ]
       };
+
+      merged = {
+        ...merged,
+        pageInfo: {
+          // The ordering of these two ...spreads may be surprising, but it
+          // makes sense because we want to combine PageInfo properties with a
+          // preference for existing values, *unless* the existing values are
+          // overridden by the logic below, which is permitted only when the
+          // incoming page falls at the beginning or end of the data.
+          ...incoming.pageInfo,
+          ...existing?.pageInfo ?? {},
+        } as TRelayPageInfo
+      }
 
       if (incoming.pageInfo) {
         const {
           hasPreviousPage, hasNextPage,
           startCursor, endCursor,
           ...extras
-        } = incoming.pageInfo;
+        } = incoming.pageInfo ?? {};
 
         // If incoming.pageInfo had any extra non-standard properties,
         // assume they should take precedence over any existing properties
         // of the same name, regardless of where this page falls with
         // respect to the existing data.
-        Object.assign(pageInfo, extras);
+        Object.assign(merged.pageInfo, extras);
 
         // Keep existing.pageInfo.has{Previous,Next}Page unless the
         // placement of the incoming edges means incoming.hasPreviousPage
@@ -248,21 +274,15 @@ export function relayStylePagination<TNode extends Reference = Reference>(
         // coincides with the beginning or end of the existing data, as
         // determined using prefix.length and suffix.length.
         if (!prefix.length) {
-          if (void 0 !== hasPreviousPage) pageInfo.hasPreviousPage = hasPreviousPage;
-          if (void 0 !== startCursor) pageInfo.startCursor = startCursor;
+          if (void 0 !== hasPreviousPage) merged.pageInfo!.hasPreviousPage = hasPreviousPage;
+          if (void 0 !== startCursor) merged.pageInfo!.startCursor = startCursor;
         }
         if (!suffix.length) {
-          if (void 0 !== hasNextPage) pageInfo.hasNextPage = hasNextPage;
-          if (void 0 !== endCursor) pageInfo.endCursor = endCursor;
+          if (void 0 !== hasNextPage) merged.pageInfo!.hasNextPage = hasNextPage;
+          if (void 0 !== endCursor) merged.pageInfo!.endCursor = endCursor;
         }
       }
-
-      return {
-        ...getExtras(existing),
-        ...getExtras(incoming),
-        edges,
-        pageInfo,
-      };
+      return merged
     },
   };
 }
@@ -270,15 +290,3 @@ export function relayStylePagination<TNode extends Reference = Reference>(
 // Returns any unrecognized properties of the given object.
 const getExtras = (obj: Record<string, any>) => __rest(obj, notExtras);
 const notExtras = ["edges", "pageInfo"];
-
-function makeEmptyData(): TExistingRelay<any> {
-  return {
-    edges: [],
-    pageInfo: {
-      hasPreviousPage: false,
-      hasNextPage: true,
-      startCursor: "",
-      endCursor: "",
-    },
-  };
-}

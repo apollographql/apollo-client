@@ -6,7 +6,7 @@ import type {
 } from '../../core';
 import { useApolloClient } from './useApolloClient';
 import type { QueryReference } from '../cache/QueryReference';
-import type { SuspenseQueryHookOptions } from '../types/types';
+import type { SuspenseQueryHookOptions, NoInfer } from '../types/types';
 import { __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import {
@@ -16,10 +16,11 @@ import {
 } from './useSuspenseQuery';
 import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery';
 import { canonicalStringify } from '../../cache';
+import type { DeepPartial } from '../../utilities';
 import { invariant } from '../../utilities/globals';
 
 export type UseBackgroundQueryResult<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 > = [
   QueryReference<TData>,
@@ -30,7 +31,84 @@ export type UseBackgroundQueryResult<
 ];
 
 export function useBackgroundQuery<
-  TData = any,
+  TData,
+  TVariables extends OperationVariables,
+  TOptions extends Omit<
+    SuspenseQueryHookOptions<TData>,
+    'variables' | 'returnPartialData' | 'refetchWritePolicy'
+  >
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: Omit<
+    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+    'returnPartialData' | 'refetchWritePolicy'
+  > &
+    TOptions
+): UseBackgroundQueryResult<
+  TOptions['errorPolicy'] extends 'ignore' | 'all'
+    ? // TOptions['returnPartialData'] extends true
+      // ? DeepPartial<TData> | undefined
+      // : TData | undefined
+      TData | undefined
+    : // : TOptions['returnPartialData'] extends true
+      // ? DeepPartial<TData>
+      TData,
+  TVariables
+>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: Omit<
+    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+    'returnPartialData' | 'refetchWritePolicy'
+  > & {
+    returnPartialData: true;
+    errorPolicy: 'ignore' | 'all';
+  }
+): UseBackgroundQueryResult<DeepPartial<TData> | undefined, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: Omit<
+    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+    'returnPartialData' | 'refetchWritePolicy'
+  > & {
+    errorPolicy: 'ignore' | 'all';
+  }
+): UseBackgroundQueryResult<TData | undefined, TVariables>;
+
+// export function useBackgroundQuery<
+//   TData = unknown,
+//   TVariables extends OperationVariables = OperationVariables
+// >(
+//   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+//   options: Omit<
+//     SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+//     'returnPartialData' | 'refetchWritePolicy'
+//   > & {
+//     returnPartialData: true;
+//   }
+// ): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: Omit<
+    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+    'returnPartialData' | 'refetchWritePolicy'
+  >
+): UseBackgroundQueryResult<TData, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,

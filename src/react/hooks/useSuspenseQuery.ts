@@ -272,7 +272,6 @@ function validateFetchPolicy(
     'network-only',
     'no-cache',
     'cache-and-network',
-    'standby',
   ];
 
   invariant(
@@ -329,26 +328,30 @@ export function useWatchQueryOptions<
   TVariables,
   TData
 > {
-  const watchQueryOptions = useDeepMemo<
-    WatchQueryOptions<TVariables, TData>
-  >(() => {
+  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
     const fetchPolicy =
       options.fetchPolicy ||
       client.defaultOptions.watchQuery?.fetchPolicy ||
       'cache-first';
 
-    return {
+    const watchQueryOptions = {
       ...options,
-      fetchPolicy: options.skip ? 'standby' : fetchPolicy,
+      fetchPolicy,
       query,
       notifyOnNetworkStatusChange: false,
       nextFetchPolicy: void 0,
     };
+
+    if (__DEV__) {
+      validateOptions(watchQueryOptions);
+    }
+
+    // Assign the updated fetch policy after our validation since `standby` is
+    // not a supported fetch policy on its own without the use of `skip`.
+    if (options.skip) {
+      watchQueryOptions.fetchPolicy = 'standby';
+    }
+
+    return watchQueryOptions;
   }, [client, options, query]);
-
-  if (__DEV__) {
-    validateOptions(watchQueryOptions);
-  }
-
-  return watchQueryOptions;
 }

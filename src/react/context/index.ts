@@ -4,6 +4,6 @@ export { ApolloConsumer, ApolloConsumerProps } from './ApolloConsumer';
 export {
   ApolloContextValue,
   getApolloContext,
-  resetApolloContext
+  getApolloContext as resetApolloContext
 } from './ApolloContext';
 export { ApolloProvider, ApolloProviderProps } from './ApolloProvider';

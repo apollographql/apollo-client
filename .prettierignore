@@ -35,7 +35,6 @@ src/react/*
 !src/react/context/
 src/react/context/*
 !src/react/context/ApolloProvider.tsx
-!src/react/context/ApolloContext.ts
 !src/react/context/__tests__/
 src/react/context/__tests__/*
 !src/react/context/__tests__/ApolloProvider.test.tsx

@@ -11,11 +11,15 @@ import {
 } from '../../../core';
 import { PROTOCOL_ERRORS_SYMBOL } from '../../../errors';
 import { InMemoryCache as Cache } from '../../../cache';
-import { ApolloProvider } from '../../context';
+import { ApolloProvider, resetApolloContext } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
 import { useSubscription } from '../useSubscription';
 
 describe('useSubscription Hook', () => {
+  afterEach(() => {
+    resetApolloContext();
+  });
+
   it('should handle a simple subscription properly', async () => {
     const subscription = gql`
       subscription {

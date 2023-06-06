@@ -122,14 +122,14 @@ export class QueryReference<TData = unknown> {
     return promise;
   }
 
-  setOptions(watchQueryOptions: WatchQueryOptions<OperationVariables, TData>) {
-    if (this.shouldTriggerRequest(watchQueryOptions)) {
-      this.promise = this.observable.reobserve(watchQueryOptions);
-    } else {
-      this.observable.setOptionsSilent(watchQueryOptions);
-    }
+  reobserve(
+    watchQueryOptions: Partial<WatchQueryOptions<OperationVariables, TData>>
+  ) {
+    const promise = this.observable.reobserve(watchQueryOptions);
 
-    return this.promise;
+    this.promise = promise;
+
+    return promise;
   }
 
   dispose() {
@@ -195,12 +195,5 @@ export class QueryReference<TData = unknown> {
 
   private deliver(promise: Promise<ApolloQueryResult<TData>>) {
     this.listeners.forEach((listener) => listener(promise));
-  }
-
-  private shouldTriggerRequest(watchQueryOptions: WatchQueryOptions) {
-    return (
-      this.watchQueryOptions.fetchPolicy === 'standby' &&
-      watchQueryOptions.fetchPolicy !== 'standby'
-    );
   }
 }

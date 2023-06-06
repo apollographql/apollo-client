@@ -169,14 +169,16 @@ export function useSuspenseQuery<
     client.watchQuery(watchQueryOptions)
   );
 
+  const { fetchPolicy: currentFetchPolicy } = queryRef.watchQueryOptions;
+
   const [promiseCache, setPromiseCache] = useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
 
   let promise = promiseCache.get(queryRef.key);
 
-  if (fetchPolicy !== queryRef.watchQueryOptions.fetchPolicy) {
-    promise = queryRef.setOptions(watchQueryOptions);
+  if (currentFetchPolicy === 'standby' && fetchPolicy !== currentFetchPolicy) {
+    promise = queryRef.reobserve({ fetchPolicy });
     promiseCache.set(queryRef.key, promise);
   }
 

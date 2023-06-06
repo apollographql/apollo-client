@@ -586,15 +586,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve(newOptions);
   }
 
-  // Update the options for this observable without triggering a `reobserve`.
-  // Should not be used publicly.
-  public setOptionsSilent(
-    newOptions: Partial<WatchQueryOptions<TVariables, TData>>
-  ) {
-    assign(this.options, compact(this.options, newOptions || {}));
-  }
-
-
   /**
    * Update the variables of this observable query, and fetch the new results
    * if they've changed. Most users should prefer `refetch` instead of

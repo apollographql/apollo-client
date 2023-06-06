@@ -4853,6 +4853,108 @@ describe('useSuspenseQuery', () => {
     expect(fetchCount).toBe(1);
   });
 
+  it('`skip` option works with `startTransition`', async () => {
+    type Variables = {
+      id: string;
+    };
+    interface Data {
+      todo: {
+        id: string;
+        name: string;
+        completed: boolean;
+      };
+    }
+    const user = userEvent.setup();
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query TodoItemQuery($id: ID!) {
+        todo(id: $id) {
+          id
+          name
+          completed
+        }
+      }
+    `;
+    const mocks: MockedResponse<Data, Variables>[] = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { todo: { id: '1', name: 'Clean room', completed: false } },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function App() {
+      const [id, setId] = React.useState<string | null>(null);
+      const [isPending, startTransition] = React.useTransition();
+
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <button
+            disabled={isPending}
+            onClick={() => {
+              startTransition(() => {
+                setId('1');
+              });
+            }}
+          >
+            Fetch to-do 1
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Todo id={id} />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function SuspenseFallback() {
+      return <p>Loading</p>;
+    }
+
+    function Todo({ id }: { id: string | null }) {
+      const { data } = useSuspenseQuery(query, {
+        skip: !id,
+        variables: { id: id ?? '0' },
+      });
+
+      const todo = data?.todo;
+
+      return todo ? (
+        <div data-testid="todo">
+          {todo.name}
+          {todo.completed && ' (completed)'}
+        </div>
+      ) : null;
+    }
+
+    render(<App />);
+
+    expect(screen.queryByTestId('todo')).not.toBeInTheDocument();
+
+    const button = screen.getByText('Fetch to-do 1');
+    await act(() => user.click(button));
+    // startTransition will avoid rendering the suspense fallback for already
+    // revealed content if the state update inside the transition causes the
+    // component to suspend.
+    //
+    // Here we should not see the suspense fallback while the component suspends
+    // until the todo is finished loading. Seeing the suspense fallback is an
+    // indication that we are suspending the component too late in the process.
+    expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+    // We can ensure this works with isPending from useTransition in the process
+    expect(button).toBeDisabled();
+    // Eventually we should see the updated todo content once its done
+    // suspending.
+    expect(await screen.findByTestId('todo')).toHaveTextContent('Clean room');
+  });
+
   it('does not oversubscribe when suspending multiple times', async () => {
     const query = gql`
       query UserQuery($id: String!) {

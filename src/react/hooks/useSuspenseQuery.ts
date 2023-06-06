@@ -195,8 +195,19 @@ export function useSuspenseQuery<
     });
   }, [queryRef]);
 
+  const skipResult = useMemo(() => {
+    const error = toApolloError(queryRef.result);
+
+    return {
+      loading: false,
+      data: queryRef.result.data,
+      networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
+      error,
+    };
+  }, [queryRef.result]);
+
   const result =
-    watchQueryOptions.fetchPolicy === 'standby' ? SKIP_RESULT : __use(promise);
+    watchQueryOptions.fetchPolicy === 'standby' ? skipResult : __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
@@ -279,13 +290,6 @@ function validatePartialDataReturn(
     );
   }
 }
-
-const SKIP_RESULT: ApolloQueryResult<undefined> = {
-  loading: false,
-  networkStatus: NetworkStatus.ready,
-  data: void 0,
-  error: void 0,
-};
 
 export function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)

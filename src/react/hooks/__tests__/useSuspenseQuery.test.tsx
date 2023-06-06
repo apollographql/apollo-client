@@ -4765,7 +4765,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('renders skip result and does not suspend when `skip` becomes `true` after it was `false`', async () => {
+  it('renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`', async () => {
     const { query, mocks } = useSimpleQueryCase();
 
     const cache = new InMemoryCache();
@@ -4790,7 +4790,7 @@ describe('useSuspenseQuery', () => {
     expect(renders.suspenseCount).toBe(1);
 
     expect(result.current).toMatchObject({
-      data: undefined,
+      ...mocks[0].result,
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
@@ -4803,7 +4803,11 @@ describe('useSuspenseQuery', () => {
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
-      { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
     ]);
   });
 

@@ -158,7 +158,7 @@ export function useSuspenseQuery<
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { variables } = watchQueryOptions;
+  const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
   const cacheKey = (
@@ -175,7 +175,7 @@ export function useSuspenseQuery<
 
   let promise = promiseCache.get(queryRef.key);
 
-  if (queryRef.didChangeOptions(watchQueryOptions)) {
+  if (fetchPolicy !== queryRef.watchQueryOptions.fetchPolicy) {
     promise = queryRef.setOptions(watchQueryOptions);
     promiseCache.set(queryRef.key, promise);
   }

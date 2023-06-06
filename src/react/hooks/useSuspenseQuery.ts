@@ -261,6 +261,7 @@ function validateFetchPolicy(
     'network-only',
     'no-cache',
     'cache-and-network',
+    'standby',
   ];
 
   invariant(
@@ -334,7 +335,7 @@ export function useWatchQueryOptions<
 
     return {
       ...options,
-      fetchPolicy,
+      fetchPolicy: options.skip ? 'standby' : fetchPolicy,
       query,
       notifyOnNetworkStatusChange: false,
       nextFetchPolicy: void 0,
@@ -343,10 +344,6 @@ export function useWatchQueryOptions<
 
   if (__DEV__) {
     validateOptions(watchQueryOptions);
-  }
-
-  if (options.skip) {
-    Object.assign(watchQueryOptions, { fetchPolicy: 'standby' });
   }
 
   return watchQueryOptions;

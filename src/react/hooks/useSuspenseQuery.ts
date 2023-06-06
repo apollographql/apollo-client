@@ -196,9 +196,7 @@ export function useSuspenseQuery<
   }, [queryRef]);
 
   const result =
-    options.skip || watchQueryOptions.fetchPolicy === 'standby'
-      ? SKIP_RESULT
-      : __use(promise);
+    watchQueryOptions.fetchPolicy === 'standby' ? SKIP_RESULT : __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {

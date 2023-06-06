@@ -4857,6 +4857,33 @@ describe('useSuspenseQuery', () => {
     expect(fetchCount).toBe(1);
   });
 
+  it('`skip` result is referentially stable', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, { skip }),
+      { mocks, initialProps: { skip: true } }
+    );
+
+    const skipResult = result.current;
+
+    rerender({ skip: true });
+
+    expect(result.current).toBe(skipResult);
+
+    rerender({ skip: false });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    const fetchedSkipResult = result.current;
+
+    rerender({ skip: false });
+
+    expect(fetchedSkipResult).toBe(fetchedSkipResult);
+  });
+
   it('`skip` option works with `startTransition`', async () => {
     type Variables = {
       id: string;

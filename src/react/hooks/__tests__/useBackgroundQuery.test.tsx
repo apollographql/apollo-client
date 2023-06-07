@@ -34,7 +34,11 @@ import {
   MockSubscriptionLink,
   mockSingleLink,
 } from '../../../testing';
-import { concatPagination, offsetLimitPagination } from '../../../utilities';
+import {
+  concatPagination,
+  offsetLimitPagination,
+  DeepPartial,
+} from '../../../utilities';
 import { useBackgroundQuery, useReadQuery } from '../useBackgroundQuery';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
@@ -2203,20 +2207,6 @@ describe('useBackgroundQuery', () => {
     });
   });
   describe.skip('type tests', () => {
-    it('disallows returnPartialData in BackgroundQueryHookOptions', () => {
-      const { query } = renderIntegrationTest();
-
-      // @ts-expect-error should not allow returnPartialData in options
-      useBackgroundQuery(query, { returnPartialData: true });
-    });
-
-    it('disallows refetchWritePolicy in BackgroundQueryHookOptions', () => {
-      const { query } = renderIntegrationTest();
-
-      // @ts-expect-error should not allow refetchWritePolicy in options
-      useBackgroundQuery(query, { refetchWritePolicy: 'overwrite' });
-    });
-
     it('returns unknown when TData cannot be inferred', () => {
       const query = gql`
         query {
@@ -2321,24 +2311,185 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
     });
 
-    // TODO: https://github.com/apollographql/apollo-client/issues/10893
-    // it('returns DeepPartial<TData> with returnPartialData: true', () => {
-    // });
+    it('returns DeepPartial<TData> with returnPartialData: true', () => {
+      const { query } = useVariablesIntegrationTestCase();
 
-    // TODO: https://github.com/apollographql/apollo-client/issues/10893
-    // it('returns TData with returnPartialData: false', () => {
-    // });
+      const [inferredQueryRef] = useBackgroundQuery(query, {
+        returnPartialData: true,
+      });
+      const { data: inferred } = useReadQuery(inferredQueryRef);
 
-    // TODO: https://github.com/apollographql/apollo-client/issues/10893
-    // it('returns TData when passing an option that does not affect TData', () => {
-    // });
+      expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
 
-    // TODO: https://github.com/apollographql/apollo-client/issues/10893
-    // it('handles combinations of options', () => {
-    // });
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: true,
+      });
 
-    // TODO: https://github.com/apollographql/apollo-client/issues/10893
-    // it('returns correct TData type when combined options that do not affect TData', () => {
-    // });
+      const { data: explicit } = useReadQuery(explicitQueryRef);
+
+      expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns TData with returnPartialData: false', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, {
+        returnPartialData: false,
+      });
+      const { data: inferred } = useReadQuery(inferredQueryRef);
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: false,
+      });
+
+      const { data: explicit } = useReadQuery(explicitQueryRef);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+    });
+
+    it('returns TData when passing an option that does not affect TData', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, {
+        fetchPolicy: 'no-cache',
+      });
+      const { data: inferred } = useReadQuery(inferredQueryRef);
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        fetchPolicy: 'no-cache',
+      });
+
+      const { data: explicit } = useReadQuery(explicitQueryRef);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+    });
+
+    it('handles combinations of options', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredPartialDataIgnoreQueryRef] = useBackgroundQuery(query, {
+        returnPartialData: true,
+        errorPolicy: 'ignore',
+      });
+      const { data: inferredPartialDataIgnore } = useReadQuery(
+        inferredPartialDataIgnoreQueryRef
+      );
+
+      expectTypeOf(inferredPartialDataIgnore).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(
+        inferredPartialDataIgnore
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const [explicitPartialDataIgnoreQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: true,
+        errorPolicy: 'ignore',
+      });
+
+      const { data: explicitPartialDataIgnore } = useReadQuery(
+        explicitPartialDataIgnoreQueryRef
+      );
+
+      expectTypeOf(explicitPartialDataIgnore).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(
+        explicitPartialDataIgnore
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const [inferredPartialDataNoneQueryRef] = useBackgroundQuery(query, {
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      const { data: inferredPartialDataNone } = useReadQuery(
+        inferredPartialDataNoneQueryRef
+      );
+
+      expectTypeOf(inferredPartialDataNone).toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(
+        inferredPartialDataNone
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const [explicitPartialDataNoneQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      const { data: explicitPartialDataNone } = useReadQuery(
+        explicitPartialDataNoneQueryRef
+      );
+
+      expectTypeOf(explicitPartialDataNone).toEqualTypeOf<
+        DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(
+        explicitPartialDataNone
+      ).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns correct TData type when combined options that do not affect TData', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, {
+        fetchPolicy: 'no-cache',
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+      const { data: inferred } = useReadQuery(inferredQueryRef);
+
+      expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        fetchPolicy: 'no-cache',
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      const { data: explicit } = useReadQuery(explicitQueryRef);
+
+      expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
   });
 });

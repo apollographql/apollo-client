@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.8.0-beta.2
+
+### Patch Changes
+
+- [#10957](https://github.com/apollographql/apollo-client/pull/10957) [`445164d21`](https://github.com/apollographql/apollo-client/commit/445164d2177efe46637a514afa6a88502d3de10f) Thanks [@phryneas](https://github.com/phryneas)! - Use `React.version` as key for shared Contexts.
+
 ## 3.8.0-beta.1
 
 ### Patch Changes

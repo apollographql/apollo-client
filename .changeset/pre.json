@@ -5,16 +5,15 @@
     "@apollo/client": "3.7.2"
   },
   "changesets": [
-    "angry-weeks-marry",
     "curvy-dragons-talk",
     "curvy-monkeys-kneel",
     "cyan-insects-love",
+    "cyan-sloths-grin",
     "dry-crabs-thank",
     "dull-snakes-turn",
     "early-pens-retire",
     "famous-ladybugs-reflect",
     "fast-tomatoes-peel",
-    "forty-zebras-smash",
     "funny-peas-change",
     "grumpy-tips-know",
     "heavy-ties-sneeze",

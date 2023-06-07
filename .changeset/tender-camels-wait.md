@@ -2,4 +2,4 @@
 '@apollo/client': patch
 ---
 
-Use React.version as key
+Use React.version as key.

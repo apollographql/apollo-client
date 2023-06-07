@@ -38,6 +38,7 @@ import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
+  DeepPartialObject,
 } from '../../../utilities';
 import { useBackgroundQuery, useReadQuery } from '../useBackgroundQuery';
 import { ApolloProvider } from '../../context';
@@ -2205,7 +2206,168 @@ describe('useBackgroundQuery', () => {
         expect(todo1).toHaveTextContent('Clean room');
       });
     });
+
+    // refetchWritePolicy
+    // it('honors refetchWritePolicy set to "merge"', async () => {
+
+    // });
+
+    // it('defaults refetchWritePolicy to "overwrite"', async () => {
+
+    // });
+
+    // returnPartialData
+    it.only('does not suspend when partial data is in the cache and using a "cache-first" fetch policy with returnPartialData', async () => {
+      // const user = userEvent.setup();
+
+      interface Data {
+        character: {
+          id: string;
+          name: string;
+        };
+      }
+
+      const fullQuery: TypedDocumentNode<Data> = gql`
+        query {
+          character {
+            id
+            name
+          }
+        }
+      `;
+
+      const partialQuery = gql`
+        query {
+          character {
+            id
+          }
+        }
+      `;
+      const mocks = [
+        {
+          request: { query: fullQuery },
+          result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        query: partialQuery,
+        data: { character: { id: '1' } },
+      });
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache,
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      function App() {
+        return (
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Parent />
+            </Suspense>
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [queryRef] = useBackgroundQuery(fullQuery, {
+          fetchPolicy: 'cache-first',
+          returnPartialData: true,
+        });
+        return <Todo queryRef={queryRef} />;
+      }
+
+      function Todo({
+        queryRef,
+      }: {
+        queryRef: QueryReference<DeepPartialObject<Data>>;
+      }) {
+        const { data, networkStatus } = useReadQuery(queryRef);
+
+        return (
+          <div data-testid="todos">
+            {networkStatus} - {data.character?.id} - {data.character?.name}
+          </div>
+        );
+      }
+
+      render(<App />);
+
+      // expect(screen.getByText('Loading')).toBeInTheDocument();
+
+      // expect(await screen.findByTestId('todos')).toBeInTheDocument();
+
+      // const todos = screen.getByTestId('todos');
+      // const todo1 = screen.getByTestId('todo:1');
+      // const button = screen.getByText('Load more');
+
+      // expect(todo1).toBeInTheDocument();
+
+      // await act(() => user.click(button));
+
+      // // startTransition will avoid rendering the suspense fallback for already
+      // // revealed content if the state update inside the transition causes the
+      // // component to suspend.
+      // //
+      // // Here we should not see the suspense fallback while the component suspends
+      // // until the todo is finished loading. Seeing the suspense fallback is an
+      // // indication that we are suspending the component too late in the process.
+      // expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+
+      // // We can ensure this works with isPending from useTransition in the process
+      // expect(todos).toHaveAttribute('aria-busy', 'true');
+
+      // // Ensure we are showing the stale UI until the new todo has loaded
+      // expect(todo1).toHaveTextContent('Clean room');
+
+      // // Eventually we should see the updated todos content once its done
+      // // suspending.
+      // await waitFor(() => {
+      //   expect(screen.getByTestId('todo:2')).toHaveTextContent(
+      //     'Take out trash (completed)'
+      //   );
+      //   expect(todo1).toHaveTextContent('Clean room');
+      // });
+    });
+
+    // it('suspends and does not use partial data when changing variables and using a "cache-first" fetch policy with returnPartialData', async () => {
+
+    // });
+
+    // it('suspends when partial data is in the cache and using a "network-only" fetch policy with returnPartialData', async () => {
+
+    // });
+
+    // it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
+
+    // });
+
+    // it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
+
+    // });
+
+    // it('does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+
+    // });
+
+    // it('suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+
+    // });
+
+    // it('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
+
+    // });
   });
+
   describe.skip('type tests', () => {
     it('returns unknown when TData cannot be inferred', () => {
       const query = gql`

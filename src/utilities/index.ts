@@ -12,7 +12,7 @@ export {
   getInclusionDirectives,
 } from './graphql/directives';
 
-export { 
+export {
   DocumentTransform,
   DocumentTransformCacheKey
 } from './graphql/DocumentTransform';
@@ -92,7 +92,7 @@ export {
   ObservableSubscription
 } from './observables/Observable';
 
-export { 
+export {
   isStatefulPromise,
   createFulfilledPromise,
   createRejectedPromise,
@@ -122,4 +122,4 @@ export { stripTypename } from './common/stripTypename';
 
 export * from './types/IsStrictlyAny';
 export { DeepOmit } from './types/DeepOmit';
-export { DeepPartial } from './types/DeepPartial';
+export { DeepPartial, DeepPartialObject } from './types/DeepPartial';

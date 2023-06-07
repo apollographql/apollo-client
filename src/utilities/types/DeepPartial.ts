@@ -53,6 +53,6 @@ type DeepPartialReadonlyMap<TKey, TValue> = {} & ReadonlyMap<
 type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
 
-type DeepPartialObject<T extends object> = {
+export type DeepPartialObject<T extends object> = {
   [K in keyof T]?: DeepPartial<T[K]>;
 };

@@ -3195,7 +3195,7 @@ describe('@connection', () => {
     const aResults = watch(aQuery);
     const bResults = watch(bQuery);
 
-    expect(cache["watches"].size).toBe(2);
+    expect(cache["watchesByCacheKey"].size).toBe(2);
 
     expect(aResults).toEqual([]);
     expect(bResults).toEqual([]);
@@ -3213,10 +3213,10 @@ describe('@connection', () => {
     expect(aResults).toEqual([]);
     expect(bResults).toEqual([]);
 
-    expect(cache["watches"].size).toBe(0);
+    expect(cache["watchesByCacheKey"].size).toBe(0);
     const abResults = watch(abQuery);
     expect(abResults).toEqual([]);
-    expect(cache["watches"].size).toBe(1);
+    expect(cache["watchesByCacheKey"].size).toBe(1);
 
     await wait();
 

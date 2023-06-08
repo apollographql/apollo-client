@@ -5700,9 +5700,89 @@ describe('QueryManager', () => {
         })
         .then(() => {
           // @ts-ignore
-          expect(cache.watches.size).toBe(0);
+          expect(cache.watchesByCacheKey.size).toBe(0);
         })
         .then(resolve, reject);
+    });
+
+    itAsync('deduplicates watches listening to the same query and variables if '
+    + 'and only if `resultCaching` is enabled',
+      (resolve, reject) => {
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      async function testWatchDedup(resultCaching: boolean) {
+        const responses = ['a', 'b', 'c'].map(id => ({
+          request: { query, variables: { id } },
+          result: {
+            data: {
+              author: { firstName: id.toUpperCase(), lastName: 'Author' }
+            }
+          }
+        }))
+        const link = mockSingleLink(...responses).setOnError(reject);
+        const cache = new InMemoryCache({ resultCaching });
+
+        const queryManager = new QueryManager<NormalizedCacheObject>({
+          link,
+          cache,
+          queryDeduplication: true
+        });
+
+        // @ts-ignore
+        const maybeBroadcastWatchProps = {...cache.maybeBroadcastWatch};
+        // @ts-ignore
+        const maybeBroadcastWatch = jest.spyOn(cache, 'maybeBroadcastWatch');
+        // reassign all optimistic wrapper properties to the spy
+        Object.assign(maybeBroadcastWatch, maybeBroadcastWatchProps);
+
+        const numQueriesPerResponse = 4;
+        const numObservablesPerResponse = 5;
+        const onNext = jest.fn();
+
+        const observables = Array.from({ length: numObservablesPerResponse })
+        .flatMap(
+          () => responses.map(response => queryManager.watchQuery(
+            {...response.request}
+          ))
+        );
+        for (const observable of observables) {
+          observable.subscribe(() => void onNext())
+        }
+
+        return Promise.all(
+            Array.from({ length: numQueriesPerResponse }).flatMap(() => {
+              return responses.map(
+                response => queryManager.query({...response.request})
+              )
+            })
+          )
+          .then(() => {
+            return new Promise(r => {
+              setTimeout(r, numQueriesPerResponse);
+            });
+          })
+          .then(() => {
+            const numObservables = numObservablesPerResponse * responses.length;
+            const numQueries = numQueriesPerResponse * responses.length;
+            const numBroadcastWatches = Math.pow(
+              numObservables + numQueries, resultCaching ? 1 : 2
+            );
+            expect(onNext).toBeCalledTimes(numObservables);
+            expect(maybeBroadcastWatch).toBeCalledTimes(
+              numBroadcastWatches * responses.length
+            );
+          })
+          .then(resolve, reject);
+      }
+
+      return testWatchDedup(true).then(() => testWatchDedup(false));
     });
   });
 

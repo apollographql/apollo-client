@@ -6,6 +6,7 @@ export namespace Cache {
   export type WatchCallback<TData = any> = (
     diff: Cache.DiffResult<TData>,
     lastDiff?: Cache.DiffResult<TData>,
+    watcher?: object,
   ) => void;
 
   export interface ReadOptions<TVariables = any, TData = any>

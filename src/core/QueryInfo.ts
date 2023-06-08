@@ -307,6 +307,14 @@ export class QueryInfo {
 
   private lastWatch?: Cache.WatchOptions;
 
+  // consistent callback reference that can take advantage of Trie caching
+  // when generating cache keys
+  private static onWatch: Cache.WatchCallback = (diff, _lastDiff, watcher) => {
+    if (watcher instanceof QueryInfo) {
+      watcher.setDiff(diff);
+    }
+  };
+
   private updateWatch(variables = this.variables) {
     const oq = this.observableQuery;
     if (oq && oq.options.fetchPolicy === "no-cache") {
@@ -319,7 +327,7 @@ export class QueryInfo {
       // we can reuse getDiffOptions here, for consistency.
       ...this.getDiffOptions(variables),
       watcher: this,
-      callback: diff => this.setDiff(diff),
+      callback: QueryInfo.onWatch,
     };
 
     if (!this.lastWatch ||

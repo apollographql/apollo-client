@@ -37,7 +37,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private optimisticData: EntityStore;
 
   protected config: InMemoryCacheConfig;
-  private watches = new Set<Cache.WatchOptions>();
+
+  private watchesByCacheKey = new Map<object, Set<Cache.WatchOptions>>();
+
   private addTypename: boolean;
 
   private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
@@ -45,9 +47,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private storeWriter: StoreWriter;
 
   private maybeBroadcastWatch: OptimisticWrapperFunction<
-    [Cache.WatchOptions, BroadcastOptions?],
+    [Cache.WatchOptions | Set<Cache.WatchOptions>, BroadcastOptions?],
     any,
-    [Cache.WatchOptions]>;
+    [Cache.WatchOptions | Set<Cache.WatchOptions>]>;
 
   // Dynamically imported code can augment existing typePolicies or
   // possibleTypes by calling cache.policies.addTypePolicies or
@@ -90,6 +92,26 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.resetResultCache();
   }
 
+  private makeCacheKey(watch: Cache.WatchOptions) {
+    // Return a cache key (thus enabling result caching) only if we're
+    // currently using a data store that can track cache dependencies.
+    const store = watch.optimistic ? this.optimisticData : this.data;
+    if (supportsResultCaching(store)) {
+      const { optimistic, id, variables } = watch;
+      return store.makeCacheKey(
+        watch.query,
+        // Different watches can have the same query, optimistic
+        // status, rootId, and variables, but if their callbacks are
+        // different, the (identical) result needs to be delivered to
+        // each distinct callback. The easiest way to achieve that
+        // separation is to include c.callback in the cache key for
+        // maybeBroadcastWatch calls. See issue #5733.
+        watch.callback,
+        canonicalStringify({ optimistic, id, variables }),
+      );
+    }
+  }
+
   private resetResultCache(resetResultIdentities?: boolean) {
     const previousReader = this.storeReader;
     const { fragments } = this.config;
@@ -113,29 +135,25 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     );
 
     this.maybeBroadcastWatch = wrap((
-      c: Cache.WatchOptions,
+      c: Set<Cache.WatchOptions> | Cache.WatchOptions,
       options?: BroadcastOptions,
     ) => {
-      return this.broadcastWatch(c, options);
+      if (c instanceof Set) {
+        return c.forEach(watch => {
+          this.broadcastWatch(watch, options);
+        });
+      } else {
+        return this.broadcastWatch(c, options);
+      }
     }, {
       max: this.config.resultCacheMaxSize,
-      makeCacheKey: (c: Cache.WatchOptions) => {
-        // Return a cache key (thus enabling result caching) only if we're
-        // currently using a data store that can track cache dependencies.
-        const store = c.optimistic ? this.optimisticData : this.data;
-        if (supportsResultCaching(store)) {
-          const { optimistic, id, variables } = c;
-          return store.makeCacheKey(
-            c.query,
-            // Different watches can have the same query, optimistic
-            // status, rootId, and variables, but if their callbacks are
-            // different, the (identical) result needs to be delivered to
-            // each distinct callback. The easiest way to achieve that
-            // separation is to include c.callback in the cache key for
-            // maybeBroadcastWatch calls. See issue #5733.
-            c.callback,
-            canonicalStringify({ optimistic, id, variables }),
-          );
+      makeCacheKey: (c: Set<Cache.WatchOptions> | Cache.WatchOptions) => {
+        if (c instanceof Set) {
+          if (c.size > 0) {
+            return this.makeCacheKey(Array.from(c)[0])
+          }
+        } else {
+          return this.makeCacheKey(c);
         }
       }
     });
@@ -244,34 +262,52 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   public watch<TData = any, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>,
   ): () => void {
-    if (!this.watches.size) {
+    if (!this.watchesByCacheKey.size) {
       // In case we previously called forgetCache(this) because
-      // this.watches became empty (see below), reattach this cache to any
-      // reactive variables on which it previously depended. It might seem
-      // paradoxical that we're able to recall something we supposedly
+      // this.watchesByCacheKey became empty (see below), reattach this cache
+      // to any reactive variables on which it previously depended. It might
+      // seem paradoxical that we're able to recall something we supposedly
       // forgot, but the point of calling forgetCache(this) is to silence
-      // useless broadcasts while this.watches is empty, and to allow the
-      // cache to be garbage collected. If, however, we manage to call
+      // useless broadcasts while this.watchesByCacheKey is empty, and to allow
+      // the cache to be garbage collected. If, however, we manage to call
       // recallCache(this) here, this cache object must not have been
       // garbage collected yet, and should resume receiving updates from
       // reactive variables, now that it has a watcher to notify.
       recallCache(this);
     }
-    this.watches.add(watch);
+    const cacheKey = this.makeCacheKey(watch) ?? watch;
+    const watches = this.watchesByCacheKey.get(cacheKey);
+
+    if (watches) {
+      watches.add(watch);
+      // this set of watches changed, so invalidate
+      this.maybeBroadcastWatch.forget(watches);
+    } else {
+      this.watchesByCacheKey.set(cacheKey, new Set([watch]));
+    }
+
     if (watch.immediate) {
       this.maybeBroadcastWatch(watch);
     }
+
     return () => {
-      // Once we remove the last watch from this.watches, cache.broadcastWatches
-      // no longer does anything, so we preemptively tell the reactive variable
-      // system to exclude this cache from future broadcasts.
-      if (this.watches.delete(watch) && !this.watches.size) {
-        forgetCache(this);
+      const watchesByCacheKey = this.watchesByCacheKey;
+      const watches = watchesByCacheKey.get(cacheKey);
+      watches?.delete(watch);
+
+      if (watches && watches.size === 0) {
+        // Once we remove the last watch from this.watchesByCacheKey,
+        // cache.broadcastWatches no longer does anything, so we preemptively
+        // tell the reactive variable system to exclude this cache from
+        // future broadcasts.
+        if (watchesByCacheKey.delete(cacheKey) && !watchesByCacheKey.size) {
+          forgetCache(this);
+        }
+        // Remove this watch from the LRU cache managed by the
+        // maybeBroadcastWatch OptimisticWrapperFunction, to prevent memory
+        // leaks involving the closure of watch.callback.
+        this.maybeBroadcastWatch.forget(watches);
       }
-      // Remove this watch from the LRU cache managed by the
-      // maybeBroadcastWatch OptimisticWrapperFunction, to prevent memory
-      // leaks involving the closure of watch.callback.
-      this.maybeBroadcastWatch.forget(watch);
     };
   }
 
@@ -365,8 +401,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     if (options && options.discardWatches) {
       // Similar to what happens in the unsubscribe function returned by
       // cache.watch, applied to all current watches.
-      this.watches.forEach(watch => this.maybeBroadcastWatch.forget(watch));
-      this.watches.clear();
+      this.watchesByCacheKey.forEach(watchSet => {
+        this.maybeBroadcastWatch.forget(watchSet);
+      });
+      this.watchesByCacheKey.clear();
       forgetCache(this);
     } else {
       // Calling this.init() above unblocks all maybeBroadcastWatch caching, so
@@ -527,7 +565,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   protected broadcastWatches(options?: BroadcastOptions) {
     if (!this.txCount) {
-      this.watches.forEach(c => this.maybeBroadcastWatch(c, options));
+      this.watchesByCacheKey.forEach(c => this.maybeBroadcastWatch(c, options));
     }
   }
 
@@ -566,7 +604,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
 
     if (!lastDiff || !equal(lastDiff.result, diff.result)) {
-      c.callback(c.lastDiff = diff, lastDiff);
+      c.callback(c.lastDiff = diff, lastDiff, c.watcher);
     }
   }
 }

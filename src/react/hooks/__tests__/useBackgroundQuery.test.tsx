@@ -1759,9 +1759,196 @@ describe('useBackgroundQuery', () => {
     expect(fetchCount).toBe(1);
   });
 
-  it.todo('`skip` result is referentially stable');
+  it('`skip` result is referentially stable', async () => {
+    interface Data {
+      greeting: string;
+    }
 
-  it.todo('`skip` option works with `startTransition`');
+    interface CurrentResult {
+      current: Data | undefined;
+    }
+
+    const user = userEvent.setup();
+
+    const result: CurrentResult = {
+      current: undefined,
+    };
+
+    const query = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Greeting queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      result.current = data;
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    const { rerender } = render(<App />);
+
+    const skipResult = result.current;
+
+    rerender(<App />);
+
+    expect(result.current).toBe(skipResult);
+
+    // Toggle skip to `false`
+    await act(() => user.click(screen.getByText('Toggle skip')));
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+
+    const fetchedResult = result.current;
+
+    rerender(<App />);
+
+    expect(result.current).toBe(fetchedResult);
+  });
+
+  it('`skip` option works with `startTransition`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [isPending, startTransition] = React.useTransition();
+      const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button
+            disabled={isPending}
+            onClick={() =>
+              startTransition(() => {
+                setSkip((skip) => !skip);
+              })
+            }
+          >
+            Toggle skip
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Greeting queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    const button = screen.getByText('Toggle skip');
+
+    // Toggle skip to `false`
+    await act(() => user.click(button));
+
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    expect(button).toBeDisabled();
+    expect(screen.getByTestId('greeting')).toHaveTextContent('Unknown');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+  });
 
   describe('refetch', () => {
     it('re-suspends when calling `refetch`', async () => {

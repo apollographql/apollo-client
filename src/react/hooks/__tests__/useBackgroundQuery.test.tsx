@@ -1577,9 +1577,83 @@ describe('useBackgroundQuery', () => {
     });
   });
 
-  it.todo(
-    'renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`'
-  );
+  it('renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(false);
+      const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Greeting queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+
+    await act(() => user.click(screen.getByText('Toggle skip')));
+
+    expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+  });
 
   it.todo('does not make network requests when `skip` is `true`');
 

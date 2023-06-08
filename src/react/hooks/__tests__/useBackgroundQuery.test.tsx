@@ -1433,6 +1433,160 @@ describe('useBackgroundQuery', () => {
     expect(await screen.findByText('2 - Black Widow')).toBeInTheDocument();
   });
 
+  it('does not suspend when `skip` is true', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const query = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [queryRef] = useBackgroundQuery(query, { skip: true });
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <Greeting queryRef={queryRef} />
+        </Suspense>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.getByTestId('greeting')).toHaveTextContent('Unknown');
+  });
+
+  it('suspends when `skip` becomes `false` after it was `true`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button onClick={() => setSkip(false)}>Run query</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Greeting queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    const greeting = screen.getByTestId('greeting');
+
+    expect(greeting).toHaveTextContent('Unknown');
+
+    await act(() => user.click(screen.getByText('Run query')));
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(greeting).toHaveTextContent('Hello');
+    });
+  });
+
+  it.todo(
+    'renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`'
+  );
+
+  it.todo('does not make network requests when `skip` is `true`');
+
+  it.todo('`skip` result is referentially stable');
+
+  it.todo('`skip` option works with `startTransition`');
+
   describe('refetch', () => {
     it('re-suspends when calling `refetch`', async () => {
       const { renders } = renderVariablesIntegrationTest({
@@ -2192,6 +2346,7 @@ describe('useBackgroundQuery', () => {
       });
     });
   });
+
   describe.skip('type tests', () => {
     it('disallows returnPartialData in BackgroundQueryHookOptions', () => {
       const { query } = renderIntegrationTest();

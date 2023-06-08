@@ -4,6 +4,7 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from '../../core';
+import { NetworkStatus } from '../../core';
 import { useApolloClient } from './useApolloClient';
 import type { QueryReference } from '../cache/QueryReference';
 import type {
@@ -45,7 +46,7 @@ export function useBackgroundQuery<
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { variables } = watchQueryOptions;
+  const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
   const cacheKey = (
@@ -56,9 +57,16 @@ export function useBackgroundQuery<
     client.watchQuery(watchQueryOptions)
   );
 
+  const { fetchPolicy: currentFetchPolicy } = queryRef.watchQueryOptions;
+
   const [promiseCache, setPromiseCache] = useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
+
+  if (currentFetchPolicy === 'standby' && fetchPolicy !== currentFetchPolicy) {
+    const promise = queryRef.reobserve({ fetchPolicy });
+    promiseCache.set(queryRef.key, promise);
+  }
 
   useTrackedQueryRefs(queryRef);
 
@@ -111,6 +119,17 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
       'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
   );
 
+  const skipResult = useMemo(() => {
+    const error = toApolloError(queryRef.result);
+
+    return {
+      loading: false,
+      data: queryRef.result.data,
+      networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
+      error,
+    };
+  }, [queryRef.result]);
+
   let promise = queryRef.promiseCache.get(queryRef.key);
 
   if (!promise) {
@@ -125,7 +144,10 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
     });
   }, [queryRef]);
 
-  const result = __use(promise);
+  const result =
+    queryRef.watchQueryOptions.fetchPolicy === 'standby'
+      ? skipResult
+      : __use(promise);
 
   return useMemo(() => {
     return {

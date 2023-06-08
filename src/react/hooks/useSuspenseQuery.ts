@@ -1,9 +1,7 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import { equal } from '@wry/equality';
-import { useRef, useCallback, useMemo } from 'react';
-import {
+import { useRef, useCallback, useMemo, useEffect, useState } from 'react';
+import type {
   ApolloClient,
-  ApolloError,
   ApolloQueryResult,
   DocumentNode,
   OperationVariables,
@@ -13,22 +11,23 @@ import {
   NetworkStatus,
   FetchMoreQueryOptions,
 } from '../../core';
+import { ApolloError } from '../../core';
+import type { DeepPartial } from '../../utilities';
 import { isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
-import {
-  SuspenseQueryHookFetchPolicy,
+import type {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
+  NoInfer,
 } from '../types/types';
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
-import { useSyncExternalStore } from './useSyncExternalStore';
-import { QuerySubscription } from '../cache/QuerySubscription';
+import type { QueryReference } from '../cache/QueryReference';
 import { canonicalStringify } from '../../cache';
 
 export interface UseSuspenseQueryResult<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 > {
   client: ApolloClient<any>;
@@ -40,7 +39,7 @@ export interface UseSuspenseQueryResult<
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
-type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
+export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
     updateQuery?: (
       previousQueryResult: TData,
@@ -52,100 +51,153 @@ type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   }
 ) => Promise<ApolloQueryResult<TData>>;
 
-type RefetchFunction<
+export type RefetchFunction<
   TData,
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['refetch'];
 
-type SubscribeToMoreFunction<
+export type SubscribeToMoreFunction<
   TData,
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
-export function useSuspenseQuery_experimental<
-  TData = any,
+export type Version = 'main' | 'network';
+
+export function useSuspenseQuery<
+  TData,
+  TVariables extends OperationVariables,
+  TOptions extends Omit<SuspenseQueryHookOptions<TData>, 'variables'>
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
+    TOptions
+): UseSuspenseQueryResult<
+  TOptions['errorPolicy'] extends 'ignore' | 'all'
+    ? TOptions['returnPartialData'] extends true
+      ? DeepPartial<TData> | undefined
+      : TData | undefined
+    : TOptions['returnPartialData'] extends true
+    ? DeepPartial<TData>
+    : TData,
+  TVariables
+>;
+
+export function useSuspenseQuery<
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: true;
+    errorPolicy: 'ignore' | 'all';
+  }
+): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+    errorPolicy: 'ignore' | 'all';
+  }
+): UseSuspenseQueryResult<TData | undefined, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: true;
+  }
+): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+): UseSuspenseQueryResult<TData, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>
+  > = Object.create(null)
 ): UseSuspenseQueryResult<TData, TVariables> {
-  const didPreviouslySuspend = useRef(false);
   const client = useApolloClient(options.client);
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const watchQueryOptions = useWatchQueryOptions({ query, options });
-  const { returnPartialData = false, variables } = watchQueryOptions;
-  const { suspensePolicy = 'always', queryKey = [] } = options;
-  const shouldSuspend =
-    suspensePolicy === 'always' || !didPreviouslySuspend.current;
+  const { variables } = watchQueryOptions;
+  const { queryKey = [] } = options;
 
   const cacheKey = (
     [client, query, canonicalStringify(variables)] as any[]
   ).concat(queryKey);
 
-  const subscription = suspenseCache.getSubscription(cacheKey, () =>
+  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)
   );
 
-  const dispose = useTrackedSubscriptions(subscription);
-
-  useStrictModeSafeCleanupEffect(dispose);
-
-  let result = useSyncExternalStore(
-    subscription.listen,
-    () => subscription.result,
-    () => subscription.result
+  const [promiseCache, setPromiseCache] = useState(
+    () => new Map([[queryRef.key, queryRef.promise]])
   );
 
-  const previousVariables = useRef(variables);
-  const previousData = useRef(result.data);
+  let promise = promiseCache.get(queryRef.key);
 
-  if (!equal(variables, previousVariables.current)) {
-    if (result.networkStatus !== NetworkStatus.ready) {
-      // Since we now create separate ObservableQuery instances per unique
-      // query + variables combination, we need to manually insert the previous
-      // data into the returned result to mimic the behavior when changing
-      // variables from a single ObservableQuery, where the previous result was
-      // held onto until the request was finished.
-      result = {
-        ...result,
-        data: previousData.current,
-        networkStatus: NetworkStatus.setVariables,
-      };
-    }
-
-    previousVariables.current = variables;
-    previousData.current = result.data;
+  if (!promise) {
+    promise = queryRef.promise;
+    promiseCache.set(queryRef.key, promise);
   }
 
-  if (
-    result.networkStatus === NetworkStatus.error ||
-    (shouldSuspend &&
-      !shouldUseCachedResult(subscription.result, {
-        returnPartialData,
-        fetchPolicy: options.fetchPolicy,
-      }))
-  ) {
-    // Intentionally ignore the result returned from __use since we want to
-    // observe results from the observable instead of the the promise.
-    __use(subscription.promise);
-  }
+  useTrackedQueryRefs(queryRef);
 
-  didPreviouslySuspend.current = true;
+  useEffect(() => {
+    return queryRef.listen((promise) => {
+      setPromiseCache((promiseCache) =>
+        new Map(promiseCache).set(queryRef.key, promise)
+      );
+    });
+  }, [queryRef]);
+
+  const result = __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
-    (options) => subscription.fetchMore(options),
-    [subscription]
+    (options) => {
+      const promise = queryRef.fetchMore(options);
+
+      setPromiseCache((previousPromiseCache) =>
+        new Map(previousPromiseCache).set(queryRef.key, promise)
+      );
+
+      return promise;
+    },
+    [queryRef]
   );
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
-    (variables) => subscription.refetch(variables),
-    [subscription]
+    (variables) => {
+      const promise = queryRef.refetch(variables);
+
+      setPromiseCache((previousPromiseCache) =>
+        new Map(previousPromiseCache).set(queryRef.key, promise)
+      );
+
+      return promise;
+    },
+    [queryRef]
   );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
     useCallback(
-      (options) => subscription.observable.subscribeToMore(options),
-      [subscription]
+      (options) => queryRef.observable.subscribeToMore(options),
+      [queryRef]
     );
 
   return useMemo(() => {
@@ -181,7 +233,8 @@ function validateFetchPolicy(
 
   invariant(
     supportedFetchPolicies.includes(fetchPolicy),
-    `The fetch policy \`${fetchPolicy}\` is not supported with suspense.`
+    `The fetch policy \`%s\` is not supported with suspense.`,
+    fetchPolicy
   );
 }
 
@@ -196,20 +249,20 @@ function validatePartialDataReturn(
   }
 }
 
-function toApolloError(result: ApolloQueryResult<any>) {
+export function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
     : result.error;
 }
 
-function useTrackedSubscriptions(subscription: QuerySubscription) {
-  const trackedSubscriptions = useRef(new Set<QuerySubscription>());
+export function useTrackedQueryRefs(queryRef: QueryReference) {
+  const trackedQueryRefs = useRef(new Set<QueryReference>());
 
-  trackedSubscriptions.current.add(subscription);
+  trackedQueryRefs.current.add(queryRef);
 
-  return function dispose() {
-    trackedSubscriptions.current.forEach((sub) => sub.dispose());
-  };
+  useStrictModeSafeCleanupEffect(() => {
+    trackedQueryRefs.current.forEach((sub) => sub.dispose());
+  });
 }
 
 interface UseWatchQueryOptionsHookOptions<
@@ -220,7 +273,10 @@ interface UseWatchQueryOptionsHookOptions<
   options: SuspenseQueryHookOptions<TData, TVariables>;
 }
 
-function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
+export function useWatchQueryOptions<
+  TData,
+  TVariables extends OperationVariables
+>({
   query,
   options,
 }: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
@@ -231,7 +287,7 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
     () => ({
       ...options,
       query,
-      notifyOnNetworkStatusChange: true,
+      notifyOnNetworkStatusChange: false,
       nextFetchPolicy: void 0,
     }),
     [options, query]
@@ -242,35 +298,4 @@ function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
   }
 
   return watchQueryOptions;
-}
-
-function shouldUseCachedResult(
-  result: ApolloQueryResult<unknown>,
-  {
-    returnPartialData,
-    fetchPolicy,
-  }: {
-    returnPartialData: boolean | undefined;
-    fetchPolicy: SuspenseQueryHookFetchPolicy | undefined;
-  }
-) {
-  if (
-    result.networkStatus === NetworkStatus.refetch ||
-    result.networkStatus === NetworkStatus.fetchMore ||
-    result.networkStatus === NetworkStatus.error
-  ) {
-    return false;
-  }
-
-  switch (fetchPolicy) {
-    // The default fetch policy is cache-first, so we can treat undefined as
-    // such.
-    case void 0:
-    case 'cache-first':
-    case 'cache-and-network': {
-      return Boolean(result.data && (!result.partial || returnPartialData));
-    }
-    default:
-      return false;
-  }
 }

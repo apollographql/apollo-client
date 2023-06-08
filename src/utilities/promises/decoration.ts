@@ -17,6 +17,24 @@ export type PromiseWithState<TValue> =
   | FulfilledPromise<TValue>
   | RejectedPromise<TValue>;
 
+export function createFulfilledPromise<TValue>(value: TValue) {
+  const promise = Promise.resolve(value) as FulfilledPromise<TValue>;
+
+  promise.status = 'fulfilled';
+  promise.value = value;
+
+  return promise;
+}
+
+export function createRejectedPromise<TValue = unknown>(reason: unknown) {
+  const promise = Promise.reject(reason) as RejectedPromise<TValue>;
+
+  promise.status = 'rejected';
+  promise.reason = reason;
+
+  return promise;
+}
+
 export function isStatefulPromise<TValue>(
   promise: Promise<TValue>
 ): promise is PromiseWithState<TValue> {

@@ -9,7 +9,7 @@ Apollo Client supports multiple strategies for interacting with cached data:
 | Strategy | API | Description |
 |----------|-----|-------------|
 | [Using GraphQL queries](#using-graphql-queries) | `readQuery` / `writeQuery` / `updateQuery` | Use standard GraphQL queries for managing both remote and local data. |
-| [Using GraphQL fragments](#using-graphql-fragments) | `readFragment` / `writeFragment` / `updateFragment` / `useFragment_experimental` | Access the fields of any cached object without composing an entire query to reach that object.  |
+| [Using GraphQL fragments](#using-graphql-fragments) | `readFragment` / `writeFragment` / `updateFragment` / `useFragment` | Access the fields of any cached object without composing an entire query to reach that object.  |
 | [Directly modifying cached fields](#using-cachemodify) | `cache.modify` | Manipulate cached data without using GraphQL at all. |
 
  You can use whichever combination of strategies and methods are most helpful for your use case.
@@ -192,11 +192,11 @@ client.writeFragment({
 
 All subscribers to the Apollo Client cache (including all active queries) see this change and update your application's UI accordingly.
 
-### `useFragment_experimental`
+### `useFragment`
 
-> ⚠️ **The `useFragment_experimental` hook is currently at the [preview stage](https://www.apollographql.com/docs/resources/release-stages/#preview) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
+> ⚠️ **The `useFragment` hook is currently at the [preview stage](https://www.apollographql.com/docs/resources/release-stages/#preview) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
-You can read data for a given fragment directly from the cache using the `useFragment_experimental` hook. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. [See the API reference.](../api/react/hooks-experimental)
+You can read data for a given fragment directly from the cache using the `useFragment` hook. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. [See the API reference.](../api/react/hooks-experimental)
 
 ## Combining reads and writes
 

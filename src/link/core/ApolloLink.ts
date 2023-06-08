@@ -1,7 +1,8 @@
-import { InvariantError, invariant } from '../../utilities/globals';
+import { newInvariantError, invariant } from '../../utilities/globals';
 
-import { Observable, Observer } from '../../utilities';
-import {
+import type { Observer } from '../../utilities';
+import { Observable } from '../../utilities';
+import type {
   NextLink,
   Operation,
   RequestHandler,
@@ -24,14 +25,6 @@ function toLink(handler: RequestHandler | ApolloLink) {
 
 function isTerminating(link: ApolloLink): boolean {
   return link.request.length <= 1;
-}
-
-class LinkError extends Error {
-  public link?: ApolloLink;
-  constructor(message?: string, link?: ApolloLink) {
-    super(message);
-    this.link = link;
-  }
 }
 
 export class ApolloLink {
@@ -88,10 +81,8 @@ export class ApolloLink {
     const firstLink = toLink(first);
     if (isTerminating(firstLink)) {
       invariant.warn(
-        new LinkError(
-          `You are calling concat on a terminating link, which will have no effect`,
+          `You are calling concat on a terminating link, which will have no effect %o`,
           firstLink,
-        ),
       );
       return firstLink;
     }
@@ -138,7 +129,7 @@ export class ApolloLink {
     operation: Operation,
     forward?: NextLink,
   ): Observable<FetchResult> | null {
-    throw new InvariantError('request is not implemented');
+    throw newInvariantError('request is not implemented');
   }
 
   protected onError(

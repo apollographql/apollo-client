@@ -1,6 +1,6 @@
-import { InvariantError } from '../globals';
+import { newInvariantError } from '../globals';
 
-import {
+import type {
   DirectiveNode,
   FieldNode,
   IntValueNode,
@@ -18,10 +18,12 @@ import {
   NameNode,
   SelectionSetNode,
   DocumentNode,
+  FragmentSpreadNode,
 } from 'graphql';
 
 import { isNonNullObject } from '../common/objects';
-import { FragmentMap, getFragmentFromSelection } from './fragments';
+import type { FragmentMap} from './fragments';
+import { getFragmentFromSelection } from './fragments';
 
 export interface Reference {
   readonly __ref: string;
@@ -130,10 +132,11 @@ export function valueToObjectRepresentation(
   } else if (isNullValue(value)) {
     argObj[name.value] = null;
   } else {
-    throw new InvariantError(
-      `The inline argument "${name.value}" of kind "${(value as any).kind}"` +
+    throw newInvariantError(
+      `The inline argument "%s" of kind "%s"` +
         'is not supported. Use variables instead of inline arguments to ' +
         'overcome this limitation.',
+        name.value, (value as any).kind
     );
   }
 }
@@ -290,16 +293,23 @@ export function getTypenameFromResult(
   selectionSet: SelectionSetNode,
   fragmentMap?: FragmentMap,
 ): string | undefined {
-  if (typeof result.__typename === 'string') {
-    return result.__typename;
-  }
-
+  let fragments: undefined | Array<InlineFragmentNode | FragmentSpreadNode>;
   for (const selection of selectionSet.selections) {
     if (isField(selection)) {
       if (selection.name.value === '__typename') {
         return result[resultKeyNameFromField(selection)];
       }
+    } else if (fragments) {
+      fragments.push(selection);
     } else {
+      fragments = [selection];
+    }
+  }
+  if (typeof result.__typename === 'string') {
+    return result.__typename;
+  }
+  if (fragments) {
+    for (const selection of fragments) {
       const typename = getTypenameFromResult(
         result,
         getFragmentFromSelection(selection, fragmentMap)!.selectionSet,

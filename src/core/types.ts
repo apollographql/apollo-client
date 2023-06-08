@@ -1,15 +1,15 @@
-import { DocumentNode, GraphQLError } from 'graphql';
+import type { DocumentNode, GraphQLError } from 'graphql';
 
-import { ApolloCache } from '../cache';
-import { FetchResult } from '../link/core';
-import { ApolloError } from '../errors';
-import { QueryInfo } from './QueryInfo';
-import { NetworkStatus } from './networkStatus';
-import { Resolver } from './LocalState';
-import { ObservableQuery } from './ObservableQuery';
-import { QueryOptions } from './watchQueryOptions';
-import { Cache } from '../cache';
-import { IsStrictlyAny } from '../utilities';
+import type { ApolloCache } from '../cache';
+import type { FetchResult } from '../link/core';
+import type { ApolloError } from '../errors';
+import type { QueryInfo } from './QueryInfo';
+import type { NetworkStatus } from './networkStatus';
+import type { Resolver } from './LocalState';
+import type { ObservableQuery } from './ObservableQuery';
+import type { QueryOptions } from './watchQueryOptions';
+import type { Cache } from '../cache';
+import type { IsStrictlyAny } from '../utilities';
 
 export { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
@@ -197,12 +197,4 @@ export interface Resolvers {
   [key: string]: {
     [ field: string ]: Resolver;
   };
-}
-
-export interface TransformQueryOptions {
-  /**
-  * Determines whether fields using the `@client` directive should be removed
-  * from the query before it is sent through the link chain. Defaults to `true`.
-  */
-  removeClientFields?: boolean
 }

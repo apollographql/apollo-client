@@ -454,7 +454,7 @@ describe('HttpLink', () => {
     it('raises warning if called with concat', () => {
       const link = createHttpLink();
       const _warn = console.warn;
-      console.warn = (warning: any) => expect(warning['message']).toBeDefined();
+      console.warn = (...args: any) => expect(args).toEqual(["You are calling concat on a terminating link, which will have no effect %o", link]);
       expect(link.concat((operation, forward) => forward(operation))).toEqual(
         link,
       );
@@ -1111,262 +1111,6 @@ describe('HttpLink', () => {
         new Error('HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or set the `transformOptions.removeClientFields` option to `true`.')
       );
     });
-
-    it('strips __typename from object argument when sending a mutation', async () => {
-      fetchMock.mock('https://example.com/graphql', {
-        status: 200,
-        body: JSON.stringify({
-          data: {
-            __typename: 'Mutation',
-            updateTodo: { 
-              __typename: 'Todo',
-              id: 1,
-              name: 'Take out trash',
-              completed: true 
-            }
-          }
-        }),
-        headers: { 'content-type': 'application/json' }
-      });
-
-      const query = gql`
-        mutation UpdateTodo($todo: TodoInput!) {
-          updateTodo(todo: $todo) {
-            id
-            name
-            completed
-          }
-        }
-      `;
-
-      const link = createHttpLink({ uri: 'https://example.com/graphql' });
-
-      const todo = { 
-        __typename: 'Todo',
-        id: 1,
-        name: 'Take out trash',
-        completed: true,
-      }
-
-      await new Promise((resolve, reject) => {
-        execute(link, { query, variables: { todo } }).subscribe({
-          next: resolve,
-          error: reject
-        });
-      });
-
-      const [, options] = fetchMock.lastCall()!;
-      const { body } = options!
-
-      expect(JSON.parse(body!.toString())).toEqual({
-        operationName: 'UpdateTodo',
-        query: print(query),
-        variables: {
-          todo: {
-            id: 1,
-            name: 'Take out trash',
-            completed: true,
-          }
-        }
-      });
-    });
-
-    it('strips __typename from array argument when sending a mutation', async () => {
-      fetchMock.mock('https://example.com/graphql', {
-        status: 200,
-        body: JSON.stringify({
-          data: {
-            __typename: 'Mutation',
-            updateTodos: [
-              { 
-                __typename: 'Todo',
-                id: 1,
-                name: 'Take out trash',
-                completed: true 
-              },
-              { 
-                __typename: 'Todo',
-                id: 2,
-                name: 'Clean room',
-                completed: true 
-              },
-            ]
-          }
-        }),
-        headers: { 'content-type': 'application/json' }
-      });
-
-      const query = gql`
-        mutation UpdateTodos($todos: [TodoInput!]!) {
-          updateTodos(todos: $todos) {
-            id
-            name
-            completed
-          }
-        }
-      `;
-
-      const link = createHttpLink({ uri: 'https://example.com/graphql' });
-
-      const todos = [
-        { 
-          __typename: 'Todo',
-          id: 1,
-          name: 'Take out trash',
-          completed: true,
-        },
-        { 
-          __typename: 'Todo',
-          id: 2,
-          name: 'Clean room',
-          completed: true,
-        },
-      ];
-
-      await new Promise((resolve, reject) => {
-        execute(link, { query, variables: { todos } }).subscribe({
-          next: resolve,
-          error: reject
-        });
-      });
-
-      const [, options] = fetchMock.lastCall()!;
-      const { body } = options!
-
-      expect(JSON.parse(body!.toString())).toEqual({
-        operationName: 'UpdateTodos',
-        query: print(query),
-        variables: {
-          todos: [
-            {
-              id: 1,
-              name: 'Take out trash',
-              completed: true,
-            },
-            {
-              id: 2,
-              name: 'Clean room',
-              completed: true,
-            },
-          ]
-        }
-      });
-    });
-
-    it('strips __typename from mixed argument when sending a mutation', async () => {
-      fetchMock.mock('https://example.com/graphql', {
-        status: 200,
-        body: JSON.stringify({
-          data: {
-            __typename: 'Mutation',
-            updateProfile: {
-              __typename: 'Profile',
-              id: 1,
-            },
-          }
-        }),
-        headers: { 'content-type': 'application/json' }
-      });
-
-      const query = gql`
-        mutation UpdateProfile($profile: ProfileInput!) {
-          updateProfile(profile: $profile) {
-            id
-          }
-        }
-      `;
-
-      const link = createHttpLink({ uri: 'https://example.com/graphql' });
-
-      const profile = { 
-        __typename: 'Profile',
-        id: 1,
-        interests: [
-          { __typename: 'Interest', name: 'Hiking' },
-          { __typename: 'Interest', name: 'Nature' }
-        ],
-        avatar: {
-          __typename: 'Avatar',
-          url: 'https://example.com/avatar.jpg',
-        }
-      };
-
-      await new Promise((resolve, reject) => {
-        execute(link, { query, variables: { profile } }).subscribe({
-          next: resolve,
-          error: reject
-        });
-      });
-
-      const [, options] = fetchMock.lastCall()!;
-      const { body } = options!
-
-      expect(JSON.parse(body!.toString())).toEqual({
-        operationName: 'UpdateProfile',
-        query: print(query),
-        variables: {
-          profile: {
-            id: 1,
-            interests: [
-              { name: 'Hiking' },
-              { name: 'Nature' }
-            ],
-            avatar: {
-              url: 'https://example.com/avatar.jpg',
-            },
-          },
-        }
-      });
-    });
-  });
-
-  it('strips __typename when sending a query', async () => {
-    fetchMock.mock('https://example.com/graphql', {
-      status: 200,
-      body: JSON.stringify({
-        data: {
-          __typename: 'Query',
-          searchTodos: []
-        }
-      }),
-      headers: { 'content-type': 'application/json' }
-    });
-
-    const query = gql`
-      query SearchTodos($filter: TodoFilter!) {
-        searchTodos(filter: $filter) {
-          id
-          name
-        }
-      }
-    `;
-
-    const link = createHttpLink({ uri: 'https://example.com/graphql' });
-
-    const filter = { 
-      __typename: 'Filter',
-      completed: true,
-    };
-
-    await new Promise((resolve, reject) => {
-      execute(link, { query, variables: { filter } }).subscribe({
-        next: resolve,
-        error: reject
-      });
-    });
-
-    const [, options] = fetchMock.lastCall()!;
-    const { body } = options!
-
-    expect(JSON.parse(body!.toString())).toEqual({
-      operationName: 'SearchTodos',
-      query: print(query),
-      variables: {
-        filter: {
-          completed: true,
-        },
-      },
-    });
   });
 
   describe('Dev warnings', () => {
@@ -1407,6 +1151,11 @@ describe('HttpLink', () => {
     const text = jest.fn(() => {
       const responseBodyText = '{}';
       responseBody = JSON.parse(responseBodyText);
+      return Promise.resolve(responseBodyText);
+    });
+    const textWithStringError = jest.fn(() => {
+      const responseBodyText = 'Error! Foo bar';
+      responseBody = responseBodyText;
       return Promise.resolve(responseBodyText);
     });
     const textWithData = jest.fn(() => {
@@ -1477,6 +1226,20 @@ describe('HttpLink', () => {
         }),
       );
     });
+    itAsync('throws an error if response code is > 300 and handles string response body', (resolve, reject) => {
+      fetch.mockReturnValueOnce(Promise.resolve({ status: 302, text: textWithStringError }));
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+      execute(link, { query: sampleQuery }).subscribe(
+        result => {
+          reject('next should have been thrown from the network');
+        },
+        makeCallback(resolve, reject, (e: ServerError) => {
+          expect(e.message).toMatch(/Received status code 302/);
+          expect(e.statusCode).toBe(302);
+          expect(e.result).toEqual(responseBody);
+        }),
+      );
+    });
     itAsync('throws an error if response code is > 300 and returns data', (resolve, reject) => {
       fetch.mockReturnValueOnce(
         Promise.resolve({ status: 400, text: textWithData }),
@@ -1506,7 +1269,6 @@ describe('HttpLink', () => {
       );
 
       const link = createHttpLink({ uri: 'data', fetch: fetch as any });
-
       execute(link, { query: sampleQuery }).subscribe(
         result => {
           reject('should not have called result because we have no data');
@@ -1668,7 +1430,10 @@ describe('HttpLink', () => {
         'Content-Type: application/json; charset=utf-8',
         'Content-Length: 58',
         '',
-        '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"],"extensions":{"timestamp":1633038919}}]}',
+        // Intentionally using the boundary value `---` within the “name” to
+        // validate that boundary delimiters are not parsed within the response
+        // data itself, only read at the beginning of each chunk.
+        '{"hasNext":false, "incremental": [{"data":{"name":"stubby---"},"path":["stub"],"extensions":{"timestamp":1633038919}}]}',
         '-----',
       ].join("\r\n");
 
@@ -1726,7 +1491,7 @@ describe('HttpLink', () => {
                 expect(result).toEqual({
                   incremental: [{
                     data: {
-                      name: 'stubby',
+                      name: 'stubby---',
                     },
                     extensions: {
                       timestamp: 1633038919,
@@ -1852,7 +1617,7 @@ describe('HttpLink', () => {
                 expect(result).toEqual({
                   incremental: [{
                     data: {
-                      name: 'stubby',
+                      name: 'stubby---',
                     },
                     extensions: {
                       timestamp: 1633038919,

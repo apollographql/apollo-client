@@ -9,6 +9,7 @@ Array [
   "ApolloLink",
   "ApolloProvider",
   "Cache",
+  "DocumentTransform",
   "DocumentType",
   "HttpLink",
   "InMemoryCache",
@@ -55,13 +56,15 @@ Array [
   "throwServerError",
   "toPromise",
   "useApolloClient",
-  "useFragment_experimental",
+  "useBackgroundQuery",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
   "useReactiveVar",
+  "useReadQuery",
   "useSubscription",
-  "useSuspenseQuery_experimental",
+  "useSuspenseQuery",
 ]
 `;
 
@@ -91,6 +94,7 @@ Array [
   "ApolloError",
   "ApolloLink",
   "Cache",
+  "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
   "MissingFieldError",
@@ -130,6 +134,14 @@ Array [
   "split",
   "throwServerError",
   "toPromise",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/dev 1`] = `
+Array [
+  "loadDevMessages",
+  "loadErrorMessageHandler",
+  "loadErrorMessages",
 ]
 `;
 
@@ -204,6 +216,13 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/link/remove-typename 1`] = `
+Array [
+  "KEEP",
+  "removeTypenameFromVariables",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link/retry 1`] = `
 Array [
   "RetryLink",
@@ -252,13 +271,15 @@ Array [
   "parser",
   "resetApolloContext",
   "useApolloClient",
-  "useFragment_experimental",
+  "useBackgroundQuery",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
   "useReactiveVar",
+  "useReadQuery",
   "useSubscription",
-  "useSuspenseQuery_experimental",
+  "useSuspenseQuery",
 ]
 `;
 
@@ -292,13 +313,15 @@ Array [
 exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
 Array [
   "useApolloClient",
-  "useFragment_experimental",
+  "useBackgroundQuery",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
   "useReactiveVar",
+  "useReadQuery",
   "useSubscription",
-  "useSuspenseQuery_experimental",
+  "useSuspenseQuery",
 ]
 `;
 
@@ -360,6 +383,7 @@ Array [
   "Concast",
   "DEV",
   "DeepMerger",
+  "DocumentTransform",
   "Observable",
   "addTypenameToDocument",
   "argumentsObjectFromField",
@@ -376,6 +400,8 @@ Array [
   "compact",
   "concatPagination",
   "createFragmentMap",
+  "createFulfilledPromise",
+  "createRejectedPromise",
   "fixObservableSubclass",
   "getDefaultValues",
   "getDirectiveNames",
@@ -406,15 +432,18 @@ Array [
   "isExecutionPatchResult",
   "isField",
   "isInlineFragment",
+  "isMutationOperation",
   "isNodeReadableStream",
   "isNodeResponse",
   "isNonEmptyArray",
   "isNonNullObject",
   "isPlainObject",
+  "isQueryOperation",
   "isReadableStream",
   "isReference",
   "isStatefulPromise",
   "isStreamableBlob",
+  "isSubscriptionOperation",
   "iterateObserversSafely",
   "makeReference",
   "makeUniqueId",
@@ -450,5 +479,6 @@ Array [
   "global",
   "invariant",
   "maybe",
+  "newInvariantError",
 ]
 `;

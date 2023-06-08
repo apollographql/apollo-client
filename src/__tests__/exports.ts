@@ -6,6 +6,7 @@
 import * as cache from "../cache";
 import * as client from "..";
 import * as core from "../core";
+import * as dev from '../dev';
 import * as errors from "../errors";
 import * as linkBatch from "../link/batch";
 import * as linkBatchHTTP from "../link/batch-http";
@@ -15,6 +16,7 @@ import * as linkError from "../link/error";
 import * as linkHTTP from "../link/http";
 import * as linkPersistedQueries from "../link/persisted-queries";
 import * as linkRetry from "../link/retry";
+import * as linkRemoveTypename from "../link/remove-typename";
 import * as linkSchema from "../link/schema";
 import * as linkSubscriptions from "../link/subscriptions";
 import * as linkUtils from "../link/utils";
@@ -48,6 +50,7 @@ describe('exports of public entry points', () => {
   check("@apollo/client", client);
   check("@apollo/client/cache", cache);
   check("@apollo/client/core", core);
+  check("@apollo/client/dev", dev);
   check("@apollo/client/errors", errors);
   check("@apollo/client/link/batch", linkBatch);
   check("@apollo/client/link/batch-http", linkBatchHTTP);
@@ -56,6 +59,7 @@ describe('exports of public entry points', () => {
   check("@apollo/client/link/error", linkError);
   check("@apollo/client/link/http", linkHTTP);
   check("@apollo/client/link/persisted-queries", linkPersistedQueries);
+  check("@apollo/client/link/remove-typename", linkRemoveTypename);
   check("@apollo/client/link/retry", linkRetry);
   check("@apollo/client/link/schema", linkSchema);
   check("@apollo/client/link/subscriptions", linkSubscriptions);

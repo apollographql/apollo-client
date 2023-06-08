@@ -1,7 +1,8 @@
-import { dep, OptimisticDependencyFunction } from "optimism";
+import type { OptimisticDependencyFunction } from "optimism";
+import { dep } from "optimism";
 import { Slot } from "@wry/context";
-import { InMemoryCache } from "./inMemoryCache";
-import { ApolloCache } from '../../core';
+import type { InMemoryCache } from "./inMemoryCache";
+import type { ApolloCache } from '../../core';
 
 export interface ReactiveVar<T> {
   (newValue?: T): T;

@@ -1,5 +1,104 @@
 # @apollo/client
 
+## 3.8.0-beta.2
+
+### Patch Changes
+
+- [#10957](https://github.com/apollographql/apollo-client/pull/10957) [`445164d21`](https://github.com/apollographql/apollo-client/commit/445164d2177efe46637a514afa6a88502d3de10f) Thanks [@phryneas](https://github.com/phryneas)! - Use `React.version` as key for shared Contexts.
+
+## 3.8.0-beta.1
+
+### Patch Changes
+
+- [#10937](https://github.com/apollographql/apollo-client/pull/10937) [`eea44eb87`](https://github.com/apollographql/apollo-client/commit/eea44eb87f6f296a6f9978d6ba1cf36e899c9131) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Moves `DocumentTransform` to the `utilities` sub-package to avoid a circular dependency between the `core` and `cache` sub-packages.
+
+- [#10919](https://github.com/apollographql/apollo-client/pull/10919) [`f796ce1ac`](https://github.com/apollographql/apollo-client/commit/f796ce1ac72f31a951a1d0f0b78d19dd039a6398) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue when using a link that relied on `operation.getContext` and `operation.setContext` would error out when it was declared after the `removeTypenameFromVariables` link.
+
+## 3.8.0-beta.0
+
+### Minor Changes
+
+- [#10887](https://github.com/apollographql/apollo-client/pull/10887) [`f8c0b965d`](https://github.com/apollographql/apollo-client/commit/f8c0b965d49fb7d802371bb9cc3cb0b60cf05e5d) Thanks [@phryneas](https://github.com/phryneas)! - Add a new mechanism for Error Extraction to reduce bundle size by including
+  error message texts on an opt-in basis.
+  By default, errors will link to an error page with the entire error message.
+  This replaces "development" and "production" errors and works without
+  additional bundler configuration.
+  Bundling the text of error messages and development warnings can be enabled by
+
+  ```js
+  import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
+  if (process.env.NODE_ENV !== 'production') {
+    loadErrorMessages();
+    loadDevMessages();
+  }
+  ```
+
+- [#10509](https://github.com/apollographql/apollo-client/pull/10509) [`79df2c7ba`](https://github.com/apollographql/apollo-client/commit/79df2c7ba55b7cfee69fd54024174f77099a2550) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to specify custom GraphQL document transforms. These transforms are run before reading data from the cache, before local state is resolved, and before the query document is sent through the link chain.
+
+  To register a custom document transform, create a transform using the `DocumentTransform` class and pass it to the `documentTransform` option on `ApolloClient`.
+
+  ```ts
+  import { DocumentTransform } from '@apollo/client';
+
+  const documentTransform = new DocumentTransform((document) => {
+    // do something with `document`
+    return transformedDocument;
+  });
+
+  const client = new ApolloClient({ documentTransform: documentTransform });
+  ```
+
+  For additional documentation on the behavior and API of `DocumentTransform`, see the [pull request](https://github.com/apollographql/apollo-client/pull/10509).
+
+- [#10916](https://github.com/apollographql/apollo-client/pull/10916) [`ea75e18de`](https://github.com/apollographql/apollo-client/commit/ea75e18dec3db090dd4ed3b2d249bf674b90ead4) Thanks [@alessbell](https://github.com/alessbell)! - Remove experimental labels from hooks, move to beta.
+
+## 3.8.0-alpha.15
+
+### Patch Changes
+
+- [#10888](https://github.com/apollographql/apollo-client/pull/10888) [`1562a2f5a`](https://github.com/apollographql/apollo-client/commit/1562a2f5a91cf577d9c89c4e84088a6bccc73c28) Thanks [@alessbell](https://github.com/alessbell)! - Updates dependency versions in `package.json` by bumping:
+
+  - `@wry/context` to `^0.7.3`
+  - `@wry/equality` to `^0.5.6`
+  - `@wry/trie` to `^0.4.3`
+  - `optimism` to `^0.17.4`
+
+  to 1. [fix sourcemap warnings](https://github.com/benjamn/wryware/pull/497) and 2. a Codesandbox [sandpack (in-browser) bundler transpilation bug](https://github.com/codesandbox/sandpack/issues/940) with an [upstream optimism workaround](https://github.com/benjamn/optimism/pull/550).
+
+## 3.8.0-alpha.14
+
+### Minor Changes
+
+- [#10755](https://github.com/apollographql/apollo-client/pull/10755) [`e3c676deb`](https://github.com/apollographql/apollo-client/commit/e3c676deb59d006f33d24a7211e58725a67641b8) Thanks [@alessbell](https://github.com/alessbell)! - Feature: adds `useBackgroundQuery` and `useReadQuery` hooks
+
+- [#10853](https://github.com/apollographql/apollo-client/pull/10853) [`300957960`](https://github.com/apollographql/apollo-client/commit/300957960a584920f2d346d29a0b3aaeb27d9489) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduce the new `removeTypenameFromVariables` link. This link will automatically remove `__typename` fields from `variables` for all operations. This link can be configured to exclude JSON-scalars for scalars that utilize `__typename`.
+
+  This change undoes some work from #10724 where `__typename` was automatically stripped for all operations with no configuration. This was determined to be a breaking change and therefore moved into this link.
+
+### Patch Changes
+
+- [#10869](https://github.com/apollographql/apollo-client/pull/10869) [`ba1d06166`](https://github.com/apollographql/apollo-client/commit/ba1d0616618ee040e9bcb20874b03d5783f7eff3) Thanks [@phryneas](https://github.com/phryneas)! - Ensure Context value stability when rerendering ApolloProvider with the same `client` and/or `suspenseCache` prop
+
+- [#10789](https://github.com/apollographql/apollo-client/pull/10789) [`23a4e1578`](https://github.com/apollographql/apollo-client/commit/23a4e15786fe99658d741585366f3b02bcffb97f) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where other fields could be aliased to `__typename` or `id`, in which case an incoming result would be merged into the wrong cache entry.
+
+- [#10765](https://github.com/apollographql/apollo-client/pull/10765) [`35f36c5aa`](https://github.com/apollographql/apollo-client/commit/35f36c5aaefe1f215044e09fdf9386042bc59dd2) Thanks [@phryneas](https://github.com/phryneas)! - More robust types for the `data` property on `UseFragmentResult`. When a partial result is given, the type is now correctly set to `Partial<TData>`.
+
+- [#10852](https://github.com/apollographql/apollo-client/pull/10852) [`27fbdb3f9`](https://github.com/apollographql/apollo-client/commit/27fbdb3f9003cc304d26987cb38daf10910f2da6) Thanks [@phryneas](https://github.com/phryneas)! - Chore: Add ESLint rule for consistent type imports, apply autofix
+
+- [#10877](https://github.com/apollographql/apollo-client/pull/10877) [`f40248598`](https://github.com/apollographql/apollo-client/commit/f402485985cc2551b51602c0bff213b7ffb856b9) Thanks [@phryneas](https://github.com/phryneas)! - Change an import in `useQuery` and `useMutation` that added an unnecessary runtime dependency on `@apollo/client/core`. This drastically reduces the bundle size of each the hooks.
+
+- [#10836](https://github.com/apollographql/apollo-client/pull/10836) [`6794893c2`](https://github.com/apollographql/apollo-client/commit/6794893c29cc945aa99f6fe54a9e4e70ec3e57fd) Thanks [@phryneas](https://github.com/phryneas)! - Remove the deprecated `returnPartialData` option from `useFragment` hook.
+
+- [#10872](https://github.com/apollographql/apollo-client/pull/10872) [`96b4f8837`](https://github.com/apollographql/apollo-client/commit/96b4f8837881db67e951272b775dc62282e50d49) Thanks [@phryneas](https://github.com/phryneas)! - The "per-React-Version-Singleton" ApolloContext is now stored on `globalThis`, not `React.createContext`, and throws an error message when accessed from React Server Components.
+
+## 3.8.0-alpha.13
+
+### Patch Changes
+
+- [#10766](https://github.com/apollographql/apollo-client/pull/10766) [`ffb179e55`](https://github.com/apollographql/apollo-client/commit/ffb179e5553fa6f9156ae0aaf782dfcbec7d08c7) Thanks [@jerelmiller](https://github.com/jerelmiller)! - More robust typings for the `data` property returned from `useSuspenseQuery` when using `returnPartialData: true` or an `errorPolicy` of `all` or `ignore`. `TData` now defaults to `unknown` instead of `any`.
+
+- [#10809](https://github.com/apollographql/apollo-client/pull/10809) [`49d28f764`](https://github.com/apollographql/apollo-client/commit/49d28f764980d132089ef8f6beca6e766b6120c0) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixed the ability to use `refetch` and `fetchMore` with React's `startTransition`. The hook will now behave correctly by allowing React to avoid showing the Suspense fallback when these functions are wrapped by `startTransition`. This change deprecates the `suspensePolicy` option in favor of `startTransition`.
+
 ## 3.8.0-alpha.12
 
 ### Minor Changes
@@ -116,6 +215,26 @@
 
 - [#10340](https://github.com/apollographql/apollo-client/pull/10340) [`4f73c5ca1`](https://github.com/apollographql/apollo-client/commit/4f73c5ca15d367aa23f02018d062f221c4506a4d) Thanks [@alessbell](https://github.com/alessbell)! - Avoid calling `useQuery` `onCompleted` for cache writes
 
+## 3.7.15
+
+### Patch Changes
+
+- [#10891](https://github.com/apollographql/apollo-client/pull/10891) [`ab42a5c08`](https://github.com/apollographql/apollo-client/commit/ab42a5c08840193cb915f4e66d71fac3834fec68) Thanks [@laverdet](https://github.com/laverdet)! - Fixes a bug in how multipart responses are read when using `@defer`. When reading a multipart body, `HttpLink` no longer attempts to parse the boundary (e.g. `"---"` or other boundary string) within the response data itself, only when reading the beginning of each mulitpart chunked message.
+
+- [#10789](https://github.com/apollographql/apollo-client/pull/10789) [`23a4e1578`](https://github.com/apollographql/apollo-client/commit/23a4e15786fe99658d741585366f3b02bcffb97f) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where other fields could be aliased to `__typename` or `id`, in which case an incoming result would be merged into the wrong cache entry.
+
+## 3.7.14
+
+### Patch Changes
+
+- [#10764](https://github.com/apollographql/apollo-client/pull/10764) [`1b0a61fe5`](https://github.com/apollographql/apollo-client/commit/1b0a61fe5a6593f319da26fec8692359232ccf9b) Thanks [@phryneas](https://github.com/phryneas)! - Deprecate `useFragment` `returnPartialData` option
+
+- [#10810](https://github.com/apollographql/apollo-client/pull/10810) [`a6252774f`](https://github.com/apollographql/apollo-client/commit/a6252774f43fd9a4be9c50b48b7a6d5a1c8e64ec) Thanks [@dleavitt](https://github.com/dleavitt)! - Fix type signature of `ServerError`.
+
+  In <3.7 `HttpLink` and `BatchHttpLink` would return a `ServerError.message` of e.g. `"Unexpected token 'E', \"Error! Foo bar\" is not valid JSON"` and a `ServerError.result` of `undefined` in the case where a server returned a >= 300 response code with a response body containing a string that could not be parsed as JSON.
+
+  In >=3.7, `message` became e.g. `Response not successful: Received status code 302` and `result` became the string from the response body, however the type in `ServerError.result` was not updated to include the `string` type, which is now properly reflected.
+
 ## 3.7.13
 
 ### Patch Changes
@@ -194,6 +313,23 @@
 ### Patch Changes
 
 - [#10470](https://github.com/apollographql/apollo-client/pull/10470) [`47435e879`](https://github.com/apollographql/apollo-client/commit/47435e879ebc867d9fc3de5b6fd5785204b4dbd4) Thanks [@alessbell](https://github.com/alessbell)! - Bumps TypeScript to `4.9.4` (previously `4.7.4`) and updates types to account for changes in TypeScript 4.8 by [propagating contstraints on generic types](https://devblogs.microsoft.com/typescript/announcing-typescript-4-8/#unconstrained-generics-no-longer-assignable-to). Technically this makes some types stricter as attempting to pass `null|undefined` into certain functions is now disallowed by TypeScript, but these were never expected runtime values in the first place.
+  This should only affect you if you are wrapping functions provided by Apollo Client with your own abstractions that pass in their generics as type arguments, in which case you might get an error like `error TS2344: Type 'YourGenericType' does not satisfy the constraint 'OperationVariables'`. In that case, make sure that `YourGenericType` is restricted to a type that only accepts objects via `extends`, like `Record<string, any>` or `@apollo/client`'s `OperationVariables`:
+
+  ```diff
+  import {
+    QueryHookOptions,
+    QueryResult,
+    useQuery,
+  + OperationVariables,
+  } from '@apollo/client';
+  - export function useWrappedQuery<T, TVariables>(
+  + export function useWrappedQuery<T, TVariables extends OperationVariables>(
+      query: DocumentNode,
+      queryOptions: QueryHookOptions<T, TVariables>
+    ): QueryResult<T, TVariables> {
+      const [execute, result] = useQuery<T, TVariables>(query);
+    }
+  ```
 
 - [#10408](https://github.com/apollographql/apollo-client/pull/10408) [`55ffafc58`](https://github.com/apollographql/apollo-client/commit/55ffafc585e9eb66314755b4f40804b8b8affb13) Thanks [@zlrlo](https://github.com/zlrlo)! - fix: modify BatchHttpLink to have a separate timer for each different batch key
 

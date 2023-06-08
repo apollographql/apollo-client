@@ -3,20 +3,26 @@ import { invariant } from '../../utilities/globals';
 // Make builtins like Map and Set safe to use with non-extensible objects.
 import './fixPolyfills';
 
-import { DocumentNode } from 'graphql';
-import { OptimisticWrapperFunction, wrap } from 'optimism';
+import type { DocumentNode } from 'graphql';
+import type { OptimisticWrapperFunction} from 'optimism';
+import { wrap } from 'optimism';
 import { equal } from '@wry/equality';
 
 import { ApolloCache } from '../core/cache';
-import { Cache } from '../core/types/Cache';
+import type { Cache } from '../core/types/Cache';
 import { MissingFieldError } from '../core/types/common';
+import type {
+  StoreObject,
+  Reference} from '../../utilities';
 import {
   addTypenameToDocument,
-  StoreObject,
-  Reference,
   isReference,
+  DocumentTransform,
 } from '../../utilities';
-import { InMemoryCacheConfig, NormalizedCacheObject } from './types';
+import type {
+  InMemoryCacheConfig,
+  NormalizedCacheObject,
+} from './types';
 import { StoreReader } from './readFromStore';
 import { StoreWriter } from './writeToStore';
 import { EntityStore, supportsResultCaching } from './entityStore';
@@ -24,7 +30,7 @@ import { makeVar, forgetCache, recallCache } from './reactiveVars';
 import { Policies } from './policies';
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
 import { canonicalStringify } from './object-canon';
-import { OperationVariables } from '../../core';
+import type { OperationVariables } from '../../core';
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -40,9 +46,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
 
-  private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
+  private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
   private maybeBroadcastWatch: OptimisticWrapperFunction<
     [Cache.WatchOptions, BroadcastOptions?],
@@ -507,32 +513,27 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    if (this.addTypename) {
-      let result = this.typenameDocumentCache.get(document);
-      if (!result) {
-        result = addTypenameToDocument(document);
-        this.typenameDocumentCache.set(document, result);
-        // If someone calls transformDocument and then mistakenly passes the
-        // result back into an API that also calls transformDocument, make sure
-        // we don't keep creating new query documents.
-        this.typenameDocumentCache.set(result, result);
-      }
-      return result;
-    }
-    return document;
-  }
-
-  public transformForLink(document: DocumentNode): DocumentNode {
-    const { fragments } = this.config;
-    return fragments
-      ? fragments.transform(document)
-      : document;
+    return this.addTypenameToDocument(this.addFragmentsToDocument(document));
   }
 
   protected broadcastWatches(options?: BroadcastOptions) {
     if (!this.txCount) {
       this.watches.forEach(c => this.maybeBroadcastWatch(c, options));
     }
+  }
+
+  private addFragmentsToDocument(document: DocumentNode) {
+    const { fragments } = this.config;
+    return fragments
+      ? fragments.transform(document)
+      : document;
+  }
+
+  private addTypenameToDocument(document: DocumentNode) {
+    if (this.addTypename) {
+      return this.addTypenameTransform.transformDocument(document);
+    }
+    return document;
   }
 
   // This method is wrapped by maybeBroadcastWatch, which is called by

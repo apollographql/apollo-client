@@ -1,4 +1,4 @@
-import { DeepOmit } from '../types/DeepOmit';
+import type { DeepOmit } from '../types/DeepOmit';
 import { isPlainObject } from './objects';
 
 export function omitDeep<T, K extends string>(value: T, key: K) {
@@ -37,12 +37,13 @@ function __omitDeep<T, K extends string>(
     Object.keys(value).forEach((k) => {
       if (k === key) {
         modified = true;
-      } else {
-        const result = __omitDeep(value[k], key, known);
-        modified ||= result !== value[k];
-
-        obj[k] = result;
+        return;
       }
+
+      const result = __omitDeep(value[k], key, known);
+      modified ||= result !== value[k];
+
+      obj[k] = result;
     });
 
     if (modified) {

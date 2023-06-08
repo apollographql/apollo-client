@@ -4,7 +4,7 @@ import { InMemoryCache } from "../inMemoryCache";
 import { ReactiveVar, makeVar } from "../reactiveVars";
 import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode, DocumentNode } from "../../../core";
 import { MissingFieldError } from "../..";
-import { relayStylePagination } from "../../../utilities";
+import { relayStylePagination, stringifyForDisplay } from "../../../utilities";
 import { FieldPolicy, StorageType } from "../policies";
 import {
   itAsync,
@@ -443,8 +443,9 @@ describe("type policies", function () {
         },
       });
     }).toThrowError(
-      `Missing field 'year' while extracting keyFields from ${JSON.stringify(
-        theInformationBookData
+      `Missing field 'year' while extracting keyFields from ${stringifyForDisplay(
+        theInformationBookData,
+        2
       )}`,
     );
   });

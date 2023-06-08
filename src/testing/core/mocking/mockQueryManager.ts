@@ -1,5 +1,6 @@
 import { QueryManager } from '../../../core/QueryManager';
-import { mockSingleLink, MockedResponse } from './mockLink';
+import type { MockedResponse } from './mockLink';
+import { mockSingleLink } from './mockLink';
 import { InMemoryCache } from '../../../cache';
 
 // Helper method for the tests that construct a query manager out of a

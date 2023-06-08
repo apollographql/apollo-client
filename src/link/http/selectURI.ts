@@ -1,4 +1,4 @@
-import { Operation } from '../core';
+import type { Operation } from '../core';
 
 export const selectURI = (
   operation: Operation,

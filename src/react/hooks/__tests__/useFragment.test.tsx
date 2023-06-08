@@ -3,7 +3,7 @@ import { render, waitFor, screen, renderHook } from "@testing-library/react";
 import userEvent from '@testing-library/user-event';
 import { act } from "react-dom/test-utils";
 
-import { useFragment_experimental as useFragment } from "../useFragment";
+import { UseFragmentOptions, useFragment } from "../useFragment";
 import { MockedProvider } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {
@@ -14,9 +14,13 @@ import {
   ApolloClient,
   Observable,
   ApolloLink,
+  StoreObject,
+  DocumentNode,
 } from "../../../core";
 import { useQuery } from "../useQuery";
 import { concatPagination } from "../../../utilities";
+import assert from "assert";
+import { expectTypeOf } from 'expect-type'
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -94,7 +98,7 @@ describe("useFragment", () => {
       expect(loading).toBe(false);
       return (
         <ol>
-          {data!.list.map(item => <Item key={item.id} id={item.id}/>)}
+          {data?.list.map(item => <Item key={item.id} id={item.id}/>)}
         </ol>
       );
     }
@@ -109,7 +113,7 @@ describe("useFragment", () => {
           id: props.id,
         },
       });
-      return <li>{complete ? data!.text : "incomplete"}</li>;
+      return <li>{complete ? data.text : "incomplete"}</li>;
     }
 
     render(
@@ -724,9 +728,10 @@ describe("useFragment", () => {
         from: { __typename: "Query" },
       });
       expect(complete).toBe(true);
+      assert(!!complete)
       return (
         <ol>
-          {data!.list.map(item => <Item key={item.id} id={item.id}/>)}
+          {data.list.map(item => <Item key={item.id} id={item.id}/>)}
         </ol>
       );
     }
@@ -740,7 +745,7 @@ describe("useFragment", () => {
           id: props.id,
         },
       });
-      return <li>{complete ? data!.text : "incomplete"}</li>;
+      return <li>{complete ? data.text : "incomplete"}</li>;
     }
 
     render(
@@ -988,7 +993,6 @@ describe("useFragment", () => {
         fragment: ListAndItemFragments,
         fragmentName: "ListFragment",
         from: { __typename: "Query" },
-        returnPartialData: true,
       }),
       { wrapper },
     );
@@ -1221,13 +1225,13 @@ describe("useFragment", () => {
           <select onChange={(e) => {
             setCurrentItem(parseInt(e.currentTarget.value))
           }}>
-            {data!.list.map(item => <option key={item.id} value={item.id}>Select item {item.id}</option>)}
+            {data.list.map(item => <option key={item.id} value={item.id}>Select item {item.id}</option>)}
           </select>
           <div>
             <Item id={currentItem} />
           </div>
           <ol>
-          {data!.list.map(item => <Item key={item.id} id={item.id}/>)}
+          {data.list.map(item => <Item key={item.id} id={item.id}/>)}
           </ol>
         </>
       ) : null;
@@ -1241,7 +1245,7 @@ describe("useFragment", () => {
           id,
         },
       });
-      return <li>{complete ? data!.text : "incomplete"}</li>;
+      return <li>{complete ? data.text : "incomplete"}</li>;
     }
 
     render(
@@ -1286,6 +1290,130 @@ describe("useFragment", () => {
       ]);
     });
   });
+
+  describe("tests with incomplete data", () => {
+    let cache: InMemoryCache, wrapper: React.FunctionComponent;
+    const ItemFragment = gql`
+      fragment ItemFragment on Item {
+        id
+        text
+      }
+    `;
+
+    beforeEach(() => {
+      cache = new InMemoryCache();
+      wrapper = ({ children }: any) => <MockedProvider cache={cache}>{children}</MockedProvider>;
+
+      // silence the console for the incomplete fragment write
+      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+        },
+      });
+      spy.mockRestore();
+    });
+
+    it("assumes `returnPartialData: true` per default", () => {
+      const { result } = renderHook(
+        () =>
+          useFragment({
+            fragment: ItemFragment,
+            from: { __typename: "Item", id: 5 },
+          }),
+        { wrapper }
+      );
+
+      expect(result.current.data).toEqual({ __typename: "Item", id: 5 });
+      expect(result.current.complete).toBe(false);
+    });
+  });
+
+  describe("return value `complete` property", () => {
+    let cache: InMemoryCache, wrapper: React.FunctionComponent;
+    const ItemFragment = gql`
+      fragment ItemFragment on Item {
+        id
+        text
+      }
+    `;
+
+    beforeEach(() => {
+      cache = new InMemoryCache();
+      wrapper = ({ children }: any) => <MockedProvider cache={cache}>{children}</MockedProvider>;
+    });
+
+    test("if all data is available, `complete` is `true`", () => {
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+      });
+
+      const { result } = renderHook(
+        () =>
+          useFragment({
+            fragment: ItemFragment,
+            from: { __typename: "Item", id: 5 },
+          }),
+        { wrapper }
+      );
+
+      expect(result.current).toStrictEqual({
+        data: { __typename: "Item", id: 5, text: "Item #5" },
+        complete: true,
+      });
+    });
+
+    test("if only partial data is available, `complete` is `false`", () => {
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+        },
+      });
+
+      const { result } = renderHook(
+        () =>
+          useFragment({
+            fragment: ItemFragment,
+            from: { __typename: "Item", id: 5 },
+          }),
+        { wrapper }
+      );
+
+      expect(result.current).toStrictEqual({
+        data: { __typename: "Item", id: 5 },
+        complete: false,
+        missing: {
+          text: "Can't find field 'text' on Item:5 object",
+        },
+      });
+    });
+
+    test("if no data is available, `complete` is `false`", () => {
+      const { result } = renderHook(
+        () =>
+          useFragment({
+            fragment: ItemFragment,
+            from: { __typename: "Item", id: 5 },
+          }),
+        { wrapper }
+      );
+
+      expect(result.current).toStrictEqual({
+        data: {},
+        complete: false,
+        missing: "Dangling reference to missing Item:5 object",
+      });
+    });
+  });
 });
 
 describe.skip("Type Tests", () => {
@@ -1300,5 +1428,17 @@ describe.skip("Type Tests", () => {
         nonExistingVariable: "string"
       }
     });
+  })
+
+  test("UseFragmentOptions interface shape", <TData, TVars>()=>{
+    expectTypeOf<UseFragmentOptions<TData, TVars>>()
+      .toEqualTypeOf<{
+        from: string | StoreObject | Reference;
+        fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+        fragmentName?: string;
+        optimistic?: boolean;
+        variables?: TVars;
+        canonizeResults?: boolean;
+      }>();
   })
 })

@@ -1,21 +1,25 @@
-import { invariant, InvariantError, __DEV__ } from '../../utilities/globals';
+import { invariant, newInvariantError, __DEV__ } from '../../utilities/globals';
 
-import {
+import type {
   DocumentNode,
   FieldNode,
-  Kind,
-  SelectionSetNode,
+  SelectionSetNode} from 'graphql';
+import {
+  Kind
 } from 'graphql';
-import { wrap, OptimisticWrapperFunction } from 'optimism';
+import type { OptimisticWrapperFunction } from 'optimism';
+import { wrap } from 'optimism';
 
+import type {
+  Reference,
+  StoreObject,
+  FragmentMap,
+  FragmentMapFunction} from '../../utilities';
 import {
   isField,
   resultKeyNameFromField,
-  Reference,
   isReference,
   makeReference,
-  StoreObject,
-  FragmentMap,
   shouldInclude,
   addTypenameToDocument,
   getDefaultValues,
@@ -27,11 +31,10 @@ import {
   DeepMerger,
   isNonNullObject,
   canUseWeakMap,
-  compact,
-  FragmentMapFunction,
+  compact
 } from '../../utilities';
-import { Cache } from '../core/types/Cache';
-import {
+import type { Cache } from '../core/types/Cache';
+import type {
   DiffQueryAgainstStoreOptions,
   InMemoryCacheConfig,
   NormalizedCache,
@@ -39,9 +42,10 @@ import {
 } from './types';
 import { maybeDependOnExistenceOfEntity, supportsResultCaching } from './entityStore';
 import { isArray, extractFragmentContext, getTypenameFromStoreObject, shouldCanonizeResults } from './helpers';
-import { Policies } from './policies';
-import { InMemoryCache } from './inMemoryCache';
-import { MissingFieldError, MissingTree } from '../core/types/common';
+import type { Policies } from './policies';
+import type { InMemoryCache } from './inMemoryCache';
+import type { MissingTree } from '../core/types/common';
+import { MissingFieldError } from '../core/types/common';
 import { canonicalStringify, ObjectCanon } from './object-canon';
 
 export type VariableMap = { [name: string]: any };
@@ -408,7 +412,7 @@ export class StoreReader {
         );
 
         if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
-          throw new InvariantError(`No fragment named ${selection.name.value}`);
+          throw newInvariantError(`No fragment named %s`, selection.name.value);
         }
 
         if (fragment && policies.fragmentMatches(fragment, typename)) {
@@ -517,9 +521,9 @@ function assertSelectionSetForIdValue(
       if (isNonNullObject(value)) {
         invariant(
           !isReference(value),
-          `Missing selection set for object of type ${
-            getTypenameFromStoreObject(store, value)
-          } returned for query field ${field.name.value}`,
+          `Missing selection set for object of type %s returned for query field %s`,
+          getTypenameFromStoreObject(store, value), 
+          field.name.value
         );
         Object.values(value).forEach(workSet.add, workSet);
       }

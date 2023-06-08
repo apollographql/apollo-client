@@ -13,7 +13,7 @@ import {
   WatchQueryFetchPolicy,
 } from '../../../core';
 import { InMemoryCache } from '../../../cache';
-import { ApolloProvider, resetApolloContext } from '../../context';
+import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
 import {
@@ -28,9 +28,6 @@ import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
 describe('useQuery Hook', () => {
-  afterEach(() => {
-    resetApolloContext();
-  });
   describe('General use', () => {
     it('should handle a simple query', async () => {
       const query = gql`{ hello }`;
@@ -5019,13 +5016,13 @@ describe('useQuery Hook', () => {
 
       expect(errorSpy).toHaveBeenCalled();
       expect(errorSpy).toHaveBeenLastCalledWith(
-        `Missing field 'vin' while writing result ${JSON.stringify({
+        `Missing field '%s' while writing result %o`, 'vin', {
           id: 1,
           make: "Audi",
           model: "RS8",
           vine: "DOLLADOLLABILL",
           __typename: "Car"
-        }, null, 2)}`
+        }
       );
       errorSpy.mockRestore();
     });

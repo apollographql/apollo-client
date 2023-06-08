@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import { equal } from "@wry/equality";
 
+import type { DeepPartial} from "../../utilities";
 import { mergeDeepArray } from "../../utilities";
-import {
+import type {
   Cache,
   Reference,
   StoreObject,
@@ -11,8 +12,8 @@ import {
 
 import { useApolloClient } from "./useApolloClient";
 import { useSyncExternalStore } from "./useSyncExternalStore";
-import { OperationVariables } from "../../core";
-import { NoInfer } from "../types/types";
+import type { OperationVariables } from "../../core";
+import type { NoInfer } from "../types/types";
 
 export interface UseFragmentOptions<TData, TVars>
 extends Omit<
@@ -21,37 +22,30 @@ extends Omit<
   | "query"
   | "optimistic"
   | "previousResult"
->, Omit<
-  Cache.ReadFragmentOptions<TData, TVars>,
+  | "returnPartialData"
+>, Omit<Cache.ReadFragmentOptions<TData, TVars>,
   | "id"
   | "variables"
+  | "returnPartialData"
 > {
   from: StoreObject | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
 }
 
-// Since the above definition of UseFragmentOptions can be hard to parse without
-// help from TypeScript/VSCode, here are the intended fields and their types.
-// Uncomment this code to check that it's consistent with the definition above.
-//
-// export interface UseFragmentOptions<TData, TVars> {
-//   from: string | StoreObject | Reference;
-//   fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-//   fragmentName?: string;
-//   optimistic?: boolean;
-//   variables?: TVars;
-//   returnPartialData?: boolean;
-//   canonizeResults?: boolean;
-// }
+export type UseFragmentResult<TData> =
+  | {
+      data: TData;
+      complete: true;
+      missing?: never;
+    }
+  | {
+      data: DeepPartial<TData>;
+      complete: false;
+      missing?: MissingTree;
+    };
 
-export interface UseFragmentResult<TData> {
-  data: TData | undefined;
-  complete: boolean;
-  missing?: MissingTree;
-}
-
-export function useFragment_experimental<
+export function useFragment<
   TData = any,
   TVars = OperationVariables
 >(
@@ -69,9 +63,10 @@ export function useFragment_experimental<
 
   const diffOptions: Cache.DiffOptions<TData, TVars> = {
     ...rest,
+    returnPartialData: true,
     id: typeof from === "string" ? from : cache.identify(from),
     query: cache["getFragmentDoc"](fragment, fragmentName),
-    optimistic,
+    optimistic
   };
 
   const resultRef = useRef<UseFragmentResult<TData>>();
@@ -107,10 +102,10 @@ export function useFragment_experimental<
 function diffToResult<TData>(
   diff: Cache.DiffResult<TData>,
 ): UseFragmentResult<TData> {
-  const result: UseFragmentResult<TData> = {
-    data: diff.result,
+  const result = {
+    data: diff.result!,
     complete: !!diff.complete,
-  };
+  } as UseFragmentResult<TData>;
 
   if (diff.missing) {
     result.missing = mergeDeepArray(

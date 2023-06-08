@@ -1,7 +1,7 @@
 import * as PropTypes from 'prop-types';
 
-import { OperationVariables } from '../../core';
-import { QueryComponentOptions } from './types';
+import type { OperationVariables } from '../../core';
+import type { QueryComponentOptions } from './types';
 import { useQuery } from '../hooks';
 
 export function Query<TData = any, TVariables extends OperationVariables = OperationVariables>(

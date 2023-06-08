@@ -1,11 +1,11 @@
-import { ReactNode } from 'react';
-import { DocumentNode } from 'graphql';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { ReactNode } from 'react';
+import type { DocumentNode } from 'graphql';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { Observable, ObservableSubscription } from '../../utilities';
-import { FetchResult } from '../../link/core';
-import { ApolloError } from '../../errors';
-import {
+import type { Observable, ObservableSubscription } from '../../utilities';
+import type { FetchResult } from '../../link/core';
+import type { ApolloError } from '../../errors';
+import type {
   ApolloCache,
   ApolloClient,
   DefaultContext,
@@ -18,7 +18,7 @@ import {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
 } from '../../core';
-import { SuspenseCache } from '../cache';
+import type { SuspenseCache } from '../cache';
 
 /* Common types */
 
@@ -100,15 +100,6 @@ export interface LazyQueryHookExecOptions<
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-/**
- * suspensePolicy determines how suspense behaves for a refetch. The options are:
- * - always (default): Re-suspend a component when a refetch occurs
- * - initial: Only suspend on the first fetch
- */
-export type SuspensePolicy =
-  | 'always'
-  | 'initial'
-
 export type SuspenseQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
   | 'cache-first'
@@ -118,7 +109,7 @@ export type SuspenseQueryHookFetchPolicy = Extract<
 >;
 
 export interface SuspenseQueryHookOptions<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 > extends Pick<
   QueryHookOptions<TData, TVariables>,
@@ -131,7 +122,6 @@ export interface SuspenseQueryHookOptions<
   | 'refetchWritePolicy'
 > {
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
-  suspensePolicy?: SuspensePolicy;
   suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
 }

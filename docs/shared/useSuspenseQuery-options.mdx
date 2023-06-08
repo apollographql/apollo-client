@@ -62,24 +62,6 @@ The default value is `none`, which causes the hook to throw the error.
 <tr>
 <td>
 
-###### `suspensePolicy`
-
-`SuspensePolicy`
-</td>
-
-<td>
-
-Determines whether the component should re-suspend when refetching data. Set to
-`initial` to avoid re-suspending the component on a refetch.
-
-The default value is `always`, which will cause the component to always
-re-suspend when refetching data.
-</td>
-</tr>
-
-<tr>
-<td>
-
 ###### `context`
 
 `Record<string, any>`
@@ -88,6 +70,23 @@ re-suspend when refetching data.
 <td>
 
 If you're using [Apollo Link](/react/api/link/introduction/), this object is the initial value of the `context` object that's passed along your link chain.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `canonizeResults`
+
+`Boolean`
+</td>
+
+<td>
+
+If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
+
+The default value is `false`.
 
 </td>
 </tr>
@@ -169,6 +168,23 @@ The default value is `cache-first`.
 If `true`, the query can return _partial_ results from the cache if the cache doesn't contain results for _all_ queried fields.
 
 The default value is `false`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `refetchWritePolicy`
+
+`"merge" | "overwrite"`
+</td>
+
+<td>
+
+Watched queries must opt into overwriting existing data on refetch, by passing `refetchWritePolicy: "overwrite"` in their `WatchQueryOptions`.
+
+The default value is `"overwrite"`.
 
 </td>
 </tr>

@@ -1,6 +1,6 @@
 import { invariant } from '../../utilities/globals';
 
-import {
+import type {
   DocumentNode,
   DefinitionNode,
   VariableDefinitionNode,
@@ -46,9 +46,10 @@ export function parser(document: DocumentNode): IDocumentDefinition {
 
   invariant(
     !!document && !!document.kind,
-    `Argument of ${document} passed to parser was not a valid GraphQL ` +
+    `Argument of %s passed to parser was not a valid GraphQL ` +
       `DocumentNode. You may need to use 'graphql-tag' or another method ` +
-      `to convert your operation into a document`
+      `to convert your operation into a document`,
+      document
   );
 
   const fragments: DefinitionNode[] = []
@@ -87,9 +88,13 @@ export function parser(document: DocumentNode): IDocumentDefinition {
   invariant(
     queries.length + mutations.length + subscriptions.length <= 1,
     `react-apollo only supports a query, subscription, or a mutation per HOC. ` +
-      `${document} had ${queries.length} queries, ${subscriptions.length} ` +
-      `subscriptions and ${mutations.length} mutations. ` +
-      `You can use 'compose' to join multiple operation types to a component`
+      `%s had %s queries, %s ` +
+      `subscriptions and %s mutations. ` +
+      `You can use 'compose' to join multiple operation types to a component`,
+      document,
+      queries.length,
+      subscriptions.length,
+      mutations.length
   );
 
   type = queries.length ? DocumentType.Query : DocumentType.Mutation;
@@ -103,9 +108,11 @@ export function parser(document: DocumentNode): IDocumentDefinition {
 
   invariant(
     definitions.length === 1,
-    `react-apollo only supports one definition per HOC. ${document} had ` +
-      `${definitions.length} definitions. ` +
-      `You can use 'compose' to join multiple operation types to a component`
+    `react-apollo only supports one definition per HOC. %s had ` +
+      `%s definitions. ` +
+      `You can use 'compose' to join multiple operation types to a component`,
+      document,
+      definitions.length
   );
 
   const definition = definitions[0] as OperationDefinitionNode;
@@ -128,8 +135,11 @@ export function verifyDocumentType(document: DocumentNode, type: DocumentType) {
   const usedOperationName = operationName(operation.type);
   invariant(
     operation.type === type,
-    `Running a ${requiredOperationName} requires a graphql ` +
-      `${requiredOperationName}, but a ${usedOperationName} was used instead.`
+    `Running a %s requires a graphql ` +
+      `%s, but a %s was used instead.`,
+      requiredOperationName,
+      requiredOperationName,
+      usedOperationName
   );
 }
 

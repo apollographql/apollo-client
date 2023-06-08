@@ -11,15 +11,11 @@ import {
 } from '../../../core';
 import { PROTOCOL_ERRORS_SYMBOL } from '../../../errors';
 import { InMemoryCache as Cache } from '../../../cache';
-import { ApolloProvider, resetApolloContext } from '../../context';
+import { ApolloProvider } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
 import { useSubscription } from '../useSubscription';
 
 describe('useSubscription Hook', () => {
-  afterEach(() => {
-    resetApolloContext();
-  });
-
   it('should handle a simple subscription properly', async () => {
     const subscription = gql`
       subscription {
@@ -538,8 +534,8 @@ describe('useSubscription Hook', () => {
     expect(result.current.data).toBe(null);
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy.mock.calls[0][0]).toBe(
-      "Missing field 'car' while writing result {}",
+    expect(errorSpy.mock.calls[0]).toStrictEqual(
+      ["Missing field '%s' while writing result %o", "car", Object.create(null)]
     );
     errorSpy.mockRestore();
   });
@@ -604,14 +600,14 @@ describe('useSubscription Hook', () => {
     expect(result.current.sub3.data).toBe(null);
 
     expect(errorSpy).toHaveBeenCalledTimes(3);
-    expect(errorSpy.mock.calls[0][0]).toBe(
-      "Missing field 'car' while writing result {}",
+    expect(errorSpy.mock.calls[0]).toStrictEqual(
+      ["Missing field '%s' while writing result %o", "car", Object.create(null)]
     );
-    expect(errorSpy.mock.calls[1][0]).toBe(
-      "Missing field 'car' while writing result {}",
+    expect(errorSpy.mock.calls[1]).toStrictEqual(
+      ["Missing field '%s' while writing result %o", "car", Object.create(null)]
     );
-    expect(errorSpy.mock.calls[2][0]).toBe(
-      "Missing field 'car' while writing result {}",
+    expect(errorSpy.mock.calls[2]).toStrictEqual(
+      ["Missing field '%s' while writing result %o", "car", Object.create(null)]
     );
     errorSpy.mockRestore();
   });

@@ -1,17 +1,19 @@
-import { invariant, InvariantError, __DEV__ } from '../utilities/globals';
+import { invariant, newInvariantError, __DEV__ } from '../utilities/globals';
 
-import { ExecutionResult, DocumentNode } from 'graphql';
+import type { ExecutionResult, DocumentNode } from 'graphql';
 
-import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
-import { ApolloCache, DataProxy, Reference } from '../cache';
-import { Observable } from '../utilities';
+import type { FetchResult, GraphQLRequest} from '../link/core';
+import { ApolloLink, execute } from '../link/core';
+import type { ApolloCache, DataProxy, Reference } from '../cache';
+import type { DocumentTransform, Observable } from '../utilities';
 import { version } from '../version';
-import { HttpLink, UriFunction } from '../link/http';
+import type { UriFunction } from '../link/http';
+import { HttpLink } from '../link/http';
 
 import { QueryManager } from './QueryManager';
-import { ObservableQuery } from './ObservableQuery';
+import type { ObservableQuery } from './ObservableQuery';
 
-import {
+import type {
   ApolloQueryResult,
   DefaultContext,
   OperationVariables,
@@ -20,10 +22,9 @@ import {
   RefetchQueriesResult,
   InternalRefetchQueriesResult,
   RefetchQueriesInclude,
-  TransformQueryOptions,
 } from './types';
 
-import {
+import type {
   QueryOptions,
   WatchQueryOptions,
   MutationOptions,
@@ -31,16 +32,16 @@ import {
   WatchQueryFetchPolicy,
 } from './watchQueryOptions';
 
+import type {
+  FragmentMatcher} from './LocalState';
 import {
-  LocalState,
-  FragmentMatcher,
+  LocalState
 } from './LocalState';
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
   query?: Partial<QueryOptions<any, any>>;
   mutate?: Partial<MutationOptions<any, any, any>>;
-  transformQuery?: Partial<TransformQueryOptions>;
 }
 
 let hasSuggestedDevtools = false;
@@ -62,6 +63,7 @@ export type ApolloClientOptions<TCacheShape> = {
   fragmentMatcher?: FragmentMatcher;
   name?: string;
   version?: string;
+  documentTransform?: DocumentTransform
 };
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
@@ -128,7 +130,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     if (!options.cache) {
-      throw new InvariantError(
+      throw newInvariantError(
         "To initialize Apollo Client, you must specify a 'cache' property " +
         "in the options object. \n" +
         "For more information, please visit: https://go.apollo.dev/c/docs"
@@ -140,6 +142,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       credentials,
       headers,
       cache,
+      documentTransform,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       connectToDevTools =
@@ -216,7 +219,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         if (url) {
           invariant.log(
             "Download the Apollo DevTools for a better development " +
-              "experience: " + url
+              "experience: %s", url
           );
         }
       }
@@ -235,6 +238,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       cache: this.cache,
       link: this.link,
       defaultOptions: this.defaultOptions,
+      documentTransform,
       queryDeduplication,
       ssrMode,
       clientAwareness: {
@@ -256,6 +260,15 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         }
       } : void 0,
     });
+  }
+
+  /**
+   * The `DocumentTransform` used to modify GraphQL documents before a request
+   * is made. If a custom `DocumentTransform` is not provided, this will be the
+   * default document transform.
+   */
+  get documentTransform() {
+    return this.queryManager.documentTransform;
   }
 
   /**
@@ -569,7 +582,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     // result.queries and result.results instead, you shouldn't have to worry
     // about preventing uncaught rejections for the Promise.all result.
     result.catch(error => {
-      invariant.debug(`In client.refetchQueries, Promise.all promise rejected with error ${error}`);
+      invariant.debug(`In client.refetchQueries, Promise.all promise rejected with error %o`, error);
     });
 
     return result;

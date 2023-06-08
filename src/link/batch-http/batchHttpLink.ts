@@ -1,10 +1,13 @@
-import { ApolloLink, Operation, FetchResult } from '../core';
+import type { Operation, FetchResult } from '../core';
+import { ApolloLink } from '../core';
 import {
   Observable,
   hasDirectives,
   removeClientSetsFromDocument
 } from '../../utilities';
 import { fromError } from '../utils';
+import type {
+  HttpOptions} from '../http';
 import {
   serializeFetchParameter,
   selectURI,
@@ -12,7 +15,6 @@ import {
   selectHttpOptionsAndBodyInternal,
   defaultPrinter,
   fallbackHttpConfig,
-  HttpOptions,
   createSignalIfSupported,
 } from '../http';
 import {

@@ -12,6 +12,11 @@ export {
   getInclusionDirectives,
 } from './graphql/directives';
 
+export { 
+  DocumentTransform,
+  DocumentTransformCacheKey
+} from './graphql/DocumentTransform';
+
 export {
   FragmentMap,
   FragmentMapFunction,
@@ -70,6 +75,12 @@ export {
 } from './graphql/transform';
 
 export {
+  isMutationOperation,
+  isQueryOperation,
+  isSubscriptionOperation,
+} from './graphql/operations';
+
+export {
   concatPagination,
   offsetLimitPagination,
   relayStylePagination,
@@ -83,6 +94,8 @@ export {
 
 export { 
   isStatefulPromise,
+  createFulfilledPromise,
+  createRejectedPromise,
   wrapPromiseWithState,
 } from './promises/decoration';
 
@@ -109,3 +122,4 @@ export { stripTypename } from './common/stripTypename';
 
 export * from './types/IsStrictlyAny';
 export { DeepOmit } from './types/DeepOmit';
+export { DeepPartial } from './types/DeepPartial';

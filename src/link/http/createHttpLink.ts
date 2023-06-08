@@ -1,6 +1,6 @@
 import { __DEV__, invariant } from '../../utilities/globals';
 
-import { DefinitionNode } from 'graphql';
+import type { DefinitionNode } from 'graphql';
 
 import { ApolloLink } from '../core';
 import { Observable, hasDirectives } from '../../utilities';
@@ -12,11 +12,13 @@ import {
   readJsonBody
 } from './parseAndCheckHttpResponse';
 import { checkFetcher } from './checkFetcher';
+import type {
+  HttpOptions
+} from './selectHttpOptionsAndBody';
 import {
   selectHttpOptionsAndBodyInternal,
   defaultPrinter,
-  fallbackHttpConfig,
-  HttpOptions
+  fallbackHttpConfig
 } from './selectHttpOptionsAndBody';
 import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';

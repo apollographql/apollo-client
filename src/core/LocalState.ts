@@ -1,6 +1,6 @@
 import { invariant } from '../utilities/globals';
 
-import {
+import type {
   DocumentNode,
   OperationDefinitionNode,
   SelectionSetNode,
@@ -9,18 +9,20 @@ import {
   FragmentDefinitionNode,
   FieldNode,
   ASTNode,
-  visit,
-  BREAK,
-  isSelectionNode,
   DirectiveNode,
   FragmentSpreadNode,
-  ExecutableDefinitionNode,
+  ExecutableDefinitionNode} from 'graphql';
+import {
+  visit,
+  BREAK,
+  isSelectionNode
 } from 'graphql';
 
-import { ApolloCache } from '../cache';
-import {
+import type { ApolloCache } from '../cache';
+import type {
   FragmentMap,
-  StoreObject,
+  StoreObject} from '../utilities';
+import {
   argumentsObjectFromField,
   buildQueryFromSelectionSet,
   createFragmentMap,
@@ -35,9 +37,9 @@ import {
   resultKeyNameFromField,
   shouldInclude,
 } from '../utilities';
-import { ApolloClient } from './ApolloClient';
-import { Resolvers, OperationVariables } from './types';
-import { FetchResult } from '../link/core';
+import type { ApolloClient } from './ApolloClient';
+import type { Resolvers, OperationVariables } from './types';
+import type { FetchResult } from '../link/core';
 import { cacheSlot } from '../cache';
 
 export type Resolver = (
@@ -177,16 +179,9 @@ export class LocalState<TCacheShape> {
     return null;
   }
 
-  // Server queries by default are stripped of all @client based selection sets.
-  public serverQuery(
-    document: DocumentNode,
-    options: { removeClientFields?: boolean } = Object.create(null)
-  ) {
-    const { removeClientFields = true } = options;
-
-    return removeClientFields
-      ? removeClientSetsFromDocument(document)
-      : document;
+  // Server queries are stripped of all @client based selection sets.
+  public serverQuery(document: DocumentNode) {
+    return removeClientSetsFromDocument(document);
   }
 
   public prepareContext(context?: Record<string, any>) {
@@ -348,7 +343,7 @@ export class LocalState<TCacheShape> {
       } else {
         // This is a named fragment.
         fragment = fragmentMap[selection.name.value];
-        invariant(fragment, `No fragment named ${selection.name.value}`);
+        invariant(fragment, `No fragment named %s`, selection.name.value);
       }
 
       if (fragment && fragment.typeCondition) {
@@ -513,7 +508,7 @@ export class LocalState<TCacheShape> {
           },
           FragmentSpread(spread: FragmentSpreadNode, _, __, ___, ancestors) {
             const fragment = fragmentMap[spread.name.value];
-            invariant(fragment, `No fragment named ${spread.name.value}`);
+            invariant(fragment, `No fragment named %s`, spread.name.value);
 
             const fragmentSelections = collectByDefinition(fragment);
             if (fragmentSelections.size > 0) {

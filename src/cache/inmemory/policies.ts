@@ -1,25 +1,26 @@
-import { invariant, InvariantError, __DEV__ } from '../../utilities/globals';
+import { invariant, newInvariantError, __DEV__ } from '../../utilities/globals';
 
-import {
+import type {
   InlineFragmentNode,
   FragmentDefinitionNode,
   SelectionSetNode,
   FieldNode,
 } from 'graphql';
 
-import {
+import type {
   FragmentMap,
-  storeKeyNameFromField,
   StoreValue,
   StoreObject,
+  Reference} from '../../utilities';
+import {
+  storeKeyNameFromField,
   argumentsObjectFromField,
-  Reference,
   isReference,
   getStoreKeyName,
   isNonNullObject,
   stringifyForDisplay,
 } from '../../utilities';
-import {
+import type {
   IdGetter,
   MergeInfo,
   NormalizedCache,
@@ -35,8 +36,8 @@ import {
   isArray,
 } from './helpers';
 import { cacheSlot } from './reactiveVars';
-import { InMemoryCache } from './inMemoryCache';
-import {
+import type { InMemoryCache } from './inMemoryCache';
+import type {
   SafeReadonly,
   FieldSpecifier,
   ToReferenceFunction,
@@ -44,7 +45,7 @@ import {
   ReadFieldOptions,
   CanReadFunction,
 } from '../core/types/common';
-import { WriteContext } from './writeToStore';
+import type { WriteContext } from './writeToStore';
 
 // Upgrade to a faster version of the default stable JSON.stringify function
 // used by getStoreKeyName. This function is used when computing storeFieldName
@@ -382,7 +383,7 @@ export class Policies {
     const policy = typename && this.getTypePolicy(typename);
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
     while (keyFn) {
-      const specifierOrId = keyFn(object, context);
+      const specifierOrId = keyFn({...object, ...storeObject}, context);
       if (isArray(specifierOrId)) {
         keyFn = keyFieldsFnFromSpecifier(specifierOrId);
       } else {
@@ -512,7 +513,7 @@ export class Policies {
     const rootId = "ROOT_" + which.toUpperCase();
     const old = this.rootTypenamesById[rootId];
     if (typename !== old) {
-      invariant(!old || old === which, `Cannot change root ${which} __typename more than once`);
+      invariant(!old || old === which, `Cannot change root %s __typename more than once`, which);
       // First, delete any old __typename associated with this rootId from
       // rootIdsByTypename.
       if (old) delete this.rootIdsByTypename[old];
@@ -686,7 +687,7 @@ export class Policies {
         if (supertypeSet.has(supertype)) {
           if (!typenameSupertypeSet.has(supertype)) {
             if (checkingFuzzySubtypes) {
-              invariant.warn(`Inferring subtype ${typename} of supertype ${supertype}`);
+              invariant.warn(`Inferring subtype %s of supertype %s`, typename, supertype);
             }
             // Record positive results for faster future lookup.
             // Unfortunately, we cannot safely cache negative results,
@@ -973,9 +974,7 @@ export function normalizeReadFieldOptions(
   }
 
   if (__DEV__ && options.from === void 0) {
-    invariant.warn(`Undefined 'from' passed to readField with arguments ${
-      stringifyForDisplay(Array.from(readFieldArgs))
-    }`);
+    invariant.warn(`Undefined 'from' passed to readField with arguments %s`, stringifyForDisplay(Array.from(readFieldArgs)));
   }
 
   if (void 0 === options.variables) {
@@ -990,7 +989,7 @@ function makeMergeObjectsFunction(
 ): MergeObjectsFunction {
   return function mergeObjects(existing, incoming) {
     if (isArray(existing) || isArray(incoming)) {
-      throw new InvariantError("Cannot automatically merge arrays");
+      throw newInvariantError("Cannot automatically merge arrays");
     }
 
     // These dynamic checks are necessary because the parameters of a

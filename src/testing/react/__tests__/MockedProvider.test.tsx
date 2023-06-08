@@ -1,6 +1,6 @@
 import React from 'react';
 import { DocumentNode } from 'graphql';
-import { render, waitFor } from '@testing-library/react';
+import { render, renderHook, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
 import { itAsync, MockedResponse, MockLink } from '../../core';
@@ -763,3 +763,112 @@ describe('@client testing', () => {
     }).then(resolve, reject);
   });
 });
+
+test('reproduction of #10953', async () => {
+  const GetTodaysWorkoutQuery = gql`
+    fragment WorkoutGame on WorkoutGame {
+      lastGamePlay {
+        finishedAt
+        id
+      }
+      game {
+        slug
+      }
+    }
+
+    fragment WorkoutSlots on WorkoutSlots {
+      slot1 {
+        ...WorkoutGame
+      }
+      slot2 {
+        ...WorkoutGame
+      }
+      slot3 {
+        ...WorkoutGame
+      }
+      slot4 {
+        ...WorkoutGame
+      }
+      slot5 {
+        ...WorkoutGame
+      }
+    }
+    query GetTodaysWorkout($knownGameSlugs: [String!]!) {
+      todaysWorkout(knownGameSlugs: $knownGameSlugs) {
+        id
+        slots {
+          ...WorkoutSlots
+        }
+      }
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { 
+        query: GetTodaysWorkoutQuery,
+        variables: { knownGameSlugs: ["ff4a4d9a-bb5b-4a69-9ddf-2f8b7b396687"]}
+      },
+      result: {
+        data: {
+          todaysWorkout: {
+            id: 'ff4a4d9a-bb5b-4a69-9ddf-2f8b7b396687',
+            slots: {
+              slot1: {
+                lastGamePlay: { finishedAt: 1686071958030, id: 209, __typename: 'GamePlay' },
+                game: { slug: 'mockGameName1', __typename: 'Game' },
+                __typename: 'WorkoutGame',
+              },
+              slot2: {
+                lastGamePlay: { finishedAt: 1686071969630, id: 210, __typename: 'GamePlay' },
+                game: { slug: 'mockGameName2', __typename: 'Game' },
+                __typename: 'WorkoutGame',
+              },
+              slot3: {
+                lastGamePlay: { finishedAt: 1686071976163, id: 211, __typename: 'GamePlay' },
+                game: { slug: 'mockGameName3', __typename: 'Game' },
+                __typename: 'WorkoutGame',
+              },
+              slot4: {
+                lastGamePlay: { finishedAt: 1686071983431, id: 212, __typename: 'GamePlay' },
+                game: { slug: 'mockGameName4', __typename: 'Game' },
+                __typename: 'WorkoutGame',
+              },
+              slot5: {
+                lastGamePlay: { finishedAt: 1686071990297, id: 213, __typename: 'GamePlay' },
+                game: { slug: 'mockGameName5', __typename: 'Game' },
+                __typename: 'WorkoutGame',
+              },
+              __typename: 'WorkoutSlots',
+            },
+            __typename: 'Workout',
+          },
+        },
+      }
+    }
+  ];
+
+  const { result } = renderHook(
+    () => useQuery(GetTodaysWorkoutQuery, {
+      variables: {
+        knownGameSlugs: ["ff4a4d9a-bb5b-4a69-9ddf-2f8b7b396687"]
+      }
+    }), 
+    {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks}>
+          {children}
+        </MockedProvider>
+      )
+    }
+  );
+
+  expect(result.current.loading).toBe(true);
+  expect(result.current.data).toBeUndefined();
+
+  await waitFor(() => {
+    expect(result.current.loading).toBe(false);
+  });
+
+  expect(result.current.data).toEqual(mocks[0].result.data);
+})

@@ -132,7 +132,10 @@ export class BatchHttpLink extends ApolloLink {
         );
 
         if (result.body.variables && !includeUnusedVariables) {
-          result.body.variables = filterOperationVariables(result.body, operation);
+          result.body.variables = filterOperationVariables(
+            result.body.variables,
+            operation.query
+          );
         }
 
         return result;

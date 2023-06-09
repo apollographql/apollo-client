@@ -22,16 +22,13 @@ export function removeTypenameFromVariables(
     const { except } = options;
     const { query, variables } = operation;
 
-    if (!variables) {
-      return forward(operation);
+    if (variables) {
+      operation.variables = except
+        ? maybeStripTypenameUsingConfig(query, variables, except)
+        : stripTypename(variables);
     }
 
-    return forward({
-      ...operation,
-      variables: except
-        ? maybeStripTypenameUsingConfig(query, variables, except)
-        : stripTypename(variables),
-    });
+    return forward(operation);
   });
 }
 

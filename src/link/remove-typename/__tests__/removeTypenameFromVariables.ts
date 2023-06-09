@@ -517,3 +517,24 @@ test('handles when declared variables are unused', async () => {
     },
   });
 });
+
+test('ensures operation.getContext and operation.setContext functions are properly forwarded', async () => {
+  const query = gql`
+    query Test($foo: FooInput) {
+      someField(foo: $foo)
+    }
+  `;
+
+  const link = removeTypenameFromVariables();
+
+  const operationWithoutVariables = await execute(link, { query });
+  const operationWithVariables = await execute(link, {
+    query,
+    variables: { foo: { __typename: 'FooInput', bar: true } },
+  });
+
+  expect(typeof operationWithoutVariables.getContext).toBe('function');
+  expect(typeof operationWithoutVariables.setContext).toBe('function');
+  expect(typeof operationWithVariables.getContext).toBe('function');
+  expect(typeof operationWithVariables.setContext).toBe('function');
+});

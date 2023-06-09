@@ -60,8 +60,6 @@ export type SubscribeToMoreFunction<
   TVariables extends OperationVariables
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
-export type Version = 'main' | 'network';
-
 export function useSuspenseQuery<
   TData,
   TVariables extends OperationVariables,

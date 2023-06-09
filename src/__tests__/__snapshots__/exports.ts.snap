@@ -383,6 +383,7 @@ Array [
   "Concast",
   "DEV",
   "DeepMerger",
+  "DocumentTransform",
   "Observable",
   "addTypenameToDocument",
   "argumentsObjectFromField",

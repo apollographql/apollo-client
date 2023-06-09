@@ -4,14 +4,13 @@ import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 import { 
   ApolloClient,
-  DocumentTransform,
   NetworkStatus,
   WatchQueryFetchPolicy
 } from "../../core";
 import { ObservableQuery } from "../ObservableQuery";
 import { QueryManager } from "../QueryManager";
 
-import { Observable, removeDirectivesFromDocument } from "../../utilities";
+import { DocumentTransform, Observable, removeDirectivesFromDocument } from "../../utilities";
 import { ApolloLink, FetchResult } from "../../link/core";
 import { InMemoryCache, NormalizedCacheObject } from "../../cache";
 import { ApolloError } from "../../errors";

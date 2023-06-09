@@ -9,6 +9,7 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary, ErrorBoundaryProps } from 'react-error-boundary';
+import { expectTypeOf } from 'expect-type';
 import { GraphQLError } from 'graphql';
 import {
   gql,
@@ -38,8 +39,11 @@ import { useBackgroundQuery, useReadQuery } from '../useBackgroundQuery';
 import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { InMemoryCache } from '../../../cache';
-import { FetchMoreFunction } from '../../../react';
-import { QueryReference } from '../../cache/QueryReference';
+import {
+  FetchMoreFunction,
+  RefetchFunction,
+  QueryReference,
+} from '../../../react';
 import equal from '@wry/equality';
 
 function renderIntegrationTest({
@@ -132,6 +136,37 @@ function renderIntegrationTest({
   return { ...rest, query, client: _client, renders };
 }
 
+interface VariablesCaseData {
+  character: {
+    id: string;
+    name: string;
+  };
+}
+
+interface VariablesCaseVariables {
+  id: string;
+}
+
+function useVariablesIntegrationTestCase() {
+  const query: TypedDocumentNode<
+    VariablesCaseData,
+    VariablesCaseVariables
+  > = gql`
+    query CharacterQuery($id: ID!) {
+      character(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+  const CHARACTERS = ['Spider-Man', 'Black Widow', 'Iron Man', 'Hulk'];
+  let mocks = [...CHARACTERS].map((name, index) => ({
+    request: { query, variables: { id: String(index + 1) } },
+    result: { data: { character: { id: String(index + 1), name } } },
+  }));
+  return { mocks, query };
+}
+
 function renderVariablesIntegrationTest({
   variables,
   mocks,
@@ -151,32 +186,8 @@ function renderVariablesIntegrationTest({
   variables: { id: string };
   errorPolicy?: ErrorPolicy;
 }) {
-  const CHARACTERS = ['Spider-Man', 'Black Widow', 'Iron Man', 'Hulk'];
+  let { mocks: _mocks, query } = useVariablesIntegrationTestCase();
 
-  interface QueryData {
-    character: {
-      id: string;
-      name: string;
-    };
-  }
-
-  interface QueryVariables {
-    id: string;
-  }
-
-  const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
-      }
-    }
-  `;
-
-  let _mocks = [...CHARACTERS].map((name, index) => ({
-    request: { query, variables: { id: String(index + 1) } },
-    result: { data: { character: { id: String(index + 1), name } } },
-  }));
   // duplicate mocks with (updated) in the name for refetches
   _mocks = [..._mocks, ..._mocks, ..._mocks].map(
     ({ request, result }, index) => {
@@ -209,7 +220,7 @@ function renderVariablesIntegrationTest({
     suspenseCount: number;
     count: number;
     frames: {
-      data: QueryData;
+      data: VariablesCaseData;
       networkStatus: NetworkStatus;
       error: ApolloError | undefined;
     }[];
@@ -240,11 +251,11 @@ function renderVariablesIntegrationTest({
     variables: _variables,
     queryRef,
   }: {
-    variables: QueryVariables;
+    variables: VariablesCaseVariables;
     refetch: (
       variables?: Partial<OperationVariables> | undefined
-    ) => Promise<ApolloQueryResult<QueryData>>;
-    queryRef: QueryReference<QueryData>;
+    ) => Promise<ApolloQueryResult<VariablesCaseData>>;
+    queryRef: QueryReference<VariablesCaseData>;
   }) {
     const { data, error, networkStatus } = useReadQuery(queryRef);
     const [variables, setVariables] = React.useState(_variables);
@@ -277,7 +288,7 @@ function renderVariablesIntegrationTest({
     variables,
     errorPolicy = 'none',
   }: {
-    variables: QueryVariables;
+    variables: VariablesCaseVariables;
     errorPolicy?: ErrorPolicy;
   }) {
     const [queryRef, { refetch }] = useBackgroundQuery(query, {
@@ -295,7 +306,7 @@ function renderVariablesIntegrationTest({
     variables,
     errorPolicy,
   }: {
-    variables: QueryVariables;
+    variables: VariablesCaseVariables;
     errorPolicy?: ErrorPolicy;
   }) {
     return (
@@ -315,7 +326,7 @@ function renderVariablesIntegrationTest({
   const { ...rest } = render(
     <App errorPolicy={errorPolicy} variables={variables} />
   );
-  const rerender = ({ variables }: { variables: QueryVariables }) => {
+  const rerender = ({ variables }: { variables: VariablesCaseVariables }) => {
     return rest.rerender(<App variables={variables} />);
   };
   return { ...rest, query, rerender, client, renders };
@@ -1244,7 +1255,15 @@ describe('useBackgroundQuery', () => {
     });
 
     it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
-      const query = gql`
+      interface Data {
+        greeting: {
+          __typename: string;
+          message: string;
+          recipient: { name: string; __typename: string };
+        };
+      }
+
+      const query: TypedDocumentNode<Data> = gql`
         query {
           greeting {
             message
@@ -1256,13 +1275,6 @@ describe('useBackgroundQuery', () => {
           }
         }
       `;
-
-      interface Data {
-        greeting: {
-          message: string;
-          recipient: { name: string };
-        };
-      }
 
       const link = new MockSubscriptionLink();
       const cache = new InMemoryCache();
@@ -2392,9 +2404,7 @@ describe('useBackgroundQuery', () => {
         queryRef,
         refetch,
       }: {
-        refetch: (
-          variables?: Partial<OperationVariables> | undefined
-        ) => Promise<ApolloQueryResult<Data>>;
+        refetch: RefetchFunction<Data, OperationVariables>;
         queryRef: QueryReference<Data>;
         onChange: (id: string) => void;
       }) {
@@ -2717,11 +2727,136 @@ describe('useBackgroundQuery', () => {
       // @ts-expect-error should not allow returnPartialData in options
       useBackgroundQuery(query, { returnPartialData: true });
     });
+
     it('disallows refetchWritePolicy in BackgroundQueryHookOptions', () => {
       const { query } = renderIntegrationTest();
 
       // @ts-expect-error should not allow refetchWritePolicy in options
       useBackgroundQuery(query, { refetchWritePolicy: 'overwrite' });
     });
+
+    it('returns unknown when TData cannot be inferred', () => {
+      const query = gql`
+        query {
+          hello
+        }
+      `;
+
+      const [queryRef] = useBackgroundQuery(query);
+      const { data } = useReadQuery(queryRef);
+
+      expectTypeOf(data).toEqualTypeOf<unknown>();
+    });
+
+    it('disallows wider variables type than specified', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      // @ts-expect-error should not allow wider TVariables type
+      useBackgroundQuery(query, { variables: { id: '1', foo: 'bar' } });
+    });
+
+    it('returns TData in default case', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query);
+      const { data: inferred } = useReadQuery(inferredQueryRef);
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
+
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query);
+
+      const { data: explicit } = useReadQuery(explicitQueryRef);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+    });
+
+    it('returns TData | undefined with errorPolicy: "ignore"', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, {
+        errorPolicy: 'ignore',
+      });
+      const { data: inferred } = useReadQuery(inferredQueryRef);
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        errorPolicy: 'ignore',
+      });
+
+      const { data: explicit } = useReadQuery(explicitQueryRef);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns TData | undefined with errorPolicy: "all"', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, {
+        errorPolicy: 'all',
+      });
+      const { data: inferred } = useReadQuery(inferredQueryRef);
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const [explicitQueryRef] = useBackgroundQuery(query, {
+        errorPolicy: 'all',
+      });
+      const { data: explicit } = useReadQuery(explicitQueryRef);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns TData with errorPolicy: "none"', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, {
+        errorPolicy: 'none',
+      });
+      const { data: inferred } = useReadQuery(inferredQueryRef);
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
+
+      const [explicitQueryRef] = useBackgroundQuery(query, {
+        errorPolicy: 'none',
+      });
+      const { data: explicit } = useReadQuery(explicitQueryRef);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+    });
+
+    // TODO: https://github.com/apollographql/apollo-client/issues/10893
+    // it('returns DeepPartial<TData> with returnPartialData: true', () => {
+    // });
+
+    // TODO: https://github.com/apollographql/apollo-client/issues/10893
+    // it('returns TData with returnPartialData: false', () => {
+    // });
+
+    // TODO: https://github.com/apollographql/apollo-client/issues/10893
+    // it('returns TData when passing an option that does not affect TData', () => {
+    // });
+
+    // TODO: https://github.com/apollographql/apollo-client/issues/10893
+    // it('handles combinations of options', () => {
+    // });
+
+    // TODO: https://github.com/apollographql/apollo-client/issues/10893
+    // it('returns correct TData type when combined options that do not affect TData', () => {
+    // });
   });
 });

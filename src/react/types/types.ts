@@ -20,6 +20,10 @@ import type {
 } from '../../core';
 import type { SuspenseCache } from '../cache';
 
+/* QueryReference type */
+
+export type { QueryReference } from '../cache/QueryReference';
+
 /* Common types */
 
 export type { DefaultContext as Context } from "../../core";

@@ -116,7 +116,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     );
 
     if (body.variables && !includeUnusedVariables) {
-      body.variables = filterOperationVariables(body.variables, operation);
+      body.variables = filterOperationVariables(body.variables, operation.query);
     }
 
     let controller: any;

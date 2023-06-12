@@ -2,13 +2,13 @@
 "@apollo/client": minor
 ---
 
-Add generic type parameter for the cache `Modifiers` type. Improves TypeScript
-type inference for that type's fields and values of those fields.
+Add generic type parameter for the entity modified in `cache.modify`. Improves
+TypeScript type inference for that type's fields and values of those fields.
 
 Example:
 
 ```ts
-cache.modify({
+cache.modify<Book>({
   id: cache.identify(someBook),
   fields: {
     title: (title) => {
@@ -19,9 +19,6 @@ cache.modify({
       // author has type `Reference | Book["author"]`.
       // It used to be `any`.
     },
-  } satisfies Modifiers<Book>,
+  },
 });
 ```
-
-To take advantage of the type inference, use [the `satisfies Modifiers<...>`
-operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html).

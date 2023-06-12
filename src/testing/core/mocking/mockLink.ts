@@ -1,6 +1,5 @@
 import { invariant } from '../../../utilities/globals';
 
-import { print } from 'graphql';
 import { equal } from '@wry/equality';
 
 import type {
@@ -18,6 +17,7 @@ import {
   removeConnectionDirectiveFromDocument,
   cloneDeep,
   stringifyForDisplay,
+  print
 } from '../../../utilities';
 
 export type ResultFunction<T> = () => T;

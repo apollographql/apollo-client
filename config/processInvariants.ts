@@ -122,7 +122,6 @@ function getErrorCode(
 
 function transform(code: string, relativeFilePath: string) {
   const ast = reparse(code);
-  let addedDEV = false;
 
   recast.visit(ast, {
     visitCallExpression(path) {
@@ -186,7 +185,6 @@ function transform(code: string, relativeFilePath: string) {
         if (isDEVLogicalAnd(path.parent.node)) {
           return newNode;
         }
-        addedDEV = true;
         return b.logicalExpression('&&', makeDEVExpr(), newNode);
       }
     },
@@ -199,7 +197,7 @@ function transform(code: string, relativeFilePath: string) {
         const node = path.node;
         if (isDEVExpr(node)) {
           return b.binaryExpression(
-            '!==', 
+            '!==',
             b.memberExpression(
               b.identifier('globalThis'),
               b.identifier('__DEV__')

@@ -1,6 +1,7 @@
 import { maybe } from "./maybe";
 
 declare global {
+  const __DEV__: boolean;
 	interface Window {
 		__DEV__?: boolean;
 	}

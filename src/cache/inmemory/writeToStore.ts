@@ -1,4 +1,4 @@
-import { invariant, newInvariantError, __DEV__ } from '../../utilities/globals';
+import { invariant, newInvariantError } from '../../utilities/globals';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 import type {

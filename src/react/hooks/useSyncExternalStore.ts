@@ -1,4 +1,4 @@
-import { invariant, __DEV__ } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals';
 import * as React from 'react';
 
 import { canUseLayoutEffect } from '../../utilities';

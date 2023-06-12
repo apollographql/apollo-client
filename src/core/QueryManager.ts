@@ -1,4 +1,4 @@
-import { invariant, newInvariantError, __DEV__ } from '../utilities/globals';
+import { invariant, newInvariantError } from '../utilities/globals';
 
 import type { DocumentNode } from 'graphql';
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)

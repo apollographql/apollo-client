@@ -352,6 +352,62 @@ describe('SharedHttpTest', () => {
     );
   });
 
+  itAsync('strips unused variables, respecting nested fragments', (resolve, reject) => {
+    const link = createHttpLink({ uri: '/data' });
+
+    const query = gql`
+      query PEOPLE (
+        $declaredAndUsed: String,
+        $declaredButUnused: Int,
+      ) {
+        people(
+          surprise: $undeclared,
+          noSurprise: $declaredAndUsed,
+        ) {
+          ... on Doctor {
+            specialty(var: $usedByInlineFragment)
+          }
+          ...LawyerFragment
+        }
+      }
+      fragment LawyerFragment on Lawyer {
+        caseCount(var: $usedByNamedFragment)
+      }
+    `;
+
+    const variables = {
+      unused: 'strip',
+      declaredButUnused: 'strip',
+      declaredAndUsed: 'keep',
+      undeclared: 'keep',
+      usedByInlineFragment: 'keep',
+      usedByNamedFragment: 'keep',
+    };
+
+    execute(link, {
+      query,
+      variables,
+    }).subscribe({
+      next: makeCallback(resolve, reject, () => {
+        const [uri, options] = fetchMock.lastCall()!;
+        const { method, body } = options!;
+        expect(JSON.parse(body as string)).toEqual([{
+          operationName: "PEOPLE",
+          query: print(query),
+          variables: {
+            declaredAndUsed: 'keep',
+            undeclared: 'keep',
+            usedByInlineFragment: 'keep',
+            usedByNamedFragment: 'keep',
+          },
+        }]);
+        expect(method).toBe('POST');
+        expect(uri).toBe('/data');
+      }),
+      error: error => reject(error),
+    });
+  });
+
   itAsync('unsubscribes without calling subscriber', (resolve, reject) => {
     const link = createHttpLink({ uri: '/data' });
     const observable = execute(link, {

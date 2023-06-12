@@ -1451,7 +1451,7 @@ describe('useBackgroundQuery', () => {
       greeting: string;
     }
 
-    const query = gql`
+    const query: TypedDocumentNode<Data> = gql`
       query {
         greeting
       }
@@ -1517,7 +1517,7 @@ describe('useBackgroundQuery', () => {
 
     const user = userEvent.setup();
 
-    const query = gql`
+    const query: TypedDocumentNode<Data> = gql`
       query {
         greeting
       }
@@ -1597,7 +1597,7 @@ describe('useBackgroundQuery', () => {
 
     const user = userEvent.setup();
 
-    const query = gql`
+    const query: TypedDocumentNode<Data> = gql`
       query {
         greeting
       }
@@ -1675,7 +1675,7 @@ describe('useBackgroundQuery', () => {
 
     const user = userEvent.setup();
 
-    const query = gql`
+    const query: TypedDocumentNode<Data> = gql`
       query {
         greeting
       }
@@ -1786,7 +1786,7 @@ describe('useBackgroundQuery', () => {
       current: undefined,
     };
 
-    const query = gql`
+    const query: TypedDocumentNode<Data> = gql`
       query {
         greeting
       }
@@ -1877,7 +1877,7 @@ describe('useBackgroundQuery', () => {
 
     const user = userEvent.setup();
 
-    const query = gql`
+    const query: TypedDocumentNode<Data> = gql`
       query {
         greeting
       }

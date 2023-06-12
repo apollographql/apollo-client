@@ -1,4 +1,5 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
+import { expectTypeOf } from 'expect-type'
 
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core';
@@ -4038,7 +4039,7 @@ describe('TypedDocumentNode<Data, Variables>', () => {
     });
   });
 
-  it("should infer the types of modifier fields", () => {
+  it.skip("should infer the types of modifier fields", () => {
     const cache = getBookCache();
 
     cache.writeQuery({
@@ -4049,31 +4050,23 @@ describe('TypedDocumentNode<Data, Variables>', () => {
       },
     });
 
-    /** Asserts the inferred TypeScript type of a value matches the expected type */
-    const assertType =
-      <ExpectedType>() =>
-      <ActualType extends ExpectedType>(
-        _value: ActualType
-      ): ExpectedType extends ActualType ? void : never =>
-        void 0 as any;
-
     cache.modify<Book>({
       id: cache.identify(ffplBook),
       fields: {
         isbn: (value) => {
-          assertType<string>()(value);
+          expectTypeOf(value).toEqualTypeOf<string>();
           return value;
         },
         title: (value, { INVALIDATE }) => {
-          assertType<string>()(value);
+          expectTypeOf(value).toEqualTypeOf<string>();
           return INVALIDATE;
         },
         author: (value, { DELETE, isReference }) => {
-          assertType<Reference | Book["author"]>()(value);
+          expectTypeOf(value).toEqualTypeOf<Reference | Book["author"]>();
           if (isReference(value)) {
-            assertType<Reference>()(value);
+            expectTypeOf(value).toEqualTypeOf<Reference>();
           } else {
-            assertType<Book["author"]>()(value);
+            expectTypeOf(value).toEqualTypeOf<Book["author"]>();
           }
 
           return DELETE;

@@ -216,6 +216,29 @@ This code also has the following drawbacks:
 * It does nothing to protect against undefined object properties.
 * Accidentally using different key fields at different times can cause inconsistencies in the cache.
 
+### Customizing Type Policies
+
+After creating an Apollo client object, you can use the `addTypePolicy` method to add or modify the type policy.
+
+Here is an example of how to use the `addTypePolicy` method:
+
+```
+cost client = new ApolloClient({
+  uri: `https://api.example.com/graphql`,
+});
+
+//Add a type policy to the client object.
+client.addTypePolicy({
+  type: "Query".
+  fields: {
+    hello: {
+      resolver: () => "Hello, world!",
+    },
+  },
+});
+```
+This code snippet first creates an ApolloClient object. Then, it uses, the `addTypePolicy` method to add a type policy to the client. The type policy specifies that the `hello` field on the `Query` type should return the string "Hello, world!".
+
 ### Disabling normalization
 
 You can instruct the `InMemoryCache` _not_ to normalize objects of a particular type. This can be useful for metrics and other transient data that's identified by a timestamp and never receives updates.

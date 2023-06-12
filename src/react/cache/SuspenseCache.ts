@@ -19,12 +19,10 @@ interface SuspenseCacheOptions {
 }
 
 export class SuspenseCache {
-  private cacheKeys = new Trie<CacheKey>(
+  private queryRefs = new Trie<{ current?: QueryReference }>(
     canUseWeakMap,
-    (cacheKey: CacheKey) => cacheKey
+    () => Object.create(null)
   );
-
-  private queryRefs = new Map<CacheKey, QueryReference>();
   private options: SuspenseCacheOptions;
 
   constructor(options: SuspenseCacheOptions = Object.create(null)) {
@@ -35,19 +33,16 @@ export class SuspenseCache {
     cacheKey: CacheKey,
     createObservable: () => ObservableQuery<TData>
   ) {
-    const stableCacheKey = this.cacheKeys.lookupArray(cacheKey);
+    const ref = this.queryRefs.lookupArray(cacheKey);
 
-    if (!this.queryRefs.has(stableCacheKey)) {
-      this.queryRefs.set(
-        stableCacheKey,
-        new QueryReference(createObservable(), {
-          key: stableCacheKey,
+    if (!ref.current) {
+      ref.current = new QueryReference(createObservable(), {
+          key: cacheKey,
           autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
-          onDispose: () => this.queryRefs.delete(stableCacheKey),
+          onDispose: () => { delete ref.current },
         })
-      );
     }
 
-    return this.queryRefs.get(stableCacheKey)! as QueryReference<TData>;
+    return ref.current as QueryReference<TData>;
   }
 }

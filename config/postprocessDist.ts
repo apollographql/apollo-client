@@ -22,28 +22,6 @@ eachFile(distDir, (file, relPath) => new Promise((resolve, reject) => {
     const tr = new Transformer;
     const output = tr.transform(source, file);
 
-    if (
-      /\b__DEV__\b/.test(source) &&
-      // Ignore modules that reside within @apollo/client/utilities/globals.
-      relPath.split(path.sep, 2).join("/") !== "utilities/globals"
-    ) {
-      let importsUtilitiesGlobals = false;
-
-      tr.absolutePaths.forEach(absPath => {
-        const distRelativePath =
-          path.relative(distDir, absPath).split(path.sep).join("/");
-        if (distRelativePath === "utilities/globals/index.js") {
-          importsUtilitiesGlobals = true;
-        }
-      });
-
-      if (!importsUtilitiesGlobals) {
-        reject(new Error(`Module ${
-          relPath
-        } uses __DEV__ but does not import @apollo/client/utilities/globals`));
-      }
-    }
-
     if (source === output) {
       resolve(file);
     } else {

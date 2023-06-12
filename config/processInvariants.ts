@@ -192,20 +192,25 @@ function transform(code: string, relativeFilePath: string) {
     },
   });
 
-  recast.visit(ast, {
-    visitIdentifier(path) {
-      this.traverse(path);
-      const node = path.node;
-      if (isDEVExpr(node)) {
-        return b.memberExpression(
-          b.identifier('globalThis'),
-          b.identifier('__DEV__')
-        );
-      }
+  if (relativeFilePath !== 'config/jest/setup.js')
+    recast.visit(ast, {
+      visitIdentifier(path) {
+        this.traverse(path);
+        const node = path.node;
+        if (isDEVExpr(node)) {
+          return b.binaryExpression(
+            '!==', 
+            b.memberExpression(
+              b.identifier('globalThis'),
+              b.identifier('__DEV__')
+            ),
+            b.literal(false)
+          );
+        }
 
-      return node;
-    },
-  });
+        return node;
+      },
+    });
 
   return reprint(ast);
 }

@@ -2839,6 +2839,44 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
     });
 
+    it('returns TData | undefined when `skip` is present', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, {
+        skip: true,
+      });
+
+      const { data: inferred } = useReadQuery(inferredQueryRef);
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const [explicitQueryRef] = useBackgroundQuery<VariablesCaseData>(query, {
+        skip: true,
+      });
+
+      const { data: explicit } = useReadQuery(explicitQueryRef);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      // TypeScript is too smart and using a `const` or `let` boolean variable
+      // for the `skip` option results in a false positive. Using an options
+      // object allows us to properly check for a dynamic case.
+      const options = {
+        skip: true,
+      };
+
+      const [dynamicQueryRef] = useBackgroundQuery(query, {
+        skip: options.skip,
+      });
+
+      const { data: dynamic } = useReadQuery(dynamicQueryRef);
+
+      expectTypeOf(dynamic).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
     // TODO: https://github.com/apollographql/apollo-client/issues/10893
     // it('returns DeepPartial<TData> with returnPartialData: true', () => {
     // });

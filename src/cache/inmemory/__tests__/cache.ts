@@ -2,7 +2,7 @@ import gql, { disableFragmentWarnings } from 'graphql-tag';
 
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core';
-import { Cache, Modifiers } from '../../../cache';
+import { Cache } from '../../../cache';
 import { InMemoryCache } from '../inMemoryCache';
 import { InMemoryCacheConfig } from '../types';
 
@@ -2817,7 +2817,7 @@ describe("InMemoryCache#modify", () => {
 
     cache.modify({
       fields: {
-        comments(comments: Reference[], { readField }) {
+        comments(comments: readonly Reference[], { readField }) {
           expect(Object.isFrozen(comments)).toBe(true);
           expect(comments.length).toBe(3);
           const filtered = comments.filter(comment => {
@@ -2902,6 +2902,7 @@ describe("InMemoryCache#modify", () => {
         expect(fieldName).not.toBe("b");
         if (fieldName === "a") expect(value).toBe(1);
         if (fieldName === "c") expect(value).toBe(3);
+        return value;
       },
       optimistic: true,
     });

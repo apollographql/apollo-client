@@ -1,5 +1,5 @@
 import { DataProxy } from './DataProxy';
-import type { Modifier, Modifiers } from './common';
+import type { AllFieldsModifier, Modifiers } from './common';;
 import type { ApolloCache } from '../cache';
 
 export namespace Cache {
@@ -57,11 +57,9 @@ export namespace Cache {
     discardWatches?: boolean;
   }
 
-  export interface ModifyOptions<Entity = Record<string, any>> {
+  export interface ModifyOptions<Entity extends Record<string, any> = Record<string, any>> {
     id?: string;
-    fields: Entity extends Record<string, unknown>
-      ? Modifiers<Entity> | Modifier<Entity>
-      : Modifier<Entity>;
+    fields: Modifiers<Entity> | AllFieldsModifier<Entity>;
     optimistic?: boolean;
     broadcast?: boolean;
   }

@@ -120,7 +120,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     return [];
   }
 
-  public modify<Entity = Record<string, any>>(options: Cache.ModifyOptions<Entity>): boolean {
+  public modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache.ModifyOptions<Entity>): boolean {
     return false;
   }
 

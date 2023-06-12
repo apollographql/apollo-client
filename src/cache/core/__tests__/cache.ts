@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 import { ApolloCache } from '../cache';
 import { Cache, DataProxy } from '../..';
 import { Reference } from '../../../utilities/graphql/storeUtils';
-
+import { expectTypeOf } from 'expect-type'
 class TestCache extends ApolloCache<unknown> {
   constructor() {
     super();
@@ -304,6 +304,145 @@ describe('abstract cache', () => {
       test.readFragment = jest.fn().mockReturnValue('foo');
       test.updateFragment({ id: fragmentId, fragment }, data => {
         expect(data).toBe('foo');
+      });
+    });
+  });
+});
+
+describe.skip('Cache type tests', () => {
+  describe('modify', () => {
+    test('field types are inferred correctly from passed entity type', () => {
+      const cache = new TestCache();
+      cache.modify<{
+        prop1: string;
+        prop2: number;
+        child: {
+          someObject: true
+        },
+        children: {
+          anotherObject: false
+        }[]
+      }>({
+        fields: {
+          prop1(field) {
+            expectTypeOf(field).toEqualTypeOf<string>();
+            return field;
+          },
+          prop2(field) {
+            expectTypeOf(field).toEqualTypeOf<number>();
+            return field;
+          },
+          child(field) {
+            expectTypeOf(field).toEqualTypeOf<{ someObject: true } | Reference>();
+            return field;
+          },
+          children(field) {
+            expectTypeOf(field).toEqualTypeOf<(ReadonlyArray<{ anotherObject: false }>) | ReadonlyArray<Reference>>();
+            return field;
+          }
+        }
+      })
+    })
+    test('field method needs to return a value of the correct type', () => {
+      const cache = new TestCache();
+      cache.modify<{ p1: string, p2: string, p3: string, p4: string, p5: string }>({
+        fields: {
+          p1() { return "" },
+          // @ts-expect-error returns wrong type
+          p2() { return 1 },
+          // @ts-expect-error needs return statement
+          p3() {},
+          p4(_, { DELETE }) { return DELETE },
+          p5(_, { INVALIDATE }) { return INVALIDATE },
+        }
+      })
+    })
+    test('passing a function as `field` should infer all entity properties as possible input (interfaces)', () => {
+      interface ParentEntity {
+        prop1: string;
+        prop2: number;
+        child: ChildEntity;
+      }
+      interface ChildEntity {
+        prop1: boolean;
+        prop2: symbol;
+        children: OtherChildEntry[];
+      }
+      interface OtherChildEntry {
+        foo: false
+      }
+
+      const cache = new TestCache();
+      // with reference
+      cache.modify<ParentEntity>({
+        id: 'foo',
+        fields(field) {
+          expectTypeOf(field).toEqualTypeOf<string | number | ChildEntity | Reference>();
+          return field;
+        }
+      })
+      // without reference
+      cache.modify<ChildEntity>({
+        id: 'foo',
+        fields(field) {
+          expectTypeOf(field).toEqualTypeOf<boolean | symbol | readonly OtherChildEntry[] | readonly Reference[]>();
+          return field;
+        }
+      })
+    })
+    test('passing a function as `field` should infer all entity properties as possible input (types)', () => {
+      type ParentEntity = {
+        prop1: string;
+        prop2: number;
+        child: ChildEntity;
+      }
+      type ChildEntity = {
+        prop1: boolean;
+        prop2: symbol;
+        children: OtherChildEntry[];
+      }
+      type OtherChildEntry = {
+        foo: false
+      }
+
+      const cache = new TestCache();
+      // with reference
+      cache.modify<ParentEntity>({
+        id: 'foo',
+        fields(field) {
+          expectTypeOf(field).toEqualTypeOf<string | number | ChildEntity | Reference>();
+          return field;
+        }
+      })
+      // without reference
+      cache.modify<ChildEntity>({
+        id: 'foo',
+        fields(field) {
+          expectTypeOf(field).toEqualTypeOf<boolean | symbol | readonly OtherChildEntry[] | readonly Reference[]>();
+          return field;
+        }
+      })
+    })
+    test('passing a function as `field` w/o specifying an entity type', () => {
+      const cache = new TestCache();
+      cache.modify({
+        id: 'foo',
+        fields(field) {
+          expectTypeOf(field).toEqualTypeOf<any>();
+          return field;
+        }
+      });
+    });
+    test('passing a function as `field` property w/o specifying an entity type', () => {
+      const cache = new TestCache();
+      cache.modify({
+        id: 'foo',
+        fields: {
+          p1(field) {
+            expectTypeOf(field).toEqualTypeOf<any>();
+            return field;
+          }
+        }
       });
     });
   });

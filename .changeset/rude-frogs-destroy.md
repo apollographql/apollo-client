@@ -2,4 +2,4 @@
 '@apollo/client': patch
 ---
 
-Use printed query for query deduplication, generally cache `print` calls.
+Use printed query for query deduplication. Cache `print` calls for GraphQL documents to speed up repeated operations.

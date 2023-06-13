@@ -37,10 +37,12 @@ export class SuspenseCache {
 
     if (!ref.current) {
       ref.current = new QueryReference(createObservable(), {
-          key: cacheKey,
-          autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
-          onDispose: () => { delete ref.current },
-        })
+        key: cacheKey,
+        autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
+        onDispose: () => {
+          delete ref.current;
+        },
+      });
     }
 
     return ref.current as QueryReference<TData>;

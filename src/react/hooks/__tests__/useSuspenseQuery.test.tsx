@@ -47,51 +47,6 @@ import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { SuspenseQueryHookFetchPolicy } from '../../../react';
 import { useSuspenseQuery } from '../useSuspenseQuery';
-import { canonicalStringify } from '../../../cache';
-
-expect.extend({
-  toHaveSuspenseCacheEntryUsing(
-    suspenseCache: SuspenseCache,
-    client: ApolloClient<unknown>,
-    query: DocumentNode,
-    {
-      variables,
-      queryKey = [],
-    }: {
-      variables?: OperationVariables;
-      queryKey?: string | number | any[];
-    } = Object.create(null)
-  ) {
-    const cacheKey = (
-      [client, query, canonicalStringify(variables)] as any[]
-    ).concat(queryKey);
-    const queryRef = suspenseCache['queryRefs'].lookupArray(cacheKey)?.current;
-
-    return {
-      pass: !!queryRef,
-      message: () => {
-        return `Expected suspense cache ${
-          queryRef ? 'not ' : ''
-        }to have cache entry using key`;
-      },
-    };
-  },
-});
-
-declare global {
-  namespace jest {
-    interface Matchers<R = void> {
-      toHaveSuspenseCacheEntryUsing(
-        client: ApolloClient<unknown>,
-        query: DocumentNode,
-        options?: {
-          variables?: OperationVariables;
-          queryKey?: string | number | any[];
-        }
-      ): R;
-    }
-  }
-}
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,

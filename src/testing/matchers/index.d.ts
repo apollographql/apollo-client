@@ -1,4 +1,8 @@
-import type { DocumentNode } from '../../core';
+import type {
+  ApolloClient,
+  DocumentNode,
+  OperationVariables,
+} from '../../core';
 
 interface ApolloCustomMatchers<R = void> {
   /**
@@ -6,6 +10,18 @@ interface ApolloCustomMatchers<R = void> {
    * comparing their printed values. The document must be parsed by `gql`.
    */
   toMatchDocument(document: DocumentNode): R;
+
+  /**
+   * Used to determine if the Suspense cache has a cache entry.
+   */
+  toHaveSuspenseCacheEntryUsing(
+    client: ApolloClient<unknown>,
+    query: DocumentNode,
+    options?: {
+      variables?: OperationVariables;
+      queryKey?: string | number | any[];
+    }
+  ): R;
 }
 
 declare global {

@@ -2,4 +2,4 @@
 '@apollo/client': patch
 ---
 
-SuspenseCache: use Trie directly
+Slightly decrease bundle size and memory footprint of `SuspenseCache` by changing how cache entries are stored internally.

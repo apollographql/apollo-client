@@ -1,10 +1,5 @@
 import { invariant, newInvariantError, InvariantError } from "./invariantWrappers";
 
-/** 
- * @deprecated this has not functionality anymore, 
- * it is just exported for backwards compatbility 
- */
-export function checkDEV(){}
 // Import graphql/jsutils/instanceOf safely, working around its unchecked usage
 // of process.env.NODE_ENV and https://github.com/graphql/graphql-js/pull/2894.
 import { removeTemporaryGlobals } from "./fix-graphql";
@@ -21,6 +16,8 @@ export { invariant, newInvariantError, InvariantError }
  * @deprecated we do not use this internally anymore, 
  * it is just exported for backwards compatbility 
  */
+// this file is extempt from automatic `__DEV__` replacement 
+// so we have to write it out here 
 // @ts-ignore
-export const DEV = __DEV__;
+export const DEV = globalThis.__DEV__ !== false;
 export { DEV as __DEV__ };

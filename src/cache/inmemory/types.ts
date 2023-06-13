@@ -15,10 +15,10 @@ import type {
   FieldMergeFunction,
 } from './policies';
 import type {
-  Modifier,
   Modifiers,
   ToReferenceFunction,
   CanReadFunction,
+  AllFieldsModifier,
 } from '../core/types/common';
 
 import type { FragmentRegistryAPI } from './fragmentRegistry';
@@ -49,7 +49,7 @@ export interface NormalizedCache {
   merge(olderId: string, newerObject: StoreObject): void;
   merge(olderObject: StoreObject, newerId: string): void;
 
-  modify(dataId: string, fields: Modifiers | Modifier<any>): boolean;
+  modify<Entity extends Record<string, any>>(dataId: string, fields: Modifiers<Entity> | AllFieldsModifier<Entity>): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 

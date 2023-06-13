@@ -1,4 +1,5 @@
 import gql, { disableFragmentWarnings } from 'graphql-tag';
+import { expectTypeOf } from 'expect-type'
 
 import { cloneDeep } from '../../../utilities/common/cloneDeep';
 import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core';
@@ -2817,7 +2818,7 @@ describe("InMemoryCache#modify", () => {
 
     cache.modify({
       fields: {
-        comments(comments: Reference[], { readField }) {
+        comments(comments: readonly Reference[], { readField }) {
           expect(Object.isFrozen(comments)).toBe(true);
           expect(comments.length).toBe(3);
           const filtered = comments.filter(comment => {
@@ -2902,6 +2903,7 @@ describe("InMemoryCache#modify", () => {
         expect(fieldName).not.toBe("b");
         if (fieldName === "a") expect(value).toBe(1);
         if (fieldName === "c") expect(value).toBe(3);
+        return value;
       },
       optimistic: true,
     });
@@ -3905,18 +3907,43 @@ describe('TypedDocumentNode<Data, Variables>', () => {
     }
   `;
 
-  it('should determine Data and Variables types of {write,read}{Query,Fragment}', () => {
-    const cache = new InMemoryCache({
+  // We need to define these objects separately from calling writeQuery,
+  // because passing them directly to writeQuery will trigger excess property
+  // warnings due to the extra __typename and isbn fields. Internally, we
+  // almost never pass object literals to writeQuery or writeFragment, so
+  // excess property checks should not be a problem in practice.
+  const jcmAuthor = {
+    __typename: "Author",
+    name: "John C. Mitchell",
+  };
+
+  const ffplBook = {
+    __typename: "Book",
+    isbn: "0262133210",
+    title: "Foundations for Programming Languages",
+    author: jcmAuthor,
+  };
+
+  const ffplVariables = {
+    isbn: "0262133210",
+  };
+
+  function getBookCache() {
+    return new InMemoryCache({
       typePolicies: {
         Query: {
           fields: {
             book(existing, { args, toReference }) {
-              return existing ?? (args && toReference({
-                __typename: "Book",
-                isbn: args.isbn,
-              }));
-            }
-          }
+              return (
+                existing ??
+                (args &&
+                  toReference({
+                    __typename: "Book",
+                    isbn: args.isbn,
+                  }))
+              );
+            },
+          },
         },
 
         Book: {
@@ -3928,27 +3955,10 @@ describe('TypedDocumentNode<Data, Variables>', () => {
         },
       },
     });
+  }
 
-    // We need to define these objects separately from calling writeQuery,
-    // because passing them directly to writeQuery will trigger excess property
-    // warnings due to the extra __typename and isbn fields. Internally, we
-    // almost never pass object literals to writeQuery or writeFragment, so
-    // excess property checks should not be a problem in practice.
-    const jcmAuthor = {
-      __typename: "Author",
-      name: "John C. Mitchell",
-    };
-
-    const ffplBook = {
-      __typename: "Book",
-      isbn: "0262133210",
-      title: "Foundations for Programming Languages",
-      author: jcmAuthor,
-    };
-
-    const ffplVariables = {
-      isbn: "0262133210",
-    };
+  it("should determine Data and Variables types of {write,read}{Query,Fragment}", () => {
+    const cache = getBookCache();
 
     cache.writeQuery({
       query,
@@ -4024,6 +4034,42 @@ describe('TypedDocumentNode<Data, Variables>', () => {
         author: {
           __typename: "Author",
           name: "Harold Abelson",
+        },
+      },
+    });
+  });
+
+  it.skip("should infer the types of modifier fields", () => {
+    const cache = getBookCache();
+
+    cache.writeQuery({
+      query,
+      variables: ffplVariables,
+      data: {
+        book: ffplBook,
+      },
+    });
+
+    cache.modify<Book>({
+      id: cache.identify(ffplBook),
+      fields: {
+        isbn: (value) => {
+          expectTypeOf(value).toEqualTypeOf<string>();
+          return value;
+        },
+        title: (value, { INVALIDATE }) => {
+          expectTypeOf(value).toEqualTypeOf<string>();
+          return INVALIDATE;
+        },
+        author: (value, { DELETE, isReference }) => {
+          expectTypeOf(value).toEqualTypeOf<Reference | Book["author"]>();
+          if (isReference(value)) {
+            expectTypeOf(value).toEqualTypeOf<Reference>();
+          } else {
+            expectTypeOf(value).toEqualTypeOf<Book["author"]>();
+          }
+
+          return DELETE;
         },
       },
     });

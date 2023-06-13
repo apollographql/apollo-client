@@ -697,8 +697,11 @@ describe('useBackgroundQuery', () => {
       }
     );
 
-    expect(directSuspenseCache['queryRefs'].size).toBe(1);
-    expect(contextSuspenseCache['queryRefs'].size).toBe(0);
+    expect(directSuspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
+    expect(contextSuspenseCache).not.toHaveSuspenseCacheEntryUsing(
+      client,
+      query
+    );
   });
 
   it('passes context to the link', async () => {

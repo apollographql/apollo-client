@@ -327,6 +327,8 @@ Array [
   "withErrorSpy",
   "withLogSpy",
   "withWarningSpy",
+  "zenObservableToPromiseAll",
+  "zenObservableToPromiseFirstValue",
 ]
 `;
 
@@ -344,6 +346,8 @@ Array [
   "withErrorSpy",
   "withLogSpy",
   "withWarningSpy",
+  "zenObservableToPromiseAll",
+  "zenObservableToPromiseFirstValue",
 ]
 `;
 

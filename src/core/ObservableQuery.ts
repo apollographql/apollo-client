@@ -244,14 +244,18 @@ export class ObservableQuery<
       // These fetch policies should never deliver data from the cache, unless
       // redelivering a previously delivered result.
       skipCacheDataFor(fetchPolicy) ||
-      this.waitForOwnResult ||
       // If this.options.query has @client(always: true) fields, we cannot
       // trust diff.result, since it was read from the cache without running
       // local resolvers (and it's too late to run resolvers now, since we must
       // return a result synchronously).
       this.queryManager.transform(this.options.query).hasForcedResolvers
     ) {
-      // Fall through.
+      // Fall through. 
+    } else if (this.waitForOwnResult) {
+      // This would usually be a part of `QueryInfo.getDiff()`. 
+      // which we skip in the waitForOwnResult case since we are not
+      // interested in the diff.
+      this.queryInfo['updateWatch']();
     } else {
       const diff = this.queryInfo.getDiff();
 
@@ -841,7 +845,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
         this.waitForOwnResult = false
       }
     }
-
+    
     const variables = options.variables && { ...options.variables };
     const { concast, fromLink } = this.fetch(options, newNetworkStatus);
     const observer: Observer<ApolloQueryResult<TData>> = {

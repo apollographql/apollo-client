@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-PersistedQueryLink: also check for extension error codes
+`PersistedQueryLink` will now also check for error codes in `extensions`.

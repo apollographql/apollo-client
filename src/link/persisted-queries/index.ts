@@ -30,8 +30,8 @@ export interface ErrorResponse {
 type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
 
-const PersistedQueryNotSupported = "PERSISTED_QUERY_NOT_SUPPORTED";
-const PersistedQueryNotFound = "PERSISTED_QUERY_NOT_FOUND"
+const PERSISTED_QUERY_NOT_SUPPORTED = "PERSISTED_QUERY_NOT_SUPPORTED";
+const PERSISTED_QUERY_NOT_FOUND = "PERSISTED_QUERY_NOT_FOUND"
 
 export namespace PersistedQueryLink {
   interface BaseOptions {
@@ -64,7 +64,7 @@ function collectErrorsByMessageAndCode(
   if (isNonEmptyArray(graphQLErrors)) {
     graphQLErrors.forEach((error) => {
       collected.byMessage[error.message] = error;
-      if (typeof error.extensions?.code == "string")
+      if (typeof error.extensions?.code === "string")
         collected.byCode[error.extensions.code] = error;
     });
   }
@@ -76,14 +76,14 @@ const defaultOptions = {
     // if the server doesn't support persisted queries, don't try anymore
     if (
       byMessage.PersistedQueryNotSupported ||
-      byCode[PersistedQueryNotSupported]
+      byCode[PERSISTED_QUERY_NOT_SUPPORTED]
     ) {
       return true;
     }
 
     if (
       byMessage.PersistedQueryNotFound ||
-      byCode[PersistedQueryNotFound]
+      byCode[PERSISTED_QUERY_NOT_FOUND]
     ) {
       return false;
     }
@@ -225,7 +225,7 @@ export const createPersistedQueryLink = (
           // if its not found, we can try it again, otherwise just report the error
           if (
             errorsByMessageAndCode.byMessage.PersistedQueryNotFound ||
-            errorsByMessageAndCode.byCode[PersistedQueryNotFound] ||
+            errorsByMessageAndCode.byCode[PERSISTED_QUERY_NOT_FOUND] ||
             !supportsPersistedQueries
           ) {
             // need to recall the link chain

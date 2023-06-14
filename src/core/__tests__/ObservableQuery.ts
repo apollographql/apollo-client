@@ -2,14 +2,9 @@ import gql from "graphql-tag";
 import { GraphQLError } from "graphql";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import {
-  ApolloClient,
-  ApolloQueryResult,
-  NetworkStatus,
-  WatchQueryFetchPolicy,
-} from '../../core';
-import { ObservableQuery } from '../ObservableQuery';
-import { QueryManager } from '../QueryManager';
+import { ApolloClient, ApolloQueryResult, NetworkStatus, WatchQueryFetchPolicy } from "../../core";
+import { ObservableQuery } from "../ObservableQuery";
+import { QueryManager } from "../QueryManager";
 
 import { Observable } from "../../utilities";
 import { ApolloLink, FetchResult } from "../../link/core";
@@ -28,16 +23,13 @@ import { waitFor } from "@testing-library/react";
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchQueryObservable = queryManager.fetchQueryObservable;
   const fetchConcastWithInfo = queryManager['fetchConcastWithInfo'];
-  const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] =
-    (queryManager as any).fetchQueryByPolicy;
+  const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (queryManager as any)
+    .fetchQueryByPolicy;
 
-  const mock = <T extends
-    | typeof fetchQueryObservable
-    | typeof fetchQueryByPolicy
-    | typeof fetchConcastWithInfo
-  >(original: T) => jest.fn<ReturnType<T>, Parameters<T>>(function () {
-    return original.apply(queryManager, arguments);
-  });
+  const mock = <T extends typeof fetchQueryObservable | typeof fetchConcastWithInfo | typeof fetchQueryByPolicy>(original: T) =>
+    jest.fn<ReturnType<T>, Parameters<T>>(function () {
+      return original.apply(queryManager, arguments);
+    });
 
   const mocks = {
     fetchQueryObservable: mock(fetchQueryObservable),
@@ -1010,10 +1002,10 @@ describe("ObservableQuery", () => {
             expect(fqbpCalls[0][1].fetchPolicy).toEqual("cache-first");
             expect(fqbpCalls[1][1].fetchPolicy).toEqual("network-only");
 
-            const fcwiCalls = mocks.fetchConcastWithInfo.mock.calls;
-            expect(fcwiCalls.length).toBe(2);
-            expect(fcwiCalls[0][1].fetchPolicy).toEqual('cache-first');
-            expect(fcwiCalls[1][1].fetchPolicy).toEqual('network-only');
+            const fqoCalls = mocks.fetchConcastWithInfo.mock.calls;
+            expect(fqoCalls.length).toBe(2);
+            expect(fqoCalls[0][1].fetchPolicy).toEqual("cache-first");
+            expect(fqoCalls[1][1].fetchPolicy).toEqual("network-only");
 
             // Although the options.fetchPolicy we passed just now to
             // fetchQueryByPolicy should have been network-only,
@@ -1065,10 +1057,10 @@ describe("ObservableQuery", () => {
             // Unlike network-only or cache-and-network, the no-cache
             // FetchPolicy does not switch to cache-first after the first
             // network request.
-            expect(observable.options.fetchPolicy).toBe('no-cache');
-            const fcwiCalls = mocks.fetchConcastWithInfo.mock.calls;
-            expect(fcwiCalls.length).toBe(2);
-            expect(fcwiCalls[1][1].fetchPolicy).toBe("no-cache");
+            expect(observable.options.fetchPolicy).toBe("no-cache");
+            const fqoCalls = mocks.fetchConcastWithInfo.mock.calls;
+            expect(fqoCalls.length).toBe(2);
+            expect(fqoCalls[1][1].fetchPolicy).toBe("no-cache");
 
             resolve();
           }
@@ -2184,22 +2176,22 @@ describe("ObservableQuery", () => {
           subscribeAndCount(reject, observable, (handleCount, subResult) => {
             const { data, loading, networkStatus } = observable.getCurrentResult();
 
-          if (handleCount === 1) {
-            expect(subResult).toEqual({
-              data,
-              loading,
-              networkStatus,
-            });
-          } else if (handleCount === 2) {
-            expect(subResult).toEqual({
-              data: dataTwo,
-              loading: false,
-              networkStatus: 7,
-            });
-            resolve();
-          }
+            if (handleCount === 1) {
+              expect(subResult).toEqual({
+                data,
+                loading,
+                networkStatus,
+              });
+            } else if (handleCount === 2) {
+              expect(subResult).toEqual({
+                data: dataTwo,
+                loading: false,
+                networkStatus: 7,
+              });
+              resolve();
+            }
+          });
         });
-      });
     });
 
     {
@@ -2356,11 +2348,11 @@ describe("ObservableQuery", () => {
 
           cache.writeQuery({ query, data: cacheValues.update4 });
           expect(observableQuery.getCurrentResult()).toStrictEqual(resultAfterCacheUpdate4);
-        }
-      );
+      }
+    );
     }
 
-    describe('mutations', () => {
+    describe("mutations", () => {
       const mutation = gql`
         mutation setName {
           name

@@ -30,9 +30,12 @@ export interface ErrorResponse {
 type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
 
+const PERSISTED_QUERY_NOT_SUPPORTED = "PERSISTED_QUERY_NOT_SUPPORTED";
+const PERSISTED_QUERY_NOT_FOUND = "PERSISTED_QUERY_NOT_FOUND"
+
 export namespace PersistedQueryLink {
   interface BaseOptions {
-    disable?: (error: ErrorResponse) => boolean;
+    disable?: (error: ErrorResponse, errorsByMessageAndCode: ErrorsByMessageAndCode) => boolean;
     useGETForHashedQueries?: boolean;
   };
 
@@ -49,26 +52,39 @@ export namespace PersistedQueryLink {
   export type Options = SHA256Options | GenerateHashOptions;
 }
 
-function collectErrorsByMessage<TError extends Error>(
-  graphQLErrors: TError[] | readonly TError[] | undefined,
-): Record<string, TError> {
-  const collected: Record<string, TError> = Object.create(null);
+type ErrorsByMessageAndCode = { byMessage: Record<string, GraphQLError>; byCode: Record<string, GraphQLError> }
+
+function collectErrorsByMessageAndCode(
+  graphQLErrors: GraphQLError[] | readonly GraphQLError[] | undefined
+): ErrorsByMessageAndCode {
+  const collected: ErrorsByMessageAndCode = {
+    byMessage: Object.create(null),
+    byCode: Object.create(null),
+  };
   if (isNonEmptyArray(graphQLErrors)) {
-    graphQLErrors.forEach(error => collected[error.message] = error);
+    graphQLErrors.forEach((error) => {
+      collected.byMessage[error.message] = error;
+      if (typeof error.extensions?.code === "string")
+        collected.byCode[error.extensions.code] = error;
+    });
   }
   return collected;
 }
 
 const defaultOptions = {
-  disable: ({ graphQLErrors, operation }: ErrorResponse) => {
-    const errorMessages = collectErrorsByMessage(graphQLErrors);
-
+  disable: ({ operation }: ErrorResponse, {byMessage, byCode}: ErrorsByMessageAndCode) => {
     // if the server doesn't support persisted queries, don't try anymore
-    if (errorMessages.PersistedQueryNotSupported) {
+    if (
+      byMessage.PersistedQueryNotSupported ||
+      byCode[PERSISTED_QUERY_NOT_SUPPORTED]
+    ) {
       return true;
     }
 
-    if (errorMessages.PersistedQueryNotFound) {
+    if (
+      byMessage.PersistedQueryNotFound ||
+      byCode[PERSISTED_QUERY_NOT_FOUND]
+    ) {
       return false;
     }
 
@@ -195,12 +211,15 @@ export const createPersistedQueryLink = (
             graphQLErrors: isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
           };
 
+          const errorsByMessageAndCode = collectErrorsByMessageAndCode(graphQLErrors);
+
           // if the server doesn't support persisted queries, don't try anymore
-          supportsPersistedQueries = !disable(disablePayload);
+          supportsPersistedQueries = !disable(disablePayload, errorsByMessageAndCode);
 
           // if its not found, we can try it again, otherwise just report the error
           if (
-            collectErrorsByMessage(graphQLErrors).PersistedQueryNotFound ||
+            errorsByMessageAndCode.byMessage.PersistedQueryNotFound ||
+            errorsByMessageAndCode.byCode[PERSISTED_QUERY_NOT_FOUND] ||
             !supportsPersistedQueries
           ) {
             // need to recall the link chain

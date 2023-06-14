@@ -18,7 +18,7 @@ export namespace BatchHttpLink {
   export type Options = Pick<
     BatchLink.Options,
     'batchMax' | 'batchDebounce' | 'batchInterval' | 'batchKey'
-  > & HttpOptions;
+  > & Omit<HttpOptions, 'useGETForQueries'>;
 }
 
 /**

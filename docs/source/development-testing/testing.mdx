@@ -411,7 +411,7 @@ const client = new ApolloClient({
 });
 ```
 
-Therefore if you're using Apollo Client 2.x local resolvers, or Apollo Client 3.x type/field policies, you have to tell the `MockedProvider` component what you're going to do with `@client` fields. Otherwise the `ApolloClient` instance created behind the scenes doesn't know how handle your tests.
+Therefore if you're using Apollo Client 2.x local resolvers, or Apollo Client 3.x type/field policies, you have to tell the `MockedProvider` component what you're going to do with `@client` fields. Otherwise the `ApolloClient` instance created behind the scenes doesn't know how to handle your tests.
 
 If using Apollo Client 2.x local resolvers, make sure your resolvers object is passed into `MockedProvider`:
 

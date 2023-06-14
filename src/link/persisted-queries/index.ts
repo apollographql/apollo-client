@@ -109,18 +109,13 @@ function operationDefinesMutation(operation: Operation) {
     d => d.kind === 'OperationDefinition' && d.operation === 'mutation');
 }
 
-const { hasOwnProperty } = Object.prototype;
-
-const hashesByQuery = new WeakMap<
-  DocumentNode,
-  Record<string, Promise<string>>
->();
-
-let nextHashesChildKey = 0;
-
 export const createPersistedQueryLink = (
   options: PersistedQueryLink.Options,
 ) => {
+  const hashesByQuery = new WeakMap<
+    DocumentNode,
+    Promise<string>
+  >();
   // Ensure a SHA-256 hash function is provided, if a custom hash
   // generation function is not provided. We don't supply a SHA-256 hash
   // function by default, to avoid forcing one as a dependency. Developers
@@ -152,8 +147,6 @@ export const createPersistedQueryLink = (
 
   let supportsPersistedQueries = true;
 
-  const hashesChildKey = 'forLink' + nextHashesChildKey++;
-
   const getHashPromise = (query: DocumentNode) =>
     new Promise<string>(resolve => resolve(generateHash(query)));
 
@@ -164,11 +157,9 @@ export const createPersistedQueryLink = (
       // what to do with the bogus query.
       return getHashPromise(query);
     }
-    let hashes = hashesByQuery.get(query)!;
-    if (!hashes) hashesByQuery.set(query, hashes = Object.create(null));
-    return hasOwnProperty.call(hashes, hashesChildKey)
-      ? hashes[hashesChildKey]
-      : hashes[hashesChildKey] = getHashPromise(query);
+    let hash = hashesByQuery.get(query)!;
+    if (!hash) hashesByQuery.set(query, hash = getHashPromise(query));
+    return hash;
   }
 
   return new ApolloLink((operation, forward) => {
@@ -202,10 +193,13 @@ export const createPersistedQueryLink = (
           }
 
           // Network errors can return GraphQL errors on for example a 403
-          const networkErrors =
-            networkError &&
-            networkError.result &&
-            networkError.result.errors as GraphQLError[];
+          let networkErrors;
+          if (typeof networkError?.result !== 'string') {
+            networkErrors =
+              networkError &&
+              networkError.result &&
+              networkError.result.errors as GraphQLError[];
+          }
           if (isNonEmptyArray(networkErrors)) {
             graphQLErrors.push(...networkErrors);
           }

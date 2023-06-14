@@ -2222,139 +2222,179 @@ describe("ObservableQuery", () => {
         },
       } as const;
 
+      type TestDetails = {
+        // writeCache: cacheValues.initial
+        resultBeforeSubscribe: Result,
+        // observableQuery.subscribe
+        resultAfterSubscribe: Result,
+        // writeCache:  cacheValues.update1
+        resultAfterCacheUpdate1: Result,
+        // incoming result: cacheValues.link
+        resultAfterLinkNext: Result,
+        // writeCache:  cacheValues.update2
+        resultAfterCacheUpdate2: Result,
+        // observableQuery.refetch
+        // writeCache:  cacheValues.update3
+        resultAfterCacheUpdate3: Result,
+        // incoming result:  cacheValues.refetch
+        resultAfterRefetchNext: Result,
+        // writeCache:  cacheValues.update4
+        resultAfterCacheUpdate4: Result
+      }
+
+      const cacheAndLink: TestDetails = {
+        resultBeforeSubscribe: {
+          ...loadingStates.loading,
+          data: cacheValues.initial,
+        },
+        resultAfterSubscribe: {
+          ...loadingStates.loading,
+          data: cacheValues.initial,
+        },
+        resultAfterCacheUpdate1: {
+          ...loadingStates.loading,
+          data: cacheValues.update1,
+        },
+        resultAfterLinkNext: {
+          ...loadingStates.done,
+          data: cacheValues.link,
+        },
+        resultAfterCacheUpdate2: {
+          ...loadingStates.done,
+          data: cacheValues.update2,
+        },
+        resultAfterCacheUpdate3: {
+          ...loadingStates.refetching,
+          data: cacheValues.update3,
+        },
+        resultAfterRefetchNext: {
+          ...loadingStates.done,
+          data: cacheValues.refetch,
+        },
+        resultAfterCacheUpdate4: {
+          ...loadingStates.done,
+          data: cacheValues.update4,
+        },
+      };
+
+      const linkOnly: TestDetails = {
+        resultBeforeSubscribe: {
+          ...loadingStates.loading,
+        },
+        resultAfterSubscribe: {
+          ...loadingStates.loading,
+        },
+        resultAfterCacheUpdate1: {
+          ...loadingStates.loading,
+        },
+        resultAfterLinkNext: {
+          ...loadingStates.done,
+          data: cacheValues.link,
+        },
+        resultAfterCacheUpdate2: {
+          ...loadingStates.done,
+          data: cacheValues.link,
+        },
+        resultAfterCacheUpdate3: {
+          ...loadingStates.refetching,
+          data: cacheValues.link,
+        },
+        resultAfterRefetchNext: {
+          ...loadingStates.done,
+          data: cacheValues.refetch,
+        },
+        resultAfterCacheUpdate4: {
+          ...loadingStates.done,
+          data: cacheValues.refetch,
+        },
+      };
+
+      const standbyOnly: TestDetails = {
+        ...linkOnly,
+        resultBeforeSubscribe: {
+          ...loadingStates.loading,
+        },
+        resultAfterSubscribe: {
+          ...loadingStates.loading,
+        },
+        resultAfterCacheUpdate1: {
+          ...loadingStates.loading,
+        },
+        resultAfterLinkNext: {
+          ...loadingStates.loading,
+        },
+        resultAfterCacheUpdate2: {
+          ...loadingStates.loading,
+        },
+        resultAfterCacheUpdate3: {
+          ...loadingStates.refetching,
+        },
+        // like linkOnly:
+        // resultAfterRefetchNext
+        // resultAfterCacheUpdate4
+      };
+
+      const linkOnlyThenCacheAndLink: TestDetails = {
+        ...cacheAndLink,
+        resultBeforeSubscribe: {
+          ...loadingStates.loading,
+        },
+        resultAfterSubscribe: {
+          ...loadingStates.loading,
+        },
+        resultAfterCacheUpdate1: {
+          ...loadingStates.loading,
+        },
+        // like cacheAndLink:
+        // resultAfterLinkNext
+        // resultAfterCacheUpdate2
+        // resultAfterCacheUpdate3
+        // resultAfterRefetchNext
+        // resultAfterCacheUpdate4
+      };
+
+      const cacheOnlyThenCacheAndLink: TestDetails = {
+        ...cacheAndLink,
+        resultBeforeSubscribe: {
+          ...loadingStates.done,
+          data: cacheValues.initial,
+        },
+        resultAfterSubscribe: {
+          ...loadingStates.done,
+          data: cacheValues.initial,
+        },
+        resultAfterCacheUpdate1: {
+          ...loadingStates.done,
+          data: cacheValues.update1,
+        },
+        resultAfterLinkNext: {
+          ...loadingStates.done,
+          data: cacheValues.update1,
+        },
+        // like cacheAndLink:
+        // resultAfterCacheUpdate2
+        // resultAfterCacheUpdate3
+        // resultAfterRefetchNext
+        // resultAfterCacheUpdate4
+      };
+
       it.each<
         [
           initialFetchPolicy: WatchQueryFetchPolicy,
           nextFetchPolicy: WatchQueryFetchPolicy,
-          testDetails: {
-            // writeCache: cacheValues.initial
-            resultBeforeSubscribe: Result,
-            // observableQuery.subscribe
-            resultAfterSubscribe: Result,
-            // writeCache:  cacheValues.update1
-            resultAfterCacheUpdate1: Result,
-            // incoming result: cacheValues.link
-            resultAfterLinkNext: Result,
-            // writeCache:  cacheValues.update2
-            resultAfterCacheUpdate2: Result,
-            // observableQuery.refetch
-            // writeCache:  cacheValues.update3
-            resultAfterCacheUpdate3: Result,
-            // incoming result:  cacheValues.refetch
-            resultAfterRefetchNext: Result,
-            // writeCache:  cacheValues.update4
-            resultAfterCacheUpdate4: Result
-          }
+          testDetails: TestDetails
         ]
       >([
-        [
-          "cache-and-network",
-          "cache-and-network",
-          {
-            resultBeforeSubscribe: {
-              ...loadingStates.loading,
-              data: cacheValues.initial,
-            },
-            resultAfterSubscribe: {
-              ...loadingStates.loading,
-              data: cacheValues.initial,
-            },
-            resultAfterCacheUpdate1: {
-              ...loadingStates.loading,
-              data: cacheValues.update1,
-            },
-            resultAfterLinkNext: {
-              ...loadingStates.done,
-              data: cacheValues.link,
-            },
-            resultAfterCacheUpdate2: {
-              ...loadingStates.done,
-              data: cacheValues.update2,
-            },
-            resultAfterCacheUpdate3: {
-              ...loadingStates.refetching,
-              data: cacheValues.update3,
-            },
-            resultAfterRefetchNext: {
-              ...loadingStates.done,
-              data: cacheValues.refetch,
-            },
-            resultAfterCacheUpdate4: {
-              ...loadingStates.done,
-              data: cacheValues.update4,
-            },
-          },
-        ],
-        [
-          "no-cache",
-          "no-cache",
-          {
-            resultBeforeSubscribe: {
-              ...loadingStates.loading,
-            },
-            resultAfterSubscribe: {
-              ...loadingStates.loading,
-            },
-            resultAfterCacheUpdate1: {
-              ...loadingStates.loading,
-            },
-            resultAfterLinkNext: {
-              ...loadingStates.done,
-              data: cacheValues.link,
-            },
-            resultAfterCacheUpdate2: {
-              ...loadingStates.done,
-              data: cacheValues.link,
-            },
-            resultAfterCacheUpdate3: {
-              ...loadingStates.refetching,
-              data: cacheValues.link,
-            },
-            resultAfterRefetchNext: {
-              ...loadingStates.done,
-              data: cacheValues.refetch,
-            },
-            resultAfterCacheUpdate4: {
-              ...loadingStates.done,
-              data: cacheValues.refetch,
-            },
-          },
-        ],
-        [
-          "no-cache",
-          "cache-and-network",
-          {
-            resultBeforeSubscribe: {
-              ...loadingStates.loading,
-            },
-            resultAfterSubscribe: {
-              ...loadingStates.loading,
-            },
-            resultAfterCacheUpdate1: {
-              ...loadingStates.loading,
-            },
-            resultAfterLinkNext: {
-              ...loadingStates.done,
-              data: cacheValues.link,
-            },
-            resultAfterCacheUpdate2: {
-              ...loadingStates.done,
-              data: cacheValues.update2,
-            },
-            resultAfterCacheUpdate3: {
-              ...loadingStates.refetching,
-              data: cacheValues.update3,
-            },
-            resultAfterRefetchNext: {
-              ...loadingStates.done,
-              data: cacheValues.refetch,
-            },
-            resultAfterCacheUpdate4: {
-              ...loadingStates.done,
-              data: cacheValues.update4,
-            },
-          },
-        ],
+        ["cache-and-network", "cache-and-network", cacheAndLink],
+        ["cache-first", "cache-first", cacheOnlyThenCacheAndLink],
+        ["cache-first", "cache-and-network", cacheOnlyThenCacheAndLink],
+        ["no-cache", "no-cache", linkOnly],
+        ["no-cache", "cache-and-network", linkOnlyThenCacheAndLink],
+        ["standby", "standby", standbyOnly],
+        ["standby", "cache-and-network", standbyOnly],
+        ["cache-only", "cache-only", cacheOnlyThenCacheAndLink],
+        ["cache-only", "cache-and-network", cacheOnlyThenCacheAndLink],
+        
       ])(
         "fetchPolicy %s -> %s",
         async (
@@ -2392,13 +2432,11 @@ describe("ObservableQuery", () => {
             nextFetchPolicy,
           });
 
-          expect(observer).toBeUndefined();
           expect(observableQuery.getCurrentResult()).toStrictEqual(
             resultBeforeSubscribe
           );
 
           observableQuery.subscribe({});
-          expect(observer).not.toBeUndefined();
           expect(observableQuery.getCurrentResult()).toStrictEqual(
             resultAfterSubscribe
           );
@@ -2408,8 +2446,10 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1
           );
 
-          observer.next({ data: cacheValues.link });
-          observer.complete();
+          if (observer) {
+            observer.next({ data: cacheValues.link });
+            observer.complete();
+          }
           await waitFor(
             () =>
               void expect(observableQuery.getCurrentResult()).toStrictEqual(
@@ -2430,8 +2470,10 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate3
           );
 
-          observer.next({ data: cacheValues.refetch });
-          observer.complete();
+          if (observer) {
+            observer.next({ data: cacheValues.refetch });
+            observer.complete();
+          }
           await waitFor(
             () =>
               void expect(observableQuery.getCurrentResult()).toStrictEqual(

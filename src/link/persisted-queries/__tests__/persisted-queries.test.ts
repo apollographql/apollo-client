@@ -40,11 +40,29 @@ const data = {
   foo: { bar: true },
 };
 const response = JSON.stringify({ data });
-const errors = [{ message: 'PersistedQueryNotFound' }];
-const giveUpErrors = [{ message: 'PersistedQueryNotSupported' }];
+const errors = [{ message: "PersistedQueryNotFound" }];
+const errorsWithCode = [
+  {
+    message: "SomeOtherMessage",
+    extensions: {
+      code: "PERSISTED_QUERY_NOT_FOUND",
+    },
+  },
+];
+const giveUpErrors = [{ message: "PersistedQueryNotSupported" }];
+const giveUpErrorsWithCode = [
+  {
+    message: "SomeOtherMessage",
+    extensions: {
+      code: "PERSISTED_QUERY_NOT_SUPPORTED",
+    },
+  },
+];
 const multipleErrors = [...errors, { message: 'not logged in' }];
 const errorResponse = JSON.stringify({ errors });
+const errorResponseWithCode = JSON.stringify({ errors: errorsWithCode });
 const giveUpResponse = JSON.stringify({ errors: giveUpErrors });
+const giveUpResponseWithCode = JSON.stringify({ errors: giveUpErrorsWithCode });
 const multiResponse = JSON.stringify({ errors: multipleErrors });
 
 export function sha256(data: string) {
@@ -236,8 +254,11 @@ describe('failure path', () => {
     fetchMock.restore();
   });
 
-  itAsync('correctly identifies the error shape from the server', (resolve, reject) => {
-    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: errorResponse})), { repeat: 1 });
+  it.each([
+    ["error message", errorResponse],
+    ["error code", errorResponseWithCode],
+  ] as const)('correctly identifies the error shape from the server (%s)', (_description, failingResponse) => new Promise<void>((resolve, reject) => {
+    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: failingResponse})), { repeat: 1 });
     // `repeat: 1` simulates a `mockResponseOnce` API with fetch-mock:
     // it limits the number of times the route can be used,
     // after which the call to `fetch()` will fall through to be
@@ -257,7 +278,7 @@ describe('failure path', () => {
       ).toBe(hash);
       resolve();
     }, reject);
-  });
+  }));
 
   itAsync('sends GET for the first response only with useGETForHashedQueries', (resolve, reject) => {
     const params = new URLSearchParams({
@@ -371,8 +392,11 @@ describe('failure path', () => {
     }, reject);
   });
 
-  itAsync('does not try again after receiving NotSupported error', (resolve, reject) => {
-    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: giveUpResponse})), { repeat: 1 });
+  it.each([
+    ["error message", giveUpResponse],
+    ["error code", giveUpResponseWithCode],
+  ] as const)('does not try again after receiving NotSupported error (%s)', (_description, failingResponse) => new Promise<void>((resolve, reject) => {
+    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: failingResponse})), { repeat: 1 });
     fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
     // mock it again so we can verify it doesn't try anymore
     fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
@@ -393,7 +417,7 @@ describe('failure path', () => {
         resolve();
       }, reject);
     }, reject);
-  });
+  }));
 
   itAsync('works with multiple errors', (resolve, reject) => {
     fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: multiResponse})), { repeat: 1 });

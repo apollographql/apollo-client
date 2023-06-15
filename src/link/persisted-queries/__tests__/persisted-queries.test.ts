@@ -9,7 +9,8 @@ import { Observable } from '../../../utilities';
 import { createHttpLink } from '../../http/createHttpLink';
 
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from '..';
-import { itAsync, zenObservableToPromiseFirstValue } from '../../../testing';
+import { itAsync } from '../../../testing';
+import { toPromise } from '../../utils';
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint
@@ -495,11 +496,11 @@ describe('failure path', () => {
         createHttpLink({ fetch: fetcher } as any),
       );
 
-      const failingAttempt = zenObservableToPromiseFirstValue(execute(link, { query, variables }))
+      const failingAttempt = toPromise(execute(link, { query, variables }))
       await expect(failingAttempt).rejects.toThrow()
       expect(fetchMock.calls().length).toBe(0)
       
-      const successfullAttempt = zenObservableToPromiseFirstValue(execute(link, { query, variables }))
+      const successfullAttempt = toPromise(execute(link, { query, variables }))
       await expect(successfullAttempt).resolves.toEqual({data})
       const [[,success]] = fetchMock.calls();
       expect(JSON.parse(success!.body!.toString()).query).toBeUndefined();

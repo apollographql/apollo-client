@@ -14,4 +14,3 @@ export { default as subscribeAndCount } from './subscribeAndCount';
 export { itAsync } from './itAsync';
 export { wait, tick } from './wait'
 export * from './withConsoleSpy';
-export { zenObservableToPromiseAll, zenObservableToPromiseFirstValue } from './zenObservableToPromise'

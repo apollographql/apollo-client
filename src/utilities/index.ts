@@ -37,6 +37,10 @@ export {
 } from './graphql/getFromAST';
 
 export {
+  print
+} from './graphql/print';
+
+export {
   StoreObject,
   Reference,
   StoreValue,

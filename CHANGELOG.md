@@ -1,5 +1,46 @@
 # @apollo/client
 
+## 3.8.0-beta.3
+
+### Minor Changes
+
+- [#10895](https://github.com/apollographql/apollo-client/pull/10895) [`e187866fd`](https://github.com/apollographql/apollo-client/commit/e187866fdfbbd1e1e30646f289367fb4b5afb3c3) Thanks [@(author)](<https://github.com/(author)>)! - Add generic type parameter for the entity modified in `cache.modify`. Improves
+  TypeScript type inference for that type's fields and values of those fields.
+
+  Example:
+
+  ```ts
+  cache.modify<Book>({
+    id: cache.identify(someBook),
+    fields: {
+      title: (title) => {
+        // title has type `string`.
+        // It used to be `any`.
+      },
+   => {
+        // author has type `Reference | Book["author"]`.
+        // It used to be `any`.
+      },
+    },
+  });
+  ```
+
+- [#10895](https://github.com/apollographql/apollo-client/pull/10895) [`e187866fd`](https://github.com/apollographql/apollo-client/commit/e187866fdfbbd1e1e30646f289367fb4b5afb3c3) Thanks [@Gelio](https://github.com/Gelio)! - Use unique opaque types for the `DELETE` and `INVALIDATE` Apollo cache modifiers.
+
+  This increases type safety, since these 2 modifiers no longer have the `any` type.
+  Moreover, it no longer triggers [the `@typescript-eslint/no-unsafe-return`
+  rule](https://typescript-eslint.io/rules/no-unsafe-return/).
+
+### Patch Changes
+
+- [#10951](https://github.com/apollographql/apollo-client/pull/10951) [`2e833b2ca`](https://github.com/apollographql/apollo-client/commit/2e833b2cacb71fc2050cb3976d0bbe710baeedff) Thanks [@alessbell](https://github.com/alessbell)! - Improve `useBackgroundQuery` type interface
+
+- [#10964](https://github.com/apollographql/apollo-client/pull/10964) [`f33171506`](https://github.com/apollographql/apollo-client/commit/f331715066d65291b1f5df5e6fa2b6618dfc70b1) Thanks [@alessbell](https://github.com/alessbell)! - Fixes a bug in `BatchHttpLink` that removed variables from all requests by default.
+
+- [#10968](https://github.com/apollographql/apollo-client/pull/10968) [`b102390b2`](https://github.com/apollographql/apollo-client/commit/b102390b238e5ce083062541d98a00fc3a10e1e1) Thanks [@phryneas](https://github.com/phryneas)! - Use printed query for query deduplication. Cache `print` calls for GraphQL documents to speed up repeated operations.
+
+- [#10969](https://github.com/apollographql/apollo-client/pull/10969) [`525a9317a`](https://github.com/apollographql/apollo-client/commit/525a9317af729309f699fd6f8b787647a5f63eac) Thanks [@phryneas](https://github.com/phryneas)! - Slightly decrease bundle size and memory footprint of `SuspenseCache` by changing how cache entries are stored internally.
+
 ## 3.8.0-beta.2
 
 ### Patch Changes

@@ -28,7 +28,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { print } from "graphql";
+import { print } from '../../utilities';
 import type { Client } from "graphql-ws";
 
 import type { Operation, FetchResult } from "../core";

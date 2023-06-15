@@ -10,7 +10,7 @@ const checks = [
   {
     path: "dist/index.js",
     import: "{ ApolloClient, InMemoryCache, HttpLink }",
-    limit: "33243"
+    limit: "33269"
   },
   ...[
     "ApolloProvider",

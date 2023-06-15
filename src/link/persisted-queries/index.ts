@@ -1,6 +1,6 @@
 import { invariant } from '../../utilities/globals';
 
-import { print } from 'graphql';
+import { print } from '../../utilities';
 import type {
   DocumentNode,
   ExecutionResult,

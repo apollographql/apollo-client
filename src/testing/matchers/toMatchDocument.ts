@@ -1,5 +1,4 @@
-import { checkDocument } from '../../utilities';
-import { print } from 'graphql';
+import { checkDocument, print } from '../../utilities';
 import type { DocumentNode } from '../../core';
 import type { MatcherFunction } from 'expect';
 

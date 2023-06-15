@@ -455,6 +455,7 @@ Array [
   "mergeOptions",
   "offsetLimitPagination",
   "omitDeep",
+  "print",
   "relayStylePagination",
   "removeArgumentsFromDocument",
   "removeClientSetsFromDocument",

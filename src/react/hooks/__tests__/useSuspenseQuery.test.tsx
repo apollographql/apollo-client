@@ -378,8 +378,11 @@ describe('useSuspenseQuery', () => {
       }
     );
 
-    expect(directSuspenseCache['queryRefs'].size).toBe(1);
-    expect(contextSuspenseCache['queryRefs'].size).toBe(0);
+    expect(directSuspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
+    expect(contextSuspenseCache).not.toHaveSuspenseCacheEntryUsing(
+      client,
+      query
+    );
   });
 
   it('ensures a valid fetch policy is used', () => {
@@ -678,7 +681,7 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['queryRefs'].size).toBe(1);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
 
     unmount();
 
@@ -687,7 +690,7 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['queryRefs'].size).toBe(0);
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
   });
 
   it('tears down all queries when rendering with multiple variable sets', async () => {
@@ -716,7 +719,12 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(client.getObservableQueries().size).toBe(2);
-    expect(suspenseCache['queryRefs'].size).toBe(2);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query, {
+      variables: { id: '1' },
+    });
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query, {
+      variables: { id: '2' },
+    });
 
     unmount();
 
@@ -725,7 +733,13 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['queryRefs'].size).toBe(0);
+
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query, {
+      variables: { id: '1' },
+    });
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query, {
+      variables: { id: '2' },
+    });
   });
 
   it('tears down all queries when multiple clients are used', async () => {
@@ -773,9 +787,16 @@ describe('useSuspenseQuery', () => {
       });
     });
 
+    const variables = { id: '1' };
+
     expect(client1.getObservableQueries().size).toBe(1);
     expect(client2.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['queryRefs'].size).toBe(2);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client1, query, {
+      variables,
+    });
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client2, query, {
+      variables,
+    });
 
     unmount();
 
@@ -785,7 +806,12 @@ describe('useSuspenseQuery', () => {
 
     expect(client1.getObservableQueries().size).toBe(0);
     expect(client2.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['queryRefs'].size).toBe(0);
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client1, query, {
+      variables,
+    });
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client2, query, {
+      variables,
+    });
   });
 
   it('tears down the query if the component never renders again after suspending', async () => {
@@ -834,12 +860,12 @@ describe('useSuspenseQuery', () => {
     link.simulateComplete();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['queryRefs'].size).toBe(1);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
 
     jest.advanceTimersByTime(30_000);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['queryRefs'].size).toBe(0);
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
 
     jest.useRealTimers();
 
@@ -895,12 +921,12 @@ describe('useSuspenseQuery', () => {
     link.simulateComplete();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['queryRefs'].size).toBe(1);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
 
     jest.advanceTimersByTime(5_000);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['queryRefs'].size).toBe(0);
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
 
     jest.useRealTimers();
 
@@ -957,7 +983,7 @@ describe('useSuspenseQuery', () => {
     jest.advanceTimersByTime(30_000);
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['queryRefs'].size).toBe(1);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
 
     jest.useRealTimers();
   });

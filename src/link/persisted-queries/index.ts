@@ -81,7 +81,7 @@ function processErrors(
 const defaultOptions = {
   disable: ({}: ErrorResponse, { persistedQueryNotSupported }: ProcessedErrors) =>
     persistedQueryNotSupported,
-  retryQuery: ({}: ErrorResponse, { persistedQueryNotSupported, persistedQueryNotFound }: ProcessedErrors) =>
+  retry: ({}: ErrorResponse, { persistedQueryNotSupported, persistedQueryNotFound }: ProcessedErrors) =>
     persistedQueryNotSupported || persistedQueryNotFound,
   useGETForHashedQueries: false,
 };
@@ -123,7 +123,7 @@ export const createPersistedQueryLink = (
     // function; they aren't limited to SHA-256.
     generateHash = (query: DocumentNode) => Promise.resolve<string>(sha256!(print(query))),
     disable,
-    retryQuery,
+    retry,
     useGETForHashedQueries,
   } = compact(defaultOptions, options);
 
@@ -157,7 +157,7 @@ export const createPersistedQueryLink = (
       let retried = false;
       let originalFetchOptions: any;
       let setFetchOptions = false;
-      const retry = (
+      const handlePossibleRetry = (
         {
           response,
           networkError,
@@ -199,7 +199,7 @@ export const createPersistedQueryLink = (
           supportsPersistedQueries = !disable(disablePayload, processedErrors);
 
           // if its not found, we can try it again, otherwise just report the error
-          if (retryQuery(disablePayload, processedErrors)) {
+          if (retry(disablePayload, processedErrors)) {
             // need to recall the link chain
             if (subscription) subscription.unsubscribe();
             // actually send the query this time
@@ -227,10 +227,10 @@ export const createPersistedQueryLink = (
       };
       const handler = {
         next: (response: ExecutionResult) => {
-          retry({ response }, () => observer.next!(response));
+          handlePossibleRetry({ response }, () => observer.next!(response));
         },
         error: (networkError: ServerError) => {
-          retry({ networkError }, () => observer.error!(networkError));
+          handlePossibleRetry({ networkError }, () => observer.error!(networkError));
         },
         complete: observer.complete!.bind(observer),
       };

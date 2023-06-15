@@ -71,7 +71,7 @@ jobs:
 
       - name: Get npm tag from pre.json
         id: tag
-        uses: notiz-dev/github-action-json-property@release
+        uses: notiz-dev/github-action-json-property@v0.2.0
         with:
           path: ".changeset/pre.json"
           prop_path: "tag"

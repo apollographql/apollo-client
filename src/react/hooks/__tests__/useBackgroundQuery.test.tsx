@@ -44,6 +44,7 @@ import {
   RefetchFunction,
   QueryReference,
 } from '../../../react';
+import equal from '@wry/equality';
 
 function renderIntegrationTest({
   client,
@@ -1448,6 +1449,522 @@ describe('useBackgroundQuery', () => {
     expect(await screen.findByText('2 - Black Widow')).toBeInTheDocument();
   });
 
+  it('does not suspend when `skip` is true', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [queryRef] = useBackgroundQuery(query, { skip: true });
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <Greeting queryRef={queryRef} />
+        </Suspense>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.getByTestId('greeting')).toHaveTextContent('Unknown');
+  });
+
+  it('suspends when `skip` becomes `false` after it was `true`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button onClick={() => setSkip(false)}>Run query</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Greeting queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    const greeting = screen.getByTestId('greeting');
+
+    expect(greeting).toHaveTextContent('Unknown');
+
+    await act(() => user.click(screen.getByText('Run query')));
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(greeting).toHaveTextContent('Hello');
+    });
+  });
+
+  it('renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(false);
+      const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Greeting queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+
+    await act(() => user.click(screen.getByText('Toggle skip')));
+
+    expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+  });
+
+  it('does not make network requests when `skip` is `true`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.query, operation.query)
+        );
+
+        if (!mock) {
+          throw new Error('Could not find mock for operation');
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Greeting queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(fetchCount).toBe(0);
+
+    // Toggle skip to `false`
+    await act(() => user.click(screen.getByText('Toggle skip')));
+
+    expect(fetchCount).toBe(1);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+
+    // Toggle skip to `true`
+    await act(() => user.click(screen.getByText('Toggle skip')));
+
+    expect(fetchCount).toBe(1);
+  });
+
+  it('`skip` result is referentially stable', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    interface CurrentResult {
+      current: Data | undefined;
+    }
+
+    const user = userEvent.setup();
+
+    const result: CurrentResult = {
+      current: undefined,
+    };
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Greeting queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      result.current = data;
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    const { rerender } = render(<App />);
+
+    const skipResult = result.current;
+
+    rerender(<App />);
+
+    expect(result.current).toBe(skipResult);
+
+    // Toggle skip to `false`
+    await act(() => user.click(screen.getByText('Toggle skip')));
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+
+    const fetchedResult = result.current;
+
+    rerender(<App />);
+
+    expect(result.current).toBe(fetchedResult);
+  });
+
+  it('`skip` option works with `startTransition`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [isPending, startTransition] = React.useTransition();
+      const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button
+            disabled={isPending}
+            onClick={() =>
+              startTransition(() => {
+                setSkip((skip) => !skip);
+              })
+            }
+          >
+            Toggle skip
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Greeting queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<Data | undefined>;
+    }) {
+      const { data } = useReadQuery(queryRef);
+
+      return (
+        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    const button = screen.getByText('Toggle skip');
+
+    // Toggle skip to `false`
+    await act(() => user.click(button));
+
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    expect(button).toBeDisabled();
+    expect(screen.getByTestId('greeting')).toHaveTextContent('Unknown');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+  });
+
   describe('refetch', () => {
     it('re-suspends when calling `refetch`', async () => {
       const { renders } = renderVariablesIntegrationTest({
@@ -2205,6 +2722,7 @@ describe('useBackgroundQuery', () => {
       });
     });
   });
+
   describe.skip('type tests', () => {
     it('disallows returnPartialData in BackgroundQueryHookOptions', () => {
       const { query } = renderIntegrationTest();
@@ -2322,6 +2840,44 @@ describe('useBackgroundQuery', () => {
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+    });
+
+    it('returns TData | undefined when `skip` is present', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, {
+        skip: true,
+      });
+
+      const { data: inferred } = useReadQuery(inferredQueryRef);
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const [explicitQueryRef] = useBackgroundQuery<VariablesCaseData>(query, {
+        skip: true,
+      });
+
+      const { data: explicit } = useReadQuery(explicitQueryRef);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      // TypeScript is too smart and using a `const` or `let` boolean variable
+      // for the `skip` option results in a false positive. Using an options
+      // object allows us to properly check for a dynamic case.
+      const options = {
+        skip: true,
+      };
+
+      const [dynamicQueryRef] = useBackgroundQuery(query, {
+        skip: options.skip,
+      });
+
+      const { data: dynamic } = useReadQuery(dynamicQueryRef);
+
+      expectTypeOf(dynamic).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
     });
 
     // TODO: https://github.com/apollographql/apollo-client/issues/10893

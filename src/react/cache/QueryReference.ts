@@ -3,6 +3,7 @@ import type {
   ApolloQueryResult,
   ObservableQuery,
   OperationVariables,
+  WatchQueryOptions,
 } from '../../core';
 import { NetworkStatus, isNetworkRequestSettled } from '../../core';
 import type { ObservableSubscription } from '../../utilities';
@@ -86,6 +87,10 @@ export class QueryReference<TData = unknown> {
     );
   }
 
+  get watchQueryOptions() {
+    return this.observable.options;
+  }
+
   listen(listener: Listener<TData>) {
     // As soon as the component listens for updates, we know it has finished
     // suspending and is ready to receive updates, so we can remove the auto
@@ -111,6 +116,16 @@ export class QueryReference<TData = unknown> {
 
   fetchMore(options: FetchMoreOptions<TData>) {
     const promise = this.observable.fetchMore<TData>(options);
+
+    this.promise = promise;
+
+    return promise;
+  }
+
+  reobserve(
+    watchQueryOptions: Partial<WatchQueryOptions<OperationVariables, TData>>
+  ) {
+    const promise = this.observable.reobserve(watchQueryOptions);
 
     this.promise = promise;
 

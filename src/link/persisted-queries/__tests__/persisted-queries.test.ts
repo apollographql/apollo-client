@@ -442,7 +442,7 @@ describe('failure path', () => {
       fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
 
       // mock it again so we can verify it doesn't try anymore
-        fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 5 });
+      fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response })), { repeat: 5 });
 
       const fetcher = (...args: any[]) => {
         if ((++requestCount)%2) {

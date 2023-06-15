@@ -137,6 +137,30 @@ describe('relayStylePagination', () => {
         hasNextPage: true,
       });
     });
+
+    it("should only override both pageInfo.{start,end}Cursor if empty strings with a single cursor and single element", () => {
+      const resultWithEndCursor = policy.read!({
+        edges: [
+          { node: { __ref: "A" }, cursor: "cursorA" },
+        ],
+        pageInfo: {
+          startCursor: "",
+          endCursor: "",
+          hasPreviousPage: false,
+          hasNextPage: true,
+        },
+      }, fakeReadOptions);
+
+      expect(
+        resultWithEndCursor &&
+        resultWithEndCursor.pageInfo
+      ).toEqual({
+        startCursor: "cursorA",
+        endCursor: "cursorA",
+        hasPreviousPage: false,
+        hasNextPage: true,
+      });
+    });
   });
 
   describe('merge', () => {

@@ -25,14 +25,20 @@ export interface ErrorResponse {
   networkError?: NetworkError;
   response?: ExecutionResult;
   operation: Operation;
+  meta: ErrorMeta;
+}
+
+type ErrorMeta = {
+  persistedQueryNotSupported: boolean;
+  persistedQueryNotFound: boolean;
 }
 
 type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
 
 interface BaseOptions {
-  disable?: (error: ErrorResponse, errorsByMessageAndCode: ProcessedErrors) => boolean;
-  retry?: (error: ErrorResponse, errorsByMessageAndCode: ProcessedErrors) => boolean;
+  disable?: (error: ErrorResponse) => boolean;
+  retry?: (error: ErrorResponse) => boolean;
   useGETForHashedQueries?: boolean;
 };
 
@@ -50,14 +56,9 @@ export namespace PersistedQueryLink {
   export type Options = SHA256Options | GenerateHashOptions;
 }
 
-type ProcessedErrors = {
-  persistedQueryNotSupported: boolean;
-  persistedQueryNotFound: boolean;
-}
-
 function processErrors(
   graphQLErrors: GraphQLError[] | readonly GraphQLError[] | undefined
-): ProcessedErrors {
+): ErrorMeta {
   const byMessage = Object.create(null),
         byCode = Object.create(null);
 
@@ -75,10 +76,8 @@ function processErrors(
 }
 
 const defaultOptions: Required<BaseOptions> = {
-  disable: ({}: ErrorResponse, { persistedQueryNotSupported }: ProcessedErrors) =>
-    persistedQueryNotSupported,
-  retry: ({}: ErrorResponse, { persistedQueryNotSupported, persistedQueryNotFound }: ProcessedErrors) =>
-    persistedQueryNotSupported || persistedQueryNotFound,
+  disable: ({ meta }) => meta.persistedQueryNotSupported,
+  retry: ({ meta }) => meta.persistedQueryNotSupported || meta.persistedQueryNotFound,
   useGETForHashedQueries: false,
 };
 
@@ -153,7 +152,7 @@ export const createPersistedQueryLink = (
       let retried = false;
       let originalFetchOptions: any;
       let setFetchOptions = false;
-      const handlePossibleRetry = (
+      const maybeRetry = (
         {
           response,
           networkError,
@@ -182,20 +181,19 @@ export const createPersistedQueryLink = (
             graphQLErrors.push(...networkErrors);
           }
 
-          const disablePayload = {
+          const disablePayload: ErrorResponse = {
             response,
             networkError,
             operation,
             graphQLErrors: isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
+            meta: processErrors(graphQLErrors)
           };
 
-          const processedErrors = processErrors(graphQLErrors);
-
           // if the server doesn't support persisted queries, don't try anymore
-          supportsPersistedQueries = !disable(disablePayload, processedErrors);
+          supportsPersistedQueries = !disable(disablePayload);
 
           // if its not found, we can try it again, otherwise just report the error
-          if (retry(disablePayload, processedErrors)) {
+          if (retry(disablePayload)) {
             // need to recall the link chain
             if (subscription) subscription.unsubscribe();
             // actually send the query this time
@@ -223,10 +221,10 @@ export const createPersistedQueryLink = (
       };
       const handler = {
         next: (response: ExecutionResult) => {
-          handlePossibleRetry({ response }, () => observer.next!(response));
+          maybeRetry({ response }, () => observer.next!(response));
         },
         error: (networkError: ServerError) => {
-          handlePossibleRetry({ networkError }, () => observer.error!(networkError));
+          maybeRetry({ networkError }, () => observer.error!(networkError));
         },
         complete: observer.complete!.bind(observer),
       };

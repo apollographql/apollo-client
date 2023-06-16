@@ -116,6 +116,10 @@ export function relayStylePagination<TNode extends Reference = Reference>(
         }
       });
 
+      if (edges.length > 1 && firstEdgeCursor === lastEdgeCursor) {
+        firstEdgeCursor = ""
+      }
+
       const {
         startCursor,
         endCursor,

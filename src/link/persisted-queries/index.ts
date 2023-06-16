@@ -30,9 +30,12 @@ export interface ErrorResponse {
 type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
 
+const PERSISTED_QUERY_NOT_SUPPORTED = "PERSISTED_QUERY_NOT_SUPPORTED";
+const PERSISTED_QUERY_NOT_FOUND = "PERSISTED_QUERY_NOT_FOUND"
+
 export namespace PersistedQueryLink {
   interface BaseOptions {
-    disable?: (error: ErrorResponse) => boolean;
+    disable?: (error: ErrorResponse, errorsByMessageAndCode: ErrorsByMessageAndCode) => boolean;
     useGETForHashedQueries?: boolean;
   };
 
@@ -49,26 +52,39 @@ export namespace PersistedQueryLink {
   export type Options = SHA256Options | GenerateHashOptions;
 }
 
-function collectErrorsByMessage<TError extends Error>(
-  graphQLErrors: TError[] | readonly TError[] | undefined,
-): Record<string, TError> {
-  const collected: Record<string, TError> = Object.create(null);
+type ErrorsByMessageAndCode = { byMessage: Record<string, GraphQLError>; byCode: Record<string, GraphQLError> }
+
+function collectErrorsByMessageAndCode(
+  graphQLErrors: GraphQLError[] | readonly GraphQLError[] | undefined
+): ErrorsByMessageAndCode {
+  const collected: ErrorsByMessageAndCode = {
+    byMessage: Object.create(null),
+    byCode: Object.create(null),
+  };
   if (isNonEmptyArray(graphQLErrors)) {
-    graphQLErrors.forEach(error => collected[error.message] = error);
+    graphQLErrors.forEach((error) => {
+      collected.byMessage[error.message] = error;
+      if (typeof error.extensions?.code === "string")
+        collected.byCode[error.extensions.code] = error;
+    });
   }
   return collected;
 }
 
 const defaultOptions = {
-  disable: ({ graphQLErrors, operation }: ErrorResponse) => {
-    const errorMessages = collectErrorsByMessage(graphQLErrors);
-
+  disable: ({ operation }: ErrorResponse, {byMessage, byCode}: ErrorsByMessageAndCode) => {
     // if the server doesn't support persisted queries, don't try anymore
-    if (errorMessages.PersistedQueryNotSupported) {
+    if (
+      byMessage.PersistedQueryNotSupported ||
+      byCode[PERSISTED_QUERY_NOT_SUPPORTED]
+    ) {
       return true;
     }
 
-    if (errorMessages.PersistedQueryNotFound) {
+    if (
+      byMessage.PersistedQueryNotFound ||
+      byCode[PERSISTED_QUERY_NOT_FOUND]
+    ) {
       return false;
     }
 
@@ -93,18 +109,13 @@ function operationDefinesMutation(operation: Operation) {
     d => d.kind === 'OperationDefinition' && d.operation === 'mutation');
 }
 
-const { hasOwnProperty } = Object.prototype;
-
-const hashesByQuery = new WeakMap<
-  DocumentNode,
-  Record<string, Promise<string>>
->();
-
-let nextHashesChildKey = 0;
-
 export const createPersistedQueryLink = (
   options: PersistedQueryLink.Options,
 ) => {
+  const hashesByQuery = new WeakMap<
+    DocumentNode,
+    Promise<string>
+  >();
   // Ensure a SHA-256 hash function is provided, if a custom hash
   // generation function is not provided. We don't supply a SHA-256 hash
   // function by default, to avoid forcing one as a dependency. Developers
@@ -136,8 +147,6 @@ export const createPersistedQueryLink = (
 
   let supportsPersistedQueries = true;
 
-  const hashesChildKey = 'forLink' + nextHashesChildKey++;
-
   const getHashPromise = (query: DocumentNode) =>
     new Promise<string>(resolve => resolve(generateHash(query)));
 
@@ -148,11 +157,9 @@ export const createPersistedQueryLink = (
       // what to do with the bogus query.
       return getHashPromise(query);
     }
-    let hashes = hashesByQuery.get(query)!;
-    if (!hashes) hashesByQuery.set(query, hashes = Object.create(null));
-    return hasOwnProperty.call(hashes, hashesChildKey)
-      ? hashes[hashesChildKey]
-      : hashes[hashesChildKey] = getHashPromise(query);
+    let hash = hashesByQuery.get(query)!;
+    if (!hash) hashesByQuery.set(query, hash = getHashPromise(query));
+    return hash;
   }
 
   return new ApolloLink((operation, forward) => {
@@ -186,10 +193,13 @@ export const createPersistedQueryLink = (
           }
 
           // Network errors can return GraphQL errors on for example a 403
-          const networkErrors =
-            networkError &&
-            networkError.result &&
-            networkError.result.errors as GraphQLError[];
+          let networkErrors;
+          if (typeof networkError?.result !== 'string') {
+            networkErrors =
+              networkError &&
+              networkError.result &&
+              networkError.result.errors as GraphQLError[];
+          }
           if (isNonEmptyArray(networkErrors)) {
             graphQLErrors.push(...networkErrors);
           }
@@ -201,12 +211,15 @@ export const createPersistedQueryLink = (
             graphQLErrors: isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
           };
 
+          const errorsByMessageAndCode = collectErrorsByMessageAndCode(graphQLErrors);
+
           // if the server doesn't support persisted queries, don't try anymore
-          supportsPersistedQueries = !disable(disablePayload);
+          supportsPersistedQueries = !disable(disablePayload, errorsByMessageAndCode);
 
           // if its not found, we can try it again, otherwise just report the error
           if (
-            collectErrorsByMessage(graphQLErrors).PersistedQueryNotFound ||
+            errorsByMessageAndCode.byMessage.PersistedQueryNotFound ||
+            errorsByMessageAndCode.byCode[PERSISTED_QUERY_NOT_FOUND] ||
             !supportsPersistedQueries
           ) {
             // need to recall the link chain

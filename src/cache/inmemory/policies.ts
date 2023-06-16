@@ -382,7 +382,7 @@ export class Policies {
     const policy = typename && this.getTypePolicy(typename);
     let keyFn = policy && policy.keyFn || this.config.dataIdFromObject;
     while (keyFn) {
-      const specifierOrId = keyFn(object, context);
+      const specifierOrId = keyFn({...object, ...storeObject}, context);
       if (isArray(specifierOrId)) {
         keyFn = keyFieldsFnFromSpecifier(specifierOrId);
       } else {

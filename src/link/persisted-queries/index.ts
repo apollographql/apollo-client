@@ -51,8 +51,6 @@ export namespace PersistedQueryLink {
 }
 
 type ProcessedErrors = {
-  byMessage: Record<string, GraphQLError>;
-  byCode: Record<string, GraphQLError>;
   persistedQueryNotSupported: boolean;
   persistedQueryNotFound: boolean;
 }
@@ -71,8 +69,6 @@ function processErrors(
     });
   }
   return {
-    byMessage,
-    byCode,
     persistedQueryNotSupported: !!(byMessage.PersistedQueryNotSupported || byCode.PERSISTED_QUERY_NOT_SUPPORTED),
     persistedQueryNotFound: !!(byMessage.PersistedQueryNotFound || byCode.PERSISTED_QUERY_NOT_FOUND),
   };

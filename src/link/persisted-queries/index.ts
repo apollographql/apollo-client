@@ -30,13 +30,13 @@ export interface ErrorResponse {
 type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
 
-export namespace PersistedQueryLink {
-  interface BaseOptions {
-    disable?: (error: ErrorResponse, errorsByMessageAndCode: ProcessedErrors) => boolean;
-    retryQuery?: (error: ErrorResponse, errorsByMessageAndCode: ProcessedErrors) => boolean;
-    useGETForHashedQueries?: boolean;
-  };
+interface BaseOptions {
+  disable?: (error: ErrorResponse, errorsByMessageAndCode: ProcessedErrors) => boolean;
+  retry?: (error: ErrorResponse, errorsByMessageAndCode: ProcessedErrors) => boolean;
+  useGETForHashedQueries?: boolean;
+};
 
+export namespace PersistedQueryLink {
   interface SHA256Options extends BaseOptions {
     sha256: SHA256Function;
     generateHash?: never;
@@ -78,7 +78,7 @@ function processErrors(
   };
 }
 
-const defaultOptions = {
+const defaultOptions: Required<BaseOptions> = {
   disable: ({}: ErrorResponse, { persistedQueryNotSupported }: ProcessedErrors) =>
     persistedQueryNotSupported,
   retry: ({}: ErrorResponse, { persistedQueryNotSupported, persistedQueryNotFound }: ProcessedErrors) =>

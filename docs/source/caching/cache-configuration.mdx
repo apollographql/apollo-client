@@ -218,9 +218,9 @@ This code also has the following drawbacks:
 
 ### Customizing Type Policies
 
-After creating an Apollo client object, you can use the `addTypePolicy` method to add or modify type policies.
+After creating an `InMemoryCache` instance, you can use the `addTypePolicies` method to add or modify type policies.
 
-Here is an example of how to use the `addTypePolicy` method:
+Here is an example of how to use the `addTypePolicies` method:
 
 ```ts
 const cache = new InMemoryCache({

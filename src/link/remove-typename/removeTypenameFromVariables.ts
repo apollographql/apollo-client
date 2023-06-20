@@ -1,6 +1,6 @@
 import { wrap } from 'optimism';
-import type { DocumentNode, TypeNode } from 'graphql';
-import { Kind, visit } from 'graphql';
+import type { DocumentNode, TypeNode } from '../../internal/wrapped-graphql';
+import { Kind, visit } from '../../internal/wrapped-graphql';
 import { ApolloLink } from '../core';
 import { stripTypename, isPlainObject } from '../../utilities';
 import type { OperationVariables } from '../../core';

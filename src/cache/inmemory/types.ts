@@ -1,4 +1,4 @@
-import type { DocumentNode, FieldNode } from 'graphql';
+import type { DocumentNode, FieldNode } from '../../internal/wrapped-graphql';
 
 import type { Transaction } from '../core/cache';
 import {

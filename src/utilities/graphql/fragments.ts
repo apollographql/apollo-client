@@ -5,7 +5,7 @@ import type {
   FragmentDefinitionNode,
   InlineFragmentNode,
   SelectionNode,
-} from 'graphql';
+} from '../../internal/wrapped-graphql';
 
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type Kind = any;

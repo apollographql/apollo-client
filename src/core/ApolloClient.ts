@@ -1,6 +1,6 @@
 import { invariant, newInvariantError } from '../utilities/globals';
 
-import type { ExecutionResult, DocumentNode } from 'graphql';
+import type { ExecutionResult, DocumentNode } from '../internal/wrapped-graphql';
 
 import type { FetchResult, GraphQLRequest} from '../link/core';
 import { ApolloLink, execute } from '../link/core';

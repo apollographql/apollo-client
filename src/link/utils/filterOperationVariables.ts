@@ -1,5 +1,5 @@
-import type { VariableDefinitionNode, DocumentNode } from 'graphql';
-import { visit } from 'graphql';
+import type { VariableDefinitionNode, DocumentNode } from '../../internal/wrapped-graphql';
+import { visit } from '../../internal/wrapped-graphql';
 
 export function filterOperationVariables(
   variables: Record<string, any>,

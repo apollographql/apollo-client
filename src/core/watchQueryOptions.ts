@@ -1,4 +1,4 @@
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '../internal/wrapped-graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import type { FetchResult } from '../link/core';

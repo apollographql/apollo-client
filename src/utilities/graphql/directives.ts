@@ -10,11 +10,11 @@ import type {
   DocumentNode,
   ArgumentNode,
   ValueNode,
-  ASTNode} from 'graphql';
+  ASTNode} from '../../internal/wrapped-graphql';
 import {
   visit,
   BREAK,
-} from 'graphql';
+} from '../../internal/wrapped-graphql';
 
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '../../internal/wrapped-graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import type { Observable, ObservableSubscription } from '../../utilities';

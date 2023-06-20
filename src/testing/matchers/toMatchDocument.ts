@@ -1,5 +1,5 @@
 import { checkDocument } from '../../utilities';
-import { print } from 'graphql';
+import { print } from '../../internal/wrapped-graphql';
 import type { DocumentNode } from '../../core';
 import type { MatcherFunction } from 'expect';
 

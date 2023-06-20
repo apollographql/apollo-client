@@ -1,4 +1,4 @@
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '../../../internal/wrapped-graphql';
 
 import { ApolloClient } from '../../../core';
 import type { NormalizedCacheObject } from '../../../cache';

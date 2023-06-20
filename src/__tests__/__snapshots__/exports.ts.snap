@@ -154,6 +154,13 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/internal/wrapped-graphql 1`] = `
+Array [
+  "print",
+  "visit",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link/batch 1`] = `
 Array [
   "BatchLink",

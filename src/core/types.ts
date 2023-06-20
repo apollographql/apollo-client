@@ -1,4 +1,4 @@
-import type { DocumentNode, GraphQLError } from 'graphql';
+import type { DocumentNode, GraphQLError } from '../internal/wrapped-graphql';
 
 import type { ApolloCache } from '../cache';
 import type { FetchResult } from '../link/core';

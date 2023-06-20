@@ -1,4 +1,4 @@
-import type { DocumentNode, FragmentDefinitionNode, SelectionSetNode } from 'graphql';
+import type { DocumentNode, FragmentDefinitionNode, SelectionSetNode } from '../../internal/wrapped-graphql';
 
 import type {
   NormalizedCache,

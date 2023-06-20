@@ -1,6 +1,6 @@
 import { invariant, newInvariantError } from '../utilities/globals';
 
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '../internal/wrapped-graphql';
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 import { equal } from '@wry/equality';
@@ -143,7 +143,7 @@ export class QueryManager<TStore> {
     assumeImmutableResults?: boolean;
   }) {
     const defaultDocumentTransform = new DocumentTransform(
-      (document) => this.cache.transformDocument(document), 
+      (document) => this.cache.transformDocument(document),
       // Allow the apollo cache to manage its own transform caches
       { cache: false }
     );
@@ -160,8 +160,8 @@ export class QueryManager<TStore> {
       ? defaultDocumentTransform
           .concat(documentTransform)
           // The custom document transform may add new fragment spreads or new
-          // field selections, so we want to give the cache a chance to run 
-          // again. For example, the InMemoryCache adds __typename to field 
+          // field selections, so we want to give the cache a chance to run
+          // again. For example, the InMemoryCache adds __typename to field
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform
@@ -694,7 +694,7 @@ export class QueryManager<TStore> {
     const query = this.transform(options.query);
 
     // assign variable default values if supplied
-    // NOTE: We don't modify options.query here with the transformed query to 
+    // NOTE: We don't modify options.query here with the transformed query to
     // ensure observable.options.query is set to the raw untransformed query.
     options = {
       ...options,
@@ -718,7 +718,7 @@ export class QueryManager<TStore> {
 
     this.queries.set(observable.queryId, queryInfo);
 
-    // We give queryInfo the transformed query to ensure the first cache diff 
+    // We give queryInfo the transformed query to ensure the first cache diff
     // uses the transformed query instead of the raw query
     queryInfo.init({
       document: query,

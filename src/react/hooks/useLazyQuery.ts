@@ -1,4 +1,4 @@
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '../../internal/wrapped-graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { useCallback, useMemo, useRef } from 'react';
 
@@ -35,7 +35,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
   const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
 
-  // Use refs to track options and the used query to ensure the `execute` 
+  // Use refs to track options and the used query to ensure the `execute`
   // function remains referentially stable between renders.
   optionsRef.current = merged;
   queryRef.current = document;

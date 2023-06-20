@@ -1,5 +1,5 @@
-import type { ASTNode} from 'graphql';
-import { print } from 'graphql';
+import type { ASTNode} from '../../internal/wrapped-graphql';
+import { print } from '../../internal/wrapped-graphql';
 
 import type { Operation } from '../core';
 

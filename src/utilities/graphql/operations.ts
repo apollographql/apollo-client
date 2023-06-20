@@ -1,4 +1,4 @@
-import { OperationTypeNode } from 'graphql';
+import { OperationTypeNode } from '../../internal/wrapped-graphql';
 import type { DocumentNode } from '../../core';
 import { getOperationDefinition } from './getFromAST';
 

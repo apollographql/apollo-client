@@ -1,11 +1,11 @@
 import { invariant } from '../../utilities/globals';
 
-import { print } from 'graphql';
+import { print } from '../../internal/wrapped-graphql';
 import type {
   DocumentNode,
   ExecutionResult,
   GraphQLError,
-} from 'graphql';
+} from '../../internal/wrapped-graphql';
 
 import type { Operation } from '../core';
 import { ApolloLink } from '../core';

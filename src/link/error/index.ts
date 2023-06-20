@@ -1,4 +1,4 @@
-import type { ExecutionResult } from 'graphql';
+import type { ExecutionResult } from '../../internal/wrapped-graphql';
 
 import type { NetworkError, GraphQLErrors } from '../../errors';
 import { Observable } from '../../utilities';

@@ -3,10 +3,10 @@ import { invariant, newInvariantError } from '../../utilities/globals';
 import type {
   DocumentNode,
   FieldNode,
-  SelectionSetNode} from 'graphql';
+  SelectionSetNode} from '../../internal/wrapped-graphql';
 import {
   Kind
-} from 'graphql';
+} from '../../internal/wrapped-graphql';
 import type { OptimisticWrapperFunction } from 'optimism';
 import { wrap } from 'optimism';
 

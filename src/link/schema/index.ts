@@ -1,5 +1,5 @@
-import type { GraphQLSchema } from 'graphql';
-import { validate, execute } from 'graphql';
+import type { GraphQLSchema } from '../../internal/wrapped-graphql';
+import { validate, execute } from '../../internal/wrapped-graphql';
 
 import type { Operation, FetchResult } from '../core';
 import { ApolloLink } from '../core';

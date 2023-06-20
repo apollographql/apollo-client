@@ -19,7 +19,7 @@ import type {
   SelectionSetNode,
   DocumentNode,
   FragmentSpreadNode,
-} from 'graphql';
+} from '../../internal/wrapped-graphql';
 
 import { isNonNullObject } from '../common/objects';
 import type { FragmentMap} from './fragments';

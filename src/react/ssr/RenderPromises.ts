@@ -1,4 +1,4 @@
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '../../internal/wrapped-graphql';
 
 import type { ObservableQuery, OperationVariables } from '../../core';
 import type { QueryDataOptions } from '../types/types';

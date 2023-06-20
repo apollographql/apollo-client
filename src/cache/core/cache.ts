@@ -1,4 +1,4 @@
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '../../internal/wrapped-graphql';
 import { wrap } from 'optimism';
 
 import type {

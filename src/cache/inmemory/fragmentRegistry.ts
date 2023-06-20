@@ -2,10 +2,10 @@ import type {
   DocumentNode,
   ASTNode,
   FragmentDefinitionNode,
-  FragmentSpreadNode} from "graphql";
+  FragmentSpreadNode} from "../../internal/wrapped-graphql";
 import {
   visit,
-} from "graphql";
+} from "../../internal/wrapped-graphql";
 
 import { wrap } from "optimism";
 

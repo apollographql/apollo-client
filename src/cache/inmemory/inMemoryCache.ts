@@ -3,7 +3,7 @@ import { invariant } from '../../utilities/globals';
 // Make builtins like Map and Set safe to use with non-extensible objects.
 import './fixPolyfills';
 
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '../../internal/wrapped-graphql';
 import type { OptimisticWrapperFunction} from 'optimism';
 import { wrap } from 'optimism';
 import { equal } from '@wry/equality';

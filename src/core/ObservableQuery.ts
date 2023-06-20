@@ -1,5 +1,5 @@
 import { invariant } from '../utilities/globals';
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '../internal/wrapped-graphql';
 import { equal } from '@wry/equality';
 
 import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
@@ -392,8 +392,8 @@ export class ObservableQuery<
       const vars = queryDef.variableDefinitions;
       if (!vars || !vars.some(v => v.variable.name.value === "variables")) {
         invariant.warn(`Called refetch(%o) for query %o, which does not declare a $variables variable.
-Did you mean to call refetch(variables) instead of refetch({ variables })?`, 
-          variables, 
+Did you mean to call refetch(variables) instead of refetch({ variables })?`,
+          variables,
           queryDef.name?.value || queryDef
         );
       }
@@ -445,12 +445,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const qid = this.queryManager.generateQueryId();
 
-    // If a temporary query is passed to `fetchMore`, we don't want to store 
-    // it as the last query result since it may be an optimized query for 
-    // pagination. We will however run the transforms on the original document 
-    // as well as the document passed in `fetchMoreOptions` to ensure the cache 
+    // If a temporary query is passed to `fetchMore`, we don't want to store
+    // it as the last query result since it may be an optimized query for
+    // pagination. We will however run the transforms on the original document
+    // as well as the document passed in `fetchMoreOptions` to ensure the cache
     // uses the most up-to-date document which may rely on runtime conditionals.
-    this.lastQuery = fetchMoreOptions.query 
+    this.lastQuery = fetchMoreOptions.query
       ? this.transformDocument(this.options.query)
       : combinedOptions.query;
 
@@ -838,9 +838,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       ? mergedOptions
       : assign(this.options, mergedOptions);
 
-    // Don't update options.query with the transformed query to avoid 
-    // overwriting this.options.query when we aren't using a disposable concast. 
-    // We want to ensure we can re-run the custom document transforms the next 
+    // Don't update options.query with the transformed query to avoid
+    // overwriting this.options.query when we aren't using a disposable concast.
+    // We want to ensure we can re-run the custom document transforms the next
     // time a request is made against the original query.
     const query = this.transformDocument(options.query);
 

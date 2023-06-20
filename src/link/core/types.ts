@@ -1,7 +1,6 @@
-import type { ExecutionResult, GraphQLError } from "graphql";
-import { DocumentNode } from "graphql";
+import type { DocumentNode, ExecutionResult, GraphQLError } from "../../internal/wrapped-graphql";
 import type { DefaultContext } from "../../core";
-export { DocumentNode };
+export type { DocumentNode };
 
 import type { Observable } from "../../utilities";
 

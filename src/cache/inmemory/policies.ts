@@ -5,7 +5,7 @@ import type {
   FragmentDefinitionNode,
   SelectionSetNode,
   FieldNode,
-} from 'graphql';
+} from '../../internal/wrapped-graphql';
 
 import type {
   FragmentMap,

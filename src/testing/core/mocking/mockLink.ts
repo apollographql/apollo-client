@@ -1,6 +1,6 @@
 import { invariant } from '../../../utilities/globals';
 
-import { print } from 'graphql';
+import { print } from '../../../internal/wrapped-graphql';
 import { equal } from '@wry/equality';
 
 import type {
@@ -117,7 +117,7 @@ ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
 
       if (this.showWarnings) {
         console.warn(
-          configError.message + 
+          configError.message +
             '\nThis typically indicates a configuration error in your mocks ' +
             'setup, usually due to a typo or mismatched variable.'
         );

@@ -13,11 +13,11 @@ import type {
   VariableDefinitionNode,
   ASTNode,
   ASTVisitor,
-  InlineFragmentNode} from 'graphql';
+  InlineFragmentNode} from '../../internal/wrapped-graphql';
 import {
   visit,
   Kind
-} from 'graphql';
+} from '../../internal/wrapped-graphql';
 
 import {
   checkDocument,

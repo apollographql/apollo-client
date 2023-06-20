@@ -5,7 +5,7 @@ import type {
   DefinitionNode,
   VariableDefinitionNode,
   OperationDefinitionNode
-} from 'graphql';
+} from '../../internal/wrapped-graphql';
 
 export enum DocumentType {
   Query,

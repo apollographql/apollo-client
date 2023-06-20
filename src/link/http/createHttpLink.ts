@@ -1,6 +1,6 @@
 import { invariant } from '../../utilities/globals';
 
-import type { DefinitionNode } from 'graphql';
+import type { DefinitionNode } from '../../internal/wrapped-graphql';
 
 import { ApolloLink } from '../core';
 import { Observable, hasDirectives } from '../../utilities';

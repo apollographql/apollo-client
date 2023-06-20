@@ -3,10 +3,10 @@ import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 import type {
   SelectionSetNode,
-  FieldNode} from 'graphql';
+  FieldNode} from '../../internal/wrapped-graphql';
 import {
   Kind,
-} from 'graphql';
+} from '../../internal/wrapped-graphql';
 
 import type {
   FragmentMap,

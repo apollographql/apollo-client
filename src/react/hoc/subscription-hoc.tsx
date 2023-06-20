@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '../../internal/wrapped-graphql';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
 import { parser } from '../parser';

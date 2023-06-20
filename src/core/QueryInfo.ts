@@ -1,4 +1,4 @@
-import type { DocumentNode, GraphQLError } from 'graphql';
+import type { DocumentNode, GraphQLError } from '../internal/wrapped-graphql';
 import { equal } from "@wry/equality";
 
 import type { Cache, ApolloCache } from '../cache';

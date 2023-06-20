@@ -30,6 +30,9 @@ src/*
 src/react/*
 
 !src/dev
+!src/internal
+!src/internal/wrapped-graphql
+!src/internal/wrapped-graphql/*
 
 # Allow src/react/cache/ApolloProvider
 !src/react/context/

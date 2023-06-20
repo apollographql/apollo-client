@@ -1,6 +1,6 @@
 import '../utilities/globals';
 
-import type { GraphQLError, GraphQLErrorExtensions } from 'graphql';
+import type { GraphQLError, GraphQLErrorExtensions } from '../internal/wrapped-graphql';
 
 import { isNonNullObject } from '../utilities';
 import type { ServerParseError } from '../link/http';

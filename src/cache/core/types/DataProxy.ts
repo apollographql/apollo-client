@@ -1,4 +1,4 @@
-import type { DocumentNode } from 'graphql'; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+import type { DocumentNode } from '../../../internal/wrapped-graphql'; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import type { MissingFieldError } from './common';

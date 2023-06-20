@@ -1,4 +1,4 @@
-import equal from "@wry/equality";
+import equal from '@wry/equality';
 
 import type {
   DirectiveNode,
@@ -9,15 +9,11 @@ import type {
   InlineFragmentNode,
   SelectionNode,
   SelectionSetNode,
-} from "graphql";
+} from '../internal/wrapped-graphql';
 
-import type {
-  ApolloQueryResult,
-  OperationVariables,
-} from "./types";
+import type { ApolloQueryResult, OperationVariables } from './types';
 
-import type {
-  FragmentMap} from "../utilities";
+import type { FragmentMap } from '../utilities';
 import {
   createFragmentMap,
   getFragmentDefinitions,
@@ -26,7 +22,7 @@ import {
   isField,
   resultKeyNameFromField,
   shouldInclude,
-} from "../utilities";
+} from '../utilities';
 
 // Returns true if aResult and bResult are deeply equal according to the fields
 // selected by the given query, ignoring any fields marked as @nonreactive.
@@ -34,16 +30,14 @@ export function equalByQuery(
   query: DocumentNode,
   { data: aData, ...aRest }: Partial<ApolloQueryResult<unknown>>,
   { data: bData, ...bRest }: Partial<ApolloQueryResult<unknown>>,
-  variables?: OperationVariables,
+  variables?: OperationVariables
 ): boolean {
-  return equal(aRest, bRest) && equalBySelectionSet(
-    getMainDefinition(query).selectionSet,
-    aData,
-    bData,
-    {
+  return (
+    equal(aRest, bRest) &&
+    equalBySelectionSet(getMainDefinition(query).selectionSet, aData, bData, {
       fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
       variables,
-    },
+    })
   );
 }
 
@@ -58,7 +52,7 @@ function equalBySelectionSet(
   selectionSet: SelectionSetNode,
   aResult: any,
   bResult: any,
-  context: CompareContext<OperationVariables>,
+  context: CompareContext<OperationVariables>
 ): boolean {
   if (aResult === bResult) {
     return true;
@@ -69,7 +63,7 @@ function equalBySelectionSet(
   // Returning true from this Array.prototype.every callback function skips the
   // current field/subtree. Returning false aborts the entire traversal
   // immediately, causing equalBySelectionSet to return false.
-  return selectionSet.selections.every(selection => {
+  return selectionSet.selections.every((selection) => {
     // Avoid re-processing the same selection at the same level of recursion, in
     // case the same field gets included via multiple indirect fragment spreads.
     if (seenSelections.has(selection)) return true;
@@ -103,12 +97,14 @@ function equalBySelectionSet(
           return false;
         }
         for (let i = 0; i < length; ++i) {
-          if (!equalBySelectionSet(
-            childSelectionSet,
-            aResultChild[i],
-            bResultChild[i],
-            context,
-          )) {
+          if (
+            !equalBySelectionSet(
+              childSelectionSet,
+              aResultChild[i],
+              bResultChild[i],
+              context
+            )
+          ) {
             return false;
           }
         }
@@ -119,9 +115,8 @@ function equalBySelectionSet(
         childSelectionSet,
         aResultChild,
         bResultChild,
-        context,
+        context
       );
-
     } else {
       const fragment = getFragmentFromSelection(selection, context.fragmentMap);
       if (fragment) {
@@ -137,22 +132,25 @@ function equalBySelectionSet(
           // that should be applied to the current result value(s).
           aResult,
           bResult,
-          context,
+          context
         );
       }
     }
   });
 }
 
-function selectionHasNonreactiveDirective(selection:
-  | FieldNode
-  | InlineFragmentNode
-  | FragmentSpreadNode
-  | FragmentDefinitionNode,
+function selectionHasNonreactiveDirective(
+  selection:
+    | FieldNode
+    | InlineFragmentNode
+    | FragmentSpreadNode
+    | FragmentDefinitionNode
 ): boolean {
-  return !!selection.directives && selection.directives.some(directiveIsNonreactive);
+  return (
+    !!selection.directives && selection.directives.some(directiveIsNonreactive)
+  );
 }
 
 function directiveIsNonreactive(dir: DirectiveNode): boolean {
-  return dir.name.value === "nonreactive";
+  return dir.name.value === 'nonreactive';
 }

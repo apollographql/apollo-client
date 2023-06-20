@@ -11,12 +11,12 @@ import type {
   ASTNode,
   DirectiveNode,
   FragmentSpreadNode,
-  ExecutableDefinitionNode} from 'graphql';
+  ExecutableDefinitionNode} from '../internal/wrapped-graphql';
 import {
   visit,
   BREAK,
   isSelectionNode
-} from 'graphql';
+} from '../internal/wrapped-graphql';
 
 import type { ApolloCache } from '../cache';
 import type {

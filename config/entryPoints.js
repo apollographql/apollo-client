@@ -27,7 +27,8 @@ const entryPoints = [
   { dirs: ['testing'], extensions: [".js", ".jsx"] },
   { dirs: ['testing', 'core'] },
   { dirs: ['utilities'] },
-  { dirs: ['utilities', 'globals'], sideEffects: true },
+  { dirs: ['utilities', 'globals'] },
+  { dirs: ['internal', 'wrapped-graphql'], sideEffects: true },
 ];
 
 const lookupTrie = Object.create(null);

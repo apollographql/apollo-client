@@ -5,7 +5,7 @@ import type {
   OperationDefinitionNode,
   FragmentDefinitionNode,
   ValueNode,
-} from 'graphql';
+} from '../../internal/wrapped-graphql';
 
 import { valueToObjectRepresentation } from './storeUtils';
 

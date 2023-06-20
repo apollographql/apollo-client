@@ -156,7 +156,13 @@ Array [
 
 exports[`exports of public entry points @apollo/client/internal/wrapped-graphql 1`] = `
 Array [
+  "BREAK",
+  "Kind",
+  "OperationTypeNode",
+  "execute",
+  "isSelectionNode",
   "print",
+  "validate",
   "visit",
 ]
 `;

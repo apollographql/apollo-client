@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.8.0-beta.4
+
+### Patch Changes
+
+- [#10940](https://github.com/apollographql/apollo-client/pull/10940) [`1d38f128f`](https://github.com/apollographql/apollo-client/commit/1d38f128f325ea7092bd04fe3799ebbb6e8bdfdd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for the `skip` option in `useBackgroundQuery` and `useSuspenseQuery`. Setting this option to `true` will avoid a network request.
+
 ## 3.8.0-beta.3
 
 ### Minor Changes

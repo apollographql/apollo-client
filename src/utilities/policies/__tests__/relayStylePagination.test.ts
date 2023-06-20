@@ -109,6 +109,58 @@ describe('relayStylePagination', () => {
         hasNextPage: true,
       });
     });
+
+    it("should only override pageInfo.endCursor if empty strings with a single cursor", () => {
+      const resultWithEndCursor = policy.read!({
+        edges: [
+          { node: { __ref: "A" }, cursor: "" },
+          { node: { __ref: "B" }, cursor: "" },
+          { node: { __ref: "C" }, cursor: "" },
+          { node: { __ref: "D" }, cursor: "cursorD" },
+          { node: { __ref: "E" } },
+        ],
+        pageInfo: {
+          startCursor: "",
+          endCursor: "",
+          hasPreviousPage: false,
+          hasNextPage: true,
+        },
+      }, fakeReadOptions);
+
+      expect(
+        resultWithEndCursor &&
+        resultWithEndCursor.pageInfo
+      ).toEqual({
+        startCursor: "",
+        endCursor: "cursorD",
+        hasPreviousPage: false,
+        hasNextPage: true,
+      });
+    });
+
+    it("should only override both pageInfo.{start,end}Cursor if empty strings with a single cursor and single element", () => {
+      const resultWithEndCursor = policy.read!({
+        edges: [
+          { node: { __ref: "A" }, cursor: "cursorA" },
+        ],
+        pageInfo: {
+          startCursor: "",
+          endCursor: "",
+          hasPreviousPage: false,
+          hasNextPage: true,
+        },
+      }, fakeReadOptions);
+
+      expect(
+        resultWithEndCursor &&
+        resultWithEndCursor.pageInfo
+      ).toEqual({
+        startCursor: "cursorA",
+        endCursor: "cursorA",
+        hasPreviousPage: false,
+        hasNextPage: true,
+      });
+    });
   });
 
   describe('merge', () => {

@@ -218,26 +218,43 @@ This code also has the following drawbacks:
 
 ### Customizing Type Policies
 
-After creating an Apollo client object, you can use the `addTypePolicy` method to add or modify the type policy.
+After creating an Apollo client object, you can use the `addTypePolicy` method to add or modify type policies.
 
 Here is an example of how to use the `addTypePolicy` method:
 
 ```
-cost client = new ApolloClient({
-  uri: `https://api.example.com/graphql`,
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        name: {
+          read(name = "UNKNOWN NAME") {
+            return name.toUpperCase();;
+          }
+        },
+      },
+    },
+  },
 });
 
-//Add a type policy to the client object.
-client.addTypePolicy({
-  type: "Query".
-  fields: {
-    hello: {
-      resolver: () => "Hello, world!",
+// Add a type policy to the client object.
+cache.policies.addTypePolicies({
+  Person: {
+    fields: {
+      email: {
+        read(email = "unknown@example.com") {
+          return email;
+        },
+      },
     },
   },
 });
 ```
-This code snippet first creates an ApolloClient object. Then, it uses, the `addTypePolicy` method to add a type policy to the client. The type policy specifies that the `hello` field on the `Query` type should return the string "Hello, world!".
+The code creates an `InMemoryCache` with a custom type policy for the `Person` type. The type policy specifies that if the `name` field is not available in the cache, it should return a default value of "UNKNOWN NAME" and converts it to uppercase.
+
+Then, the code adds an additional type policy to the cache using `cache.policies.addTypePolicies`. This new type policy is related to the `Person` type and its `email` field. The custom read function specifies that if the email field is not available in the cache, it should return a default value of "unknown@example.com".
+
+Overall, the code sets up caching behaviors for the `Person` type, ensuring that default values are provided for the `name` and `email` fields if they are not present in the cache.
 
 ### Disabling normalization
 

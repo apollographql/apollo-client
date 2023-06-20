@@ -250,6 +250,7 @@ cache.policies.addTypePolicies({
   },
 });
 ```
+
 The code creates an `InMemoryCache` with a custom type policy for the `Person` type. The type policy specifies that if the `name` field is not available in the cache, it should return a default value of "UNKNOWN NAME" and converts it to uppercase.
 
 Then, the code adds an additional type policy to the cache using `cache.policies.addTypePolicies`. This new type policy is related to the `Person` type and its `email` field. The custom read function specifies that if the email field is not available in the cache, it should return a default value of "unknown@example.com".

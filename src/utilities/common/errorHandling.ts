@@ -1,6 +1,6 @@
-import type { FetchResult } from "../../link/core";
-import { isNonEmptyArray } from "../../utilities/common/arrays";
-import { isExecutionPatchIncrementalResult } from "../../utilities/common/incrementalResult";
+import type { FetchResult } from "../../link/core/index.js";
+import { isNonEmptyArray } from "../../utilities/common/arrays.js";
+import { isExecutionPatchIncrementalResult } from "../../utilities/common/incrementalResult.js";
 
 export function graphQLResultHasError<T>(result: FetchResult<T>): boolean {
   const errors = getGraphQLErrorsFromResult(result);

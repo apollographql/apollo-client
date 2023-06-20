@@ -1,24 +1,24 @@
-import { invariant, newInvariantError, __DEV__ } from '../utilities/globals';
+import { invariant, newInvariantError, __DEV__ } from '../utilities/globals/index.js';
 
 import type { DocumentNode } from 'graphql';
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
-import type { ApolloLink, FetchResult } from '../link/core';
-import { execute } from '../link/core';
+import type { ApolloLink, FetchResult } from '../link/core/index.js';
+import { execute } from '../link/core/index.js';
 import {
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
   removeDirectivesFromDocument,
-} from '../utilities';
-import type { Cache, ApolloCache} from '../cache';
-import { canonicalStringify } from '../cache';
+} from '../utilities/index.js';
+import type { Cache, ApolloCache} from '../cache/index.js';
+import { canonicalStringify } from '../cache/index.js';
 
 import type {
   ObservableSubscription,
-  ConcastSourcesArray} from '../utilities';
+  ConcastSourcesArray} from '../utilities/index.js';
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -35,9 +35,9 @@ import {
   isDocumentNode,
   isNonNullObject,
   DocumentTransform,
-} from '../utilities';
-import { mergeIncrementalData } from '../utilities/common/incrementalResult';
-import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from '../errors';
+} from '../utilities/index.js';
+import { mergeIncrementalData } from '../utilities/common/incrementalResult.js';
+import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from '../errors/index.js';
 import type {
   QueryOptions,
   WatchQueryOptions,
@@ -45,9 +45,9 @@ import type {
   MutationOptions,
   ErrorPolicy,
   MutationFetchPolicy,
-} from './watchQueryOptions';
-import { ObservableQuery, logMissingFieldErrors } from './ObservableQuery';
-import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
+} from './watchQueryOptions.js';
+import { ObservableQuery, logMissingFieldErrors } from './ObservableQuery.js';
+import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus.js';
 import type {
   ApolloQueryResult,
   OperationVariables,
@@ -57,19 +57,19 @@ import type {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
-} from './types';
-import { LocalState } from './LocalState';
+} from './types.js';
+import { LocalState } from './LocalState.js';
 
 import type {
-  QueryStoreValue} from './QueryInfo';
+  QueryStoreValue} from './QueryInfo.js';
 import {
   QueryInfo,
   shouldWriteResult,
   CacheWriteBehavior,
-} from './QueryInfo';
-import type { ApolloErrorOptions } from '../errors';
-import { PROTOCOL_ERRORS_SYMBOL } from '../errors';
-import { print } from '../utilities';
+} from './QueryInfo.js';
+import type { ApolloErrorOptions } from '../errors/index.js';
+import { PROTOCOL_ERRORS_SYMBOL } from '../errors/index.js';
+import { print } from '../utilities/index.js';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -144,7 +144,7 @@ export class QueryManager<TStore> {
     assumeImmutableResults?: boolean;
   }) {
     const defaultDocumentTransform = new DocumentTransform(
-      (document) => this.cache.transformDocument(document), 
+      (document) => this.cache.transformDocument(document),
       // Allow the apollo cache to manage its own transform caches
       { cache: false }
     );
@@ -161,8 +161,8 @@ export class QueryManager<TStore> {
       ? defaultDocumentTransform
           .concat(documentTransform)
           // The custom document transform may add new fragment spreads or new
-          // field selections, so we want to give the cache a chance to run 
-          // again. For example, the InMemoryCache adds __typename to field 
+          // field selections, so we want to give the cache a chance to run
+          // again. For example, the InMemoryCache adds __typename to field
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform
@@ -695,7 +695,7 @@ export class QueryManager<TStore> {
     const query = this.transform(options.query);
 
     // assign variable default values if supplied
-    // NOTE: We don't modify options.query here with the transformed query to 
+    // NOTE: We don't modify options.query here with the transformed query to
     // ensure observable.options.query is set to the raw untransformed query.
     options = {
       ...options,
@@ -719,7 +719,7 @@ export class QueryManager<TStore> {
 
     this.queries.set(observable.queryId, queryInfo);
 
-    // We give queryInfo the transformed query to ensure the first cache diff 
+    // We give queryInfo the transformed query to ensure the first cache diff
     // uses the transformed query instead of the raw query
     queryInfo.init({
       document: query,

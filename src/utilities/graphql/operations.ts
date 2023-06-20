@@ -1,6 +1,6 @@
 import { OperationTypeNode } from 'graphql';
-import type { DocumentNode } from '../../core';
-import { getOperationDefinition } from './getFromAST';
+import type { DocumentNode } from '../../core/index.js';
+import { getOperationDefinition } from './getFromAST.js';
 
 function isOperation(document: DocumentNode, operation: OperationTypeNode) {
   return getOperationDefinition(document)?.operation === operation;

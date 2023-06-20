@@ -3,22 +3,22 @@ import type {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
-} from '../../core';
-import { NetworkStatus } from '../../core';
-import { useApolloClient } from './useApolloClient';
-import type { QueryReference } from '../cache/QueryReference';
-import type { SuspenseQueryHookOptions, NoInfer } from '../types/types';
-import { __use } from './internal';
-import { useSuspenseCache } from './useSuspenseCache';
+} from '../../core/index.js';
+import { NetworkStatus } from '../../core/index.js';
+import { useApolloClient } from './useApolloClient.js';
+import type { QueryReference } from '../cache/QueryReference.js';
+import type { SuspenseQueryHookOptions, NoInfer } from '../types/types.js';
+import { __use } from './internal/index.js';
+import { useSuspenseCache } from './useSuspenseCache.js';
 import {
   toApolloError,
   useTrackedQueryRefs,
   useWatchQueryOptions,
-} from './useSuspenseQuery';
-import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery';
-import { canonicalStringify } from '../../cache';
-import type { DeepPartial } from '../../utilities';
-import { invariant } from '../../utilities/globals';
+} from './useSuspenseQuery.js';
+import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
+import { canonicalStringify } from '../../cache/index.js';
+import type { DeepPartial } from '../../utilities/index.js';
+import { invariant } from '../../utilities/globals/index.js';
 
 export type UseBackgroundQueryResult<
   TData = unknown,

@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import type { Observable, ObservableSubscription } from '../../utilities';
-import type { FetchResult } from '../../link/core';
-import type { ApolloError } from '../../errors';
+import type { Observable, ObservableSubscription } from '../../utilities/index.js';
+import type { FetchResult } from '../../link/core/index.js';
+import type { ApolloError } from '../../errors/index.js';
 import type {
   ApolloCache,
   ApolloClient,
@@ -17,16 +17,16 @@ import type {
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
-} from '../../core';
-import type { SuspenseCache } from '../cache';
+} from '../../core/index.js';
+import type { SuspenseCache } from '../cache/index.js';
 
 /* QueryReference type */
 
-export type { QueryReference } from '../cache/QueryReference';
+export type { QueryReference } from '../cache/QueryReference.js';
 
 /* Common types */
 
-export type { DefaultContext as Context } from "../../core";
+export type { DefaultContext as Context } from "../../core/index.js";
 
 export type CommonOptions<TOptions> = TOptions & {
   client?: ApolloClient<object>;

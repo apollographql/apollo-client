@@ -9,8 +9,8 @@ import {
 
 import { wrap } from "optimism";
 
-import type { FragmentMap} from "../../utilities";
-import { getFragmentDefinitions } from "../../utilities";
+import type { FragmentMap} from "../../utilities/index.js";
+import { getFragmentDefinitions } from "../../utilities/index.js";
 
 export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;

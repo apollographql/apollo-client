@@ -1,5 +1,5 @@
-import type { ObservableSubscription, Observable } from '../../utilities';
-import { asyncMap } from '../../utilities';
+import type { ObservableSubscription, Observable } from '../../utilities/index.js';
+import { asyncMap } from '../../utilities/index.js';
 
 export default function subscribeAndCount<TResult>(
   reject: (reason: any) => any,

@@ -1,7 +1,7 @@
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import type { OperationVariables, DefaultContext, ApolloCache } from '../../core';
+import type { OperationVariables, DefaultContext, ApolloCache } from '../../core/index.js';
 import type {
   QueryFunctionOptions,
   QueryResult,
@@ -10,7 +10,7 @@ import type {
   MutationResult,
   BaseSubscriptionOptions,
   SubscriptionResult
-} from '../types/types';
+} from '../types/types.js';
 
 export interface QueryComponentOptions<
   TData = any,

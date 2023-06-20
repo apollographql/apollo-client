@@ -217,7 +217,7 @@ function transform(code: string, relativeFilePath: string) {
           const normalized = posix.normalize(
             posix.join(posix.dirname(relativeFilePath), importedModuleId)
           );
-          if (normalized === 'utilities/globals') {
+          if (normalized === 'utilities/globals/index.js') {
             foundExistingImportDecl = true;
             if (
               node.specifiers?.some((s) =>
@@ -242,7 +242,7 @@ function transform(code: string, relativeFilePath: string) {
       throw new Error(
         `Missing import from "${posix.relative(
           posix.dirname(relativeFilePath),
-          'utilities/globals'
+          'utilities/globals/index.js'
         )} in ${relativeFilePath}`
       );
     }

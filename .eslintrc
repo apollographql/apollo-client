@@ -1,6 +1,6 @@
 {
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "import"],
   "env": {
     "browser": true,
     "node": true,
@@ -14,12 +14,13 @@
       "files": ["**/*.ts", "**/*.tsx"],
       "excludedFiles": ["**/__tests__/**/*.*"],
       "rules": {
-        "@typescript-eslint/consistent-type-imports": ["error", { 
+        "@typescript-eslint/consistent-type-imports": ["error", {
           "prefer": "type-imports",
           "disallowTypeAnnotations": false,
           "fixStyle": "separate-type-imports"
         }],
-        "@typescript-eslint/no-import-type-side-effects": "error"
+        "@typescript-eslint/no-import-type-side-effects": "error",
+        "import/extensions": ["error", "always", { "ignorePackages": true } ]
       }
     },
     {

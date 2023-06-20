@@ -1,5 +1,5 @@
-import { __DEV__ } from '../globals';
-import { isNonNullObject } from './objects';
+import { __DEV__ } from '../globals/index.js';
+import { isNonNullObject } from './objects.js';
 
 function deepFreeze(value: any) {
   const workSet = new Set([value]);

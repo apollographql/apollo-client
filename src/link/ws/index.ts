@@ -1,9 +1,9 @@
 import type { ClientOptions } from 'subscriptions-transport-ws';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 
-import type { Operation, FetchResult } from '../core';
-import { ApolloLink } from '../core';
-import type { Observable } from '../../utilities';
+import type { Operation, FetchResult } from '../core/index.js';
+import { ApolloLink } from '../core/index.js';
+import type { Observable } from '../../utilities/index.js';
 
 export namespace WebSocketLink {
   /**

@@ -1,5 +1,5 @@
-import global from "./global";
-import { maybe } from "./maybe";
+import global from "./global.js";
+import { maybe } from "./maybe.js";
 
 export default (
   "__DEV__" in global

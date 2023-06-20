@@ -1,4 +1,4 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 
 import {
   useCallback,
@@ -7,34 +7,34 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useSyncExternalStore } from './useSyncExternalStore';
+import { useSyncExternalStore } from './useSyncExternalStore.js';
 import { equal } from '@wry/equality';
 
-import type { OperationVariables, WatchQueryFetchPolicy } from '../../core';
-import { mergeOptions } from '../../utilities';
-import type { ApolloContextValue} from '../context';
-import { getApolloContext } from '../context';
-import { ApolloError } from '../../errors';
+import type { OperationVariables, WatchQueryFetchPolicy } from '../../core/index.js';
+import { mergeOptions } from '../../utilities/index.js';
+import type { ApolloContextValue} from '../context/index.js';
+import { getApolloContext } from '../context/index.js';
+import { ApolloError } from '../../errors/index.js';
 import type {
   ApolloClient,
   ApolloQueryResult,
   ObservableQuery,
   DocumentNode,
   TypedDocumentNode,
-  WatchQueryOptions} from '../../core';
+  WatchQueryOptions} from '../../core/index.js';
 import {
   NetworkStatus
-} from '../../core';
+} from '../../core/index.js';
 import type {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
   NoInfer,
-} from '../types/types';
+} from '../types/types.js';
 
-import { DocumentType, verifyDocumentType } from '../parser';
-import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
+import { DocumentType, verifyDocumentType } from '../parser/index.js';
+import { useApolloClient } from './useApolloClient.js';
+import { canUseWeakMap, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities/index.js';
 
 const {
   prototype: {
@@ -130,7 +130,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     return new Promise<QueryResult<TData, TVariables>>((resolve) => {
       let result: ApolloQueryResult<TData>;
 
-      // Subscribe to the concast independently of the ObservableQuery in case 
+      // Subscribe to the concast independently of the ObservableQuery in case
       // the component gets unmounted before the promise resolves. This prevents
       // the concast from terminating early and resolving with `undefined` when
       // there are no more subscribers for the concast.

@@ -1,9 +1,9 @@
 import * as React from 'react';
-import type { ApolloClient } from '../../core';
-import { canUseSymbol } from '../../utilities';
-import type { SuspenseCache } from '../cache';
+import type { ApolloClient } from '../../core/index.js';
+import { canUseSymbol } from '../../utilities/index.js';
+import type { SuspenseCache } from '../cache/index.js';
 import type { RenderPromises } from '../ssr';
-import { global, invariant } from '../../utilities/globals';
+import { global, invariant } from '../../utilities/globals/index.js';
 
 export interface ApolloContextValue {
   client?: ApolloClient<object>;
@@ -40,15 +40,15 @@ export function getApolloContext(): React.Context<ApolloContextValue> {
       'For more information, see https://nextjs.org/docs/getting-started/react-essentials#client-components'
   );
 
-  let contextStorage = global[contextKey] || (
-    global[contextKey] = Object.create(null)
-  );
+  let contextStorage =
+    global[contextKey] || (global[contextKey] = Object.create(null));
 
-  return contextStorage[React.version] || (
-    contextStorage[React.version] = Object.assign(
+  return (
+    contextStorage[React.version] ||
+    (contextStorage[React.version] = Object.assign(
       React.createContext<ApolloContextValue>({}),
-      { displayName: 'ApolloContext' },
-    )
+      { displayName: 'ApolloContext' }
+    ))
   );
 }
 

@@ -5,7 +5,7 @@ description: Receive query response data incrementally
 
 > **The `@defer` directive is currently at the [General Availability stage](/resources/product-launch-stages/#general-availability) in Apollo Client, and is available by installing `@apollo/client@latest`.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
-Beginning with version `3.7.0`, Apollo Client Web provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
+Beginning with version `3.7.0`, Apollo Client provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
 
 > For a query to defer fields successfully, the queried endpoint must _also_ support the `@defer` directive. Entity-based `@defer` support is also at the General Availability stage in [Apollo Router](/router/executing-operations/defer-support/) and is compatible with all [federation-compatible subgraph libraries](/federation/building-supergraphs/supported-subgraphs/).
 
@@ -78,6 +78,4 @@ For this reason, `@defer` can be thought of as a tool to improve initial renderi
 
 ## Using with code generation
 
-If you currently use [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) for your codegen needs, note that it doesn't yet support the use of the `@defer` directive in the code output.
-
-The status of this support is tracked in [this GitHub issue](https://github.com/dotansimha/graphql-code-generator/issues/7885).
+If you currently use [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) for your codegen needs, you'll need to use the Codegen version `4.0.0` or higher. Please refer to the [Codegen documentation](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#fragment-masking-with-defer-directive) for more information.

@@ -815,6 +815,13 @@ function warnAboutDataLoss(
   invariant.warn(
 `Cache data may be lost when replacing the ${fieldName} field of a ${parentType} object.
 
+This could cause additional (usually avoidable) network requests to fetch data
+that were otherwise cached.
+
+Additionally, if you use watchQuery (React useQuery internally uses watchQuery),
+this might also cause rerendering of frontend components and, in some rare cases, infinite loops.
+https://github.com/apollographql/apollo-client/issues/10992
+
 To address this problem (which is not a bug in Apollo Client), ${
   childTypenames.length
     ? "either ensure all objects of type " +

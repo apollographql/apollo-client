@@ -1,12 +1,6 @@
 import { invariant } from '../../utilities/globals';
 
-import {
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import * as React from 'react';
 import { useSyncExternalStore } from './useSyncExternalStore';
 import { equal } from '@wry/equality';
 
@@ -35,6 +29,14 @@ import type {
 import { DocumentType, verifyDocumentType } from '../parser';
 import { useApolloClient } from './useApolloClient';
 import { canUseWeakMap, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
+
+const {
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} = React;
 
 const {
   prototype: {

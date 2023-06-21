@@ -1,12 +1,12 @@
 import { invariant } from '../../utilities/globals';
-import { useContext } from 'react';
+import * as React from 'react';
 import type { ApolloClient } from '../../core';
 import { getApolloContext } from '../context';
 
 export function useApolloClient(
   override?: ApolloClient<object>,
 ): ApolloClient<object> {
-  const context = useContext(getApolloContext());
+  const context = React.useContext(getApolloContext());
   const client = override || context.client;
   invariant(
     !!client,

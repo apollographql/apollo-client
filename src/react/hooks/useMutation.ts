@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import * as React from 'react';
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type {
@@ -20,6 +20,8 @@ import { equal } from '@wry/equality';
 import { DocumentType, verifyDocumentType } from '../parser';
 import { ApolloError } from '../../errors';
 import { useApolloClient } from './useApolloClient';
+
+const { useCallback, useEffect, useRef, useState } = React;
 
 export function useMutation<
   TData = any,

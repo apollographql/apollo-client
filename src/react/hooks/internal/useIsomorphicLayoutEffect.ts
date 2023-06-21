@@ -1,5 +1,7 @@
-import { useLayoutEffect, useEffect } from 'react';
+import * as React from 'react';
 import { canUseDOM } from '../../../utilities';
+
+const { useLayoutEffect, useEffect } = React;
 
 // use canUseDOM here instead of canUseLayoutEffect because we want to be able
 // to use useLayoutEffect in our jest tests. useLayoutEffect seems to work fine

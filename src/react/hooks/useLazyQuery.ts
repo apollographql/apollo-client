@@ -1,6 +1,6 @@
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { useCallback, useMemo, useRef } from 'react';
+import * as React from 'react';
 
 import type { OperationVariables } from '../../core';
 import { mergeOptions } from '../../utilities';
@@ -13,6 +13,8 @@ import type {
 } from '../types/types';
 import { useInternalState } from './useQuery';
 import { useApolloClient } from './useApolloClient';
+
+const { useCallback, useMemo, useRef } = React;
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.

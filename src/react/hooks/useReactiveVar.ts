@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import * as React from 'react';
 import type { ReactiveVar } from '../../core';
+
+const { useEffect, useState } = React;
 
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T {
   const value = rv();

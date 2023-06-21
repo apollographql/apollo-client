@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import * as React from 'react';
 import type {
   DocumentNode,
   OperationVariables,
@@ -19,6 +19,8 @@ import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery';
 import { canonicalStringify } from '../../cache';
 import type { DeepPartial } from '../../utilities';
 import { invariant } from '../../utilities/globals';
+
+const { useEffect, useState, useMemo, useCallback } = React;
 
 export type UseBackgroundQueryResult<
   TData = unknown,

@@ -1,5 +1,5 @@
 import { invariant, __DEV__ } from '../../utilities/globals';
-import { useRef, useCallback, useMemo, useEffect, useState } from 'react';
+import * as React from 'react';
 import type {
   ApolloClient,
   ApolloQueryResult,
@@ -25,6 +25,7 @@ import { useSuspenseCache } from './useSuspenseCache';
 import type { QueryReference } from '../cache/QueryReference';
 import { canonicalStringify } from '../../cache';
 
+const { useRef, useCallback, useMemo, useEffect, useState } = React;
 export interface UseSuspenseQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables

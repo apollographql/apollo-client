@@ -1,5 +1,5 @@
 import { invariant } from '../../utilities/globals';
-import { useState, useRef, useEffect } from 'react';
+import * as React from 'react';
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { equal } from '@wry/equality';
@@ -12,6 +12,8 @@ import type {
 } from '../types/types';
 import type { OperationVariables } from '../../core';
 import { useApolloClient } from './useApolloClient';
+
+const { useState, useRef, useEffect } = React;
 
 export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,

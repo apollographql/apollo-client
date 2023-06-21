@@ -31,14 +31,6 @@ import { useApolloClient } from './useApolloClient';
 import { canUseWeakMap, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
 
 const {
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-} = React;
-
-const {
   prototype: {
     hasOwnProperty,
   },
@@ -61,7 +53,7 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
 ): InternalState<TData, TVariables> {
-  const stateRef = useRef<InternalState<TData, TVariables>>();
+  const stateRef = React.useRef<InternalState<TData, TVariables>>();
   if (
     !stateRef.current ||
     client !== stateRef.current.client ||
@@ -77,7 +69,7 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   // setTick function. Updating this state by calling state.forceUpdate is the
   // only way we trigger React component updates (no other useState calls within
   // the InternalState class).
-  const [_tick, setTick] = useState(0);
+  const [_tick, setTick] = React.useState(0);
   state.forceUpdate = () => {
     setTick(tick => tick + 1);
   };
@@ -161,14 +153,14 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // initialization, this.renderPromises is usually undefined (unless SSR is
     // happening), but that's fine as long as it has been initialized that way,
     // rather than left uninitialized.
-    this.renderPromises = useContext(getApolloContext()).renderPromises;
+    this.renderPromises = React.useContext(getApolloContext()).renderPromises;
 
     this.useOptions(options);
 
     const obsQuery = this.useObservableQuery();
 
     const result = useSyncExternalStore(
-      useCallback(() => {
+      React.useCallback(() => {
         if (this.renderPromises) {
           return () => {};
         }
@@ -471,7 +463,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
         || this.observable // Reuse this.observable if possible (and not SSR)
         || this.client.watchQuery(this.getObsQueryOptions());
 
-    this.obsQueryFields = useMemo(() => ({
+    this.obsQueryFields = React.useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),
       reobserve: obsQuery.reobserve.bind(obsQuery),
       fetchMore: obsQuery.fetchMore.bind(obsQuery),

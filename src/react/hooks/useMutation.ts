@@ -21,8 +21,6 @@ import { DocumentType, verifyDocumentType } from '../parser';
 import { ApolloError } from '../../errors';
 import { useApolloClient } from './useApolloClient';
 
-const { useCallback, useEffect, useRef, useState } = React;
-
 export function useMutation<
   TData = any,
   TVariables = OperationVariables,
@@ -34,13 +32,13 @@ export function useMutation<
 ): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
-  const [result, setResult] = useState<Omit<MutationResult, 'reset'>>({
+  const [result, setResult] = React.useState<Omit<MutationResult, 'reset'>>({
     called: false,
     loading: false,
     client,
   });
 
-  const ref = useRef({
+  const ref = React.useRef({
     result,
     mutationId: 0,
     isMounted: true,
@@ -55,7 +53,7 @@ export function useMutation<
     Object.assign(ref.current, { client, options, mutation });
   }
 
-  const execute = useCallback((
+  const execute = React.useCallback((
     executeOptions: MutationFunctionOptions<
       TData,
       TVariables,
@@ -142,13 +140,13 @@ export function useMutation<
     });
   }, []);
 
-  const reset = useCallback(() => {
+  const reset = React.useCallback(() => {
     if (ref.current.isMounted) {
       setResult({ called: false, loading: false, client });
     }
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     ref.current.isMounted = true;
 
     return () => {

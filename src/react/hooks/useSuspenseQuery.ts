@@ -24,8 +24,6 @@ import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import type { QueryReference } from '../cache/QueryReference';
 import { canonicalStringify } from '../../cache';
-
-const { useRef, useCallback, useMemo, useEffect, useState } = React;
 export interface UseSuspenseQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
@@ -170,7 +168,7 @@ export function useSuspenseQuery<
 
   const { fetchPolicy: currentFetchPolicy } = queryRef.watchQueryOptions;
 
-  const [promiseCache, setPromiseCache] = useState(
+  const [promiseCache, setPromiseCache] = React.useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
 
@@ -188,7 +186,7 @@ export function useSuspenseQuery<
 
   useTrackedQueryRefs(queryRef);
 
-  useEffect(() => {
+  React.useEffect(() => {
     return queryRef.listen((promise) => {
       setPromiseCache((promiseCache) =>
         new Map(promiseCache).set(queryRef.key, promise)
@@ -196,7 +194,7 @@ export function useSuspenseQuery<
     });
   }, [queryRef]);
 
-  const skipResult = useMemo(() => {
+  const skipResult = React.useMemo(() => {
     const error = toApolloError(queryRef.result);
 
     return {
@@ -210,7 +208,7 @@ export function useSuspenseQuery<
   const result =
     watchQueryOptions.fetchPolicy === 'standby' ? skipResult : __use(promise);
 
-  const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
+  const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
       const promise = queryRef.fetchMore(options);
 
@@ -223,7 +221,7 @@ export function useSuspenseQuery<
     [queryRef]
   );
 
-  const refetch: RefetchFunction<TData, TVariables> = useCallback(
+  const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {
       const promise = queryRef.refetch(variables);
 
@@ -237,12 +235,12 @@ export function useSuspenseQuery<
   );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-    useCallback(
+  React.useCallback(
       (options) => queryRef.observable.subscribeToMore(options),
       [queryRef]
     );
 
-  return useMemo(() => {
+  return React.useMemo(() => {
     return {
       client,
       data: result.data,
@@ -298,7 +296,7 @@ export function toApolloError(result: ApolloQueryResult<any>) {
 }
 
 export function useTrackedQueryRefs(queryRef: QueryReference) {
-  const trackedQueryRefs = useRef(new Set<QueryReference>());
+  const trackedQueryRefs = React.useRef(new Set<QueryReference>());
 
   trackedQueryRefs.current.add(queryRef);
 

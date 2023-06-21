@@ -20,8 +20,6 @@ import { canonicalStringify } from '../../cache';
 import type { DeepPartial } from '../../utilities';
 import { invariant } from '../../utilities/globals';
 
-const { useEffect, useState, useMemo, useCallback } = React;
-
 export type UseBackgroundQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
@@ -149,7 +147,7 @@ export function useBackgroundQuery<
 
   const { fetchPolicy: currentFetchPolicy } = queryRef.watchQueryOptions;
 
-  const [promiseCache, setPromiseCache] = useState(
+  const [promiseCache, setPromiseCache] = React.useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
 
@@ -160,7 +158,7 @@ export function useBackgroundQuery<
 
   useTrackedQueryRefs(queryRef);
 
-  const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
+  const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
       const promise = queryRef.fetchMore(options);
 
@@ -173,7 +171,7 @@ export function useBackgroundQuery<
     [queryRef]
   );
 
-  const refetch: RefetchFunction<TData, TVariables> = useCallback(
+  const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {
       const promise = queryRef.refetch(variables);
 
@@ -188,7 +186,7 @@ export function useBackgroundQuery<
 
   queryRef.promiseCache = promiseCache;
 
-  return useMemo(() => {
+  return React.useMemo(() => {
     return [
       queryRef,
       {
@@ -200,7 +198,7 @@ export function useBackgroundQuery<
 }
 
 export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
-  const [, forceUpdate] = useState(0);
+  const [, forceUpdate] = React.useState(0);
 
   invariant(
     queryRef.promiseCache,
@@ -209,7 +207,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
       'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
   );
 
-  const skipResult = useMemo(() => {
+  const skipResult = React.useMemo(() => {
     const error = toApolloError(queryRef.result);
 
     return {
@@ -227,7 +225,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
     queryRef.promiseCache.set(queryRef.key, promise);
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     return queryRef.listen((promise) => {
       queryRef.promiseCache!.set(queryRef.key, promise);
       forceUpdate((prevState) => prevState + 1);
@@ -239,7 +237,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
       ? skipResult
       : __use(promise);
 
-  return useMemo(() => {
+  return React.useMemo(() => {
     return {
       data: result.data,
       networkStatus: result.networkStatus,

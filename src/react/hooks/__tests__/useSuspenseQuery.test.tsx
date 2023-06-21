@@ -281,7 +281,7 @@ function wait(delay: number) {
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
-it('validates the GraphQL query as a query', () => {
+test('validates the GraphQL query as a query', () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const query = gql`
@@ -303,7 +303,7 @@ it('validates the GraphQL query as a query', () => {
   consoleSpy.mockRestore();
 });
 
-it('ensures a suspense cache is provided', () => {
+test('ensures a suspense cache is provided', () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
   const { query } = useSimpleQueryCase();
 
@@ -328,7 +328,7 @@ it('ensures a suspense cache is provided', () => {
   consoleSpy.mockRestore();
 });
 
-it('does not throw when provided a `suspenseCache` option', async () => {
+test('does not throw when provided a `suspenseCache` option', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const client = new ApolloClient({
@@ -355,7 +355,7 @@ it('does not throw when provided a `suspenseCache` option', async () => {
   });
 });
 
-it('prioritizes the `suspenseCache` option over the context value', () => {
+test('prioritizes the `suspenseCache` option over the context value', () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const directSuspenseCache = new SuspenseCache();
@@ -381,7 +381,7 @@ it('prioritizes the `suspenseCache` option over the context value', () => {
   expect(contextSuspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
 });
 
-it('ensures a valid fetch policy is used', () => {
+test('ensures a valid fetch policy is used', () => {
   const INVALID_FETCH_POLICIES = ['cache-only', 'standby'];
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
   const { query } = useSimpleQueryCase();
@@ -401,7 +401,7 @@ it('ensures a valid fetch policy is used', () => {
   consoleSpy.mockRestore();
 });
 
-it('suspends a query and returns results', async () => {
+test('suspends a query and returns results', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const { result, renders } = renderSuspenseHook(
@@ -429,7 +429,7 @@ it('suspends a query and returns results', async () => {
   ]);
 });
 
-it('suspends a query with variables and returns results', async () => {
+test('suspends a query with variables and returns results', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const { result, renders } = renderSuspenseHook(
@@ -455,7 +455,7 @@ it('suspends a query with variables and returns results', async () => {
   ]);
 });
 
-it('returns the same results for the same variables', async () => {
+test('returns the same results for the same variables', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const { result, rerender, renders } = renderSuspenseHook(
@@ -491,7 +491,7 @@ it('returns the same results for the same variables', async () => {
   ]);
 });
 
-it('ensures result is referentially stable', async () => {
+test('ensures result is referentially stable', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const { result, rerender } = renderSuspenseHook(
@@ -515,7 +515,7 @@ it('ensures result is referentially stable', async () => {
   expect(result.current).toBe(previousResult);
 });
 
-it('ensures refetch, fetchMore, and subscribeToMore are referentially stable even after result data has changed', async () => {
+test('ensures refetch, fetchMore, and subscribeToMore are referentially stable even after result data has changed', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const client = new ApolloClient({
@@ -552,7 +552,7 @@ it('ensures refetch, fetchMore, and subscribeToMore are referentially stable eve
   expect(result.current.subscribeToMore).toBe(previousResult.subscribeToMore);
 });
 
-it('enables canonical results when canonizeResults is "true"', async () => {
+test('enables canonical results when canonizeResults is "true"', async () => {
   interface Result {
     __typename: string;
     value: number;
@@ -603,7 +603,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
   expect(values).toEqual([0, 1, 2, 3, 5]);
 });
 
-it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
+test("can disable canonical results when the cache's canonizeResults setting is true", async () => {
   interface Result {
     __typename: string;
     value: number;
@@ -655,7 +655,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
   expect(values).toEqual([0, 1, 1, 2, 3, 5]);
 });
 
-it('tears down the query on unmount', async () => {
+test('tears down the query on unmount', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const client = new ApolloClient({
@@ -687,7 +687,7 @@ it('tears down the query on unmount', async () => {
   expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
 });
 
-it('tears down all queries when rendering with multiple variable sets', async () => {
+test('tears down all queries when rendering with multiple variable sets', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const client = new ApolloClient({
@@ -736,7 +736,7 @@ it('tears down all queries when rendering with multiple variable sets', async ()
   });
 });
 
-it('tears down all queries when multiple clients are used', async () => {
+test('tears down all queries when multiple clients are used', async () => {
   const { query } = useVariablesQueryCase();
 
   const client1 = new ApolloClient({
@@ -807,7 +807,7 @@ it('tears down all queries when multiple clients are used', async () => {
   });
 });
 
-it('tears down the query if the component never renders again after suspending', async () => {
+test('tears down the query if the component never renders again after suspending', async () => {
   jest.useFakeTimers();
   const { query } = useSimpleQueryCase();
   const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
@@ -867,7 +867,7 @@ it('tears down the query if the component never renders again after suspending',
   await act(() => wait(0));
 });
 
-it('has configurable auto dispose timer if the component never renders again after suspending', async () => {
+test('has configurable auto dispose timer if the component never renders again after suspending', async () => {
   jest.useFakeTimers();
   const { query } = useSimpleQueryCase();
   const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
@@ -928,7 +928,7 @@ it('has configurable auto dispose timer if the component never renders again aft
   await act(() => wait(0));
 });
 
-it('cancels auto dispose if the component renders before timer finishes', async () => {
+test('cancels auto dispose if the component renders before timer finishes', async () => {
   jest.useFakeTimers();
   const { query } = useSimpleQueryCase();
   const link = new ApolloLink(() => {
@@ -981,7 +981,7 @@ it('cancels auto dispose if the component renders before timer finishes', async 
   jest.useRealTimers();
 });
 
-it('allows the client to be overridden', async () => {
+test('allows the client to be overridden', async () => {
   const { query } = useSimpleQueryCase();
 
   const globalClient = new ApolloClient({
@@ -1016,7 +1016,7 @@ it('allows the client to be overridden', async () => {
   ]);
 });
 
-it('allows the client to be overridden in strict mode', async () => {
+test('allows the client to be overridden in strict mode', async () => {
   const { query } = useSimpleQueryCase();
 
   const globalClient = new ApolloClient({
@@ -1058,7 +1058,7 @@ it('allows the client to be overridden in strict mode', async () => {
   ]);
 });
 
-it('returns the client used in the result', async () => {
+test('returns the client used in the result', async () => {
   const { query } = useSimpleQueryCase();
 
   const client = new ApolloClient({
@@ -1078,7 +1078,7 @@ it('returns the client used in the result', async () => {
   expect(result.current.client).toBe(client);
 });
 
-it('suspends when changing variables', async () => {
+test('suspends when changing variables', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const { result, rerender, renders } = renderSuspenseHook(
@@ -1120,7 +1120,7 @@ it('suspends when changing variables', async () => {
   ]);
 });
 
-it('suspends and fetches data from new client when changing clients', async () => {
+test('suspends and fetches data from new client when changing clients', async () => {
   const { query } = useSimpleQueryCase();
 
   const client1 = new ApolloClient({
@@ -1182,7 +1182,7 @@ it('suspends and fetches data from new client when changing clients', async () =
   ]);
 });
 
-it('allows custom query key so two components that share same query and variables do not interfere with each other', async () => {
+test('allows custom query key so two components that share same query and variables do not interfere with each other', async () => {
   interface Data {
     todo: {
       id: number;
@@ -1296,7 +1296,7 @@ it('allows custom query key so two components that share same query and variable
   expect(screen.getByTestId('second.data')).toHaveTextContent('Take out trash');
 });
 
-it('suspends and refetches data when changing query keys', async () => {
+test('suspends and refetches data when changing query keys', async () => {
   const { query } = useSimpleQueryCase();
 
   const mocks = [
@@ -1353,7 +1353,7 @@ it('suspends and refetches data when changing query keys', async () => {
   ]);
 });
 
-it('suspends and refetches data when part of the query key changes', async () => {
+test('suspends and refetches data when part of the query key changes', async () => {
   const { query } = useSimpleQueryCase();
 
   const mocks = [
@@ -1410,7 +1410,7 @@ it('suspends and refetches data when part of the query key changes', async () =>
   ]);
 });
 
-it('suspends and refetches when using plain string query keys', async () => {
+test('suspends and refetches when using plain string query keys', async () => {
   const { query } = useSimpleQueryCase();
 
   const mocks = [
@@ -1467,7 +1467,7 @@ it('suspends and refetches when using plain string query keys', async () => {
   ]);
 });
 
-it('suspends and refetches when using numeric query keys', async () => {
+test('suspends and refetches when using numeric query keys', async () => {
   const { query } = useSimpleQueryCase();
 
   const mocks = [
@@ -1524,7 +1524,7 @@ it('suspends and refetches when using numeric query keys', async () => {
   ]);
 });
 
-it('responds to cache updates after changing variables', async () => {
+test('responds to cache updates after changing variables', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const client = new ApolloClient({
@@ -1590,7 +1590,7 @@ it('responds to cache updates after changing variables', async () => {
   ]);
 });
 
-it('uses previously fetched result and does not suspend when switching back to already fetched variables', async () => {
+test('uses previously fetched result and does not suspend when switching back to already fetched variables', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const { result, rerender, renders } = renderSuspenseHook(
@@ -1645,7 +1645,7 @@ it('uses previously fetched result and does not suspend when switching back to a
   ]);
 });
 
-it('responds to cache updates after changing back to already fetched variables', async () => {
+test('responds to cache updates after changing back to already fetched variables', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const client = new ApolloClient({
@@ -1726,7 +1726,7 @@ it('responds to cache updates after changing back to already fetched variables',
   ]);
 });
 
-it('does not suspend when data is in the cache and using a "cache-first" fetch policy', async () => {
+test('does not suspend when data is in the cache and using a "cache-first" fetch policy', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const cache = new InMemoryCache();
@@ -1758,7 +1758,7 @@ it('does not suspend when data is in the cache and using a "cache-first" fetch p
   ]);
 });
 
-it('does not initiate a network request when data is in the cache and using a "cache-first" fetch policy', async () => {
+test('does not initiate a network request when data is in the cache and using a "cache-first" fetch policy', async () => {
   let fetchCount = 0;
   const { query, mocks } = useSimpleQueryCase();
 
@@ -1788,7 +1788,7 @@ it('does not initiate a network request when data is in the cache and using a "c
   expect(fetchCount).toBe(0);
 });
 
-it('suspends when partial data is in the cache and using a "cache-first" fetch policy', async () => {
+test('suspends when partial data is in the cache and using a "cache-first" fetch policy', async () => {
   const fullQuery = gql`
     query {
       character {
@@ -1844,7 +1844,7 @@ it('suspends when partial data is in the cache and using a "cache-first" fetch p
   ]);
 });
 
-it('does not suspend when partial data is in the cache and using a "cache-first" fetch policy with returnPartialData', async () => {
+test('does not suspend when partial data is in the cache and using a "cache-first" fetch policy with returnPartialData', async () => {
   const fullQuery = gql`
     query {
       character {
@@ -1916,7 +1916,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
   ]);
 });
 
-it('suspends and does not use partial data when changing variables and using a "cache-first" fetch policy with returnPartialData', async () => {
+test('suspends and does not use partial data when changing variables and using a "cache-first" fetch policy with returnPartialData', async () => {
   const { query: fullQuery, mocks } = useVariablesQueryCase();
 
   const partialQuery = gql`
@@ -1991,7 +1991,7 @@ it('suspends and does not use partial data when changing variables and using a "
   ]);
 });
 
-it('suspends when data is in the cache and using a "network-only" fetch policy', async () => {
+test('suspends when data is in the cache and using a "network-only" fetch policy', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const cache = new InMemoryCache();
@@ -2025,7 +2025,7 @@ it('suspends when data is in the cache and using a "network-only" fetch policy',
   ]);
 });
 
-it('suspends when partial data is in the cache and using a "network-only" fetch policy with returnPartialData', async () => {
+test('suspends when partial data is in the cache and using a "network-only" fetch policy with returnPartialData', async () => {
   const fullQuery = gql`
     query {
       character {
@@ -2087,7 +2087,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
   ]);
 });
 
-it('suspends and does not overwrite cache when data is in the cache and using a "no-cache" fetch policy', async () => {
+test('suspends and does not overwrite cache when data is in the cache and using a "no-cache" fetch policy', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const cache = new InMemoryCache();
@@ -2124,7 +2124,7 @@ it('suspends and does not overwrite cache when data is in the cache and using a 
   expect(cachedData).toEqual({ greeting: 'hello from cache' });
 });
 
-it('maintains results when rerendering a query using a "no-cache" fetch policy', async () => {
+test('maintains results when rerendering a query using a "no-cache" fetch policy', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const cache = new InMemoryCache();
@@ -2175,7 +2175,7 @@ it('maintains results when rerendering a query using a "no-cache" fetch policy',
   ]);
 });
 
-it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
+test('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
   const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
   const fullQuery = gql`
@@ -2241,7 +2241,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
   consoleSpy.mockRestore();
 });
 
-it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
+test('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
   const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
   const { query, mocks } = useSimpleQueryCase();
@@ -2263,7 +2263,7 @@ it('warns when using returnPartialData with a "no-cache" fetch policy', async ()
   consoleSpy.mockRestore();
 });
 
-it('does not suspend when data is in the cache and using a "cache-and-network" fetch policy', async () => {
+test('does not suspend when data is in the cache and using a "cache-and-network" fetch policy', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const cache = new InMemoryCache();
@@ -2308,7 +2308,7 @@ it('does not suspend when data is in the cache and using a "cache-and-network" f
   ]);
 });
 
-it('does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+test('does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData', async () => {
   const fullQuery = gql`
     query {
       character {
@@ -2380,7 +2380,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
   ]);
 });
 
-it('suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+test('suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData', async () => {
   const { query: fullQuery, mocks } = useVariablesQueryCase();
 
   const partialQuery = gql`
@@ -2455,7 +2455,7 @@ it('suspends and does not use partial data when changing variables and using a "
   ]);
 });
 
-it.each<SuspenseQueryHookFetchPolicy>([
+test.each<SuspenseQueryHookFetchPolicy>([
   'cache-first',
   'network-only',
   'cache-and-network',
@@ -2481,7 +2481,7 @@ it.each<SuspenseQueryHookFetchPolicy>([
   }
 );
 
-it('does not write to the cache when using a "no-cache" fetch policy', async () => {
+test('does not write to the cache when using a "no-cache" fetch policy', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const cache = new InMemoryCache();
@@ -2501,7 +2501,7 @@ it('does not write to the cache when using a "no-cache" fetch policy', async () 
   expect(cachedData).toBeNull();
 });
 
-it.each<SuspenseQueryHookFetchPolicy>([
+test.each<SuspenseQueryHookFetchPolicy>([
   'cache-first',
   'network-only',
   'cache-and-network',
@@ -2553,7 +2553,7 @@ it.each<SuspenseQueryHookFetchPolicy>([
   }
 );
 
-it('does not respond to cache updates when using a "no-cache" fetch policy', async () => {
+test('does not respond to cache updates when using a "no-cache" fetch policy', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const client = new ApolloClient({
@@ -2594,7 +2594,7 @@ it('does not respond to cache updates when using a "no-cache" fetch policy', asy
   ]);
 });
 
-it.each<SuspenseQueryHookFetchPolicy>([
+test.each<SuspenseQueryHookFetchPolicy>([
   'cache-first',
   'network-only',
   'no-cache',
@@ -2649,7 +2649,7 @@ it.each<SuspenseQueryHookFetchPolicy>([
   }
 );
 
-it.each<SuspenseQueryHookFetchPolicy>([
+test.each<SuspenseQueryHookFetchPolicy>([
   'cache-first',
   'network-only',
   'no-cache',
@@ -2726,7 +2726,7 @@ it.each<SuspenseQueryHookFetchPolicy>([
   }
 );
 
-it.each<SuspenseQueryHookFetchPolicy>([
+test.each<SuspenseQueryHookFetchPolicy>([
   'cache-first',
   'network-only',
   'no-cache',
@@ -2776,7 +2776,7 @@ it.each<SuspenseQueryHookFetchPolicy>([
   }
 );
 
-it.each<SuspenseQueryHookFetchPolicy>([
+test.each<SuspenseQueryHookFetchPolicy>([
   'cache-first',
   'network-only',
   'no-cache',
@@ -2823,7 +2823,7 @@ it.each<SuspenseQueryHookFetchPolicy>([
   }
 );
 
-it.each<SuspenseQueryHookFetchPolicy>([
+test.each<SuspenseQueryHookFetchPolicy>([
   'cache-first',
   'network-only',
   'cache-and-network',
@@ -2862,7 +2862,7 @@ it.each<SuspenseQueryHookFetchPolicy>([
 );
 
 // https://github.com/apollographql/apollo-client/issues/10478
-it('responds to cache updates when data is already in the cache while using a cache-first fetch policy', async () => {
+test('responds to cache updates when data is already in the cache while using a cache-first fetch policy', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const client = new ApolloClient({
@@ -2902,7 +2902,7 @@ it('responds to cache updates when data is already in the cache while using a ca
   });
 });
 
-it('uses the default fetch policy from the client when none provided in options', async () => {
+test('uses the default fetch policy from the client when none provided in options', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const cache = new InMemoryCache();
@@ -2939,7 +2939,7 @@ it('uses the default fetch policy from the client when none provided in options'
   ]);
 });
 
-it('uses default variables from the client when none provided in options', async () => {
+test('uses default variables from the client when none provided in options', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const client = new ApolloClient({
@@ -2974,7 +2974,7 @@ it('uses default variables from the client when none provided in options', async
   ]);
 });
 
-it('uses default variables from the client when none provided in options in strict mode', async () => {
+test('uses default variables from the client when none provided in options in strict mode', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const client = new ApolloClient({
@@ -3016,7 +3016,7 @@ it('uses default variables from the client when none provided in options in stri
   ]);
 });
 
-it('merges global default variables with local variables', async () => {
+test('merges global default variables with local variables', async () => {
   const query = gql`
     query MergedVariablesQuery {
       vars
@@ -3087,7 +3087,7 @@ it('merges global default variables with local variables', async () => {
   ]);
 });
 
-it('can unset a globally defined variable', async () => {
+test('can unset a globally defined variable', async () => {
   const query: TypedDocumentNode<{ vars: Record<string, any> }> = gql`
     query MergedVariablesQuery {
       vars
@@ -3140,7 +3140,7 @@ it('can unset a globally defined variable', async () => {
   ]);
 });
 
-it('passes context to the link', async () => {
+test('passes context to the link', async () => {
   const query = gql`
     query ContextQuery {
       context
@@ -3176,7 +3176,7 @@ it('passes context to the link', async () => {
   });
 });
 
-it('throws network errors by default', async () => {
+test('throws network errors by default', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const { query, mocks } = useErrorCase({
@@ -3202,7 +3202,7 @@ it('throws network errors by default', async () => {
   consoleSpy.mockRestore();
 });
 
-it('throws graphql errors by default', async () => {
+test('throws graphql errors by default', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const { query, mocks } = useErrorCase({
@@ -3230,7 +3230,7 @@ it('throws graphql errors by default', async () => {
   consoleSpy.mockRestore();
 });
 
-it('tears down subscription when throwing an error', async () => {
+test('tears down subscription when throwing an error', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const { query, mocks } = useErrorCase({
@@ -3253,7 +3253,7 @@ it('tears down subscription when throwing an error', async () => {
   consoleSpy.mockRestore();
 });
 
-it('tears down subscription when throwing an error on refetch', async () => {
+test('tears down subscription when throwing an error on refetch', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const query = gql`
@@ -3309,7 +3309,7 @@ it('tears down subscription when throwing an error on refetch', async () => {
   consoleSpy.mockRestore();
 });
 
-it('throws network errors when errorPolicy is set to "none"', async () => {
+test('throws network errors when errorPolicy is set to "none"', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const { query, mocks } = useErrorCase({
@@ -3336,7 +3336,7 @@ it('throws network errors when errorPolicy is set to "none"', async () => {
   consoleSpy.mockRestore();
 });
 
-it('throws graphql errors when errorPolicy is set to "none"', async () => {
+test('throws graphql errors when errorPolicy is set to "none"', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const { query, mocks } = useErrorCase({
@@ -3365,7 +3365,7 @@ it('throws graphql errors when errorPolicy is set to "none"', async () => {
   consoleSpy.mockRestore();
 });
 
-it('handles multiple graphql errors when errorPolicy is set to "none"', async () => {
+test('handles multiple graphql errors when errorPolicy is set to "none"', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const graphQLErrors = [
@@ -3395,7 +3395,7 @@ it('handles multiple graphql errors when errorPolicy is set to "none"', async ()
   consoleSpy.mockRestore();
 });
 
-it('throws network errors when errorPolicy is set to "ignore"', async () => {
+test('throws network errors when errorPolicy is set to "ignore"', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
   const networkError = new Error('Could not fetch');
 
@@ -3423,7 +3423,7 @@ it('throws network errors when errorPolicy is set to "ignore"', async () => {
   consoleSpy.mockRestore();
 });
 
-it('does not throw or return graphql errors when errorPolicy is set to "ignore"', async () => {
+test('does not throw or return graphql errors when errorPolicy is set to "ignore"', async () => {
   const { query, mocks } = useErrorCase({
     graphQLErrors: [new GraphQLError('`id` should not be null')],
   });
@@ -3450,7 +3450,7 @@ it('does not throw or return graphql errors when errorPolicy is set to "ignore"'
   ]);
 });
 
-it('returns partial data results and discards GraphQL errors when errorPolicy is set to "ignore"', async () => {
+test('returns partial data results and discards GraphQL errors when errorPolicy is set to "ignore"', async () => {
   const { query, mocks } = useErrorCase({
     data: { currentUser: { id: '1', name: null } },
     graphQLErrors: [new GraphQLError('`name` could not be found')],
@@ -3478,7 +3478,7 @@ it('returns partial data results and discards GraphQL errors when errorPolicy is
   ]);
 });
 
-it('discards multiple graphql errors when errorPolicy is set to "ignore"', async () => {
+test('discards multiple graphql errors when errorPolicy is set to "ignore"', async () => {
   const { query, mocks } = useErrorCase({
     graphQLErrors: [
       new GraphQLError('Fool me once'),
@@ -3504,7 +3504,7 @@ it('discards multiple graphql errors when errorPolicy is set to "ignore"', async
   ]);
 });
 
-it('responds to cache updates and clears errors after an error returns when errorPolicy is set to "ignore"', async () => {
+test('responds to cache updates and clears errors after an error returns when errorPolicy is set to "ignore"', async () => {
   const graphQLError = new GraphQLError('`id` should not be null');
 
   const { query, mocks } = useErrorCase({ graphQLErrors: [graphQLError] });
@@ -3565,7 +3565,7 @@ it('responds to cache updates and clears errors after an error returns when erro
   ]);
 });
 
-it('throws network errors when errorPolicy is set to "all"', async () => {
+test('throws network errors when errorPolicy is set to "all"', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const networkError = new Error('Could not fetch');
@@ -3594,7 +3594,7 @@ it('throws network errors when errorPolicy is set to "all"', async () => {
   consoleSpy.mockRestore();
 });
 
-it('does not throw and returns graphql errors when errorPolicy is set to "all"', async () => {
+test('does not throw and returns graphql errors when errorPolicy is set to "all"', async () => {
   const graphQLError = new GraphQLError('`id` should not be null');
 
   const { query, mocks } = useErrorCase({ graphQLErrors: [graphQLError] });
@@ -3630,7 +3630,7 @@ it('does not throw and returns graphql errors when errorPolicy is set to "all"',
   expect(error!.graphQLErrors).toEqual([graphQLError]);
 });
 
-it('responds to cache updates and clears errors after an error returns when errorPolicy is set to "all"', async () => {
+test('responds to cache updates and clears errors after an error returns when errorPolicy is set to "all"', async () => {
   const graphQLError = new GraphQLError('`id` should not be null');
 
   const { query, mocks } = useErrorCase({ graphQLErrors: [graphQLError] });
@@ -3691,7 +3691,7 @@ it('responds to cache updates and clears errors after an error returns when erro
   ]);
 });
 
-it('handles multiple graphql errors when errorPolicy is set to "all"', async () => {
+test('handles multiple graphql errors when errorPolicy is set to "all"', async () => {
   const graphQLErrors = [
     new GraphQLError('Fool me once'),
     new GraphQLError('Fool me twice'),
@@ -3732,7 +3732,7 @@ it('handles multiple graphql errors when errorPolicy is set to "all"', async () 
   expect(error!.graphQLErrors).toEqual(graphQLErrors);
 });
 
-it('returns partial data and keeps errors when errorPolicy is set to "all"', async () => {
+test('returns partial data and keeps errors when errorPolicy is set to "all"', async () => {
   const graphQLError = new GraphQLError('`name` could not be found');
 
   const { query, mocks } = useErrorCase({
@@ -3764,7 +3764,7 @@ it('returns partial data and keeps errors when errorPolicy is set to "all"', asy
   ]);
 });
 
-it('persists errors between rerenders when errorPolicy is set to "all"', async () => {
+test('persists errors between rerenders when errorPolicy is set to "all"', async () => {
   const graphQLError = new GraphQLError('`name` could not be found');
 
   const { query, mocks } = useErrorCase({
@@ -3787,7 +3787,7 @@ it('persists errors between rerenders when errorPolicy is set to "all"', async (
   expect(result.current.error).toEqual(expectedError);
 });
 
-it('clears errors when changing variables and errorPolicy is set to "all"', async () => {
+test('clears errors when changing variables and errorPolicy is set to "all"', async () => {
   const query = gql`
     query UserQuery($id: String!) {
       user(id: $id) {
@@ -3858,7 +3858,7 @@ it('clears errors when changing variables and errorPolicy is set to "all"', asyn
   ]);
 });
 
-it('re-suspends when calling `refetch`', async () => {
+test('re-suspends when calling `refetch`', async () => {
   const query = gql`
     query UserQuery($id: String!) {
       user(id: $id) {
@@ -3924,7 +3924,7 @@ it('re-suspends when calling `refetch`', async () => {
   ]);
 });
 
-it('re-suspends when calling `refetch` with new variables', async () => {
+test('re-suspends when calling `refetch` with new variables', async () => {
   const query = gql`
     query UserQuery($id: String!) {
       user(id: $id) {
@@ -3989,7 +3989,7 @@ it('re-suspends when calling `refetch` with new variables', async () => {
   ]);
 });
 
-it('re-suspends multiple times when calling `refetch` multiple times', async () => {
+test('re-suspends multiple times when calling `refetch` multiple times', async () => {
   const query = gql`
     query UserQuery($id: String!) {
       user(id: $id) {
@@ -4077,7 +4077,7 @@ it('re-suspends multiple times when calling `refetch` multiple times', async () 
   ]);
 });
 
-it('throws errors when errors are returned after calling `refetch`', async () => {
+test('throws errors when errors are returned after calling `refetch`', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const query = gql`
@@ -4141,7 +4141,7 @@ it('throws errors when errors are returned after calling `refetch`', async () =>
   consoleSpy.mockRestore();
 });
 
-it('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
+test('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
   const query = gql`
     query UserQuery($id: String!) {
       user(id: $id) {
@@ -4203,7 +4203,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
   ]);
 });
 
-it('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
+test('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
   const query = gql`
     query UserQuery($id: String!) {
       user(id: $id) {
@@ -4277,7 +4277,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
   ]);
 });
 
-it('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
+test('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
   const query = gql`
     query UserQuery($id: String!) {
       user(id: $id) {
@@ -4351,7 +4351,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
   ]);
 });
 
-it('re-suspends when calling `fetchMore` with different variables', async () => {
+test('re-suspends when calling `fetchMore` with different variables', async () => {
   const { data, query, link } = usePaginatedCase();
 
   const { result, renders } = renderSuspenseHook(
@@ -4395,7 +4395,7 @@ it('re-suspends when calling `fetchMore` with different variables', async () => 
   ]);
 });
 
-it('properly uses `updateQuery` when calling `fetchMore`', async () => {
+test('properly uses `updateQuery` when calling `fetchMore`', async () => {
   const { data, query, link } = usePaginatedCase();
 
   const { result, renders } = renderSuspenseHook(
@@ -4440,7 +4440,7 @@ it('properly uses `updateQuery` when calling `fetchMore`', async () => {
   ]);
 });
 
-it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
+test('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
   const { data, query, link } = usePaginatedCase();
 
   const cache = new InMemoryCache({
@@ -4492,7 +4492,7 @@ it('properly uses cache field policies when calling `fetchMore` without `updateQ
   ]);
 });
 
-it('honors refetchWritePolicy set to "overwrite"', async () => {
+test('honors refetchWritePolicy set to "overwrite"', async () => {
   const query: TypedDocumentNode<
     { primes: number[] },
     { min: number; max: number }
@@ -4568,7 +4568,7 @@ it('honors refetchWritePolicy set to "overwrite"', async () => {
   ]);
 });
 
-it('honors refetchWritePolicy set to "merge"', async () => {
+test('honors refetchWritePolicy set to "merge"', async () => {
   const query: TypedDocumentNode<
     { primes: number[] },
     { min: number; max: number }
@@ -4647,7 +4647,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
   ]);
 });
 
-it('defaults refetchWritePolicy to "overwrite"', async () => {
+test('defaults refetchWritePolicy to "overwrite"', async () => {
   const query: TypedDocumentNode<
     { primes: number[] },
     { min: number; max: number }
@@ -4719,7 +4719,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
   ]);
 });
 
-it('does not suspend when `skip` is true', async () => {
+test('does not suspend when `skip` is true', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const cache = new InMemoryCache();
@@ -4737,7 +4737,7 @@ it('does not suspend when `skip` is true', async () => {
   });
 });
 
-it('suspends when `skip` becomes `false` after it was `true`', async () => {
+test('suspends when `skip` becomes `false` after it was `true`', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const cache = new InMemoryCache();
@@ -4778,7 +4778,7 @@ it('suspends when `skip` becomes `false` after it was `true`', async () => {
   ]);
 });
 
-it('renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`', async () => {
+test('renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const cache = new InMemoryCache();
@@ -4824,7 +4824,7 @@ it('renders skip result, does not suspend, and maintains `data` when `skip` beco
   ]);
 });
 
-it('does not make network requests when `skip` is `true`', async () => {
+test('does not make network requests when `skip` is `true`', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   let fetchCount = 0;
@@ -4870,7 +4870,7 @@ it('does not make network requests when `skip` is `true`', async () => {
   expect(fetchCount).toBe(1);
 });
 
-it('`skip` result is referentially stable', async () => {
+test('`skip` result is referentially stable', async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const { result, rerender } = renderSuspenseHook(
@@ -4897,7 +4897,7 @@ it('`skip` result is referentially stable', async () => {
   expect(fetchedSkipResult).toBe(fetchedSkipResult);
 });
 
-it('`skip` option works with `startTransition`', async () => {
+test('`skip` option works with `startTransition`', async () => {
   type Variables = {
     id: string;
   };
@@ -4999,7 +4999,7 @@ it('`skip` option works with `startTransition`', async () => {
   expect(await screen.findByTestId('todo')).toHaveTextContent('Clean room');
 });
 
-it('does not oversubscribe when suspending multiple times', async () => {
+test('does not oversubscribe when suspending multiple times', async () => {
   const query = gql`
     query UserQuery($id: String!) {
       user(id: $id) {
@@ -5075,7 +5075,7 @@ it('does not oversubscribe when suspending multiple times', async () => {
   expect(client.getObservableQueries().size).toBe(1);
 });
 
-it('suspends deferred queries until initial chunk loads then streams in data as it loads', async () => {
+test('suspends deferred queries until initial chunk loads then streams in data as it loads', async () => {
   const query = gql`
     query {
       greeting {
@@ -5164,7 +5164,7 @@ it('suspends deferred queries until initial chunk loads then streams in data as 
   ]);
 });
 
-it.each<SuspenseQueryHookFetchPolicy>([
+test.each<SuspenseQueryHookFetchPolicy>([
   'cache-first',
   'network-only',
   'no-cache',
@@ -5267,7 +5267,7 @@ it.each<SuspenseQueryHookFetchPolicy>([
   }
 );
 
-it('does not suspend deferred queries with data in the cache and using a "cache-first" fetch policy', async () => {
+test('does not suspend deferred queries with data in the cache and using a "cache-first" fetch policy', async () => {
   const query = gql`
     query {
       greeting {
@@ -5327,7 +5327,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   ]);
 });
 
-it('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
+test('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
   const query = gql`
     query {
       greeting {
@@ -5466,7 +5466,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
   ]);
 });
 
-it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
+test('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
   const query = gql`
     query {
       greeting {
@@ -5601,7 +5601,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   ]);
 });
 
-it('suspends deferred queries with lists and properly patches results', async () => {
+test('suspends deferred queries with lists and properly patches results', async () => {
   const query = gql`
     query {
       greetings {
@@ -5771,7 +5771,7 @@ it('suspends deferred queries with lists and properly patches results', async ()
   ]);
 });
 
-it('suspends queries with deferred fragments in lists and properly merges arrays', async () => {
+test('suspends queries with deferred fragments in lists and properly merges arrays', async () => {
   const query = gql`
     query DeferVariation {
       allProducts {
@@ -5907,7 +5907,7 @@ it('suspends queries with deferred fragments in lists and properly merges arrays
   });
 });
 
-it('throws network errors returned by deferred queries', async () => {
+test('throws network errors returned by deferred queries', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const query = gql`
@@ -5948,7 +5948,7 @@ it('throws network errors returned by deferred queries', async () => {
   consoleSpy.mockRestore();
 });
 
-it('throws graphql errors returned by deferred queries', async () => {
+test('throws graphql errors returned by deferred queries', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const query = gql`
@@ -5993,7 +5993,7 @@ it('throws graphql errors returned by deferred queries', async () => {
   consoleSpy.mockRestore();
 });
 
-it('throws errors returned by deferred queries that include partial data', async () => {
+test('throws errors returned by deferred queries that include partial data', async () => {
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
   const query = gql`
@@ -6039,7 +6039,7 @@ it('throws errors returned by deferred queries that include partial data', async
   consoleSpy.mockRestore();
 });
 
-it('discards partial data and does not throw errors returned in incremental chunks but returns them in `error` property', async () => {
+test('discards partial data and does not throw errors returned in incremental chunks but returns them in `error` property', async () => {
   const query = gql`
     query {
       hero {
@@ -6215,7 +6215,7 @@ it('discards partial data and does not throw errors returned in incremental chun
   ]);
 });
 
-it('adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`', async () => {
+test('adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`', async () => {
   const query = gql`
     query {
       hero {
@@ -6393,7 +6393,7 @@ it('adds partial data and does not throw errors returned in incremental chunks b
   ]);
 });
 
-it('adds partial data and discards errors returned in incremental chunks with errorPolicy set to `ignore`', async () => {
+test('adds partial data and discards errors returned in incremental chunks with errorPolicy set to `ignore`', async () => {
   const query = gql`
     query {
       hero {
@@ -6555,7 +6555,7 @@ it('adds partial data and discards errors returned in incremental chunks with er
   ]);
 });
 
-it('can subscribe to subscriptions and react to cache updates via `subscribeToMore`', async () => {
+test('can subscribe to subscriptions and react to cache updates via `subscribeToMore`', async () => {
   interface SubscriptionData {
     greetingUpdated: string;
   }
@@ -6650,7 +6650,7 @@ it('can subscribe to subscriptions and react to cache updates via `subscribeToMo
   ]);
 });
 
-it('works with useDeferredValue', async () => {
+test('works with useDeferredValue', async () => {
   const user = userEvent.setup();
 
   interface Variables {
@@ -6750,7 +6750,7 @@ it('works with useDeferredValue', async () => {
   });
 });
 
-it('works with startTransition to change variables', async () => {
+test('works with startTransition to change variables', async () => {
   type Variables = {
     id: string;
   };
@@ -6879,7 +6879,7 @@ it('works with startTransition to change variables', async () => {
   });
 });
 
-it('`refetch` works with startTransition to allow React to show stale UI until finished suspending', async () => {
+test('`refetch` works with startTransition to allow React to show stale UI until finished suspending', async () => {
   type Variables = {
     id: string;
   };
@@ -7000,7 +7000,7 @@ it('`refetch` works with startTransition to allow React to show stale UI until f
   });
 });
 
-it('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', async () => {
+test('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', async () => {
   type Variables = {
     offset: number;
   };
@@ -7161,7 +7161,7 @@ it('`fetchMore` works with startTransition to allow React to show stale UI until
 });
 
 describe.skip('type tests', () => {
-  it('returns unknown when TData cannot be inferred', () => {
+  test('returns unknown when TData cannot be inferred', () => {
     const query = gql`
       query {
         hello
@@ -7173,14 +7173,14 @@ describe.skip('type tests', () => {
     expectTypeOf(data).toEqualTypeOf<unknown>();
   });
 
-  it('disallows wider variables type than specified', () => {
+  test('disallows wider variables type than specified', () => {
     const { query } = useVariablesQueryCase();
 
     // @ts-expect-error should not allow wider TVariables type
     useSuspenseQuery(query, { variables: { id: '1', foo: 'bar' } });
   });
 
-  it('returns TData in default case', () => {
+  test('returns TData in default case', () => {
     const { query } = useVariablesQueryCase();
 
     const { data: inferred } = useSuspenseQuery(query);
@@ -7197,7 +7197,7 @@ describe.skip('type tests', () => {
     expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
   });
 
-  it('returns TData | undefined with errorPolicy: "ignore"', () => {
+  test('returns TData | undefined with errorPolicy: "ignore"', () => {
     const { query } = useVariablesQueryCase();
 
     const { data: inferred } = useSuspenseQuery(query, {
@@ -7218,7 +7218,7 @@ describe.skip('type tests', () => {
     expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
   });
 
-  it('returns TData | undefined with errorPolicy: "all"', () => {
+  test('returns TData | undefined with errorPolicy: "all"', () => {
     const { query } = useVariablesQueryCase();
 
     const { data: inferred } = useSuspenseQuery(query, {
@@ -7239,7 +7239,7 @@ describe.skip('type tests', () => {
     expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
   });
 
-  it('returns TData with errorPolicy: "none"', () => {
+  test('returns TData with errorPolicy: "none"', () => {
     const { query } = useVariablesQueryCase();
 
     const { data: inferred } = useSuspenseQuery(query, {
@@ -7260,7 +7260,7 @@ describe.skip('type tests', () => {
     expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
   });
 
-  it('returns DeepPartial<TData> with returnPartialData: true', () => {
+  test('returns DeepPartial<TData> with returnPartialData: true', () => {
     const { query } = useVariablesQueryCase();
 
     const { data: inferred } = useSuspenseQuery(query, {
@@ -7281,7 +7281,7 @@ describe.skip('type tests', () => {
     expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
   });
 
-  it('returns TData with returnPartialData: false', () => {
+  test('returns TData with returnPartialData: false', () => {
     const { query } = useVariablesQueryCase();
 
     const { data: inferred } = useSuspenseQuery(query, {
@@ -7302,7 +7302,7 @@ describe.skip('type tests', () => {
     expectTypeOf(explicit).not.toEqualTypeOf<DeepPartial<VariablesCaseData>>();
   });
 
-  it('returns TData | undefined when skip is present', () => {
+  test('returns TData | undefined when skip is present', () => {
     const { query } = useVariablesQueryCase();
 
     const { data: inferred } = useSuspenseQuery(query, {
@@ -7337,7 +7337,7 @@ describe.skip('type tests', () => {
     expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
   });
 
-  it('returns TData when passing an option that does not affect TData', () => {
+  test('returns TData when passing an option that does not affect TData', () => {
     const { query } = useVariablesQueryCase();
 
     const { data: inferred } = useSuspenseQuery(query, {
@@ -7358,7 +7358,7 @@ describe.skip('type tests', () => {
     expectTypeOf(explicit).not.toEqualTypeOf<DeepPartial<VariablesCaseData>>();
   });
 
-  it('handles combinations of options', () => {
+  test('handles combinations of options', () => {
     // TypeScript is too smart and using a `const` or `let` boolean variable
     // for the `skip` option results in a false positive. Using an options
     // object allows us to properly check for a dynamic case which is the
@@ -7501,7 +7501,7 @@ describe.skip('type tests', () => {
     ).not.toEqualTypeOf<VariablesCaseData>();
   });
 
-  it('returns correct TData type when combined options that do not affect TData', () => {
+  test('returns correct TData type when combined options that do not affect TData', () => {
     const { query } = useVariablesQueryCase();
 
     const { data: inferred } = useSuspenseQuery(query, {

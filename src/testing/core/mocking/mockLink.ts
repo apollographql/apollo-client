@@ -34,6 +34,7 @@ export interface MockedResponse<
 
 export interface MockLinkOptions {
   showWarnings?: boolean;
+  preserveMocks?: boolean;
 }
 
 function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
@@ -47,6 +48,7 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
 export class MockLink extends ApolloLink {
   public operation: Operation;
   public addTypename: Boolean = true;
+  public preserveMocks: Boolean = false;
   public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
@@ -58,6 +60,7 @@ export class MockLink extends ApolloLink {
     super();
     this.addTypename = addTypename;
     this.showWarnings = options.showWarnings ?? true;
+    this.preserveMocks = options.preserveMocks ?? false;
 
     if (mockedResponses) {
       mockedResponses.forEach(mockedResponse => {
@@ -116,13 +119,15 @@ ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
 
       if (this.showWarnings) {
         console.warn(
-          configError.message + 
+          configError.message +
             '\nThis typically indicates a configuration error in your mocks ' +
             'setup, usually due to a typo or mismatched variable.'
         );
       }
     } else {
-      mockedResponses.splice(responseIndex, 1);
+      if (!this.preserveMocks) {
+        mockedResponses.splice(responseIndex, 1);
+      }
 
       const { newData } = response;
       if (newData) {

@@ -96,5 +96,6 @@ export * from './common/compact';
 export * from './common/makeUniqueId';
 export * from './common/stringifyForDisplay';
 export * from './common/mergeOptions';
+export * from './common/Subject';
 
 export * from './types/IsStrictlyAny';

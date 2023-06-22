@@ -642,4 +642,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public setLink(newLink: ApolloLink) {
     this.link = this.queryManager.link = newLink;
   }
+
+  public get metrics(){
+    return this.queryManager.metrics
+  }
 }

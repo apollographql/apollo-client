@@ -1006,6 +1006,6 @@ export function logMissingFieldErrors(
   }
 }
 
-function skipCacheDataFor(fetchPolicy?: WatchQueryFetchPolicy) {
+function skipCacheDataFor(fetchPolicy?: WatchQueryFetchPolicy /* `undefined` would mean `"cache-first"` */) {
   return fetchPolicy === "network-only" || fetchPolicy === "no-cache" || fetchPolicy === "standby";
 }

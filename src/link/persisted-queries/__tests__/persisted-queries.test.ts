@@ -10,6 +10,7 @@ import { createHttpLink } from '../../http/createHttpLink';
 
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from '..';
 import { itAsync } from '../../../testing';
+import { toPromise } from '../../utils';
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint
@@ -436,129 +437,103 @@ describe('failure path', () => {
     }, reject);
   });
 
-  itAsync('handles a 500 network error and still retries', (resolve, reject) => {
-    let failed = false;
-    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
-
-    // mock it again so we can verify it doesn't try anymore
+  describe.each([[400],[500]])('status %s', (status) => {
+    itAsync(`handles a ${status} network with a "PERSISTED_QUERY_NOT_FOUND" error and still retries`, (resolve, reject) => {
+      let requestCount = 0;
       fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
 
-    const fetcher = (...args: any[]) => {
-      if (!failed) {
-        failed = true;
-        return Promise.resolve({
-          json: () => Promise.resolve('This will blow up'),
-          text: () => Promise.resolve('THIS WILL BLOW UP'),
-          status: 500,
-        });
-      }
-      return global.fetch.apply(null, args);
-    };
-    const link = createPersistedQuery({ sha256 }).concat(
-      createHttpLink({ fetch: fetcher } as any),
-    );
+      // mock it again so we can verify it doesn't try anymore
+      fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response })), { repeat: 5 });
 
-    execute(link, { query, variables }).subscribe(result => {
-      expect(result.data).toEqual(data);
-      const [[,success]] = fetchMock.calls();
-      expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-      expect(JSON.parse(success!.body!.toString()).extensions).toBeUndefined();
-      execute(link, { query, variables }).subscribe(secondResult => {
-        expect(secondResult.data).toEqual(data);
-        const [,[,success]] = fetchMock.calls();
+      const fetcher = (...args: any[]) => {
+        if ((++requestCount)%2) {
+          return Promise.resolve({
+            json: () => Promise.resolve(errorResponseWithCode),
+            text: () => Promise.resolve(errorResponseWithCode),
+            status,
+          });
+        }
+        return global.fetch.apply(null, args);
+      };
+      const link = createPersistedQuery({ sha256 }).concat(
+        createHttpLink({ fetch: fetcher } as any),
+      );
+
+      execute(link, { query, variables }).subscribe(result => {
+        expect(result.data).toEqual(data);
+        const [[,success]] = fetchMock.calls();
         expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-        expect(JSON.parse(success!.body!.toString()).extensions).toBeUndefined();
-        resolve();
+        expect(JSON.parse(success!.body!.toString()).extensions.persistedQuery.sha256Hash).toBe(hash);
+        execute(link, { query, variables }).subscribe(secondResult => {
+          expect(secondResult.data).toEqual(data);
+          const [,[,success]] = fetchMock.calls();
+          expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+          expect(JSON.parse(success!.body!.toString()).extensions.persistedQuery.sha256Hash).toBe(hash);
+          resolve();
+        }, reject);
       }, reject);
-    }, reject);
-  });
+    });
 
-  itAsync('handles a 400 network error and still retries', (resolve, reject) => {
-    let failed = false;
-    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
-
-    // mock it again so we can verify it doesn't try anymore
+    it(`will fail on an unrelated ${status} network error, but still send a hash the next request`, async () => {
+      let failed = false;
       fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
 
-    const fetcher = (...args: any[]) => {
-      if (!failed) {
-        failed = true;
-        return Promise.resolve({
-          json: () => Promise.resolve('This will blow up'),
-          text: () => Promise.resolve('THIS WILL BLOW UP'),
-          status: 400,
-        });
-      }
-      return global.fetch.apply(null, args);
-    };
-    const link = createPersistedQuery({ sha256 }).concat(
-      createHttpLink({ fetch: fetcher } as any),
-    );
+      // mock it again so we can verify it doesn't try anymore
+      fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response })), { repeat: 1 });
 
-    execute(link, { query, variables }).subscribe(result => {
-      expect(result.data).toEqual(data);
+      const fetcher = (...args: any[]) => {
+        if (!failed) {
+          failed = true;
+          return Promise.resolve({
+            json: () => Promise.resolve('This will blow up'),
+            text: () => Promise.resolve('THIS WILL BLOW UP'),
+            status,
+          });
+        }
+        return global.fetch.apply(null, args);
+      };
+      const link = createPersistedQuery({ sha256 }).concat(
+        createHttpLink({ fetch: fetcher } as any),
+      );
+
+      const failingAttempt = toPromise(execute(link, { query, variables }))
+      await expect(failingAttempt).rejects.toThrow()
+      expect(fetchMock.calls().length).toBe(0)
+      
+      const successfullAttempt = toPromise(execute(link, { query, variables }))
+      await expect(successfullAttempt).resolves.toEqual({data})
       const [[,success]] = fetchMock.calls();
-      expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-      expect(JSON.parse(success!.body!.toString()).extensions).toBeUndefined();
-      execute(link, { query, variables }).subscribe(secondResult => {
-        expect(secondResult.data).toEqual(data);
-        const [,[,success]] = fetchMock.calls();
+      expect(JSON.parse(success!.body!.toString()).query).toBeUndefined();
+      expect(JSON.parse(success!.body!.toString()).extensions.persistedQuery.sha256Hash).toBe(hash);
+    });
+
+    itAsync(`handles ${status} response network error and graphql error without disabling persistedQuery support`, (resolve, reject) => {
+      let failed = false;
+      fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
+
+      const fetcher = (...args: any[]) => {
+        if (!failed) {
+          failed = true;
+          return Promise.resolve({
+            json: () => Promise.resolve(errorResponse),
+            text: () => Promise.resolve(errorResponse),
+            status,
+          });
+        }
+        return global.fetch.apply(null, args);
+      };
+
+      const link = createPersistedQuery({ sha256 }).concat(
+        createHttpLink({ fetch: fetcher } as any),
+      );
+
+      execute(link, { query, variables }).subscribe(result => {
+        expect(result.data).toEqual(data);
+        const [[,success]] = fetchMock.calls();
         expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-        expect(JSON.parse(success!.body!.toString()).extensions).toBeUndefined();
+        expect(JSON.parse(success!.body!.toString()).extensions).not.toBeUndefined();
         resolve();
       }, reject);
-    }, reject);
-  });
-
-  itAsync('only retries a 400 network error once', (resolve, reject) => {
-    let fetchCalls = 0;
-    const fetcher = () => {
-      fetchCalls++;
-      return Promise.resolve({
-        json: () => Promise.resolve('This will blow up'),
-        text: () => Promise.resolve('THIS WILL BLOW UP'),
-        status: 400,
-      });
-    };
-    const link = createPersistedQuery({ sha256 }).concat(
-      createHttpLink({ fetch: fetcher } as any),
-    );
-
-    execute(link, { query, variables }).subscribe(
-      result => reject,
-      error => {
-        expect(fetchCalls).toBe(2);
-        resolve();
-      },
-    );
-  });
-
-  itAsync('handles 400 response network error and graphql error without disabling persistedQuery support', (resolve, reject) => {
-    let failed = false;
-    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response})), { repeat: 1 });
-
-    const fetcher = (...args: any[]) => {
-      if (!failed) {
-        failed = true;
-        return Promise.resolve({
-          json: () => Promise.resolve(errorResponse),
-          text: () => Promise.resolve(errorResponse),
-          status: 400,
-        });
-      }
-      return global.fetch.apply(null, args);
-    };
-
-    const link = createPersistedQuery({ sha256 }).concat(
-      createHttpLink({ fetch: fetcher } as any),
-    );
-
-    execute(link, { query, variables }).subscribe(result => {
-      expect(result.data).toEqual(data);
-      const [[,success]] = fetchMock.calls();
-      expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-      expect(JSON.parse(success!.body!.toString()).extensions).not.toBeUndefined();
-      resolve();
-    }, reject);
+    });
   });
 });

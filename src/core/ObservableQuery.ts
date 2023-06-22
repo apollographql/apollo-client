@@ -839,12 +839,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       }
     }
 
-    this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy)
+    this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
     const finishWaitingForOwnResult = () => {
       if (this.concast === concast) {
-        this.waitForOwnResult = false
+        this.waitForOwnResult = false;
       }
-    }
+    };
     
     const variables = options.variables && { ...options.variables };
     const { concast, fromLink } = this.fetch(options, newNetworkStatus);

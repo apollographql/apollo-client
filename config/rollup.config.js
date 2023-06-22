@@ -1,4 +1,4 @@
-import path from 'path';
+import path, { resolve, dirname } from 'path';
 import { promises as fs } from "fs";
 
 import nodeResolve from '@rollup/plugin-node-resolve';
@@ -109,9 +109,12 @@ function prepareBundle({
 
   return {
     input: inputFile,
+    /*
     external(id, parentId) {
+      console.log({id, parentId})
       return isExternal(id, parentId, true);
     },
+    */
     output: {
       file: outputFile,
       format: 'cjs',
@@ -120,6 +123,29 @@ function prepareBundle({
       externalLiveBindings: false,
     },
     plugins: [
+      {
+        name: 'externalize-dependency',
+        resolveId(id, parentId) {
+          if (!parentId) {
+            return null;
+          }
+          function removeIndex(filename) {
+            if (filename.endsWith(`${path.sep}index.js`)) {
+              return filename.slice(0, -`${path.sep}index.js`.length)
+            }
+            return filename
+          }
+
+          const external = isExternal(id, parentId, true)
+          if (external) {
+            if (id.startsWith(".")) {
+              return { id: removeIndex(resolve(dirname(parentId), id)), external: true };
+            }
+            return { id: removeIndex(id), external: true };
+          }
+          return null;
+        }
+      },
       extensions ? nodeResolve({ extensions }) : nodeResolve(),
       {
         name: "copy *.cjs to *.cjs.native.js",
@@ -137,7 +163,8 @@ function prepareBundle({
 
 export default [
   ...entryPoints.map(prepareBundle),
-  // Convert the ESM entry point to a single CJS bundle.
+  //.filter(x => x.input.includes("utilities")),
+  // Convert the ESM entry point to a single CJS bundle.#
   prepareCJS(
     './dist/index.js',
     './dist/apollo-client.cjs',

@@ -157,6 +157,7 @@
     "subscriptions-transport-ws": "0.11.0",
     "terser": "5.17.7",
     "ts-jest": "29.1.0",
+    "ts-jest-resolver": "2.0.1",
     "ts-node": "10.9.1",
     "typedoc": "0.24.7",
     "typescript": "5.0.4",

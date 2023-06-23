@@ -191,7 +191,7 @@ export function useBackgroundQuery<
 
   return useMemo(() => {
     return [
-      { [QUERY_REFERENCE_SYMBOL]: queryRef},
+      { [QUERY_REFERENCE_SYMBOL]: queryRef },
       {
         fetchMore,
         refetch,
@@ -236,7 +236,7 @@ export function useReadQuery<TData>(_queryRef: QueryReference<TData>) {
   }, [queryRef]);
 
   const result =
-  queryRef.watchQueryOptions.fetchPolicy === 'standby'
+    queryRef.watchQueryOptions.fetchPolicy === 'standby'
       ? skipResult
       : __use(promise);
 

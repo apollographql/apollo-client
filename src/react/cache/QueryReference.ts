@@ -15,7 +15,7 @@ type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
 type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
-  >[0];
+>[0];
 
 export const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 /**

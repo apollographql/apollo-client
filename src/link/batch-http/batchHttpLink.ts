@@ -7,7 +7,7 @@ import {
 } from '../../utilities/index.js';
 import { fromError } from '../utils/index.js';
 import type {
-  HttpOptions} from '../http';
+  HttpOptions} from '../http/index.js';
 import {
   serializeFetchParameter,
   selectURI,

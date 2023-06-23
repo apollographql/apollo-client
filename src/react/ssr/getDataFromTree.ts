@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { getApolloContext } from '../context/index.js';
 import { RenderPromises } from './RenderPromises.js';
-import { renderToStaticMarkup } from 'react-dom/server.js';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 export function getDataFromTree(
   tree: React.ReactNode,

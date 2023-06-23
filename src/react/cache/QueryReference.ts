@@ -36,8 +36,8 @@ export class QueryReference<TData = unknown> {
   private initialized = false;
   private refetching = false;
 
-  private resolve: (result: ApolloQueryResult<TData>) => void;
-  private reject: (error: unknown) => void;
+  private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
+  private reject: ((error: unknown) => void) | undefined;
 
   constructor(
     observable: ObservableQuery<TData>,
@@ -157,7 +157,9 @@ export class QueryReference<TData = unknown> {
       this.initialized = true;
       this.refetching = false;
       this.result = result;
-      this.resolve(result);
+      if (this.resolve) {
+        this.resolve(result);
+      }
       return;
     }
 
@@ -182,7 +184,9 @@ export class QueryReference<TData = unknown> {
     if (!this.initialized || this.refetching) {
       this.initialized = true;
       this.refetching = false;
-      this.reject(error);
+      if (this.reject) {
+        this.reject(error);
+      }
       return;
     }
 

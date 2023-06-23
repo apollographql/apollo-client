@@ -6,7 +6,10 @@ import type {
 } from '../../core';
 import { NetworkStatus } from '../../core';
 import { useApolloClient } from './useApolloClient';
-import type { QueryReference } from '../cache/QueryReference';
+import {
+  QUERY_REFERENCE_SYMBOL,
+  type QueryReference,
+} from '../cache/QueryReference';
 import type { SuspenseQueryHookOptions, NoInfer } from '../types/types';
 import { __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
@@ -188,7 +191,7 @@ export function useBackgroundQuery<
 
   return useMemo(() => {
     return [
-      queryRef,
+      { [QUERY_REFERENCE_SYMBOL]: queryRef},
       {
         fetchMore,
         refetch,
@@ -197,9 +200,9 @@ export function useBackgroundQuery<
   }, [queryRef, fetchMore, refetch]);
 }
 
-export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
+export function useReadQuery<TData>(_queryRef: QueryReference<TData>) {
   const [, forceUpdate] = useState(0);
-
+  const queryRef = _queryRef[QUERY_REFERENCE_SYMBOL];
   invariant(
     queryRef.promiseCache,
     'It appears that `useReadQuery` was used outside of `useBackgroundQuery`. ' +
@@ -233,7 +236,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   }, [queryRef]);
 
   const result =
-    queryRef.watchQueryOptions.fetchPolicy === 'standby'
+  queryRef.watchQueryOptions.fetchPolicy === 'standby'
       ? skipResult
       : __use(promise);
 

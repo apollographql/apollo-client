@@ -22,7 +22,7 @@ import type {
 } from '../types/types';
 import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
-import type { QueryReference } from '../cache/QueryReference';
+import type { InternalQueryReference } from '../cache/QueryReference';
 import { canonicalStringify } from '../../cache';
 
 export interface UseSuspenseQueryResult<
@@ -296,8 +296,8 @@ export function toApolloError(result: ApolloQueryResult<any>) {
     : result.error;
 }
 
-export function useTrackedQueryRefs(queryRef: QueryReference) {
-  const trackedQueryRefs = useRef(new Set<QueryReference>());
+export function useTrackedQueryRefs(queryRef: InternalQueryReference) {
+  const trackedQueryRefs = useRef(new Set<InternalQueryReference>());
 
   trackedQueryRefs.current.add(queryRef);
 

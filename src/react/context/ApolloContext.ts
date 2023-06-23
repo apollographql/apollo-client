@@ -2,7 +2,7 @@ import * as React from 'react';
 import type { ApolloClient } from '../../core/index.js';
 import { canUseSymbol } from '../../utilities/index.js';
 import type { SuspenseCache } from '../cache/index.js';
-import type { RenderPromises } from '../ssr';
+import type { RenderPromises } from '../ssr/index.js';
 import { global, invariant } from '../../utilities/globals/index.js';
 
 export interface ApolloContextValue {

@@ -7,7 +7,7 @@ import { ApolloLink, execute } from '../link/core/index.js';
 import type { ApolloCache, DataProxy, Reference } from '../cache/index.js';
 import type { DocumentTransform, Observable } from '../utilities/index.js';
 import { version } from '../version.js';
-import type { UriFunction } from '../link/http';
+import type { UriFunction } from '../link/http/index.js';
 import { HttpLink } from '../link/http/index.js';
 
 import { QueryManager } from './QueryManager.js';

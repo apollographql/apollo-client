@@ -26,4 +26,4 @@ jobs:
 
       - name: Run AreTheTypesWrong
         id: attw
-        run: ./node_modules/.bin/attw ./dist/*.tgz > $GITHUB_STEP_SUMMARY
+        run: ./node_modules/.bin/attw ./dist/*.tgz --format ascii > $GITHUB_STEP_SUMMARY

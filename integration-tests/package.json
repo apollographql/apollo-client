@@ -1,6 +1,7 @@
 {
   "name": "integration-tests",
-  "dependencies": {
+  "license": "UNLICENSED",
+  "overrides": {
     "@playwright/test": "^1.35.1",
     "playwright": "^1.35.1",
     "serve": "^14.2.0"
@@ -8,6 +9,7 @@
   "workspaces": [
     "esmtest",
     "cra4",
+    "cra5",
     "shared"
   ]
 }

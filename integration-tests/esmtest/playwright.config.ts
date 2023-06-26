@@ -4,7 +4,6 @@ export default defineConfig({
     command: 'yarn serve-app',
     port: 3000,
     timeout: 120 * 1000,
-    reuseExistingServer: !process.env.CI,
   },
   timeout: 120 * 1000,
   use: {

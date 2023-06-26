@@ -4408,6 +4408,55 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('suspends when refetching after returning cached data for the initial fetch', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'hello from cache' },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { cache, mocks }
+    );
+
+    expect(result.current).toMatchObject({
+      data: { greeting: 'hello from cache' },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    act(() => {
+      result.current.refetch();
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { greeting: 'hello from cache' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { greeting: 'Hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('properly uses `updateQuery` when calling `fetchMore`', async () => {
     const { data, query, link } = usePaginatedCase();
 

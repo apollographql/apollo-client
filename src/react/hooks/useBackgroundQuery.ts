@@ -45,8 +45,7 @@ export function useBackgroundQuery<
   TOptions extends Omit<SuspenseQueryHookOptions<TData>, 'variables'>
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
-    TOptions
+  options?: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & TOptions
 ): UseBackgroundQueryResult<
   TOptions['errorPolicy'] extends 'ignore' | 'all'
     ? TOptions['returnPartialData'] extends true
@@ -67,10 +66,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > & {
+  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
     errorPolicy: 'ignore' | 'all';
   }
@@ -81,10 +77,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > & {
+  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
     errorPolicy: 'ignore' | 'all';
   }
 ): UseBackgroundQueryResult<TData | undefined, TVariables>;
@@ -94,61 +87,11 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > & {
+  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
     skip: boolean;
-  }
-): UseBackgroundQueryResult<TData | undefined, TVariables>;
-
-// TODO: support `returnPartialData` | `refetchWritePolicy`
-// see https://github.com/apollographql/apollo-client/issues/10893
-
-// export function useBackgroundQuery<
-//   TData = unknown,
-//   TVariables extends OperationVariables = OperationVariables
-// >(
-//   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-//   options: Omit<
-//     SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-//     'returnPartialData' | 'refetchWritePolicy'
-//   > & {
-//     returnPartialData: true;
-//   }
-// ): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
-
-export function useBackgroundQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  >
-): UseBackgroundQueryResult<TData, TVariables>;
-
-export function useBackgroundQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
-    errorPolicy: 'ignore' | 'all';
   }
 ): UseBackgroundQueryResult<DeepPartial<TData> | undefined, TVariables>;
-
-export function useBackgroundQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
-    errorPolicy: 'ignore' | 'all';
-  }
-): UseBackgroundQueryResult<TData | undefined, TVariables>;
 
 export function useBackgroundQuery<
   TData = unknown,
@@ -159,6 +102,16 @@ export function useBackgroundQuery<
     returnPartialData: true;
   }
 ): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
+    skip: boolean;
+  }
+): UseBackgroundQueryResult<TData | undefined, TVariables>;
 
 export function useBackgroundQuery<
   TData = unknown,

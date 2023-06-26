@@ -126,4 +126,4 @@ export { stripTypename } from './common/stripTypename';
 
 export * from './types/IsStrictlyAny';
 export { DeepOmit } from './types/DeepOmit';
-export { DeepPartial, DeepPartialObject } from './types/DeepPartial';
+export { DeepPartial } from './types/DeepPartial';

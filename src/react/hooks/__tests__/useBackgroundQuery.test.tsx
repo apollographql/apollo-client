@@ -38,7 +38,6 @@ import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
-  DeepPartialObject,
 } from '../../../utilities';
 import { useBackgroundQuery, useReadQuery } from '../useBackgroundQuery';
 import { ApolloProvider } from '../../context';
@@ -2810,7 +2809,7 @@ describe('useBackgroundQuery', () => {
       function Todo({
         queryRef,
       }: {
-        queryRef: QueryReference<DeepPartialObject<Data>>;
+        queryRef: QueryReference<DeepPartial<Data>>;
       }) {
         const { data, networkStatus } = useReadQuery(queryRef);
 

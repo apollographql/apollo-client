@@ -22,7 +22,7 @@ The `useQuery` [React hook](https://reactjs.org/docs/hooks-intro.html) is the pr
 
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
-```tsx title="index.js"
+```jsx title="index.js"
 import { gql, useQuery } from '@apollo/client';
 
 const GET_DOGS = gql`
@@ -37,7 +37,7 @@ const GET_DOGS = gql`
 
 Next, we'll create a component named `Dogs`. Inside it, we'll pass our `GET_DOGS` query to the `useQuery` hook:
 
-```tsx title="index.js"
+```jsx title="index.js"
 function Dogs({ onDogSelected }) {
   const { loading, error, data } = useQuery(GET_DOGS);
 

@@ -3315,25 +3315,5 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(dynamic).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
     });
-
-    // TODO: https://github.com/apollographql/apollo-client/issues/10893
-    // it('returns DeepPartial<TData> with returnPartialData: true', () => {
-    // });
-
-    // TODO: https://github.com/apollographql/apollo-client/issues/10893
-    // it('returns TData with returnPartialData: false', () => {
-    // });
-
-    // TODO: https://github.com/apollographql/apollo-client/issues/10893
-    // it('returns TData when passing an option that does not affect TData', () => {
-    // });
-
-    // TODO: https://github.com/apollographql/apollo-client/issues/10893
-    // it('handles combinations of options', () => {
-    // });
-
-    // TODO: https://github.com/apollographql/apollo-client/issues/10893
-    // it('returns correct TData type when combined options that do not affect TData', () => {
-    // });
   });
 });

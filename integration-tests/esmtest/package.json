@@ -1,0 +1,10 @@
+{
+  "name": "esmtest",
+  "scripts": {
+    "serve-app": "yarn serve html",
+    "test": "yarn playwright test"
+  },
+  "devDependencies": {
+    "shared": "*"
+  }
+}

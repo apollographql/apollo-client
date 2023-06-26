@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 import { test } from 'shared/fixture';
 
-test('Basic Test', async ({ page }) => {
+test('Basic Test', async ({ page, withHar }) => {
   await page.goto('http://localhost:3000/jspm-prepared.html');
 
   await expect(page.getByText('loading')).toBeVisible();

@@ -1,15 +1,4 @@
+import { baseConfig } from 'shared/playwright.config';
 import { defineConfig } from '@playwright/test';
-export default defineConfig({
-  webServer: {
-    command: 'yarn serve-app',
-    port: 3000,
-    timeout: 120 * 1000,
-  },
-  timeout: 120 * 1000,
-  use: {
-    headless: true,
-    viewport: { width: 1280, height: 720 },
-    ignoreHTTPSErrors: true,
-  },
-  testDir: 'tests/playwright/',
-});
+
+export default defineConfig(baseConfig);

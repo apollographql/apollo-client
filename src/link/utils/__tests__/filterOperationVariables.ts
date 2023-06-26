@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
 import { filterOperationVariables } from '../filterOperationVariables';
-import { createOperation } from '../createOperation';
 
 const sampleQueryWithVariables = gql`
   query MyQuery($a: Int!) {
@@ -23,7 +22,7 @@ describe('filterOperationVariables', () => {
     const variables = { a: 1, b: 2, c: 3 };
     const result = filterOperationVariables(
       variables,
-      createOperation({}, { query: sampleQueryWithoutVariables, variables })
+      sampleQueryWithoutVariables
     );
     expect(result).toEqual({});
   });
@@ -32,7 +31,7 @@ describe('filterOperationVariables', () => {
     const variables = { a: 1, b: 2, c: 3 };
     const result = filterOperationVariables(
       variables,
-      createOperation({}, { query: sampleQueryWithVariables, variables })
+      sampleQueryWithVariables
     );
     expect(result).toEqual({ a: 1 });
   });

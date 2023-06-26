@@ -4,8 +4,12 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from '../../core';
+import { NetworkStatus } from '../../core';
 import { useApolloClient } from './useApolloClient';
-import type { QueryReference } from '../cache/QueryReference';
+import {
+  QUERY_REFERENCE_SYMBOL,
+  type QueryReference,
+} from '../cache/QueryReference';
 import type { SuspenseQueryHookOptions, NoInfer } from '../types/types';
 import { __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
@@ -49,10 +53,81 @@ export function useBackgroundQuery<
       ? DeepPartial<TData> | undefined
       : TData | undefined
     : TOptions['returnPartialData'] extends true
-    ? DeepPartial<TData>
+    ? TOptions['skip'] extends boolean
+      ? DeepPartial<TData> | undefined
+      : DeepPartial<TData>
+    : TOptions['skip'] extends boolean
+    ? TData | undefined
     : TData,
   TVariables
 >;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: Omit<
+    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+    'returnPartialData' | 'refetchWritePolicy'
+  > & {
+    returnPartialData: true;
+    errorPolicy: 'ignore' | 'all';
+  }
+): UseBackgroundQueryResult<DeepPartial<TData> | undefined, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: Omit<
+    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+    'returnPartialData' | 'refetchWritePolicy'
+  > & {
+    errorPolicy: 'ignore' | 'all';
+  }
+): UseBackgroundQueryResult<TData | undefined, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: Omit<
+    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+    'returnPartialData' | 'refetchWritePolicy'
+  > & {
+    skip: boolean;
+  }
+): UseBackgroundQueryResult<TData | undefined, TVariables>;
+
+// TODO: support `returnPartialData` | `refetchWritePolicy`
+// see https://github.com/apollographql/apollo-client/issues/10893
+
+// export function useBackgroundQuery<
+//   TData = unknown,
+//   TVariables extends OperationVariables = OperationVariables
+// >(
+//   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+//   options: Omit<
+//     SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+//     'returnPartialData' | 'refetchWritePolicy'
+//   > & {
+//     returnPartialData: true;
+//   }
+// ): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: Omit<
+    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+    'returnPartialData' | 'refetchWritePolicy'
+  >
+): UseBackgroundQueryResult<TData, TVariables>;
 
 export function useBackgroundQuery<
   TData = unknown,
@@ -104,8 +179,8 @@ export function useBackgroundQuery<
 ): UseBackgroundQueryResult<TData> {
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
-  const watchQueryOptions = useWatchQueryOptions({ query, options });
-  const { variables } = watchQueryOptions;
+  const watchQueryOptions = useWatchQueryOptions({ client, query, options });
+  const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
   const cacheKey = (
@@ -116,9 +191,16 @@ export function useBackgroundQuery<
     client.watchQuery(watchQueryOptions)
   );
 
+  const { fetchPolicy: currentFetchPolicy } = queryRef.watchQueryOptions;
+
   const [promiseCache, setPromiseCache] = useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
+
+  if (currentFetchPolicy === 'standby' && fetchPolicy !== currentFetchPolicy) {
+    const promise = queryRef.reobserve({ fetchPolicy });
+    promiseCache.set(queryRef.key, promise);
+  }
 
   useTrackedQueryRefs(queryRef);
 
@@ -152,7 +234,7 @@ export function useBackgroundQuery<
 
   return useMemo(() => {
     return [
-      queryRef,
+      { [QUERY_REFERENCE_SYMBOL]: queryRef },
       {
         fetchMore,
         refetch,
@@ -163,29 +245,43 @@ export function useBackgroundQuery<
 
 export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   const [, forceUpdate] = useState(0);
-
+  const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
   invariant(
-    queryRef.promiseCache,
+    internalQueryRef.promiseCache,
     'It appears that `useReadQuery` was used outside of `useBackgroundQuery`. ' +
       '`useReadQuery` is only supported for use with `useBackgroundQuery`. ' +
       'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
   );
 
-  let promise = queryRef.promiseCache.get(queryRef.key);
+  const skipResult = useMemo(() => {
+    const error = toApolloError(internalQueryRef.result);
+
+    return {
+      loading: false,
+      data: internalQueryRef.result.data,
+      networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
+      error,
+    };
+  }, [internalQueryRef.result]);
+
+  let promise = internalQueryRef.promiseCache.get(internalQueryRef.key);
 
   if (!promise) {
-    promise = queryRef.promise;
-    queryRef.promiseCache.set(queryRef.key, promise);
+    promise = internalQueryRef.promise;
+    internalQueryRef.promiseCache.set(internalQueryRef.key, promise);
   }
 
   useEffect(() => {
-    return queryRef.listen((promise) => {
-      queryRef.promiseCache!.set(queryRef.key, promise);
+    return internalQueryRef.listen((promise) => {
+      internalQueryRef.promiseCache!.set(internalQueryRef.key, promise);
       forceUpdate((prevState) => prevState + 1);
     });
   }, [queryRef]);
 
-  const result = __use(promise);
+  const result =
+    internalQueryRef.watchQueryOptions.fetchPolicy === 'standby'
+      ? skipResult
+      : __use(promise);
 
   return useMemo(() => {
     return {

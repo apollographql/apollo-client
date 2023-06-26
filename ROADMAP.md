@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2023-05-30**
+**Last updated: 2023-06-20**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -29,6 +29,20 @@ Currently in active development and in the beta stage.  React 18 users will get 
 - A new optional `removeTypenameFromVariables` Apollo Link that will automatically strip `__typename` from your variables for each request
 
 Try it today: `npm i @apollo/client@beta` and let us know what you think!
+
+## [3.9.0](https://github.com/apollographql/apollo-client/milestone/32)
+
+_Currently in planning phase_
+
+Features we plan to tackle:
+
+- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
+- Ability to preload a query outside of a React component that can be used with `useReadQuery` to suspend while loading
+- Introduce a new `useInteractiveQuery`/`useLazyBackgroundQuery` hook (name TBD) 
+- Add metrics integration throughout the library for powerful insights
+- Improved testing utilities 
+
+> NOTE: These are subject to change and are not guaranteed to be part of 3.9 at the time of this writing.
 
 ## Future 3.x releases
 

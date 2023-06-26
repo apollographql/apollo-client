@@ -25,7 +25,7 @@ export namespace BatchHttpLink {
   export type Options = Pick<
     BatchLink.Options,
     'batchMax' | 'batchDebounce' | 'batchInterval' | 'batchKey'
-  > & HttpOptions;
+  > & Omit<HttpOptions, 'useGETForQueries'>;
 }
 
 /**
@@ -132,7 +132,10 @@ export class BatchHttpLink extends ApolloLink {
         );
 
         if (result.body.variables && !includeUnusedVariables) {
-          result.body.variables = filterOperationVariables(result.body, operation);
+          result.body.variables = filterOperationVariables(
+            result.body.variables,
+            operation.query
+          );
         }
 
         return result;

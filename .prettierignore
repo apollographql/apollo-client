@@ -17,7 +17,7 @@
 *.md
 
 # Do not format anything automatically except files listed below
-*
+/*
 
 !config/
 config/*
@@ -74,6 +74,7 @@ src/utilities/globals/*
 !src/utilities/graphql
 src/utilities/graphql/*
 !src/utilities/graphql/operations.ts
+!src/utilities/graphql/print.ts
 !src/utilities/graphql/DocumentTransform.ts
 !src/utilities/graphql/__tests__/
 src/utilities/graphql/__tests__/*

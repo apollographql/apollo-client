@@ -29,7 +29,7 @@ import type {
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
   WatchQueryFetchPolicy,
-} from './watchQueryOptions';
+} from './watchQueryOptions.js';
 import type { QueryInfo } from './QueryInfo.js';
 import type { MissingFieldError } from '../cache/index.js';
 import type { MissingTree } from '../cache/core/types/common.js';

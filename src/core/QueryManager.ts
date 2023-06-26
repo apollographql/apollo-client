@@ -103,18 +103,18 @@ export class QueryManager<TStore> {
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
 
-  private queryDeduplication: boolean;
-  private clientAwareness: Record<string, string> = {};
-  private localState: LocalState<TStore>;
+  protected queryDeduplication: boolean;
+  protected clientAwareness: Record<string, string> = {};
+  protected localState: LocalState<TStore>;
 
-  private onBroadcast?: () => void;
+  protected onBroadcast?: () => void;
   public mutationStore?: {
     [mutationId: string]: MutationStoreValue;
   };
 
   // All the queries that the QueryManager is currently managing (not
   // including mutations and subscriptions).
-  private queries = new Map<string, QueryInfo>();
+  protected queries = new Map<string, QueryInfo>();
 
   // Maps from queryId strings to Promise rejection functions for
   // currently active queries and fetches.
@@ -186,7 +186,7 @@ export class QueryManager<TStore> {
     );
   }
 
-  private cancelPendingFetches(error: Error) {
+  protected cancelPendingFetches(error: Error) {
     this.fetchCancelFns.forEach(cancel => cancel(error));
     this.fetchCancelFns.clear();
   }
@@ -633,7 +633,7 @@ export class QueryManager<TStore> {
     return this.documentTransform.transformDocument(document);
   }
 
-  private transformCache = new (
+  protected transformCache = new (
     canUseWeakMap ? WeakMap : Map
   )<DocumentNode, TransformCacheEntry>();
 
@@ -679,7 +679,7 @@ export class QueryManager<TStore> {
     return transformCache.get(document)!;
   }
 
-  private getVariables<TVariables>(
+  protected getVariables<TVariables>(
     document: DocumentNode,
     variables?: TVariables,
   ): OperationVariables {
@@ -761,17 +761,17 @@ export class QueryManager<TStore> {
     ).finally(() => this.stopQuery(queryId));
   }
 
-  private queryIdCounter = 1;
+  protected queryIdCounter = 1;
   public generateQueryId() {
     return String(this.queryIdCounter++);
   }
 
-  private requestIdCounter = 1;
+  protected requestIdCounter = 1;
   public generateRequestId() {
     return this.requestIdCounter++;
   }
 
-  private mutationIdCounter = 1;
+  protected mutationIdCounter = 1;
   public generateMutationId() {
     return String(this.mutationIdCounter++);
   }
@@ -781,7 +781,7 @@ export class QueryManager<TStore> {
     this.broadcastQueries();
   }
 
-  private stopQueryInStoreNoBroadcast(queryId: string) {
+  protected stopQueryInStoreNoBroadcast(queryId: string) {
     const queryInfo = this.queries.get(queryId);
     if (queryInfo) queryInfo.stop();
   }
@@ -1000,7 +1000,7 @@ export class QueryManager<TStore> {
     this.broadcastQueries();
   }
 
-  private stopQueryNoBroadcast(queryId: string) {
+  protected stopQueryNoBroadcast(queryId: string) {
     this.stopQueryInStoreNoBroadcast(queryId);
     this.removeQuery(queryId);
   }
@@ -1032,7 +1032,7 @@ export class QueryManager<TStore> {
     Map<string, Observable<FetchResult>>
   >();
 
-  private getObservableFromLink<T = any>(
+  protected getObservableFromLink<T = any>(
     query: DocumentNode,
     context: any,
     variables?: OperationVariables,
@@ -1108,7 +1108,7 @@ export class QueryManager<TStore> {
     return observable;
   }
 
-  private getResultsFromLink<TData, TVars extends OperationVariables>(
+  protected getResultsFromLink<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
     options: Pick<WatchQueryOptions<TVars, TData>,
@@ -1181,7 +1181,7 @@ export class QueryManager<TStore> {
     );
   }
 
-  private fetchConcastWithInfo<TData, TVars extends OperationVariables>(
+  protected fetchConcastWithInfo<TData, TVars extends OperationVariables>(
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
@@ -1439,7 +1439,7 @@ export class QueryManager<TStore> {
     return results;
   }
 
-  private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
+  protected fetchQueryByPolicy<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     { query,
       variables,
@@ -1592,14 +1592,14 @@ export class QueryManager<TStore> {
     }
   }
 
-  private getQuery(queryId: string): QueryInfo {
+  protected getQuery(queryId: string): QueryInfo {
     if (queryId && !this.queries.has(queryId)) {
       this.queries.set(queryId, new QueryInfo(this, queryId));
     }
     return this.queries.get(queryId)!;
   }
 
-  private prepareContext(context = {}) {
+  protected prepareContext(context = {}) {
     const newContext = this.localState.prepareContext(context);
     return {
       ...newContext,
@@ -1608,7 +1608,7 @@ export class QueryManager<TStore> {
   }
 }
 
-// Return types used by fetchQueryByPolicy and other private methods above.
+// Return types used by fetchQueryByPolicy and other protected methods above.
 interface FetchConcastInfo {
   // Metadata properties that can be returned in addition to the Concast.
   fromLink: boolean;

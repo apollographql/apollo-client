@@ -1,10 +1,9 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
 } from '../../core';
-import { NetworkStatus } from '../../core';
 import { useApolloClient } from './useApolloClient';
 import {
   QUERY_REFERENCE_SYMBOL,
@@ -13,15 +12,10 @@ import {
 import type { SuspenseQueryHookOptions, NoInfer } from '../types/types';
 import { __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
-import {
-  toApolloError,
-  useTrackedQueryRefs,
-  useWatchQueryOptions,
-} from './useSuspenseQuery';
+import { useTrackedQueryRefs, useWatchQueryOptions } from './useSuspenseQuery';
 import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery';
 import { canonicalStringify } from '../../cache';
 import type { DeepPartial } from '../../utilities';
-import { invariant } from '../../utilities/globals';
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -198,53 +192,4 @@ export function useBackgroundQuery<
       },
     ];
   }, [queryRef, fetchMore, refetch]);
-}
-
-export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
-  const [, forceUpdate] = useState(0);
-  const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
-  invariant(
-    internalQueryRef.promiseCache,
-    'It appears that `useReadQuery` was used outside of `useBackgroundQuery`. ' +
-      '`useReadQuery` is only supported for use with `useBackgroundQuery`. ' +
-      'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
-  );
-
-  const skipResult = useMemo(() => {
-    const error = toApolloError(internalQueryRef.result);
-
-    return {
-      loading: false,
-      data: internalQueryRef.result.data,
-      networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
-      error,
-    };
-  }, [internalQueryRef.result]);
-
-  let promise = internalQueryRef.promiseCache.get(internalQueryRef.key);
-
-  if (!promise) {
-    promise = internalQueryRef.promise;
-    internalQueryRef.promiseCache.set(internalQueryRef.key, promise);
-  }
-
-  useEffect(() => {
-    return internalQueryRef.listen((promise) => {
-      internalQueryRef.promiseCache!.set(internalQueryRef.key, promise);
-      forceUpdate((prevState) => prevState + 1);
-    });
-  }, [queryRef]);
-
-  const result =
-    internalQueryRef.watchQueryOptions.fetchPolicy === 'standby'
-      ? skipResult
-      : __use(promise);
-
-  return useMemo(() => {
-    return {
-      data: result.data,
-      networkStatus: result.networkStatus,
-      error: toApolloError(result),
-    };
-  }, [result]);
 }

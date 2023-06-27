@@ -11,6 +11,8 @@
     "cra4",
     "cra5",
     "next",
+    "vite",
+    "vite-swc",
     "shared"
   ]
 }

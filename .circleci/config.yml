@@ -88,7 +88,7 @@ workflows:
       - Lint
       - BuildTarball
       - IntegrationTests:
-          name: Integration Test << matrix.test >>
+          name: Integration Test << matrix.framework >>
           requires:
             - BuildTarball
           matrix:

@@ -7,7 +7,7 @@
     "serve": "^14.2.0"
   },
   "workspaces": [
-    "esmtest",
+    "browser-esm",
     "cra4",
     "cra5",
     "next",

@@ -9,7 +9,6 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --port 3000",
     "serve-app": "npm run preview",
-    "build-and-test": "npm run build && npm run test",
     "test": "playwright test"
   },
   "dependencies": {

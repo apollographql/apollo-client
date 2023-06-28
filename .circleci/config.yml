@@ -37,6 +37,60 @@ jobs:
       - store_artifacts:
           path: reports/junit
 
+  BuildTarball:
+    docker:
+      - image: cimg/node:20.2.0
+    steps:
+      - checkout
+      - run: npm run ci:precheck
+      - run: npm version
+      - run: npm ci
+      - run: npm run build && cd dist && mv "$(npm pack --json | jq --raw-output '.[0].filename')" apollo-client.tgz
+      - persist_to_workspace:
+          root: dist
+          paths:
+            - apollo-client.tgz
+
+  IntegrationTests:
+    name: Integration Test << matrix.test >>
+    requires:
+      - BuildTarball
+    matrix:
+      parameters:
+        test:
+          - cra4
+          - cra5
+          - next
+          - dual-module-test-esm
+          - dual-module-test-standard
+          - vite
+          - vite-swc
+          # -browser-esm would need a package publish to npm/CDNs
+    docker:
+      - image: cimg/node:20.2.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: npm run ci:precheck
+      - run: npm version
+      - run:
+          command: |
+            npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.test >>
+          working_directory: integration-tests
+      - run:
+          command: |
+            npm run ci-preparations --workspace=<< parameters.test >> --if-present
+          working_directory: integration-tests
+      - run:
+          command: |
+            npm run build --workspace=<< parameters.test >> --if-present
+          working_directory: integration-tests
+      - run:
+          command: |
+            npm run test --workspace=<< parameters.test >>
+          working_directory: integration-tests
+
 workflows:
   version: 2
   Build and Test:
@@ -44,3 +98,5 @@ workflows:
       # - Filesize
       - Tests
       - Lint
+      - BuildTarball
+      - IntegrationTests

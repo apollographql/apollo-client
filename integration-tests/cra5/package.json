@@ -16,8 +16,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "serve-app": "yarn serve -s build",
-    "build-and-test": "npm run build && npm run test",
-    "test": "yarn playwright test"
+    "test": "playwright test"
   },
   "eslintConfig": {
     "extends": [

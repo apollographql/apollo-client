@@ -6,9 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "build-and-test": "npm run build && npm run test",
     "serve-app": "npm run start",
-    "test": "yarn playwright test"
+    "ci-preparations": "npm install @apollo/experimental-nextjs-app-support",
+    "test": "playwright test"
   },
   "dependencies": {
     "@apollo/client": "^3.8.0-beta.4",

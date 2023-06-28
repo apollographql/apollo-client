@@ -1,9 +1,8 @@
 {
-  "name": "esmtest",
+  "name": "browser-esm",
   "scripts": {
     "serve-app": "yarn serve html",
-    "build-and-test": "npm run test",
-    "test": "yarn playwright test"
+    "test": "playwright test"
   },
   "devDependencies": {
     "shared": "*",

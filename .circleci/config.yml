@@ -55,17 +55,9 @@ jobs:
     name: Integration Test << matrix.test >>
     requires:
       - BuildTarball
-    matrix:
-      parameters:
-        test:
-          - cra4
-          - cra5
-          - next
-          - dual-module-test-esm
-          - dual-module-test-standard
-          - vite
-          - vite-swc
-          # -browser-esm would need a package publish to npm/CDNs
+    parameters:
+      test:
+        type: string
     docker:
       - image: cimg/node:20.2.0
     steps:
@@ -99,4 +91,15 @@ workflows:
       - Tests
       - Lint
       - BuildTarball
-      - IntegrationTests
+      - IntegrationTests:
+          matrix:
+            parameters:
+              test:
+                - cra4
+                - cra5
+                - next
+                - dual-module-test-esm
+                - dual-module-test-standard
+                - vite
+                - vite-swc
+                # -browser-esm would need a package publish to npm/CDNs

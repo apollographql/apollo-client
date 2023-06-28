@@ -1,3 +1,4 @@
+import { equal } from '@wry/equality';
 import type {
   ApolloError,
   ApolloQueryResult,
@@ -34,6 +35,7 @@ interface InternalQueryReferenceOptions {
 }
 
 const OBSERVED_CHANGED_OPTIONS: Array<keyof WatchQueryOptions> = [
+  'context',
   'errorPolicy',
 ];
 
@@ -108,7 +110,8 @@ export class InternalQueryReference<TData = unknown> {
 
   didChangeOptions(watchQueryOptions: WatchQueryOptions) {
     return OBSERVED_CHANGED_OPTIONS.some(
-      (option) => watchQueryOptions[option] !== this.watchQueryOptions[option]
+      (option) =>
+        !equal(this.watchQueryOptions[option], watchQueryOptions[option])
     );
   }
 

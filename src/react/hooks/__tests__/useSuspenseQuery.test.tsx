@@ -5130,6 +5130,74 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('applies `context` on next fetch when it changes between renders', async () => {
+    const query = gql`
+      query {
+        context
+      }
+    `;
+
+    const link = new ApolloLink((operation) => {
+      return Observable.of({
+        data: {
+          context: operation.getContext(),
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ context }) => useSuspenseQuery(query, { context }),
+      { client, initialProps: { context: { phase: 'initialValue' } } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { context: { phase: 'initialValue' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ context: { phase: 'rerender' } });
+
+    act(() => {
+      result.current.refetch();
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          context: { phase: 'rerender' },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.frames).toMatchObject([
+      {
+        data: { context: { phase: 'initialValue' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { context: { phase: 'initialValue' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { context: { phase: 'rerender' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('does not oversubscribe when suspending multiple times', async () => {
     const query = gql`
       query UserQuery($id: String!) {

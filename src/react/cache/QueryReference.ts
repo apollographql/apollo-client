@@ -39,6 +39,7 @@ const OBSERVED_CHANGED_OPTIONS: Array<keyof WatchQueryOptions> = [
   'context',
   'errorPolicy',
   'refetchWritePolicy',
+  'returnPartialData',
 ];
 
 export class InternalQueryReference<TData = unknown> {

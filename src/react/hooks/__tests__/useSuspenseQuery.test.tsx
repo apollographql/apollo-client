@@ -5391,6 +5391,129 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('applies `returnPartialData` on next fetch when it changes between renders', async () => {
+    const fullQuery = gql`
+      query {
+        character {
+          __typename
+          id
+          name
+        }
+      }
+    `;
+
+    const partialQuery = gql`
+      query {
+        character {
+          __typename
+          id
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: fullQuery },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '1',
+              name: 'Doctor Strange',
+            },
+          },
+        },
+      },
+      {
+        request: { query: fullQuery },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '1',
+              name: 'Doctor Strange (refetched)',
+            },
+          },
+        },
+        delay: 100,
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: { character: { __typename: 'Character', id: '1' } },
+    });
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ returnPartialData }) =>
+        useSuspenseQuery(fullQuery, {
+          fetchPolicy: 'cache-first',
+          returnPartialData,
+        }),
+      { cache, mocks, initialProps: { returnPartialData: false } }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ returnPartialData: true });
+
+    cache.modify({
+      id: cache.identify({ __typename: 'Character', id: '1' }),
+      fields: {
+        name: (_, { DELETE }) => DELETE,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({
+        character: { __typename: 'Character', id: '1' },
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { character: { __typename: 'Character', id: '1' } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { character: { __typename: 'Character', id: '1' } },
+        networkStatus: NetworkStatus.loading,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('does not oversubscribe when suspending multiple times', async () => {
     const query = gql`
       query UserQuery($id: String!) {

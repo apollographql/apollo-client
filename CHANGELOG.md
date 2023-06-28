@@ -1,5 +1,19 @@
 # @apollo/client
 
+## 3.8.0-beta.5
+
+### Patch Changes
+
+- [#10631](https://github.com/apollographql/apollo-client/pull/10631) [`b93388d75`](https://github.com/apollographql/apollo-client/commit/b93388d7582d88859c4975dff524c1ceb5bd2b4e) Thanks [@phryneas](https://github.com/phryneas)! - ObservableQuery.getCurrentResult: skip the cache if the running query should not access the cache
+
+- [#10999](https://github.com/apollographql/apollo-client/pull/10999) [`c1904a78a`](https://github.com/apollographql/apollo-client/commit/c1904a78abb186f475303d632c2cb303bbd8d4f9) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug in `QueryReference` where `this.resolve` or `this.reject` might be executed even if `undefined`.
+
+- [#11018](https://github.com/apollographql/apollo-client/pull/11018) [`5618953f3`](https://github.com/apollographql/apollo-client/commit/5618953f332a10c7df1b385126ec714aa5809c48) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `useBackgroundQuery` now uses its own options type called `BackgroundQueryHookOptions` rather than reusing `SuspenseQueryHookOptions`.
+
+- [#11010](https://github.com/apollographql/apollo-client/pull/11010) [`1051a9c88`](https://github.com/apollographql/apollo-client/commit/1051a9c888ba86511b7fcb80a26d3b3050359258) Thanks [@alessbell](https://github.com/alessbell)! - Hide queryRef in a Symbol in `useBackgroundQuery`s return value.
+
+- [#10960](https://github.com/apollographql/apollo-client/pull/10960) [`ee407ef97`](https://github.com/apollographql/apollo-client/commit/ee407ef97317bf29c554732237aaf11552e06b01) Thanks [@alessbell](https://github.com/alessbell)! - Adds support for `returnPartialData` and `refetchWritePolicy` options in `useBackgroundQuery` hook.
+
 ## 3.8.0-beta.4
 
 ### Patch Changes

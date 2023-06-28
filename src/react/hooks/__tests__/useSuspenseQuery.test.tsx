@@ -48,6 +48,7 @@ import { ApolloProvider } from '../../context';
 import { SuspenseCache } from '../../cache';
 import { SuspenseQueryHookFetchPolicy } from '../../../react';
 import { useSuspenseQuery } from '../useSuspenseQuery';
+import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -5269,6 +5270,125 @@ describe('useSuspenseQuery', () => {
 
     verifyCanonicalResults(result.current.data, true);
     expect(renders.count).toBe(2);
+  });
+
+  it('applies changed `refetchWritePolicy` to next fetch when changing between renders', async () => {
+    const query: TypedDocumentNode<
+      { primes: number[] },
+      { min: number; max: number }
+    > = gql`
+      query GetPrimes($min: number, $max: number) {
+        primes(min: $min, max: $max)
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { min: 0, max: 12 } },
+        result: { data: { primes: [2, 3, 5, 7, 11] } },
+      },
+      {
+        request: { query, variables: { min: 12, max: 30 } },
+        result: { data: { primes: [13, 17, 19, 23, 29] } },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { min: 30, max: 50 } },
+        result: { data: { primes: [31, 37, 41, 43, 47] } },
+        delay: 10,
+      },
+    ];
+
+    const mergeParams: [number[] | undefined, number[]][] = [];
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            primes: {
+              keyArgs: false,
+              merge(existing: number[] | undefined, incoming: number[]) {
+                mergeParams.push([existing, incoming]);
+                return existing ? existing.concat(incoming) : incoming;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ refetchWritePolicy }) =>
+        useSuspenseQuery(query, {
+          variables: { min: 0, max: 12 },
+          refetchWritePolicy,
+        }),
+      {
+        cache,
+        mocks,
+        initialProps: { refetchWritePolicy: 'merge' as RefetchWritePolicy },
+      }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+
+    act(() => {
+      result.current.refetch({ min: 12, max: 30 });
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+    ]);
+
+    rerender({ refetchWritePolicy: 'overwrite' });
+
+    act(() => {
+      result.current.refetch({ min: 30, max: 50 });
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[2].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[2].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+      [undefined, [31, 37, 41, 43, 47]],
+    ]);
   });
 
   it('does not oversubscribe when suspending multiple times', async () => {

@@ -38,6 +38,7 @@ const OBSERVED_CHANGED_OPTIONS: Array<keyof WatchQueryOptions> = [
   'canonizeResults',
   'context',
   'errorPolicy',
+  'refetchWritePolicy',
 ];
 
 export class InternalQueryReference<TData = unknown> {

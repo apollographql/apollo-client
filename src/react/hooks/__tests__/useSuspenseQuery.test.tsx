@@ -5198,6 +5198,76 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('applies canonized results immediately when `canonizeResults` changes between renders', async () => {
+    interface Result {
+      __typename: string;
+      value: number;
+    }
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Result: {
+          keyFields: false,
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<{ results: Result[] }> = gql`
+      query {
+        results {
+          value
+        }
+      }
+    `;
+
+    const results: Result[] = [
+      { __typename: 'Result', value: 0 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 2 },
+      { __typename: 'Result', value: 3 },
+      { __typename: 'Result', value: 5 },
+    ];
+
+    cache.writeQuery({
+      query,
+      data: { results },
+    });
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ canonizeResults }) => useSuspenseQuery(query, { canonizeResults }),
+      { cache, initialProps: { canonizeResults: false } }
+    );
+
+    const { data: nonCanonicalData } = result.current;
+
+    const nonCanonicalResults = new Set(nonCanonicalData.results);
+    const nonCanonicalValues = Array.from(nonCanonicalResults).map(
+      (item) => item.value
+    );
+
+    expect(nonCanonicalData).toEqual({ results });
+    expect(nonCanonicalData.results.length).toBe(6);
+    expect(nonCanonicalResults.size).toBe(6);
+    expect(nonCanonicalValues).toEqual([0, 1, 1, 2, 3, 5]);
+
+    rerender({ canonizeResults: true });
+
+    const { data: canonicalData } = result.current;
+
+    const canonicalResults = new Set(canonicalData.results);
+    const canonicalValues = Array.from(canonicalResults).map(
+      (item) => item.value
+    );
+
+    expect(canonicalData).toEqual({ results });
+    expect(canonicalData.results.length).toBe(6);
+    expect(canonicalResults.size).toBe(5);
+    expect(canonicalValues).toEqual([0, 1, 2, 3, 5]);
+
+    expect(renders.count).toBe(2);
+  });
+
   it('does not oversubscribe when suspending multiple times', async () => {
     const query = gql`
       query UserQuery($id: String!) {

@@ -35,6 +35,7 @@ interface InternalQueryReferenceOptions {
 }
 
 const OBSERVED_CHANGED_OPTIONS: Array<keyof WatchQueryOptions> = [
+  'canonizeResults',
   'context',
   'errorPolicy',
 ];
@@ -117,6 +118,11 @@ export class InternalQueryReference<TData = unknown> {
 
   applyOptions(watchQueryOptions: WatchQueryOptions) {
     this.observable.silentSetOptions(watchQueryOptions);
+
+    this.result = this.observable.getCurrentResult();
+    this.promise = createFulfilledPromise(this.result);
+
+    return this.promise;
   }
 
   listen(listener: Listener<TData>) {

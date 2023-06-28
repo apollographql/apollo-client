@@ -179,7 +179,8 @@ export function useSuspenseQuery<
     promise = queryRef.reobserve({ fetchPolicy });
     promiseCache.set(queryRef.key, promise);
   } else if (queryRef.didChangeOptions(watchQueryOptions)) {
-    queryRef.applyOptions(watchQueryOptions);
+    promise = queryRef.applyOptions(watchQueryOptions);
+    promiseCache.set(queryRef.key, promise);
   }
 
   if (!promise) {

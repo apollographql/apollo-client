@@ -149,6 +149,8 @@ export interface BackgroundQueryHookOptions<
   | 'errorPolicy'
   | 'context'
   | 'canonizeResults'
+  | 'returnPartialData'
+  | 'refetchWritePolicy'
   | 'skip'
 > {
   fetchPolicy?: BackgroundQueryHookFetchPolicy;

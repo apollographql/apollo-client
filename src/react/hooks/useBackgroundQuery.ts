@@ -28,17 +28,27 @@ export type UseBackgroundQueryResult<
   }
 ];
 
+type BackgroundQueryHookOptionsNoInfer<
+  TData,
+  TVariables extends OperationVariables
+> = BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+
 export function useBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
   TOptions extends Omit<BackgroundQueryHookOptions<TData>, 'variables'>
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
-    TOptions
+  options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions
 ): UseBackgroundQueryResult<
   TOptions['errorPolicy'] extends 'ignore' | 'all'
-    ? TData | undefined
+    ? TOptions['returnPartialData'] extends true
+      ? DeepPartial<TData> | undefined
+      : TData | undefined
+    : TOptions['returnPartialData'] extends true
+    ? TOptions['skip'] extends boolean
+      ? DeepPartial<TData> | undefined
+      : DeepPartial<TData>
     : TOptions['skip'] extends boolean
     ? TData | undefined
     : TData,
@@ -50,7 +60,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
     errorPolicy: 'ignore' | 'all';
   }
@@ -61,7 +71,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     errorPolicy: 'ignore' | 'all';
   }
 ): UseBackgroundQueryResult<TData | undefined, TVariables>;
@@ -71,30 +81,38 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     skip: boolean;
+    returnPartialData: true;
   }
-): UseBackgroundQueryResult<TData | undefined, TVariables>;
-
-// TODO: support `returnPartialData` | `refetchWritePolicy`
-// see https://github.com/apollographql/apollo-client/issues/10893
-
-// export function useBackgroundQuery<
-//   TData = unknown,
-//   TVariables extends OperationVariables = OperationVariables
-// >(
-//   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-//   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
-//     returnPartialData: true;
-//   }
-// ): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
+): UseBackgroundQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
+    returnPartialData: true;
+  }
+): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
+    skip: boolean;
+  }
+): UseBackgroundQueryResult<TData | undefined, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>
 ): UseBackgroundQueryResult<TData, TVariables>;
 
 export function useBackgroundQuery<
@@ -102,10 +120,9 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = Object.create(null)
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(
+    null
+  )
 ): UseBackgroundQueryResult<TData> {
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);

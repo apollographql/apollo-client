@@ -33,6 +33,10 @@ interface InternalQueryReferenceOptions {
   autoDisposeTimeoutMs?: number;
 }
 
+const OBSERVED_CHANGED_OPTIONS: Array<keyof WatchQueryOptions> = [
+  'errorPolicy',
+];
+
 export class InternalQueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
   public readonly key: CacheKey;
@@ -100,6 +104,16 @@ export class InternalQueryReference<TData = unknown> {
 
   get watchQueryOptions() {
     return this.observable.options;
+  }
+
+  didChangeOptions(watchQueryOptions: WatchQueryOptions) {
+    return OBSERVED_CHANGED_OPTIONS.some(
+      (option) => watchQueryOptions[option] !== this.watchQueryOptions[option]
+    );
+  }
+
+  applyOptions(watchQueryOptions: WatchQueryOptions) {
+    this.observable.silentSetOptions(watchQueryOptions);
   }
 
   listen(listener: Listener<TData>) {

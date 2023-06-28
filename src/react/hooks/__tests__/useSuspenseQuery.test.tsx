@@ -29,6 +29,7 @@ import {
   TypedDocumentNode,
   split,
   NetworkStatus,
+  ErrorPolicy,
 } from '../../../core';
 import {
   DeepPartial,
@@ -5059,6 +5060,74 @@ describe('useSuspenseQuery', () => {
     // Eventually we should see the updated todo content once its done
     // suspending.
     expect(await screen.findByTestId('todo')).toHaveTextContent('Clean room');
+  });
+
+  it('applies `errorPolicy` on next fetch when it changes between renders', async () => {
+    const { query, mocks: simpleMocks } = useSimpleQueryCase();
+
+    const successMock = simpleMocks[0];
+
+    const mocks = [
+      successMock,
+      {
+        request: { query },
+        result: {
+          errors: [new GraphQLError('oops')],
+        },
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ errorPolicy }) => useSuspenseQuery(query, { errorPolicy }),
+      { mocks, initialProps: { errorPolicy: 'none' as ErrorPolicy } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...successMock.result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ errorPolicy: 'all' });
+
+    act(() => {
+      result.current.refetch();
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...successMock.result,
+        networkStatus: NetworkStatus.error,
+        error: new ApolloError({ graphQLErrors: [new GraphQLError('oops')] }),
+      });
+    });
+
+    expect(renders.errorCount).toBe(0);
+    expect(
+      renders.frames.map((f) => ({
+        data: f.data,
+        error: f.error,
+        networkStatus: f.networkStatus,
+      }))
+    ).toMatchObject([
+      {
+        ...successMock.result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...successMock.result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...successMock.result,
+        networkStatus: NetworkStatus.error,
+        error: new ApolloError({ graphQLErrors: [new GraphQLError('oops')] }),
+      },
+    ]);
   });
 
   it('does not oversubscribe when suspending multiple times', async () => {

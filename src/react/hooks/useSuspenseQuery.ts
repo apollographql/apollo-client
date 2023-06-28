@@ -178,6 +178,8 @@ export function useSuspenseQuery<
   if (currentFetchPolicy === 'standby' && fetchPolicy !== currentFetchPolicy) {
     promise = queryRef.reobserve({ fetchPolicy });
     promiseCache.set(queryRef.key, promise);
+  } else if (queryRef.didChangeOptions(watchQueryOptions)) {
+    queryRef.applyOptions(watchQueryOptions);
   }
 
   if (!promise) {

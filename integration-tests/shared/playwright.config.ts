@@ -1,7 +1,7 @@
 export const baseConfig = {
   webServer: {
     command: 'yarn serve-app',
-    port: 3000,
+    url: 'http://localhost:3000',
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
   },

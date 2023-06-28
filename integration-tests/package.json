@@ -16,5 +16,8 @@
     "node-standard",
     "node-esm",
     "shared"
-  ]
+  ],
+  "devDependencies": {
+    "@types/lodash": "^4.14.195"
+  }
 }

@@ -52,8 +52,6 @@ jobs:
             - apollo-client.tgz
 
   IntegrationTests:
-    requires:
-      - BuildTarball
     parameters:
       framework:
         type: string
@@ -91,6 +89,8 @@ workflows:
       - BuildTarball
       - IntegrationTests:
           name: Integration Test << matrix.test >>
+          requires:
+            - BuildTarball
           matrix:
             parameters:
               framework:

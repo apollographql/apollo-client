@@ -5198,10 +5198,17 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('applies canonized results immediately when `canonizeResults` changes between renders', async () => {
+  // NOTE: We only test the `false` -> `true` path here. If the option changes
+  // from `true` -> `false`, the data has already been canonized, so it has no
+  // effect on the output.
+  it('returns canonical results immediately when `canonizeResults` changes from `false` to `true` between renders', async () => {
     interface Result {
       __typename: string;
       value: number;
+    }
+
+    interface Data {
+      results: Result[];
     }
 
     const cache = new InMemoryCache({
@@ -5212,7 +5219,7 @@ describe('useSuspenseQuery', () => {
       },
     });
 
-    const query: TypedDocumentNode<{ results: Result[] }> = gql`
+    const query: TypedDocumentNode<Data> = gql`
       query {
         results {
           value
@@ -5234,37 +5241,33 @@ describe('useSuspenseQuery', () => {
       data: { results },
     });
 
+    function verifyCanonicalResults(data: Data, canonized: boolean) {
+      const resultSet = new Set(data.results);
+      const values = Array.from(resultSet).map((item) => item.value);
+
+      expect(data).toEqual({ results });
+
+      if (canonized) {
+        expect(data.results.length).toBe(6);
+        expect(resultSet.size).toBe(5);
+        expect(values).toEqual([0, 1, 2, 3, 5]);
+      } else {
+        expect(data.results.length).toBe(6);
+        expect(resultSet.size).toBe(6);
+        expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+      }
+    }
+
     const { result, rerender, renders } = renderSuspenseHook(
       ({ canonizeResults }) => useSuspenseQuery(query, { canonizeResults }),
       { cache, initialProps: { canonizeResults: false } }
     );
 
-    const { data: nonCanonicalData } = result.current;
-
-    const nonCanonicalResults = new Set(nonCanonicalData.results);
-    const nonCanonicalValues = Array.from(nonCanonicalResults).map(
-      (item) => item.value
-    );
-
-    expect(nonCanonicalData).toEqual({ results });
-    expect(nonCanonicalData.results.length).toBe(6);
-    expect(nonCanonicalResults.size).toBe(6);
-    expect(nonCanonicalValues).toEqual([0, 1, 1, 2, 3, 5]);
+    verifyCanonicalResults(result.current.data, false);
 
     rerender({ canonizeResults: true });
 
-    const { data: canonicalData } = result.current;
-
-    const canonicalResults = new Set(canonicalData.results);
-    const canonicalValues = Array.from(canonicalResults).map(
-      (item) => item.value
-    );
-
-    expect(canonicalData).toEqual({ results });
-    expect(canonicalData.results.length).toBe(6);
-    expect(canonicalResults.size).toBe(5);
-    expect(canonicalValues).toEqual([0, 1, 2, 3, 5]);
-
+    verifyCanonicalResults(result.current.data, true);
     expect(renders.count).toBe(2);
   });
 

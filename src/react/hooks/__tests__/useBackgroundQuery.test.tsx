@@ -39,7 +39,8 @@ import {
   offsetLimitPagination,
   DeepPartial,
 } from '../../../utilities';
-import { useBackgroundQuery, useReadQuery } from '../useBackgroundQuery';
+import { useBackgroundQuery } from '../useBackgroundQuery';
+import { useReadQuery } from '../useReadQuery';
 import { ApolloProvider } from '../../context';
 import { QUERY_REFERENCE_SYMBOL } from '../../cache/QueryReference';
 import { SuspenseCache } from '../../cache';

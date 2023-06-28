@@ -9,7 +9,7 @@ import {
   QUERY_REFERENCE_SYMBOL,
   type QueryReference,
 } from '../cache/QueryReference';
-import type { SuspenseQueryHookOptions, NoInfer } from '../types/types';
+import type { BackgroundQueryHookOptions, NoInfer } from '../types/types';
 import { __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useTrackedQueryRefs, useWatchQueryOptions } from './useSuspenseQuery';
@@ -28,18 +28,18 @@ export type UseBackgroundQueryResult<
   }
 ];
 
-type SuspenseQueryHookOptionsNoInfer<
+type BackgroundQueryHookOptionsNoInfer<
   TData,
   TVariables extends OperationVariables
-> = SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+> = BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
 
 export function useBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<SuspenseQueryHookOptions<TData>, 'variables'>
+  TOptions extends Omit<BackgroundQueryHookOptions<TData>, 'variables'>
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & TOptions
+  options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions
 ): UseBackgroundQueryResult<
   TOptions['errorPolicy'] extends 'ignore' | 'all'
     ? TOptions['returnPartialData'] extends true
@@ -60,7 +60,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
     errorPolicy: 'ignore' | 'all';
   }
@@ -71,7 +71,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     errorPolicy: 'ignore' | 'all';
   }
 ): UseBackgroundQueryResult<TData | undefined, TVariables>;
@@ -81,7 +81,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     skip: boolean;
     returnPartialData: true;
   }
@@ -92,7 +92,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
   }
 ): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
@@ -102,7 +102,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     skip: boolean;
   }
 ): UseBackgroundQueryResult<TData | undefined, TVariables>;
@@ -112,7 +112,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SuspenseQueryHookOptionsNoInfer<TData, TVariables>
+  options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>
 ): UseBackgroundQueryResult<TData, TVariables>;
 
 export function useBackgroundQuery<
@@ -120,7 +120,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptionsNoInfer<TData, TVariables> = Object.create(
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(
     null
   )
 ): UseBackgroundQueryResult<TData> {

@@ -3667,9 +3667,200 @@ describe('useBackgroundQuery', () => {
       ]);
     });
 
-    it.todo(
-      'does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`'
-    );
+    it('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
+      interface QueryData {
+        greeting: {
+          __typename: string;
+          message?: string;
+          recipient?: {
+            __typename: string;
+            name: string;
+          };
+        };
+      }
+
+      const query: TypedDocumentNode<QueryData> = gql`
+        query {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+      const cache = new InMemoryCache();
+
+      // We are intentionally writing partial data to the cache. Supress console
+      // warnings to avoid unnecessary noise in the test.
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      cache.writeQuery({
+        query,
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            recipient: { __typename: 'Person', name: 'Cached Alice' },
+          },
+        },
+      });
+      consoleSpy.mockRestore();
+
+      interface Renders {
+        errors: Error[];
+        errorCount: number;
+        suspenseCount: number;
+        count: number;
+        frames: {
+          data: DeepPartial<QueryData>;
+          networkStatus: NetworkStatus;
+          error: ApolloError | undefined;
+        }[];
+      }
+      const renders: Renders = {
+        errors: [],
+        errorCount: 0,
+        suspenseCount: 0,
+        count: 0,
+        frames: [],
+      };
+
+      const client = new ApolloClient({
+        link,
+        cache,
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      function App() {
+        return (
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Parent />
+            </Suspense>
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        renders.suspenseCount++;
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [queryRef] = useBackgroundQuery(query, {
+          fetchPolicy: 'cache-first',
+          returnPartialData: true,
+        });
+
+        return <Todo queryRef={queryRef} />;
+      }
+
+      function Todo({
+        queryRef,
+      }: {
+        queryRef: QueryReference<DeepPartial<QueryData>>;
+      }) {
+        const { data, networkStatus, error } = useReadQuery(queryRef);
+        renders.frames.push({ data, networkStatus, error });
+        renders.count++;
+        return (
+          <>
+            <div data-testid="message">{data.greeting?.message}</div>
+            <div data-testid="recipient">{data.greeting?.recipient?.name}</div>
+            <div data-testid="network-status">{networkStatus}</div>
+            <div data-testid="error">{error?.message || 'undefined'}</div>
+          </>
+        );
+      }
+
+      render(<App />);
+
+      expect(renders.suspenseCount).toBe(0);
+      expect(screen.getByTestId('recipient')).toHaveTextContent('Cached Alice');
+      // message is not present yet, since it's missing in partial data
+      expect(screen.getByTestId('message')).toHaveTextContent('');
+      expect(screen.getByTestId('network-status')).toHaveTextContent('1'); // loading
+      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+
+      link.simulateResult({
+        result: {
+          data: {
+            greeting: { message: 'Hello world', __typename: 'Greeting' },
+          },
+          hasNext: true,
+        },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('message')).toHaveTextContent('Hello world');
+      });
+      expect(screen.getByTestId('recipient')).toHaveTextContent('Cached Alice');
+      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
+      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+
+      link.simulateResult({
+        result: {
+          incremental: [
+            {
+              data: {
+                __typename: 'Greeting',
+                recipient: { name: 'Alice', __typename: 'Person' },
+              },
+              path: ['greeting'],
+            },
+          ],
+          hasNext: false,
+        },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('recipient').textContent).toEqual('Alice');
+      });
+      expect(screen.getByTestId('message')).toHaveTextContent('Hello world');
+      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
+      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+
+      expect(renders.count).toBe(3);
+      expect(renders.suspenseCount).toBe(0);
+      expect(renders.frames).toMatchObject([
+        {
+          data: {
+            greeting: {
+              __typename: 'Greeting',
+              recipient: { __typename: 'Person', name: 'Cached Alice' },
+            },
+          },
+          networkStatus: NetworkStatus.loading,
+          error: undefined,
+        },
+        {
+          data: {
+            greeting: {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Cached Alice' },
+            },
+          },
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          data: {
+            greeting: {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: { __typename: 'Person', name: 'Alice' },
+            },
+          },
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+      ]);
+    });
   });
 
   describe.skip('type tests', () => {

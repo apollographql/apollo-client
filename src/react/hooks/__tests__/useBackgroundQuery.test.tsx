@@ -3471,13 +3471,201 @@ describe('useBackgroundQuery', () => {
       consoleSpy.mockRestore();
     });
 
-    it.todo(
-      'does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData'
-    );
+    it('does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+      interface Data {
+        character: {
+          id: string;
+          name: string;
+        };
+      }
 
-    it.todo(
-      'suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData'
-    );
+      const fullQuery: TypedDocumentNode<Data> = gql`
+        query {
+          character {
+            id
+            name
+          }
+        }
+      `;
+
+      const partialQuery = gql`
+        query {
+          character {
+            id
+          }
+        }
+      `;
+      const mocks = [
+        {
+          request: { query: fullQuery },
+          result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+        },
+      ];
+
+      interface Renders {
+        errors: Error[];
+        errorCount: number;
+        suspenseCount: number;
+        count: number;
+        frames: {
+          data: DeepPartial<Data>;
+          networkStatus: NetworkStatus;
+          error: ApolloError | undefined;
+        }[];
+      }
+      const renders: Renders = {
+        errors: [],
+        errorCount: 0,
+        suspenseCount: 0,
+        count: 0,
+        frames: [],
+      };
+
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        query: partialQuery,
+        data: { character: { id: '1' } },
+      });
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache,
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      function App() {
+        return (
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Parent />
+            </Suspense>
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        renders.suspenseCount++;
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [queryRef] = useBackgroundQuery(fullQuery, {
+          fetchPolicy: 'cache-and-network',
+          returnPartialData: true,
+        });
+
+        return <Todo queryRef={queryRef} />;
+      }
+
+      function Todo({
+        queryRef,
+      }: {
+        queryRef: QueryReference<DeepPartial<Data>>;
+      }) {
+        const { data, networkStatus, error } = useReadQuery(queryRef);
+        renders.frames.push({ data, networkStatus, error });
+        renders.count++;
+        return (
+          <>
+            <div data-testid="character-id">{data.character?.id}</div>
+            <div data-testid="character-name">{data.character?.name}</div>
+            <div data-testid="network-status">{networkStatus}</div>
+            <div data-testid="error">{error?.message || 'undefined'}</div>
+          </>
+        );
+      }
+
+      render(<App />);
+
+      expect(renders.suspenseCount).toBe(0);
+      expect(screen.getByTestId('character-id')).toHaveTextContent('1');
+      // name is not present yet, since it's missing in partial data
+      expect(screen.getByTestId('character-name')).toHaveTextContent('');
+      expect(screen.getByTestId('network-status')).toHaveTextContent('1'); // loading
+      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('character-name')).toHaveTextContent(
+          'Doctor Strange'
+        );
+      });
+      expect(screen.getByTestId('character-id')).toHaveTextContent('1');
+      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
+      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+
+      expect(renders.count).toBe(2);
+      expect(renders.suspenseCount).toBe(0);
+
+      expect(renders.frames).toMatchObject([
+        {
+          data: { character: { id: '1' } },
+          networkStatus: NetworkStatus.loading,
+          error: undefined,
+        },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+      ]);
+    });
+
+    it('suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+      const partialQuery = gql`
+        query ($id: ID!) {
+          character(id: $id) {
+            id
+          }
+        }
+      `;
+
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        query: partialQuery,
+        data: { character: { id: '1' } },
+        variables: { id: '1' },
+      });
+
+      const { renders, mocks, rerender } = renderVariablesIntegrationTest({
+        variables: { id: '1' },
+        cache,
+        options: {
+          fetchPolicy: 'cache-and-network',
+          returnPartialData: true,
+        },
+      });
+
+      expect(renders.suspenseCount).toBe(0);
+
+      expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
+
+      rerender({ variables: { id: '2' } });
+
+      expect(await screen.findByText('2 - Black Widow')).toBeInTheDocument();
+
+      expect(renders.count).toBe(3);
+      expect(renders.suspenseCount).toBe(1);
+      expect(renders.frames).toMatchObject([
+        {
+          data: { character: { id: '1' } },
+          networkStatus: NetworkStatus.loading,
+          error: undefined,
+        },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[1].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+      ]);
+    });
 
     it.todo(
       'does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`'

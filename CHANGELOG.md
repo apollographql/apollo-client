@@ -1,5 +1,25 @@
 # @apollo/client
 
+## 3.7.16
+
+### Patch Changes
+
+- [#10806](https://github.com/apollographql/apollo-client/pull/10806) [`cb1540504`](https://github.com/apollographql/apollo-client/commit/cb15405041e0bd644fcf23d1b8fcaa09762c5a6a) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug in `PersistedQueryLink` that would cause it to permanently skip persisted queries after a 400 or 500 status code.
+
+- [#10807](https://github.com/apollographql/apollo-client/pull/10807) [`b32369592`](https://github.com/apollographql/apollo-client/commit/b3236959269ce27b18b8c2cae72106098a3ba1b8) Thanks [@phryneas](https://github.com/phryneas)! - `PersistedQueryLink` will now also check for error codes in `extensions`.
+
+- [#10982](https://github.com/apollographql/apollo-client/pull/10982) [`b9be7a814`](https://github.com/apollographql/apollo-client/commit/b9be7a814a64fc6b3e6ce23dd97a4f0c7140aba7) Thanks [@sdeleur-sc](https://github.com/sdeleur-sc)! - Update `relayStylePagination` to avoid populating `startCursor` when only a single cursor is present under the `edges` field. Use that cursor only as the `endCursor`.
+
+- [#10962](https://github.com/apollographql/apollo-client/pull/10962) [`772cfa3cb`](https://github.com/apollographql/apollo-client/commit/772cfa3cb563dccee878177e58c8250c4e5b5013) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `useGETForQueries` option in `BatchHttpLink.Options` type since it is not supported.
+
+## 3.7.15
+
+### Patch Changes
+
+- [#10891](https://github.com/apollographql/apollo-client/pull/10891) [`ab42a5c08`](https://github.com/apollographql/apollo-client/commit/ab42a5c08840193cb915f4e66d71fac3834fec68) Thanks [@laverdet](https://github.com/laverdet)! - Fixes a bug in how multipart responses are read when using `@defer`. When reading a multipart body, `HttpLink` no longer attempts to parse the boundary (e.g. `"---"` or other boundary string) within the response data itself, only when reading the beginning of each mulitpart chunked message.
+
+- [#10789](https://github.com/apollographql/apollo-client/pull/10789) [`23a4e1578`](https://github.com/apollographql/apollo-client/commit/23a4e15786fe99658d741585366f3b02bcffb97f) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where other fields could be aliased to `__typename` or `id`, in which case an incoming result would be merged into the wrong cache entry.
+
 ## 3.7.14
 
 ### Patch Changes

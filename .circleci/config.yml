@@ -56,7 +56,7 @@ jobs:
     requires:
       - BuildTarball
     parameters:
-      test:
+      framework:
         type: string
     docker:
       - image: cimg/node:20.2.0
@@ -68,19 +68,19 @@ jobs:
       - run: npm version
       - run:
           command: |
-            npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.test >>
+            npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.framework >>
           working_directory: integration-tests
       - run:
           command: |
-            npm run ci-preparations --workspace=<< parameters.test >> --if-present
+            npm run ci-preparations --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
           command: |
-            npm run build --workspace=<< parameters.test >> --if-present
+            npm run build --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
           command: |
-            npm run test --workspace=<< parameters.test >>
+            npm run test --workspace=<< parameters.framework >>
           working_directory: integration-tests
 
 workflows:
@@ -93,7 +93,7 @@ workflows:
       - IntegrationTests:
           matrix:
             parameters:
-              test:
+              framework:
                 - cra4
                 - cra5
                 - next

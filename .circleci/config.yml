@@ -56,12 +56,11 @@ jobs:
       framework:
         type: string
     docker:
-      - image: cimg/node:20.2.0
+      - image: cimg/node:18.16.1
     steps:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      - run: npm install -g npm
       - run: npm version
       - run:
           command: npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.framework >>

@@ -3305,13 +3305,171 @@ describe('useBackgroundQuery', () => {
       ]);
     });
 
-    it.todo(
-      'suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData'
-    );
+    it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      interface Data {
+        character: {
+          id: string;
+          name: string;
+        };
+      }
 
-    it.todo(
-      'warns when using returnPartialData with a "no-cache" fetch policy'
-    );
+      const fullQuery: TypedDocumentNode<Data> = gql`
+        query {
+          character {
+            id
+            name
+          }
+        }
+      `;
+
+      const partialQuery = gql`
+        query {
+          character {
+            id
+          }
+        }
+      `;
+      const mocks = [
+        {
+          request: { query: fullQuery },
+          result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+        },
+      ];
+
+      interface Renders {
+        errors: Error[];
+        errorCount: number;
+        suspenseCount: number;
+        count: number;
+        frames: {
+          data: DeepPartial<Data>;
+          networkStatus: NetworkStatus;
+          error: ApolloError | undefined;
+        }[];
+      }
+      const renders: Renders = {
+        errors: [],
+        errorCount: 0,
+        suspenseCount: 0,
+        count: 0,
+        frames: [],
+      };
+
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        query: partialQuery,
+        data: { character: { id: '1' } },
+      });
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache,
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      function App() {
+        return (
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Parent />
+            </Suspense>
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        renders.suspenseCount++;
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [queryRef] = useBackgroundQuery(fullQuery, {
+          fetchPolicy: 'no-cache',
+          returnPartialData: true,
+        });
+
+        return <Todo queryRef={queryRef} />;
+      }
+
+      function Todo({
+        queryRef,
+      }: {
+        queryRef: QueryReference<DeepPartial<Data>>;
+      }) {
+        const { data, networkStatus, error } = useReadQuery(queryRef);
+        renders.frames.push({ data, networkStatus, error });
+        renders.count++;
+        return (
+          <>
+            <div data-testid="character-id">{data.character?.id}</div>
+            <div data-testid="character-name">{data.character?.name}</div>
+            <div data-testid="network-status">{networkStatus}</div>
+            <div data-testid="error">{error?.message || 'undefined'}</div>
+          </>
+        );
+      }
+
+      render(<App />);
+
+      expect(renders.suspenseCount).toBe(1);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('character-name')).toHaveTextContent(
+          'Doctor Strange'
+        );
+      });
+      expect(screen.getByTestId('character-id')).toHaveTextContent('1');
+      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
+      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+
+      expect(renders.count).toBe(1);
+      expect(renders.suspenseCount).toBe(1);
+
+      expect(renders.frames).toMatchObject([
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+      ]);
+
+      consoleSpy.mockRestore();
+    });
+
+    it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      const query: TypedDocumentNode<SimpleQueryData> = gql`
+        query UserQuery {
+          greeting
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { greeting: 'Hello' } },
+        },
+      ];
+
+      renderSuspenseHook(
+        () =>
+          useBackgroundQuery(query, {
+            fetchPolicy: 'no-cache',
+            returnPartialData: true,
+          }),
+        { mocks }
+      );
+
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(console.warn).toHaveBeenCalledWith(
+        'Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy.'
+      );
+
+      consoleSpy.mockRestore();
+    });
 
     it.todo(
       'does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData'

@@ -1,9 +1,33 @@
-import { useQuery, gql, TypedDocumentNode } from '@apollo/client';
+import type { TypedDocumentNode } from '@apollo/client';
 
-import { InMemoryCache, ApolloClient, ApolloProvider } from '@apollo/client';
+import {
+  useQuery,
+  gql,
+  InMemoryCache,
+  ApolloClient,
+  ApolloProvider,
+  ApolloLink,
+  Observable,
+  HttpLink,
+} from '@apollo/client';
+
+const delayLink = new ApolloLink((operation, forward) => {
+  return new Observable((observer) => {
+    const handle = setTimeout(() => {
+      forward(operation).subscribe(observer);
+    }, 1000);
+
+    return () => clearTimeout(handle);
+  });
+});
+
+const httpLink = new HttpLink({
+  uri: 'https://main--hack-the-e-commerce.apollographos.net/graphql',
+});
+
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  uri: 'https://main--hack-the-e-commerce.apollographos.net/graphql',
+  link: ApolloLink.from([delayLink, httpLink]),
 });
 
 const QUERY: TypedDocumentNode<{

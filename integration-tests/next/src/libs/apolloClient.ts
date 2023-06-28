@@ -1,6 +1,13 @@
 import { useRef } from 'react';
 import type { NormalizedCacheObject } from '@apollo/client';
-import { ApolloClient, HttpLink, InMemoryCache, from } from '@apollo/client';
+import {
+  ApolloClient,
+  HttpLink,
+  InMemoryCache,
+  from,
+  ApolloLink,
+  Observable,
+} from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
 import merge from 'deepmerge';
 import isEqual from 'lodash/isEqual';
@@ -20,6 +27,16 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (networkError) console.log(`[Network error]: ${networkError}`);
 });
 
+const delayLink = new ApolloLink((operation, forward) => {
+  return new Observable((observer) => {
+    const handle = setTimeout(() => {
+      forward(operation).subscribe(observer);
+    }, 1000);
+
+    return () => clearTimeout(handle);
+  });
+});
+
 const httpLink = new HttpLink({
   uri: 'https://main--hack-the-e-commerce.apollographos.net/graphql',
 });
@@ -27,7 +44,7 @@ const httpLink = new HttpLink({
 function createApolloClient() {
   return new ApolloClient({
     ssrMode: typeof window === 'undefined',
-    link: from([errorLink, httpLink]),
+    link: from([errorLink, delayLink, httpLink]),
     cache: new InMemoryCache(),
   });
 }

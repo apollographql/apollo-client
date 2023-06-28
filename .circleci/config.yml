@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 jobs:
   # Filesize:
@@ -84,7 +84,6 @@ jobs:
           working_directory: integration-tests
 
 workflows:
-  version: 2
   Build and Test:
     jobs:
       # - Filesize

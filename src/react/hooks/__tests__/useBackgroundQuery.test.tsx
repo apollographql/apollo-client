@@ -49,6 +49,7 @@ import {
   RefetchFunction,
   QueryReference,
 } from '../../../react';
+import { SuspenseQueryHookOptions } from '../../types/types';
 import equal from '@wry/equality';
 
 function renderIntegrationTest({
@@ -108,20 +109,18 @@ function renderIntegrationTest({
 
   function Child({ queryRef }: { queryRef: QueryReference<QueryData> }) {
     const { data } = useReadQuery(queryRef);
+    // count renders in the child component
+    renders.count++;
     return <div>{data.foo.bar}</div>;
   }
 
   function Parent() {
     const [queryRef] = useBackgroundQuery(query);
-    // count renders in the parent component
-    renders.count++;
     return <Child queryRef={queryRef} />;
   }
 
   function ParentWithVariables() {
     const [queryRef] = useBackgroundQuery(query);
-    // count renders in the parent component
-    renders.count++;
     return <Child queryRef={queryRef} />;
   }
 
@@ -176,6 +175,8 @@ function renderVariablesIntegrationTest({
   variables,
   mocks,
   errorPolicy,
+  options,
+  cache,
 }: {
   mocks?: {
     request: { query: DocumentNode; variables: { id: string } };
@@ -189,6 +190,8 @@ function renderVariablesIntegrationTest({
     };
   }[];
   variables: { id: string };
+  options?: SuspenseQueryHookOptions;
+  cache?: InMemoryCache;
   errorPolicy?: ErrorPolicy;
 }) {
   let { mocks: _mocks, query } = useVariablesIntegrationTestCase();
@@ -216,7 +219,7 @@ function renderVariablesIntegrationTest({
   );
   const suspenseCache = new SuspenseCache();
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: cache || new InMemoryCache(),
     link: new MockLink(mocks || _mocks),
   });
   interface Renders {
@@ -264,7 +267,8 @@ function renderVariablesIntegrationTest({
   }) {
     const { data, error, networkStatus } = useReadQuery(queryRef);
     const [variables, setVariables] = React.useState(_variables);
-
+    // count renders in the child component
+    renders.count++;
     renders.frames.push({ data, networkStatus, error });
 
     return (
@@ -297,11 +301,10 @@ function renderVariablesIntegrationTest({
     errorPolicy?: ErrorPolicy;
   }) {
     const [queryRef, { refetch }] = useBackgroundQuery(query, {
+      ...options,
       variables,
       errorPolicy,
     });
-    // count renders in the parent component
-    renders.count++;
     return (
       <Child refetch={refetch} variables={variables} queryRef={queryRef} />
     );
@@ -334,7 +337,7 @@ function renderVariablesIntegrationTest({
   const rerender = ({ variables }: { variables: VariablesCaseVariables }) => {
     return rest.rerender(<App variables={variables} />);
   };
-  return { ...rest, query, rerender, client, renders };
+  return { ...rest, query, rerender, client, renders, mocks: mocks || _mocks };
 }
 
 function renderPaginatedIntegrationTest({
@@ -443,7 +446,8 @@ function renderPaginatedIntegrationTest({
     queryRef: QueryReference<QueryData>;
   }) {
     const { data, error } = useReadQuery(queryRef);
-
+    // count renders in the child component
+    renders.count++;
     return (
       <div>
         {error ? <div>{error.message}</div> : null}
@@ -485,8 +489,6 @@ function renderPaginatedIntegrationTest({
     const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
       variables: { limit: 2, offset: 0 },
     });
-    // count renders in the parent component
-    renders.count++;
     return <Child fetchMore={fetchMore} queryRef={queryRef} />;
   }
 
@@ -1122,7 +1124,7 @@ describe('useBackgroundQuery', () => {
 
       // the parent component re-renders when promise fulfilled
       expect(await screen.findByText('hello')).toBeInTheDocument();
-      expect(renders.count).toBe(2);
+      expect(renders.count).toBe(1);
     });
 
     it('works with startTransition to change variables', async () => {
@@ -1414,7 +1416,7 @@ describe('useBackgroundQuery', () => {
 
     // the parent component re-renders when promise fulfilled
     expect(await screen.findByText('hello')).toBeInTheDocument();
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(1);
 
     client.writeQuery({
       query,
@@ -1424,6 +1426,7 @@ describe('useBackgroundQuery', () => {
     // the parent component re-renders when promise fulfilled
     expect(await screen.findByText('baz')).toBeInTheDocument();
 
+    expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
 
     client.writeQuery({
@@ -1987,7 +1990,7 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.count).toBe(4);
+      expect(renders.count).toBe(2);
 
       expect(
         await screen.findByText('1 - Spider-Man (updated)')
@@ -2052,7 +2055,7 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.count).toBe(4);
+      expect(renders.count).toBe(3);
 
       // extra render puts an additional frame into the array
       expect(renders.frames).toMatchObject([
@@ -2089,7 +2092,7 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.count).toBe(4);
+      expect(renders.count).toBe(2);
 
       expect(
         await screen.findByText('1 - Spider-Man (updated)')
@@ -2099,7 +2102,7 @@ describe('useBackgroundQuery', () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(3);
-      expect(renders.count).toBe(6);
+      expect(renders.count).toBe(3);
 
       expect(
         await screen.findByText('1 - Spider-Man (updated again)')
@@ -2499,7 +2502,7 @@ describe('useBackgroundQuery', () => {
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
       await waitFor(() => {
-        expect(renders.count).toBe(4);
+        expect(renders.count).toBe(2);
       });
 
       expect(getItemTexts()).toStrictEqual(['C', 'D']);
@@ -2524,7 +2527,7 @@ describe('useBackgroundQuery', () => {
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
       await waitFor(() => {
-        expect(renders.count).toBe(4);
+        expect(renders.count).toBe(2);
       });
 
       const moreItems = await screen.findAllByTestId(/letter/i);
@@ -2550,7 +2553,7 @@ describe('useBackgroundQuery', () => {
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
       await waitFor(() => {
-        expect(renders.count).toBe(4);
+        expect(renders.count).toBe(2);
       });
 
       const moreItems = await screen.findAllByTestId(/letter/i);
@@ -3111,13 +3114,196 @@ describe('useBackgroundQuery', () => {
       expect(renders.suspenseCount).toBe(0);
     });
 
-    it.todo(
-      'suspends and does not use partial data when changing variables and using a "cache-first" fetch policy with returnPartialData'
-    );
+    it('suspends and does not use partial data when changing variables and using a "cache-first" fetch policy with returnPartialData', async () => {
+      const partialQuery = gql`
+        query ($id: ID!) {
+          character(id: $id) {
+            id
+          }
+        }
+      `;
 
-    it.todo(
-      'suspends when partial data is in the cache and using a "network-only" fetch policy with returnPartialData'
-    );
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        query: partialQuery,
+        data: { character: { id: '1' } },
+        variables: { id: '1' },
+      });
+
+      const { renders, mocks, rerender } = renderVariablesIntegrationTest({
+        variables: { id: '1' },
+        cache,
+        options: {
+          fetchPolicy: 'cache-first',
+          returnPartialData: true,
+        },
+      });
+      expect(renders.suspenseCount).toBe(0);
+
+      expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
+
+      rerender({ variables: { id: '2' } });
+
+      expect(await screen.findByText('2 - Black Widow')).toBeInTheDocument();
+
+      expect(renders.frames[2]).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+
+      expect(renders.count).toBe(3);
+      expect(renders.suspenseCount).toBe(1);
+      expect(renders.frames).toMatchObject([
+        {
+          data: { character: { id: '1' } },
+          networkStatus: NetworkStatus.loading,
+          error: undefined,
+        },
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        {
+          ...mocks[1].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+      ]);
+    });
+
+    it('suspends when partial data is in the cache and using a "network-only" fetch policy with returnPartialData', async () => {
+      interface Data {
+        character: {
+          id: string;
+          name: string;
+        };
+      }
+
+      const fullQuery: TypedDocumentNode<Data> = gql`
+        query {
+          character {
+            id
+            name
+          }
+        }
+      `;
+
+      const partialQuery = gql`
+        query {
+          character {
+            id
+          }
+        }
+      `;
+      const mocks = [
+        {
+          request: { query: fullQuery },
+          result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+        },
+      ];
+
+      interface Renders {
+        errors: Error[];
+        errorCount: number;
+        suspenseCount: number;
+        count: number;
+        frames: {
+          data: DeepPartial<Data>;
+          networkStatus: NetworkStatus;
+          error: ApolloError | undefined;
+        }[];
+      }
+      const renders: Renders = {
+        errors: [],
+        errorCount: 0,
+        suspenseCount: 0,
+        count: 0,
+        frames: [],
+      };
+
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        query: partialQuery,
+        data: { character: { id: '1' } },
+      });
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache,
+      });
+
+      const suspenseCache = new SuspenseCache();
+
+      function App() {
+        return (
+          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Parent />
+            </Suspense>
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        renders.suspenseCount++;
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [queryRef] = useBackgroundQuery(fullQuery, {
+          fetchPolicy: 'network-only',
+          returnPartialData: true,
+        });
+
+        return <Todo queryRef={queryRef} />;
+      }
+
+      function Todo({
+        queryRef,
+      }: {
+        queryRef: QueryReference<DeepPartial<Data>>;
+      }) {
+        const { data, networkStatus, error } = useReadQuery(queryRef);
+        renders.frames.push({ data, networkStatus, error });
+        renders.count++;
+        return (
+          <>
+            <div data-testid="character-id">{data.character?.id}</div>
+            <div data-testid="character-name">{data.character?.name}</div>
+            <div data-testid="network-status">{networkStatus}</div>
+            <div data-testid="error">{error?.message || 'undefined'}</div>
+          </>
+        );
+      }
+
+      render(<App />);
+
+      expect(renders.suspenseCount).toBe(1);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('character-name')).toHaveTextContent(
+          'Doctor Strange'
+        );
+      });
+      expect(screen.getByTestId('character-id')).toHaveTextContent('1');
+      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
+      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+
+      expect(renders.count).toBe(1);
+      expect(renders.suspenseCount).toBe(1);
+
+      expect(renders.frames).toMatchObject([
+        {
+          ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+      ]);
+    });
 
     it.todo(
       'suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData'

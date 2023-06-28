@@ -9,7 +9,7 @@ import {
   QUERY_REFERENCE_SYMBOL,
   type QueryReference,
 } from '../cache/QueryReference';
-import type { SuspenseQueryHookOptions, NoInfer } from '../types/types';
+import type { BackgroundQueryHookOptions, NoInfer } from '../types/types';
 import { __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
 import { useTrackedQueryRefs, useWatchQueryOptions } from './useSuspenseQuery';
@@ -31,16 +31,10 @@ export type UseBackgroundQueryResult<
 export function useBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<
-    SuspenseQueryHookOptions<TData>,
-    'variables' | 'returnPartialData' | 'refetchWritePolicy'
-  >
+  TOptions extends Omit<BackgroundQueryHookOptions<TData>, 'variables'>
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > &
+  options?: BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
     TOptions
 ): UseBackgroundQueryResult<
   TOptions['errorPolicy'] extends 'ignore' | 'all'
@@ -56,10 +50,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > & {
+  options: BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: true;
     errorPolicy: 'ignore' | 'all';
   }
@@ -70,10 +61,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > & {
+  options: BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     errorPolicy: 'ignore' | 'all';
   }
 ): UseBackgroundQueryResult<TData | undefined, TVariables>;
@@ -83,10 +71,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > & {
+  options: BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     skip: boolean;
   }
 ): UseBackgroundQueryResult<TData | undefined, TVariables>;
@@ -99,10 +84,7 @@ export function useBackgroundQuery<
 //   TVariables extends OperationVariables = OperationVariables
 // >(
 //   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-//   options: Omit<
-//     SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-//     'returnPartialData' | 'refetchWritePolicy'
-//   > & {
+//   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
 //     returnPartialData: true;
 //   }
 // ): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
@@ -112,10 +94,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  >
+  options?: BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): UseBackgroundQueryResult<TData, TVariables>;
 
 export function useBackgroundQuery<
@@ -123,9 +102,9 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<TData, TVariables>,
-    'returnPartialData' | 'refetchWritePolicy'
+  options: BackgroundQueryHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>
   > = Object.create(null)
 ): UseBackgroundQueryResult<TData> {
   const suspenseCache = useSuspenseCache(options.suspenseCache);

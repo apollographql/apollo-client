@@ -120,10 +120,23 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   applyOptions(watchQueryOptions: WatchQueryOptions) {
-    this.observable.silentSetOptions(watchQueryOptions);
+    const { fetchPolicy: currentFetchPolicy } = this.watchQueryOptions;
 
-    this.result = { ...this.result, ...this.observable.getCurrentResult() };
-    this.promise = createFulfilledPromise(this.result);
+    // Handle when changing from `skip: false` -> `skip: true` which is
+    // reflected by setting the `fetchPolicy` to 'standby'.
+    if (
+      currentFetchPolicy === 'standby' &&
+      currentFetchPolicy !== watchQueryOptions.fetchPolicy
+    ) {
+      this.promise = this.observable.reobserve(watchQueryOptions);
+    } else {
+      this.observable.silentSetOptions(watchQueryOptions);
+
+      // Maintain the previous result in case the current result does not return
+      // a `data` property.
+      this.result = { ...this.result, ...this.observable.getCurrentResult() };
+      this.promise = createFulfilledPromise(this.result);
+    }
 
     return this.promise;
   }

@@ -167,18 +167,13 @@ export function useSuspenseQuery<
     client.watchQuery(watchQueryOptions)
   );
 
-  const { fetchPolicy: currentFetchPolicy } = queryRef.watchQueryOptions;
-
   const [promiseCache, setPromiseCache] = useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
 
   let promise = promiseCache.get(queryRef.key);
 
-  if (currentFetchPolicy === 'standby' && fetchPolicy !== currentFetchPolicy) {
-    promise = queryRef.reobserve({ fetchPolicy });
-    promiseCache.set(queryRef.key, promise);
-  } else if (queryRef.didChangeOptions(watchQueryOptions)) {
+  if (queryRef.didChangeOptions(watchQueryOptions)) {
     promise = queryRef.applyOptions(watchQueryOptions);
     promiseCache.set(queryRef.key, promise);
   }
@@ -209,8 +204,7 @@ export function useSuspenseQuery<
     };
   }, [queryRef.result]);
 
-  const result =
-    watchQueryOptions.fetchPolicy === 'standby' ? skipResult : __use(promise);
+  const result = fetchPolicy === 'standby' ? skipResult : __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {

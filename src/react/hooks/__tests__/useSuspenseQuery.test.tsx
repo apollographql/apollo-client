@@ -5514,6 +5514,130 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('applies updated `fetchPolicy` on next fetch when it changes between renders', async () => {
+    const query = gql`
+      query {
+        character {
+          __typename
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '1',
+              name: 'Doctor Strange',
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: {
+        character: {
+          __typename: 'Character',
+          id: '1',
+          name: 'Doctor Strangecache',
+        },
+      },
+    });
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ fetchPolicy }) => useSuspenseQuery(query, { fetchPolicy }),
+      {
+        cache,
+        mocks,
+        initialProps: {
+          fetchPolicy: 'cache-first' as SuspenseQueryHookFetchPolicy,
+        },
+      }
+    );
+
+    expect(result.current).toMatchObject({
+      data: {
+        character: {
+          __typename: 'Character',
+          id: '1',
+          name: 'Doctor Strangecache',
+        },
+      },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    rerender({ fetchPolicy: 'no-cache' });
+
+    const cacheKey = cache.identify({ __typename: 'Character', id: '1' })!;
+
+    cache.modify({
+      id: cacheKey,
+      fields: {
+        name: (_, { DELETE }) => DELETE,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({
+        character: {
+          __typename: 'Character',
+          id: '1',
+          name: 'Doctor Strange',
+        },
+      });
+    });
+
+    // Because we switched to a `no-cache` fetch policy, we should not see the
+    // newly fetched data in the cache after the fetch occured.
+    expect(cache.extract()[cacheKey]).toEqual({
+      __typename: 'Character',
+      id: '1',
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(0);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          character: {
+            __typename: 'Character',
+            id: '1',
+            name: 'Doctor Strangecache',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          character: {
+            __typename: 'Character',
+            id: '1',
+            name: 'Doctor Strangecache',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('does not oversubscribe when suspending multiple times', async () => {
     const query = gql`
       query UserQuery($id: String!) {

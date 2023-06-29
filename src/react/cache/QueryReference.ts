@@ -122,8 +122,8 @@ export class InternalQueryReference<TData = unknown> {
   applyOptions(watchQueryOptions: WatchQueryOptions) {
     const { fetchPolicy: currentFetchPolicy } = this.watchQueryOptions;
 
-    // Handle when changing from `skip: false` -> `skip: true` which is
-    // reflected by setting the `fetchPolicy` to 'standby'.
+    // "standby" is used when `skip` is set to `true`. Detect when we've
+    // enabled the query (i.e. `skip` is `false`) to execute a network request.
     if (
       currentFetchPolicy === 'standby' &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy

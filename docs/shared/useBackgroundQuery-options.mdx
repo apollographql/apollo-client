@@ -22,6 +22,7 @@
 ###### `variables`
 
 `{ [key: string]: any }`
+
 </td>
 
 <td>
@@ -39,6 +40,7 @@ Each key in the object corresponds to a variable name, and that key's value corr
 ###### `errorPolicy`
 
 `ErrorPolicy`
+
 </td>
 
 <td>
@@ -48,6 +50,7 @@ Specifies how the query handles a response that returns both GraphQL errors and 
 For details, see [GraphQL error policies](/react/data/error-handling/#graphql-error-policies).
 
 The default value is `none`, which causes the `useReadQuery` hook to throw the error.
+
 </td>
 </tr>
 
@@ -65,6 +68,7 @@ The default value is `none`, which causes the `useReadQuery` hook to throw the e
 ###### `context`
 
 `Record<string, any>`
+
 </td>
 
 <td>
@@ -80,6 +84,7 @@ If you're using [Apollo Link](/react/api/link/introduction/), this object is the
 ###### `canonizeResults`
 
 `Boolean`
+
 </td>
 
 <td>
@@ -97,6 +102,7 @@ The default value is `false`.
 ###### `client`
 
 `ApolloClient`
+
 </td>
 
 <td>
@@ -122,6 +128,7 @@ By default, the instance that's passed down via context is used, but you can pro
 ###### `fetchPolicy`
 
 `SuspenseQueryHookFetchPolicy`
+
 </td>
 
 <td>
@@ -134,6 +141,42 @@ the `cache-first`, `network-only`, `no-cache`, and `cache-and-network` fetch
 policies.
 
 The default value is `cache-first`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `returnPartialData`
+
+`boolean`
+
+</td>
+
+<td>
+
+If `true`, the query can return _partial_ results from the cache if the cache doesn't contain results for _all_ queried fields.
+
+The default value is `false`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `refetchWritePolicy`
+
+`"merge" | "overwrite"`
+
+</td>
+
+<td>
+
+Watched queries must opt into overwriting existing data on refetch, by passing `refetchWritePolicy: "overwrite"` in their `WatchQueryOptions`.
+
+The default value is `"overwrite"`.
 
 </td>
 </tr>

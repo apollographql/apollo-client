@@ -5633,6 +5633,174 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('properly handles changing options along with changing `variables`', async () => {
+    const query = gql`
+      query ($id: ID!) {
+        character(id: $id) {
+          __typename
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          errors: [new GraphQLError('oops')],
+        },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '2',
+              name: 'Hulk',
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      variables: {
+        id: '1',
+      },
+      data: {
+        character: {
+          __typename: 'Character',
+          id: '1',
+          name: 'Doctor Strangecache',
+        },
+      },
+    });
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ errorPolicy, variables }) =>
+        useSuspenseQuery(query, { errorPolicy, variables }),
+      {
+        cache,
+        mocks,
+        initialProps: {
+          errorPolicy: 'none' as ErrorPolicy,
+          variables: { id: '1' },
+        },
+      }
+    );
+
+    expect(result.current).toMatchObject({
+      data: {
+        character: {
+          __typename: 'Character',
+          id: '1',
+          name: 'Doctor Strangecache',
+        },
+      },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    rerender({ errorPolicy: 'none', variables: { id: '2' } });
+
+    expect(renders.suspenseCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          character: {
+            __typename: 'Character',
+            id: '2',
+            name: 'Hulk',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ errorPolicy: 'all', variables: { id: '1' } });
+
+    act(() => {
+      result.current.refetch();
+    });
+
+    const expectedError = new ApolloError({
+      graphQLErrors: [new GraphQLError('oops')],
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          character: {
+            __typename: 'Character',
+            id: '1',
+            name: 'Doctor Strangecache',
+          },
+        },
+        networkStatus: NetworkStatus.error,
+        error: expectedError,
+      });
+    });
+
+    expect(renders.errorCount).toBe(0);
+    expect(renders.count).toBe(6);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          character: {
+            __typename: 'Character',
+            id: '1',
+            name: 'Doctor Strangecache',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          character: {
+            __typename: 'Character',
+            id: '2',
+            name: 'Hulk',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          character: {
+            __typename: 'Character',
+            id: '1',
+            name: 'Doctor Strangecache',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          character: {
+            __typename: 'Character',
+            id: '1',
+            name: 'Doctor Strangecache',
+          },
+        },
+        networkStatus: NetworkStatus.error,
+        error: expectedError,
+      },
+    ]);
+  });
+
   it('does not oversubscribe when suspending multiple times', async () => {
     const query = gql`
       query UserQuery($id: String!) {

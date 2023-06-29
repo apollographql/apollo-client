@@ -5448,10 +5448,7 @@ describe('useSuspenseQuery', () => {
 
     const { result, renders, rerender } = renderSuspenseHook(
       ({ returnPartialData }) =>
-        useSuspenseQuery(fullQuery, {
-          fetchPolicy: 'cache-first',
-          returnPartialData,
-        }),
+        useSuspenseQuery(fullQuery, { returnPartialData }),
       { cache, mocks, initialProps: { returnPartialData: false } }
     );
 

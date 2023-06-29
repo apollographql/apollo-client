@@ -5578,11 +5578,8 @@ describe('useSuspenseQuery', () => {
 
     const cacheKey = cache.identify({ __typename: 'Character', id: '1' })!;
 
-    cache.modify({
-      id: cacheKey,
-      fields: {
-        name: (_, { DELETE }) => DELETE,
-      },
+    act(() => {
+      result.current.refetch();
     });
 
     await waitFor(() => {
@@ -5600,10 +5597,11 @@ describe('useSuspenseQuery', () => {
     expect(cache.extract()[cacheKey]).toEqual({
       __typename: 'Character',
       id: '1',
+      name: 'Doctor Strangecache',
     });
 
-    expect(renders.count).toBe(3);
-    expect(renders.suspenseCount).toBe(0);
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
         data: {

@@ -6724,10 +6724,6 @@ describe('useQuery Hook', () => {
       setTimeout(() => {
         link.simulateResult({
           result: {
-            extensions: {
-              thing1: 'foo',
-              thing2: 'bar',
-            },
             incremental: [
               {
                 path: ["hero", "heroFriends", 0],
@@ -6739,13 +6735,21 @@ describe('useQuery Hook', () => {
                 ],
                 data: {
                   "homeWorld": null,
-                }
+                },
+                extensions: {
+                  thing1: 'foo',
+                  thing2: 'bar',
+                },
               },
               {
                 path: ["hero", "heroFriends", 1],
                 data: {
                   "homeWorld": "Alderaan",
-                }
+                },
+                extensions: {
+                  thing1: 'foo',
+                  thing2: 'bar',
+                },
               },
             ],
             "hasNext": false

@@ -127,7 +127,7 @@ export function useBackgroundQuery<
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { fetchPolicy, variables } = watchQueryOptions;
+  const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
   const cacheKey = (
@@ -138,14 +138,12 @@ export function useBackgroundQuery<
     client.watchQuery(watchQueryOptions)
   );
 
-  const { fetchPolicy: currentFetchPolicy } = queryRef.watchQueryOptions;
-
   const [promiseCache, setPromiseCache] = useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
 
-  if (currentFetchPolicy === 'standby' && fetchPolicy !== currentFetchPolicy) {
-    const promise = queryRef.reobserve({ fetchPolicy });
+  if (queryRef.didChangeOptions(watchQueryOptions)) {
+    const promise = queryRef.applyOptions(watchQueryOptions);
     promiseCache.set(queryRef.key, promise);
   }
 

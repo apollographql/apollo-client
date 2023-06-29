@@ -50,8 +50,12 @@ import {
   RefetchFunction,
   QueryReference,
 } from '../../../react';
-import { SuspenseQueryHookOptions } from '../../types/types';
+import {
+  SuspenseQueryHookFetchPolicy,
+  SuspenseQueryHookOptions,
+} from '../../types/types';
 import equal from '@wry/equality';
+import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
 
 function renderIntegrationTest({
   client,
@@ -1972,6 +1976,828 @@ describe('useBackgroundQuery', () => {
     await waitFor(() => {
       expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
     });
+  });
+
+  it('applies `errorPolicy` on next fetch when it changes between renders', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+      {
+        request: { query },
+        result: {
+          errors: [new GraphQLError('oops')],
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [errorPolicy, setErrorPolicy] = React.useState<ErrorPolicy>('none');
+      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        errorPolicy,
+      });
+
+      return (
+        <>
+          <button onClick={() => setErrorPolicy('all')}>
+            Change error policy
+          </button>
+          <button onClick={() => refetch()}>Refetch greeting</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Greeting queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data, error } = useReadQuery(queryRef);
+
+      return error ? (
+        <div data-testid="error">{error.message}</div>
+      ) : (
+        <div data-testid="greeting">{data.greeting}</div>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ErrorBoundary
+            fallback={<div data-testid="error">Error boundary</div>}
+          >
+            <Parent />
+          </ErrorBoundary>
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(await screen.findByTestId('greeting')).toHaveTextContent('Hello');
+
+    await act(() => user.click(screen.getByText('Change error policy')));
+    await act(() => user.click(screen.getByText('Refetch greeting')));
+
+    // Ensure we aren't rendering the error boundary and instead rendering the
+    // error message in the Greeting component.
+    expect(await screen.findByTestId('error')).toHaveTextContent('oops');
+  });
+
+  it('applies `context` on next fetch when it changes between renders', async () => {
+    interface Data {
+      context: Record<string, any>;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        context
+      }
+    `;
+
+    const link = new ApolloLink((operation) => {
+      return Observable.of({
+        data: {
+          context: operation.getContext(),
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [phase, setPhase] = React.useState('initial');
+      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        context: { phase },
+      });
+
+      return (
+        <>
+          <button onClick={() => setPhase('rerender')}>Update context</button>
+          <button onClick={() => refetch()}>Refetch</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Context queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Context({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="context">{data.context.phase}</div>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(await screen.findByTestId('context')).toHaveTextContent('initial');
+
+    await act(() => user.click(screen.getByText('Update context')));
+    await act(() => user.click(screen.getByText('Refetch')));
+
+    expect(await screen.findByTestId('context')).toHaveTextContent('rerender');
+  });
+
+  // NOTE: We only test the `false` -> `true` path here. If the option changes
+  // from `true` -> `false`, the data has already been canonized, so it has no
+  // effect on the output.
+  it('returns canonical results immediately when `canonizeResults` changes from `false` to `true` between renders', async () => {
+    interface Result {
+      __typename: string;
+      value: number;
+    }
+
+    interface Data {
+      results: Result[];
+    }
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Result: {
+          keyFields: false,
+        },
+      },
+    });
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        results {
+          value
+        }
+      }
+    `;
+
+    const results: Result[] = [
+      { __typename: 'Result', value: 0 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 1 },
+      { __typename: 'Result', value: 2 },
+      { __typename: 'Result', value: 3 },
+      { __typename: 'Result', value: 5 },
+    ];
+
+    const user = userEvent.setup();
+
+    cache.writeQuery({
+      query,
+      data: { results },
+    });
+
+    const client = new ApolloClient({
+      link: new MockLink([]),
+      cache,
+    });
+
+    const result: { current: Data | null } = {
+      current: null,
+    };
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [canonizeResults, setCanonizeResults] = React.useState(false);
+      const [queryRef] = useBackgroundQuery(query, {
+        canonizeResults,
+      });
+
+      return (
+        <>
+          <button onClick={() => setCanonizeResults(true)}>
+            Canonize results
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Results queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Results({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      result.current = data;
+
+      return null;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    function verifyCanonicalResults(data: Data, canonized: boolean) {
+      const resultSet = new Set(data.results);
+      const values = Array.from(resultSet).map((item) => item.value);
+
+      expect(data).toEqual({ results });
+
+      if (canonized) {
+        expect(data.results.length).toBe(6);
+        expect(resultSet.size).toBe(5);
+        expect(values).toEqual([0, 1, 2, 3, 5]);
+      } else {
+        expect(data.results.length).toBe(6);
+        expect(resultSet.size).toBe(6);
+        expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+      }
+    }
+
+    verifyCanonicalResults(result.current!, false);
+
+    await act(() => user.click(screen.getByText('Canonize results')));
+
+    verifyCanonicalResults(result.current!, true);
+  });
+
+  it('applies changed `refetchWritePolicy` to next fetch when changing between renders', async () => {
+    interface Data {
+      primes: number[];
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data, { min: number; max: number }> = gql`
+      query GetPrimes($min: number, $max: number) {
+        primes(min: $min, max: $max)
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { min: 0, max: 12 } },
+        result: { data: { primes: [2, 3, 5, 7, 11] } },
+      },
+      {
+        request: { query, variables: { min: 12, max: 30 } },
+        result: { data: { primes: [13, 17, 19, 23, 29] } },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { min: 30, max: 50 } },
+        result: { data: { primes: [31, 37, 41, 43, 47] } },
+        delay: 10,
+      },
+    ];
+
+    const mergeParams: [number[] | undefined, number[]][] = [];
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            primes: {
+              keyArgs: false,
+              merge(existing: number[] | undefined, incoming: number[]) {
+                mergeParams.push([existing, incoming]);
+                return existing ? existing.concat(incoming) : incoming;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache,
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [refetchWritePolicy, setRefetchWritePolicy] =
+        React.useState<RefetchWritePolicy>('merge');
+
+      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        refetchWritePolicy,
+        variables: { min: 0, max: 12 },
+      });
+
+      return (
+        <>
+          <button onClick={() => setRefetchWritePolicy('overwrite')}>
+            Change refetch write policy
+          </button>
+          <button onClick={() => refetch({ min: 12, max: 30 })}>
+            Refetch next
+          </button>
+          <button onClick={() => refetch({ min: 30, max: 50 })}>
+            Refetch last
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Primes queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Primes({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <span data-testid="primes">{data.primes.join(', ')}</span>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    const primes = await screen.findByTestId('primes');
+
+    expect(primes).toHaveTextContent('2, 3, 5, 7, 11');
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+
+    await act(() => user.click(screen.getByText('Refetch next')));
+
+    await waitFor(() => {
+      expect(primes).toHaveTextContent('2, 3, 5, 7, 11, 13, 17, 19, 23, 29');
+    });
+
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+    ]);
+
+    await act(() =>
+      user.click(screen.getByText('Change refetch write policy'))
+    );
+
+    await act(() => user.click(screen.getByText('Refetch last')));
+
+    await waitFor(() => {
+      expect(primes).toHaveTextContent('31, 37, 41, 43, 47');
+    });
+
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+      [undefined, [31, 37, 41, 43, 47]],
+    ]);
+  });
+
+  it('applies `returnPartialData` on next fetch when it changes between renders', async () => {
+    interface Data {
+      character: {
+        __typename: 'Character';
+        id: string;
+        name: string;
+      };
+    }
+
+    interface PartialData {
+      character: {
+        __typename: 'Character';
+        id: string;
+      };
+    }
+
+    const user = userEvent.setup();
+
+    const fullQuery: TypedDocumentNode<Data> = gql`
+      query {
+        character {
+          __typename
+          id
+          name
+        }
+      }
+    `;
+
+    const partialQuery: TypedDocumentNode<PartialData> = gql`
+      query {
+        character {
+          __typename
+          id
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: fullQuery },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '1',
+              name: 'Doctor Strange',
+            },
+          },
+        },
+      },
+      {
+        request: { query: fullQuery },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '1',
+              name: 'Doctor Strange (refetched)',
+            },
+          },
+        },
+        delay: 100,
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: { character: { __typename: 'Character', id: '1' } },
+    });
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache,
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [returnPartialData, setReturnPartialData] = React.useState(false);
+
+      const [queryRef] = useBackgroundQuery(fullQuery, {
+        returnPartialData,
+      });
+
+      return (
+        <>
+          <button onClick={() => setReturnPartialData(true)}>
+            Update partial data
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Character queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return (
+        <span data-testid="character">{data.character.name ?? 'unknown'}</span>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    const character = await screen.findByTestId('character');
+
+    expect(character).toHaveTextContent('Doctor Strange');
+
+    await act(() => user.click(screen.getByText('Update partial data')));
+
+    cache.modify({
+      id: cache.identify({ __typename: 'Character', id: '1' }),
+      fields: {
+        name: (_, { DELETE }) => DELETE,
+      },
+    });
+
+    await waitFor(() => {
+      expect(character).toHaveTextContent('unknown');
+    });
+
+    await waitFor(() => {
+      expect(character).toHaveTextContent('Doctor Strange (refetched)');
+    });
+  });
+
+  it('applies updated `fetchPolicy` on next fetch when it changes between renders', async () => {
+    interface Data {
+      character: {
+        __typename: 'Character';
+        id: string;
+        name: string;
+      };
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        character {
+          __typename
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '1',
+              name: 'Doctor Strange',
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: {
+        character: {
+          __typename: 'Character',
+          id: '1',
+          name: 'Doctor Strangecache',
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache,
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [fetchPolicy, setFetchPolicy] =
+        React.useState<SuspenseQueryHookFetchPolicy>('cache-first');
+
+      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        fetchPolicy,
+      });
+
+      return (
+        <>
+          <button onClick={() => setFetchPolicy('no-cache')}>
+            Change fetch policy
+          </button>
+          <button onClick={() => refetch()}>Refetch</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Character queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <span data-testid="character">{data.character.name}</span>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    const character = await screen.findByTestId('character');
+
+    expect(character).toHaveTextContent('Doctor Strangecache');
+
+    await act(() => user.click(screen.getByText('Change fetch policy')));
+    await act(() => user.click(screen.getByText('Refetch')));
+    await waitFor(() => {
+      expect(character).toHaveTextContent('Doctor Strange');
+    });
+
+    // Because we switched to a `no-cache` fetch policy, we should not see the
+    // newly fetched data in the cache after the fetch occured.
+    expect(cache.readQuery({ query })).toEqual({
+      character: {
+        __typename: 'Character',
+        id: '1',
+        name: 'Doctor Strangecache',
+      },
+    });
+  });
+
+  it('properly handles changing options along with changing `variables`', async () => {
+    interface Data {
+      character: {
+        __typename: 'Character';
+        id: string;
+        name: string;
+      };
+    }
+
+    const user = userEvent.setup();
+    const query: TypedDocumentNode<Data, { id: string }> = gql`
+      query ($id: ID!) {
+        character(id: $id) {
+          __typename
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          errors: [new GraphQLError('oops')],
+        },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '2',
+              name: 'Hulk',
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      variables: {
+        id: '1',
+      },
+      data: {
+        character: {
+          __typename: 'Character',
+          id: '1',
+          name: 'Doctor Strangecache',
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache,
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [id, setId] = React.useState('1');
+
+      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        errorPolicy: id === '1' ? 'all' : 'none',
+        variables: { id },
+      });
+
+      return (
+        <>
+          <button onClick={() => setId('1')}>Get first character</button>
+          <button onClick={() => setId('2')}>Get second character</button>
+          <button onClick={() => refetch()}>Refetch</button>
+          <ErrorBoundary
+            fallback={<div data-testid="error">Error boundary</div>}
+          >
+            <Suspense fallback={<SuspenseFallback />}>
+              <Character queryRef={queryRef} />
+            </Suspense>
+          </ErrorBoundary>
+        </>
+      );
+    }
+
+    function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data, error } = useReadQuery(queryRef);
+
+      return error ? (
+        <div data-testid="error">{error.message}</div>
+      ) : (
+        <span data-testid="character">{data.character.name}</span>
+      );
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    const character = await screen.findByTestId('character');
+
+    expect(character).toHaveTextContent('Doctor Strangecache');
+
+    await act(() => user.click(screen.getByText('Get second character')));
+
+    await waitFor(() => {
+      expect(character).toHaveTextContent('Hulk');
+    });
+
+    await act(() => user.click(screen.getByText('Get first character')));
+
+    await waitFor(() => {
+      expect(character).toHaveTextContent('Doctor Strangecache');
+    });
+
+    await act(() => user.click(screen.getByText('Refetch')));
+
+    // Ensure we render the inline error instead of the error boundary, which
+    // tells us the error policy was properly applied.
+    expect(await screen.findByTestId('error')).toHaveTextContent('oops');
   });
 
   describe('refetch', () => {

@@ -120,7 +120,10 @@ export class InternalQueryReference<TData = unknown> {
 
     const promise = this.observable.refetch(variables);
 
-    this.promise = promise;
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
 
     return promise;
   }
@@ -170,6 +173,8 @@ export class InternalQueryReference<TData = unknown> {
       this.result = result;
       if (this.resolve) {
         this.resolve(result);
+        this.resolve = void 0;
+        this.deliver(this.promise);
       }
       return;
     }
@@ -203,9 +208,29 @@ export class InternalQueryReference<TData = unknown> {
 
     this.promise = createRejectedPromise(error);
     this.deliver(this.promise);
+
+    this.resubscribe();
   }
 
   private deliver(promise: Promise<ApolloQueryResult<TData>>) {
     this.listeners.forEach((listener) => listener(promise));
+  }
+
+  private resubscribe() {
+    const last = this.observable['last'];
+    this.subscription.unsubscribe();
+    // Unfortunately, if `lastError` is set in the current
+    // `observableQuery` when the subscription is re-created,
+    // the subscription will immediately receive the error, which will
+    // cause it to terminate again. To avoid this, we first clear
+    // the last error/result from the `observableQuery` before re-starting
+    // the subscription, and restore it afterwards (so the subscription
+    // has a chance to stay open).
+    this.observable.resetLastResults();
+    this.subscription = this.observable.subscribe({
+      next: this.handleNext,
+      error: this.handleError,
+    });
+    this.observable['last'] = last;
   }
 }

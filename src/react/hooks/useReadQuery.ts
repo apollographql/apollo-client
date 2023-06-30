@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import * as React from "react";
 import invariant from "ts-invariant";
 import { NetworkStatus } from "../../core";
 import { QUERY_REFERENCE_SYMBOL, type QueryReference } from "../cache/QueryReference";
@@ -6,7 +6,7 @@ import { __use } from "./internal";
 import { toApolloError } from "./useSuspenseQuery";
 
 export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
-  const [, forceUpdate] = useState(0);
+  const [, forceUpdate] = React.useState(0);
   const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
   invariant(
     internalQueryRef.promiseCache,
@@ -15,7 +15,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
       'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
   );
 
-  const skipResult = useMemo(() => {
+  const skipResult = React.useMemo(() => {
     const error = toApolloError(internalQueryRef.result);
 
     return {
@@ -33,7 +33,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
     internalQueryRef.promiseCache.set(internalQueryRef.key, promise);
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     return internalQueryRef.listen((promise) => {
       internalQueryRef.promiseCache!.set(internalQueryRef.key, promise);
       forceUpdate((prevState) => prevState + 1);
@@ -45,7 +45,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
       ? skipResult
       : __use(promise);
 
-  return useMemo(() => {
+  return React.useMemo(() => {
     return {
       data: result.data,
       networkStatus: result.networkStatus,

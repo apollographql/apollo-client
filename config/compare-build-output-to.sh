@@ -16,7 +16,11 @@ patterndiff(){
     if ! filediff="$(diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$file") -w)"; then
       (( count++ ))
       echo "$file"
-      echo "$filediff"
+      if [[ "$file" == *.min.* ]]; then
+        echo "> Minified file differs."
+      else
+        echo "$filediff"
+      fi
     fi
   done >"$temp" < <(find . -name "$1" -print0)
 

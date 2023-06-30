@@ -33,7 +33,7 @@ export const useSyncExternalStore: RealUseSESHookType = realHook || ((
   // always synchronous.
   const value = getSnapshot();
   if (
-    // DEVIATION: Using our own __DEV__ polyfill (from ../../utilities/globals).
+    // DEVIATION: Using __DEV__
     __DEV__ &&
     !didWarnUncachedGetSnapshot &&
     // DEVIATION: Not using Object.is because we know our snapshots will never

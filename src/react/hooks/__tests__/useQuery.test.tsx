@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, ReactNode, useEffect, useState } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
 import { act } from 'react-dom/test-utils';
@@ -5949,6 +5949,84 @@ describe('useQuery Hook', () => {
     });
   });
 
+  // https://github.com/apollographql/apollo-client/issues/10222
+  describe('regression test issue #10222', () => {
+    it('maintains initial fetch policy when component unmounts and remounts', async () => {
+      let helloCount = 1;
+      const query = gql`{ hello }`;
+      const link = new ApolloLink(() => {
+        return new Observable(observer => {
+          const timer = setTimeout(() => {
+            observer.next({ data: { hello: `hello ${helloCount++}` } });
+            observer.complete();
+          }, 50);
+
+          return () => {
+            clearTimeout(timer);
+          }
+        })
+      })
+
+      const cache = new InMemoryCache();
+
+      const client = new ApolloClient({
+        link,
+        cache
+      });
+
+      let setShow: Function
+      const Toggler = ({ children }: { children: ReactNode }) => {
+        const [show, _setShow] = useState(true);
+        setShow = _setShow;
+
+        return show ? <>{children}</> : null;
+      }
+
+      const { result } = renderHook(
+        () => useQuery(query, {
+            fetchPolicy: 'network-only',
+            nextFetchPolicy: 'cache-first'
+          }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>
+              <Toggler>{children}</Toggler>
+            </ApolloProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBeUndefined();
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.data).toEqual({ hello: 'hello 1' });
+      expect(cache.readQuery({ query })).toEqual({ hello: 'hello 1' })
+
+      act(() => {
+        setShow(false);
+      });
+
+      act(() => {
+        setShow(true);
+      });
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.data).toBeUndefined();
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      })
+
+      expect(result.current.data).toEqual({ hello: 'hello 2' });
+      expect(cache.readQuery({ query })).toEqual({ hello: 'hello 2' })
+    });
+  });
+
+
   describe('defer', () => {
     it('should handle deferred queries', async () => {
       const query = gql`
@@ -6646,10 +6724,6 @@ describe('useQuery Hook', () => {
       setTimeout(() => {
         link.simulateResult({
           result: {
-            extensions: {
-              thing1: 'foo',
-              thing2: 'bar',
-            },
             incremental: [
               {
                 path: ["hero", "heroFriends", 0],
@@ -6661,13 +6735,21 @@ describe('useQuery Hook', () => {
                 ],
                 data: {
                   "homeWorld": null,
-                }
+                },
+                extensions: {
+                  thing1: 'foo',
+                  thing2: 'bar',
+                },
               },
               {
                 path: ["hero", "heroFriends", 1],
                 data: {
                   "homeWorld": "Alderaan",
-                }
+                },
+                extensions: {
+                  thing1: 'foo',
+                  thing2: 'bar',
+                },
               },
             ],
             "hasNext": false

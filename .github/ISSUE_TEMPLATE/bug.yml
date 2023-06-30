@@ -13,7 +13,7 @@ body:
   - type: input
     attributes:
       label: Link to Reproduction
-      description: A link with runnable reproduction. For web projects, you can fork our `react-apollo-error-template` to create one via [GitHub repository](https://github.com/apollographql/react-apollo-error-template) or [CodeSandbox](https://codesandbox.io/s/github/apollographql/react-apollo-error-template). For React Native projects, you can fork our `rn-apollo-client-testbed` via [GitHub respository](https://github.com/apollographql/rn-apollo-client-testbed). Make sure this includes everything necessary (`package.json`, `tsconfig.json`, etc.) so we don't have to guess anything!
+      description: "A link with runnable reproduction. For web projects, you can fork our `react-apollo-error-template` to create one via [GitHub repository](https://github.com/apollographql/react-apollo-error-template) or [CodeSandbox](https://codesandbox.io/s/github/apollographql/react-apollo-error-template). For React Native projects, you can fork our `rn-apollo-client-testbed` via [GitHub respository](https://github.com/apollographql/rn-apollo-client-testbed). Make sure this includes everything necessary (`package.json`, `tsconfig.json`, etc.) so we don't have to guess anything! If a minimal reproduction can't be created, please share a [Replay](https://docs.replay.io/workflows/recording-bug-reports) of the bug (note: you don't have to grant Replay access to a private repo to create a recording, but it will contain source maps for your JavaScript code)."
     validations:
       required: true
   - type: textarea

@@ -101,11 +101,8 @@ function useBackgroundQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
 >(
-  query: query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<TData, TVariables>,
-    'returnPartialData' | 'refetchWritePolicy'
-  >,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: BackgroundQueryHookOptions<TData, TVariables>,
 ): UseBackgroundQueryResult<TData> {}
 ```
 

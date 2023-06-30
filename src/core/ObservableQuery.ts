@@ -28,6 +28,7 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
+  WatchQueryFetchPolicy,
 } from './watchQueryOptions';
 import { QueryInfo } from './QueryInfo';
 import { MissingFieldError } from '../cache';
@@ -86,6 +87,7 @@ export class ObservableQuery<
   private observers = new Set<Observer<ApolloQueryResult<TData>>>();
   private subscriptions = new Set<ObservableSubscription>();
 
+  private waitForOwnResult: boolean;
   private last?: Last<TData, TVariables>;
 
   private queryInfo: QueryInfo;
@@ -152,6 +154,7 @@ export class ObservableQuery<
     this.queryManager = queryManager;
 
     // active state
+    this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
     this.isTornDown = false;
 
     const {
@@ -240,16 +243,19 @@ export class ObservableQuery<
     if (
       // These fetch policies should never deliver data from the cache, unless
       // redelivering a previously delivered result.
-      fetchPolicy === 'network-only' ||
-      fetchPolicy === 'no-cache' ||
-      fetchPolicy === 'standby' ||
+      skipCacheDataFor(fetchPolicy) ||
       // If this.options.query has @client(always: true) fields, we cannot
       // trust diff.result, since it was read from the cache without running
       // local resolvers (and it's too late to run resolvers now, since we must
       // return a result synchronously).
       this.queryManager.transform(this.options.query).hasForcedResolvers
     ) {
-      // Fall through.
+      // Fall through. 
+    } else if (this.waitForOwnResult) {
+      // This would usually be a part of `QueryInfo.getDiff()`. 
+      // which we skip in the waitForOwnResult case since we are not
+      // interested in the diff.
+      this.queryInfo['updateWatch']();
     } else {
       const diff = this.queryInfo.getDiff();
 
@@ -833,13 +839,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       }
     }
 
+    this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
+    const finishWaitingForOwnResult = () => {
+      if (this.concast === concast) {
+        this.waitForOwnResult = false;
+      }
+    };
+    
     const variables = options.variables && { ...options.variables };
     const { concast, fromLink } = this.fetch(options, newNetworkStatus);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
+        finishWaitingForOwnResult();
         this.reportResult(result, variables);
       },
       error: error => {
+        finishWaitingForOwnResult();
         this.reportError(error, variables);
       },
     };
@@ -989,4 +1004,8 @@ export function logMissingFieldErrors(
       JSON.stringify(missing)
     }`, missing);
   }
+}
+
+function skipCacheDataFor(fetchPolicy?: WatchQueryFetchPolicy /* `undefined` would mean `"cache-first"` */) {
+  return fetchPolicy === "network-only" || fetchPolicy === "no-cache" || fetchPolicy === "standby";
 }

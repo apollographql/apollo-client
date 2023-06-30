@@ -43,7 +43,7 @@ export function getApolloContext(): React.Context<ApolloContextValue> {
   );
 
   let contextStorage =
-    global[contextKey] || (global[contextKey] = Object.create(null));
+    global[contextKey] || (global[contextKey] = new Map());
 
   let value = contextStorage.get(React.createContext);
   if (!value) {

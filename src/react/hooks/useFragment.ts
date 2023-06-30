@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import * as React from "react";
 import { equal } from "@wry/equality";
 
 import type { DeepPartial} from "../../utilities";
@@ -69,7 +69,7 @@ export function useFragment<
     optimistic
   };
 
-  const resultRef = useRef<UseFragmentResult<TData>>();
+  const resultRef = React.useRef<UseFragmentResult<TData>>();
   let latestDiff = cache.diff<TData>(diffOptions);
 
   // Used for both getSnapshot and getServerSnapshot

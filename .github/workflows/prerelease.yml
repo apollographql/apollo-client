@@ -65,9 +65,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: get-npm-version
+      - name: Get package version from package.json
         id: package-version
         uses: martinbeentjes/npm-get-version-action@main
+
+      - name: Get npm tag from pre.json
+        id: tag
+        uses: notiz-dev/github-action-json-property@v0.2.0
+        with:
+          path: ".changeset/pre.json"
+          prop_path: "tag"
 
       - name: Run publish
         id: changesets
@@ -106,7 +113,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Tag:*\n`alpha`"
+                      "text": "*Tag:*\n`${{steps.tag.outputs.prop}}`"
                     },
                     {
                       "type": "mrkdwn",

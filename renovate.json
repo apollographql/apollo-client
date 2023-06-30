@@ -6,10 +6,31 @@
       "extends": ["apollo-docs"]
     }
   ],
+  "packageRules": [
+    {
+      "groupName": "all @types",
+      "groupSlug": "all-types",
+      "matchPackagePatterns": ["@types/*"]
+    },
+    {
+      "groupName": "all devDependencies",
+      "groupSlug": "all-dev",
+      "matchPackagePatterns": ["*"],
+      "matchDepTypes": ["devDependencies"]
+    },
+    {
+      "groupName": "all dependencies - patch updates",
+      "groupSlug": "all-patch",
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["patch"]
+    }
+  ],
   "ignoreDeps": [
     "typedoc",
     "react-17",
     "react-dom-17",
-    "@testing-library/react-12"
+    "@testing-library/react-12",
+    "@rollup/plugin-node-resolve",
+    "rollup"
   ]
 }

@@ -3,11 +3,13 @@ import type {
   ApolloQueryResult,
   ObservableQuery,
   OperationVariables,
+  WatchQueryOptions,
 } from '../../core';
 import { NetworkStatus, isNetworkRequestSettled } from '../../core';
 import type { ObservableSubscription } from '../../utilities';
 import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
 import type { CacheKey } from './types';
+import type { useBackgroundQuery, useReadQuery } from '../hooks';
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
@@ -15,13 +17,23 @@ type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
 >[0];
 
-interface QueryReferenceOptions {
+export const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
+/**
+ * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
+ * A child component reading the `QueryReference` via {@link useReadQuery} will
+ * suspend until the promise resolves.
+ */
+export interface QueryReference<TData = unknown> {
+  [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+}
+
+interface InternalQueryReferenceOptions {
   key: CacheKey;
   onDispose?: () => void;
   autoDisposeTimeoutMs?: number;
 }
 
-export class QueryReference<TData = unknown> {
+export class InternalQueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
   public readonly key: CacheKey;
   public readonly observable: ObservableQuery<TData>;
@@ -35,12 +47,12 @@ export class QueryReference<TData = unknown> {
   private initialized = false;
   private refetching = false;
 
-  private resolve: (result: ApolloQueryResult<TData>) => void;
-  private reject: (error: unknown) => void;
+  private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
+  private reject: ((error: unknown) => void) | undefined;
 
   constructor(
     observable: ObservableQuery<TData>,
-    options: QueryReferenceOptions
+    options: InternalQueryReferenceOptions
   ) {
     this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
@@ -86,6 +98,10 @@ export class QueryReference<TData = unknown> {
     );
   }
 
+  get watchQueryOptions() {
+    return this.observable.options;
+  }
+
   listen(listener: Listener<TData>) {
     // As soon as the component listens for updates, we know it has finished
     // suspending and is ready to receive updates, so we can remove the auto
@@ -117,6 +133,16 @@ export class QueryReference<TData = unknown> {
     return promise;
   }
 
+  reobserve(
+    watchQueryOptions: Partial<WatchQueryOptions<OperationVariables, TData>>
+  ) {
+    const promise = this.observable.reobserve(watchQueryOptions);
+
+    this.promise = promise;
+
+    return promise;
+  }
+
   dispose() {
     this.subscription.unsubscribe();
     this.onDispose();
@@ -142,7 +168,9 @@ export class QueryReference<TData = unknown> {
       this.initialized = true;
       this.refetching = false;
       this.result = result;
-      this.resolve(result);
+      if (this.resolve) {
+        this.resolve(result);
+      }
       return;
     }
 
@@ -167,7 +195,9 @@ export class QueryReference<TData = unknown> {
     if (!this.initialized || this.refetching) {
       this.initialized = true;
       this.refetching = false;
-      this.reject(error);
+      if (this.reject) {
+        this.reject(error);
+      }
       return;
     }
 

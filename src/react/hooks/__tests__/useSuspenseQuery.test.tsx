@@ -378,8 +378,11 @@ describe('useSuspenseQuery', () => {
       }
     );
 
-    expect(directSuspenseCache['queryRefs'].size).toBe(1);
-    expect(contextSuspenseCache['queryRefs'].size).toBe(0);
+    expect(directSuspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
+    expect(contextSuspenseCache).not.toHaveSuspenseCacheEntryUsing(
+      client,
+      query
+    );
   });
 
   it('ensures a valid fetch policy is used', () => {
@@ -678,7 +681,7 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['queryRefs'].size).toBe(1);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
 
     unmount();
 
@@ -687,7 +690,7 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['queryRefs'].size).toBe(0);
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
   });
 
   it('tears down all queries when rendering with multiple variable sets', async () => {
@@ -716,7 +719,12 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(client.getObservableQueries().size).toBe(2);
-    expect(suspenseCache['queryRefs'].size).toBe(2);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query, {
+      variables: { id: '1' },
+    });
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query, {
+      variables: { id: '2' },
+    });
 
     unmount();
 
@@ -725,7 +733,13 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['queryRefs'].size).toBe(0);
+
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query, {
+      variables: { id: '1' },
+    });
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query, {
+      variables: { id: '2' },
+    });
   });
 
   it('tears down all queries when multiple clients are used', async () => {
@@ -773,9 +787,16 @@ describe('useSuspenseQuery', () => {
       });
     });
 
+    const variables = { id: '1' };
+
     expect(client1.getObservableQueries().size).toBe(1);
     expect(client2.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['queryRefs'].size).toBe(2);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client1, query, {
+      variables,
+    });
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client2, query, {
+      variables,
+    });
 
     unmount();
 
@@ -785,7 +806,12 @@ describe('useSuspenseQuery', () => {
 
     expect(client1.getObservableQueries().size).toBe(0);
     expect(client2.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['queryRefs'].size).toBe(0);
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client1, query, {
+      variables,
+    });
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client2, query, {
+      variables,
+    });
   });
 
   it('tears down the query if the component never renders again after suspending', async () => {
@@ -834,12 +860,12 @@ describe('useSuspenseQuery', () => {
     link.simulateComplete();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['queryRefs'].size).toBe(1);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
 
     jest.advanceTimersByTime(30_000);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['queryRefs'].size).toBe(0);
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
 
     jest.useRealTimers();
 
@@ -895,12 +921,12 @@ describe('useSuspenseQuery', () => {
     link.simulateComplete();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['queryRefs'].size).toBe(1);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
 
     jest.advanceTimersByTime(5_000);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache['queryRefs'].size).toBe(0);
+    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
 
     jest.useRealTimers();
 
@@ -957,7 +983,7 @@ describe('useSuspenseQuery', () => {
     jest.advanceTimersByTime(30_000);
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache['queryRefs'].size).toBe(1);
+    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
 
     jest.useRealTimers();
   });
@@ -4382,6 +4408,55 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('suspends when refetching after returning cached data for the initial fetch', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    cache.writeQuery({
+      query,
+      data: { greeting: 'hello from cache' },
+    });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { cache, mocks }
+    );
+
+    expect(result.current).toMatchObject({
+      data: { greeting: 'hello from cache' },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    act(() => {
+      result.current.refetch();
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: { greeting: 'Hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        data: { greeting: 'hello from cache' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: { greeting: 'Hello' },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('properly uses `updateQuery` when calling `fetchMore`', async () => {
     const { data, query, link } = usePaginatedCase();
 
@@ -4704,6 +4779,286 @@ describe('useSuspenseQuery', () => {
       [undefined, [2, 3, 5, 7, 11]],
       [undefined, [13, 17, 19, 23, 29]],
     ]);
+  });
+
+  it('does not suspend when `skip` is true', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { skip: true }),
+      { cache, mocks }
+    );
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(result.current).toMatchObject({
+      data: undefined,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  });
+
+  it('suspends when `skip` becomes `false` after it was `true`', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, { skip }),
+      { cache, mocks, initialProps: { skip: true } }
+    );
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(result.current).toMatchObject({
+      data: undefined,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    rerender({ skip: false });
+
+    expect(renders.suspenseCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, { skip }),
+      { cache, mocks, initialProps: { skip: false } }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ skip: true });
+
+    expect(renders.suspenseCount).toBe(1);
+
+    expect(result.current).toMatchObject({
+      ...mocks[0].result,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('does not make network requests when `skip` is `true`', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.query, operation.query)
+        );
+
+        if (!mock) {
+          throw new Error('Could not find mock for operation');
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, { skip }),
+      { mocks, link, initialProps: { skip: true } }
+    );
+
+    expect(fetchCount).toBe(0);
+
+    rerender({ skip: false });
+
+    expect(fetchCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ skip: true });
+
+    expect(fetchCount).toBe(1);
+  });
+
+  it('`skip` result is referentially stable', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, { skip }),
+      { mocks, initialProps: { skip: true } }
+    );
+
+    const skipResult = result.current;
+
+    rerender({ skip: true });
+
+    expect(result.current).toBe(skipResult);
+
+    rerender({ skip: false });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    const fetchedSkipResult = result.current;
+
+    rerender({ skip: false });
+
+    expect(fetchedSkipResult).toBe(fetchedSkipResult);
+  });
+
+  it('`skip` option works with `startTransition`', async () => {
+    type Variables = {
+      id: string;
+    };
+    interface Data {
+      todo: {
+        id: string;
+        name: string;
+        completed: boolean;
+      };
+    }
+    const user = userEvent.setup();
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query TodoItemQuery($id: ID!) {
+        todo(id: $id) {
+          id
+          name
+          completed
+        }
+      }
+    `;
+    const mocks: MockedResponse<Data, Variables>[] = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { todo: { id: '1', name: 'Clean room', completed: false } },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const suspenseCache = new SuspenseCache();
+
+    function App() {
+      const [id, setId] = React.useState<string | null>(null);
+      const [isPending, startTransition] = React.useTransition();
+
+      return (
+        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <button
+            disabled={isPending}
+            onClick={() => {
+              startTransition(() => {
+                setId('1');
+              });
+            }}
+          >
+            Fetch to-do 1
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Todo id={id} />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function SuspenseFallback() {
+      return <p>Loading</p>;
+    }
+
+    function Todo({ id }: { id: string | null }) {
+      const { data } = useSuspenseQuery(query, {
+        skip: !id,
+        variables: { id: id ?? '0' },
+      });
+
+      const todo = data?.todo;
+
+      return todo ? (
+        <div data-testid="todo">
+          {todo.name}
+          {todo.completed && ' (completed)'}
+        </div>
+      ) : null;
+    }
+
+    render(<App />);
+
+    expect(screen.queryByTestId('todo')).not.toBeInTheDocument();
+
+    const button = screen.getByText('Fetch to-do 1');
+    await act(() => user.click(button));
+    // startTransition will avoid rendering the suspense fallback for already
+    // revealed content if the state update inside the transition causes the
+    // component to suspend.
+    //
+    // Here we should not see the suspense fallback while the component suspends
+    // until the todo is finished loading. Seeing the suspense fallback is an
+    // indication that we are suspending the component too late in the process.
+    expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+    // We can ensure this works with isPending from useTransition in the process
+    expect(button).toBeDisabled();
+    // Eventually we should see the updated todo content once its done
+    // suspending.
+    expect(await screen.findByTestId('todo')).toHaveTextContent('Clean room');
   });
 
   it('does not oversubscribe when suspending multiple times', async () => {
@@ -6273,7 +6628,7 @@ describe('useSuspenseQuery', () => {
 
     type UpdateQueryFn = NonNullable<
       SubscribeToMoreOptions<
-        QueryData,
+        QueryData | undefined,
         OperationVariables,
         SubscriptionData
       >['updateQuery']
@@ -7013,6 +7368,41 @@ describe('useSuspenseQuery', () => {
       >();
     });
 
+    it('returns TData | undefined when skip is present', () => {
+      const { query } = useVariablesQueryCase();
+
+      const { data: inferred } = useSuspenseQuery(query, {
+        skip: true,
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        skip: true,
+      });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      // TypeScript is too smart and using a `const` or `let` boolean variable
+      // for the `skip` option results in a false positive. Using an options
+      // object allows us to properly check for a dynamic case.
+      const options = {
+        skip: true,
+      };
+
+      const { data: dynamic } = useSuspenseQuery(query, {
+        skip: options.skip,
+      });
+
+      expectTypeOf(dynamic).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
     it('returns TData when passing an option that does not affect TData', () => {
       const { query } = useVariablesQueryCase();
 
@@ -7039,6 +7429,14 @@ describe('useSuspenseQuery', () => {
     });
 
     it('handles combinations of options', () => {
+      // TypeScript is too smart and using a `const` or `let` boolean variable
+      // for the `skip` option results in a false positive. Using an options
+      // object allows us to properly check for a dynamic case which is the
+      // typical usage of this option.
+      const options = {
+        skip: true,
+      };
+
       const { query } = useVariablesQueryCase();
 
       const { data: inferredPartialDataIgnore } = useSuspenseQuery(query, {
@@ -7093,6 +7491,83 @@ describe('useSuspenseQuery', () => {
       >();
       expectTypeOf(
         explicitPartialDataNone
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: inferredSkipIgnore } = useSuspenseQuery(query, {
+        skip: options.skip,
+        errorPolicy: 'ignore',
+      });
+
+      expectTypeOf(inferredSkipIgnore).toEqualTypeOf<
+        VariablesCaseData | undefined
+      >();
+      expectTypeOf(
+        inferredPartialDataIgnore
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicitSkipIgnore } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        skip: options.skip,
+        errorPolicy: 'ignore',
+      });
+
+      expectTypeOf(explicitSkipIgnore).toEqualTypeOf<
+        VariablesCaseData | undefined
+      >();
+      expectTypeOf(explicitSkipIgnore).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: inferredSkipNone } = useSuspenseQuery(query, {
+        skip: options.skip,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(inferredSkipNone).toEqualTypeOf<
+        VariablesCaseData | undefined
+      >();
+      expectTypeOf(inferredSkipNone).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicitSkipNone } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        skip: options.skip,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(explicitSkipNone).toEqualTypeOf<
+        VariablesCaseData | undefined
+      >();
+      expectTypeOf(explicitSkipNone).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: inferredPartialDataNoneSkip } = useSuspenseQuery(query, {
+        skip: options.skip,
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(inferredPartialDataNoneSkip).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(
+        inferredPartialDataNoneSkip
+      ).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicitPartialDataNoneSkip } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        skip: options.skip,
+        returnPartialData: true,
+        errorPolicy: 'none',
+      });
+
+      expectTypeOf(explicitPartialDataNoneSkip).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(
+        explicitPartialDataNoneSkip
       ).not.toEqualTypeOf<VariablesCaseData>();
     });
 

@@ -12,7 +12,7 @@ export {
   getInclusionDirectives,
 } from './graphql/directives';
 
-export { 
+export {
   DocumentTransform,
   DocumentTransformCacheKey
 } from './graphql/DocumentTransform';
@@ -35,6 +35,10 @@ export {
   getMainDefinition,
   getDefaultValues,
 } from './graphql/getFromAST';
+
+export {
+  print
+} from './graphql/print';
 
 export {
   StoreObject,
@@ -92,7 +96,7 @@ export {
   ObservableSubscription
 } from './observables/Observable';
 
-export { 
+export {
   isStatefulPromise,
   createFulfilledPromise,
   createRejectedPromise,

@@ -124,8 +124,36 @@ export interface SuspenseQueryHookOptions<
   | 'canonizeResults'
   | 'returnPartialData'
   | 'refetchWritePolicy'
+  | 'skip'
 > {
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
+  suspenseCache?: SuspenseCache;
+  queryKey?: string | number | any[];
+}
+
+export type BackgroundQueryHookFetchPolicy = Extract<
+  WatchQueryFetchPolicy,
+  | 'cache-first'
+  | 'network-only'
+  | 'no-cache'
+  | 'cache-and-network'
+>;
+
+export interface BackgroundQueryHookOptions<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+> extends Pick<
+  QueryHookOptions<TData, TVariables>,
+  | 'client'
+  | 'variables'
+  | 'errorPolicy'
+  | 'context'
+  | 'canonizeResults'
+  | 'returnPartialData'
+  | 'refetchWritePolicy'
+  | 'skip'
+> {
+  fetchPolicy?: BackgroundQueryHookFetchPolicy;
   suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
 }

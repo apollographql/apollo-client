@@ -434,11 +434,7 @@ describe('[queries] loading', () => {
       ]);
     }, { interval: 1 });
     await waitFor(() => {
-      if (IS_REACT_18) {
         expect(count).toBe(5);
-      } else {
-        expect(count).toBe(6);
-      }
     }, { interval: 1 });
   });
 

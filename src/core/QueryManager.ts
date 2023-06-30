@@ -69,6 +69,7 @@ import {
 } from './QueryInfo';
 import type { ApolloErrorOptions } from '../errors';
 import { PROTOCOL_ERRORS_SYMBOL } from '../errors';
+import { print } from '../utilities';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -1027,7 +1028,7 @@ export class QueryManager<TStore> {
   }
 
   private inFlightLinkObservables = new Map<
-    DocumentNode,
+    string,
     Map<string, Observable<FetchResult>>
   >();
 
@@ -1059,8 +1060,9 @@ export class QueryManager<TStore> {
       context = operation.context;
 
       if (deduplication) {
-        const byVariables = inFlightLinkObservables.get(serverQuery) || new Map();
-        inFlightLinkObservables.set(serverQuery, byVariables);
+        const printedServerQuery = print(serverQuery);
+        const byVariables = inFlightLinkObservables.get(printedServerQuery) || new Map();
+        inFlightLinkObservables.set(printedServerQuery, byVariables);
 
         const varJson = canonicalStringify(variables);
         observable = byVariables.get(varJson);
@@ -1075,7 +1077,7 @@ export class QueryManager<TStore> {
           concast.beforeNext(() => {
             if (byVariables.delete(varJson) &&
                 byVariables.size < 1) {
-              inFlightLinkObservables.delete(serverQuery);
+              inFlightLinkObservables.delete(printedServerQuery);
             }
           });
         }

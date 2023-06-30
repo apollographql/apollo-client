@@ -815,6 +815,8 @@ function warnAboutDataLoss(
   invariant.warn(
 `Cache data may be lost when replacing the ${fieldName} field of a ${parentType} object.
 
+This could cause additional (usually avoidable) network requests to fetch data that were otherwise cached.
+
 To address this problem (which is not a bug in Apollo Client), ${
   childTypenames.length
     ? "either ensure all objects of type " +

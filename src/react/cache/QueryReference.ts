@@ -181,14 +181,6 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private handleError(error: ApolloError) {
-    const result = {
-      ...this.result,
-      error,
-      networkStatus: NetworkStatus.error,
-    };
-
-    this.result = result;
-
     switch (this.status) {
       case 'loading': {
         this.status = 'idle';

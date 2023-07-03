@@ -73,6 +73,11 @@ export class InternalQueryReference<TData = unknown> {
     ) {
       this.promise = createFulfilledPromise(this.result);
       this.status = 'idle';
+    } else {
+      this.promise = new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+      });
     }
 
     this.subscription = observable
@@ -90,13 +95,6 @@ export class InternalQueryReference<TData = unknown> {
         next: this.handleNext,
         error: this.handleError,
       });
-
-    if (!this.promise) {
-      this.promise = new Promise((resolve, reject) => {
-        this.resolve = resolve;
-        this.reject = reject;
-      });
-    }
 
     // Start a timer that will automatically dispose of the query if the
     // suspended resource does not use this queryRef in the given time. This

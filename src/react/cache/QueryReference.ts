@@ -141,14 +141,14 @@ export class InternalQueryReference<TData = unknown> {
     watchQueryOptions: Partial<WatchQueryOptions<OperationVariables, TData>>
   ) {
     this.status = 'loading';
-    this.observable.reobserve(watchQueryOptions);
+    const promise = this.observable.reobserve(watchQueryOptions);
 
     this.promise = new Promise((resolve, reject) => {
       this.resolve = resolve;
       this.reject = reject;
     });
 
-    return this.promise;
+    return promise;
   }
 
   dispose() {

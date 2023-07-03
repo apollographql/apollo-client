@@ -176,7 +176,8 @@ export function useSuspenseQuery<
   let promise = promiseCache.get(queryRef.key);
 
   if (currentFetchPolicy === 'standby' && fetchPolicy !== currentFetchPolicy) {
-    promise = queryRef.reobserve({ fetchPolicy });
+    queryRef.reobserve({ fetchPolicy });
+    promise = queryRef.promise;
     promiseCache.set(queryRef.key, promise);
   }
 

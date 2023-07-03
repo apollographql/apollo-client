@@ -114,8 +114,6 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   refetch(variables: OperationVariables | undefined) {
-    this.status = 'loading';
-
     const promise = this.observable.refetch(variables);
 
     this.promise = promise;

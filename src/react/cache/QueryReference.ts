@@ -10,6 +10,7 @@ import type { ObservableSubscription } from '../../utilities';
 import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
 import type { CacheKey } from './types';
 import type { useBackgroundQuery, useReadQuery } from '../hooks';
+import equal from '@wry/equality';
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
@@ -74,10 +75,12 @@ export class InternalQueryReference<TData = unknown> {
       this.status = 'idle';
     }
 
-    this.subscription = observable.subscribe({
-      next: this.handleNext,
-      error: this.handleError,
-    });
+    this.subscription = observable
+      .filter(({ data }) => !equal(data, {}))
+      .subscribe({
+        next: this.handleNext,
+        error: this.handleError,
+      });
 
     if (!this.promise) {
       this.promise = new Promise((resolve, reject) => {
@@ -146,10 +149,6 @@ export class InternalQueryReference<TData = unknown> {
 
     switch (this.status) {
       case 'loading': {
-        if (!isNetworkRequestSettled(result.networkStatus)) {
-          return;
-        }
-
         this.status = 'idle';
         this.result = result;
         this.resolve?.(result);

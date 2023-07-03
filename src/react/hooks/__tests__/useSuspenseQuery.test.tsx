@@ -6579,7 +6579,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('can refetch and responds to cache updates after encountering an error in an incremental chunk for a deferred query', async () => {
+  it('can refetch and respond to cache updates after encountering an error in an incremental chunk for a deferred query', async () => {
     const query = gql`
       query {
         hero {

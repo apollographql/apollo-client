@@ -69,7 +69,7 @@ export class InternalQueryReference<TData = unknown> {
     if (
       isNetworkRequestSettled(this.result.networkStatus) ||
       (this.result.data &&
-        (!this.result.partial || this.observable.options.returnPartialData))
+        (!this.result.partial || this.watchQueryOptions.returnPartialData))
     ) {
       this.promise = createFulfilledPromise(this.result);
       this.status = 'idle';

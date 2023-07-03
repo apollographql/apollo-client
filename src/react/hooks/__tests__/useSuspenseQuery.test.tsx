@@ -6579,7 +6579,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('can refetch and respond to cache updates after encountering an error in an incremental chunk for a deferred query', async () => {
+  it('can refetch and respond to cache updates after encountering an error in an incremental chunk for a deferred query when `errorPolicy` is `all`', async () => {
     const query = gql`
       query {
         hero {
@@ -6600,7 +6600,7 @@ describe('useSuspenseQuery', () => {
     const client = new ApolloClient({ link, cache });
 
     const { result, renders } = renderSuspenseHook(
-      () => useSuspenseQuery(query),
+      () => useSuspenseQuery(query, { errorPolicy: 'all' }),
       { client }
     );
 
@@ -6651,8 +6651,6 @@ describe('useSuspenseQuery', () => {
                 homeWorld: null,
               },
             },
-            // This chunk is ignored since errorPolicy `none` throws away partial
-            // data
             {
               path: ['hero', 'heroFriends', 1],
               data: {

@@ -5970,6 +5970,225 @@ describe('useSuspenseQuery', () => {
     });
   });
 
+  it('incrementally rerenders data returned by a `refetch` for a deferred query', async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({ link, cache });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { client }
+    );
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { __typename: 'Greeting', message: 'Hello world' } },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: 'Alice', __typename: 'Person' },
+              },
+              path: ['greeting'],
+            },
+          ],
+          hasNext: false,
+        },
+      },
+      true
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: {
+              __typename: 'Person',
+              name: 'Alice',
+            },
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    let refetchPromise: Promise<ApolloQueryResult<unknown>>;
+    act(() => {
+      refetchPromise = result.current.refetch();
+    });
+
+    link.simulateResult({
+      result: {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Goodbye',
+          },
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Goodbye',
+            recipient: {
+              __typename: 'Person',
+              name: 'Alice',
+            },
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: 'Bob', __typename: 'Person' },
+              },
+              path: ['greeting'],
+            },
+          ],
+          hasNext: false,
+        },
+      },
+      true
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Goodbye',
+            recipient: {
+              __typename: 'Person',
+              name: 'Bob',
+            },
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    await expect(refetchPromise!).resolves.toEqual({
+      data: {
+        greeting: {
+          __typename: 'Greeting',
+          message: 'Goodbye',
+          recipient: {
+            __typename: 'Person',
+            name: 'Bob',
+          },
+        },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    expect(renders.count).toBe(6);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: {
+              __typename: 'Person',
+              name: 'Alice',
+            },
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Goodbye',
+            recipient: {
+              __typename: 'Person',
+              name: 'Alice',
+            },
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Goodbye',
+            recipient: {
+              __typename: 'Person',
+              name: 'Bob',
+            },
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('throws network errors returned by deferred queries', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 

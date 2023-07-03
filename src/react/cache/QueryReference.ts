@@ -44,8 +44,7 @@ export class InternalQueryReference<TData = unknown> {
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
-  private initialized = false;
-  private refetching = false;
+  private status: 'idle' | 'loading' = 'loading';
 
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
@@ -72,8 +71,7 @@ export class InternalQueryReference<TData = unknown> {
         (!this.result.partial || this.observable.options.returnPartialData))
     ) {
       this.promise = createFulfilledPromise(this.result);
-      this.initialized = true;
-      this.refetching = false;
+      this.status = 'idle';
     }
 
     this.subscription = observable.subscribe({
@@ -116,7 +114,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   refetch(variables: OperationVariables | undefined) {
-    this.refetching = true;
+    this.status = 'loading';
 
     const promise = this.observable.refetch(variables);
 
@@ -160,29 +158,28 @@ export class InternalQueryReference<TData = unknown> {
       result.data = this.result.data;
     }
 
-    if (!this.initialized || this.refetching) {
-      if (!isNetworkRequestSettled(result.networkStatus)) {
-        return;
-      }
+    switch (this.status) {
+      case 'loading': {
+        if (!isNetworkRequestSettled(result.networkStatus)) {
+          return;
+        }
 
-      this.initialized = true;
-      this.refetching = false;
-      this.result = result;
-      if (this.resolve) {
-        this.resolve(result);
-        this.resolve = void 0;
+        this.status = 'idle';
+        this.result = result;
+        this.resolve?.(result);
+        break;
+      }
+      case 'idle': {
+        if (result.data === this.result.data) {
+          return;
+        }
+
+        this.result = result;
+        this.promise = createFulfilledPromise(result);
         this.deliver(this.promise);
+        break;
       }
-      return;
     }
-
-    if (result.data === this.result.data) {
-      return;
-    }
-
-    this.result = result;
-    this.promise = createFulfilledPromise(result);
-    this.deliver(this.promise);
   }
 
   private handleError(error: ApolloError) {
@@ -194,19 +191,18 @@ export class InternalQueryReference<TData = unknown> {
 
     this.result = result;
 
-    if (!this.initialized || this.refetching) {
-      this.initialized = true;
-      this.refetching = false;
-      if (this.reject) {
-        this.reject(error);
+    switch (this.status) {
+      case 'loading': {
+        this.status = 'idle';
+        this.reject?.(error);
+        break;
       }
-      return;
+      case 'idle': {
+        this.promise = createRejectedPromise(error);
+        this.deliver(this.promise);
+        this.resubscribe();
+      }
     }
-
-    this.promise = createRejectedPromise(error);
-    this.deliver(this.promise);
-
-    this.resubscribe();
   }
 
   private deliver(promise: Promise<ApolloQueryResult<TData>>) {

@@ -173,7 +173,6 @@ export class InternalQueryReference<TData = unknown> {
     switch (this.status) {
       case 'loading': {
         this.status = 'idle';
-        this.promise.catch(() => {});
         this.reject?.(error);
         break;
       }
@@ -195,6 +194,8 @@ export class InternalQueryReference<TData = unknown> {
       this.resolve = resolve;
       this.reject = reject;
     });
+
+    this.promise.catch(() => {});
 
     return promise;
   }

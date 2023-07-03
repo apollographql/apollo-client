@@ -114,41 +114,17 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   refetch(variables: OperationVariables | undefined) {
-    this.status = 'loading';
-    const promise = this.observable.refetch(variables);
-
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-
-    return promise;
+    return this.handleFetch(this.observable.refetch(variables));
   }
 
   fetchMore(options: FetchMoreOptions<TData>) {
-    this.status = 'loading';
-    const promise = this.observable.fetchMore<TData>(options);
-
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-
-    return promise;
+    return this.handleFetch(this.observable.fetchMore<TData>(options));
   }
 
   reobserve(
     watchQueryOptions: Partial<WatchQueryOptions<OperationVariables, TData>>
   ) {
-    this.status = 'loading';
-    const promise = this.observable.reobserve(watchQueryOptions);
-
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-
-    return promise;
+    return this.handleFetch(this.observable.reobserve(watchQueryOptions));
   }
 
   dispose() {
@@ -209,5 +185,16 @@ export class InternalQueryReference<TData = unknown> {
 
   private deliver(promise: Promise<ApolloQueryResult<TData>>) {
     this.listeners.forEach((listener) => listener(promise));
+  }
+
+  private handleFetch(promise: Promise<ApolloQueryResult<TData>>) {
+    this.status = 'loading';
+
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+
+    return promise;
   }
 }

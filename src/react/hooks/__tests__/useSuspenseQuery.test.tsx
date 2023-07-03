@@ -6800,7 +6800,7 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    expect(renders.count).toBe(8);
+    expect(renders.count).toBe(7);
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {

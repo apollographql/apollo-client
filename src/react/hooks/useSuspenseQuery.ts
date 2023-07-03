@@ -227,7 +227,7 @@ export function useSuspenseQuery<
       const promise = queryRef.refetch(variables);
 
       setPromiseCache((previousPromiseCache) =>
-        new Map(previousPromiseCache).set(queryRef.key, promise)
+        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
       );
 
       return promise;

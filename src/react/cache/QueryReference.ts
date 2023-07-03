@@ -114,9 +114,13 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   refetch(variables: OperationVariables | undefined) {
+    this.status = 'loading';
     const promise = this.observable.refetch(variables);
 
-    this.promise = promise;
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
 
     return promise;
   }
@@ -184,6 +188,7 @@ export class InternalQueryReference<TData = unknown> {
     switch (this.status) {
       case 'loading': {
         this.status = 'idle';
+        this.promise.catch(() => {});
         this.reject?.(error);
         break;
       }

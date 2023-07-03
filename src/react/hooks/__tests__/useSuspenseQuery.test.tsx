@@ -6189,6 +6189,124 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('incrementally renders data returned after skipping a deferred query', async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({ link, cache });
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, { skip }),
+      { client, initialProps: { skip: true } }
+    );
+
+    expect(result.current).toMatchObject({
+      data: undefined,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    rerender({ skip: false });
+
+    expect(renders.suspenseCount).toBe(1);
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { __typename: 'Greeting', message: 'Hello world' } },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: 'Alice', __typename: 'Person' },
+              },
+              path: ['greeting'],
+            },
+          ],
+          hasNext: false,
+        },
+      },
+      true
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: {
+              __typename: 'Person',
+              name: 'Alice',
+            },
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(4);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          greeting: {
+            __typename: 'Greeting',
+            message: 'Hello world',
+            recipient: {
+              __typename: 'Person',
+              name: 'Alice',
+            },
+          },
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   // TODO: This test is a bit of a lie. `fetchMore` should incrementally
   // rerender when using `@defer` but there is currently a bug in the core
   // implementation that prevents updates until the final result is returned.

@@ -120,10 +120,7 @@ export class InternalQueryReference<TData = unknown> {
 
     const promise = this.observable.refetch(variables);
 
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
+    this.promise = promise;
 
     return promise;
   }

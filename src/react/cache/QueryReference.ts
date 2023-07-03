@@ -5,7 +5,7 @@ import type {
   OperationVariables,
   WatchQueryOptions,
 } from '../../core';
-import { NetworkStatus, isNetworkRequestSettled } from '../../core';
+import { isNetworkRequestSettled } from '../../core';
 import type { ObservableSubscription } from '../../utilities';
 import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
 import type { CacheKey } from './types';

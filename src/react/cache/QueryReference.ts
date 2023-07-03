@@ -76,6 +76,15 @@ export class InternalQueryReference<TData = unknown> {
     }
 
     this.subscription = observable
+      .map((result) => {
+        // Maintain the last successful `data` value if the next result does not
+        // have one.
+        if (result.data === void 0) {
+          result.data = this.result.data;
+        }
+
+        return result;
+      })
       .filter(({ data }) => !equal(data, {}))
       .subscribe({
         next: this.handleNext,
@@ -140,13 +149,6 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private handleNext(result: ApolloQueryResult<TData>) {
-    // If we encounter an error with the new result after we have successfully
-    // fetched a previous result, set the new result data to the last successful
-    // result.
-    if (this.result.data && result.data === void 0) {
-      result.data = this.result.data;
-    }
-
     switch (this.status) {
       case 'loading': {
         this.status = 'idle';

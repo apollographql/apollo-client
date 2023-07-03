@@ -6189,6 +6189,288 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  // TODO: This test is a bit of a lie. `fetchMore` should incrementally
+  // rerender when using `@defer` but there is currently a bug in the core
+  // implementation that prevents updates until the final result is returned.
+  // This test reflects the behavior as it exists today, but will need
+  // to be updated once the core bug is fixed.
+  //
+  // https://github.com/apollographql/apollo-client/issues/11034
+  it('incrementally rerenders data returned by a `fetchMore` for a deferred query', async () => {
+    const query = gql`
+      query ($offset: Int) {
+        greetings(offset: $offset) {
+          message
+          ... @defer {
+            recipient {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            greetings: offsetLimitPagination(),
+          },
+        },
+      },
+    });
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({ link, cache });
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, { variables: { offset: 0 } }),
+      { client }
+    );
+
+    link.simulateResult({
+      result: {
+        data: {
+          greetings: [{ __typename: 'Greeting', message: 'Hello world' }],
+        },
+        hasNext: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+            },
+          ],
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: 'Alice', __typename: 'Person' },
+              },
+              path: ['greetings', 0],
+            },
+          ],
+          hasNext: false,
+        },
+      },
+      true
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: {
+                __typename: 'Person',
+                name: 'Alice',
+              },
+            },
+          ],
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    let fetchMorePromise: Promise<ApolloQueryResult<unknown>>;
+    act(() => {
+      fetchMorePromise = result.current.fetchMore({ variables: { offset: 1 } });
+    });
+
+    link.simulateResult({
+      result: {
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Goodbye',
+            },
+          ],
+        },
+        hasNext: true,
+      },
+    });
+
+    // TODO: Re-enable once the core bug is fixed
+    // await waitFor(() => {
+    //   expect(result.current).toMatchObject({
+    //     data: {
+    //       greetings: [
+    //         {
+    //           __typename: 'Greeting',
+    //           message: 'Hello world',
+    //           recipient: {
+    //             __typename: 'Person',
+    //             name: 'Alice',
+    //           },
+    //         },
+    //         {
+    //           __typename: 'Greeting',
+    //           message: 'Goodbye',
+    //         },
+    //       ],
+    //     },
+    //     networkStatus: NetworkStatus.ready,
+    //     error: undefined,
+    //   });
+    // });
+
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: 'Bob', __typename: 'Person' },
+              },
+              path: ['greetings', 0],
+            },
+          ],
+          hasNext: false,
+        },
+      },
+      true
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: {
+                __typename: 'Person',
+                name: 'Alice',
+              },
+            },
+            {
+              __typename: 'Greeting',
+              message: 'Goodbye',
+              recipient: {
+                __typename: 'Person',
+                name: 'Bob',
+              },
+            },
+          ],
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    await expect(fetchMorePromise!).resolves.toEqual({
+      data: {
+        greetings: [
+          {
+            __typename: 'Greeting',
+            message: 'Goodbye',
+            recipient: {
+              __typename: 'Person',
+              name: 'Bob',
+            },
+          },
+        ],
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    expect(renders.count).toBe(5);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+            },
+          ],
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: {
+                __typename: 'Person',
+                name: 'Alice',
+              },
+            },
+          ],
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      // TODO: Re-enable when the core `fetchMore` bug is fixed
+      // {
+      //   data: {
+      //     greetings: [
+      //       {
+      //         __typename: 'Greeting',
+      //         message: 'Hello world',
+      //         recipient: {
+      //           __typename: 'Person',
+      //           name: 'Alice',
+      //         },
+      //       },
+      //       {
+      //         __typename: 'Greeting',
+      //         message: 'Goodbye',
+      //       },
+      //     ],
+      //   },
+      //   networkStatus: NetworkStatus.ready,
+      //   error: undefined,
+      // },
+      {
+        data: {
+          greetings: [
+            {
+              __typename: 'Greeting',
+              message: 'Hello world',
+              recipient: {
+                __typename: 'Person',
+                name: 'Alice',
+              },
+            },
+            {
+              __typename: 'Greeting',
+              message: 'Goodbye',
+              recipient: {
+                __typename: 'Person',
+                name: 'Bob',
+              },
+            },
+          ],
+        },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('throws network errors returned by deferred queries', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 

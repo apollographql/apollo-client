@@ -126,9 +126,13 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   fetchMore(options: FetchMoreOptions<TData>) {
+    this.status = 'loading';
     const promise = this.observable.fetchMore<TData>(options);
 
-    this.promise = promise;
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
 
     return promise;
   }

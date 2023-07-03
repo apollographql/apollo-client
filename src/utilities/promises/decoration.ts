@@ -29,9 +29,7 @@ export function createFulfilledPromise<TValue>(value: TValue) {
 export function createRejectedPromise<TValue = unknown>(reason: unknown) {
   const promise = Promise.reject(reason) as RejectedPromise<TValue>;
 
-  // prevent unhandled error rejections since this is usually used with __use
-  // which synchronously reads the `status` and `reason` properties to throw
-  // the error.
+  // prevent potential edge cases leaking unhandled error rejections
   promise.catch(() => {});
 
   promise.status = 'rejected';

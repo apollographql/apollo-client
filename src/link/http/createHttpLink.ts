@@ -9,7 +9,7 @@ import { selectURI } from './selectURI';
 import {
   handleError,
   readMultipartBody,
-  readJsonBody
+  parseAndCheckHttpResponse
 } from './parseAndCheckHttpResponse';
 import { checkFetcher } from './checkFetcher';
 import type {
@@ -182,18 +182,24 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       // removal of window.fetch, which is unlikely but not impossible.
       const currentFetch = preferredFetch || maybe(() => fetch) || backupFetch;
 
+      const observerNext = observer.next.bind(observer);
       currentFetch!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });
           const ctype = response.headers?.get('content-type');
 
           if (ctype !== null && /^multipart\/mixed/i.test(ctype)) {
-            return readMultipartBody(response, observer);
+            return readMultipartBody(response, observerNext);
           } else {
-            return readJsonBody(response, operation, observer);
+            return parseAndCheckHttpResponse(operation)(response).then(observerNext);
           }
         })
-        .catch(err => handleError(err, observer));
+        .then(() => {
+          observer.complete();
+        })
+        .catch(err => {
+          handleError(err, observer)
+        });
 
       return () => {
         // XXX support canceling this request

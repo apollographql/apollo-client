@@ -20,7 +20,6 @@ import {
   defaultPrinter,
   fallbackHttpConfig
 } from './selectHttpOptionsAndBody';
-import { createSignalIfSupported } from './createSignalIfSupported';
 import { rewriteURIForGET } from './rewriteURIForGET';
 import { fromError, filterOperationVariables } from '../utils';
 import {
@@ -120,10 +119,9 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     }
 
     let controller: AbortController | undefined;
-    if (!(options as any).signal) {
-      const { controller: _controller, signal } = createSignalIfSupported();
-      controller = _controller as AbortController;
-      if (controller) (options as any).signal = signal;
+    if (!options.signal && typeof AbortController !== 'undefined') {
+      controller = new AbortController();
+      options.signal = controller.signal;
     }
 
     // If requested, set method to GET if there are no mutations.

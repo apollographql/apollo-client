@@ -16,7 +16,6 @@ import {
   selectHttpOptionsAndBodyInternal,
   defaultPrinter,
   fallbackHttpConfig,
-  createSignalIfSupported,
 } from '../http';
 import { BatchLink } from '../batch';
 import { filterOperationVariables } from "../utils/filterOperationVariables";
@@ -158,10 +157,9 @@ export class BatchHttpLink extends ApolloLink {
       }
 
       let controller: AbortController | undefined;
-      if (!(options as any).signal) {
-        const { controller: _controller, signal } = createSignalIfSupported();
-        controller = _controller as AbortController;
-        if (controller) (options as any).signal = signal;
+      if (!options.signal && typeof AbortController !== 'undefined') {
+        controller = new AbortController();
+        options.signal = controller.signal;
       }
 
       return new Observable<FetchResult[]>(observer => {

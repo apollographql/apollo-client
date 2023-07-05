@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.7.17
+
+### Patch Changes
+
+- [#10631](https://github.com/apollographql/apollo-client/pull/10631) [`b93388d75`](https://github.com/apollographql/apollo-client/commit/b93388d7582d88859c4975dff524c1ceb5bd2b4e) Thanks [@phryneas](https://github.com/phryneas)! - ObservableQuery.getCurrentResult: skip the cache if the running query should not access the cache
+
 ## 3.7.16
 
 ### Patch Changes

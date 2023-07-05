@@ -6101,7 +6101,9 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it('discards partial data and does not throw errors returned in incremental chunks but returns them in `error` property', async () => {
+  it('discards partial data and throws errors returned in incremental chunks', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
     const query = gql`
       query {
         hero {
@@ -6196,37 +6198,9 @@ describe('useSuspenseQuery', () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
-        data: {
-          hero: {
-            heroFriends: [
-              {
-                id: '1000',
-                name: 'Luke Skywalker',
-              },
-              {
-                id: '1003',
-                name: 'Leia Organa',
-              },
-            ],
-            name: 'R2-D2',
-          },
-        },
-        networkStatus: NetworkStatus.error,
-        error: new ApolloError({
-          graphQLErrors: [
-            new GraphQLError(
-              'homeWorld for character with ID 1000 could not be fetched.',
-              { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
-            ),
-          ],
-        }),
-      });
+      expect(renders.errorCount).toBe(1);
     });
 
-    expect(result.current.error).toBeInstanceOf(ApolloError);
-
-    expect(renders.count).toBe(3);
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -6248,33 +6222,20 @@ describe('useSuspenseQuery', () => {
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
-      {
-        data: {
-          hero: {
-            heroFriends: [
-              {
-                id: '1000',
-                name: 'Luke Skywalker',
-              },
-              {
-                id: '1003',
-                name: 'Leia Organa',
-              },
-            ],
-            name: 'R2-D2',
-          },
-        },
-        networkStatus: NetworkStatus.error,
-        error: new ApolloError({
-          graphQLErrors: [
-            new GraphQLError(
-              'homeWorld for character with ID 1000 could not be fetched.',
-              { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
-            ),
-          ],
-        }),
-      },
     ]);
+
+    const [error] = renders.errors as ApolloError[];
+
+    expect(error).toBeInstanceOf(ApolloError);
+    expect(error.networkError).toBeNull();
+    expect(error.graphQLErrors).toEqual([
+      new GraphQLError(
+        'homeWorld for character with ID 1000 could not be fetched.',
+        { path: ['hero', 'heroFriends', 0, 'homeWorld'] }
+      ),
+    ]);
+
+    consoleSpy.mockRestore();
   });
 
   it('adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`', async () => {

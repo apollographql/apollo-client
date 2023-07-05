@@ -201,10 +201,7 @@ export class InternalQueryReference<TData = unknown> {
       return;
     }
 
-    this.result = result;
-    this.promise = result.data
-      ? createFulfilledPromise(result)
-      : createRejectedPromise(result);
+    this.promise = createRejectedPromise(error);
     this.deliver(this.promise);
   }
 

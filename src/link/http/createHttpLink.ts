@@ -119,10 +119,10 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       body.variables = filterOperationVariables(body.variables, operation.query);
     }
 
-    let controller: any;
+    let controller: AbortController | undefined;
     if (!(options as any).signal) {
       const { controller: _controller, signal } = createSignalIfSupported();
-      controller = _controller;
+      controller = _controller as AbortController;
       if (controller) (options as any).signal = signal;
     }
 
@@ -195,9 +195,11 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
           }
         })
         .then(() => {
+          controller = undefined;
           observer.complete();
         })
         .catch(err => {
+          controller = undefined;
           handleError(err, observer)
         });
 

@@ -9,6 +9,16 @@
   "parserOptions": {
     "ecmaVersion": "latest"
   },
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true
+      }
+    }
+  },
   "overrides": [
     {
       "files": ["**/*.ts", "**/*.tsx"],
@@ -20,7 +30,14 @@
           "fixStyle": "separate-type-imports"
         }],
         "@typescript-eslint/no-import-type-side-effects": "error",
-        "import/extensions": ["error", "always", { "ignorePackages": true } ]
+        "import/extensions": [
+          "error",
+          "always",
+          {
+            "ignorePackages": true,
+            "checkTypeImports": true
+          }
+        ]
       }
     },
     {
@@ -32,4 +49,7 @@
       }
     }
   ],
+  "rules": {
+    "import/no-unresolved": "error"
+  }
 }

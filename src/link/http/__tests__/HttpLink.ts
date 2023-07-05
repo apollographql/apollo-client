@@ -13,7 +13,7 @@ import { HttpLink } from '../HttpLink';
 import { createHttpLink } from '../createHttpLink';
 import { ClientParseError } from '../serializeFetchParameter';
 import { ServerParseError } from '../parseAndCheckHttpResponse';
-import { ServerError } from '../../..';
+import { FetchResult, ServerError } from '../../..';
 import { voidFetchDuringEachTest } from './helpers';
 import { itAsync } from '../../../testing';
 
@@ -1325,46 +1325,96 @@ describe('HttpLink', () => {
         }),
       );
     });
-    itAsync('supports being cancelled and does not throw', (resolve, reject) => {
-      let called = false;
-      class AbortController {
+
+    describe('AbortController', () => {
+      let aborted = false;
+      let created = false;
+      beforeEach(() => { created = aborted = false; })
+
+      class AbortControllerMock {
+        constructor() {
+          created = true;
+        }
         signal: {};
         abort = () => {
-          called = true;
+          aborted = true;
         };
       }
 
-      (global as any).AbortController = AbortController;
+      const originalAbortController = globalThis.AbortController;
+      beforeAll(() => {
+        globalThis.AbortController = AbortControllerMock as any;
+      })
+      afterAll(() => {
+        globalThis.AbortController = originalAbortController;
+      })
 
-      fetch.mockReturnValueOnce(Promise.resolve({ text }));
-      text.mockReturnValueOnce(
-        Promise.resolve('{ "data": { "hello": "world" } }'),
-      );
+      beforeEach( () => {
+        fetch.mockResolvedValueOnce({ text });
+        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
+      })
+      afterEach(() => {
+        fetch.mockReset();
+        text.mockReset();
+      })
 
-      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
-
-      const sub = execute(link, { query: sampleQuery }).subscribe({
-        next: result => {
-          reject('result should not have been called');
+      const failingObserver: Observer<FetchResult> = {
+        next: () => {
+          fail('result should not have been called');
         },
         error: e => {
-          reject(e);
+          fail(e);
         },
         complete: () => {
-          reject('complete should not have been called');
+          fail('complete should not have been called');
         },
-      });
-      sub.unsubscribe();
+      }
 
-      setTimeout(
-        makeCallback(resolve, reject, () => {
-          delete (global as any).AbortController;
-          expect(called).toBe(true);
-          fetch.mockReset();
-          text.mockReset();
-        }),
-        150,
-      );
+      it('unsubscribing cancels internally created AbortController', () => {
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+        const sub = execute(link, { query: sampleQuery }).subscribe(failingObserver);
+        sub.unsubscribe();
+
+        expect(created).toBe(true);
+        expect(aborted).toBe(true);
+      });
+
+      it('passing a signal in means no AbortController is created internally', () => {
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any, fetchOptions: { signal: {} } });
+
+        const sub = execute(link, { query: sampleQuery } ).subscribe(failingObserver);
+        sub.unsubscribe();
+
+        expect(created).toBe(false);
+        expect(aborted).toBe(false);
+      });
+
+      it('resolving fetch does not cause the AbortController to be aborted', async () => {
+        // (the request is already finished at that point)
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+        await new Promise<void>(resolve => execute(link, { query: sampleQuery }).subscribe({
+          complete: resolve
+        }));
+
+        expect(created).toBe(true);
+        expect(aborted).toBe(false);
+      });
+
+      it('throwing an error from fetch does not cause the AbortController to be aborted', async () => {
+        fetch.mockReset();
+        fetch.mockRejectedValueOnce("This is an error!")
+        // the request would be closed by the browser in the case of an error anyways
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+        await new Promise<void>(resolve => execute(link, { query: sampleQuery }).subscribe({
+          error: resolve
+        }));
+
+        expect(created).toBe(true);
+        expect(aborted).toBe(false);
+      });
     });
 
     const body = '{';

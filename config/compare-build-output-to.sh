@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#set -euo pipefail
+set -uo pipefail
 upstream=$1
 comparison="${RUNNER_TEMP:-/tmp}/comparison_checkout"
 root=$(git rev-parse --show-toplevel)

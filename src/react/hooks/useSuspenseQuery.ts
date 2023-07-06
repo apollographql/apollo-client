@@ -184,14 +184,19 @@ export function useSuspenseQuery<
     promiseCache.set(queryRef.key, promise);
   }
 
-  useTrackedQueryRefs(queryRef);
-
   useEffect(() => {
-    return queryRef.listen((promise) => {
+    queryRef.retain();
+
+    const removeListener = queryRef.listen((promise) => {
       setPromiseCache((promiseCache) =>
         new Map(promiseCache).set(queryRef.key, promise)
       );
     });
+
+    return () => {
+      removeListener();
+      queryRef.dispose();
+    };
   }, [queryRef]);
 
   const skipResult = useMemo(() => {

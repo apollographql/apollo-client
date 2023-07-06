@@ -721,14 +721,6 @@ describe('useSuspenseQuery', () => {
       expect(result.current.data).toEqual(mocks[1].result.data);
     });
 
-    expect(client.getObservableQueries().size).toBe(2);
-    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query, {
-      variables: { id: '1' },
-    });
-    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query, {
-      variables: { id: '2' },
-    });
-
     unmount();
 
     // We need to wait a tick since the cleanup is run in a setTimeout to
@@ -791,15 +783,6 @@ describe('useSuspenseQuery', () => {
     });
 
     const variables = { id: '1' };
-
-    expect(client1.getObservableQueries().size).toBe(1);
-    expect(client2.getObservableQueries().size).toBe(1);
-    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client1, query, {
-      variables,
-    });
-    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client2, query, {
-      variables,
-    });
 
     unmount();
 
@@ -1606,11 +1589,15 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('uses previously fetched result and does not suspend when switching back to already fetched variables', async () => {
+  it('uses cached result and does not suspend when switching back to already used variables while using `cache-first` fetch policy', async () => {
     const { query, mocks } = useVariablesQueryCase();
 
     const { result, rerender, renders } = renderSuspenseHook(
-      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'cache-first',
+          variables: { id },
+        }),
       { mocks, initialProps: { id: '1' } }
     );
 
@@ -1655,6 +1642,335 @@ describe('useSuspenseQuery', () => {
       },
       {
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('uses cached result with network request and does not suspend when switching back to already used variables while using `cache-and-network` fetch policy', async () => {
+    const query: TypedDocumentNode<
+      VariablesCaseData,
+      VariablesCaseVariables
+    > = gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: {
+            character: { __typename: 'Character', id: '1', name: 'Spider-Man' },
+          },
+        },
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '2',
+              name: 'Black Widow',
+            },
+          },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '1',
+              name: 'Spider-Man (refetch)',
+            },
+          },
+        },
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'cache-and-network',
+          variables: { id },
+        }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '1' });
+
+    expect(result.current).toMatchObject({
+      ...mocks[0].result,
+      networkStatus: NetworkStatus.loading,
+      error: undefined,
+    });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[2].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(6);
+    expect(renders.suspenseCount).toBe(2);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.loading,
+        error: undefined,
+      },
+      {
+        ...mocks[2].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('refetches and suspends when switching back to already used variables while using `network-only` fetch policy', async () => {
+    const query: TypedDocumentNode<
+      VariablesCaseData,
+      VariablesCaseVariables
+    > = gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: {
+            character: { __typename: 'Character', id: '1', name: 'Spider-Man' },
+          },
+        },
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '2',
+              name: 'Black Widow',
+            },
+          },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '1',
+              name: 'Spider-Man (refetch)',
+            },
+          },
+        },
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'network-only',
+          variables: { id },
+        }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '1' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[2].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(6);
+    expect(renders.suspenseCount).toBe(3);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[2].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('refetches and suspends when switching back to already used variables while using `no-cache` fetch policy', async () => {
+    const query: TypedDocumentNode<
+      VariablesCaseData,
+      VariablesCaseVariables
+    > = gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: {
+            character: { __typename: 'Character', id: '1', name: 'Spider-Man' },
+          },
+        },
+      },
+      {
+        request: { query, variables: { id: '2' } },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '2',
+              name: 'Black Widow',
+            },
+          },
+        },
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: {
+            character: {
+              __typename: 'Character',
+              id: '1',
+              name: 'Spider-Man (refetch)',
+            },
+          },
+        },
+      },
+    ];
+
+    const { result, rerender, renders } = renderSuspenseHook(
+      ({ id }) =>
+        useSuspenseQuery(query, {
+          fetchPolicy: 'no-cache',
+          variables: { id },
+        }),
+      { mocks, initialProps: { id: '1' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '2' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ id: '1' });
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[2].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(6);
+    expect(renders.suspenseCount).toBe(3);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[1].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[2].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },

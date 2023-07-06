@@ -63,6 +63,8 @@ export class InternalQueryReference<TData = unknown> {
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
+  private references = 0;
+
   constructor(
     observable: ObservableQuery<TData>,
     options: InternalQueryReferenceOptions
@@ -72,6 +74,7 @@ export class InternalQueryReference<TData = unknown> {
     this.handleError = this.handleError.bind(this);
     this.initiateFetch = this.initiateFetch.bind(this);
     this.dispose = this.dispose.bind(this);
+    this.performDispose = this.performDispose.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult(false);
     this.key = options.key;
@@ -115,13 +118,18 @@ export class InternalQueryReference<TData = unknown> {
     // helps prevent memory leaks when a component has unmounted before the
     // query has finished loading.
     this.autoDisposeTimeoutId = setTimeout(
-      this.dispose,
+      this.performDispose,
       options.autoDisposeTimeoutMs ?? 30_000
     );
   }
 
   get watchQueryOptions() {
     return this.observable.options;
+  }
+
+  retain() {
+    this.references++;
+    clearTimeout(this.autoDisposeTimeoutId);
   }
 
   didChangeOptions(watchQueryOptions: WatchQueryOptions) {
@@ -157,11 +165,6 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   listen(listener: Listener<TData>) {
-    // As soon as the component listens for updates, we know it has finished
-    // suspending and is ready to receive updates, so we can remove the auto
-    // dispose timer.
-    clearTimeout(this.autoDisposeTimeoutId);
-
     this.listeners.add(listener);
 
     return () => {
@@ -178,6 +181,17 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   dispose() {
+    this.references--;
+
+    // Wait before fully disposing in case the app is running in strict mode.
+    setTimeout(() => {
+      if (!this.references) {
+        this.performDispose();
+      }
+    });
+  }
+
+  private performDispose() {
     this.subscription.unsubscribe();
     this.onDispose();
   }

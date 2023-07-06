@@ -14,6 +14,9 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+          # Fetch entire git history so we have the parent commit to compare against
+          fetch-depth: 0
       - name: Setup Node.js 18.x
         uses: actions/setup-node@v3
         with:

@@ -6,7 +6,7 @@ export { invariant, newInvariantError, InvariantError }
 
 /** 
  * @deprecated we do not use this internally anymore, 
- * it is just exported for backwards compatbility 
+ * it is just exported for backwards compatibility 
  */
 // this file is extempt from automatic `__DEV__` replacement 
 // so we have to write it out here 

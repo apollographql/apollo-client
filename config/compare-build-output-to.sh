@@ -4,7 +4,7 @@ upstream=$1
 comparison="${RUNNER_TEMP:-/tmp}/comparison_checkout"
 root=$(git rev-parse --show-toplevel)
 
-temp=$(mktemp --tmpdir "${RUNNER_TEMP:-/tmp}")
+temp=$(mktemp --tmpdir="${RUNNER_TEMP:-/tmp}")
 trap 'rm -f "$temp"' EXIT
 
 echo "## Comparing build output to $upstream, using $comparison as a temporary checkout."

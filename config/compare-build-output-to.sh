@@ -16,9 +16,9 @@ patterndiff(){
   count=0
   while IFS= read -r -d '' file
   do
-    echo comparing $file >&2
-    diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$file") -w >&2 || true
-    if ! filediff="$(diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$file") -w)"; then
+    echo comparing "$comparison/dist/$file" to "$root/dist/$file" >&2
+    diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$root/dist/$file") -w >&2 || true
+    if ! filediff="$(diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$root/dist/$file") -w)"; then
       (( count++ ))
       echo "$file"
       if [[ "$file" == *.min.* ]]; then
@@ -61,8 +61,10 @@ git worktree add --force --detach --checkout "$comparison" "$upstream" || cd "$c
 cd "$comparison" || { echo "checkout failed"; exit 1; }
 cp -r "$root/node_modules" .
 npm i >&2
+git status >&2
 npm run build >&2
 cd "$root" || exit 1
+git status >&2
 npm run build >&2
 
 patterndiff "*.js"

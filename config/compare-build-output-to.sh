@@ -16,6 +16,8 @@ patterndiff(){
   count=0
   while IFS= read -r -d '' file
   do
+    echo comparing $file >&2
+    diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$file") -w >&2 || true
     if ! filediff="$(diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$file") -w)"; then
       (( count++ ))
       echo "$file"

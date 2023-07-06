@@ -1,4 +1,4 @@
-name: AreTheTypesWrong
+name: Compare Build Output
 on:
   pull_request:
     branches:
@@ -8,8 +8,8 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  arethetypeswrong:
-    name: Are the types wrong
+  comparebuildoutput:
+    name: Compare Build Output
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -21,8 +21,6 @@ jobs:
       - name: Install dependencies (with cache)
         uses: bahmutov/npm-install@v1
 
-      - name: Run build
-        run: npm run build
-      - name: Run AreTheTypesWrong
+      - name: Run comparison script
         id: attw
-        run: ./node_modules/.bin/attw --format ascii --pack dist > $GITHUB_STEP_SUMMARY
+        run: ./config/compare-build-output $(git merge-base HEAD origin/${{ github.base_ref }}) > $GITHUB_STEP_SUMMARY

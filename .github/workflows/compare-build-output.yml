@@ -8,7 +8,7 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  build:
+  comparebuildoutput:
     name: Compare Build Output
     runs-on: ubuntu-latest
     steps:

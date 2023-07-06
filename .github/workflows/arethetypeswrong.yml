@@ -8,8 +8,8 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  build:
-    name: Build library
+  arethetypeswrong:
+    name: Are the types wrong
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -22,8 +22,7 @@ jobs:
         uses: bahmutov/npm-install@v1
 
       - name: Run build
-        run: npm run build && cd dist; npm pack
-
+        run: npm run build
       - name: Run AreTheTypesWrong
         id: attw
         run: ./node_modules/.bin/attw --format ascii --pack dist > $GITHUB_STEP_SUMMARY

@@ -2,10 +2,10 @@ import { responseIterator } from "./responseIterator";
 import type { Operation } from "../core";
 import { throwServerError } from "../utils";
 import { PROTOCOL_ERRORS_SYMBOL } from '../../errors';
-import type { Observer } from "../../utilities";
 import {
   isApolloPayloadResult
 } from '../../utilities/common/incrementalResult';
+import type { SubscriptionObserver } from "zen-observable-ts";
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -160,7 +160,7 @@ export function parseJsonBody<T>(response: Response, bodyText: string): T {
   }
 }
 
-export function handleError(err: any, observer: Observer<any>) {
+export function handleError(err: any, observer: SubscriptionObserver<any>) {
   if (err.name === "AbortError") return;
   // if it is a network error, BUT there is graphql result info fire
   // the next observer before calling error this gives apollo-client
@@ -195,10 +195,10 @@ export function handleError(err: any, observer: Observer<any>) {
     // status code of above would be a 401
     // in the UI you want to show data where you can, errors as data where you can
     // and use correct http status codes
-    observer.next?.(err.result);
+    observer.next(err.result);
   }
 
-  observer.error?.(err);
+  observer.error(err);
 }
 
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {

@@ -135,7 +135,7 @@ export class InternalQueryReference<TData = unknown> {
       currentFetchPolicy === 'standby' &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy
     ) {
-      this.promise = this.observable.reobserve(watchQueryOptions);
+      this.handleFetch(this.observable.reobserve(watchQueryOptions));
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
 
@@ -167,12 +167,6 @@ export class InternalQueryReference<TData = unknown> {
 
   fetchMore(options: FetchMoreOptions<TData>) {
     return this.handleFetch(this.observable.fetchMore<TData>(options));
-  }
-
-  reobserve(
-    watchQueryOptions: Partial<WatchQueryOptions<OperationVariables, TData>>
-  ) {
-    return this.handleFetch(this.observable.reobserve(watchQueryOptions));
   }
 
   dispose() {

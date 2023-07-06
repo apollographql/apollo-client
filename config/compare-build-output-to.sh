@@ -7,17 +7,11 @@ root=$(git rev-parse --show-toplevel)
 temp=$(mktemp --tmpdir="${RUNNER_TEMP:-/tmp}")
 trap 'rm -f "$temp"' EXIT
 
-echo "## Comparing build output to $upstream, using $comparison as a temporary checkout."
-echo "temp file: $temp"
-echo "comparison: $root"
-
 patterndiff(){
   cd dist || { echo "dist folder not found"; exit 1; }
   count=0
   while IFS= read -r -d '' file
   do
-    echo comparing "$comparison/dist/$file" to "$root/dist/$file" >&2
-    diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$root/dist/$file") -w >&2 || true
     if ! filediff="$(diff <(tr "'" '"' < "$comparison/dist/$file") <(tr "'" '"' < "$root/dist/$file") -w)"; then
       (( count++ ))
       echo "$file"

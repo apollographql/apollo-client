@@ -1326,37 +1326,25 @@ describe('HttpLink', () => {
       );
     });
 
-    describe('AbortController', () => {
-      let aborted = false;
-      let created = false;
-      beforeEach(() => { created = aborted = false; })
-
-      class AbortControllerMock {
-        constructor() {
-          created = true;
+    describe.only('AbortController', () => {
+      function mockGlobalAbortController() {
+        const mockStatus = {
+          aborted: false,
+          created: false
         }
-        signal: {};
-        abort = () => {
-          aborted = true;
-        };
-      }
+        class AbortControllerMock {
+          constructor() {
+            mockStatus.created = true;
+          }
+          signal: {};
+          abort = () => {
+            mockStatus.aborted = true;
+          };
+        }
 
-      const originalAbortController = globalThis.AbortController;
-      beforeAll(() => {
         globalThis.AbortController = AbortControllerMock as any;
-      })
-      afterAll(() => {
-        globalThis.AbortController = originalAbortController;
-      })
-
-      beforeEach( () => {
-        fetch.mockResolvedValueOnce({ text });
-        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
-      })
-      afterEach(() => {
-        fetch.mockReset();
-        text.mockReset();
-      })
+        return mockStatus;
+      }
 
       const failingObserver: Observer<FetchResult> = {
         next: () => {
@@ -1370,27 +1358,49 @@ describe('HttpLink', () => {
         },
       }
 
+      // clean up between tests
+      const originalAbortController = globalThis.AbortController;
+      afterEach(() => {
+        globalThis.AbortController = originalAbortController;
+        fetch.mockReset();
+        text.mockReset();
+      })
+
+
       it('unsubscribing cancels internally created AbortController', () => {
+        const mock = mockGlobalAbortController();
+        fetch.mockResolvedValueOnce({ text });
+        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
+
         const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
         const sub = execute(link, { query: sampleQuery }).subscribe(failingObserver);
         sub.unsubscribe();
 
-        expect(created).toBe(true);
-        expect(aborted).toBe(true);
+        expect(mock.created).toBe(true);
+        expect(mock.aborted).toBe(true);
       });
 
       it('passing a signal in means no AbortController is created internally', () => {
-        const link = createHttpLink({ uri: 'data', fetch: fetch as any, fetchOptions: { signal: {} } });
+        const realAbortController = new AbortController();
+        const mock = mockGlobalAbortController();
+        fetch.mockResolvedValueOnce({ text });
+        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
+
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any, fetchOptions: { signal: realAbortController.signal } });
 
         const sub = execute(link, { query: sampleQuery } ).subscribe(failingObserver);
         sub.unsubscribe();
 
-        expect(created).toBe(false);
-        expect(aborted).toBe(false);
+        expect(mock.created).toBe(false);
+        expect(mock.aborted).toBe(false);
       });
 
       it('resolving fetch does not cause the AbortController to be aborted', async () => {
+        const mock = mockGlobalAbortController();
+        fetch.mockResolvedValueOnce({ text });
+        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
+
         // (the request is already finished at that point)
         const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
@@ -1398,12 +1408,12 @@ describe('HttpLink', () => {
           complete: resolve
         }));
 
-        expect(created).toBe(true);
-        expect(aborted).toBe(false);
+        expect(mock.created).toBe(true);
+        expect(mock.aborted).toBe(false);
       });
 
       it('throwing an error from fetch does not cause the AbortController to be aborted', async () => {
-        fetch.mockReset();
+        const mock = mockGlobalAbortController();
         fetch.mockRejectedValueOnce("This is an error!")
         // the request would be closed by the browser in the case of an error anyways
         const link = createHttpLink({ uri: 'data', fetch: fetch as any });
@@ -1412,8 +1422,8 @@ describe('HttpLink', () => {
           error: resolve
         }));
 
-        expect(created).toBe(true);
-        expect(aborted).toBe(false);
+        expect(mock.created).toBe(true);
+        expect(mock.aborted).toBe(false);
       });
     });
 

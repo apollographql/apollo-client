@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 upstream=$1
-comparison=${RUNNER_TEMP:-/tmp/comparison_checkout}
+comparison="${RUNNER_TEMP:-/tmp}/comparison_checkout"
 root=$(git rev-parse --show-toplevel)
 
 temp=$(mktemp)

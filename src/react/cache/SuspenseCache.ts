@@ -1,7 +1,7 @@
 import { Trie } from '@wry/trie';
 import type { ObservableQuery } from '../../core/index.js';
 import { canUseWeakMap } from '../../utilities/index.js';
-import { QueryReference } from './QueryReference.js';
+import { InternalQueryReference } from './QueryReference.js';
 import type { CacheKey } from './types.js';
 
 interface SuspenseCacheOptions {
@@ -19,7 +19,7 @@ interface SuspenseCacheOptions {
 }
 
 export class SuspenseCache {
-  private queryRefs = new Trie<{ current?: QueryReference }>(canUseWeakMap);
+  private queryRefs = new Trie<{ current?: InternalQueryReference }>(canUseWeakMap);
   private options: SuspenseCacheOptions;
 
   constructor(options: SuspenseCacheOptions = Object.create(null)) {
@@ -33,7 +33,7 @@ export class SuspenseCache {
     const ref = this.queryRefs.lookupArray(cacheKey);
 
     if (!ref.current) {
-      ref.current = new QueryReference(createObservable(), {
+      ref.current = new InternalQueryReference(createObservable(), {
         key: cacheKey,
         autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
         onDispose: () => {
@@ -42,6 +42,6 @@ export class SuspenseCache {
       });
     }
 
-    return ref.current as QueryReference<TData>;
+    return ref.current as InternalQueryReference<TData>;
   }
 }

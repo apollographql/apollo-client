@@ -1,24 +1,21 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
 } from '../../core/index.js';
-import { NetworkStatus } from '../../core/index.js';
 import { useApolloClient } from './useApolloClient.js';
-import type { QueryReference } from '../cache/QueryReference.js';
-import type { SuspenseQueryHookOptions, NoInfer } from '../types/types.js';
+import {
+  QUERY_REFERENCE_SYMBOL,
+  type QueryReference,
+} from '../cache/QueryReference.js';
+import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
 import { __use } from './internal/index.js';
 import { useSuspenseCache } from './useSuspenseCache.js';
-import {
-  toApolloError,
-  useTrackedQueryRefs,
-  useWatchQueryOptions,
-} from './useSuspenseQuery.js';
+import { useTrackedQueryRefs, useWatchQueryOptions } from './useSuspenseQuery.js';
 import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
 import { canonicalStringify } from '../../cache/index.js';
 import type { DeepPartial } from '../../utilities/index.js';
-import { invariant } from '../../utilities/globals/index.js';
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -31,23 +28,27 @@ export type UseBackgroundQueryResult<
   }
 ];
 
+type BackgroundQueryHookOptionsNoInfer<
+  TData,
+  TVariables extends OperationVariables
+> = BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+
 export function useBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<
-    SuspenseQueryHookOptions<TData>,
-    'variables' | 'returnPartialData' | 'refetchWritePolicy'
-  >
+  TOptions extends Omit<BackgroundQueryHookOptions<TData>, 'variables'>
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > &
-    TOptions
+  options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions
 ): UseBackgroundQueryResult<
   TOptions['errorPolicy'] extends 'ignore' | 'all'
-    ? TData | undefined
+    ? TOptions['returnPartialData'] extends true
+      ? DeepPartial<TData> | undefined
+      : TData | undefined
+    : TOptions['returnPartialData'] extends true
+    ? TOptions['skip'] extends boolean
+      ? DeepPartial<TData> | undefined
+      : DeepPartial<TData>
     : TOptions['skip'] extends boolean
     ? TData | undefined
     : TData,
@@ -59,10 +60,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
     errorPolicy: 'ignore' | 'all';
   }
@@ -73,10 +71,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     errorPolicy: 'ignore' | 'all';
   }
 ): UseBackgroundQueryResult<TData | undefined, TVariables>;
@@ -86,39 +81,38 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > & {
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     skip: boolean;
+    returnPartialData: true;
   }
-): UseBackgroundQueryResult<TData | undefined, TVariables>;
-
-// TODO: support `returnPartialData` | `refetchWritePolicy`
-// see https://github.com/apollographql/apollo-client/issues/10893
-
-// export function useBackgroundQuery<
-//   TData = unknown,
-//   TVariables extends OperationVariables = OperationVariables
-// >(
-//   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-//   options: Omit<
-//     SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-//     'returnPartialData' | 'refetchWritePolicy'
-//   > & {
-//     returnPartialData: true;
-//   }
-// ): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
+): UseBackgroundQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
 export function useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: Omit<
-    SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-    'returnPartialData' | 'refetchWritePolicy'
-  >
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
+    returnPartialData: true;
+  }
+): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
+    skip: boolean;
+  }
+): UseBackgroundQueryResult<TData | undefined, TVariables>;
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>
 ): UseBackgroundQueryResult<TData, TVariables>;
 
 export function useBackgroundQuery<
@@ -126,15 +120,14 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: Omit<
-    SuspenseQueryHookOptions<TData, TVariables>,
-    'returnPartialData' | 'refetchWritePolicy'
-  > = Object.create(null)
+  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(
+    null
+  )
 ): UseBackgroundQueryResult<TData> {
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { fetchPolicy, variables } = watchQueryOptions;
+  const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
   const cacheKey = (
@@ -145,14 +138,12 @@ export function useBackgroundQuery<
     client.watchQuery(watchQueryOptions)
   );
 
-  const { fetchPolicy: currentFetchPolicy } = queryRef.watchQueryOptions;
-
   const [promiseCache, setPromiseCache] = useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
 
-  if (currentFetchPolicy === 'standby' && fetchPolicy !== currentFetchPolicy) {
-    const promise = queryRef.reobserve({ fetchPolicy });
+  if (queryRef.didChangeOptions(watchQueryOptions)) {
+    const promise = queryRef.applyOptions(watchQueryOptions);
     promiseCache.set(queryRef.key, promise);
   }
 
@@ -188,60 +179,11 @@ export function useBackgroundQuery<
 
   return useMemo(() => {
     return [
-      queryRef,
+      { [QUERY_REFERENCE_SYMBOL]: queryRef },
       {
         fetchMore,
         refetch,
       },
     ];
   }, [queryRef, fetchMore, refetch]);
-}
-
-export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
-  const [, forceUpdate] = useState(0);
-
-  invariant(
-    queryRef.promiseCache,
-    'It appears that `useReadQuery` was used outside of `useBackgroundQuery`. ' +
-      '`useReadQuery` is only supported for use with `useBackgroundQuery`. ' +
-      'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
-  );
-
-  const skipResult = useMemo(() => {
-    const error = toApolloError(queryRef.result);
-
-    return {
-      loading: false,
-      data: queryRef.result.data,
-      networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
-      error,
-    };
-  }, [queryRef.result]);
-
-  let promise = queryRef.promiseCache.get(queryRef.key);
-
-  if (!promise) {
-    promise = queryRef.promise;
-    queryRef.promiseCache.set(queryRef.key, promise);
-  }
-
-  useEffect(() => {
-    return queryRef.listen((promise) => {
-      queryRef.promiseCache!.set(queryRef.key, promise);
-      forceUpdate((prevState) => prevState + 1);
-    });
-  }, [queryRef]);
-
-  const result =
-    queryRef.watchQueryOptions.fetchPolicy === 'standby'
-      ? skipResult
-      : __use(promise);
-
-  return useMemo(() => {
-    return {
-      data: result.data,
-      networkStatus: result.networkStatus,
-      error: toApolloError(result),
-    };
-  }, [result]);
 }

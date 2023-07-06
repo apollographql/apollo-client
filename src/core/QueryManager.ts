@@ -118,7 +118,9 @@ export class QueryManager<TStore> {
 
   // Maps from queryId strings to Promise rejection functions for
   // currently active queries and fetches.
-  private fetchCancelFns = new Map<string, (error: any) => any>();
+  // Use protected instead of private field so
+  // @apollo/experimental-nextjs-app-support can access type info.
+  protected fetchCancelFns = new Map<string, (error: any) => any>();
 
   constructor({
     cache,
@@ -1027,7 +1029,9 @@ export class QueryManager<TStore> {
     return this.localState;
   }
 
-  private inFlightLinkObservables = new Map<
+  // Use protected instead of private field so
+  // @apollo/experimental-nextjs-app-support can access type info.
+  protected inFlightLinkObservables = new Map<
     string,
     Map<string, Observable<FetchResult>>
   >();

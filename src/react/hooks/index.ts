@@ -16,6 +16,6 @@ export {
 } from './useSuspenseQuery.js';
 export {
   useBackgroundQuery,
-  useReadQuery,
   UseBackgroundQueryResult,
 } from './useBackgroundQuery.js';
+export { useReadQuery } from './useReadQuery.js';

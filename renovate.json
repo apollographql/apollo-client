@@ -25,5 +25,12 @@
       "matchUpdateTypes": ["patch"]
     }
   ],
-  "ignoreDeps": ["typedoc", "react-17", "react-dom-17", "@testing-library/react-12"]
+  "ignoreDeps": [
+    "typedoc",
+    "react-17",
+    "react-dom-17",
+    "@testing-library/react-12",
+    "@rollup/plugin-node-resolve",
+    "rollup"
+  ]
 }

@@ -124,6 +124,8 @@ export * from './common/incrementalResult';
 export { omitDeep } from './common/omitDeep';
 export { stripTypename } from './common/stripTypename';
 
+export { tap } from './common/tap';
+
 export * from './types/IsStrictlyAny';
 export { DeepOmit } from './types/DeepOmit';
 export { DeepPartial } from './types/DeepPartial';

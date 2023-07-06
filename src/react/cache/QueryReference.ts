@@ -8,7 +8,11 @@ import type {
 } from '../../core';
 import { isNetworkRequestSettled } from '../../core';
 import type { ObservableSubscription } from '../../utilities';
-import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
+import {
+  createFulfilledPromise,
+  createRejectedPromise,
+  tap,
+} from '../../utilities';
 import type { CacheKey } from './types';
 import type { useBackgroundQuery, useReadQuery } from '../hooks';
 
@@ -66,6 +70,7 @@ export class InternalQueryReference<TData = unknown> {
     this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
+    this.handleFetch = this.handleFetch.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult(false);
@@ -138,7 +143,7 @@ export class InternalQueryReference<TData = unknown> {
       currentFetchPolicy === 'standby' &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy
     ) {
-      this.handleFetch(this.observable.reobserve(watchQueryOptions));
+      tap(this.observable.reobserve(watchQueryOptions), this.handleFetch);
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
 
@@ -165,11 +170,11 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   refetch(variables: OperationVariables | undefined) {
-    return this.handleFetch(this.observable.refetch(variables));
+    return tap(this.observable.refetch(variables), this.handleFetch);
   }
 
   fetchMore(options: FetchMoreOptions<TData>) {
-    return this.handleFetch(this.observable.fetchMore<TData>(options));
+    return tap(this.observable.fetchMore<TData>(options), this.handleFetch);
   }
 
   dispose() {
@@ -220,7 +225,7 @@ export class InternalQueryReference<TData = unknown> {
     this.listeners.forEach((listener) => listener(promise));
   }
 
-  private handleFetch(promise: Promise<ApolloQueryResult<TData>>) {
+  private handleFetch() {
     this.status = 'loading';
 
     this.promise = new Promise((resolve, reject) => {
@@ -229,7 +234,5 @@ export class InternalQueryReference<TData = unknown> {
     });
 
     this.promise.catch(() => {});
-
-    return promise;
   }
 }

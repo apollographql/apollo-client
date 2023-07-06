@@ -16,6 +16,7 @@ import { useTrackedQueryRefs, useWatchQueryOptions } from './useSuspenseQuery';
 import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery';
 import { canonicalStringify } from '../../cache';
 import type { DeepPartial } from '../../utilities';
+import { tap } from '../../utilities';
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -151,26 +152,22 @@ export function useBackgroundQuery<
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
-      const promise = queryRef.fetchMore(options);
-
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
-      );
-
-      return promise;
+      return tap(queryRef.fetchMore(options), () => {
+        setPromiseCache((promiseCache) =>
+          new Map(promiseCache).set(queryRef.key, queryRef.promise)
+        );
+      });
     },
     [queryRef]
   );
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
-      const promise = queryRef.refetch(variables);
-
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
-      );
-
-      return promise;
+      return tap(queryRef.refetch(variables), () => {
+        setPromiseCache((promiseCache) =>
+          new Map(promiseCache).set(queryRef.key, queryRef.promise)
+        );
+      });
     },
     [queryRef]
   );

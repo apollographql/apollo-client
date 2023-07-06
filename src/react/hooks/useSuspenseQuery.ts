@@ -12,6 +12,7 @@ import type {
 } from '../../core';
 import { ApolloError, NetworkStatus } from '../../core';
 import type { DeepPartial } from '../../utilities';
+import { tap } from '../../utilities';
 import { isNonEmptyArray } from '../../utilities';
 import { useApolloClient } from './useApolloClient';
 import { DocumentType, verifyDocumentType } from '../parser';
@@ -208,26 +209,22 @@ export function useSuspenseQuery<
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
     (options) => {
-      const promise = queryRef.fetchMore(options);
-
-      setPromiseCache((previousPromiseCache) =>
-        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
-      );
-
-      return promise;
+      return tap(queryRef.fetchMore(options), () => {
+        setPromiseCache((previousPromiseCache) =>
+          new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
+        );
+      });
     },
     [queryRef]
   );
 
   const refetch: RefetchFunction<TData, TVariables> = useCallback(
     (variables) => {
-      const promise = queryRef.refetch(variables);
-
-      setPromiseCache((previousPromiseCache) =>
-        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
-      );
-
-      return promise;
+      return tap(queryRef.refetch(variables), () => {
+        setPromiseCache((previousPromiseCache) =>
+          new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
+        );
+      });
     },
     [queryRef]
   );

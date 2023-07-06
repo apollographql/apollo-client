@@ -28,6 +28,7 @@ import type {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
+  WatchQueryFetchPolicy,
 } from './watchQueryOptions';
 import type { QueryInfo } from './QueryInfo';
 import type { MissingFieldError } from '../cache';
@@ -89,6 +90,7 @@ export class ObservableQuery<
   private observers = new Set<Observer<ApolloQueryResult<TData>>>();
   private subscriptions = new Set<ObservableSubscription>();
 
+  private waitForOwnResult: boolean;
   private last?: Last<TData, TVariables>;
   private lastQuery?: DocumentNode;
 
@@ -156,6 +158,7 @@ export class ObservableQuery<
     this.queryManager = queryManager;
 
     // active state
+    this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
     this.isTornDown = false;
 
     const {
@@ -244,16 +247,19 @@ export class ObservableQuery<
     if (
       // These fetch policies should never deliver data from the cache, unless
       // redelivering a previously delivered result.
-      fetchPolicy === 'network-only' ||
-      fetchPolicy === 'no-cache' ||
-      fetchPolicy === 'standby' ||
+      skipCacheDataFor(fetchPolicy) ||
       // If this.options.query has @client(always: true) fields, we cannot
       // trust diff.result, since it was read from the cache without running
       // local resolvers (and it's too late to run resolvers now, since we must
       // return a result synchronously).
       this.queryManager.getDocumentInfo(this.query).hasForcedResolvers
     ) {
-      // Fall through.
+      // Fall through. 
+    } else if (this.waitForOwnResult) {
+      // This would usually be a part of `QueryInfo.getDiff()`. 
+      // which we skip in the waitForOwnResult case since we are not
+      // interested in the diff.
+      this.queryInfo['updateWatch']();
     } else {
       const diff = this.queryInfo.getDiff();
 
@@ -586,6 +592,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve(newOptions);
   }
 
+  public silentSetOptions(
+    newOptions: Partial<WatchQueryOptions<TVariables, TData>>,
+  ) {
+    const mergedOptions = compact(this.options, newOptions || {});
+    assign(this.options, mergedOptions);
+  }
+
   /**
    * Update the variables of this observable query, and fetch the new results
    * if they've changed. Most users should prefer `refetch` instead of
@@ -872,13 +885,23 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // If the transform doesn't change the document, leave `options` alone and
     // use the original object.
     const fetchOptions = query === options.query ? options : { ...options, query };
-    const variables = options.variables && { ...options.variables };
+
+    this.waitForOwnResult &&= skipCacheDataFor(fetchOptions.fetchPolicy);
+    const finishWaitingForOwnResult = () => {
+      if (this.concast === concast) {
+        this.waitForOwnResult = false;
+      }
+    };
+    
+    const variables = fetchOptions.variables && { ...fetchOptions.variables };
     const { concast, fromLink } = this.fetch(fetchOptions, newNetworkStatus);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
+        finishWaitingForOwnResult();
         this.reportResult(result, variables);
       },
       error: error => {
+        finishWaitingForOwnResult();
         this.reportError(error, variables);
       },
     };
@@ -1034,4 +1057,8 @@ export function logMissingFieldErrors(
   if (__DEV__ && missing) {
     invariant.debug(`Missing cache result fields: %o`, missing);
   }
+}
+
+function skipCacheDataFor(fetchPolicy?: WatchQueryFetchPolicy /* `undefined` would mean `"cache-first"` */) {
+  return fetchPolicy === "network-only" || fetchPolicy === "no-cache" || fetchPolicy === "standby";
 }

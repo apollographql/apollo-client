@@ -1,3 +1,4 @@
+import { equal } from '@wry/equality';
 import type {
   ApolloError,
   ApolloQueryResult,
@@ -9,6 +10,7 @@ import { NetworkStatus, isNetworkRequestSettled } from '../../core';
 import type { ObservableSubscription } from '../../utilities';
 import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
 import type { CacheKey } from './types';
+import type { useBackgroundQuery, useReadQuery } from '../hooks';
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
@@ -16,13 +18,32 @@ type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
 >[0];
 
-interface QueryReferenceOptions {
+export const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
+/**
+ * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
+ * A child component reading the `QueryReference` via {@link useReadQuery} will
+ * suspend until the promise resolves.
+ */
+export interface QueryReference<TData = unknown> {
+  [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+}
+
+interface InternalQueryReferenceOptions {
   key: CacheKey;
   onDispose?: () => void;
   autoDisposeTimeoutMs?: number;
 }
 
-export class QueryReference<TData = unknown> {
+const OBSERVED_CHANGED_OPTIONS: Array<keyof WatchQueryOptions> = [
+  'canonizeResults',
+  'context',
+  'errorPolicy',
+  'fetchPolicy',
+  'refetchWritePolicy',
+  'returnPartialData',
+];
+
+export class InternalQueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
   public readonly key: CacheKey;
   public readonly observable: ObservableQuery<TData>;
@@ -36,12 +57,12 @@ export class QueryReference<TData = unknown> {
   private initialized = false;
   private refetching = false;
 
-  private resolve: (result: ApolloQueryResult<TData>) => void;
-  private reject: (error: unknown) => void;
+  private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
+  private reject: ((error: unknown) => void) | undefined;
 
   constructor(
     observable: ObservableQuery<TData>,
-    options: QueryReferenceOptions
+    options: InternalQueryReferenceOptions
   ) {
     this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
@@ -89,6 +110,35 @@ export class QueryReference<TData = unknown> {
 
   get watchQueryOptions() {
     return this.observable.options;
+  }
+
+  didChangeOptions(watchQueryOptions: WatchQueryOptions) {
+    return OBSERVED_CHANGED_OPTIONS.some(
+      (option) =>
+        !equal(this.watchQueryOptions[option], watchQueryOptions[option])
+    );
+  }
+
+  applyOptions(watchQueryOptions: WatchQueryOptions) {
+    const { fetchPolicy: currentFetchPolicy } = this.watchQueryOptions;
+
+    // "standby" is used when `skip` is set to `true`. Detect when we've
+    // enabled the query (i.e. `skip` is `false`) to execute a network request.
+    if (
+      currentFetchPolicy === 'standby' &&
+      currentFetchPolicy !== watchQueryOptions.fetchPolicy
+    ) {
+      this.promise = this.observable.reobserve(watchQueryOptions);
+    } else {
+      this.observable.silentSetOptions(watchQueryOptions);
+
+      // Maintain the previous result in case the current result does not return
+      // a `data` property.
+      this.result = { ...this.result, ...this.observable.getCurrentResult() };
+      this.promise = createFulfilledPromise(this.result);
+    }
+
+    return this.promise;
   }
 
   listen(listener: Listener<TData>) {
@@ -157,7 +207,9 @@ export class QueryReference<TData = unknown> {
       this.initialized = true;
       this.refetching = false;
       this.result = result;
-      this.resolve(result);
+      if (this.resolve) {
+        this.resolve(result);
+      }
       return;
     }
 
@@ -182,14 +234,13 @@ export class QueryReference<TData = unknown> {
     if (!this.initialized || this.refetching) {
       this.initialized = true;
       this.refetching = false;
-      this.reject(error);
+      if (this.reject) {
+        this.reject(error);
+      }
       return;
     }
 
-    this.result = result;
-    this.promise = result.data
-      ? createFulfilledPromise(result)
-      : createRejectedPromise(result);
+    this.promise = createRejectedPromise(error);
     this.deliver(this.promise);
   }
 

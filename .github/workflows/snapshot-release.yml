@@ -80,7 +80,7 @@ jobs:
 
       - name: Add comment if no new changesets exist
         if: ${{ steps.added-files.outputs.changesets == '' }}
-        uses: peter-evans/create-or-update-comment@v3.0.1
+        uses: peter-evans/create-or-update-comment@v3.0.2
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
@@ -106,7 +106,7 @@ jobs:
 
       - name: Create comment
         if: ${{ steps.added-files.outputs.changesets != '' }}
-        uses: peter-evans/create-or-update-comment@v3.0.1
+        uses: peter-evans/create-or-update-comment@v3.0.2
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |

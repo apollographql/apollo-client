@@ -11,10 +11,12 @@ export interface ApolloContextValue {
   suspenseCache?: SuspenseCache;
 }
 
-type ReactVersion = string;
 declare global {
   interface Window {
-    [contextKey]: Record<ReactVersion, React.Context<ApolloContextValue>>;
+    [contextKey]: Map<
+      typeof React.createContext,
+      React.Context<ApolloContextValue>
+    >;
   }
 }
 
@@ -40,16 +42,18 @@ export function getApolloContext(): React.Context<ApolloContextValue> {
       'For more information, see https://nextjs.org/docs/getting-started/react-essentials#client-components'
   );
 
-  let contextStorage = global[contextKey] || (
-    global[contextKey] = Object.create(null)
-  );
+  let contextStorage =
+    global[contextKey] || (global[contextKey] = new Map());
 
-  return contextStorage[React.version] || (
-    contextStorage[React.version] = Object.assign(
-      React.createContext<ApolloContextValue>({}),
-      { displayName: 'ApolloContext' },
-    )
-  );
+  let value = contextStorage.get(React.createContext);
+  if (!value) {
+    value = Object.assign(React.createContext<ApolloContextValue>({}), {
+      displayName: 'ApolloContext',
+    });
+    contextStorage.set(React.createContext, value);
+  }
+
+  return value;
 }
 
 /**

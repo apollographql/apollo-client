@@ -1,5 +1,5 @@
 import { invariant } from '../../utilities/globals';
-import { useRef, useCallback, useMemo, useEffect, useState } from 'react';
+import { useCallback, useMemo, useEffect, useState } from 'react';
 import type {
   ApolloClient,
   ApolloQueryResult,
@@ -21,9 +21,8 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from '../types/types';
-import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
+import { useDeepMemo, __use } from './internal';
 import { useSuspenseCache } from './useSuspenseCache';
-import type { InternalQueryReference } from '../cache/QueryReference';
 import { canonicalStringify } from '../../cache';
 
 export interface UseSuspenseQueryResult<
@@ -293,16 +292,6 @@ export function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
     : result.error;
-}
-
-export function useTrackedQueryRefs(queryRef: InternalQueryReference) {
-  const trackedQueryRefs = useRef(new Set<InternalQueryReference>());
-
-  trackedQueryRefs.current.add(queryRef);
-
-  useStrictModeSafeCleanupEffect(() => {
-    trackedQueryRefs.current.forEach((sub) => sub.dispose());
-  });
 }
 
 interface UseWatchQueryOptionsHookOptions<

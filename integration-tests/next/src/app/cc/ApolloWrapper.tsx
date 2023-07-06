@@ -9,6 +9,7 @@ import {
 
 import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
 import { setVerbosity } from 'ts-invariant';
+import { schemaLink } from '@/libs/schemaLink';
 
 //if (process.env.NODE_ENV === 'development') {
 setVerbosity('debug');
@@ -33,7 +34,7 @@ export function ApolloWrapper({ children }: React.PropsWithChildren<{}>) {
 
     return new NextSSRApolloClient({
       cache: new NextSSRInMemoryCache(),
-      link: httpLink,
+      link: typeof window === "undefined" ? schemaLink : httpLink,
     });
   }
 

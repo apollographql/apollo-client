@@ -12,6 +12,7 @@ import { onError } from '@apollo/client/link/error';
 import merge from 'deepmerge';
 import isEqual from 'lodash/isEqual';
 import type { GetServerSidePropsResult } from 'next';
+import { schemaLink } from './schemaLink';
 
 export const APOLLO_STATE_PROP_NAME = '__APOLLO_STATE__';
 
@@ -44,7 +45,7 @@ const httpLink = new HttpLink({
 function createApolloClient() {
   return new ApolloClient({
     ssrMode: typeof window === 'undefined',
-    link: from([errorLink, delayLink, httpLink]),
+    link: from([errorLink, delayLink, typeof window === "undefined" ? schemaLink : httpLink]),
     cache: new InMemoryCache(),
   });
 }

@@ -7,8 +7,6 @@ root=$(git rev-parse --show-toplevel)
 temp=$(mktemp --tmpdir="${RUNNER_TEMP:-/tmp}")
 trap 'rm -f "$temp"' EXIT
 
-set -x
-
 patterndiff(){
   cd dist || { echo "dist folder not found"; exit 1; }
   count=0
@@ -62,6 +60,8 @@ npm run build >&2
 cd "$root" || exit 1
 git status >&2
 npm run build >&2
+
+set +e
 
 patterndiff "*.js"
 patterndiff "*.cjs"

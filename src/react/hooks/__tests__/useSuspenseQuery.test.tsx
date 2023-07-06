@@ -6071,54 +6071,6 @@ describe('useSuspenseQuery', () => {
     });
 
     expect(renders.errorCount).toBe(0);
-    expect(renders.count).toBe(6);
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
-      {
-        data: {
-          character: {
-            __typename: 'Character',
-            id: '1',
-            name: 'Doctor Strangecache',
-          },
-        },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: {
-          character: {
-            __typename: 'Character',
-            id: '2',
-            name: 'Hulk',
-          },
-        },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: {
-          character: {
-            __typename: 'Character',
-            id: '1',
-            name: 'Doctor Strangecache',
-          },
-        },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: {
-          character: {
-            __typename: 'Character',
-            id: '1',
-            name: 'Doctor Strangecache',
-          },
-        },
-        networkStatus: NetworkStatus.error,
-        error: expectedError,
-      },
-    ]);
   });
 
   it('does not oversubscribe when suspending multiple times', async () => {

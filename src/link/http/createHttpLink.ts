@@ -1,4 +1,4 @@
-import { __DEV__, invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals';
 
 import type { DefinitionNode } from 'graphql';
 

@@ -3,6 +3,15 @@ import * as path from "path";
 import resolve from "resolve";
 import { distDir, eachFile, reparse, reprint } from './helpers';
 
+const globalTypesFile = path.resolve(distDir, "utilities/globals/global.d.ts");
+fs.writeFileSync(globalTypesFile, 
+  fs.readFileSync(globalTypesFile, "utf8")
+    .split("\n")
+    .filter(line => line.trim() !== 'const __DEV__: boolean;')
+    .join("\n"), 
+  "utf8"
+);
+
 // The primary goal of the 'npm run resolve' script is to make ECMAScript
 // modules exposed by Apollo Client easier to consume natively in web browsers,
 // without bundling, and without help from package.json files. It accomplishes
@@ -21,28 +30,6 @@ eachFile(distDir, (file, relPath) => new Promise((resolve, reject) => {
 
     const tr = new Transformer;
     const output = tr.transform(source, file);
-
-    if (
-      /\b__DEV__\b/.test(source) &&
-      // Ignore modules that reside within @apollo/client/utilities/globals.
-      relPath.split(path.sep, 2).join("/") !== "utilities/globals"
-    ) {
-      let importsUtilitiesGlobals = false;
-
-      tr.absolutePaths.forEach(absPath => {
-        const distRelativePath =
-          path.relative(distDir, absPath).split(path.sep).join("/");
-        if (distRelativePath === "utilities/globals/index.js") {
-          importsUtilitiesGlobals = true;
-        }
-      });
-
-      if (!importsUtilitiesGlobals) {
-        reject(new Error(`Module ${
-          relPath
-        } uses __DEV__ but does not import @apollo/client/utilities/globals`));
-      }
-    }
 
     if (source === output) {
       resolve(file);

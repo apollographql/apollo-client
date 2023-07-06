@@ -1,4 +1,4 @@
-import { invariant, __DEV__ } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals';
 import { useRef, useCallback, useMemo, useEffect, useState } from 'react';
 import type {
   ApolloClient,

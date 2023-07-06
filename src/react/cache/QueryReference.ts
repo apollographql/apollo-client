@@ -127,7 +127,10 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   applyOptions(watchQueryOptions: WatchQueryOptions) {
-    const { fetchPolicy: currentFetchPolicy } = this.watchQueryOptions;
+    const {
+      fetchPolicy: currentFetchPolicy,
+      canonizeResults: currentCanonizeResults,
+    } = this.watchQueryOptions;
 
     // "standby" is used when `skip` is set to `true`. Detect when we've
     // enabled the query (i.e. `skip` is `false`) to execute a network request.
@@ -139,10 +142,10 @@ export class InternalQueryReference<TData = unknown> {
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
 
-      // Maintain the previous result in case the current result does not return
-      // a `data` property.
-      this.result = { ...this.result, ...this.observable.getCurrentResult() };
-      this.promise = createFulfilledPromise(this.result);
+      if (currentCanonizeResults !== watchQueryOptions.canonizeResults) {
+        this.result = { ...this.result, ...this.observable.getCurrentResult() };
+        this.promise = createFulfilledPromise(this.result);
+      }
     }
 
     return this.promise;

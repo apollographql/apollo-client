@@ -467,6 +467,7 @@ Array [
   "storeKeyNameFromField",
   "stringifyForDisplay",
   "stripTypename",
+  "tap",
   "valueToObjectRepresentation",
   "wrapPromiseWithState",
 ]

@@ -3,6 +3,15 @@ import * as path from "path";
 import resolve from "resolve";
 import { distDir, eachFile, reparse, reprint } from './helpers';
 
+const globalTypesFile = path.resolve(distDir, "utilities/globals/global.d.ts");
+fs.writeFileSync(globalTypesFile, 
+  fs.readFileSync(globalTypesFile, "utf8")
+    .split("\n")
+    .filter(line => line.trim() !== 'const __DEV__: boolean;')
+    .join("\n"), 
+  "utf8"
+);
+
 // The primary goal of the 'npm run resolve' script is to make ECMAScript
 // modules exposed by Apollo Client easier to consume natively in web browsers,
 // without bundling, and without help from package.json files. It accomplishes

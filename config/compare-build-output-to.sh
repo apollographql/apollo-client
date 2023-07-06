@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -euo pipefail
 upstream=$1
 comparison="${RUNNER_TEMP:-/tmp}/comparison_checkout"
 root=$(git rev-parse --show-toplevel)
 
 temp=$(mktemp --tmpdir="${RUNNER_TEMP:-/tmp}")
 trap 'rm -f "$temp"' EXIT
+
+set -x
 
 patterndiff(){
   cd dist || { echo "dist folder not found"; exit 1; }

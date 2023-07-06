@@ -3,6 +3,9 @@ const defaults = {
   preset: "ts-jest",
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
+  globals: {
+    __DEV__: true,
+  },
   testEnvironmentOptions: {
     url: "http://localhost",
   },

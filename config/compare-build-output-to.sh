@@ -56,7 +56,7 @@ EOF
 
 [ -z "$upstream" ] && { echo "need upstream argument"; exit 1; }
 
-git worktree add --force --detach --checkout "$comparison" "$upstream" || cd "$comparison" && git checkout "$upstream" || exit 1
+git worktree add --force --detach --checkout "$comparison" "$upstream" || { cd "$comparison" && git checkout "$upstream"; } || exit 1
 
 cd "$comparison" || { echo "checkout failed"; exit 1; }
 cp -r "$root/node_modules" .

@@ -11,7 +11,6 @@ import type { ObservableSubscription } from '../../utilities';
 import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
 import type { CacheKey } from './types';
 import type { useBackgroundQuery, useReadQuery } from '../hooks';
-import equal from '@wry/equality';
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 

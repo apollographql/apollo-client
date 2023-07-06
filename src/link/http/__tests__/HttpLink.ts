@@ -1367,7 +1367,7 @@ describe('HttpLink', () => {
       })
 
 
-      it('unsubscribing cancels internally created AbortController', () => {
+      it('unsubscribing cancels internally created AbortController when request hasn\'t completed', () => {
         const mock = mockGlobalAbortController();
         fetch.mockResolvedValueOnce({ text });
         text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');

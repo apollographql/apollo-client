@@ -86,6 +86,12 @@ function getErrorCode(
         extractString(file, target, message.alternate, condition)
       );
     } else if (isStringOnly(message)) {
+
+      const messageText = reprint(message);
+      if (messageText.includes('Apollo DevTools')) {
+        return message;
+      }
+
       const obj = b.objectExpression([]);
       const numLit = b.numericLiteral(nextErrorCode++);
       target.push(b.property('init', numLit, obj));

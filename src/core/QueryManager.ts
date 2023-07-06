@@ -118,7 +118,9 @@ export class QueryManager<TStore> {
 
   // Maps from queryId strings to Promise rejection functions for
   // currently active queries and fetches.
-  private fetchCancelFns = new Map<string, (error: any) => any>();
+  // Use protected instead of private field so
+  // @apollo/experimental-nextjs-app-support can access type info.
+  protected fetchCancelFns = new Map<string, (error: any) => any>();
 
   constructor({
     cache,
@@ -144,7 +146,7 @@ export class QueryManager<TStore> {
     assumeImmutableResults?: boolean;
   }) {
     const defaultDocumentTransform = new DocumentTransform(
-      (document) => this.cache.transformDocument(document), 
+      (document) => this.cache.transformDocument(document),
       // Allow the apollo cache to manage its own transform caches
       { cache: false }
     );
@@ -161,8 +163,8 @@ export class QueryManager<TStore> {
       ? defaultDocumentTransform
           .concat(documentTransform)
           // The custom document transform may add new fragment spreads or new
-          // field selections, so we want to give the cache a chance to run 
-          // again. For example, the InMemoryCache adds __typename to field 
+          // field selections, so we want to give the cache a chance to run
+          // again. For example, the InMemoryCache adds __typename to field
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform
@@ -695,7 +697,7 @@ export class QueryManager<TStore> {
     const query = this.transform(options.query);
 
     // assign variable default values if supplied
-    // NOTE: We don't modify options.query here with the transformed query to 
+    // NOTE: We don't modify options.query here with the transformed query to
     // ensure observable.options.query is set to the raw untransformed query.
     options = {
       ...options,
@@ -719,7 +721,7 @@ export class QueryManager<TStore> {
 
     this.queries.set(observable.queryId, queryInfo);
 
-    // We give queryInfo the transformed query to ensure the first cache diff 
+    // We give queryInfo the transformed query to ensure the first cache diff
     // uses the transformed query instead of the raw query
     queryInfo.init({
       document: query,
@@ -1027,7 +1029,9 @@ export class QueryManager<TStore> {
     return this.localState;
   }
 
-  private inFlightLinkObservables = new Map<
+  // Use protected instead of private field so
+  // @apollo/experimental-nextjs-app-support can access type info.
+  protected inFlightLinkObservables = new Map<
     string,
     Map<string, Observable<FetchResult>>
   >();

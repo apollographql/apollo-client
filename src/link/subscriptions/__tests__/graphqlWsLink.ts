@@ -35,6 +35,7 @@ function mockClient(subscribe: Client["subscribe"]): Client {
   return {
     subscribe,
     // GraphQLWsLink doesn't use these methods
+    iterate: () => (async function* iterator() {})(),
     on: () => () => {},
     dispose: () => {},
     terminate: () => {},

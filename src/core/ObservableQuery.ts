@@ -592,6 +592,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve(newOptions);
   }
 
+  public silentSetOptions(
+    newOptions: Partial<WatchQueryOptions<TVariables, TData>>,
+  ) {
+    const mergedOptions = compact(this.options, newOptions || {});
+    assign(this.options, mergedOptions);
+  }
+
   /**
    * Update the variables of this observable query, and fetch the new results
    * if they've changed. Most users should prefer `refetch` instead of

@@ -86,6 +86,12 @@ function getErrorCode(
         extractString(file, target, message.alternate, condition)
       );
     } else if (isStringOnly(message)) {
+
+      const messageText = reprint(message);
+      if (messageText.includes('Apollo DevTools')) {
+        return message;
+      }
+
       const obj = b.objectExpression([]);
       const numLit = b.numericLiteral(nextErrorCode++);
       target.push(b.property('init', numLit, obj));
@@ -113,7 +119,7 @@ function getErrorCode(
       throw new Error(`invariant minification error: node cannot have dynamical error argument!
         file: ${posix.join(distDir, file)}:${expr.loc?.start.line}
         code:
-  
+
         ${reprint(message)}
       `);
     }

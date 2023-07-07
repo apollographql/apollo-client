@@ -1,17 +1,17 @@
-import { invariant, newInvariantError, __DEV__ } from '../utilities/globals';
+import { invariant, newInvariantError } from '../utilities/globals/index.js';
 
 import type { ExecutionResult, DocumentNode } from 'graphql';
 
-import type { FetchResult, GraphQLRequest} from '../link/core';
-import { ApolloLink, execute } from '../link/core';
-import type { ApolloCache, DataProxy, Reference } from '../cache';
-import type { DocumentTransform, Observable } from '../utilities';
-import { version } from '../version';
-import type { UriFunction } from '../link/http';
-import { HttpLink } from '../link/http';
+import type { FetchResult, GraphQLRequest} from '../link/core/index.js';
+import { ApolloLink, execute } from '../link/core/index.js';
+import type { ApolloCache, DataProxy, Reference } from '../cache/index.js';
+import type { DocumentTransform, Observable } from '../utilities/index.js';
+import { version } from '../version.js';
+import type { UriFunction } from '../link/http/index.js';
+import { HttpLink } from '../link/http/index.js';
 
-import { QueryManager } from './QueryManager';
-import type { ObservableQuery } from './ObservableQuery';
+import { QueryManager } from './QueryManager.js';
+import type { ObservableQuery } from './ObservableQuery.js';
 
 import type {
   ApolloQueryResult,
@@ -22,7 +22,7 @@ import type {
   RefetchQueriesResult,
   InternalRefetchQueriesResult,
   RefetchQueriesInclude,
-} from './types';
+} from './types.js';
 
 import type {
   QueryOptions,
@@ -30,13 +30,13 @@ import type {
   MutationOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
-} from './watchQueryOptions';
+} from './watchQueryOptions.js';
 
 import type {
-  FragmentMatcher} from './LocalState';
+  FragmentMatcher} from './LocalState.js';
 import {
   LocalState
-} from './LocalState';
+} from './LocalState.js';
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
@@ -70,7 +70,7 @@ export type ApolloClientOptions<TCacheShape> = {
 // previously declared and exported from this module, and then reexported from
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
-import { mergeOptions } from "../utilities";
+import { mergeOptions } from "../utilities/index.js";
 export { mergeOptions }
 
 /**

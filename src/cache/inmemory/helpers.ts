@@ -3,17 +3,17 @@ import type { DocumentNode, FragmentDefinitionNode, SelectionSetNode } from 'gra
 import type {
   NormalizedCache,
   InMemoryCacheConfig,
-} from './types';
+} from './types.js';
 
-import type { KeyFieldsContext } from './policies';
-import type { FragmentRegistryAPI } from './fragmentRegistry';
+import type { KeyFieldsContext } from './policies.js';
+import type { FragmentRegistryAPI } from './fragmentRegistry.js';
 
 import type {
   Reference,
   StoreValue,
   StoreObject,
   FragmentMap,
-  FragmentMapFunction} from '../../utilities';
+  FragmentMapFunction} from '../../utilities/index.js';
 import {
   isReference,
   isField,
@@ -25,7 +25,7 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   isArray,
-} from '../../utilities';
+} from '../../utilities/index.js';
 
 export const {
   hasOwnProperty: hasOwn,

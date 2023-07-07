@@ -1,4 +1,4 @@
-import { invariant, newInvariantError, __DEV__ } from '../../utilities/globals';
+import { invariant, newInvariantError } from '../../utilities/globals/index.js';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 import type {
@@ -13,7 +13,7 @@ import type {
   FragmentMapFunction,
   StoreValue,
   StoreObject,
-  Reference} from '../../utilities';
+  Reference} from '../../utilities/index.js';
 import {
   getFragmentFromSelection,
   getDefaultValues,
@@ -28,17 +28,17 @@ import {
   addTypenameToDocument,
   isNonEmptyArray,
   argumentsObjectFromField,
-} from '../../utilities';
+} from '../../utilities/index.js';
 
-import type { NormalizedCache, ReadMergeModifyContext, MergeTree, InMemoryCacheConfig } from './types';
-import { isArray, makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject, extractFragmentContext } from './helpers';
-import type { StoreReader } from './readFromStore';
-import type { InMemoryCache } from './inMemoryCache';
-import type { EntityStore } from './entityStore';
-import type { Cache } from '../../core';
-import { canonicalStringify } from './object-canon';
-import { normalizeReadFieldOptions } from './policies';
-import type { ReadFieldFunction } from '../core/types/common';
+import type { NormalizedCache, ReadMergeModifyContext, MergeTree, InMemoryCacheConfig } from './types.js';
+import { isArray, makeProcessedFieldsMerger, fieldNameFromStoreName, storeValueIsStoreObject, extractFragmentContext } from './helpers.js';
+import type { StoreReader } from './readFromStore.js';
+import type { InMemoryCache } from './inMemoryCache.js';
+import type { EntityStore } from './entityStore.js';
+import type { Cache } from '../../core/index.js';
+import { canonicalStringify } from './object-canon.js';
+import { normalizeReadFieldOptions } from './policies.js';
+import type { ReadFieldFunction } from '../core/types/common.js';
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
@@ -812,6 +812,8 @@ function warnAboutDataLoss(
 
   invariant.warn(
 `Cache data may be lost when replacing the %s field of a %s object.
+
+This could cause additional (usually avoidable) network requests to fetch data that were otherwise cached.
 
 To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
 

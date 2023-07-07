@@ -3,19 +3,19 @@ import type {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
-} from '../../core';
-import { useApolloClient } from './useApolloClient';
+} from '../../core/index.js';
+import { useApolloClient } from './useApolloClient.js';
 import {
   QUERY_REFERENCE_SYMBOL,
   type QueryReference,
-} from '../cache/QueryReference';
-import type { BackgroundQueryHookOptions, NoInfer } from '../types/types';
-import { __use } from './internal';
-import { useSuspenseCache } from './useSuspenseCache';
-import { useTrackedQueryRefs, useWatchQueryOptions } from './useSuspenseQuery';
-import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery';
-import { canonicalStringify } from '../../cache';
-import type { DeepPartial } from '../../utilities';
+} from '../cache/QueryReference.js';
+import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
+import { __use } from './internal/index.js';
+import { useSuspenseCache } from './useSuspenseCache.js';
+import { useTrackedQueryRefs, useWatchQueryOptions } from './useSuspenseQuery.js';
+import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
+import { canonicalStringify } from '../../cache/index.js';
+import type { DeepPartial } from '../../utilities/index.js';
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -127,7 +127,7 @@ export function useBackgroundQuery<
   const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { fetchPolicy, variables } = watchQueryOptions;
+  const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
   const cacheKey = (
@@ -138,14 +138,12 @@ export function useBackgroundQuery<
     client.watchQuery(watchQueryOptions)
   );
 
-  const { fetchPolicy: currentFetchPolicy } = queryRef.watchQueryOptions;
-
   const [promiseCache, setPromiseCache] = React.useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
 
-  if (currentFetchPolicy === 'standby' && fetchPolicy !== currentFetchPolicy) {
-    const promise = queryRef.reobserve({ fetchPolicy });
+  if (queryRef.didChangeOptions(watchQueryOptions)) {
+    const promise = queryRef.applyOptions(watchQueryOptions);
     promiseCache.set(queryRef.key, promise);
   }
 

@@ -5,9 +5,9 @@ import type {
   StoreObject,
   StoreValue,
   isReference,
-} from '../../../utilities';
+} from '../../../utilities/index.js';
 
-import type { StorageType } from '../../inmemory/policies';
+import type { StorageType } from '../../inmemory/policies.js';
 
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when
@@ -98,7 +98,7 @@ export type Modifier<T> = (
   details: ModifierDetails
 ) => T | DeleteModifier | InvalidateModifier;
 
-type StoreObjectValueMaybeReference<StoreVal> = 
+type StoreObjectValueMaybeReference<StoreVal> =
   StoreVal extends Record<string, any>[]
   ? Readonly<StoreVal> | readonly Reference[]
   : StoreVal extends Record<string, any>
@@ -107,7 +107,7 @@ type StoreObjectValueMaybeReference<StoreVal> =
 
 export type AllFieldsModifier<
   Entity extends Record<string, any>
-> = Modifier<Entity[keyof Entity] extends infer Value ? 
+> = Modifier<Entity[keyof Entity] extends infer Value ?
   StoreObjectValueMaybeReference<Exclude<Value, undefined>>
   : never>;
 

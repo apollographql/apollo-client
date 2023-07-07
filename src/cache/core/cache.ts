@@ -3,12 +3,12 @@ import { wrap } from 'optimism';
 
 import type {
   StoreObject,
-  Reference} from '../../utilities';
+  Reference} from '../../utilities/index.js';
 import {
   getFragmentQueryDocument,
-} from '../../utilities';
-import type { DataProxy } from './types/DataProxy';
-import type { Cache } from './types/Cache';
+} from '../../utilities/index.js';
+import type { DataProxy } from './types/DataProxy.js';
+import type { Cache } from './types/Cache.js';
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 

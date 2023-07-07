@@ -88,6 +88,9 @@ exports.check = function (id, parentId) {
 function partsAfterDist(id) {
   const parts = id.split(path.sep);
   const distIndex = parts.lastIndexOf("dist");
+  if (/^index.jsx?$/.test(parts[parts.length - 1])) {
+    parts.pop();
+  }
   if (distIndex >= 0) {
     return parts.slice(distIndex + 1);
   }

@@ -1,6 +1,7 @@
-import { maybe } from "./maybe";
+import { maybe } from "./maybe.js";
 
 declare global {
+  const __DEV__: boolean; // will be removed in `dist` by the `postprocessDist` script
 	interface Window {
 		__DEV__?: boolean;
 	}

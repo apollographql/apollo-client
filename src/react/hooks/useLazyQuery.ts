@@ -2,17 +2,17 @@ import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import * as React from 'react';
 
-import type { OperationVariables } from '../../core';
-import { mergeOptions } from '../../utilities';
+import type { OperationVariables } from '../../core/index.js';
+import { mergeOptions } from '../../utilities/index.js';
 import type {
   LazyQueryHookExecOptions,
   LazyQueryHookOptions,
   LazyQueryResultTuple,
   NoInfer,
   QueryResult,
-} from '../types/types';
-import { useInternalState } from './useQuery';
-import { useApolloClient } from './useApolloClient';
+} from '../types/types.js';
+import { useInternalState } from './useQuery.js';
+import { useApolloClient } from './useApolloClient.js';
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -35,7 +35,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
   const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
 
-  // Use refs to track options and the used query to ensure the `execute` 
+  // Use refs to track options and the used query to ensure the `execute`
   // function remains referentially stable between renders.
   optionsRef.current = merged;
   queryRef.current = document;

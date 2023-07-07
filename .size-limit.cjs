@@ -1,7 +1,7 @@
 const checks = [
   {
     path: "dist/apollo-client.min.cjs",
-    limit: "37789"
+    limit: "37860"
   },
   {
     path: "dist/main.cjs",
@@ -10,7 +10,7 @@ const checks = [
   {
     path: "dist/index.js",
     import: "{ ApolloClient, InMemoryCache, HttpLink }",
-    limit: "33371"
+    limit: "32181"
   },
   ...[
     "ApolloProvider",
@@ -44,6 +44,15 @@ const checks = [
     "tslib",
     "zen-observable-ts"
   ],
-}));
+})).flatMap((value) => value.path == "dist/apollo-client.min.cjs" ? value : [{...value, limit: undefined}, {
+  ...value,
+  name: `${value.name} (production)`,
+  modifyEsbuildConfig(config){
+    config.define = {
+      "globalThis.__DEV__": `false`,
+    }
+    return config
+  }
+}]);
 
 module.exports = checks;

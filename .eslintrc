@@ -1,6 +1,6 @@
 {
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "import"],
   "env": {
     "browser": true,
     "node": true,
@@ -8,6 +8,16 @@
   },
   "parserOptions": {
     "ecmaVersion": "latest"
+  },
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true
+      }
+    }
   },
   "overrides": [
     {
@@ -26,6 +36,14 @@
             "selector": "ImportDeclaration[source.value='react'][importKind!='type'] :matches(ImportSpecifier, ImportDefaultSpecifier)",
             "message": "Please only use the namespace import syntax (`import * as React from 'react'`) for React imports!"
           }
+        ],
+        "import/extensions": [
+          "error",
+          "always",
+          {
+            "ignorePackages": true,
+            "checkTypeImports": true
+          }
         ]
       }
     },
@@ -38,4 +56,7 @@
       }
     }
   ],
+  "rules": {
+    "import/no-unresolved": "error"
+  }
 }

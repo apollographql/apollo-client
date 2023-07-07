@@ -1,15 +1,16 @@
+import { equal } from '@wry/equality';
 import type {
   ApolloError,
   ApolloQueryResult,
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
-} from '../../core';
-import { NetworkStatus, isNetworkRequestSettled } from '../../core';
-import type { ObservableSubscription } from '../../utilities';
-import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
-import type { CacheKey } from './types';
-import type { useBackgroundQuery, useReadQuery } from '../hooks';
+} from '../../core/index.js';
+import { NetworkStatus, isNetworkRequestSettled } from '../../core/index.js';
+import type { ObservableSubscription } from '../../utilities/index.js';
+import { createFulfilledPromise, createRejectedPromise } from '../../utilities/index.js';
+import type { CacheKey } from './types.js';
+import type { useBackgroundQuery, useReadQuery } from '../hooks/index.js';
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
@@ -32,6 +33,15 @@ interface InternalQueryReferenceOptions {
   onDispose?: () => void;
   autoDisposeTimeoutMs?: number;
 }
+
+const OBSERVED_CHANGED_OPTIONS: Array<keyof WatchQueryOptions> = [
+  'canonizeResults',
+  'context',
+  'errorPolicy',
+  'fetchPolicy',
+  'refetchWritePolicy',
+  'returnPartialData',
+];
 
 export class InternalQueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
@@ -100,6 +110,35 @@ export class InternalQueryReference<TData = unknown> {
 
   get watchQueryOptions() {
     return this.observable.options;
+  }
+
+  didChangeOptions(watchQueryOptions: WatchQueryOptions) {
+    return OBSERVED_CHANGED_OPTIONS.some(
+      (option) =>
+        !equal(this.watchQueryOptions[option], watchQueryOptions[option])
+    );
+  }
+
+  applyOptions(watchQueryOptions: WatchQueryOptions) {
+    const { fetchPolicy: currentFetchPolicy } = this.watchQueryOptions;
+
+    // "standby" is used when `skip` is set to `true`. Detect when we've
+    // enabled the query (i.e. `skip` is `false`) to execute a network request.
+    if (
+      currentFetchPolicy === 'standby' &&
+      currentFetchPolicy !== watchQueryOptions.fetchPolicy
+    ) {
+      this.promise = this.observable.reobserve(watchQueryOptions);
+    } else {
+      this.observable.silentSetOptions(watchQueryOptions);
+
+      // Maintain the previous result in case the current result does not return
+      // a `data` property.
+      this.result = { ...this.result, ...this.observable.getCurrentResult() };
+      this.promise = createFulfilledPromise(this.result);
+    }
+
+    return this.promise;
   }
 
   listen(listener: Listener<TData>) {
@@ -201,10 +240,7 @@ export class InternalQueryReference<TData = unknown> {
       return;
     }
 
-    this.result = result;
-    this.promise = result.data
-      ? createFulfilledPromise(result)
-      : createRejectedPromise(result);
+    this.promise = createRejectedPromise(error);
     this.deliver(this.promise);
   }
 

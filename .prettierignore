@@ -23,6 +23,9 @@
 config/*
 !config/processInvariants.ts
 
+!integration-tests/
+!integration-tests/**
+
 #####  PATHS TO BE FORMATTED #####
 !src/
 src/*

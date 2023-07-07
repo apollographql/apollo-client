@@ -1,8 +1,8 @@
 import { invariant as originalInvariant, InvariantError } from 'ts-invariant';
-import { version } from '../../version';
-import global from './global';
-import type { ErrorCodes } from '../../invariantErrorCodes';
-import { stringifyForDisplay } from '../common/stringifyForDisplay';
+import { version } from '../../version.js';
+import global from './global.js';
+import type { ErrorCodes } from '../../invariantErrorCodes.js';
+import { stringifyForDisplay } from '../common/stringifyForDisplay.js';
 
 function wrap(fn: (msg?: string, ...args: any[]) => void) {
   return function (message: string | number, ...args: any[]) {

@@ -1,24 +1,24 @@
-import { invariant, newInvariantError } from '../utilities/globals';
+import { invariant, newInvariantError } from '../utilities/globals/index.js';
 
 import type { DocumentNode } from 'graphql';
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 import { equal } from '@wry/equality';
 
-import type { ApolloLink, FetchResult } from '../link/core';
-import { execute } from '../link/core';
+import type { ApolloLink, FetchResult } from '../link/core/index.js';
+import { execute } from '../link/core/index.js';
 import {
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
   removeDirectivesFromDocument,
-} from '../utilities';
-import type { Cache, ApolloCache} from '../cache';
-import { canonicalStringify } from '../cache';
+} from '../utilities/index.js';
+import type { Cache, ApolloCache} from '../cache/index.js';
+import { canonicalStringify } from '../cache/index.js';
 
 import type {
   ObservableSubscription,
-  ConcastSourcesArray} from '../utilities';
+  ConcastSourcesArray} from '../utilities/index.js';
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -35,9 +35,9 @@ import {
   isDocumentNode,
   isNonNullObject,
   DocumentTransform,
-} from '../utilities';
-import { mergeIncrementalData } from '../utilities/common/incrementalResult';
-import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from '../errors';
+} from '../utilities/index.js';
+import { mergeIncrementalData } from '../utilities/common/incrementalResult.js';
+import { ApolloError, isApolloError, graphQLResultHasProtocolErrors } from '../errors/index.js';
 import type {
   QueryOptions,
   WatchQueryOptions,
@@ -45,9 +45,9 @@ import type {
   MutationOptions,
   ErrorPolicy,
   MutationFetchPolicy,
-} from './watchQueryOptions';
-import { ObservableQuery, logMissingFieldErrors } from './ObservableQuery';
-import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
+} from './watchQueryOptions.js';
+import { ObservableQuery, logMissingFieldErrors } from './ObservableQuery.js';
+import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus.js';
 import type {
   ApolloQueryResult,
   OperationVariables,
@@ -57,19 +57,19 @@ import type {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
-} from './types';
-import { LocalState } from './LocalState';
+} from './types.js';
+import { LocalState } from './LocalState.js';
 
 import type {
-  QueryStoreValue} from './QueryInfo';
+  QueryStoreValue} from './QueryInfo.js';
 import {
   QueryInfo,
   shouldWriteResult,
   CacheWriteBehavior,
-} from './QueryInfo';
-import type { ApolloErrorOptions } from '../errors';
-import { PROTOCOL_ERRORS_SYMBOL } from '../errors';
-import { print } from '../utilities';
+} from './QueryInfo.js';
+import type { ApolloErrorOptions } from '../errors/index.js';
+import { PROTOCOL_ERRORS_SYMBOL } from '../errors/index.js';
+import { print } from '../utilities/index.js';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -92,7 +92,7 @@ interface TransformCacheEntry {
   asQuery: DocumentNode;
 }
 
-type DefaultOptions = import("./ApolloClient").DefaultOptions;
+type DefaultOptions = import("./ApolloClient.js").DefaultOptions;
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;

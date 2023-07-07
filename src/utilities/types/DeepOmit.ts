@@ -1,4 +1,4 @@
-import type { Primitive } from './Primitive';
+import type { Primitive } from './Primitive.js';
 
 // DeepOmit primitives include functions since these are unmodified.
 type DeepOmitPrimitive = Primitive | Function;

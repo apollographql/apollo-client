@@ -1,6 +1,6 @@
-import type { ErrorCodes } from '../invariantErrorCodes';
-import { global } from '../utilities/globals';
-import { ApolloErrorMessageHandler } from '../utilities/globals/invariantWrappers';
+import type { ErrorCodes } from '../invariantErrorCodes.js';
+import { global } from '../utilities/globals/index.js';
+import { ApolloErrorMessageHandler } from '../utilities/globals/invariantWrappers.js';
 
 export function loadErrorMessageHandler(...errorCodes: ErrorCodes[]) {
   if (!global[ApolloErrorMessageHandler]) {

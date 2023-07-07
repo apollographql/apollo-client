@@ -23,6 +23,7 @@ const defaults = {
       },
     ],
   },
+  resolver: "ts-jest-resolver",
 };
 
 const ignoreTSFiles = '.ts$';

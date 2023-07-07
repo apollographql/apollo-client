@@ -5,12 +5,15 @@ import type {
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
-} from '../../core';
-import { isNetworkRequestSettled } from '../../core';
-import type { ObservableSubscription } from '../../utilities';
-import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
-import type { CacheKey } from './types';
-import type { useBackgroundQuery, useReadQuery } from '../hooks';
+} from '../../core/index.js';
+import { isNetworkRequestSettled } from '../../core/index.js';
+import type { ObservableSubscription } from '../../utilities/index.js';
+import {
+  createFulfilledPromise,
+  createRejectedPromise,
+} from '../../utilities/index.js';
+import type { CacheKey } from './types.js';
+import type { useBackgroundQuery, useReadQuery } from '../hooks/index.js';
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 

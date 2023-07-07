@@ -1,5 +1,5 @@
-import { useLayoutEffect, useEffect } from 'react';
-import { canUseDOM } from '../../../utilities';
+import * as React from 'react';
+import { canUseDOM } from '../../../utilities/index.js';
 
 // use canUseDOM here instead of canUseLayoutEffect because we want to be able
 // to use useLayoutEffect in our jest tests. useLayoutEffect seems to work fine
@@ -7,5 +7,5 @@ import { canUseDOM } from '../../../utilities';
 // warnings for useSyncExternalStore implementation, canUseLayoutEffect is left
 // alone.
 export const useIsomorphicLayoutEffect = canUseDOM
-  ? useLayoutEffect
-  : useEffect;
+  ? React.useLayoutEffect
+  : React.useEffect;

@@ -1,6 +1,6 @@
 import type { Response as NodeResponse } from "node-fetch";
 import type { Readable as NodeReadableStream } from "stream";
-import { canUseAsyncIteratorSymbol } from "./canUse";
+import { canUseAsyncIteratorSymbol } from "./canUse.js";
 
 export function isNodeResponse(value: any): value is NodeResponse {
   return !!(value as NodeResponse).body;

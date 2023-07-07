@@ -12,6 +12,8 @@
     "esModuleInterop": true,
     "sourceMap": true,
     "inlineSourceMap": false,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
     // This option should cause sourcesContent to be included in the
     // source map JSON, so we don't have to rely on the (nonexistent)
     // relative paths in the sources array, but it appears tsc does not

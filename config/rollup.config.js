@@ -109,12 +109,8 @@ function prepareBundle({
 
   return {
     input: inputFile,
-    /*
-    external(id, parentId) {
-      console.log({id, parentId})
-      return isExternal(id, parentId, true);
-    },
-    */
+    // the external check is done by the `'externalize-dependency'` plugin
+    // external(id, parentId) {}
     output: {
       file: outputFile,
       format: 'cjs',
@@ -163,8 +159,7 @@ function prepareBundle({
 
 export default [
   ...entryPoints.map(prepareBundle),
-  //.filter(x => x.input.includes("utilities")),
-  // Convert the ESM entry point to a single CJS bundle.#
+  // Convert the ESM entry point to a single CJS bundle.
   prepareCJS(
     './dist/index.js',
     './dist/apollo-client.cjs',

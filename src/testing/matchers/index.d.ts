@@ -2,7 +2,7 @@ import type {
   ApolloClient,
   DocumentNode,
   OperationVariables,
-} from '../../core';
+} from '../../core/index.js';
 
 interface ApolloCustomMatchers<R = void> {
   /**

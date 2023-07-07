@@ -7,19 +7,19 @@ import type {
   MutationResult,
   MutationTuple,
   NoInfer,
-} from '../types/types';
+} from '../types/types.js';
 
 import type {
   ApolloCache,
   DefaultContext,
-  OperationVariables} from '../../core';
+  OperationVariables} from '../../core/index.js';
 import {
   mergeOptions
-} from '../../utilities';
+} from '../../utilities/index.js';
 import { equal } from '@wry/equality';
-import { DocumentType, verifyDocumentType } from '../parser';
-import { ApolloError } from '../../errors';
-import { useApolloClient } from './useApolloClient';
+import { DocumentType, verifyDocumentType } from '../parser/index.js';
+import { ApolloError } from '../../errors/index.js';
+import { useApolloClient } from './useApolloClient.js';
 
 export function useMutation<
   TData = any,

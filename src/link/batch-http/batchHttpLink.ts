@@ -1,13 +1,13 @@
-import type { Operation, FetchResult } from '../core';
-import { ApolloLink } from '../core';
+import type { Operation, FetchResult } from '../core/index.js';
+import { ApolloLink } from '../core/index.js';
 import {
   Observable,
   hasDirectives,
   removeClientSetsFromDocument
-} from '../../utilities';
-import { fromError } from '../utils';
+} from '../../utilities/index.js';
+import { fromError } from '../utils/index.js';
 import type {
-  HttpOptions} from '../http';
+  HttpOptions} from '../http/index.js';
 import {
   serializeFetchParameter,
   selectURI,
@@ -17,9 +17,9 @@ import {
   defaultPrinter,
   fallbackHttpConfig,
   createSignalIfSupported,
-} from '../http';
-import { BatchLink } from '../batch';
-import { filterOperationVariables } from "../utils/filterOperationVariables";
+} from '../http/index.js';
+import { BatchLink } from '../batch/index.js';
+import { filterOperationVariables } from "../utils/filterOperationVariables.js";
 
 export namespace BatchHttpLink {
   export type Options = Pick<

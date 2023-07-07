@@ -1,36 +1,36 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 
 // Make builtins like Map and Set safe to use with non-extensible objects.
-import './fixPolyfills';
+import './fixPolyfills.js';
 
 import type { DocumentNode } from 'graphql';
 import type { OptimisticWrapperFunction} from 'optimism';
 import { wrap } from 'optimism';
 import { equal } from '@wry/equality';
 
-import { ApolloCache } from '../core/cache';
-import type { Cache } from '../core/types/Cache';
-import { MissingFieldError } from '../core/types/common';
+import { ApolloCache } from '../core/cache.js';
+import type { Cache } from '../core/types/Cache.js';
+import { MissingFieldError } from '../core/types/common.js';
 import type {
   StoreObject,
-  Reference} from '../../utilities';
+  Reference} from '../../utilities/index.js';
 import {
   addTypenameToDocument,
   isReference,
   DocumentTransform,
-} from '../../utilities';
+} from '../../utilities/index.js';
 import type {
   InMemoryCacheConfig,
   NormalizedCacheObject,
-} from './types';
-import { StoreReader } from './readFromStore';
-import { StoreWriter } from './writeToStore';
-import { EntityStore, supportsResultCaching } from './entityStore';
-import { makeVar, forgetCache, recallCache } from './reactiveVars';
-import { Policies } from './policies';
-import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
-import { canonicalStringify } from './object-canon';
-import type { OperationVariables } from '../../core';
+} from './types.js';
+import { StoreReader } from './readFromStore.js';
+import { StoreWriter } from './writeToStore.js';
+import { EntityStore, supportsResultCaching } from './entityStore.js';
+import { makeVar, forgetCache, recallCache } from './reactiveVars.js';
+import { Policies } from './policies.js';
+import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers.js';
+import { canonicalStringify } from './object-canon.js';
+import type { OperationVariables } from '../../core/index.js';
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,

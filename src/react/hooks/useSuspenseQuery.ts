@@ -1,4 +1,4 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 import { useRef, useCallback, useMemo, useEffect, useState } from 'react';
 import type {
   ApolloClient,
@@ -9,21 +9,21 @@ import type {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
   FetchMoreQueryOptions,
-} from '../../core';
-import { ApolloError, NetworkStatus } from '../../core';
-import type { DeepPartial } from '../../utilities';
-import { isNonEmptyArray } from '../../utilities';
-import { useApolloClient } from './useApolloClient';
-import { DocumentType, verifyDocumentType } from '../parser';
+} from '../../core/index.js';
+import { ApolloError, NetworkStatus } from '../../core/index.js';
+import type { DeepPartial } from '../../utilities/index.js';
+import { isNonEmptyArray } from '../../utilities/index.js';
+import { useApolloClient } from './useApolloClient.js';
+import { DocumentType, verifyDocumentType } from '../parser/index.js';
 import type {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
   NoInfer,
-} from '../types/types';
-import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal';
-import { useSuspenseCache } from './useSuspenseCache';
-import type { InternalQueryReference } from '../cache/QueryReference';
-import { canonicalStringify } from '../../cache';
+} from '../types/types.js';
+import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal/index.js';
+import { useSuspenseCache } from './useSuspenseCache.js';
+import type { InternalQueryReference } from '../cache/QueryReference.js';
+import { canonicalStringify } from '../../cache/index.js';
 
 export interface UseSuspenseQueryResult<
   TData = unknown,

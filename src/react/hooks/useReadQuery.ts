@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
 import invariant from "ts-invariant";
-import { NetworkStatus } from "../../core";
-import { QUERY_REFERENCE_SYMBOL, type QueryReference } from "../cache/QueryReference";
-import { __use } from "./internal";
-import { toApolloError } from "./useSuspenseQuery";
+import { NetworkStatus } from "../../core/index.js";
+import { QUERY_REFERENCE_SYMBOL, type QueryReference } from "../cache/QueryReference.js";
+import { __use } from "./internal/index.js";
+import { toApolloError } from "./useSuspenseQuery.js";
 
 export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   const [, forceUpdate] = useState(0);

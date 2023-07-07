@@ -1,5 +1,5 @@
-import { checkDocument, print } from '../../utilities';
-import type { DocumentNode } from '../../core';
+import { checkDocument, print } from '../../utilities/index.js';
+import type { DocumentNode } from '../../core/index.js';
 import type { MatcherFunction } from 'expect';
 
 export const toMatchDocument: MatcherFunction<[document: DocumentNode]> =

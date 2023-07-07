@@ -1,27 +1,27 @@
 import type { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
-import type { Cache, ApolloCache } from '../cache';
-import { DeepMerger } from "../utilities"
-import { mergeIncrementalData } from '../utilities';
-import type { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
-import type { ObservableQuery} from './ObservableQuery';
-import { reobserveCacheFirst } from './ObservableQuery';
-import type { QueryListener, MethodKeys } from './types';
-import type { FetchResult } from '../link/core';
+import type { Cache, ApolloCache } from '../cache/index.js';
+import { DeepMerger } from "../utilities/index.js"
+import { mergeIncrementalData } from '../utilities/index.js';
+import type { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions.js';
+import type { ObservableQuery} from './ObservableQuery.js';
+import { reobserveCacheFirst } from './ObservableQuery.js';
+import type { QueryListener, MethodKeys } from './types.js';
+import type { FetchResult } from '../link/core/index.js';
 import type {
-  ObservableSubscription} from '../utilities';
+  ObservableSubscription} from '../utilities/index.js';
 import {
   isNonEmptyArray,
   graphQLResultHasError,
   canUseWeakMap,
-} from '../utilities';
+} from '../utilities/index.js';
 import {
   NetworkStatus,
   isNetworkRequestInFlight,
-} from './networkStatus';
-import type { ApolloError } from '../errors';
-import type { QueryManager } from './QueryManager';
+} from './networkStatus.js';
+import type { ApolloError } from '../errors/index.js';
+import type { QueryManager } from './QueryManager.js';
 
 export type QueryStoreValue = Pick<QueryInfo,
   | "variables"

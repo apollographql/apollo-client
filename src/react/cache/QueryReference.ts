@@ -5,16 +5,15 @@ import type {
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
-} from '../../core';
-import { isNetworkRequestSettled } from '../../core';
-import type { ObservableSubscription } from '../../utilities';
+} from '../../core/index.js';
+import { isNetworkRequestSettled } from '../../core/index.js';
+import type { ObservableSubscription } from '../../utilities/index.js';
 import {
   createFulfilledPromise,
   createRejectedPromise,
-  tap,
-} from '../../utilities';
-import type { CacheKey } from './types';
-import type { useBackgroundQuery, useReadQuery } from '../hooks';
+} from '../../utilities/index.js';
+import type { CacheKey } from './types.js';
+import type { useBackgroundQuery, useReadQuery } from '../hooks/index.js';
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
@@ -142,7 +141,8 @@ export class InternalQueryReference<TData = unknown> {
       currentFetchPolicy === 'standby' &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy
     ) {
-      tap(this.observable.reobserve(watchQueryOptions), this.initiateFetch);
+      this.observable.reobserve(watchQueryOptions);
+      this.initiateFetch();
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
 
@@ -164,11 +164,19 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   refetch(variables: OperationVariables | undefined) {
-    return tap(this.observable.refetch(variables), this.initiateFetch);
+    const promise = this.observable.refetch(variables);
+
+    this.initiateFetch();
+
+    return promise;
   }
 
   fetchMore(options: FetchMoreOptions<TData>) {
-    return tap(this.observable.fetchMore<TData>(options), this.initiateFetch);
+    const promise = this.observable.fetchMore<TData>(options);
+
+    this.initiateFetch();
+
+    return promise;
   }
 
   dispose() {

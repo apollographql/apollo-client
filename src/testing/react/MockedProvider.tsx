@@ -1,15 +1,15 @@
 import * as React from 'react';
 
-import type { DefaultOptions } from '../../core';
-import { ApolloClient } from '../../core';
-import { InMemoryCache as Cache } from '../../cache';
-import { ApolloProvider } from '../../react/context';
-import { SuspenseCache } from '../../react';
-import type { MockedResponse } from '../core';
-import { MockLink } from '../core';
-import type { ApolloLink } from '../../link/core';
-import type { Resolvers } from '../../core';
-import type { ApolloCache } from '../../cache';
+import type { DefaultOptions } from '../../core/index.js';
+import { ApolloClient } from '../../core/index.js';
+import { InMemoryCache as Cache } from '../../cache/index.js';
+import { ApolloProvider } from '../../react/context/index.js';
+import { SuspenseCache } from '../../react/index.js';
+import type { MockedResponse } from '../core/index.js';
+import { MockLink } from '../core/index.js';
+import type { ApolloLink } from '../../link/core/index.js';
+import type { Resolvers } from '../../core/index.js';
+import type { ApolloCache } from '../../cache/index.js';
 
 export interface MockedProviderProps<TSerializedCache = {}> {
   mocks?: ReadonlyArray<MockedResponse>;

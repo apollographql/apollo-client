@@ -1,7 +1,7 @@
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import type { FetchResult } from '../link/core';
+import type { FetchResult } from '../link/core/index.js';
 import type {
   DefaultContext,
   MutationQueryReducersMap,
@@ -9,9 +9,9 @@ import type {
   MutationUpdaterFunction,
   OnQueryUpdated,
   InternalRefetchQueriesInclude,
-} from './types';
-import type { ApolloCache } from '../cache';
-import type { ObservableQuery } from './ObservableQuery';
+} from './types.js';
+import type { ApolloCache } from '../cache/index.js';
+import type { ObservableQuery } from './ObservableQuery.js';
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:

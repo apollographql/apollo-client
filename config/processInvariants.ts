@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { posix, join as osPathJoin } from 'path';
-import { distDir, eachFile, reparse, reprint } from './helpers';
+import { distDir, eachFile, reparse, reprint } from './helpers.ts';
 import type { ExpressionKind } from 'ast-types/lib/gen/kinds';
 
 eachFile(distDir, (file, relPath) => {
@@ -211,7 +211,6 @@ function transform(code: string, relativeFilePath: string) {
             b.literal(false)
           );
         }
-
         return node;
       },
     });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import * as React from 'react';
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type {
@@ -7,19 +7,19 @@ import type {
   MutationResult,
   MutationTuple,
   NoInfer,
-} from '../types/types';
+} from '../types/types.js';
 
 import type {
   ApolloCache,
   DefaultContext,
-  OperationVariables} from '../../core';
+  OperationVariables} from '../../core/index.js';
 import {
   mergeOptions
-} from '../../utilities';
+} from '../../utilities/index.js';
 import { equal } from '@wry/equality';
-import { DocumentType, verifyDocumentType } from '../parser';
-import { ApolloError } from '../../errors';
-import { useApolloClient } from './useApolloClient';
+import { DocumentType, verifyDocumentType } from '../parser/index.js';
+import { ApolloError } from '../../errors/index.js';
+import { useApolloClient } from './useApolloClient.js';
 
 export function useMutation<
   TData = any,
@@ -32,13 +32,13 @@ export function useMutation<
 ): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
-  const [result, setResult] = useState<Omit<MutationResult, 'reset'>>({
+  const [result, setResult] = React.useState<Omit<MutationResult, 'reset'>>({
     called: false,
     loading: false,
     client,
   });
 
-  const ref = useRef({
+  const ref = React.useRef({
     result,
     mutationId: 0,
     isMounted: true,
@@ -53,7 +53,7 @@ export function useMutation<
     Object.assign(ref.current, { client, options, mutation });
   }
 
-  const execute = useCallback((
+  const execute = React.useCallback((
     executeOptions: MutationFunctionOptions<
       TData,
       TVariables,
@@ -140,13 +140,13 @@ export function useMutation<
     });
   }, []);
 
-  const reset = useCallback(() => {
+  const reset = React.useCallback(() => {
     if (ref.current.isMounted) {
       setResult({ called: false, loading: false, client });
     }
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     ref.current.isMounted = true;
 
     return () => {

@@ -1,9 +1,9 @@
 import { wrap } from 'optimism';
 import type { DocumentNode, TypeNode } from 'graphql';
 import { Kind, visit } from 'graphql';
-import { ApolloLink } from '../core';
-import { stripTypename, isPlainObject } from '../../utilities';
-import type { OperationVariables } from '../../core';
+import { ApolloLink } from '../core/index.js';
+import { stripTypename, isPlainObject } from '../../utilities/index.js';
+import type { OperationVariables } from '../../core/index.js';
 
 export const KEEP = '__KEEP';
 

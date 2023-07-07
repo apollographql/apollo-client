@@ -1,5 +1,5 @@
-import { invariant } from '../../utilities/globals';
-import { useCallback, useMemo, useEffect, useState } from 'react';
+import { invariant } from '../../utilities/globals/index.js';
+import * as React from 'react';
 import type {
   ApolloClient,
   ApolloQueryResult,
@@ -9,21 +9,20 @@ import type {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
   FetchMoreQueryOptions,
-} from '../../core';
-import { ApolloError, NetworkStatus } from '../../core';
-import type { DeepPartial } from '../../utilities';
-import { tap } from '../../utilities';
-import { isNonEmptyArray } from '../../utilities';
-import { useApolloClient } from './useApolloClient';
-import { DocumentType, verifyDocumentType } from '../parser';
+} from '../../core/index.js';
+import { ApolloError, NetworkStatus } from '../../core/index.js';
+import type { DeepPartial } from '../../utilities/index.js';
+import { isNonEmptyArray } from '../../utilities/index.js';
+import { useApolloClient } from './useApolloClient.js';
+import { DocumentType, verifyDocumentType } from '../parser/index.js';
 import type {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
   NoInfer,
-} from '../types/types';
-import { useDeepMemo, __use } from './internal';
-import { useSuspenseCache } from './useSuspenseCache';
-import { canonicalStringify } from '../../cache';
+} from '../types/types.js';
+import { useDeepMemo, __use } from './internal/index.js';
+import { useSuspenseCache } from './useSuspenseCache.js';
+import { canonicalStringify } from '../../cache/index.js';
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -167,7 +166,7 @@ export function useSuspenseQuery<
     client.watchQuery(watchQueryOptions)
   );
 
-  const [promiseCache, setPromiseCache] = useState(
+  const [promiseCache, setPromiseCache] = React.useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
 
@@ -183,7 +182,7 @@ export function useSuspenseQuery<
     promiseCache.set(queryRef.key, promise);
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     queryRef.retain();
 
     const removeListener = queryRef.listen((promise) => {
@@ -198,7 +197,7 @@ export function useSuspenseQuery<
     };
   }, [queryRef]);
 
-  const skipResult = useMemo(() => {
+  const skipResult = React.useMemo(() => {
     const error = toApolloError(queryRef.result);
 
     return {
@@ -211,35 +210,39 @@ export function useSuspenseQuery<
 
   const result = fetchPolicy === 'standby' ? skipResult : __use(promise);
 
-  const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
+  const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
-      return tap(queryRef.fetchMore(options), () => {
-        setPromiseCache((previousPromiseCache) =>
-          new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
-        );
-      });
+      const promise = queryRef.fetchMore(options);
+
+      setPromiseCache((previousPromiseCache) =>
+        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
+      );
+
+      return promise;
     },
     [queryRef]
   );
 
-  const refetch: RefetchFunction<TData, TVariables> = useCallback(
+  const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {
-      return tap(queryRef.refetch(variables), () => {
-        setPromiseCache((previousPromiseCache) =>
-          new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
-        );
-      });
+      const promise = queryRef.refetch(variables);
+
+      setPromiseCache((previousPromiseCache) =>
+        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
+      );
+
+      return promise;
     },
     [queryRef]
   );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-    useCallback(
+    React.useCallback(
       (options) => queryRef.observable.subscribeToMore(options),
       [queryRef]
     );
 
-  return useMemo(() => {
+  return React.useMemo(() => {
     return {
       client,
       data: result.data,

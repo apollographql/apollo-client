@@ -1,5 +1,5 @@
-import { newInvariantError } from '../../utilities/globals';
-import type { InvariantError } from '../../utilities/globals';
+import { newInvariantError } from '../../utilities/globals/index.js';
+import type { InvariantError } from '../../utilities/globals/index.js';
 
 export type ClientParseError = InvariantError & {
   parseError: Error;

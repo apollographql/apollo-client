@@ -1,4 +1,4 @@
-import { invariant, newInvariantError } from '../globals';
+import { invariant, newInvariantError } from '../globals/index.js';
 
 import type {
   DocumentNode,
@@ -7,7 +7,7 @@ import type {
   ValueNode,
 } from 'graphql';
 
-import { valueToObjectRepresentation } from './storeUtils';
+import { valueToObjectRepresentation } from './storeUtils.js';
 
 type OperationDefinitionWithName = OperationDefinitionNode & {
   name: NonNullable<OperationDefinitionNode['name']>;

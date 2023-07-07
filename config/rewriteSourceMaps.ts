@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { distDir } from './helpers';
+import { distDir } from './helpers.ts';
 import glob = require("glob");
 
 glob(`${distDir.replace(/\\/g, '/')}/**/*.js.map`, (error, files) => {

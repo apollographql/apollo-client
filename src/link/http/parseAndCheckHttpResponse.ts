@@ -1,11 +1,11 @@
-import { responseIterator } from "./responseIterator";
-import type { Operation } from "../core";
-import { throwServerError } from "../utils";
-import { PROTOCOL_ERRORS_SYMBOL } from '../../errors';
-import type { Observer } from "../../utilities";
+import { responseIterator } from "./responseIterator.js";
+import type { Operation } from "../core/index.js";
+import { throwServerError } from "../utils/index.js";
+import { PROTOCOL_ERRORS_SYMBOL } from '../../errors/index.js';
+import type { Observer } from "../../utilities/index.js";
 import {
   isApolloPayloadResult
-} from '../../utilities/common/incrementalResult';
+} from '../../utilities/common/incrementalResult.js';
 
 const { hasOwnProperty } = Object.prototype;
 

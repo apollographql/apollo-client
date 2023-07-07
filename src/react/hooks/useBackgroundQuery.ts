@@ -154,7 +154,7 @@ export function useBackgroundQuery<
       const promise = queryRef.fetchMore(options);
 
       setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, promise)
+        new Map(promiseCache).set(queryRef.key, queryRef.promise)
       );
 
       return promise;
@@ -167,7 +167,7 @@ export function useBackgroundQuery<
       const promise = queryRef.refetch(variables);
 
       setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, promise)
+        new Map(promiseCache).set(queryRef.key, queryRef.promise)
       );
 
       return promise;

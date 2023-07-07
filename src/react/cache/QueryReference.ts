@@ -8,11 +8,7 @@ import type {
 } from '../../core';
 import { isNetworkRequestSettled } from '../../core';
 import type { ObservableSubscription } from '../../utilities';
-import {
-  createFulfilledPromise,
-  createRejectedPromise,
-  tap,
-} from '../../utilities';
+import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
 import type { CacheKey } from './types';
 import type { useBackgroundQuery, useReadQuery } from '../hooks';
 
@@ -143,7 +139,8 @@ export class InternalQueryReference<TData = unknown> {
       currentFetchPolicy === 'standby' &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy
     ) {
-      tap(this.observable.reobserve(watchQueryOptions), this.initiateFetch);
+      this.observable.reobserve(watchQueryOptions);
+      this.initiateFetch();
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
 
@@ -170,11 +167,19 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   refetch(variables: OperationVariables | undefined) {
-    return tap(this.observable.refetch(variables), this.initiateFetch);
+    const promise = this.observable.refetch(variables);
+
+    this.initiateFetch();
+
+    return promise;
   }
 
   fetchMore(options: FetchMoreOptions<TData>) {
-    return tap(this.observable.fetchMore<TData>(options), this.initiateFetch);
+    const promise = this.observable.fetchMore<TData>(options);
+
+    this.initiateFetch();
+
+    return promise;
   }
 
   dispose() {

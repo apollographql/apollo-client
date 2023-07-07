@@ -1,7 +1,5 @@
 /* Core */
 
-import { __DEV__ } from '../utilities/globals';
-
 export {
   ApolloClient,
   ApolloClientOptions,

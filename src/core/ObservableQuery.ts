@@ -1,4 +1,4 @@
-import { invariant, __DEV__ } from '../utilities/globals';
+import { invariant } from '../utilities/globals';
 import type { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
 
@@ -590,6 +590,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>,
   ): Promise<ApolloQueryResult<TData>> {
     return this.reobserve(newOptions);
+  }
+
+  public silentSetOptions(
+    newOptions: Partial<WatchQueryOptions<TVariables, TData>>,
+  ) {
+    const mergedOptions = compact(this.options, newOptions || {});
+    assign(this.options, mergedOptions);
   }
 
   /**

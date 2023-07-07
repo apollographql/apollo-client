@@ -1,0 +1,13 @@
+{
+  "name": "browser-esm",
+  "scripts": {
+    "serve-app": "yarn serve html",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "shared": "*",
+    "playwright": "*",
+    "@playwright/test": "*",
+    "serve": "*"
+  }
+}

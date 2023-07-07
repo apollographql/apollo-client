@@ -1,4 +1,4 @@
-import { invariant, __DEV__ } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals';
 import * as React from 'react';
 
 import { canUseLayoutEffect } from '../../utilities';
@@ -33,7 +33,7 @@ export const useSyncExternalStore: RealUseSESHookType = realHook || ((
   // always synchronous.
   const value = getSnapshot();
   if (
-    // DEVIATION: Using our own __DEV__ polyfill (from ../../utilities/globals).
+    // DEVIATION: Using __DEV__
     __DEV__ &&
     !didWarnUncachedGetSnapshot &&
     // DEVIATION: Not using Object.is because we know our snapshots will never

@@ -1,4 +1,4 @@
-import { invariant, newInvariantError, __DEV__ } from '../../utilities/globals';
+import { invariant, newInvariantError } from '../../utilities/globals';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 import type {
@@ -812,6 +812,8 @@ function warnAboutDataLoss(
 
   invariant.warn(
 `Cache data may be lost when replacing the %s field of a %s object.
+
+This could cause additional (usually avoidable) network requests to fetch data that were otherwise cached.
 
 To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
 

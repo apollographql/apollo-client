@@ -147,7 +147,7 @@ export function useBackgroundQuery<
     promiseCache.set(queryRef.key, promise);
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     queryRef.retain();
 
     return () => {

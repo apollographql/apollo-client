@@ -42,6 +42,16 @@ const checks = [
     "tslib",
     "zen-observable-ts"
   ],
-}));
+})).flatMap((value) => value.path == "dist/apollo-client.min.cjs" ? value : [{...value, limit: undefined}, {
+  ...value,
+  name: `${value.name} (production)`,
+  modifyEsbuildConfig(config){
+    config.define = {
+      "__DEV__": `false`,
+      "globalThis.__DEV__": `false`,
+    }
+    return config
+  }
+}]);
 
 module.exports = checks;

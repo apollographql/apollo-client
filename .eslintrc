@@ -30,6 +30,13 @@
           "fixStyle": "separate-type-imports"
         }],
         "@typescript-eslint/no-import-type-side-effects": "error",
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "ImportDeclaration[source.value='react'][importKind!='type'] :matches(ImportSpecifier, ImportDefaultSpecifier)",
+            "message": "Please only use the namespace import syntax (`import * as React from 'react'`) for React imports!"
+          }
+        ],
         "import/extensions": [
           "error",
           "always",

@@ -1,6 +1,6 @@
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { useCallback, useMemo, useRef } from 'react';
+import * as React from 'react';
 
 import type { OperationVariables } from '../../core/index.js';
 import { mergeOptions } from '../../utilities/index.js';
@@ -29,9 +29,9 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
-  const execOptionsRef = useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
-  const optionsRef = useRef<LazyQueryHookOptions<TData, TVariables>>();
-  const queryRef = useRef<DocumentNode | TypedDocumentNode<TData, TVariables>>();
+  const execOptionsRef = React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
+  const optionsRef = React.useRef<LazyQueryHookOptions<TData, TVariables>>();
+  const queryRef = React.useRef<DocumentNode | TypedDocumentNode<TData, TVariables>>();
   const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
 
@@ -60,7 +60,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
     });
 
   // We use useMemo here to make sure the eager methods have a stable identity.
-  const eagerMethods = useMemo(() => {
+  const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
       const method = result[key];
@@ -79,7 +79,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
 
   Object.assign(result, eagerMethods);
 
-  const execute = useCallback<
+  const execute = React.useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
     execOptionsRef.current = executeOptions ? {

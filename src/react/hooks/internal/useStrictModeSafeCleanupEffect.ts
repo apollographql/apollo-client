@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import * as React from 'react';
 
 export function useStrictModeSafeCleanupEffect(cleanup: () => void) {
   let timeout: NodeJS.Timeout;
 
-  useEffect(() => {
+  React.useEffect(() => {
     clearTimeout(timeout);
 
     return () => {

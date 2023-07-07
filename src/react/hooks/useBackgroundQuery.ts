@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import * as React from 'react';
 import type {
   DocumentNode,
   OperationVariables,
@@ -138,7 +138,7 @@ export function useBackgroundQuery<
     client.watchQuery(watchQueryOptions)
   );
 
-  const [promiseCache, setPromiseCache] = useState(
+  const [promiseCache, setPromiseCache] = React.useState(
     () => new Map([[queryRef.key, queryRef.promise]])
   );
 
@@ -149,7 +149,7 @@ export function useBackgroundQuery<
 
   useTrackedQueryRefs(queryRef);
 
-  const fetchMore: FetchMoreFunction<TData, TVariables> = useCallback(
+  const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
       const promise = queryRef.fetchMore(options);
 
@@ -162,7 +162,7 @@ export function useBackgroundQuery<
     [queryRef]
   );
 
-  const refetch: RefetchFunction<TData, TVariables> = useCallback(
+  const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {
       const promise = queryRef.refetch(variables);
 
@@ -177,7 +177,7 @@ export function useBackgroundQuery<
 
   queryRef.promiseCache = promiseCache;
 
-  return useMemo(() => {
+  return React.useMemo(() => {
     return [
       { [QUERY_REFERENCE_SYMBOL]: queryRef },
       {

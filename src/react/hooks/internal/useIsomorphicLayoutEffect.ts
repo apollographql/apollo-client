@@ -1,4 +1,4 @@
-import { useLayoutEffect, useEffect } from 'react';
+import * as React from 'react';
 import { canUseDOM } from '../../../utilities/index.js';
 
 // use canUseDOM here instead of canUseLayoutEffect because we want to be able
@@ -7,5 +7,5 @@ import { canUseDOM } from '../../../utilities/index.js';
 // warnings for useSyncExternalStore implementation, canUseLayoutEffect is left
 // alone.
 export const useIsomorphicLayoutEffect = canUseDOM
-  ? useLayoutEffect
-  : useEffect;
+  ? React.useLayoutEffect
+  : React.useEffect;

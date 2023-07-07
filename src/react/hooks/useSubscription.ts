@@ -1,5 +1,5 @@
 import { invariant } from '../../utilities/globals/index.js';
-import { useState, useRef, useEffect } from 'react';
+import * as React from 'react';
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { equal } from '@wry/equality';
@@ -17,10 +17,10 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
 ) {
-  const hasIssuedDeprecationWarningRef = useRef(false);
+  const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options?.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
-  const [result, setResult] = useState<SubscriptionResult<TData, TVariables>>({
+  const [result, setResult] = React.useState<SubscriptionResult<TData, TVariables>>({
     loading: !options?.skip,
     error: void 0,
     data: void 0,
@@ -47,7 +47,7 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
     }
   }
 
-  const [observable, setObservable] = useState(() => {
+  const [observable, setObservable] = React.useState(() => {
     if (options?.skip) {
       return null;
     }
@@ -60,15 +60,15 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
     });
   });
 
-  const canResetObservableRef = useRef(false);
-  useEffect(() => {
+  const canResetObservableRef = React.useRef(false);
+  React.useEffect(() => {
     return () => {
       canResetObservableRef.current = true;
     };
   }, []);
 
-  const ref = useRef({ client, subscription, options });
-  useEffect(() => {
+  const ref = React.useRef({ client, subscription, options });
+  React.useEffect(() => {
     let shouldResubscribe = options?.shouldResubscribe;
     if (typeof shouldResubscribe === 'function') {
       shouldResubscribe = !!shouldResubscribe(options!);
@@ -112,7 +112,7 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
     Object.assign(ref.current, { client, subscription, options });
   }, [client, subscription, options, canResetObservableRef.current]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!observable) {
       return;
     }

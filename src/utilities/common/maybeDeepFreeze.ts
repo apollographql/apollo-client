@@ -1,4 +1,3 @@
-import { __DEV__ } from '../globals/index.js';
 import { isNonNullObject } from './objects.js';
 
 function deepFreeze(value: any) {

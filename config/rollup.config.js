@@ -90,7 +90,7 @@ function prepareCJSMinified(input) {
         compress: {
           toplevel: true,
           global_defs: {
-            '@__DEV__': 'false',
+            '@globalThis.__DEV__': 'false',
           },
         },
       }),

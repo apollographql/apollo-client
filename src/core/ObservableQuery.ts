@@ -1,4 +1,4 @@
-import { invariant, __DEV__ } from '../utilities/globals/index.js';
+import { invariant } from '../utilities/globals/index.js';
 import type { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
 

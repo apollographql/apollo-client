@@ -1,4 +1,3 @@
-import { __DEV__ } from "../../utilities/globals/index.js";
 import { Trie } from "@wry/trie";
 import {
   canUseWeakMap,

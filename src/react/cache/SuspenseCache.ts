@@ -4,7 +4,7 @@ import { canUseWeakMap } from '../../utilities/index.js';
 import { InternalQueryReference } from './QueryReference.js';
 import type { CacheKey } from './types.js';
 
-interface SuspenseCacheOptions {
+export interface SuspenseCacheOptions {
   /**
    * Specifies the amount of time, in milliseconds, the suspense cache will wait
    * for a suspended component to read from the suspense cache before it

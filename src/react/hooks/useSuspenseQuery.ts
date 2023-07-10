@@ -20,7 +20,11 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from '../types/types.js';
-import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal/index.js';
+import {
+  useDeepMemo,
+  useStrictModeSafeCleanupEffect,
+  __use,
+} from './internal/index.js';
 import { useSuspenseCache } from './useSuspenseCache.js';
 import type { InternalQueryReference } from '../cache/QueryReference.js';
 import { canonicalStringify } from '../../cache/index.js';
@@ -154,7 +158,7 @@ export function useSuspenseQuery<
   > = Object.create(null)
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
-  const suspenseCache = useSuspenseCache(options.suspenseCache);
+  const suspenseCache = useSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
@@ -233,7 +237,7 @@ export function useSuspenseQuery<
   );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-  React.useCallback(
+    React.useCallback(
       (options) => queryRef.observable.subscribeToMore(options),
       [queryRef]
     );

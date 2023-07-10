@@ -124,8 +124,8 @@ export function useBackgroundQuery<
     null
   )
 ): UseBackgroundQueryResult<TData> {
-  const suspenseCache = useSuspenseCache(options.suspenseCache);
   const client = useApolloClient(options.client);
+  const suspenseCache = useSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;

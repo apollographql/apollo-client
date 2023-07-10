@@ -1,18 +1,27 @@
-import * as React from 'react';
-import { getApolloContext } from '../context/index.js';
-import { invariant } from '../../utilities/globals/index.js';
-import type { SuspenseCache } from '../cache/index.js';
+import type { SuspenseCacheOptions } from '../cache/index.js';
+import { SuspenseCache } from '../cache/index.js';
+import type { ApolloClient } from '../../core/ApolloClient.js';
 
-export function useSuspenseCache(override?: SuspenseCache) {
-  const context = React.useContext(getApolloContext());
-  const suspenseCache = override || context.suspenseCache;
+declare module '../../core/ApolloClient.js' {
+  interface ApolloClientOptions<TCacheShape> {
+    react?: {
+      suspenseCacheOptions?: SuspenseCacheOptions;
+    };
+  }
+}
 
-  invariant(
-    suspenseCache,
-    'Could not find a "suspenseCache" in the context or passed in as an option. ' +
-      'Wrap the root component in an <ApolloProvider> and provide a suspenseCache, ' +
-      'or pass a SuspenseCache instance in via options.'
-  );
+const suspenseCacheSymbol = Symbol.for('apollo.suspenseCache');
 
-  return suspenseCache;
+export function useSuspenseCache(client: ApolloClient<object>) {
+  const clientWithSuspenseCache: ApolloClient<object> & {
+    [suspenseCacheSymbol]?: SuspenseCache;
+  } = client;
+
+  if (!clientWithSuspenseCache[suspenseCacheSymbol]) {
+    clientWithSuspenseCache[suspenseCacheSymbol] = new SuspenseCache(
+      clientWithSuspenseCache['excessOptions'].react?.suspenseCacheOptions
+    );
+  }
+
+  return clientWithSuspenseCache[suspenseCacheSymbol];
 }

@@ -4,7 +4,6 @@ import type { DefaultOptions } from '../../core/index.js';
 import { ApolloClient } from '../../core/index.js';
 import { InMemoryCache as Cache } from '../../cache/index.js';
 import { ApolloProvider } from '../../react/context/index.js';
-import { SuspenseCache } from '../../react/index.js';
 import type { MockedResponse } from '../core/index.js';
 import { MockLink } from '../core/index.js';
 import type { ApolloLink } from '../../link/core/index.js';
@@ -20,13 +19,11 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   childProps?: object;
   children?: any;
   link?: ApolloLink;
-  suspenseCache?: SuspenseCache;
   showWarnings?: boolean;
 }
 
 export interface MockedProviderState {
   client: ApolloClient<any>;
-  suspenseCache: SuspenseCache;
 }
 
 export class MockedProvider extends React.Component<
@@ -47,7 +44,6 @@ export class MockedProvider extends React.Component<
       cache,
       resolvers,
       link,
-      suspenseCache,
       showWarnings,
     } = this.props;
     const client = new ApolloClient({
@@ -63,16 +59,15 @@ export class MockedProvider extends React.Component<
 
     this.state = {
       client,
-      suspenseCache: suspenseCache || new SuspenseCache()
     };
   }
 
   public render() {
     const { children, childProps } = this.props;
-    const { client, suspenseCache } = this.state;
+    const { client } = this.state;
 
     return React.isValidElement(children) ? (
-      <ApolloProvider client={client} suspenseCache={suspenseCache}>
+      <ApolloProvider client={client}>
         {React.cloneElement(React.Children.only(children), { ...childProps })}
       </ApolloProvider>
     ) : null;

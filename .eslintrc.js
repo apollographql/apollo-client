@@ -1,4 +1,26 @@
-{
+const { entryPoints } = require("./config/entryPoints.js")
+const {join} = require('node:path')
+
+const fullImports = entryPoints.map(({ dirs }) => join(__dirname, 'src', ...dirs, 'index.{ts,tsx}'))
+
+const zones = entryPoints.map(({ dirs }) => {
+  const subEntrypoints = entryPoints.map(({dirs}) => dirs).filter(other => other.length > dirs.length && dirs.every((v,i) => v === other[i]))
+
+  let target = join(__dirname, 'src', ...dirs);
+  if (subEntrypoints.length) {
+    target = join(target, `!(${subEntrypoints.map(e => join(...e.slice(dirs.length))).join('|')})`)
+  }
+  return {
+    target,
+    from: join(__dirname, 'src', '**'),
+    except: fullImports.concat(
+      join(__dirname, 'src', ...dirs, '*.ts'),
+      join(target, '**'),
+    )
+  }
+})
+
+module.exports = {
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "import"],
   "env": {
@@ -21,7 +43,7 @@
   },
   "overrides": [
     {
-      "files": ["**/*.ts", "**/*.tsx"],
+      "files": ["**/*.[jt]sx", "**/*.[jt]s"],
       "excludedFiles": ["**/__tests__/**/*.*"],
       "rules": {
         "@typescript-eslint/consistent-type-imports": ["error", {
@@ -37,7 +59,8 @@
             "ignorePackages": true,
             "checkTypeImports": true
           }
-        ]
+        ],
+        "import/no-restricted-paths": ["error", { zones }]
       }
     },
     {

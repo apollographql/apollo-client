@@ -29,6 +29,7 @@ const entryPoints = [
   { dirs: ['utilities'] },
   { dirs: ['utilities', 'globals'], sideEffects: true },
 ];
+exports.entryPoints = entryPoints;
 
 const lookupTrie = Object.create(null);
 entryPoints.forEach(info => {

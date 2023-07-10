@@ -73,7 +73,6 @@ export class InternalQueryReference<TData = unknown> {
     this.handleError = this.handleError.bind(this);
     this.initiateFetch = this.initiateFetch.bind(this);
     this.dispose = this.dispose.bind(this);
-    this.performDispose = this.performDispose.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult(false);
     this.key = options.key;
@@ -108,7 +107,7 @@ export class InternalQueryReference<TData = unknown> {
     // helps prevent memory leaks when a component has unmounted before the
     // query has finished loading.
     this.autoDisposeTimeoutId = setTimeout(
-      this.performDispose,
+      this.dispose,
       options.autoDisposeTimeoutMs ?? 30_000
     );
   }
@@ -120,6 +119,23 @@ export class InternalQueryReference<TData = unknown> {
   retain() {
     this.references++;
     clearTimeout(this.autoDisposeTimeoutId);
+    let disposed = false;
+
+    return () => {
+      if (disposed) {
+        return;
+      }
+
+      disposed = true;
+      this.references--;
+
+      // Wait before fully disposing in case the app is running in strict mode.
+      setTimeout(() => {
+        if (!this.references) {
+          this.dispose();
+        }
+      });
+    };
   }
 
   didChangeOptions(watchQueryOptions: WatchQueryOptions) {
@@ -179,18 +195,7 @@ export class InternalQueryReference<TData = unknown> {
     return promise;
   }
 
-  dispose() {
-    this.references--;
-
-    // Wait before fully disposing in case the app is running in strict mode.
-    setTimeout(() => {
-      if (!this.references) {
-        this.performDispose();
-      }
-    });
-  }
-
-  private performDispose() {
+  private dispose() {
     this.subscription.unsubscribe();
     this.onDispose();
   }

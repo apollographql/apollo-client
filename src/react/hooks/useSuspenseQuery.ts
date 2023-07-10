@@ -183,7 +183,7 @@ export function useSuspenseQuery<
   }
 
   React.useEffect(() => {
-    queryRef.retain();
+    const dispose = queryRef.retain();
 
     const removeListener = queryRef.listen((promise) => {
       setPromiseCache((promiseCache) =>
@@ -193,7 +193,7 @@ export function useSuspenseQuery<
 
     return () => {
       removeListener();
-      queryRef.dispose();
+      dispose();
     };
   }, [queryRef]);
 

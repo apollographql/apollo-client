@@ -147,13 +147,7 @@ export function useBackgroundQuery<
     promiseCache.set(queryRef.key, promise);
   }
 
-  React.useEffect(() => {
-    queryRef.retain();
-
-    return () => {
-      queryRef.dispose();
-    };
-  }, [queryRef]);
+  React.useEffect(() => queryRef.retain(), [queryRef]);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {

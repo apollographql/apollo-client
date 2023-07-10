@@ -20,9 +20,8 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from '../types/types.js';
-import { useDeepMemo, useStrictModeSafeCleanupEffect, __use } from './internal/index.js';
+import { useDeepMemo, __use } from './internal/index.js';
 import { useSuspenseCache } from './useSuspenseCache.js';
-import type { InternalQueryReference } from '../cache/QueryReference.js';
 import { canonicalStringify } from '../../cache/index.js';
 
 export interface UseSuspenseQueryResult<
@@ -183,14 +182,19 @@ export function useSuspenseQuery<
     promiseCache.set(queryRef.key, promise);
   }
 
-  useTrackedQueryRefs(queryRef);
-
   React.useEffect(() => {
-    return queryRef.listen((promise) => {
+    const dispose = queryRef.retain();
+
+    const removeListener = queryRef.listen((promise) => {
       setPromiseCache((promiseCache) =>
         new Map(promiseCache).set(queryRef.key, promise)
       );
     });
+
+    return () => {
+      removeListener();
+      dispose();
+    };
   }, [queryRef]);
 
   const skipResult = React.useMemo(() => {
@@ -233,7 +237,7 @@ export function useSuspenseQuery<
   );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-  React.useCallback(
+    React.useCallback(
       (options) => queryRef.observable.subscribeToMore(options),
       [queryRef]
     );
@@ -291,16 +295,6 @@ export function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
     : result.error;
-}
-
-export function useTrackedQueryRefs(queryRef: InternalQueryReference) {
-  const trackedQueryRefs = React.useRef(new Set<InternalQueryReference>());
-
-  trackedQueryRefs.current.add(queryRef);
-
-  useStrictModeSafeCleanupEffect(() => {
-    trackedQueryRefs.current.forEach((sub) => sub.dispose());
-  });
 }
 
 interface UseWatchQueryOptionsHookOptions<

@@ -62,6 +62,8 @@ export class InternalQueryReference<TData = unknown> {
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
+  private references = 0;
+
   constructor(
     observable: ObservableQuery<TData>,
     options: InternalQueryReferenceOptions
@@ -94,15 +96,6 @@ export class InternalQueryReference<TData = unknown> {
     }
 
     this.subscription = observable
-      .map((result) => {
-        // Maintain the last successful `data` value if the next result does not
-        // have one.
-        if (result.data === void 0) {
-          result.data = this.result.data;
-        }
-
-        return result;
-      })
       .filter(({ data }) => !equal(data, {}))
       .subscribe({
         next: this.handleNext,
@@ -121,6 +114,28 @@ export class InternalQueryReference<TData = unknown> {
 
   get watchQueryOptions() {
     return this.observable.options;
+  }
+
+  retain() {
+    this.references++;
+    clearTimeout(this.autoDisposeTimeoutId);
+    let disposed = false;
+
+    return () => {
+      if (disposed) {
+        return;
+      }
+
+      disposed = true;
+      this.references--;
+
+      // Wait before fully disposing in case the app is running in strict mode.
+      setTimeout(() => {
+        if (!this.references) {
+          this.dispose();
+        }
+      });
+    };
   }
 
   didChangeOptions(watchQueryOptions: WatchQueryOptions) {
@@ -157,11 +172,6 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   listen(listener: Listener<TData>) {
-    // As soon as the component listens for updates, we know it has finished
-    // suspending and is ready to receive updates, so we can remove the auto
-    // dispose timer.
-    clearTimeout(this.autoDisposeTimeoutId);
-
     this.listeners.add(listener);
 
     return () => {
@@ -185,7 +195,7 @@ export class InternalQueryReference<TData = unknown> {
     return promise;
   }
 
-  dispose() {
+  private dispose() {
     this.subscription.unsubscribe();
     this.onDispose();
   }
@@ -197,6 +207,11 @@ export class InternalQueryReference<TData = unknown> {
   private handleNext(result: ApolloQueryResult<TData>) {
     switch (this.status) {
       case 'loading': {
+        // Maintain the last successful `data` value if the next result does not
+        // have one.
+        if (result.data === void 0) {
+          result.data = this.result.data;
+        }
         this.status = 'idle';
         this.result = result;
         this.resolve?.(result);
@@ -205,6 +220,12 @@ export class InternalQueryReference<TData = unknown> {
       case 'idle': {
         if (result.data === this.result.data) {
           return;
+        }
+
+        // Maintain the last successful `data` value if the next result does not
+        // have one.
+        if (result.data === void 0) {
+          result.data = this.result.data;
         }
 
         this.result = result;

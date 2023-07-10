@@ -12,7 +12,7 @@ import {
 import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
 import { __use } from './internal/index.js';
 import { useSuspenseCache } from './useSuspenseCache.js';
-import { useTrackedQueryRefs, useWatchQueryOptions } from './useSuspenseQuery.js';
+import { useWatchQueryOptions } from './useSuspenseQuery.js';
 import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
 import { canonicalStringify } from '../../cache/index.js';
 import type { DeepPartial } from '../../utilities/index.js';
@@ -147,7 +147,7 @@ export function useBackgroundQuery<
     promiseCache.set(queryRef.key, promise);
   }
 
-  useTrackedQueryRefs(queryRef);
+  React.useEffect(() => queryRef.retain(), [queryRef]);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {

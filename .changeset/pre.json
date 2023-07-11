@@ -1,8 +1,8 @@
 {
   "mode": "pre",
-  "tag": "beta",
+  "tag": "rc",
   "initialVersions": {
-    "@apollo/client": "3.7.2"
+    "@apollo/client": "3.7.17"
   },
   "changesets": [
     "afraid-zebras-punch",

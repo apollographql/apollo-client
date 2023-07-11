@@ -1358,15 +1358,15 @@ describe('HttpLink', () => {
         },
       }
 
-      beforeEach(() => {
-        fetch.mockReset();
-        text.mockReset();
-      });
+      function mockFetch() {
+        const text = jest.fn(async () => '{}');
+        const fetch = jest.fn(async (uri, options) => ({ text }));
+        return { text, fetch }
+      }
 
       it("aborts the request when unsubscribing before the request has completed", () => {
+        const { fetch } = mockFetch();
         const abortControllers = trackGlobalAbortControllers();
-        fetch.mockResolvedValueOnce({ text });
-        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
 
         const link = createHttpLink({ uri: 'data', fetch: fetch as any });
 
@@ -1378,9 +1378,8 @@ describe('HttpLink', () => {
       });
 
       it('a passed-in signal will be forwarded to the `fetch` call and not be overwritten by an internally-created one', () => {
+        const { fetch } = mockFetch();
         const externalAbortController = new AbortController();
-        fetch.mockResolvedValueOnce({ text });
-        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
 
         const link = createHttpLink({ uri: 'data', fetch: fetch as any, fetchOptions: { signal: externalAbortController.signal } });
 
@@ -1392,8 +1391,8 @@ describe('HttpLink', () => {
       });
 
       it('resolving fetch does not cause the AbortController to be aborted', async () => {
+        const { text, fetch } = mockFetch();
         const abortControllers = trackGlobalAbortControllers();
-        fetch.mockResolvedValueOnce({ text });
         text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
 
         // (the request is already finished at that point)
@@ -1408,6 +1407,7 @@ describe('HttpLink', () => {
       });
 
       it('an unsuccessful fetch does not cause the AbortController to be aborted', async () => {
+        const { fetch } = mockFetch();
         const abortControllers = trackGlobalAbortControllers();
         fetch.mockRejectedValueOnce("This is an error!")
         // the request would be closed by the browser in the case of an error anyways

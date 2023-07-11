@@ -1,4 +1,4 @@
-import { invariant } from '../globals';
+import { invariant } from '../globals/index.js';
 
 import type {
   DocumentNode,
@@ -25,14 +25,14 @@ import {
   getFragmentDefinition,
   getFragmentDefinitions,
   getMainDefinition,
-} from './getFromAST';
-import { isField } from './storeUtils';
+} from './getFromAST.js';
+import { isField } from './storeUtils.js';
 import type {
-  FragmentMap} from './fragments';
+  FragmentMap} from './fragments.js';
 import {
   createFragmentMap
-} from './fragments';
-import { isArray, isNonEmptyArray } from '../common/arrays';
+} from './fragments.js';
+import { isArray, isNonEmptyArray } from '../common/arrays.js';
 
 export type RemoveNodeConfig<N> = {
   name?: string;

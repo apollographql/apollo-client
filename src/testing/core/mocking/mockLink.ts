@@ -1,14 +1,14 @@
-import { invariant } from '../../../utilities/globals';
+import { invariant } from '../../../utilities/globals/index.js';
 
 import { equal } from '@wry/equality';
 
 import type {
   Operation,
   GraphQLRequest,
-  FetchResult} from '../../../link/core';
+  FetchResult} from '../../../link/core/index.js';
 import {
   ApolloLink
-} from '../../../link/core';
+} from '../../../link/core/index.js';
 
 import {
   Observable,
@@ -18,7 +18,7 @@ import {
   cloneDeep,
   stringifyForDisplay,
   print
-} from '../../../utilities';
+} from '../../../utilities/index.js';
 
 export type ResultFunction<T> = () => T;
 
@@ -117,7 +117,7 @@ ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
 
       if (this.showWarnings) {
         console.warn(
-          configError.message + 
+          configError.message +
             '\nThis typically indicates a configuration error in your mocks ' +
             'setup, usually due to a typo or mismatched variable.'
         );

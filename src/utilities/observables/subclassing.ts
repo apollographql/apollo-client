@@ -1,5 +1,5 @@
-import { Observable } from "./Observable";
-import { canUseSymbol } from "../common/canUse";
+import { Observable } from "./Observable.js";
+import { canUseSymbol } from "../common/canUse.js";
 
 // Generic implementations of Observable.prototype methods like map and
 // filter need to know how to create a new Observable from an Observable

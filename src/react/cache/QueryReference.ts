@@ -5,12 +5,15 @@ import type {
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
-} from '../../core';
-import { NetworkStatus, isNetworkRequestSettled } from '../../core';
-import type { ObservableSubscription } from '../../utilities';
-import { createFulfilledPromise, createRejectedPromise } from '../../utilities';
-import type { CacheKey } from './types';
-import type { useBackgroundQuery, useReadQuery } from '../hooks';
+} from '../../core/index.js';
+import { isNetworkRequestSettled } from '../../core/index.js';
+import type { ObservableSubscription } from '../../utilities/index.js';
+import {
+  createFulfilledPromise,
+  createRejectedPromise,
+} from '../../utilities/index.js';
+import type { CacheKey } from './types.js';
+import type { useBackgroundQuery, useReadQuery } from '../hooks/index.js';
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
@@ -54,11 +57,12 @@ export class InternalQueryReference<TData = unknown> {
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
-  private initialized = false;
-  private refetching = false;
+  private status: 'idle' | 'loading' = 'loading';
 
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
+
+  private references = 0;
 
   constructor(
     observable: ObservableQuery<TData>,
@@ -67,6 +71,7 @@ export class InternalQueryReference<TData = unknown> {
     this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
+    this.initiateFetch = this.initiateFetch.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult(false);
@@ -79,24 +84,23 @@ export class InternalQueryReference<TData = unknown> {
     if (
       isNetworkRequestSettled(this.result.networkStatus) ||
       (this.result.data &&
-        (!this.result.partial || this.observable.options.returnPartialData))
+        (!this.result.partial || this.watchQueryOptions.returnPartialData))
     ) {
       this.promise = createFulfilledPromise(this.result);
-      this.initialized = true;
-      this.refetching = false;
-    }
-
-    this.subscription = observable.subscribe({
-      next: this.handleNext,
-      error: this.handleError,
-    });
-
-    if (!this.promise) {
+      this.status = 'idle';
+    } else {
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
       });
     }
+
+    this.subscription = observable
+      .filter(({ data }) => !equal(data, {}))
+      .subscribe({
+        next: this.handleNext,
+        error: this.handleError,
+      });
 
     // Start a timer that will automatically dispose of the query if the
     // suspended resource does not use this queryRef in the given time. This
@@ -112,6 +116,28 @@ export class InternalQueryReference<TData = unknown> {
     return this.observable.options;
   }
 
+  retain() {
+    this.references++;
+    clearTimeout(this.autoDisposeTimeoutId);
+    let disposed = false;
+
+    return () => {
+      if (disposed) {
+        return;
+      }
+
+      disposed = true;
+      this.references--;
+
+      // Wait before fully disposing in case the app is running in strict mode.
+      setTimeout(() => {
+        if (!this.references) {
+          this.dispose();
+        }
+      });
+    };
+  }
+
   didChangeOptions(watchQueryOptions: WatchQueryOptions) {
     return OBSERVED_CHANGED_OPTIONS.some(
       (option) =>
@@ -120,7 +146,10 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   applyOptions(watchQueryOptions: WatchQueryOptions) {
-    const { fetchPolicy: currentFetchPolicy } = this.watchQueryOptions;
+    const {
+      fetchPolicy: currentFetchPolicy,
+      canonizeResults: currentCanonizeResults,
+    } = this.watchQueryOptions;
 
     // "standby" is used when `skip` is set to `true`. Detect when we've
     // enabled the query (i.e. `skip` is `false`) to execute a network request.
@@ -128,25 +157,21 @@ export class InternalQueryReference<TData = unknown> {
       currentFetchPolicy === 'standby' &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy
     ) {
-      this.promise = this.observable.reobserve(watchQueryOptions);
+      this.observable.reobserve(watchQueryOptions);
+      this.initiateFetch();
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
 
-      // Maintain the previous result in case the current result does not return
-      // a `data` property.
-      this.result = { ...this.result, ...this.observable.getCurrentResult() };
-      this.promise = createFulfilledPromise(this.result);
+      if (currentCanonizeResults !== watchQueryOptions.canonizeResults) {
+        this.result = { ...this.result, ...this.observable.getCurrentResult() };
+        this.promise = createFulfilledPromise(this.result);
+      }
     }
 
     return this.promise;
   }
 
   listen(listener: Listener<TData>) {
-    // As soon as the component listens for updates, we know it has finished
-    // suspending and is ready to receive updates, so we can remove the auto
-    // dispose timer.
-    clearTimeout(this.autoDisposeTimeoutId);
-
     this.listeners.add(listener);
 
     return () => {
@@ -155,11 +180,9 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   refetch(variables: OperationVariables | undefined) {
-    this.refetching = true;
-
     const promise = this.observable.refetch(variables);
 
-    this.promise = promise;
+    this.initiateFetch();
 
     return promise;
   }
@@ -167,22 +190,12 @@ export class InternalQueryReference<TData = unknown> {
   fetchMore(options: FetchMoreOptions<TData>) {
     const promise = this.observable.fetchMore<TData>(options);
 
-    this.promise = promise;
+    this.initiateFetch();
 
     return promise;
   }
 
-  reobserve(
-    watchQueryOptions: Partial<WatchQueryOptions<OperationVariables, TData>>
-  ) {
-    const promise = this.observable.reobserve(watchQueryOptions);
-
-    this.promise = promise;
-
-    return promise;
-  }
-
-  dispose() {
+  private dispose() {
     this.subscription.unsubscribe();
     this.onDispose();
   }
@@ -192,59 +205,63 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private handleNext(result: ApolloQueryResult<TData>) {
-    if (!this.initialized || this.refetching) {
-      if (!isNetworkRequestSettled(result.networkStatus)) {
-        return;
+    switch (this.status) {
+      case 'loading': {
+        // Maintain the last successful `data` value if the next result does not
+        // have one.
+        if (result.data === void 0) {
+          result.data = this.result.data;
+        }
+        this.status = 'idle';
+        this.result = result;
+        this.resolve?.(result);
+        break;
       }
+      case 'idle': {
+        if (result.data === this.result.data) {
+          return;
+        }
 
-      // If we encounter an error with the new result after we have successfully
-      // fetched a previous result, set the new result data to the last successful
-      // result.
-      if (this.result.data && result.data === void 0) {
-        result.data = this.result.data;
-      }
+        // Maintain the last successful `data` value if the next result does not
+        // have one.
+        if (result.data === void 0) {
+          result.data = this.result.data;
+        }
 
-      this.initialized = true;
-      this.refetching = false;
-      this.result = result;
-      if (this.resolve) {
-        this.resolve(result);
+        this.result = result;
+        this.promise = createFulfilledPromise(result);
+        this.deliver(this.promise);
+        break;
       }
-      return;
     }
-
-    if (result.data === this.result.data) {
-      return;
-    }
-
-    this.result = result;
-    this.promise = createFulfilledPromise(result);
-    this.deliver(this.promise);
   }
 
   private handleError(error: ApolloError) {
-    const result = {
-      ...this.result,
-      error,
-      networkStatus: NetworkStatus.error,
-    };
-
-    this.result = result;
-
-    if (!this.initialized || this.refetching) {
-      this.initialized = true;
-      this.refetching = false;
-      if (this.reject) {
-        this.reject(error);
+    switch (this.status) {
+      case 'loading': {
+        this.status = 'idle';
+        this.reject?.(error);
+        break;
       }
-      return;
+      case 'idle': {
+        this.promise = createRejectedPromise(error);
+        this.deliver(this.promise);
+      }
     }
-
-    this.promise = createRejectedPromise(error);
-    this.deliver(this.promise);
   }
 
   private deliver(promise: Promise<ApolloQueryResult<TData>>) {
     this.listeners.forEach((listener) => listener(promise));
+  }
+
+  private initiateFetch() {
+    this.status = 'loading';
+
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+
+    this.promise.catch(() => {});
   }
 }

@@ -1,12 +1,12 @@
 import type { DependencyList } from 'react';
-import { useRef } from 'react';
+import * as React from 'react';
 import { equal } from '@wry/equality';
 
 export function useDeepMemo<TValue>(
   memoFn: () => TValue,
   deps: DependencyList
 ) {
-  const ref = useRef<{ deps: DependencyList; value: TValue }>();
+  const ref = React.useRef<{ deps: DependencyList; value: TValue }>();
 
   if (!ref.current || !equal(ref.current.deps, deps)) {
     ref.current = { value: memoFn(), deps };

@@ -63,13 +63,13 @@ jobs:
           at: /tmp/workspace
       - run: npm version
       - run:
+          command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
+          working_directory: integration-tests
+      - run:
           command: npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.framework >>
           working_directory: integration-tests
       - run:
           command: npx playwright install-deps
-          working_directory: integration-tests
-      - run:
-          command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
           command: npm run build --workspace=<< parameters.framework >> --if-present

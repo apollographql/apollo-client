@@ -16,7 +16,6 @@ import {
   selectHttpOptionsAndBodyInternal,
   defaultPrinter,
   fallbackHttpConfig,
-  createSignalIfSupported,
 } from '../http/index.js';
 import { BatchLink } from '../batch/index.js';
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
@@ -157,11 +156,10 @@ export class BatchHttpLink extends ApolloLink {
         return fromError<FetchResult[]>(parseError);
       }
 
-      let controller: any;
-      if (!(options as any).signal) {
-        const { controller: _controller, signal } = createSignalIfSupported();
-        controller = _controller;
-        if (controller) (options as any).signal = signal;
+      let controller: AbortController | undefined;
+      if (!options.signal && typeof AbortController !== 'undefined') {
+        controller = new AbortController();
+        options.signal = controller.signal;
       }
 
       return new Observable<FetchResult[]>(observer => {
@@ -173,12 +171,14 @@ export class BatchHttpLink extends ApolloLink {
           })
           .then(parseAndCheckHttpResponse(operations))
           .then(result => {
+            controller = undefined;
             // we have data and can send it to back up the link chain
             observer.next(result);
             observer.complete();
             return result;
           })
           .catch(err => {
+            controller = undefined;
             // fetch was cancelled so its already been cleaned up in the unsubscribe
             if (err.name === 'AbortError') return;
             // if it is a network error, BUT there is graphql result info

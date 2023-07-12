@@ -9,7 +9,7 @@ import { selectURI } from './selectURI.js';
 import {
   handleError,
   readMultipartBody,
-  readJsonBody
+  parseAndCheckHttpResponse
 } from './parseAndCheckHttpResponse.js';
 import { checkFetcher } from './checkFetcher.js';
 import type {
@@ -20,7 +20,6 @@ import {
   defaultPrinter,
   fallbackHttpConfig
 } from './selectHttpOptionsAndBody.js';
-import { createSignalIfSupported } from './createSignalIfSupported.js';
 import { rewriteURIForGET } from './rewriteURIForGET.js';
 import { fromError, filterOperationVariables } from '../utils/index.js';
 import {
@@ -119,11 +118,10 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       body.variables = filterOperationVariables(body.variables, operation.query);
     }
 
-    let controller: any;
-    if (!(options as any).signal) {
-      const { controller: _controller, signal } = createSignalIfSupported();
-      controller = _controller;
-      if (controller) (options as any).signal = signal;
+    let controller: AbortController | undefined;
+    if (!options.signal && typeof AbortController !== 'undefined') {
+      controller = new AbortController();
+      options.signal = controller.signal;
     }
 
     // If requested, set method to GET if there are no mutations.
@@ -182,18 +180,26 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       // removal of window.fetch, which is unlikely but not impossible.
       const currentFetch = preferredFetch || maybe(() => fetch) || backupFetch;
 
+      const observerNext = observer.next.bind(observer);
       currentFetch!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });
           const ctype = response.headers?.get('content-type');
 
           if (ctype !== null && /^multipart\/mixed/i.test(ctype)) {
-            return readMultipartBody(response, observer);
+            return readMultipartBody(response, observerNext);
           } else {
-            return readJsonBody(response, operation, observer);
+            return parseAndCheckHttpResponse(operation)(response).then(observerNext);
           }
         })
-        .catch(err => handleError(err, observer));
+        .then(() => {
+          controller = undefined;
+          observer.complete();
+        })
+        .catch(err => {
+          controller = undefined;
+          handleError(err, observer)
+        });
 
       return () => {
         // XXX support canceling this request

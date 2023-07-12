@@ -13,7 +13,7 @@ import { HttpLink } from '../HttpLink';
 import { createHttpLink } from '../createHttpLink';
 import { ClientParseError } from '../serializeFetchParameter';
 import { ServerParseError } from '../parseAndCheckHttpResponse';
-import { ServerError } from '../../..';
+import { FetchResult, ServerError } from '../../..';
 import { voidFetchDuringEachTest } from './helpers';
 import { itAsync } from '../../../testing';
 
@@ -1325,46 +1325,101 @@ describe('HttpLink', () => {
         }),
       );
     });
-    itAsync('supports being cancelled and does not throw', (resolve, reject) => {
-      let called = false;
-      class AbortController {
-        signal: {};
-        abort = () => {
-          called = true;
-        };
+
+    describe('AbortController', () => {
+      const originalAbortController = globalThis.AbortController;
+      afterEach(() => {
+        globalThis.AbortController = originalAbortController;
+      });
+
+      function trackGlobalAbortControllers() {
+        const instances: AbortController[] = []
+        class AbortControllerMock {
+          constructor() {
+            const instance = new originalAbortController()
+            instances.push(instance)
+            return instance
+          }
+        }
+
+        globalThis.AbortController = AbortControllerMock as any;
+        return instances;
       }
 
-      (global as any).AbortController = AbortController;
-
-      fetch.mockReturnValueOnce(Promise.resolve({ text }));
-      text.mockReturnValueOnce(
-        Promise.resolve('{ "data": { "hello": "world" } }'),
-      );
-
-      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
-
-      const sub = execute(link, { query: sampleQuery }).subscribe({
-        next: result => {
-          reject('result should not have been called');
+      const failingObserver: Observer<FetchResult> = {
+        next: () => {
+          fail('result should not have been called');
         },
         error: e => {
-          reject(e);
+          fail(e);
         },
         complete: () => {
-          reject('complete should not have been called');
+          fail('complete should not have been called');
         },
-      });
-      sub.unsubscribe();
+      }
 
-      setTimeout(
-        makeCallback(resolve, reject, () => {
-          delete (global as any).AbortController;
-          expect(called).toBe(true);
-          fetch.mockReset();
-          text.mockReset();
-        }),
-        150,
-      );
+      function mockFetch() {
+        const text = jest.fn(async () => '{}');
+        const fetch = jest.fn(async (uri, options) => ({ text }));
+        return { text, fetch }
+      }
+
+      it("aborts the request when unsubscribing before the request has completed", () => {
+        const { fetch } = mockFetch();
+        const abortControllers = trackGlobalAbortControllers();
+
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+        const sub = execute(link, { query: sampleQuery }).subscribe(failingObserver);
+        sub.unsubscribe();
+
+        expect(abortControllers.length).toBe(1);
+        expect(abortControllers[0].signal.aborted).toBe(true);
+      });
+
+      it('a passed-in signal will be forwarded to the `fetch` call and not be overwritten by an internally-created one', () => {
+        const { fetch } = mockFetch();
+        const externalAbortController = new AbortController();
+
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any, fetchOptions: { signal: externalAbortController.signal } });
+
+        const sub = execute(link, { query: sampleQuery } ).subscribe(failingObserver);
+        sub.unsubscribe();
+
+        expect(fetch.mock.calls.length).toBe(1);
+        expect(fetch.mock.calls[0][1]).toEqual(expect.objectContaining({ signal: externalAbortController.signal }))
+      });
+
+      it('resolving fetch does not cause the AbortController to be aborted', async () => {
+        const { text, fetch } = mockFetch();
+        const abortControllers = trackGlobalAbortControllers();
+        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
+
+        // (the request is already finished at that point)
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+        await new Promise<void>(resolve => execute(link, { query: sampleQuery }).subscribe({
+          complete: resolve
+        }));
+
+        expect(abortControllers.length).toBe(1);
+        expect(abortControllers[0].signal.aborted).toBe(false);
+      });
+
+      it('an unsuccessful fetch does not cause the AbortController to be aborted', async () => {
+        const { fetch } = mockFetch();
+        const abortControllers = trackGlobalAbortControllers();
+        fetch.mockRejectedValueOnce("This is an error!")
+        // the request would be closed by the browser in the case of an error anyways
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+        await new Promise<void>(resolve => execute(link, { query: sampleQuery }).subscribe({
+          error: resolve
+        }));
+
+        expect(abortControllers.length).toBe(1);
+        expect(abortControllers[0].signal.aborted).toBe(false);
+      });
     });
 
     const body = '{';

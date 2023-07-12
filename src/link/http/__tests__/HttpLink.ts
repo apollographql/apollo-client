@@ -1359,7 +1359,7 @@ describe('HttpLink', () => {
       }
 
       function mockFetch() {
-        const text = jest.fn(async () => '{}');
+        const text = jest.fn(async () => '{ "data": { "stub": { "id": "foo" } } }');
         const fetch = jest.fn(async (uri, options) => ({ text }));
         return { text, fetch }
       }
@@ -1388,6 +1388,42 @@ describe('HttpLink', () => {
 
         expect(fetch.mock.calls.length).toBe(1);
         expect(fetch.mock.calls[0][1]).toEqual(expect.objectContaining({ signal: externalAbortController.signal }))
+      });
+
+      it('a passed-in signal that is cancelled will fail the observable with an `AbortError`', async () => {
+        try { 
+          fetchMock.restore();
+          fetchMock.postOnce('data', async () => '{ "data": { "stub": { "id": "foo" } } }');
+
+          const externalAbortController = new AbortController();
+
+          const link = createHttpLink({ uri: '/data', fetchOptions: { signal: externalAbortController.signal } });
+
+          const error = await new Promise<Error>(resolve => {
+            execute(link, { query: sampleQuery } ).subscribe({
+              ...failingObserver,
+              error: resolve,
+            });
+            externalAbortController.abort();
+          });
+          expect(error.name).toBe("AbortError")
+        } finally {
+          fetchMock.restore();
+        }
+      });
+
+      it('aborting the internal signal will not cause an error', async () => {
+        try { 
+          fetchMock.restore();
+          fetchMock.postOnce('data', async () => '{ "data": { "stub": { "id": "foo" } } }');
+          const abortControllers = trackGlobalAbortControllers();
+
+          const link = createHttpLink({ uri: '/data' });
+          execute(link, { query: sampleQuery } ).subscribe(failingObserver);
+          abortControllers[0].abort();
+        } finally {
+          fetchMock.restore();
+        }
       });
 
       it('resolving fetch does not cause the AbortController to be aborted', async () => {

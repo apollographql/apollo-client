@@ -7922,7 +7922,7 @@ describe('useSuspenseQuery', () => {
     consoleSpy.mockRestore();
   });
 
-  it(/*.only*/ 'discards partial data and throws errors returned in incremental chunks', async () => {
+  it('discards partial data and throws errors returned in incremental chunks', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     const query = gql`

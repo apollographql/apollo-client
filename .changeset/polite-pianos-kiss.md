@@ -2,5 +2,4 @@
 '@apollo/client': minor
 ---
 
-(Batch)HttpLink: Previously, these links would swallow all `AbortErrors`, causing queries and mutations to potentially never resolve.
-As `AbortError`s caused by an internally used `AbortSignal` would never propagate in the first place, and `AbortError`s caused by user-provided `AbortSignal` instances should not cause a "hanging" result, this behaviour has been removed and those queries/mutations will instead error as a consequence.
+(Batch)HttpLink: Propagate `AbortError`s to the user when a user-provided `signal` is passed to the link. Previously, these links would swallow all `AbortErrors`, potentially causing queries and mutations to never resolve. As a result of this change, users are now expected to handle `AbortError`s when passing in a user-provided `signal`.

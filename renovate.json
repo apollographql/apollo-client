@@ -1,5 +1,6 @@
 {
   "extends": ["apollo-open-source"],
+  "dependencyDashboard": true,
   "pathRules": [
     {
       "paths": ["docs/package.json"],

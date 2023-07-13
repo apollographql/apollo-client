@@ -45,7 +45,6 @@ import {
   MockLink,
 } from '../../../testing';
 import { ApolloProvider } from '../../context';
-import { SuspenseCache } from '../../cache';
 import { SuspenseQueryHookFetchPolicy } from '../../../react';
 import { useSuspenseQuery } from '../useSuspenseQuery';
 import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
@@ -58,7 +57,6 @@ type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   link?: ApolloLink;
   cache?: ApolloCache<TSerializedCache>;
   mocks?: MockedResponse[];
-  suspenseCache?: SuspenseCache;
   strictMode?: boolean;
 };
 

@@ -21,7 +21,7 @@ import type {
   NoInfer,
 } from '../types/types.js';
 import { useDeepMemo, __use } from './internal/index.js';
-import { getSuspenseCache } from './getSuspenseCache.js';
+import { getSuspenseCache } from '../cache/index.js';
 import { canonicalStringify } from '../../cache/index.js';
 import type { CacheKey } from '../cache/types.js';
 

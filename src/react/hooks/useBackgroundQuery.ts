@@ -11,7 +11,7 @@ import {
 } from '../cache/QueryReference.js';
 import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
 import { __use } from './internal/index.js';
-import { getSuspenseCache } from './getSuspenseCache.js';
+import { getSuspenseCache } from '../cache/index.js';
 import { useWatchQueryOptions } from './useSuspenseQuery.js';
 import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
 import { canonicalStringify } from '../../cache/index.js';

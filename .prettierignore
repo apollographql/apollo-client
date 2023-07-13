@@ -67,6 +67,7 @@ src/utilities/types/*
 src/utilities/common/*
 !src/utilities/common/stripTypename.ts
 !src/utilities/common/omitDeep.ts
+!src/utilities/common/tap.ts
 !src/utilities/common/__tests__/
 src/utilities/common/__tests__/*
 !src/utilities/common/__tests__/omitDeep.ts

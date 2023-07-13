@@ -1,8 +1,8 @@
 {
   "mode": "pre",
-  "tag": "beta",
+  "tag": "rc",
   "initialVersions": {
-    "@apollo/client": "3.7.2"
+    "@apollo/client": "3.7.17"
   },
   "changesets": [
     "afraid-zebras-punch",
@@ -24,17 +24,22 @@
     "heavy-ties-sneeze",
     "hungry-chairs-live",
     "hungry-eagles-kick",
+    "itchy-bulldogs-help",
+    "large-beers-rhyme",
     "lazy-teachers-sell",
+    "lemon-fans-shake",
     "light-ravens-wait",
     "little-schools-roll",
     "mean-tigers-thank",
     "modern-peaches-marry",
     "neat-rockets-sleep",
+    "nice-eyes-return",
     "nine-boxes-happen",
     "odd-pumpkins-care",
     "odd-students-crash",
     "old-moles-run",
     "olive-pans-report",
+    "orange-suns-check",
     "polite-birds-rescue",
     "popular-beers-move",
     "rude-frogs-destroy",
@@ -57,6 +62,7 @@
     "strange-drinks-report",
     "tasty-wasps-relate",
     "ten-cherries-clap",
+    "three-grapes-marry",
     "twelve-files-promise",
     "warm-pandas-cry",
     "wild-mice-nail"

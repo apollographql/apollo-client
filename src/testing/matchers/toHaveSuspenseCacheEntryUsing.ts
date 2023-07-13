@@ -20,7 +20,7 @@ export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
   { variables, queryKey = [] } = Object.create(null)
 ) {
   if (!(client instanceof ApolloClient)) {
-    throw new Error('Actual must be an instance of `SuspenseCache`');
+    throw new Error('Actual must be an instance of `ApolloClient`');
   }
 
   const suspenseCache = getSuspenseCache(client);

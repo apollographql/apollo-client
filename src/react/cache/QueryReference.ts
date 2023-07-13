@@ -51,7 +51,7 @@ export class InternalQueryReference<TData = unknown> {
   public readonly key: CacheKey;
   public readonly observable: ObservableQuery<TData>;
 
-  public promiseCache?: Map<any[], Promise<ApolloQueryResult<TData>>>;
+  public promiseCache?: Map<CacheKey, Promise<ApolloQueryResult<TData>>>;
   public promise: Promise<ApolloQueryResult<TData>>;
 
   private subscription: ObservableSubscription;

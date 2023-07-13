@@ -43,7 +43,6 @@ import { useBackgroundQuery } from '../useBackgroundQuery';
 import { useReadQuery } from '../useReadQuery';
 import { ApolloProvider } from '../../context';
 import { QUERY_REFERENCE_SYMBOL } from '../../cache/QueryReference';
-import { SuspenseCache } from '../../cache';
 import { InMemoryCache } from '../../../cache';
 import {
   FetchMoreFunction,
@@ -70,7 +69,6 @@ function renderIntegrationTest({
     }
   `;
 
-  const suspenseCache = new SuspenseCache();
   const mocks = [
     {
       request: { query },
@@ -131,7 +129,7 @@ function renderIntegrationTest({
 
   function App({ variables }: { variables?: Record<string, unknown> }) {
     return (
-      <ApolloProvider client={_client} suspenseCache={suspenseCache}>
+      <ApolloProvider client={_client}>
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
             {variables ? <ParentWithVariables /> : <Parent />}
@@ -222,7 +220,6 @@ function renderVariablesIntegrationTest({
       };
     }
   );
-  const suspenseCache = new SuspenseCache();
   const client = new ApolloClient({
     cache: cache || new InMemoryCache(),
     link: new MockLink(mocks || _mocks),
@@ -323,7 +320,7 @@ function renderVariablesIntegrationTest({
     errorPolicy?: ErrorPolicy;
   }) {
     return (
-      <ApolloProvider client={client} suspenseCache={suspenseCache}>
+      <ApolloProvider client={client}>
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
             <ParentWithVariables
@@ -412,7 +409,6 @@ function renderPaginatedIntegrationTest({
       },
     },
   });
-  const suspenseCache = new SuspenseCache();
   const client = new ApolloClient({
     cache: fieldPolicies ? cacheWithTypePolicies : new InMemoryCache(),
     link,
@@ -499,7 +495,7 @@ function renderPaginatedIntegrationTest({
 
   function App() {
     return (
-      <ApolloProvider client={client} suspenseCache={suspenseCache}>
+      <ApolloProvider client={client}>
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
             <ParentWithVariables />
@@ -521,7 +517,6 @@ type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   link?: ApolloLink;
   cache?: ApolloCache<TSerializedCache>;
   mocks?: MockedResponse[];
-  suspenseCache?: SuspenseCache;
   strictMode?: boolean;
 };
 
@@ -557,7 +552,6 @@ function renderSuspenseHook<Result, Props>(
 
   const {
     mocks = [],
-    suspenseCache = new SuspenseCache(),
     strictMode,
     ...renderHookOptions
   } = options;
@@ -594,7 +588,7 @@ function renderSuspenseHook<Result, Props>(
                   renders.errors.push(error);
                 }}
               >
-                <ApolloProvider client={client} suspenseCache={suspenseCache}>
+                <ApolloProvider client={client}>
                   {children}
                 </ApolloProvider>
               </ErrorBoundary>
@@ -677,46 +671,6 @@ describe('useBackgroundQuery', () => {
     });
   });
 
-  it('prioritizes the `suspenseCache` option over the context value', () => {
-    const query: TypedDocumentNode<SimpleQueryData> = gql`
-      query UserQuery {
-        greeting
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query },
-        result: { data: { greeting: 'Hello' } },
-      },
-    ];
-
-    const directSuspenseCache = new SuspenseCache();
-    const contextSuspenseCache = new SuspenseCache();
-
-    const client = new ApolloClient({
-      link: new MockLink(mocks),
-      cache: new InMemoryCache(),
-    });
-
-    renderHook(
-      () => useBackgroundQuery(query, { suspenseCache: directSuspenseCache }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client} suspenseCache={contextSuspenseCache}>
-            {children}
-          </ApolloProvider>
-        ),
-      }
-    );
-
-    expect(directSuspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
-    expect(contextSuspenseCache).not.toHaveSuspenseCacheEntryUsing(
-      client,
-      query
-    );
-  });
-
   it('passes context to the link', async () => {
     const query = gql`
       query ContextQuery {
@@ -733,8 +687,6 @@ describe('useBackgroundQuery', () => {
       });
     });
 
-    const suspenseCache = new SuspenseCache();
-
     const { result } = renderHook(
       () =>
         useBackgroundQuery(query, {
@@ -742,7 +694,7 @@ describe('useBackgroundQuery', () => {
         }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider link={link} suspenseCache={suspenseCache}>
+          <MockedProvider link={link}>
             {children}
           </MockedProvider>
         ),
@@ -797,8 +749,6 @@ describe('useBackgroundQuery', () => {
       data: { results },
     });
 
-    const suspenseCache = new SuspenseCache();
-
     const { result } = renderHook(
       () =>
         useBackgroundQuery(query, {
@@ -806,7 +756,7 @@ describe('useBackgroundQuery', () => {
         }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider cache={cache} suspenseCache={suspenseCache}>
+          <MockedProvider cache={cache}>
             {children}
           </MockedProvider>
         ),
@@ -862,8 +812,6 @@ describe('useBackgroundQuery', () => {
       data: { results },
     });
 
-    const suspenseCache = new SuspenseCache();
-
     const { result } = renderHook(
       () =>
         useBackgroundQuery(query, {
@@ -871,7 +819,7 @@ describe('useBackgroundQuery', () => {
         }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider cache={cache} suspenseCache={suspenseCache}>
+          <MockedProvider cache={cache}>
             {children}
           </MockedProvider>
         ),
@@ -897,7 +845,6 @@ describe('useBackgroundQuery', () => {
         hello
       }
     `;
-    const suspenseCache = new SuspenseCache();
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query },
@@ -916,7 +863,7 @@ describe('useBackgroundQuery', () => {
       () => useBackgroundQuery(query, { fetchPolicy: 'cache-and-network' }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider suspenseCache={suspenseCache} client={client}>
+          <ApolloProvider client={client}>
             {children}
           </ApolloProvider>
         ),
@@ -940,7 +887,6 @@ describe('useBackgroundQuery', () => {
         hello
       }
     `;
-    const suspenseCache = new SuspenseCache();
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query },
@@ -959,7 +905,7 @@ describe('useBackgroundQuery', () => {
       () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider suspenseCache={suspenseCache} client={client}>
+          <ApolloProvider client={client}>
             {children}
           </ApolloProvider>
         ),
@@ -983,7 +929,6 @@ describe('useBackgroundQuery', () => {
         foo
       }
     `;
-    const suspenseCache = new SuspenseCache();
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query },
@@ -1009,7 +954,7 @@ describe('useBackgroundQuery', () => {
       () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider suspenseCache={suspenseCache} client={client}>
+          <ApolloProvider client={client}>
             {children}
           </ApolloProvider>
         ),
@@ -1033,7 +978,6 @@ describe('useBackgroundQuery', () => {
         hello
       }
     `;
-    const suspenseCache = new SuspenseCache();
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query },
@@ -1052,7 +996,7 @@ describe('useBackgroundQuery', () => {
       () => useBackgroundQuery(query, { fetchPolicy: 'network-only' }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider suspenseCache={suspenseCache} client={client}>
+          <ApolloProvider client={client}>
             {children}
           </ApolloProvider>
         ),
@@ -1079,7 +1023,6 @@ describe('useBackgroundQuery', () => {
         hello
       }
     `;
-    const suspenseCache = new SuspenseCache();
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query },
@@ -1098,7 +1041,7 @@ describe('useBackgroundQuery', () => {
       () => useBackgroundQuery(query, { fetchPolicy: 'no-cache' }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider suspenseCache={suspenseCache} client={client}>
+          <ApolloProvider client={client}>
             {children}
           </ApolloProvider>
         ),
@@ -1180,11 +1123,9 @@ describe('useBackgroundQuery', () => {
         cache: new InMemoryCache(),
       });
 
-      const suspenseCache = new SuspenseCache();
-
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>
@@ -1304,13 +1245,12 @@ describe('useBackgroundQuery', () => {
         },
       });
       const client = new ApolloClient({ cache, link });
-      const suspenseCache = new SuspenseCache();
       let renders = 0;
       let suspenseCount = 0;
 
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>
@@ -1485,8 +1425,6 @@ describe('useBackgroundQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -1515,7 +1453,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -1551,8 +1489,6 @@ describe('useBackgroundQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -1585,7 +1521,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -1631,8 +1567,6 @@ describe('useBackgroundQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -1665,7 +1599,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -1728,8 +1662,6 @@ describe('useBackgroundQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -1762,7 +1694,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -1820,8 +1752,6 @@ describe('useBackgroundQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -1856,7 +1786,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -1912,8 +1842,6 @@ describe('useBackgroundQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -1956,7 +1884,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -2009,8 +1937,6 @@ describe('useBackgroundQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -2046,7 +1972,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <ErrorBoundary
             fallback={<div data-testid="error">Error boundary</div>}
           >
@@ -2094,8 +2020,6 @@ describe('useBackgroundQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -2125,7 +2049,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -2195,8 +2119,6 @@ describe('useBackgroundQuery', () => {
       current: null,
     };
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -2229,7 +2151,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -2314,8 +2236,6 @@ describe('useBackgroundQuery', () => {
       cache,
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -2355,7 +2275,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -2479,8 +2399,6 @@ describe('useBackgroundQuery', () => {
       cache,
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -2514,7 +2432,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -2599,8 +2517,6 @@ describe('useBackgroundQuery', () => {
       cache,
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -2634,7 +2550,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -2727,8 +2643,6 @@ describe('useBackgroundQuery', () => {
       cache,
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function SuspenseFallback() {
       return <div>Loading...</div>;
     }
@@ -2769,7 +2683,7 @@ describe('useBackgroundQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Parent />
         </ApolloProvider>
       );
@@ -3214,11 +3128,9 @@ describe('useBackgroundQuery', () => {
         cache: new InMemoryCache(),
       });
 
-      const suspenseCache = new SuspenseCache();
-
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>
@@ -3461,11 +3373,9 @@ describe('useBackgroundQuery', () => {
         }),
       });
 
-      const suspenseCache = new SuspenseCache();
-
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>
@@ -3611,8 +3521,6 @@ describe('useBackgroundQuery', () => {
         cache,
       });
 
-      const suspenseCache = new SuspenseCache();
-
       function Child({
         refetch,
         queryRef,
@@ -3650,7 +3558,7 @@ describe('useBackgroundQuery', () => {
 
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>
@@ -3745,8 +3653,6 @@ describe('useBackgroundQuery', () => {
         cache,
       });
 
-      const suspenseCache = new SuspenseCache();
-
       function Child({
         refetch,
         queryRef,
@@ -3783,7 +3689,7 @@ describe('useBackgroundQuery', () => {
 
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>
@@ -3877,11 +3783,9 @@ describe('useBackgroundQuery', () => {
         cache,
       });
 
-      const suspenseCache = new SuspenseCache();
-
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>
@@ -4063,11 +3967,9 @@ describe('useBackgroundQuery', () => {
         cache,
       });
 
-      const suspenseCache = new SuspenseCache();
-
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>
@@ -4195,11 +4097,9 @@ describe('useBackgroundQuery', () => {
         cache,
       });
 
-      const suspenseCache = new SuspenseCache();
-
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>
@@ -4360,11 +4260,9 @@ describe('useBackgroundQuery', () => {
         cache,
       });
 
-      const suspenseCache = new SuspenseCache();
-
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>
@@ -4560,11 +4458,9 @@ describe('useBackgroundQuery', () => {
         cache,
       });
 
-      const suspenseCache = new SuspenseCache();
-
       function App() {
         return (
-          <ApolloProvider client={client} suspenseCache={suspenseCache}>
+          <ApolloProvider client={client}>
             <Suspense fallback={<SuspenseFallback />}>
               <Parent />
             </Suspense>

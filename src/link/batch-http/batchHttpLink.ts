@@ -157,10 +157,9 @@ export class BatchHttpLink extends ApolloLink {
       }
 
       let controller: AbortController | undefined;
-      let internalAbortSignal : AbortSignal | undefined;
       if (!options.signal && typeof AbortController !== 'undefined') {
         controller = new AbortController();
-        options.signal = internalAbortSignal = controller.signal;
+        options.signal = controller.signal;
       }
 
       return new Observable<FetchResult[]>(observer => {
@@ -180,8 +179,6 @@ export class BatchHttpLink extends ApolloLink {
           })
           .catch(err => {
             controller = undefined;
-            // fetch was cancelled so its already been cleaned up in the unsubscribe
-            if (err.name === 'AbortError' && internalAbortSignal?.aborted) return;
             // if it is a network error, BUT there is graphql result info
             // fire the next observer before calling error
             // this gives apollo-client (and react-apollo) the `graphqlErrors` and `networkErrors`

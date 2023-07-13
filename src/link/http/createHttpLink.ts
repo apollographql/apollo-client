@@ -119,10 +119,9 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     }
 
     let controller: AbortController | undefined;
-    let internalAbortSignal : AbortSignal | undefined;
     if (!options.signal && typeof AbortController !== 'undefined') {
       controller = new AbortController();
-      options.signal = internalAbortSignal = controller.signal;
+      options.signal = controller.signal;
     }
 
     // If requested, set method to GET if there are no mutations.
@@ -199,7 +198,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
         })
         .catch(err => {
           controller = undefined;
-          handleError(err, observer, internalAbortSignal)
+          handleError(err, observer)
         });
 
       return () => {

@@ -1412,20 +1412,6 @@ describe('HttpLink', () => {
         }
       });
 
-      it('aborting the internal signal will not cause an error', async () => {
-        try { 
-          fetchMock.restore();
-          fetchMock.postOnce('data', async () => '{ "data": { "stub": { "id": "foo" } } }');
-          const abortControllers = trackGlobalAbortControllers();
-
-          const link = createHttpLink({ uri: '/data' });
-          execute(link, { query: sampleQuery } ).subscribe(failingObserver);
-          abortControllers[0].abort();
-        } finally {
-          fetchMock.restore();
-        }
-      });
-
       it('resolving fetch does not cause the AbortController to be aborted', async () => {
         const { text, fetch } = mockFetch();
         const abortControllers = trackGlobalAbortControllers();

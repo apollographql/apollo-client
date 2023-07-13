@@ -11,11 +11,15 @@ import {
 } from '../cache/QueryReference.js';
 import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
 import { __use } from './internal/index.js';
-import { useSuspenseCache } from './useSuspenseCache.js';
-import { useTrackedQueryRefs, useWatchQueryOptions } from './useSuspenseQuery.js';
+import { getSuspenseCache } from './getSuspenseCache.js';
+import {
+  useTrackedQueryRefs,
+  useWatchQueryOptions,
+} from './useSuspenseQuery.js';
 import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
 import { canonicalStringify } from '../../cache/index.js';
 import type { DeepPartial } from '../../utilities/index.js';
+import type { CacheKey } from '../cache/types.js';
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -125,14 +129,16 @@ export function useBackgroundQuery<
   )
 ): UseBackgroundQueryResult<TData> {
   const client = useApolloClient(options.client);
-  const suspenseCache = useSuspenseCache(client);
+  const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
-  const cacheKey = (
-    [client, query, canonicalStringify(variables)] as any[]
-  ).concat(queryKey);
+  const cacheKey: CacheKey = [
+    query,
+    canonicalStringify(variables),
+    ...([] as any[]).concat(queryKey),
+  ];
 
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)

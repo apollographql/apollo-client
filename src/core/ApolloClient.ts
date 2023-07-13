@@ -46,7 +46,7 @@ export interface DefaultOptions {
 
 let hasSuggestedDevtools = false;
 
-export interface ApolloClientOptions<TCacheShape> {
+export type ApolloClientOptions<TCacheShape> = {
   uri?: string | UriFunction;
   credentials?: string;
   headers?: Record<string, string>;
@@ -93,7 +93,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
   private localState: LocalState<TCacheShape>;
-  protected excessOptions: Partial<ApolloClientOptions<TCacheShape>>;
 
   /**
    * Constructs an instance of {@link ApolloClient}.
@@ -161,10 +160,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
-      ...excessOptions
     } = options;
-
-    this.excessOptions = excessOptions;
 
     let { link } = options;
 

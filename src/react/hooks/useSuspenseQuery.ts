@@ -25,9 +25,10 @@ import {
   useStrictModeSafeCleanupEffect,
   __use,
 } from './internal/index.js';
-import { useSuspenseCache } from './useSuspenseCache.js';
+import { getSuspenseCache } from './getSuspenseCache.js';
 import type { InternalQueryReference } from '../cache/QueryReference.js';
 import { canonicalStringify } from '../../cache/index.js';
+import type { CacheKey } from '../cache/types.js';
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -158,14 +159,16 @@ export function useSuspenseQuery<
   > = Object.create(null)
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
-  const suspenseCache = useSuspenseCache(client);
+  const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
-  const cacheKey = (
-    [client, query, canonicalStringify(variables)] as any[]
-  ).concat(queryKey);
+  const cacheKey: CacheKey = [
+    query,
+    canonicalStringify(variables),
+    ...([] as any[]).concat(queryKey),
+  ];
 
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
     client.watchQuery(watchQueryOptions)

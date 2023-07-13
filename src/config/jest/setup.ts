@@ -9,3 +9,10 @@ gql.disableFragmentWarnings();
 process.on('unhandledRejection', () => {});
 
 loadErrorMessageHandler();
+
+function fail(reason = "fail was called in a test.") {
+  expect(reason).toBe(undefined);
+}
+
+// @ts-ignore
+globalThis.fail = fail;

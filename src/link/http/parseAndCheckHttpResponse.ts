@@ -161,7 +161,6 @@ export function parseJsonBody<T>(response: Response, bodyText: string): T {
 }
 
 export function handleError(err: any, observer: SubscriptionObserver<any>) {
-  if (err.name === "AbortError") return;
   // if it is a network error, BUT there is graphql result info fire
   // the next observer before calling error this gives apollo-client
   // (and react-apollo) the `graphqlErrors` and `networkErrors` to

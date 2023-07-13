@@ -179,8 +179,6 @@ export class BatchHttpLink extends ApolloLink {
           })
           .catch(err => {
             controller = undefined;
-            // fetch was cancelled so its already been cleaned up in the unsubscribe
-            if (err.name === 'AbortError') return;
             // if it is a network error, BUT there is graphql result info
             // fire the next observer before calling error
             // this gives apollo-client (and react-apollo) the `graphqlErrors` and `networkErrors`

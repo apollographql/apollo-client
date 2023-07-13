@@ -6,7 +6,6 @@ import {
   renderHook,
   waitFor,
   RenderHookOptions,
-  RenderHookResult,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -46,7 +45,6 @@ import {
   MockLink,
 } from '../../../testing';
 import { ApolloProvider } from '../../context';
-import { SuspenseCache } from '../../cache';
 import { SuspenseQueryHookFetchPolicy } from '../../../react';
 import { useSuspenseQuery } from '../useSuspenseQuery';
 import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
@@ -59,7 +57,6 @@ type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   link?: ApolloLink;
   cache?: ApolloCache<TSerializedCache>;
   mocks?: MockedResponse[];
-  suspenseCache?: SuspenseCache;
   strictMode?: boolean;
 };
 
@@ -93,12 +90,7 @@ function renderSuspenseHook<Result, Props>(
     frames: [],
   };
 
-  const {
-    mocks = [],
-    suspenseCache = new SuspenseCache(),
-    strictMode,
-    ...renderHookOptions
-  } = options;
+  const { mocks = [], strictMode, ...renderHookOptions } = options;
 
   const client =
     options.client ||
@@ -132,9 +124,7 @@ function renderSuspenseHook<Result, Props>(
                   renders.errors.push(error);
                 }}
               >
-                <ApolloProvider client={client} suspenseCache={suspenseCache}>
-                  {children}
-                </ApolloProvider>
+                <ApolloProvider client={client}>{children}</ApolloProvider>
               </ErrorBoundary>
             </Suspense>
           </Wrapper>
@@ -305,87 +295,6 @@ describe('useSuspenseQuery', () => {
     );
 
     consoleSpy.mockRestore();
-  });
-
-  it('ensures a suspense cache is provided', () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-    const { query } = useSimpleQueryCase();
-
-    const client = new ApolloClient({ cache: new InMemoryCache() });
-
-    expect(() => {
-      renderHook(() => useSuspenseQuery(query), {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client} suspenseCache={undefined}>
-            {children}
-          </ApolloProvider>
-        ),
-      });
-    }).toThrowError(
-      new InvariantError(
-        'Could not find a "suspenseCache" in the context or passed in as an option. ' +
-          'Wrap the root component in an <ApolloProvider> and provide a suspenseCache, ' +
-          'or pass a SuspenseCache instance in via options.'
-      )
-    );
-
-    consoleSpy.mockRestore();
-  });
-
-  it('does not throw when provided a `suspenseCache` option', async () => {
-    const { query, mocks } = useSimpleQueryCase();
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: new MockLink(mocks),
-    });
-    const suspenseCache = new SuspenseCache();
-
-    let hook: RenderHookResult<unknown, unknown>;
-
-    expect(() => {
-      hook = renderHook(() => useSuspenseQuery(query, { suspenseCache }), {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client} suspenseCache={undefined}>
-            <Suspense fallback="Loading">{children}</Suspense>
-          </ApolloProvider>
-        ),
-      });
-    }).not.toThrow();
-
-    // Avoid `act` warnings by waiting for the hook to finish suspending.
-    await waitFor(() => {
-      expect(hook.result.current).toBeDefined();
-    });
-  });
-
-  it('prioritizes the `suspenseCache` option over the context value', () => {
-    const { query, mocks } = useSimpleQueryCase();
-
-    const directSuspenseCache = new SuspenseCache();
-    const contextSuspenseCache = new SuspenseCache();
-
-    const client = new ApolloClient({
-      link: new MockLink(mocks),
-      cache: new InMemoryCache(),
-    });
-
-    renderHook(
-      () => useSuspenseQuery(query, { suspenseCache: directSuspenseCache }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client} suspenseCache={contextSuspenseCache}>
-            {children}
-          </ApolloProvider>
-        ),
-      }
-    );
-
-    expect(directSuspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
-    expect(contextSuspenseCache).not.toHaveSuspenseCacheEntryUsing(
-      client,
-      query
-    );
   });
 
   it('ensures a valid fetch policy is used', () => {
@@ -672,11 +581,9 @@ describe('useSuspenseQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     const { result, unmount } = renderSuspenseHook(
       () => useSuspenseQuery(query),
-      { client, suspenseCache }
+      { client }
     );
 
     await waitFor(() =>
@@ -684,7 +591,7 @@ describe('useSuspenseQuery', () => {
     );
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
+    expect(client).toHaveSuspenseCacheEntryUsing(query);
 
     unmount();
 
@@ -693,7 +600,7 @@ describe('useSuspenseQuery', () => {
     await wait(0);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
+    expect(client).not.toHaveSuspenseCacheEntryUsing(query);
   });
 
   it('tears down all queries when rendering with multiple variable sets', async () => {
@@ -704,11 +611,9 @@ describe('useSuspenseQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     const { rerender, result, unmount } = renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
-      { client, suspenseCache, initialProps: { id: '1' } }
+      { client, initialProps: { id: '1' } }
     );
 
     await waitFor(() =>
@@ -729,10 +634,10 @@ describe('useSuspenseQuery', () => {
 
     expect(client.getObservableQueries().size).toBe(0);
 
-    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query, {
+    expect(client).not.toHaveSuspenseCacheEntryUsing(query, {
       variables: { id: '1' },
     });
-    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query, {
+    expect(client).not.toHaveSuspenseCacheEntryUsing(query, {
       variables: { id: '2' },
     });
   });
@@ -760,12 +665,10 @@ describe('useSuspenseQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     const { rerender, result, unmount } = renderSuspenseHook(
       ({ client }) =>
         useSuspenseQuery(query, { client, variables: { id: '1' } }),
-      { suspenseCache, initialProps: { client: client1 } }
+      { initialProps: { client: client1 } }
     );
 
     await waitFor(() =>
@@ -792,10 +695,10 @@ describe('useSuspenseQuery', () => {
 
     expect(client1.getObservableQueries().size).toBe(0);
     expect(client2.getObservableQueries().size).toBe(0);
-    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client1, query, {
+    expect(client1).not.toHaveSuspenseCacheEntryUsing(query, {
       variables,
     });
-    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client2, query, {
+    expect(client2).not.toHaveSuspenseCacheEntryUsing(query, {
       variables,
     });
   });
@@ -809,13 +712,12 @@ describe('useSuspenseQuery', () => {
       link,
       cache: new InMemoryCache(),
     });
-    const suspenseCache = new SuspenseCache();
 
     function App() {
       const [showGreeting, setShowGreeting] = React.useState(true);
 
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <button onClick={() => setShowGreeting(false)}>Hide greeting</button>
           {showGreeting && (
             <Suspense fallback="Loading greeting...">
@@ -846,12 +748,12 @@ describe('useSuspenseQuery', () => {
     link.simulateComplete();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
+    expect(client).toHaveSuspenseCacheEntryUsing(query);
 
     jest.advanceTimersByTime(30_000);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
+    expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
     jest.useRealTimers();
 
@@ -868,15 +770,20 @@ describe('useSuspenseQuery', () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      defaultOptions: {
+        react: {
+          suspense: {
+            autoDisposeTimeoutMs: 5000,
+          },
+        },
+      },
     });
-
-    const suspenseCache = new SuspenseCache({ autoDisposeTimeoutMs: 5000 });
 
     function App() {
       const [showGreeting, setShowGreeting] = React.useState(true);
 
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <button onClick={() => setShowGreeting(false)}>Hide greeting</button>
           {showGreeting && (
             <Suspense fallback="Loading greeting...">
@@ -907,12 +814,12 @@ describe('useSuspenseQuery', () => {
     link.simulateComplete();
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
+    expect(client).toHaveSuspenseCacheEntryUsing(query);
 
     jest.advanceTimersByTime(5_000);
 
     expect(client.getObservableQueries().size).toBe(0);
-    expect(suspenseCache).not.toHaveSuspenseCacheEntryUsing(client, query);
+    expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
     jest.useRealTimers();
 
@@ -937,11 +844,9 @@ describe('useSuspenseQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Suspense fallback="Loading greeting...">
             <Greeting />
           </Suspense>
@@ -969,7 +874,7 @@ describe('useSuspenseQuery', () => {
     jest.advanceTimersByTime(30_000);
 
     expect(client.getObservableQueries().size).toBe(1);
-    expect(suspenseCache).toHaveSuspenseCacheEntryUsing(client, query);
+    expect(client).toHaveSuspenseCacheEntryUsing(query);
 
     jest.useRealTimers();
   });
@@ -1219,7 +1124,7 @@ describe('useSuspenseQuery', () => {
     ];
 
     const user = userEvent.setup();
-    const suspenseCache = new SuspenseCache();
+
     const client = new ApolloClient({
       link: new MockLink(mocks),
       cache: new InMemoryCache(),
@@ -1231,7 +1136,7 @@ describe('useSuspenseQuery', () => {
 
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Suspense fallback={<Spinner name="first" />}>
             <Todo name="first" />
           </Suspense>
@@ -5314,14 +5219,12 @@ describe('useSuspenseQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function App() {
       const [id, setId] = React.useState<string | null>(null);
       const [isPending, startTransition] = React.useTransition();
 
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <button
             disabled={isPending}
             onClick={() => {
@@ -8925,14 +8828,12 @@ describe('useSuspenseQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function App() {
       const [query, setValue] = React.useState('');
       const deferredQuery = React.useDeferredValue(query);
 
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <label htmlFor="searchInput">Search</label>
           <input
             id="searchInput"
@@ -9036,13 +8937,11 @@ describe('useSuspenseQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function App() {
       const [id, setId] = React.useState('1');
 
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Suspense fallback={<SuspenseFallback />}>
             <Todo id={id} onChange={setId} />
           </Suspense>
@@ -9165,11 +9064,9 @@ describe('useSuspenseQuery', () => {
       cache: new InMemoryCache(),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Suspense fallback={<SuspenseFallback />}>
             <Todo id="1" />
           </Suspense>
@@ -9315,11 +9212,9 @@ describe('useSuspenseQuery', () => {
       }),
     });
 
-    const suspenseCache = new SuspenseCache();
-
     function App() {
       return (
-        <ApolloProvider client={client} suspenseCache={suspenseCache}>
+        <ApolloProvider client={client}>
           <Suspense fallback={<SuspenseFallback />}>
             <Todos />
           </Suspense>

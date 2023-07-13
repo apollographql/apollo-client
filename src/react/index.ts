@@ -9,6 +9,7 @@ export {
 } from './context/index.js';
 
 export * from './hooks/index.js';
+// TODO: remove export with release 3.8
 export { SuspenseCache } from './cache/index.js';
 
 export {

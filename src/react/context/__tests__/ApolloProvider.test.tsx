@@ -6,7 +6,6 @@ import { ApolloClient } from '../../../core';
 import { InMemoryCache as Cache } from '../../../cache';
 import { ApolloProvider, ApolloProviderProps } from '../ApolloProvider';
 import { ApolloContextValue, getApolloContext } from '../ApolloContext';
-import { SuspenseCache } from '../../cache';
 
 describe('<ApolloProvider /> Component', () => {
   const client = new ApolloClient({
@@ -18,9 +17,6 @@ describe('<ApolloProvider /> Component', () => {
     cache: new Cache(),
     link: new ApolloLink((o, f) => (f ? f(o) : null)),
   });
-
-  const suspenseCache = new SuspenseCache();
-  const anotherSuspenseCache = new SuspenseCache();
 
   it('should render children components', () => {
     render(
@@ -122,16 +118,6 @@ describe('<ApolloProvider /> Component', () => {
     ]
   >([
     ['client', { client }, { client: anotherClient }],
-    [
-      'suspenseCache',
-      { client, suspenseCache },
-      { client, suspenseCache: anotherSuspenseCache },
-    ],
-    [
-      'suspenseCache and client',
-      { client, suspenseCache },
-      { suspenseCache: anotherSuspenseCache, client: anotherClient },
-    ],
   ])('context value stability, %s prop', (prop, value, childValue) => {
     it(`should not recreate the context value if the ${prop} prop didn't change`, () => {
       let lastContext: ApolloContextValue | undefined;

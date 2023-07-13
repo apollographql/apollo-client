@@ -1,5 +1,38 @@
 # @apollo/client
 
+## 3.8.0-rc.0
+
+### Minor Changes
+
+- [#11058](https://github.com/apollographql/apollo-client/pull/11058) [`89bf33c42`](https://github.com/apollographql/apollo-client/commit/89bf33c425d08880eeaed4584bdd56c4caf085e7) Thanks [@phryneas](https://github.com/phryneas)! - (Batch)HttpLink: Propagate `AbortError`s to the user when a user-provided `signal` is passed to the link. Previously, these links would swallow all `AbortErrors`, potentially causing queries and mutations to never resolve. As a result of this change, users are now expected to handle `AbortError`s when passing in a user-provided `signal`.
+
+- [#11040](https://github.com/apollographql/apollo-client/pull/11040) [`125ef5b2a`](https://github.com/apollographql/apollo-client/commit/125ef5b2a8fd2de1515b2bdd71785ebab3596cb2) Thanks [@phryneas](https://github.com/phryneas)! - `HttpLink`/`BatchHttpLink`: Abort the `AbortController` signal more granularly.
+  Before this change, when `HttpLink`/`BatchHttpLink` created an `AbortController`
+  internally, the signal would always be `.abort`ed after the request was completed. This could cause issues with Sentry Session Replay and Next.js App Router Cache invalidations, which just replayed the fetch with the same options - including the cancelled `AbortSignal`.
+
+  With this change, the `AbortController` will only be `.abort()`ed by outside events,
+  not as a consequence of the request completing.
+
+### Patch Changes
+
+- [#11053](https://github.com/apollographql/apollo-client/pull/11053) [`c0ca70720`](https://github.com/apollographql/apollo-client/commit/c0ca70720cf5fbedd6e4f128b460c1995d9c55a7) Thanks [@phryneas](https://github.com/phryneas)! - Add `SuspenseCache` as a lazy hidden property on ApolloClient.
+  This means that `SuspenseCache` is now an implementation details of Apollo Client
+  and you no longer need to manually instantiate it and no longer need to pass it
+  into `ApolloProvider`.
+  Trying to instantiate a `SuspenseCache` instance in your code will now throw an
+  error.
+
+  Migration:
+
+  ```diff
+  -import { SuspenseCache } from '@apollo/client';
+
+  -const suspenseCache = new SuspenseCache();
+
+  -<ApolloProvider client={client} suspenseCache={suspenseCache} />;
+  +<ApolloProvider client={client} />;
+  ```
+
 ## 3.8.0-beta.7
 
 ### Minor Changes

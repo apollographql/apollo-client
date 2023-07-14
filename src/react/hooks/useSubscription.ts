@@ -1,4 +1,5 @@
 import '../../utilities/globals';
+import { flushSync } from 'react-dom';
 import { useState, useRef, useEffect } from 'react';
 import { DocumentNode } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -132,7 +133,14 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
           error: void 0,
           variables: options?.variables,
         };
-        setResult(result);
+
+        // Fixes https://github.com/apollographql/apollo-client/issues/10001
+        // If two subscription messages are delivered at _exactly_ the same
+        // time, automatic batching in React 18 prevents the first message
+        // from being rendered to the screen since the two synchronous calls to
+        // `setResult` are batched resulting in a skipped render of the first
+        // message, so we use `flushSync` to guarantee a re-render for each.
+        flushSync(() => { setResult(result) });
 
         if (ref.current.options?.onData) {
           ref.current.options.onData({

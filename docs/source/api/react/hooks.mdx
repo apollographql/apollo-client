@@ -281,7 +281,7 @@ If your subscription API sends multiple messages at the same time or in very fas
 Consider the following component:
 
 ```jsx
-export function Subscriptions({ useFailing }) {
+export function Subscriptions() {
   const { data, error, loading } = useSubscription(query);
   const [accumulatedData, setAccumulatedData] = useState([]);
 
@@ -305,7 +305,7 @@ Since the component above is using `useEffect` to push `data` into a piece of lo
 Instead of using `useEffect` here, we can re-write this component to use the `onData` callback function accepted in `useSubscription`'s `options` object:
 
 ```jsx
-export function Subscriptions({ useFailing }) {
+export function Subscriptions() {
   const [accumulatedData, setAccumulatedData] = useState([]);
   const { data, error, loading } = useSubscription(
     query,

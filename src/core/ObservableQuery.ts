@@ -428,7 +428,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       // instead of network-only), because we allow the caller of
       // fetchMore to provide an updateQuery callback that determines how
       // the data gets written to the cache.
-      fetchPolicy: "no-cache",
+      fetchPolicy: fetchMoreOptions.updateQuery ? "no-cache" : this.options.fetchPolicy,
     } as WatchQueryOptions<TFetchVars, TFetchData>;
 
     const qid = this.queryManager.generateQueryId();

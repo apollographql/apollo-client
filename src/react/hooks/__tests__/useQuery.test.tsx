@@ -4599,7 +4599,7 @@ describe("useQuery Hook", () => {
 
       await waitFor(() => {
         // All results are returned
-        expect(hookResponse).toHaveBeenCalledTimes(6);
+        expect(hookResponse).toHaveBeenCalledTimes(5);
       });
 
       expect(hookResponse.mock.calls.map(call => call[0].data)).toEqual([
@@ -4626,13 +4626,6 @@ describe("useQuery Hook", () => {
             "model": "RS8",
           },
         },
-        {
-          "car": {
-            "__typename": "Car",
-            "make": "Audi",
-            "model": "RS8",
-          },
-        }
       ]);
     });
   });

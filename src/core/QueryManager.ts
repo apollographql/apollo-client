@@ -70,6 +70,7 @@ import {
 import type { ApolloErrorOptions } from '../errors/index.js';
 import { PROTOCOL_ERRORS_SYMBOL } from '../errors/index.js';
 import { print } from '../utilities/index.js';
+import { GraphQLOperation } from './GraphQLOperation.js';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -268,12 +269,11 @@ export class QueryManager<TStore> {
     return new Promise((resolve, reject) => {
       return asyncMap(
         self.getObservableFromLink(
-          mutation,
-          {
-            ...context,
-            optimisticResponse,
-          },
-          variables,
+          new GraphQLOperation({ 
+            query: mutation,
+            variables,
+            context: { ...context, optimisticResponse }
+          }),
           false,
         ),
 
@@ -942,9 +942,7 @@ export class QueryManager<TStore> {
 
     const makeObservable = (variables: OperationVariables) =>
       this.getObservableFromLink<T>(
-        query,
-        context,
-        variables,
+        new GraphQLOperation({ query, variables, context }),
       ).map(result => {
         if (fetchPolicy !== 'no-cache') {
           // the subscription interface should handle not sending us results we no longer subscribe to.
@@ -1037,14 +1035,14 @@ export class QueryManager<TStore> {
   >();
 
   private getObservableFromLink<T = any>(
-    query: DocumentNode,
-    context: any,
-    variables?: OperationVariables,
+    graphqlOperation: GraphQLOperation,
     deduplication: boolean =
       // Prefer context.queryDeduplication if specified.
-      context?.queryDeduplication ??
+      graphqlOperation.context?.queryDeduplication ??
       this.queryDeduplication,
   ): Observable<FetchResult<T>> {
+    const { variables, query } = graphqlOperation
+    let context = graphqlOperation.context
     let observable: Observable<FetchResult<T>>;
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
@@ -1056,7 +1054,7 @@ export class QueryManager<TStore> {
         variables,
         operationName: getOperationName(serverQuery) || void 0,
         context: this.prepareContext({
-          ...context,
+          ...graphqlOperation.context,
           forceFetch: !deduplication
         }),
       };
@@ -1131,11 +1129,12 @@ export class QueryManager<TStore> {
 
     return asyncMap(
       this.getObservableFromLink(
-        linkDocument,
-        options.context,
-        options.variables,
+        new GraphQLOperation({ 
+          query: linkDocument,
+          variables: options.variables,
+          context: options.context
+        })
       ),
-
       result => {
         const graphQLErrors = getGraphQLErrorsFromResult(result);
         const hasErrors = graphQLErrors.length > 0;

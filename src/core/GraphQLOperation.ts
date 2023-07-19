@@ -6,13 +6,13 @@ import { getOperationName } from '../utilities/index.js';
 interface GraphQLOperationOptions {
   query: DocumentNode;
   variables: OperationVariables | undefined;
-  context: DefaultContext;
+  context: DefaultContext | undefined;
 }
 
 export class GraphQLOperation {
   query: DocumentNode;
   variables: OperationVariables | undefined;
-  context: DefaultContext;
+  context: DefaultContext | undefined;
 
   constructor(options: GraphQLOperationOptions) {
     this.query = options.query;
@@ -22,15 +22,6 @@ export class GraphQLOperation {
 
   get operationName() {
     return getOperationName(this.query) || void 0;
-  }
-
-  setContext(
-    next: ((current: DefaultContext) => DefaultContext) | DefaultContext
-  ) {
-    this.context =
-      typeof next === 'function'
-        ? { ...this.context, ...next(this.context) }
-        : { ...this.context, ...next };
   }
 
   toGraphQLRequest(): GraphQLRequest {

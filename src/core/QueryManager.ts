@@ -1115,7 +1115,9 @@ export class QueryManager<TStore> {
     const linkDocument = this.cache.transformForLink(operation.query);
 
     return asyncMap(
-      this.getObservableFromLink(operation.clone({ query: linkDocument })),
+      this.getObservableFromLink(
+        GraphQLOperation.from(operation, { query: linkDocument })
+      ),
       result => {
         const graphQLErrors = getGraphQLErrorsFromResult(result);
         const hasErrors = graphQLErrors.length > 0;

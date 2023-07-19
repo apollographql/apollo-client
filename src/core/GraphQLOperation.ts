@@ -19,6 +19,15 @@ export class GraphQLOperation {
   variables: OperationVariables | undefined;
   context: DefaultContext | undefined;
 
+  static from(other: GraphQLOperation, operation: Partial<RawOperation>) {
+    return new GraphQLOperation({
+      query: other.query,
+      variables: other.variables,
+      context: other.context,
+      ...operation,
+    });
+  }
+
   constructor(operation: RawOperation) {
     this.query = operation.query;
     this.variables = operation.variables;
@@ -27,14 +36,6 @@ export class GraphQLOperation {
 
   get operationName() {
     return getOperationName(this.query) || void 0;
-  }
-
-  clone(operation: Partial<RawOperation>) {
-    return new GraphQLOperation({
-      query: operation.query || this.query,
-      variables: operation.variables || this.variables,
-      context: operation.context || this.context,
-    });
   }
 
   printQuery() {
@@ -74,7 +75,7 @@ export function getServerOperation(operation: GraphQLOperation) {
   );
 
   if (query) {
-    return operation.clone({ query });
+    return GraphQLOperation.from(operation, { query });
   }
 
   return null;
@@ -88,7 +89,7 @@ export function getClientOperation(
   const query = localState.clientQuery(operation.query);
 
   if (query) {
-    return operation.clone({ query });
+    return GraphQLOperation.from(operation, { query });
   }
 
   return null;

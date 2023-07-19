@@ -936,8 +936,8 @@ export class QueryManager<TStore> {
     query = this.transform(query);
     variables = this.getVariables(query, variables);
 
-    const makeObservable = (variables: OperationVariables) =>
-      this.getObservableFromLink<T>(
+    const makeObservable = (variables: OperationVariables) => {
+      return this.getObservableFromLink<T>(
         new GraphQLOperation({ query, variables, context }),
       ).map(result => {
         if (fetchPolicy !== 'no-cache') {
@@ -970,6 +970,7 @@ export class QueryManager<TStore> {
 
         return result;
       });
+    }
 
     if (this.getDocumentInfo(query).hasClientExports) {
       const observablePromise = this.localState.addExportedVariables(

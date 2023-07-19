@@ -1433,12 +1433,20 @@ export class QueryManager<TStore> {
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     operation: GraphQLOperation,
-    { fetchPolicy,
+    { 
+      fetchPolicy,
       refetchWritePolicy,
       errorPolicy,
       returnPartialData,
       notifyOnNetworkStatusChange,
-    }: WatchQueryOptions<TVars, TData>,
+    }: Pick<
+      WatchQueryOptions<TVars, TData>, 
+      | 'fetchPolicy' 
+      | 'refetchWritePolicy' 
+      | 'errorPolicy' 
+      | 'returnPartialData' 
+      | 'notifyOnNetworkStatusChange'
+    >,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.

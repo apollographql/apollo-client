@@ -11,7 +11,6 @@ import {
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
-  removeDirectivesFromDocument,
 } from '../utilities/index.js';
 import type { Cache, ApolloCache} from '../cache/index.js';
 import { canonicalStringify } from '../cache/index.js';
@@ -69,7 +68,7 @@ import {
 } from './QueryInfo.js';
 import type { ApolloErrorOptions } from '../errors/index.js';
 import { PROTOCOL_ERRORS_SYMBOL } from '../errors/index.js';
-import { 
+import {
   GraphQLOperation,
   getClientOperation,
   getServerOperation

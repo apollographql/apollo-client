@@ -1002,8 +1002,8 @@ describe("ObservableQuery", () => {
 
             const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
             expect(fqbpCalls.length).toBe(2);
-            expect(fqbpCalls[0][1].fetchPolicy).toEqual("cache-first");
-            expect(fqbpCalls[1][1].fetchPolicy).toEqual("network-only");
+            expect(fqbpCalls[0][2].fetchPolicy).toEqual("cache-first");
+            expect(fqbpCalls[1][2].fetchPolicy).toEqual("network-only");
 
             const fqoCalls = mocks.fetchConcastWithInfo.mock.calls;
             expect(fqoCalls.length).toBe(2);
@@ -1055,7 +1055,7 @@ describe("ObservableQuery", () => {
           } else if (handleCount === 2) {
             const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
             expect(fqbpCalls.length).toBe(2);
-            expect(fqbpCalls[1][1].fetchPolicy).toBe("no-cache");
+            expect(fqbpCalls[1][2].fetchPolicy).toBe("no-cache");
 
             // Unlike network-only or cache-and-network, the no-cache
             // FetchPolicy does not switch to cache-first after the first

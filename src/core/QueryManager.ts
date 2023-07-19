@@ -1210,6 +1210,7 @@ export class QueryManager<TStore> {
 
       const sourcesWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
+        new GraphQLOperation({ query: normalized.query, variables: normalized.variables, context: normalized.context }),
         normalized,
         networkStatus,
       );
@@ -1431,13 +1432,11 @@ export class QueryManager<TStore> {
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
-    { query,
-      variables,
-      fetchPolicy,
+    operation: GraphQLOperation,
+    { fetchPolicy,
       refetchWritePolicy,
       errorPolicy,
       returnPartialData,
-      context,
       notifyOnNetworkStatusChange,
     }: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
@@ -1448,12 +1447,12 @@ export class QueryManager<TStore> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
-      document: query,
-      variables,
+      document: operation.query,
+      variables: operation.variables,
       networkStatus,
     });
 
-    const readCache = () => queryInfo.getDiff(variables);
+    const readCache = () => queryInfo.getDiff(operation.variables);
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
@@ -1474,12 +1473,12 @@ export class QueryManager<TStore> {
         ...(diff.complete ? null : { partial: true }),
       } as ApolloQueryResult<TData>);
 
-      if (data && this.getDocumentInfo(query).hasForcedResolvers) {
+      if (data && this.getDocumentInfo(operation.query).hasForcedResolvers) {
         return this.localState.runResolvers({
-          document: query,
+          document: operation.query,
           remoteResult: { data },
-          context,
-          variables,
+          context: operation.context,
+          variables: operation.variables,
           onlyRunForcedResolvers: true,
         }).then(resolved => fromData(resolved.data || void 0));
       }
@@ -1511,7 +1510,7 @@ export class QueryManager<TStore> {
     const resultsFromLink = () => this.getResultsFromLink<TData, TVars>(
       queryInfo,
       cacheWriteBehavior,
-      new GraphQLOperation({ query, variables, context }),
+      operation,
       { fetchPolicy, errorPolicy },
     );
 

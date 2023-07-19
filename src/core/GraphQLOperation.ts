@@ -8,7 +8,7 @@ import {
   removeDirectivesFromDocument,
 } from '../utilities/index.js';
 
-interface GraphQLOperationOptions {
+interface RawOperation {
   query: DocumentNode;
   variables: OperationVariables | undefined;
   context: DefaultContext | undefined;
@@ -19,10 +19,10 @@ export class GraphQLOperation {
   variables: OperationVariables | undefined;
   context: DefaultContext | undefined;
 
-  constructor(options: GraphQLOperationOptions) {
-    this.query = options.query;
-    this.variables = options.variables;
-    this.context = options.context;
+  constructor(operation: RawOperation) {
+    this.query = operation.query;
+    this.variables = operation.variables;
+    this.context = operation.context;
   }
 
   get operationName() {

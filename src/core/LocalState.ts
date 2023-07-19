@@ -197,7 +197,7 @@ export class LocalState<TCacheShape> {
     if (query) {
       return this.resolveDocument(
         operation.setContext((context) => this.prepareContext(context)),
-        this.buildRootValueFromCache(query, variables) || {},
+        this.buildRootValueFromCache(operation) || {},
       ).then(data => ({
         ...variables,
         ...data.exportedVariables,
@@ -232,13 +232,10 @@ export class LocalState<TCacheShape> {
   }
 
   // Query the cache and return matching data.
-  private buildRootValueFromCache(
-    document: DocumentNode,
-    variables?: Record<string, any>,
-  ) {
+  private buildRootValueFromCache(operation: GraphQLOperation) {
     return this.cache.diff({
-      query: buildQueryFromSelectionSet(document),
-      variables,
+      query: buildQueryFromSelectionSet(operation.query),
+      variables: operation.variables,
       returnPartialData: true,
       optimistic: false,
     }).result;

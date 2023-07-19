@@ -69,8 +69,11 @@ import {
 } from './QueryInfo.js';
 import type { ApolloErrorOptions } from '../errors/index.js';
 import { PROTOCOL_ERRORS_SYMBOL } from '../errors/index.js';
-import { print } from '../utilities/index.js';
-import { GraphQLOperation } from './GraphQLOperation.js';
+import { 
+  GraphQLOperation,
+  getClientOperation,
+  getServerOperation
+} from './GraphQLOperation.js';
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -1035,43 +1038,38 @@ export class QueryManager<TStore> {
   >();
 
   private getObservableFromLink<T = any>(
-    graphqlOperation: GraphQLOperation,
+    operation: GraphQLOperation,
     deduplication: boolean =
       // Prefer context.queryDeduplication if specified.
-      graphqlOperation.context?.queryDeduplication ??
+      operation.context?.queryDeduplication ??
       this.queryDeduplication,
   ): Observable<FetchResult<T>> {
-    const { variables, query } = graphqlOperation
-    let context = graphqlOperation.context
+    let context = operation.context
     let observable: Observable<FetchResult<T>>;
 
-    const { serverQuery, clientQuery } = this.getDocumentInfo(query);
-    if (serverQuery) {
+    const serverOperation = getServerOperation(operation);
+    const clientOperation = getClientOperation(operation, this.localState);
+
+    if (serverOperation) {
       const { inFlightLinkObservables, link } = this;
 
-      const operation = {
-        query: serverQuery,
-        variables,
-        operationName: getOperationName(serverQuery) || void 0,
-        context: this.prepareContext({
-          ...graphqlOperation.context,
-          forceFetch: !deduplication
-        }),
-      };
+      serverOperation.setContext(
+        context => this.prepareContext({...context, forceFetch: !deduplication})
+      );
 
-      context = operation.context;
+      context = serverOperation.context;
 
       if (deduplication) {
-        const printedServerQuery = print(serverQuery);
+        const printedServerQuery = serverOperation.printQuery();
         const byVariables = inFlightLinkObservables.get(printedServerQuery) || new Map();
         inFlightLinkObservables.set(printedServerQuery, byVariables);
 
-        const varJson = canonicalStringify(variables);
+        const varJson = canonicalStringify(operation.variables);
         observable = byVariables.get(varJson);
 
         if (!observable) {
           const concast = new Concast([
-            execute(link, operation) as Observable<FetchResult<T>>
+            execute(link, serverOperation.toGraphQLRequest()) as Observable<FetchResult<T>>
           ]);
 
           byVariables.set(varJson, observable = concast);
@@ -1086,7 +1084,7 @@ export class QueryManager<TStore> {
 
       } else {
         observable = new Concast([
-          execute(link, operation) as Observable<FetchResult<T>>
+          execute(link, serverOperation.toGraphQLRequest()) as Observable<FetchResult<T>>
         ]);
       }
     } else {
@@ -1096,13 +1094,13 @@ export class QueryManager<TStore> {
       context = this.prepareContext(context);
     }
 
-    if (clientQuery) {
+    if (clientOperation) {
       observable = asyncMap(observable, result => {
         return this.localState.runResolvers({
-          document: clientQuery,
+          document: clientOperation.query,
           remoteResult: result,
           context,
-          variables,
+          variables: clientOperation.variables,
         });
       });
     }

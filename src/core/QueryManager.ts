@@ -90,8 +90,6 @@ interface TransformCacheEntry {
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
-  clientQuery: DocumentNode | null;
-  serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
   asQuery: DocumentNode;
 }
@@ -655,12 +653,6 @@ export class QueryManager<TStore> {
         hasClientExports: hasClientExports(document),
         hasForcedResolvers: this.localState.shouldForceResolvers(document),
         hasNonreactiveDirective: hasDirectives(['nonreactive'], document),
-        clientQuery: this.localState.clientQuery(document),
-        serverQuery: removeDirectivesFromDocument([
-          { name: 'client', remove: true },
-          { name: 'connection' },
-          { name: 'nonreactive' },
-        ], document),
         defaultVars: getDefaultValues(
           getOperationDefinition(document)
         ) as OperationVariables,

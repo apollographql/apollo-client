@@ -142,10 +142,8 @@ export class LocalState<TCacheShape> {
     }
   ): Promise<FetchResult<TData>> {
     return this.resolveDocument(
-      operation.query,
+      operation,
       remoteResult.data,
-      operation.context,
-      operation.variables,
       this.fragmentMatcher,
       onlyRunForcedResolvers,
     ).then(localResult => ({
@@ -198,10 +196,8 @@ export class LocalState<TCacheShape> {
 
     if (query) {
       return this.resolveDocument(
-        query,
+        operation.setContext((context) => this.prepareContext(context)),
         this.buildRootValueFromCache(query, variables) || {},
-        this.prepareContext(operation.context),
-        variables
       ).then(data => ({
         ...variables,
         ...data.exportedVariables,
@@ -249,15 +245,15 @@ export class LocalState<TCacheShape> {
   }
 
   private async resolveDocument<TData>(
-    document: DocumentNode,
+    operation: GraphQLOperation,
     rootValue: TData,
-    context: any = {},
-    variables: VariableMap = {},
     fragmentMatcher: FragmentMatcher = () => true,
     onlyRunForcedResolvers: boolean = false,
   ) {
-    const mainDefinition = getMainDefinition(document) as OperationDefinitionNode;
-    const fragments = getFragmentDefinitions(document);
+    const { query, context = {}, variables = {} } = operation;
+
+    const mainDefinition = getMainDefinition(query) as OperationDefinitionNode;
+    const fragments = getFragmentDefinitions(query);
     const fragmentMap = createFragmentMap(fragments);
     const selectionsToResolve = this.collectSelectionsToResolve(mainDefinition, fragmentMap);
 

@@ -32,8 +32,8 @@ export class GraphQLOperation {
   clone(operation: Partial<RawOperation>) {
     return new GraphQLOperation({
       query: operation.query || this.query,
-      variables: operation.query || this.variables,
-      context: operation.query || this.context,
+      variables: operation.variables || this.variables,
+      context: operation.context || this.context,
     });
   }
 

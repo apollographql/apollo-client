@@ -29,6 +29,14 @@ export class GraphQLOperation {
     return getOperationName(this.query) || void 0;
   }
 
+  clone(operation: Partial<RawOperation>) {
+    return new GraphQLOperation({
+      query: operation.query || this.query,
+      variables: operation.query || this.variables,
+      context: operation.query || this.context,
+    });
+  }
+
   printQuery() {
     return print(this.query);
   }
@@ -66,11 +74,7 @@ export function getServerOperation(operation: GraphQLOperation) {
   );
 
   if (query) {
-    return new GraphQLOperation({
-      query,
-      variables: operation.variables,
-      context: operation.context,
-    });
+    return operation.clone({ query });
   }
 
   return null;
@@ -84,11 +88,7 @@ export function getClientOperation(
   const query = localState.clientQuery(operation.query);
 
   if (query) {
-    return new GraphQLOperation({
-      query,
-      variables: operation.variables,
-      context: operation.context,
-    });
+    return operation.clone({ query });
   }
 
   return null;

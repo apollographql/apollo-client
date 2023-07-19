@@ -938,7 +938,7 @@ export class QueryManager<TStore> {
 
     const makeObservable = (variables: OperationVariables) => {
       return this.getObservableFromLink<T>(
-        new GraphQLOperation({ query, variables, context }),
+        new GraphQLOperation({ query, variables, context })
       ).map(result => {
         if (fetchPolicy !== 'no-cache') {
           // the subscription interface should handle not sending us results we no longer subscribe to.
@@ -973,16 +973,17 @@ export class QueryManager<TStore> {
     }
 
     if (this.getDocumentInfo(query).hasClientExports) {
-      const observablePromise = this.localState.addExportedVariables(
-        new GraphQLOperation({ query, variables, context })
-      ).then(makeObservable);
-
       return new Observable<FetchResult<T>>(observer => {
         let sub: ObservableSubscription | null = null;
-        observablePromise.then(
-          observable => sub = observable.subscribe(observer),
-          observer.error,
-        );
+        this.localState
+          .addExportedVariables(
+            new GraphQLOperation({ query, variables, context })
+          )
+          .then(makeObservable)
+          .then(
+            observable => sub = observable.subscribe(observer),
+            observer.error,
+          );
         return () => sub && sub.unsubscribe();
       });
     }

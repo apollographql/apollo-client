@@ -1102,10 +1102,8 @@ export class QueryManager<TStore> {
   private getResultsFromLink<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
+    operation: GraphQLOperation,
     options: Pick<WatchQueryOptions<TVars, TData>,
-      | "query"
-      | "variables"
-      | "context"
       | "fetchPolicy"
       | "errorPolicy">,
   ): Observable<ApolloQueryResult<TData>> {
@@ -1114,14 +1112,14 @@ export class QueryManager<TStore> {
     // Performing transformForLink here gives this.cache a chance to fill in
     // missing fragment definitions (for example) before sending this document
     // through the link chain.
-    const linkDocument = this.cache.transformForLink(options.query);
+    const linkDocument = this.cache.transformForLink(operation.query);
 
     return asyncMap(
       this.getObservableFromLink(
         new GraphQLOperation({ 
           query: linkDocument,
-          variables: options.variables,
-          context: options.context
+          variables: operation.variables,
+          context: operation.context
         })
       ),
       result => {
@@ -1140,7 +1138,7 @@ export class QueryManager<TStore> {
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
           // ones used to obtain it from the link.
-          queryInfo.markResult(result, linkDocument, options, cacheWriteBehavior);
+          queryInfo.markResult(result, linkDocument, { ...options, variables: operation.variables }, cacheWriteBehavior);
           queryInfo.markReady();
         }
 
@@ -1513,13 +1511,8 @@ export class QueryManager<TStore> {
     const resultsFromLink = () => this.getResultsFromLink<TData, TVars>(
       queryInfo,
       cacheWriteBehavior,
-      {
-        query,
-        variables,
-        context,
-        fetchPolicy,
-        errorPolicy,
-      },
+      new GraphQLOperation({ query, variables, context }),
+      { fetchPolicy, errorPolicy },
     );
 
     const shouldNotify =

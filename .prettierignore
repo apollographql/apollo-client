@@ -53,6 +53,7 @@ src/core/*
 src/core/tests/*
 !src/core/__tests__/equalByQuery.ts
 !src/core/equalByQuery.ts
+!src/core/GraphQLOperation.ts
 
 # Allowed utilities
 !src/utilities/

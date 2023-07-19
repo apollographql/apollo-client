@@ -83,16 +83,21 @@ export function useFragment<
 
   return useSyncExternalStore(
     (forceUpdate) => {
-      return cache.watch({
+      let lastTimeout = 0;
+      const unsubcribe = cache.watch({
         ...diffOptions,
         immediate: true,
         callback(diff) {
           if (!equal(diff, latestDiff)) {
             resultRef.current = diffToResult((latestDiff = diff));
-            forceUpdate();
+            lastTimeout = setTimeout(forceUpdate) as any;
           }
         },
       });
+      return () => {
+        unsubcribe();
+        clearTimeout(lastTimeout);
+      }
     },
     getSnapshot,
     getSnapshot

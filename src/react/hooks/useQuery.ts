@@ -160,7 +160,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     const obsQuery = this.useObservableQuery();
 
     const result = useSyncExternalStore(
-      React.useCallback(() => {
+      React.useCallback((handleStoreChange) => {
         if (this.renderPromises) {
           return () => {};
         }
@@ -181,7 +181,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
             return;
           }
 
-          this.setResult(result);
+          this.setResult(result, handleStoreChange);
         };
 
         const onError = (error: Error) => {
@@ -217,7 +217,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
               error: error as ApolloError,
               loading: false,
               networkStatus: NetworkStatus.error,
-            });
+            }, handleStoreChange);
           }
         };
 
@@ -495,7 +495,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
   private result: undefined | ApolloQueryResult<TData>;
   private previousData: undefined | TData;
 
-  private setResult(nextResult: ApolloQueryResult<TData>) {
+  private setResult(nextResult: ApolloQueryResult<TData>, forceUpdate: () => void) {
     const previousResult = this.result;
     if (previousResult && previousResult.data) {
       this.previousData = previousResult.data;
@@ -503,7 +503,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     this.result = nextResult;
     // Calling state.setResult always triggers an update, though some call sites
     // perform additional equality checks before committing to an update.
-    this.forceUpdate();
+    forceUpdate();
     this.handleErrorOrCompleted(nextResult, previousResult);
   }
 

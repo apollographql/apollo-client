@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, waitFor, screen, renderHook } from "@testing-library/react";
+import { render, waitFor, screen, renderHook, within } from "@testing-library/react";
 import userEvent from '@testing-library/user-event';
 import { act } from "react-dom/test-utils";
 
@@ -16,11 +16,13 @@ import {
   ApolloLink,
   StoreObject,
   DocumentNode,
+  FetchResult,
 } from "../../../core";
 import { useQuery } from "../useQuery";
 import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from 'expect-type'
+import { SubscriptionObserver } from "zen-observable-ts";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -175,7 +177,7 @@ describe("useFragment", () => {
     act(() => {
       cache.modify({
         fields: {
-          list(list: Reference[], { readField }) {
+          list(list: readonly Reference[], { readField }) {
             return [
               ...list,
               cache.writeFragment({
@@ -308,6 +310,39 @@ describe("useFragment", () => {
       },
     });
   });
+
+  it("returns data on first render", () => {
+    const ItemFragment: TypedDocumentNode<Item> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+    `;
+    const cache = new InMemoryCache();
+    const item  = { __typename: "Item", id: 1, text: "Item #1" };
+    cache.writeFragment({
+      fragment: ItemFragment,
+      data: item,
+    })
+    const client = new ApolloClient({
+      cache,
+    })
+    function Component(){
+      const { data } = useFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 1 }
+      })
+      return <>{data.text}</>
+    }
+    render(
+      <ApolloProvider client={client}>
+        <Component />
+      </ApolloProvider>,
+    );
+
+    // would throw if not present synchronously
+    screen.getByText(/Item #1/);
+  })
 
   it.each<TypedDocumentNode<{ list: Item[] }>>([
     // This query uses a basic field-level @nonreactive directive.
@@ -807,7 +842,7 @@ describe("useFragment", () => {
     act(() => {
       cache.modify({
         fields: {
-          list(list: Reference[], { readField }) {
+          list(list: readonly Reference[], { readField }) {
             return [
               ...list,
               cache.writeFragment({
@@ -1413,6 +1448,181 @@ describe("useFragment", () => {
         missing: "Dangling reference to missing Item:5 object",
       });
     });
+  });
+});
+
+describe("has the same timing as `useQuery`", () => {
+  const itemFragment = gql`
+    fragment ItemFragment on Item {
+      id
+      title
+    }
+  `;
+
+  it("both in same component", async () => {
+    const initialItem = { __typename: "Item", id: 1, title: "Item #initial" };
+    const updatedItem = { __typename: "Item", id: 1, title: "Item #updated" };
+
+    const query = gql`
+      query {
+        item {
+          ...ItemFragment
+        }
+      }
+      ${itemFragment}
+    `;
+    let observer: SubscriptionObserver<FetchResult>;
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link: new ApolloLink(operation => new Observable(o => void (observer = o))),
+    });
+
+    function Component(){
+      const { data: queryData } = useQuery(query, { returnPartialData: true });
+      const { data: fragmentData, complete } = useFragment({
+        fragment: itemFragment,
+        from: initialItem,
+      });
+
+      if (!queryData) {
+        expect(fragmentData).toStrictEqual({});
+      } else {
+        expect({ item: fragmentData }).toStrictEqual(queryData);
+      }
+      return complete ? JSON.stringify(fragmentData) : 'loading';
+    }
+    render(<Component />, { wrapper: ({ children }) => (
+      <ApolloProvider client={client}>{children}</ApolloProvider>
+    )});
+    await screen.findByText(/loading/);
+    assert(observer!)
+    observer.next({ data: { item: initialItem } });
+    observer.complete();
+    await screen.findByText(/Item #initial/)
+    cache.writeQuery({ query, data: { item: updatedItem } });
+    await screen.findByText(/Item #updated/)
+    await new Promise(resolve => setTimeout(resolve, 50))
+  });
+
+  it("`useQuery` in parent, `useFragment` in child", async () => {
+    const item1 = { __typename: "Item", id: 1, title: "Item #1" };
+    const item2 = { __typename: "Item", id: 2, title: "Item #2" };
+    const query: TypedDocumentNode<{items: Array<typeof item1>}> = gql`
+      query {
+        items {
+          ...ItemFragment
+        }
+      }
+      ${itemFragment}
+    `;
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache
+    });
+    cache.writeQuery({ query, data: { items: [ item1, item2 ] } });
+
+    const valuePairs: Array<[item: string, parentCount: number, childCount: number]> = []
+    function captureDOMState(){
+      const parent = screen.getByTestId("parent");
+      const children = screen.getByTestId("children");
+      valuePairs.push(['Item 1', within(parent).queryAllByText(/Item #1/).length, within(children).queryAllByText(/Item #1/).length])
+      valuePairs.push(['Item 2', within(parent).queryAllByText(/Item #2/).length, within(children).queryAllByText(/Item #2/).length])
+    }
+
+    function Parent(){
+      const { data } = useQuery(query);
+      if (!data) throw new Error("should never happen")
+      React.useEffect(captureDOMState);
+      return <>
+        <div data-testid="parent"><p>{JSON.stringify(data)}</p></div>
+        <div data-testid="children">{data.items.map((item, i) => <p key={i}><Child id={item.id} /></p>)}</div>
+      </>
+    }
+    function Child({ id }: { id: number }){
+      const {data} = useFragment({
+        fragment: itemFragment,
+        from: { __typename: "Item", id },
+      })
+      React.useEffect(captureDOMState);
+      return <>{JSON.stringify({item: data })}</>
+    }
+
+    render(<Parent />, { wrapper: ({ children }) => (
+      <ApolloProvider client={client}>{children}</ApolloProvider>
+    )});
+    cache.evict({
+      id: cache.identify(item2)
+    });
+    await waitFor(() => {
+      expect(() => screen.getByText(/Item #2/)).toThrow()
+    })
+
+    for (const [_item, parentChount, childCount] of valuePairs) {
+      expect(parentChount).toBe(childCount)
+    }
+  });
+
+  it.failing("`useFragment` in parent, `useQuery` in child", async () => {
+    const item1 = { __typename: "Item", id: 1, title: "Item #1" };
+    const item2 = { __typename: "Item", id: 2, title: "Item #2" };
+    const query: TypedDocumentNode<{items: Array<typeof item1>}> = gql`
+      query {
+        items {
+          ...ItemFragment
+        }
+      }
+      ${itemFragment}
+    `;
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache
+    });
+    cache.writeQuery({ query, data: { items: [ item1, item2 ] } });
+
+    const valuePairs: Array<[item: string, parentCount: number, childCount: number]> = []
+    function captureDOMState(){
+      const parent = screen.getByTestId("parent");
+      const children = screen.getByTestId("children");
+      valuePairs.push(['Item 1', within(parent).queryAllByText(/Item #1/).length, within(children).queryAllByText(/Item #1/).length])
+      valuePairs.push(['Item 2', within(parent).queryAllByText(/Item #2/).length, within(children).queryAllByText(/Item #2/).length])
+    }
+
+    function Parent(){
+      const {data: data1} = useFragment({
+        fragment: itemFragment,
+        from: { __typename: "Item", id: 1 },
+      })
+      const {data: data2} = useFragment({
+        fragment: itemFragment,
+        from: { __typename: "Item", id: 2 },
+      })
+      React.useEffect(captureDOMState);
+      return <>
+        <div data-testid="parent"><p>{JSON.stringify(data1)}</p><p>{JSON.stringify(data2)}</p></div>
+        <div data-testid="children"><p><Child /></p></div>
+      </>
+    }
+    function Child(){
+      const { data } = useQuery(query);
+      if (!data) throw new Error("should never happen")
+      React.useEffect(captureDOMState);
+      return <>{JSON.stringify(data)}</>
+    }
+
+    render(<Parent />, { wrapper: ({ children }) => (
+      <ApolloProvider client={client}>{children}</ApolloProvider>
+    )});
+    act(() => void cache.evict({
+      id: cache.identify(item2)
+    }));
+    await waitFor(() => {
+      expect(() => screen.getByText(/Item #2/)).toThrow()
+    })
+
+    for (const [_item, parentChount, childCount] of valuePairs) {
+      expect(parentChount).toBe(childCount)
+    }
   });
 });
 

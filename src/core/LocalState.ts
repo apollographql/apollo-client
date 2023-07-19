@@ -131,25 +131,22 @@ export class LocalState<TCacheShape> {
   // Locally resolved field values are merged with the incoming remote data,
   // and returned. Note that locally resolved fields will overwrite
   // remote data using the same field name.
-  public async runResolvers<TData>({
-    document,
-    remoteResult,
-    context,
-    variables,
-    onlyRunForcedResolvers = false,
-  }: {
-    document: DocumentNode | null;
-    remoteResult: FetchResult<TData>;
-    context?: Record<string, any>;
-    variables?: Record<string, any>;
-    onlyRunForcedResolvers?: boolean;
-  }): Promise<FetchResult<TData>> {
-    if (document) {
+  public async runResolvers<TData>(
+    operation: GraphQLOperation,
+    {
+      remoteResult,
+      onlyRunForcedResolvers = false,
+    }: {
+      remoteResult: FetchResult<TData>;
+      onlyRunForcedResolvers?: boolean;
+    }
+  ): Promise<FetchResult<TData>> {
+    if (operation.query) {
       return this.resolveDocument(
-        document,
+        operation.query,
         remoteResult.data,
-        context,
-        variables,
+        operation.context,
+        operation.variables,
         this.fragmentMatcher,
         onlyRunForcedResolvers,
       ).then(localResult => ({

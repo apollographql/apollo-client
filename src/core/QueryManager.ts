@@ -1087,12 +1087,10 @@ export class QueryManager<TStore> {
 
     if (clientOperation) {
       observable = asyncMap(observable, result => {
-        return this.localState.runResolvers({
-          document: clientOperation.query,
-          remoteResult: result,
-          context,
-          variables: clientOperation.variables,
-        });
+        return this.localState.runResolvers(
+          GraphQLOperation.from(clientOperation, { context }), 
+          { remoteResult: result }
+        );
       });
     }
 
@@ -1484,11 +1482,8 @@ export class QueryManager<TStore> {
       } as ApolloQueryResult<TData>);
 
       if (data && this.getDocumentInfo(operation.query).hasForcedResolvers) {
-        return this.localState.runResolvers({
-          document: operation.query,
+        return this.localState.runResolvers(operation, {
           remoteResult: { data },
-          context: operation.context,
-          variables: operation.variables,
           onlyRunForcedResolvers: true,
         }).then(resolved => fromData(resolved.data || void 0));
       }

@@ -74,11 +74,7 @@ export function getServerOperation(operation: GraphQLOperation) {
     operation.query
   );
 
-  if (query) {
-    return GraphQLOperation.from(operation, { query });
-  }
-
-  return null;
+  return query ? GraphQLOperation.from(operation, { query }) : null;
 }
 
 // TODO: Add a cache around this functionality
@@ -88,9 +84,5 @@ export function getClientOperation(
 ) {
   const query = localState.clientQuery(operation.query);
 
-  if (query) {
-    return GraphQLOperation.from(operation, { query });
-  }
-
-  return null;
+  return query ? GraphQLOperation.from(operation, { query }) : null;
 }

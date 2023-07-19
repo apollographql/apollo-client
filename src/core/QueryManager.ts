@@ -231,7 +231,9 @@ export class QueryManager<TStore> {
 
     variables = this.getVariables(mutation, variables) as TVariables;
     if (hasClientExports) {
-      variables = await this.localState.addExportedVariables(mutation, variables, context) as TVariables;
+      variables = await this.localState.addExportedVariables(
+        new GraphQLOperation({ query: mutation, variables, context })
+      ) as TVariables;
     }
 
     const mutationStoreValue =
@@ -971,9 +973,7 @@ export class QueryManager<TStore> {
 
     if (this.getDocumentInfo(query).hasClientExports) {
       const observablePromise = this.localState.addExportedVariables(
-        query,
-        variables,
-        context,
+        new GraphQLOperation({ query, variables, context })
       ).then(makeObservable);
 
       return new Observable<FetchResult<T>>(observer => {
@@ -1204,7 +1204,7 @@ export class QueryManager<TStore> {
 
       const sourcesWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
-        new GraphQLOperation({ query: normalized.query, variables: normalized.variables, context: normalized.context }),
+        new GraphQLOperation({ query: normalized.query, variables, context: normalized.context }),
         normalized,
         networkStatus,
       );
@@ -1245,7 +1245,13 @@ export class QueryManager<TStore> {
     if (this.getDocumentInfo(normalized.query).hasClientExports) {
       concast = new Concast(
         this.localState
-          .addExportedVariables(normalized.query, normalized.variables, normalized.context)
+          .addExportedVariables(
+            new GraphQLOperation({ 
+              query: normalized.query,
+              variables: normalized.variables,
+              context: normalized.context
+            })
+          )
           .then(fromVariables).then(sourcesWithInfo => sourcesWithInfo.sources),
       );
       // there is just no way we can synchronously get the *right* value here,

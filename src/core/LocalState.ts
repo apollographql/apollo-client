@@ -141,21 +141,17 @@ export class LocalState<TCacheShape> {
       onlyRunForcedResolvers?: boolean;
     }
   ): Promise<FetchResult<TData>> {
-    if (operation.query) {
-      return this.resolveDocument(
-        operation.query,
-        remoteResult.data,
-        operation.context,
-        operation.variables,
-        this.fragmentMatcher,
-        onlyRunForcedResolvers,
-      ).then(localResult => ({
-        ...remoteResult,
-        data: localResult.result,
-      }));
-    }
-
-    return remoteResult;
+    return this.resolveDocument(
+      operation.query,
+      remoteResult.data,
+      operation.context,
+      operation.variables,
+      this.fragmentMatcher,
+      onlyRunForcedResolvers,
+    ).then(localResult => ({
+      ...remoteResult,
+      data: localResult.result,
+    }));
   }
 
   public setFragmentMatcher(fragmentMatcher: FragmentMatcher) {

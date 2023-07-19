@@ -192,21 +192,13 @@ export class LocalState<TCacheShape> {
   // @client @export fields locally, then pass the resolved values back to be
   // used alongside the original operation variables.
   public async addExportedVariables(operation: GraphQLOperation) {
-    const { query, variables = {} } = operation;
-
-    if (query) {
-      return this.resolveDocument(
-        operation.setContext((context) => this.prepareContext(context)),
-        this.buildRootValueFromCache(operation) || {},
-      ).then(data => ({
-        ...variables,
-        ...data.exportedVariables,
-      }));
-    }
-
-    return {
-      ...variables,
-    };
+    return this.resolveDocument(
+      operation.setContext((context) => this.prepareContext(context)),
+      this.buildRootValueFromCache(operation) || {},
+    ).then(data => ({
+      ...operation.variables,
+      ...data.exportedVariables,
+    }));
   }
 
   public shouldForceResolvers(document: ASTNode) {

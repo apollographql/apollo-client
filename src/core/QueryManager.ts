@@ -1045,7 +1045,7 @@ export class QueryManager<TStore> {
       const { inFlightLinkObservables, link } = this;
 
       serverOperation.setContext(
-        context => this.prepareContext({...context, forceFetch: !deduplication})
+        context => this.prepareContext({ ...context, forceFetch: !deduplication })
       );
 
       context = serverOperation.context;

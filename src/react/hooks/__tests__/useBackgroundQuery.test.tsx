@@ -62,7 +62,7 @@ function renderIntegrationTest({
 }: {
   client?: ApolloClient<NormalizedCacheObject>;
 } = {}) {
-  const query: TypedDocumentNode<QueryData> = gql`
+  const query: TypedDocumentNode<QueryData, never> = gql`
     query SimpleQuery {
       foo {
         bar
@@ -70,10 +70,13 @@ function renderIntegrationTest({
     }
   `;
 
+  const user = userEvent.setup();
+
   const mocks = [
     {
       request: { query },
       result: { data: { foo: { bar: 'hello' } } },
+      delay: 10,
     },
   ];
   const _client =
@@ -119,29 +122,37 @@ function renderIntegrationTest({
   }
 
   function Parent() {
-    const [queryRef] = useBackgroundQuery(query);
-    return <Child queryRef={queryRef} />;
+    const [queryRef, loadQuery] = useBackgroundQuery(query);
+    return (
+      <div>
+        <button onClick={() => loadQuery()}>Load query</button>
+        {queryRef && <Child queryRef={queryRef} />}
+      </div>
+    );
   }
 
-  function ParentWithVariables() {
-    const [queryRef] = useBackgroundQuery(query);
-    return <Child queryRef={queryRef} />;
-  }
-
-  function App({ variables }: { variables?: Record<string, unknown> }) {
+  function App() {
     return (
       <ApolloProvider client={_client}>
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
-            {variables ? <ParentWithVariables /> : <Parent />}
+            <Parent />
           </Suspense>
         </ErrorBoundary>
       </ApolloProvider>
     );
   }
 
-  const { ...rest } = render(<App />);
-  return { ...rest, query, client: _client, renders };
+  const utils = render(<App />);
+
+  return {
+    ...utils,
+    query,
+    client: _client,
+    renders,
+    user,
+    loadQueryButton: screen.getByText('Load query'),
+  };
 }
 
 interface VariablesCaseData {

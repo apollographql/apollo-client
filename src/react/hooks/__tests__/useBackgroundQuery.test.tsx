@@ -3908,7 +3908,9 @@ describe('useBackgroundQuery', () => {
         };
       }
 
-      const query: TypedDocumentNode<QueryData> = gql`
+      const user = userEvent.setup();
+
+      const query: TypedDocumentNode<QueryData, never> = gql`
         query {
           greeting {
             message
@@ -3978,12 +3980,17 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef] = useBackgroundQuery(query, {
+        const [queryRef, loadTodo] = useBackgroundQuery(query, {
           fetchPolicy: 'cache-first',
           returnPartialData: true,
         });
 
-        return <Todo queryRef={queryRef} />;
+        return (
+          <div>
+            <button onClick={() => loadTodo()}>Load todo</button>
+            {queryRef && <Todo queryRef={queryRef} />}
+          </div>
+        );
       }
 
       function Todo({
@@ -4005,6 +4012,8 @@ describe('useBackgroundQuery', () => {
       }
 
       render(<App />);
+
+      await act(() => user.click(screen.getByText('Load todo')));
 
       expect(renders.suspenseCount).toBe(0);
       expect(screen.getByTestId('recipient')).toHaveTextContent('Cached Alice');

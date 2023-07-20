@@ -87,7 +87,7 @@ export function useBackgroundQuery<
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
   }
-): UseBackgroundQueryResult<DeepPartial<TData> | undefined, TVariables>;
+): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
 
 export function useBackgroundQuery<
   TData = unknown,

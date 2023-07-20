@@ -10,9 +10,9 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
   invariant(
     internalQueryRef.promiseCache,
-    'It appears that `useReadQuery` was used outside of `useBackgroundQuery`. ' +
-      '`useReadQuery` is only supported for use with `useBackgroundQuery`. ' +
-      'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
+    'It appears that `useReadQuery` was used outside of `useInteractiveQuery`. ' +
+      '`useReadQuery` is only supported for use with `useInteractiveQuery`. ' +
+      'Please ensure you are passing the `queryRef` returned from `useInteractiveQuery`.'
   );
 
   const skipResult = React.useMemo(() => {

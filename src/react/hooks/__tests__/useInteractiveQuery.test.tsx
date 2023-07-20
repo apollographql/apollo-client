@@ -599,7 +599,7 @@ function renderSuspenseHook<Result, Props>(
   return { ...view, renders };
 }
 
-describe('useBackgroundQuery', () => {
+describe('useInteractiveQuery', () => {
   // it('fetches a simple query with minimal config', async () => {
   //   const query = gql`
   //     query {
@@ -612,7 +612,7 @@ describe('useBackgroundQuery', () => {
   //       result: { data: { hello: 'world 1' } },
   //     },
   //   ];
-  //   const { result } = renderHook(() => useBackgroundQuery(query), {
+  //   const { result } = renderHook(() => useInteractiveQuery(query), {
   //     wrapper: ({ children }) => (
   //       <MockedProvider mocks={mocks}>{children}</MockedProvider>
   //     ),
@@ -651,7 +651,7 @@ describe('useBackgroundQuery', () => {
   //   });
 
   //   const { result } = renderSuspenseHook(
-  //     () => useBackgroundQuery(query, { client: localClient }),
+  //     () => useInteractiveQuery(query, { client: localClient }),
   //     { client: globalClient }
   //   );
 
@@ -686,7 +686,7 @@ describe('useBackgroundQuery', () => {
 
   //   const { result } = renderHook(
   //     () =>
-  //       useBackgroundQuery(query, {
+  //       useInteractiveQuery(query, {
   //         context: { valueA: 'A', valueB: 'B' },
   //       }),
   //     {
@@ -746,7 +746,7 @@ describe('useBackgroundQuery', () => {
 
   //   const { result } = renderHook(
   //     () =>
-  //       useBackgroundQuery(query, {
+  //       useInteractiveQuery(query, {
   //         canonizeResults: true,
   //       }),
   //     {
@@ -807,7 +807,7 @@ describe('useBackgroundQuery', () => {
 
   //   const { result } = renderHook(
   //     () =>
-  //       useBackgroundQuery(query, {
+  //       useInteractiveQuery(query, {
   //         canonizeResults: false,
   //       }),
   //     {
@@ -851,7 +851,7 @@ describe('useBackgroundQuery', () => {
   //   cache.writeQuery({ query, data: { hello: 'from cache' } });
 
   //   const { result } = renderHook(
-  //     () => useBackgroundQuery(query, { fetchPolicy: 'cache-and-network' }),
+  //     () => useInteractiveQuery(query, { fetchPolicy: 'cache-and-network' }),
   //     {
   //       wrapper: ({ children }) => (
   //         <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -891,7 +891,7 @@ describe('useBackgroundQuery', () => {
   //   cache.writeQuery({ query, data: { hello: 'from cache' } });
 
   //   const { result } = renderHook(
-  //     () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
+  //     () => useInteractiveQuery(query, { fetchPolicy: 'cache-first' }),
   //     {
   //       wrapper: ({ children }) => (
   //         <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -938,7 +938,7 @@ describe('useBackgroundQuery', () => {
   //   console.error = originalConsoleError;
 
   //   const { result } = renderHook(
-  //     () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
+  //     () => useInteractiveQuery(query, { fetchPolicy: 'cache-first' }),
   //     {
   //       wrapper: ({ children }) => (
   //         <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -978,7 +978,7 @@ describe('useBackgroundQuery', () => {
   //   cache.writeQuery({ query, data: { hello: 'from cache' } });
 
   //   const { result } = renderHook(
-  //     () => useBackgroundQuery(query, { fetchPolicy: 'network-only' }),
+  //     () => useInteractiveQuery(query, { fetchPolicy: 'network-only' }),
   //     {
   //       wrapper: ({ children }) => (
   //         <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -1021,7 +1021,7 @@ describe('useBackgroundQuery', () => {
   //   cache.writeQuery({ query, data: { hello: 'from cache' } });
 
   //   const { result } = renderHook(
-  //     () => useBackgroundQuery(query, { fetchPolicy: 'no-cache' }),
+  //     () => useInteractiveQuery(query, { fetchPolicy: 'no-cache' }),
   //     {
   //       wrapper: ({ children }) => (
   //         <ApolloProvider client={client}>{children}</ApolloProvider>

@@ -13,7 +13,7 @@ import {
   createRejectedPromise,
 } from '../../utilities/index.js';
 import type { CacheKey } from './types.js';
-import type { useBackgroundQuery, useReadQuery } from '../hooks/index.js';
+import type { useInteractiveQuery, useReadQuery } from '../hooks/index.js';
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
@@ -23,7 +23,7 @@ type FetchMoreOptions<TData> = Parameters<
 
 export const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 /**
- * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
+ * A `QueryReference` is an opaque object returned by {@link useInteractiveQuery}.
  * A child component reading the `QueryReference` via {@link useReadQuery} will
  * suspend until the promise resolves.
  */

@@ -93,10 +93,10 @@ src/link/*
 !src/react/hooks/
 src/react/hooks/*
 !src/react/hooks/internal
+!src/react/hooks/useInteractiveQuery.ts
+!src/react/hooks/useReadQuery.ts
 !src/react/hooks/useSuspenseCache.ts
 !src/react/hooks/useSuspenseQuery.ts
-!src/react/hooks/useBackgroundQuery.ts
-!src/react/hooks/useReadQuery.ts
 
 ## Allowed React hook tests
 !src/react/hooks/__tests__/

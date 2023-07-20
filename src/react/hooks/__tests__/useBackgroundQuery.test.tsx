@@ -55,6 +55,7 @@ import {
 } from '../../types/types';
 import equal from '@wry/equality';
 import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
+import invariant from 'ts-invariant';
 
 function renderIntegrationTest({
   client,

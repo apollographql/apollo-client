@@ -305,7 +305,9 @@ function renderVariablesIntegrationTest({
     return (
       <div>
         <button onClick={() => loadQuery(variables)}>Load query</button>
-        {queryRef && <Child onChange={loadQuery} queryRef={queryRef} />}
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child onChange={loadQuery} queryRef={queryRef} />}
+        </Suspense>
       </div>
     );
   }
@@ -320,12 +322,10 @@ function renderVariablesIntegrationTest({
     return (
       <ApolloProvider client={client}>
         <ErrorBoundary {...errorBoundaryProps}>
-          <Suspense fallback={<SuspenseFallback />}>
-            <ParentWithVariables
-              variables={variables}
-              errorPolicy={errorPolicy}
-            />
-          </Suspense>
+          <ParentWithVariables
+            variables={variables}
+            errorPolicy={errorPolicy}
+          />
         </ErrorBoundary>
       </ApolloProvider>
     );

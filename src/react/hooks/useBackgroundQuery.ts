@@ -8,25 +8,28 @@ import { useApolloClient } from './useApolloClient.js';
 import {
   QUERY_REFERENCE_SYMBOL,
   type QueryReference,
+  type InternalQueryReference,
 } from '../cache/QueryReference.js';
 import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
 import { __use } from './internal/index.js';
 import { getSuspenseCache } from '../cache/index.js';
 import { useWatchQueryOptions } from './useSuspenseQuery.js';
-import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
+import type { FetchMoreFunction } from './useSuspenseQuery.js';
 import { canonicalStringify } from '../../cache/index.js';
 import type { DeepPartial } from '../../utilities/index.js';
 import type { CacheKey } from '../cache/types.js';
+
+type LoadQuery<TVariables extends OperationVariables> = (
+  ...args: [TVariables] extends [never] ? [] : [TVariables]
+) => void;
 
 export type UseBackgroundQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 > = [
-  QueryReference<TData>,
-  {
-    fetchMore: FetchMoreFunction<TData, TVariables>;
-    refetch: RefetchFunction<TData, TVariables>;
-  }
+  QueryReference<TData> | null,
+  LoadQuery<TVariables>,
+  { fetchMore: FetchMoreFunction<TData, TVariables> }
 ];
 
 type BackgroundQueryHookOptionsNoInfer<
@@ -128,32 +131,29 @@ export function useBackgroundQuery<
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
-  const cacheKey: CacheKey = [
-    query,
-    canonicalStringify(variables),
-    ...([] as any[]).concat(queryKey),
-  ];
+  const [queryRef, setQueryRef] =
+    React.useState<InternalQueryReference<TData> | null>(null);
 
-  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-    client.watchQuery(watchQueryOptions)
+  const [promiseCache, setPromiseCache] = React.useState(() =>
+    queryRef ? new Map([[queryRef.key, queryRef.promise]]) : new Map()
   );
 
-  const [promiseCache, setPromiseCache] = React.useState(
-    () => new Map([[queryRef.key, queryRef.promise]])
-  );
-
-  if (queryRef.didChangeOptions(watchQueryOptions)) {
-    const promise = queryRef.applyOptions(watchQueryOptions);
-    promiseCache.set(queryRef.key, promise);
+  if (queryRef) {
+    queryRef.promiseCache = promiseCache;
   }
 
-  React.useEffect(() => queryRef.retain(), [queryRef]);
+  React.useEffect(() => queryRef?.retain(), [queryRef]);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
+      if (!queryRef) {
+        throw new Error(
+          'The query has not been loaded. Please load the query.'
+        );
+      }
+
       const promise = queryRef.fetchMore(options);
 
       setPromiseCache((promiseCache) =>
@@ -165,28 +165,29 @@ export function useBackgroundQuery<
     [queryRef]
   );
 
-  const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
+  const loadQuery: LoadQuery<TVariables> = React.useCallback(
     (variables) => {
-      const promise = queryRef.refetch(variables);
+      const cacheKey: CacheKey = [
+        query,
+        canonicalStringify(variables),
+        ...([] as any[]).concat(queryKey),
+      ];
 
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
+      const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
+        client.watchQuery(watchQueryOptions)
       );
 
-      return promise;
+      promiseCache.set(queryRef.key, queryRef.promise);
+      setQueryRef(queryRef);
     },
-    [queryRef]
+    [query, queryKey, suspenseCache, watchQueryOptions, promiseCache]
   );
-
-  queryRef.promiseCache = promiseCache;
 
   return React.useMemo(() => {
     return [
-      { [QUERY_REFERENCE_SYMBOL]: queryRef },
-      {
-        fetchMore,
-        refetch,
-      },
+      queryRef && { [QUERY_REFERENCE_SYMBOL]: queryRef },
+      loadQuery,
+      { fetchMore },
     ];
-  }, [queryRef, fetchMore, refetch]);
+  }, [queryRef, loadQuery, fetchMore]);
 }

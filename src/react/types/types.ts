@@ -145,7 +145,6 @@ export interface BackgroundQueryHookOptions<
 > extends Pick<
   QueryHookOptions<TData, TVariables>,
   | 'client'
-  | 'variables'
   | 'errorPolicy'
   | 'context'
   | 'canonizeResults'

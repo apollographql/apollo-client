@@ -37,7 +37,7 @@ import {
   offsetLimitPagination,
   DeepPartial,
 } from '../../../utilities';
-import { useBackgroundQuery } from '../useBackgroundQuery';
+import { useInteractiveQuery } from '../useInteractiveQuery';
 import { useReadQuery } from '../useReadQuery';
 import { ApolloProvider } from '../../context';
 import { InMemoryCache } from '../../../cache';
@@ -47,8 +47,8 @@ import {
   QueryReference,
 } from '../../../react';
 import {
-  BackgroundQueryHookOptions,
-  BackgroundQueryHookFetchPolicy,
+  InteractiveQueryHookOptions,
+  InteractiveQueryHookFetchPolicy,
 } from '../../types/types';
 import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
 import invariant from 'ts-invariant';
@@ -118,7 +118,7 @@ function renderIntegrationTest({
   }
 
   function Parent() {
-    const [queryRef, loadQuery] = useBackgroundQuery(query);
+    const [queryRef, loadQuery] = useInteractiveQuery(query);
     return (
       <div>
         <button onClick={() => loadQuery()}>Load query</button>
@@ -202,7 +202,7 @@ function renderVariablesIntegrationTest({
     };
   }[];
   variables: { id: string };
-  options?: BackgroundQueryHookOptions;
+  options?: InteractiveQueryHookOptions;
   cache?: InMemoryCache;
   errorPolicy?: ErrorPolicy;
 }) {
@@ -293,7 +293,7 @@ function renderVariablesIntegrationTest({
     variables: VariablesCaseVariables;
     errorPolicy?: ErrorPolicy;
   }) {
-    const [queryRef, loadQuery] = useBackgroundQuery(query, {
+    const [queryRef, loadQuery] = useInteractiveQuery(query, {
       ...options,
       variables,
       errorPolicy,
@@ -490,7 +490,7 @@ function renderPaginatedIntegrationTest({
   }
 
   function ParentWithVariables() {
-    const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
+    const [queryRef, { fetchMore }] = useInteractiveQuery(query, {
       variables: { limit: 2, offset: 0 },
     });
     return <Child fetchMore={fetchMore} queryRef={queryRef} />;
@@ -1124,7 +1124,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef, loadQuery] = useBackgroundQuery(query);
+        const [queryRef, loadQuery] = useInteractiveQuery(query);
 
         return (
           <div>
@@ -1260,7 +1260,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef, loadQuery] = useBackgroundQuery(query, {
+        const [queryRef, loadQuery] = useInteractiveQuery(query, {
           fetchPolicy: 'cache-and-network',
         });
         return (
@@ -1447,7 +1447,7 @@ describe('useBackgroundQuery', () => {
 
     function Parent() {
       const [errorPolicy, setErrorPolicy] = React.useState<ErrorPolicy>('none');
-      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+      const [queryRef, { refetch }] = useInteractiveQuery(query, {
         errorPolicy,
       });
 
@@ -1530,7 +1530,7 @@ describe('useBackgroundQuery', () => {
 
     function Parent() {
       const [phase, setPhase] = React.useState('initial');
-      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+      const [queryRef, { refetch }] = useInteractiveQuery(query, {
         context: { phase },
       });
 
@@ -1629,7 +1629,7 @@ describe('useBackgroundQuery', () => {
 
     function Parent() {
       const [canonizeResults, setCanonizeResults] = React.useState(false);
-      const [queryRef] = useBackgroundQuery(query, {
+      const [queryRef] = useInteractiveQuery(query, {
         canonizeResults,
       });
 
@@ -1748,7 +1748,7 @@ describe('useBackgroundQuery', () => {
       const [refetchWritePolicy, setRefetchWritePolicy] =
         React.useState<RefetchWritePolicy>('merge');
 
-      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+      const [queryRef, { refetch }] = useInteractiveQuery(query, {
         refetchWritePolicy,
         variables: { min: 0, max: 12 },
       });
@@ -1910,7 +1910,7 @@ describe('useBackgroundQuery', () => {
     function Parent() {
       const [returnPartialData, setReturnPartialData] = React.useState(false);
 
-      const [queryRef] = useBackgroundQuery(fullQuery, {
+      const [queryRef] = useInteractiveQuery(fullQuery, {
         returnPartialData,
       });
 
@@ -2027,9 +2027,9 @@ describe('useBackgroundQuery', () => {
 
     function Parent() {
       const [fetchPolicy, setFetchPolicy] =
-        React.useState<BackgroundQueryHookFetchPolicy>('cache-first');
+        React.useState<InteractiveQueryHookFetchPolicy>('cache-first');
 
-      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+      const [queryRef, { refetch }] = useInteractiveQuery(query, {
         fetchPolicy,
       });
 
@@ -2154,7 +2154,7 @@ describe('useBackgroundQuery', () => {
     function Parent() {
       const [id, setId] = React.useState('1');
 
-      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+      const [queryRef, { refetch }] = useInteractiveQuery(query, {
         errorPolicy: id === '1' ? 'all' : 'none',
         variables: { id },
       });
@@ -2648,7 +2648,7 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [id, setId] = React.useState('1');
-        const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        const [queryRef, { refetch }] = useInteractiveQuery(query, {
           variables: { id },
         });
         return <Todo refetch={refetch} queryRef={queryRef} onChange={setId} />;
@@ -2892,7 +2892,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
+        const [queryRef, { fetchMore }] = useInteractiveQuery(query, {
           variables: { offset: 0 },
         });
         return <Todo fetchMore={fetchMore} queryRef={queryRef} />;
@@ -3053,7 +3053,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        const [queryRef, { refetch }] = useInteractiveQuery(query, {
           variables: { min: 0, max: 12 },
           refetchWritePolicy: 'merge',
         });
@@ -3185,7 +3185,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        const [queryRef, { refetch }] = useInteractiveQuery(query, {
           variables: { min: 0, max: 12 },
         });
         return <Child refetch={refetch} queryRef={queryRef} />;
@@ -3303,7 +3303,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef] = useBackgroundQuery(fullQuery, {
+        const [queryRef] = useInteractiveQuery(fullQuery, {
           fetchPolicy: 'cache-first',
           returnPartialData: true,
         });
@@ -3487,7 +3487,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef] = useBackgroundQuery(fullQuery, {
+        const [queryRef] = useInteractiveQuery(fullQuery, {
           fetchPolicy: 'network-only',
           returnPartialData: true,
         });
@@ -3617,7 +3617,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef] = useBackgroundQuery(fullQuery, {
+        const [queryRef] = useInteractiveQuery(fullQuery, {
           fetchPolicy: 'no-cache',
           returnPartialData: true,
         });
@@ -3687,7 +3687,7 @@ describe('useBackgroundQuery', () => {
 
       renderSuspenseHook(
         () =>
-          useBackgroundQuery(query, {
+          useInteractiveQuery(query, {
             fetchPolicy: 'no-cache',
             returnPartialData: true,
           }),
@@ -3780,7 +3780,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef] = useBackgroundQuery(fullQuery, {
+        const [queryRef] = useInteractiveQuery(fullQuery, {
           fetchPolicy: 'cache-and-network',
           returnPartialData: true,
         });
@@ -3980,7 +3980,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [queryRef, loadTodo] = useBackgroundQuery(query, {
+        const [queryRef, loadTodo] = useInteractiveQuery(query, {
           fetchPolicy: 'cache-first',
           returnPartialData: true,
         });
@@ -4107,7 +4107,7 @@ describe('useBackgroundQuery', () => {
         }
       `;
 
-      const [queryRef] = useBackgroundQuery(query);
+      const [queryRef] = useInteractiveQuery(query);
       invariant(queryRef);
 
       const { data } = useReadQuery(queryRef);
@@ -4119,20 +4119,20 @@ describe('useBackgroundQuery', () => {
       const { query } = useVariablesIntegrationTestCase();
 
       // @ts-expect-error should not allow wider TVariables type
-      useBackgroundQuery(query, { variables: { id: '1', foo: 'bar' } });
+      useInteractiveQuery(query, { variables: { id: '1', foo: 'bar' } });
     });
 
     it('returns TData in default case', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useBackgroundQuery(query);
+      const [inferredQueryRef] = useInteractiveQuery(query);
       invariant(inferredQueryRef);
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
 
-      const [explicitQueryRef] = useBackgroundQuery<
+      const [explicitQueryRef] = useInteractiveQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query);
@@ -4148,7 +4148,7 @@ describe('useBackgroundQuery', () => {
     it('returns TData | undefined with errorPolicy: "ignore"', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useBackgroundQuery(query, {
+      const [inferredQueryRef] = useInteractiveQuery(query, {
         errorPolicy: 'ignore',
       });
       invariant(inferredQueryRef);
@@ -4157,7 +4157,7 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
 
-      const [explicitQueryRef] = useBackgroundQuery<
+      const [explicitQueryRef] = useInteractiveQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
@@ -4174,7 +4174,7 @@ describe('useBackgroundQuery', () => {
     it('returns TData | undefined with errorPolicy: "all"', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useBackgroundQuery(query, {
+      const [inferredQueryRef] = useInteractiveQuery(query, {
         errorPolicy: 'all',
       });
       invariant(inferredQueryRef);
@@ -4183,7 +4183,7 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
 
-      const [explicitQueryRef] = useBackgroundQuery(query, {
+      const [explicitQueryRef] = useInteractiveQuery(query, {
         errorPolicy: 'all',
       });
       invariant(explicitQueryRef);
@@ -4196,7 +4196,7 @@ describe('useBackgroundQuery', () => {
     it('returns TData with errorPolicy: "none"', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useBackgroundQuery(query, {
+      const [inferredQueryRef] = useInteractiveQuery(query, {
         errorPolicy: 'none',
       });
       invariant(inferredQueryRef);
@@ -4205,7 +4205,7 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
 
-      const [explicitQueryRef] = useBackgroundQuery(query, {
+      const [explicitQueryRef] = useInteractiveQuery(query, {
         errorPolicy: 'none',
       });
       invariant(explicitQueryRef);
@@ -4218,7 +4218,7 @@ describe('useBackgroundQuery', () => {
     it('returns DeepPartial<TData> with returnPartialData: true', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useBackgroundQuery(query, {
+      const [inferredQueryRef] = useInteractiveQuery(query, {
         returnPartialData: true,
       });
       invariant(inferredQueryRef);
@@ -4227,7 +4227,7 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
 
-      const [explicitQueryRef] = useBackgroundQuery<
+      const [explicitQueryRef] = useInteractiveQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
@@ -4244,7 +4244,7 @@ describe('useBackgroundQuery', () => {
     it('returns TData with returnPartialData: false', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useBackgroundQuery(query, {
+      const [inferredQueryRef] = useInteractiveQuery(query, {
         returnPartialData: false,
       });
       invariant(inferredQueryRef);
@@ -4255,7 +4255,7 @@ describe('useBackgroundQuery', () => {
         DeepPartial<VariablesCaseData>
       >();
 
-      const [explicitQueryRef] = useBackgroundQuery<
+      const [explicitQueryRef] = useInteractiveQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
@@ -4274,7 +4274,7 @@ describe('useBackgroundQuery', () => {
     it('returns TData when passing an option that does not affect TData', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useBackgroundQuery(query, {
+      const [inferredQueryRef] = useInteractiveQuery(query, {
         fetchPolicy: 'no-cache',
       });
       invariant(inferredQueryRef);
@@ -4285,7 +4285,7 @@ describe('useBackgroundQuery', () => {
         DeepPartial<VariablesCaseData>
       >();
 
-      const [explicitQueryRef] = useBackgroundQuery<
+      const [explicitQueryRef] = useInteractiveQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
@@ -4304,7 +4304,7 @@ describe('useBackgroundQuery', () => {
     it('handles combinations of options', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredPartialDataIgnoreQueryRef] = useBackgroundQuery(query, {
+      const [inferredPartialDataIgnoreQueryRef] = useInteractiveQuery(query, {
         returnPartialData: true,
         errorPolicy: 'ignore',
       });
@@ -4320,7 +4320,7 @@ describe('useBackgroundQuery', () => {
         inferredPartialDataIgnore
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const [explicitPartialDataIgnoreQueryRef] = useBackgroundQuery<
+      const [explicitPartialDataIgnoreQueryRef] = useInteractiveQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
@@ -4340,7 +4340,7 @@ describe('useBackgroundQuery', () => {
         explicitPartialDataIgnore
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const [inferredPartialDataNoneQueryRef] = useBackgroundQuery(query, {
+      const [inferredPartialDataNoneQueryRef] = useInteractiveQuery(query, {
         returnPartialData: true,
         errorPolicy: 'none',
       });
@@ -4357,7 +4357,7 @@ describe('useBackgroundQuery', () => {
         inferredPartialDataNone
       ).not.toEqualTypeOf<VariablesCaseData>();
 
-      const [explicitPartialDataNoneQueryRef] = useBackgroundQuery<
+      const [explicitPartialDataNoneQueryRef] = useInteractiveQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
@@ -4381,7 +4381,7 @@ describe('useBackgroundQuery', () => {
     it('returns correct TData type when combined options that do not affect TData', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useBackgroundQuery(query, {
+      const [inferredQueryRef] = useInteractiveQuery(query, {
         fetchPolicy: 'no-cache',
         returnPartialData: true,
         errorPolicy: 'none',
@@ -4392,7 +4392,7 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
 
-      const [explicitQueryRef] = useBackgroundQuery<
+      const [explicitQueryRef] = useInteractiveQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {

@@ -131,7 +131,7 @@ export interface SuspenseQueryHookOptions<
   queryKey?: string | number | any[];
 }
 
-export type BackgroundQueryHookFetchPolicy = Extract<
+export type InteractiveQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
   | 'cache-first'
   | 'network-only'
@@ -139,7 +139,7 @@ export type BackgroundQueryHookFetchPolicy = Extract<
   | 'cache-and-network'
 >;
 
-export interface BackgroundQueryHookOptions<
+export interface InteractiveQueryHookOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 > extends Pick<
@@ -151,7 +151,7 @@ export interface BackgroundQueryHookOptions<
   | 'returnPartialData'
   | 'refetchWritePolicy'
 > {
-  fetchPolicy?: BackgroundQueryHookFetchPolicy;
+  fetchPolicy?: InteractiveQueryHookFetchPolicy;
   suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
 }

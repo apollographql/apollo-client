@@ -10,7 +10,7 @@ import {
   type QueryReference,
   type InternalQueryReference,
 } from '../cache/QueryReference.js';
-import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
+import type { InteractiveQueryHookOptions, NoInfer } from '../types/types.js';
 import { __use } from './internal/index.js';
 import { getSuspenseCache } from '../cache/index.js';
 import { useWatchQueryOptions } from './useSuspenseQuery.js';
@@ -38,12 +38,12 @@ export type UseBackgroundQueryResult<
 type BackgroundQueryHookOptionsNoInfer<
   TData,
   TVariables extends OperationVariables
-> = BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+> = InteractiveQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
 
-export function useBackgroundQuery<
+export function useInteractiveQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<BackgroundQueryHookOptions<TData>, 'variables'>
+  TOptions extends Omit<InteractiveQueryHookOptions<TData>, 'variables'>
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions
@@ -58,7 +58,7 @@ export function useBackgroundQuery<
   TVariables
 >;
 
-export function useBackgroundQuery<
+export function useInteractiveQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
@@ -69,7 +69,7 @@ export function useBackgroundQuery<
   }
 ): UseBackgroundQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
-export function useBackgroundQuery<
+export function useInteractiveQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
@@ -79,7 +79,7 @@ export function useBackgroundQuery<
   }
 ): UseBackgroundQueryResult<TData | undefined, TVariables>;
 
-export function useBackgroundQuery<
+export function useInteractiveQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
@@ -89,7 +89,7 @@ export function useBackgroundQuery<
   }
 ): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
 
-export function useBackgroundQuery<
+export function useInteractiveQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
@@ -97,7 +97,7 @@ export function useBackgroundQuery<
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>
 ): UseBackgroundQueryResult<TData, TVariables>;
 
-export function useBackgroundQuery<
+export function useInteractiveQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(

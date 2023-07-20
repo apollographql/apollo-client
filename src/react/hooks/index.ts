@@ -15,7 +15,7 @@ export {
   SubscribeToMoreFunction,
 } from './useSuspenseQuery.js';
 export {
-  useBackgroundQuery,
+  useInteractiveQuery,
   UseBackgroundQueryResult,
-} from './useBackgroundQuery.js';
+} from './useInteractiveQuery.js';
 export { useReadQuery } from './useReadQuery.js';

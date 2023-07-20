@@ -166,7 +166,9 @@ export function useBackgroundQuery<
   );
 
   const loadQuery: LoadQuery<TVariables> = React.useCallback(
-    (variables) => {
+    (...args) => {
+      const [variables] = args;
+
       const cacheKey: CacheKey = [
         query,
         canonicalStringify(variables),
@@ -174,7 +176,7 @@ export function useBackgroundQuery<
       ];
 
       const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-        client.watchQuery(watchQueryOptions)
+        client.watchQuery({ ...watchQueryOptions, variables })
       );
 
       promiseCache.set(queryRef.key, queryRef.promise);

@@ -29,7 +29,10 @@ export type UseBackgroundQueryResult<
 > = [
   QueryReference<TData> | null,
   LoadQuery<TVariables>,
-  { fetchMore: FetchMoreFunction<TData, TVariables> }
+  {
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    refetch: RefetchFunction<TData, TVariables>;
+  }
 ];
 
 type BackgroundQueryHookOptionsNoInfer<
@@ -165,6 +168,25 @@ export function useBackgroundQuery<
     [queryRef]
   );
 
+  const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
+    (options) => {
+      if (!queryRef) {
+        throw new Error(
+          'The query has not been loaded. Please load the query.'
+        );
+      }
+
+      const promise = queryRef.refetch(options);
+
+      setPromiseCache((promiseCache) =>
+        new Map(promiseCache).set(queryRef.key, queryRef.promise)
+      );
+
+      return promise;
+    },
+    [queryRef]
+  );
+
   const loadQuery: LoadQuery<TVariables> = React.useCallback(
     (...args) => {
       const [variables] = args;
@@ -189,7 +211,7 @@ export function useBackgroundQuery<
     return [
       queryRef && { [QUERY_REFERENCE_SYMBOL]: queryRef },
       loadQuery,
-      { fetchMore },
+      { fetchMore, refetch },
     ];
   }, [queryRef, loadQuery, fetchMore]);
 }

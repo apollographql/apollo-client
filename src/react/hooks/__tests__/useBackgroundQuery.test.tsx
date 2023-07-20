@@ -271,15 +271,12 @@ function renderVariablesIntegrationTest({
 
   function Child({
     onChange,
-    variables: _variables,
     queryRef,
   }: {
-    variables: VariablesCaseVariables;
     onChange: (variables: VariablesCaseVariables) => void;
     queryRef: QueryReference<VariablesCaseData>;
   }) {
     const { data, error, networkStatus } = useReadQuery(queryRef);
-    const [variables, setVariables] = React.useState(_variables);
     // count renders in the child component
     renders.count++;
     renders.frames.push({ data, networkStatus, error });
@@ -287,20 +284,7 @@ function renderVariablesIntegrationTest({
     return (
       <div>
         {error ? <div>{error.message}</div> : null}
-        <button
-          onClick={() => {
-            onChange(variables);
-          }}
-        >
-          Change variables
-        </button>
-        <button
-          onClick={() => {
-            setVariables({ id: '2' });
-          }}
-        >
-          Set variables to id: 2
-        </button>
+        <button onClick={() => onChange({ id: '2' })}>Change variables</button>
         {data?.character.id} - {data?.character.name}
       </div>
     );
@@ -321,13 +305,7 @@ function renderVariablesIntegrationTest({
     return (
       <div>
         <button onClick={() => loadQuery(variables)}>Load query</button>
-        {queryRef && (
-          <Child
-            onChange={(variables) => loadQuery(variables)}
-            variables={variables}
-            queryRef={queryRef}
-          />
-        )}
+        {queryRef && <Child onChange={loadQuery} queryRef={queryRef} />}
       </div>
     );
   }

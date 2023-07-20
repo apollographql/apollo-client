@@ -19,7 +19,7 @@ const checks = [
     "useMutation",
     "useSubscription",
     "useSuspenseQuery",
-    "useBackgroundQuery",
+    "useInteractiveQuery",
     "useReadQuery",
     "useFragment"
   ].map((name) => ({ path: "dist/react/index.js", import: `{ ${name} }` })),

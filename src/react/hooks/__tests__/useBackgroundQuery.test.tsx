@@ -205,10 +205,11 @@ function renderVariablesIntegrationTest({
     };
   }[];
   variables: { id: string };
-  options?: SuspenseQueryHookOptions;
+  options?: BackgroundQueryHookOptions;
   cache?: InMemoryCache;
   errorPolicy?: ErrorPolicy;
 }) {
+  const user = userEvent.setup();
   let { mocks: _mocks, query } = useVariablesIntegrationTestCase();
 
   // duplicate mocks with (updated) in the name for refetches
@@ -269,14 +270,12 @@ function renderVariablesIntegrationTest({
   }
 
   function Child({
-    refetch,
+    onChange,
     variables: _variables,
     queryRef,
   }: {
     variables: VariablesCaseVariables;
-    refetch: (
-      variables?: Partial<OperationVariables> | undefined
-    ) => Promise<ApolloQueryResult<VariablesCaseData>>;
+    onChange: (variables: VariablesCaseVariables) => void;
     queryRef: QueryReference<VariablesCaseData>;
   }) {
     const { data, error, networkStatus } = useReadQuery(queryRef);
@@ -290,10 +289,10 @@ function renderVariablesIntegrationTest({
         {error ? <div>{error.message}</div> : null}
         <button
           onClick={() => {
-            refetch(variables);
+            onChange(variables);
           }}
         >
-          Refetch
+          Change variables
         </button>
         <button
           onClick={() => {
@@ -314,13 +313,22 @@ function renderVariablesIntegrationTest({
     variables: VariablesCaseVariables;
     errorPolicy?: ErrorPolicy;
   }) {
-    const [queryRef, { refetch }] = useBackgroundQuery(query, {
+    const [queryRef, loadQuery] = useBackgroundQuery(query, {
       ...options,
       variables,
       errorPolicy,
     });
     return (
-      <Child refetch={refetch} variables={variables} queryRef={queryRef} />
+      <div>
+        <button onClick={() => loadQuery(variables)}>Load query</button>
+        {queryRef && (
+          <Child
+            onChange={(variables) => loadQuery(variables)}
+            variables={variables}
+            queryRef={queryRef}
+          />
+        )}
+      </div>
     );
   }
 
@@ -351,7 +359,16 @@ function renderVariablesIntegrationTest({
   const rerender = ({ variables }: { variables: VariablesCaseVariables }) => {
     return rest.rerender(<App variables={variables} />);
   };
-  return { ...rest, query, rerender, client, renders, mocks: mocks || _mocks };
+  return {
+    ...rest,
+    query,
+    rerender,
+    client,
+    renders,
+    mocks: mocks || _mocks,
+    user,
+    loadQueryButton: screen.getByText('Load query'),
+  };
 }
 
 function renderPaginatedIntegrationTest({

@@ -1139,11 +1139,18 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [id, setId] = React.useState('1');
-        const [queryRef] = useBackgroundQuery(query, {
-          variables: { id },
-        });
-        return <Todo queryRef={queryRef} onChange={setId} />;
+        const [queryRef, loadQuery] = useBackgroundQuery(query);
+
+        return (
+          <div>
+            <button onClick={() => loadQuery({ id: '1' })}>
+              Load first todo
+            </button>
+            {queryRef && (
+              <Todo queryRef={queryRef} onChange={(id) => loadQuery({ id })} />
+            )}
+          </div>
+        );
       }
 
       function Todo({
@@ -1178,8 +1185,9 @@ describe('useBackgroundQuery', () => {
 
       render(<App />);
 
-      expect(screen.getByText('Loading')).toBeInTheDocument();
+      await act(() => user.click(screen.getByText('Load first todo')));
 
+      expect(screen.getByText('Loading')).toBeInTheDocument();
       expect(await screen.findByTestId('todo')).toBeInTheDocument();
 
       const todo = screen.getByTestId('todo');

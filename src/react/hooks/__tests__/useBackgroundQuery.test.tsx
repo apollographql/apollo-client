@@ -1066,13 +1066,18 @@ describe('useBackgroundQuery', () => {
 
   describe('integration tests with useReadQuery', () => {
     it('suspends and renders hello', async () => {
-      const { renders } = renderIntegrationTest();
-      // ensure the hook suspends immediately
-      expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      const user = userEvent.setup();
+      const { renders, loadQueryButton } = renderIntegrationTest();
+
+      expect(renders.suspenseCount).toBe(0);
+
+      await act(() => user.click(loadQueryButton));
+
+      expect(await screen.findByText('loading')).toBeInTheDocument();
 
       // the parent component re-renders when promise fulfilled
       expect(await screen.findByText('hello')).toBeInTheDocument();
+      expect(renders.suspenseCount).toBe(1);
       expect(renders.count).toBe(1);
     });
 

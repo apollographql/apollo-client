@@ -50,8 +50,8 @@ import {
   QueryReference,
 } from '../../../react';
 import {
-  SuspenseQueryHookFetchPolicy,
-  SuspenseQueryHookOptions,
+  BackgroundQueryHookOptions,
+  BackgroundQueryHookFetchPolicy,
 } from '../../types/types';
 import equal from '@wry/equality';
 import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
@@ -2557,7 +2557,7 @@ describe('useBackgroundQuery', () => {
 
     function Parent() {
       const [fetchPolicy, setFetchPolicy] =
-        React.useState<SuspenseQueryHookFetchPolicy>('cache-first');
+        React.useState<BackgroundQueryHookFetchPolicy>('cache-first');
 
       const [queryRef, { refetch }] = useBackgroundQuery(query, {
         fetchPolicy,

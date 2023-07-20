@@ -1417,16 +1417,18 @@ describe('useBackgroundQuery', () => {
   });
 
   it('reacts to variables updates', async () => {
-    const { renders, rerender } = renderVariablesIntegrationTest({
+    const { renders, user, loadQueryButton } = renderVariablesIntegrationTest({
       variables: { id: '1' },
     });
+
+    await act(() => user.click(loadQueryButton));
 
     expect(renders.suspenseCount).toBe(1);
     expect(screen.getByText('loading')).toBeInTheDocument();
 
     expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
 
-    rerender({ variables: { id: '2' } });
+    await act(() => user.click(screen.getByText('Change variables')));
 
     expect(renders.suspenseCount).toBe(2);
     expect(screen.getByText('loading')).toBeInTheDocument();

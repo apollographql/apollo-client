@@ -53,11 +53,7 @@ export function useBackgroundQuery<
       ? DeepPartial<TData> | undefined
       : TData | undefined
     : TOptions['returnPartialData'] extends true
-    ? TOptions['skip'] extends boolean
-      ? DeepPartial<TData> | undefined
-      : DeepPartial<TData>
-    : TOptions['skip'] extends boolean
-    ? TData | undefined
+    ? DeepPartial<TData>
     : TData,
   TVariables
 >;
@@ -89,30 +85,9 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
-    skip: boolean;
     returnPartialData: true;
   }
 ): UseBackgroundQueryResult<DeepPartial<TData> | undefined, TVariables>;
-
-export function useBackgroundQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
-    returnPartialData: true;
-  }
-): UseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
-
-export function useBackgroundQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
-    skip: boolean;
-  }
-): UseBackgroundQueryResult<TData | undefined, TVariables>;
 
 export function useBackgroundQuery<
   TData = unknown,

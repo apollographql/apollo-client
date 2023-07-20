@@ -150,7 +150,6 @@ export interface BackgroundQueryHookOptions<
   | 'canonizeResults'
   | 'returnPartialData'
   | 'refetchWritePolicy'
-  | 'skip'
 > {
   fetchPolicy?: BackgroundQueryHookFetchPolicy;
   suspenseCache?: SuspenseCache;

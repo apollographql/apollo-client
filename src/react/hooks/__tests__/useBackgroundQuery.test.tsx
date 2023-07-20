@@ -182,6 +182,7 @@ function useVariablesIntegrationTestCase() {
   let mocks = [...CHARACTERS].map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
     result: { data: { character: { id: String(index + 1), name } } },
+    delay: 20,
   }));
   return { mocks, query };
 }
@@ -213,26 +214,25 @@ function renderVariablesIntegrationTest({
   let { mocks: _mocks, query } = useVariablesIntegrationTestCase();
 
   // duplicate mocks with (updated) in the name for refetches
-  _mocks = [..._mocks, ..._mocks, ..._mocks].map(
-    ({ request, result }, index) => {
-      return {
-        request: request,
-        result: {
-          data: {
-            character: {
-              ...result.data.character,
-              name:
-                index > 3
-                  ? index > 7
-                    ? `${result.data.character.name} (updated again)`
-                    : `${result.data.character.name} (updated)`
-                  : result.data.character.name,
-            },
+  _mocks = [..._mocks, ..._mocks, ..._mocks].map((mock, index) => {
+    return {
+      ...mock,
+      request: mock.request,
+      result: {
+        data: {
+          character: {
+            ...mock.result.data.character,
+            name:
+              index > 3
+                ? index > 7
+                  ? `${mock.result.data.character.name} (updated again)`
+                  : `${mock.result.data.character.name} (updated)`
+                : mock.result.data.character.name,
           },
         },
-      };
-    }
-  );
+      },
+    };
+  });
   const client = new ApolloClient({
     cache: cache || new InMemoryCache(),
     link: new MockLink(mocks || _mocks),

@@ -4595,6 +4595,8 @@ describe('useBackgroundQuery', () => {
       `;
 
       const [queryRef] = useBackgroundQuery(query);
+      invariant(queryRef);
+
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<unknown>();
@@ -4611,6 +4613,7 @@ describe('useBackgroundQuery', () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query);
+      invariant(inferredQueryRef);
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
@@ -4620,6 +4623,8 @@ describe('useBackgroundQuery', () => {
         VariablesCaseData,
         VariablesCaseVariables
       >(query);
+
+      invariant(explicitQueryRef);
 
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
@@ -4633,6 +4638,7 @@ describe('useBackgroundQuery', () => {
       const [inferredQueryRef] = useBackgroundQuery(query, {
         errorPolicy: 'ignore',
       });
+      invariant(inferredQueryRef);
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
@@ -4644,6 +4650,7 @@ describe('useBackgroundQuery', () => {
       >(query, {
         errorPolicy: 'ignore',
       });
+      invariant(explicitQueryRef);
 
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
@@ -4657,6 +4664,7 @@ describe('useBackgroundQuery', () => {
       const [inferredQueryRef] = useBackgroundQuery(query, {
         errorPolicy: 'all',
       });
+      invariant(inferredQueryRef);
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
@@ -4665,6 +4673,7 @@ describe('useBackgroundQuery', () => {
       const [explicitQueryRef] = useBackgroundQuery(query, {
         errorPolicy: 'all',
       });
+      invariant(explicitQueryRef);
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
@@ -4677,6 +4686,7 @@ describe('useBackgroundQuery', () => {
       const [inferredQueryRef] = useBackgroundQuery(query, {
         errorPolicy: 'none',
       });
+      invariant(inferredQueryRef);
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
@@ -4685,6 +4695,7 @@ describe('useBackgroundQuery', () => {
       const [explicitQueryRef] = useBackgroundQuery(query, {
         errorPolicy: 'none',
       });
+      invariant(explicitQueryRef);
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
@@ -4697,6 +4708,7 @@ describe('useBackgroundQuery', () => {
       const [inferredQueryRef] = useBackgroundQuery(query, {
         returnPartialData: true,
       });
+      invariant(inferredQueryRef);
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
       expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
@@ -4708,6 +4720,7 @@ describe('useBackgroundQuery', () => {
       >(query, {
         returnPartialData: true,
       });
+      invariant(explicitQueryRef);
 
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
@@ -4721,6 +4734,7 @@ describe('useBackgroundQuery', () => {
       const [inferredQueryRef] = useBackgroundQuery(query, {
         returnPartialData: false,
       });
+      invariant(inferredQueryRef);
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
@@ -4734,6 +4748,7 @@ describe('useBackgroundQuery', () => {
       >(query, {
         returnPartialData: false,
       });
+      invariant(explicitQueryRef);
 
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
@@ -4749,6 +4764,7 @@ describe('useBackgroundQuery', () => {
       const [inferredQueryRef] = useBackgroundQuery(query, {
         fetchPolicy: 'no-cache',
       });
+      invariant(inferredQueryRef);
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
       expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
@@ -4762,6 +4778,7 @@ describe('useBackgroundQuery', () => {
       >(query, {
         fetchPolicy: 'no-cache',
       });
+      invariant(explicitQueryRef);
 
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
@@ -4778,6 +4795,7 @@ describe('useBackgroundQuery', () => {
         returnPartialData: true,
         errorPolicy: 'ignore',
       });
+      invariant(inferredPartialDataIgnoreQueryRef);
       const { data: inferredPartialDataIgnore } = useReadQuery(
         inferredPartialDataIgnoreQueryRef
       );
@@ -4796,6 +4814,7 @@ describe('useBackgroundQuery', () => {
         returnPartialData: true,
         errorPolicy: 'ignore',
       });
+      invariant(explicitPartialDataIgnoreQueryRef);
 
       const { data: explicitPartialDataIgnore } = useReadQuery(
         explicitPartialDataIgnoreQueryRef
@@ -4812,6 +4831,7 @@ describe('useBackgroundQuery', () => {
         returnPartialData: true,
         errorPolicy: 'none',
       });
+      invariant(inferredPartialDataNoneQueryRef);
 
       const { data: inferredPartialDataNone } = useReadQuery(
         inferredPartialDataNoneQueryRef
@@ -4831,6 +4851,7 @@ describe('useBackgroundQuery', () => {
         returnPartialData: true,
         errorPolicy: 'none',
       });
+      invariant(explicitPartialDataNoneQueryRef);
 
       const { data: explicitPartialDataNone } = useReadQuery(
         explicitPartialDataNoneQueryRef
@@ -4852,6 +4873,7 @@ describe('useBackgroundQuery', () => {
         returnPartialData: true,
         errorPolicy: 'none',
       });
+      invariant(inferredQueryRef);
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
       expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
@@ -4865,6 +4887,7 @@ describe('useBackgroundQuery', () => {
         returnPartialData: true,
         errorPolicy: 'none',
       });
+      invariant(explicitQueryRef);
 
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
@@ -4878,6 +4901,7 @@ describe('useBackgroundQuery', () => {
       const [inferredQueryRef] = useBackgroundQuery(query, {
         skip: true,
       });
+      invariant(inferredQueryRef);
 
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
@@ -4887,6 +4911,7 @@ describe('useBackgroundQuery', () => {
       const [explicitQueryRef] = useBackgroundQuery<VariablesCaseData>(query, {
         skip: true,
       });
+      invariant(explicitQueryRef);
 
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
@@ -4903,6 +4928,7 @@ describe('useBackgroundQuery', () => {
       const [dynamicQueryRef] = useBackgroundQuery(query, {
         skip: options.skip,
       });
+      invariant(dynamicQueryRef);
 
       const { data: dynamic } = useReadQuery(dynamicQueryRef);
 

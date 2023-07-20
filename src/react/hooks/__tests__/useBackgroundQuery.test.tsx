@@ -557,11 +557,7 @@ function renderSuspenseHook<Result, Props>(
     frames: [],
   };
 
-  const {
-    mocks = [],
-    strictMode,
-    ...renderHookOptions
-  } = options;
+  const { mocks = [], strictMode, ...renderHookOptions } = options;
 
   const client =
     options.client ||
@@ -595,9 +591,7 @@ function renderSuspenseHook<Result, Props>(
                   renders.errors.push(error);
                 }}
               >
-                <ApolloProvider client={client}>
-                  {children}
-                </ApolloProvider>
+                <ApolloProvider client={client}>{children}</ApolloProvider>
               </ErrorBoundary>
             </Suspense>
           </Wrapper>

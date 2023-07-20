@@ -14,7 +14,7 @@ import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
 import { __use } from './internal/index.js';
 import { getSuspenseCache } from '../cache/index.js';
 import { useWatchQueryOptions } from './useSuspenseQuery.js';
-import type { FetchMoreFunction } from './useSuspenseQuery.js';
+import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
 import { canonicalStringify } from '../../cache/index.js';
 import type { DeepPartial } from '../../utilities/index.js';
 import type { CacheKey } from '../cache/types.js';
@@ -213,5 +213,5 @@ export function useBackgroundQuery<
       loadQuery,
       { fetchMore, refetch },
     ];
-  }, [queryRef, loadQuery, fetchMore]);
+  }, [queryRef, loadQuery, fetchMore, refetch]);
 }

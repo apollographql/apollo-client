@@ -4729,6 +4729,68 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('properly resolves `fetchMore` when returning a result that is deeply equal to data in the cache', async () => {
+    const { query, link } = usePaginatedCase();
+
+    const user = userEvent.setup();
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Letters offset={0} />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function SuspenseFallback() {
+      return <p>Loading</p>;
+    }
+
+    function Letters({ offset }: { offset: number }) {
+      const { data, fetchMore } = useSuspenseQuery(query, {
+        variables: { offset },
+      });
+
+      return (
+        <div>
+          <button onClick={() => fetchMore({ variables: { offset } })}>
+            Fetch more
+          </button>
+          <div data-testid="letters">
+            {data.letters.map(({ letter }) => letter).join('')}
+          </div>
+        </div>
+      );
+    }
+
+    render(<App />);
+
+    expect(await screen.findByText('Loading')).toBeInTheDocument();
+
+    const letters = await screen.findByTestId('letters');
+
+    expect(letters).toHaveTextContent('AB');
+
+    await act(() => user.click(screen.getByText('Fetch more')));
+
+    expect(screen.getByText('Loading')).toBeInTheDocument();
+
+    await waitFor(() => {
+      // Suspense will hide the component until the suspense boundary has
+      // finished loading so it is still in the DOM.
+      expect(letters).toBeVisible();
+    });
+
+    expect(letters).toHaveTextContent('AB');
+  });
+
   it('suspends when refetching after returning cached data for the initial fetch', async () => {
     const { query, mocks } = useSimpleQueryCase();
 

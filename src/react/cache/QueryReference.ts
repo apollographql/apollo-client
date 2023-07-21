@@ -186,10 +186,18 @@ export class InternalQueryReference<TData = unknown> {
 
     // If the data returned from the fetch is deeply equal to the data already
     // in the cache, `handleNext` will not be triggered leaving the promise we
-    // created forever in a pending state. To avoid this situtation, we attempt
-    // to resolve or reject the promise as a fallback to guarantee it will be
-    // resolved.
-    promise.then(this.resolve, this.reject);
+    // created in a pending state forever. To avoid this situtation, we attempt
+    // to resolve the promise if `handleNext` hasn't been run to ensure the
+    // promise is resolved correctly.
+    promise
+      .then((result) => {
+        if (this.status === 'loading') {
+          this.status = 'idle';
+          this.result = result;
+          this.resolve?.(result);
+        }
+      })
+      .catch(() => {});
 
     return promise;
   }
@@ -198,6 +206,21 @@ export class InternalQueryReference<TData = unknown> {
     const promise = this.observable.fetchMore<TData>(options);
 
     this.initiateFetch();
+
+    // If the data returned from the fetch is deeply equal to the data already
+    // in the cache, `handleNext` will not be triggered leaving the promise we
+    // created in a pending state forever. To avoid this situtation, we attempt
+    // to resolve the promise if `handleNext` hasn't been run to ensure the
+    // promise is resolved correctly.
+    promise
+      .then((result) => {
+        if (this.status === 'loading') {
+          this.status = 'idle';
+          this.result = result;
+          this.resolve?.(result);
+        }
+      })
+      .catch(() => {});
 
     return promise;
   }

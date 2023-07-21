@@ -157,8 +157,18 @@ export class InternalQueryReference<TData = unknown> {
       currentFetchPolicy === 'standby' &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy
     ) {
-      this.observable.reobserve(watchQueryOptions);
+      const promise = this.observable.reobserve(watchQueryOptions);
       this.initiateFetch();
+
+      promise
+        .then((result) => {
+          if (this.status === 'loading') {
+            this.status = 'idle';
+            this.result = result;
+            this.resolve?.(result);
+          }
+        })
+        .catch(() => {});
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
 

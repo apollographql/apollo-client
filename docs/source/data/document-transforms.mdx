@@ -1,0 +1,252 @@
+---
+title: Document transforms
+description: Make custom modifications to your GraphQL documents
+---
+
+Have you noticed that Apollo Client makes modifications to your queries, such as adding the `__typename` field, before those queries are sent to your GraphQL server? Apollo Client includes an advanced capability that allows you to define your own GraphQL document transforms that make modifications to your GraphQL queries. Let's learn how you can make and utilize your own GraphQL document transforms.
+
+> This feature requires Apollo Client `v3.8` or greater.
+
+## Prerequisites
+
+This article assumes you're familiar with the concept of an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree). Document transforms make modifications to the GraphQL AST, which is parsed from a raw GraphQL query string using the `gql` function. A GraphQL document is a GraphQL string that defines one or more operations and fragments.
+
+## Writing your own document transform
+
+You create your own document transforms using the `DocumentTransform` class. The created transform is then passed to the `ApolloClient` constructor.
+
+```ts
+import { DocumentTransform } from '@apollo/client';
+
+const documentTransform = new DocumentTransform((document) => {
+  // modify the document
+  return transformedDocument;
+});
+
+const client = new ApolloClient({
+  documentTransform
+});
+```
+
+As an example, let's write a document transform that ensures an `id` field is selected anytime `currentUser` is queried. We will use several helper functions and utilities provided by the [`graphql-js`](https://graphql.org/graphql-js/) library to help us traverse the AST and make modifications to the GraphQL document.
+
+First, we need to create a new document transform using the `DocumentTransform` class provided by Apollo Client. The `DocumentTransform` constructor takes a callback function that will run for each GraphQL document being transformed. The GraphQL `document` is passed as the only argument to this callback function.
+
+```ts
+import { DocumentTransform } from '@apollo/client';
+
+const documentTransform = new DocumentTransform((document) => {
+  // Modify the document
+});
+```
+
+To make modifications to the document, we will bring in the [`visit`](https://graphql.org/graphql-js/language/#visit) function from `graphql-js` that walks the AST and allows us to make modifications to its nodes. The `visit` function takes a GraphQL AST as the first argument and a visitor as the second argument. The `visit` function will return our modified or unmodified GraphQL document, which we return from our document transform callback function.
+
+```ts {5-9}
+import { DocumentTransform } from '@apollo/client';
+import { visit } from 'graphql';
+
+const documentTransform = new DocumentTransform((document) => {
+  const transformedDocument = visit(document, {
+    // visitor
+  });
+
+  return transformedDocument;
+});
+```
+
+Visitors allow you to visit many types of nodes in the AST, such as directives, fragments, and fields. In our example, we only care to visit field nodes since we are looking to make modifications to the `currentUser` field in our queries. To visit a field node, we need to define a `Field` callback function which will be called whenever the traversal encounters a field node.
+
+```ts {2-4}
+const transformedDocument = visit(document, {
+  Field(fieldNode) {
+    // ...
+  }
+});
+```
+
+> In this example, we are using the shorthand visitor syntax, which defines the `enter` function on this node for us. This is equivalent to the following:
+> ```ts
+> visit(document, {
+>   Field: {
+>     enter(fieldNode) {
+>       // ...
+>     }
+>   }
+> });
+> ```
+
+Our document transform only needs to make modifications to a field named `currentUser`, so we need to check the field node's `name` to know if we are working with the `currentUser` field. Let's add a conditional check and return early if we encounter any field not named `currentUser`.
+
+```ts
+const transformedDocument = visit(document, {
+  Field(fieldNode) {
+    if (fieldNode.name.value !== 'currentUser') {
+      return;
+    }
+  }
+});
+```
+> Returning `undefined` from our `Field` visitor tells the `visit` function to leave the node unchanged.
+
+Now that we've determined we are working with the `currentUser` field, we need to figure out if our `id` field is already part of the `currentUser` field's selection set. By checking it's selection set, we ensure we don't accidentally select the field twice in our query. 
+
+To do so, let's get the field's `selectionSet` and loop over it's `selections` to determine if it includes a field named `id`. It's important to note that a `selectionSet` may contain `selections` of both fields and fragments. Our implementation will need to perform a check against the selection's `kind` property to limit our check only to fields and not fragments. If we find a match on a field named `id`, we no longer need to do any work and can stop traversal of the AST. 
+
+We will bring in both the [`Kind`](https://graphql.org/graphql-js/language/#kind) enum from `graphql-js`, which allows us to compare against the node's `kind` property, and the [`BREAK`](https://graphql.org/graphql-js/language/#break) constant, which directs the `visit` function to stop traversal of the AST.
+
+```ts {6-15}
+import { visit, Kind, BREAK } from 'graphql';
+
+const transformedDocument = visit(document, {
+  Field(fieldNode) {
+    // ...
+    const selections = fieldNode.selectionSet?.selections ?? [];
+
+    for (const selectionNode of selections) {
+      if (
+        selectionNode.kind === Kind.FIELD &&
+        selectionNode.name.value === 'id'
+      ) {
+        return BREAK;
+      }
+    }
+  }
+});
+```
+
+> To keep our document transform simple, it does not traverse fragments within the `currentUser` field to determine if those fragments contain an `id` field. A more complete version of this document transform might perform this check.
+
+Now that we know the `id` field is missing, we can add it to our `currentUser` field's selection set. To do so, let's first create a new field node and give it a name of `id`. This is just a plain object with the `kind` property set to `Kind.FIELD` and a `name` node that define's the field's name.
+
+```ts
+const idField = {
+  kind: Kind.FIELD,
+  name: {
+    kind: Kind.NAME,
+    value: 'id',
+  },
+};
+```
+
+We can now return a modified field node from our visitor that adds that field to the node's `selectionSet` to update our GraphQL document.
+
+```ts {8-14}
+const transformedDocument = visit(document, {
+  Field(fieldNode) {
+    // ...
+    const idField = {
+      // ... 
+    };
+
+    return {
+      ...fieldNode,
+      selectionSet: {
+        ...fieldNode.selectionSet,
+        selections: [...selections, idField],
+      },
+    };
+  }
+});
+```
+
+> Here we've added the `id` field to the end of the selection set. The order does not matter and you may prefer to put the field in a different order within the `selections` array.
+
+Hooray! We've now got a working document transform that ensures the `id` field is selected whenever a query is sent to our server that contains the `currentUser` field. For completeness, here is the full definition of our custom document transform after completing this example.
+
+```ts
+import { DocumentTransform } from '@apollo/client';
+import { visit, Kind, BREAK } from 'graphql';
+
+const documentTransform = new DocumentTransform((document) => {
+  const transformedDocument = visit(document, {
+    Field(fieldNode) {
+      if (fieldNode.name.value !== 'currentUser') {
+        return;
+      }
+
+      const selections = fieldNode.selectionSet?.selections ?? [];
+
+      for (const selectionNode of selections) {
+        if (
+          selectionNode.kind === Kind.FIELD &&
+          selectionNode.name.value === 'id'
+        ) {
+          return BREAK;
+        }
+      }
+
+      const idField = {
+        kind: Kind.FIELD,
+        name: {
+          kind: Kind.NAME,
+          value: 'id',
+        },
+      };
+
+      return {
+        ...fieldNode,
+        selectionSet: {
+          ...fieldNode.selectionSet,
+          selections: [...selections, idField],
+        },
+      };
+    },
+  });
+
+  return transformedDocument;
+});
+```
+
+### Checking our document transform
+
+We can check our custom document transform by calling the `transformDocument` function and passing a GraphQL query to it. 
+
+```ts
+import { print } from 'graphql';
+
+const query = gql`
+  query TestQuery {
+    currentUser {
+      name
+    }
+  }
+`;
+
+const documentTransform = new DocumentTransform((document) => {
+  // ...
+});
+
+const modifiedQuery = documentTransform.transformDocument(query);
+
+console.log(print(modifiedQuery));
+// query TestQuery {
+//   currentUser {
+//     name
+//     id
+//   }
+// }
+```
+
+> We use the [`print`](https://graphql.org/graphql-js/language/#print) function exported by `graphql-js` to make the query human-readable.
+
+Similarly, we can verify that passing a query that _doesn't_ query for `currentUser` is not affected by our transform.
+
+```ts
+const query = gql`
+  query TestQuery {
+    user {
+      name
+    }
+  }
+`;
+
+const modifiedQuery = documentTransform.transformDocument(query);
+
+console.log(print(modifiedQuery));
+// query TestQuery {
+//   user {
+//     name
+//   }
+// }
+```

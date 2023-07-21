@@ -157,18 +157,7 @@ export class InternalQueryReference<TData = unknown> {
       currentFetchPolicy === 'standby' &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy
     ) {
-      const promise = this.observable.reobserve(watchQueryOptions);
-      this.initiateFetch();
-
-      promise
-        .then((result) => {
-          if (this.status === 'loading') {
-            this.status = 'idle';
-            this.result = result;
-            this.resolve?.(result);
-          }
-        })
-        .catch(() => {});
+      this.initiateFetch(this.observable.reobserve(watchQueryOptions));
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
 
@@ -190,49 +179,11 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   refetch(variables: OperationVariables | undefined) {
-    const promise = this.observable.refetch(variables);
-
-    this.initiateFetch();
-
-    // If the data returned from the fetch is deeply equal to the data already
-    // in the cache, `handleNext` will not be triggered leaving the promise we
-    // created in a pending state forever. To avoid this situtation, we attempt
-    // to resolve the promise if `handleNext` hasn't been run to ensure the
-    // promise is resolved correctly.
-    promise
-      .then((result) => {
-        if (this.status === 'loading') {
-          this.status = 'idle';
-          this.result = result;
-          this.resolve?.(result);
-        }
-      })
-      .catch(() => {});
-
-    return promise;
+    return this.initiateFetch(this.observable.refetch(variables));
   }
 
   fetchMore(options: FetchMoreOptions<TData>) {
-    const promise = this.observable.fetchMore<TData>(options);
-
-    this.initiateFetch();
-
-    // If the data returned from the fetch is deeply equal to the data already
-    // in the cache, `handleNext` will not be triggered leaving the promise we
-    // created in a pending state forever. To avoid this situtation, we attempt
-    // to resolve the promise if `handleNext` hasn't been run to ensure the
-    // promise is resolved correctly.
-    promise
-      .then((result) => {
-        if (this.status === 'loading') {
-          this.status = 'idle';
-          this.result = result;
-          this.resolve?.(result);
-        }
-      })
-      .catch(() => {});
-
-    return promise;
+    return this.initiateFetch(this.observable.fetchMore<TData>(options));
   }
 
   private dispose() {
@@ -294,7 +245,7 @@ export class InternalQueryReference<TData = unknown> {
     this.listeners.forEach((listener) => listener(promise));
   }
 
-  private initiateFetch() {
+  private initiateFetch(returnedPromise: Promise<ApolloQueryResult<TData>>) {
     this.status = 'loading';
 
     this.promise = new Promise((resolve, reject) => {
@@ -303,5 +254,22 @@ export class InternalQueryReference<TData = unknown> {
     });
 
     this.promise.catch(() => {});
+
+    // If the data returned from the fetch is deeply equal to the data already
+    // in the cache, `handleNext` will not be triggered leaving the promise we
+    // created in a pending state forever. To avoid this situtation, we attempt
+    // to resolve the promise if `handleNext` hasn't been run to ensure the
+    // promise is resolved correctly.
+    returnedPromise
+      .then((result) => {
+        if (this.status === 'loading') {
+          this.status = 'idle';
+          this.result = result;
+          this.resolve?.(result);
+        }
+      })
+      .catch(() => {});
+
+    return returnedPromise;
   }
 }

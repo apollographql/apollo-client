@@ -184,6 +184,13 @@ export class InternalQueryReference<TData = unknown> {
 
     this.initiateFetch();
 
+    // If the data returned from the fetch is deeply equal to the data already
+    // in the cache, `handleNext` will not be triggered leaving the promise we
+    // created forever in a pending state. To avoid this situtation, we attempt
+    // to resolve or reject the promise as a fallback to guarantee it will be
+    // resolved.
+    promise.then(this.resolve, this.reject);
+
     return promise;
   }
 

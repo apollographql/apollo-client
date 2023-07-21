@@ -4161,6 +4161,103 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('properly resolves `refetch` when returning a result that is deeply equal to data in the cache', async () => {
+    type Variables = {
+      id: string;
+    };
+    interface Data {
+      todo: {
+        id: string;
+        name: string;
+        completed: boolean;
+      };
+    }
+    const user = userEvent.setup();
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query TodoItemQuery($id: ID!) {
+        todo(id: $id) {
+          id
+          name
+          completed
+        }
+      }
+    `;
+
+    const mocks: MockedResponse<Data, Variables>[] = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { todo: { id: '1', name: 'Clean room', completed: false } },
+        },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { todo: { id: '1', name: 'Clean room', completed: false } },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Todo id="1" />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function SuspenseFallback() {
+      return <p>Loading</p>;
+    }
+
+    function Todo({ id }: { id: string }) {
+      const { data, refetch } = useSuspenseQuery(query, {
+        variables: { id },
+      });
+
+      const { todo } = data;
+
+      return (
+        <div>
+          <button onClick={() => refetch()}>Refetch</button>
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && ' (completed)'}
+          </div>
+        </div>
+      );
+    }
+
+    render(<App />);
+
+    expect(await screen.findByText('Loading')).toBeInTheDocument();
+
+    const todo = await screen.findByTestId('todo');
+
+    expect(todo).toHaveTextContent('Clean room');
+
+    await act(() => user.click(screen.getByText('Refetch')));
+
+    expect(screen.getByText('Loading')).toBeInTheDocument();
+
+    await waitFor(() => {
+      // Suspense will hide the component until the suspense boundary has
+      // finished loading so it is still in the DOM.
+      expect(todo).toBeVisible();
+    });
+
+    expect(todo).toHaveTextContent('Clean room');
+  });
+
   it('re-suspends when calling `refetch` with new variables', async () => {
     const query = gql`
       query UserQuery($id: String!) {

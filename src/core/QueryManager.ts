@@ -1194,15 +1194,17 @@ export class QueryManager<TStore> {
       context,
     });
 
-    const fromVariables = (variables: TVars) => {
+    const operation = new GraphQLOperation({ query, variables, context });
+
+    const fromVariables = (operation: GraphQLOperation<TData, TVars>) => {
       // Since normalized is always a fresh copy of options, it's safe to
       // modify its properties here, rather than creating yet another new
       // WatchQueryOptions object.
-      normalized.variables = variables;
+      normalized.variables = operation.variables!;
 
       const sourcesWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
-        new GraphQLOperation({ query: normalized.query, variables, context: normalized.context }),
+        operation,
         normalized,
         networkStatus,
       );
@@ -1243,14 +1245,8 @@ export class QueryManager<TStore> {
     if (this.getDocumentInfo(normalized.query).hasClientExports) {
       concast = new Concast(
         this.localState
-          .addExportedVariables(
-            new GraphQLOperation({ 
-              query: normalized.query,
-              variables: normalized.variables,
-              context: normalized.context
-            })
-          )
-          .then(operation => fromVariables(operation.variables!))
+          .addExportedVariables(operation)
+          .then(fromVariables)
           .then(sourcesWithInfo => sourcesWithInfo.sources),
       );
       // there is just no way we can synchronously get the *right* value here,
@@ -1260,7 +1256,7 @@ export class QueryManager<TStore> {
       // directives.
       containsDataFromLink = true;
     } else {
-      const sourcesWithInfo = fromVariables(normalized.variables);
+      const sourcesWithInfo = fromVariables(operation);
       containsDataFromLink = sourcesWithInfo.fromLink;
       concast = new Concast(sourcesWithInfo.sources);
     }

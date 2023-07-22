@@ -365,6 +365,13 @@ const documentTransform = DocumentTransform.split(
 
 You should strive to make your document transforms be deterministic, meaning the document transform should always output the same transformed GraphQL document when given the same input GraphQL document. The `DocumentTransform` class optimizes for this case by caching the transformed result for each input GraphQL document. This speeds up repeated calls to the document transform to avoid unnecessary work.
 
+The `DocumentTransform` class takes this one step further and will record all transformed documents. This means that passing an _already_ transformed document to the `transformDocument()` function will immediately return the GraphQL document.
+
+```ts
+const transformedDocument = documentTransform.transformDocument(document)
+
+transformedDocument === documentTransform.transformDocument(transformedDocument) // => true
+```
 
 ### Non-deterministic document transforms
 

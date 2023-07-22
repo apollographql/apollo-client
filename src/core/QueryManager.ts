@@ -934,10 +934,10 @@ export class QueryManager<TStore> {
     query = this.transform(query);
     variables = this.getVariables(query, variables);
 
-    const makeObservable = (variables: OperationVariables) => {
-      return this.getObservableFromLink<T>(
-        new GraphQLOperation({ query, variables, context })
-      ).map(result => {
+    const operation = new GraphQLOperation({ query, variables, context });
+
+    const makeObservable = (operation: GraphQLOperation<T>) => {
+      return this.getObservableFromLink<T>(operation).map(result => {
         if (fetchPolicy !== 'no-cache') {
           // the subscription interface should handle not sending us results we no longer subscribe to.
           // XXX I don't think we ever send in an object with errors, but we might in the future...
@@ -974,10 +974,8 @@ export class QueryManager<TStore> {
       return new Observable<FetchResult<T>>(observer => {
         let sub: ObservableSubscription | null = null;
         this.localState
-          .addExportedVariables(
-            new GraphQLOperation({ query, variables, context })
-          )
-          .then(operation => makeObservable(operation.variables!))
+          .addExportedVariables(operation)
+          .then(makeObservable)
           .then(
             observable => sub = observable.subscribe(observer),
             observer.error,
@@ -986,7 +984,7 @@ export class QueryManager<TStore> {
       });
     }
 
-    return makeObservable(variables);
+    return makeObservable(operation);
   }
 
   public stopQuery(queryId: string) {

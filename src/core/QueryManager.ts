@@ -310,14 +310,11 @@ export class QueryManager<TStore> {
             TVariables,
             TContext,
             TCache
-          >({
+          >(operation, {
             mutationId,
             result: storeResult,
-            document: mutation,
-            variables,
             fetchPolicy,
             errorPolicy,
-            context,
             update: updateWithProxyFn,
             updateQueries,
             awaitRefetchQueries,
@@ -366,18 +363,16 @@ export class QueryManager<TStore> {
 
   public markMutationResult<
     TData,
-    TVariables,
-    TContext,
+    TVariables extends OperationVariables,
+    TContext extends DefaultContext,
     TCache extends ApolloCache<any>
   >(
+    operation: GraphQLOperation<TData, TVariables, TContext>,
     mutation: {
       mutationId: string;
       result: FetchResult<TData>;
-      document: DocumentNode;
-      variables?: TVariables;
       fetchPolicy?: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
-      context?: TContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
       awaitRefetchQueries?: boolean;
@@ -397,8 +392,8 @@ export class QueryManager<TStore> {
         cacheWrites.push({
           result: result.data,
           dataId: 'ROOT_MUTATION',
-          query: mutation.document,
-          variables: mutation.variables,
+          query: operation.query,
+          variables: operation.variables,
         });
       }
       if (isExecutionPatchIncrementalResult(result) && isNonEmptyArray(result.incremental)) {
@@ -407,8 +402,8 @@ export class QueryManager<TStore> {
           // The cache complains if passed a mutation where it expects a
           // query, so we transform mutations and subscriptions to queries
           // (only once, thanks to this.transformCache).
-          query: this.getDocumentInfo(mutation.document).asQuery,
-          variables: mutation.variables,
+          query: this.getDocumentInfo(operation.query).asQuery,
+          variables: operation.variables,
           optimistic: false,
           returnPartialData: true,
         });
@@ -423,8 +418,8 @@ export class QueryManager<TStore> {
           cacheWrites.push({
             result: mergedData,
             dataId: 'ROOT_MUTATION',
-            query: mutation.document,
-            variables: mutation.variables,
+            query: operation.query,
+            variables: operation.variables,
           })
         }
       }
@@ -505,8 +500,8 @@ export class QueryManager<TStore> {
                 // The cache complains if passed a mutation where it expects a
                 // query, so we transform mutations and subscriptions to queries
                 // (only once, thanks to this.transformCache).
-                query: this.getDocumentInfo(mutation.document).asQuery,
-                variables: mutation.variables,
+                query: this.getDocumentInfo(operation.query).asQuery,
+                variables: operation.variables,
                 optimistic: false,
                 returnPartialData: true,
               });
@@ -527,8 +522,8 @@ export class QueryManager<TStore> {
             // call the update function.
             if (isFinalResult) {
               update(cache, result, {
-                context: mutation.context,
-                variables: mutation.variables,
+                context: operation.context,
+                variables: operation.variables,
               });
             }
           }
@@ -596,13 +591,11 @@ export class QueryManager<TStore> {
 
     return this.cache.recordOptimisticTransaction(cache => {
       try {
-        this.markMutationResult<TData, TVariables, TContext, TCache>({
-          ...mutation,
-          variables: operation.variables,
-          context: operation.context,
-          document: operation.query,
-          result: { data },
-        }, cache);
+        this.markMutationResult<TData, TVariables, TContext, TCache>(
+          operation,
+          { ...mutation, result: { data } }, 
+          cache
+        );
       } catch (error) {
         invariant.error(error);
       }

@@ -239,11 +239,7 @@ export class QueryManager<TStore> {
     });
 
     if (hasClientExports) {
-      variables = await this.localState.addExportedVariables(
-        operation
-      ) as TVariables;
-
-      operation = GraphQLOperation.from(operation, { variables });
+      operation = await this.localState.addExportedVariables(operation);
     }
 
     const mutationStoreValue =
@@ -981,7 +977,7 @@ export class QueryManager<TStore> {
           .addExportedVariables(
             new GraphQLOperation({ query, variables, context })
           )
-          .then(makeObservable)
+          .then(operation => makeObservable(operation.variables!))
           .then(
             observable => sub = observable.subscribe(observer),
             observer.error,
@@ -1256,7 +1252,8 @@ export class QueryManager<TStore> {
               context: normalized.context
             })
           )
-          .then(fromVariables).then(sourcesWithInfo => sourcesWithInfo.sources),
+          .then(operation => fromVariables(operation.variables!))
+          .then(sourcesWithInfo => sourcesWithInfo.sources),
       );
       // there is just no way we can synchronously get the *right* value here,
       // so we will assume `true`, which is the behaviour before the bug fix in

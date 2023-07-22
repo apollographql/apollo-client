@@ -38,10 +38,10 @@ import {
   shouldInclude,
 } from '../utilities/index.js';
 import type { ApolloClient } from './ApolloClient.js';
-import type { Resolvers } from './types.js';
+import type { DefaultContext, OperationVariables, Resolvers } from './types.js';
 import type { FetchResult } from '../link/core/index.js';
 import { cacheSlot } from '../cache/index.js';
-import type { GraphQLOperation } from './GraphQLOperation.js';
+import { GraphQLOperation } from './GraphQLOperation.js';
 
 export type Resolver = (
   rootValue?: any,
@@ -191,14 +191,22 @@ export class LocalState<TCacheShape> {
   // To support `@client @export(as: "someVar")` syntax, we'll first resolve
   // @client @export fields locally, then pass the resolved values back to be
   // used alongside the original operation variables.
-  public async addExportedVariables(operation: GraphQLOperation) {
+  public async addExportedVariables<
+    TData,
+    TVariables extends OperationVariables,
+    TContext extends DefaultContext
+  >(operation: GraphQLOperation<TData, TVariables, TContext>) {
     return this.resolveDocument(
       operation.setContext((context) => this.prepareContext(context)),
       this.buildRootValueFromCache(operation) || {},
-    ).then(data => ({
-      ...operation.variables,
-      ...data.exportedVariables,
-    }));
+    ).then(data => {
+      return GraphQLOperation.from(operation, { 
+        variables: {
+          ...operation.variables,
+          ...data.exportedVariables,
+        } as TVariables
+      });
+    });
   }
 
   public shouldForceResolvers(document: ASTNode) {

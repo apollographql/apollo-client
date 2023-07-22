@@ -1098,7 +1098,7 @@ export class QueryManager<TStore> {
   private getResultsFromLink<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
-    operation: GraphQLOperation,
+    operation: GraphQLOperation<TData, TVars>,
     options: Pick<WatchQueryOptions<TVars, TData>,
       | "fetchPolicy"
       | "errorPolicy">,
@@ -1431,7 +1431,7 @@ export class QueryManager<TStore> {
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
-    operation: GraphQLOperation,
+    operation: GraphQLOperation<TData, TVars>,
     { 
       fetchPolicy,
       refetchWritePolicy,

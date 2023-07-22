@@ -629,7 +629,7 @@ describe("client.refetchQueries", () => {
         // One-off client.query-style queries never get an ObservableQuery, so
         // they should not be included by include: "active".
         expect(queryInfo.observableQuery).toBe(null);
-        expect(queryInfo.document).toBe(delayedQuery);
+        expect(queryInfo.operation?.query).toBe(delayedQuery);
       }
     });
 

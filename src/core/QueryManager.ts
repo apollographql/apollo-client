@@ -1193,7 +1193,7 @@ export class QueryManager<TStore> {
 
     const operation = new GraphQLOperation({ query, variables, context });
 
-    const fromVariables = (operation: GraphQLOperation<TData, TVars>) => {
+    const fromOperation = (operation: GraphQLOperation<TData, TVars>) => {
       const sourcesWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         operation,
@@ -1238,7 +1238,7 @@ export class QueryManager<TStore> {
       concast = new Concast(
         this.localState
           .addExportedVariables(operation)
-          .then(fromVariables)
+          .then(fromOperation)
           .then(sourcesWithInfo => sourcesWithInfo.sources),
       );
       // there is just no way we can synchronously get the *right* value here,
@@ -1248,7 +1248,7 @@ export class QueryManager<TStore> {
       // directives.
       containsDataFromLink = true;
     } else {
-      const sourcesWithInfo = fromVariables(operation);
+      const sourcesWithInfo = fromOperation(operation);
       containsDataFromLink = sourcesWithInfo.fromLink;
       concast = new Concast(sourcesWithInfo.sources);
     }

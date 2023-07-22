@@ -278,11 +278,7 @@ export class QueryManager<TStore> {
     return new Promise((resolve, reject) => {
       return asyncMap(
         self.getObservableFromLink(
-          new GraphQLOperation({ 
-            query: mutation,
-            variables,
-            context: { ...context, optimisticResponse }
-          }),
+          operation.setContext({ optimisticResponse }),
           false,
         ),
 

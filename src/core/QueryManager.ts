@@ -715,13 +715,15 @@ export class QueryManager<TStore> {
 
     this.queries.set(observable.queryId, queryInfo);
 
+    const operation = new GraphQLOperation({ 
+      query,
+      variables: observable.variables,
+      context: options.context,
+    });
+
     // We give queryInfo the transformed query to ensure the first cache diff
     // uses the transformed query instead of the raw query
-    queryInfo.init({
-      document: query,
-      observableQuery: observable,
-      variables: observable.variables,
-    });
+    queryInfo.init(operation, { observableQuery: observable });
 
     return observable;
   }
@@ -868,10 +870,13 @@ export class QueryManager<TStore> {
         // pre-allocate a new query ID here, using a special prefix to enable
         // cleaning up these temporary queries later, after fetching.
         const queryId = makeUniqueId("legacyOneTimeQuery");
-        const queryInfo = this.getQuery(queryId).init({
-          document: options.query,
-          variables: options.variables,
-        });
+        const queryInfo = this.getQuery(queryId).init(
+          new GraphQLOperation({ 
+            query: options.query,
+            variables: options.variables,
+            context: void 0
+          }),
+        );
         const oq = new ObservableQuery({
           queryManager: this,
           queryInfo,
@@ -1441,11 +1446,7 @@ export class QueryManager<TStore> {
   ): SourcesAndInfo<TData> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
-    queryInfo.init({
-      document: operation.query,
-      variables: operation.variables,
-      networkStatus,
-    });
+    queryInfo.init(operation, { networkStatus });
 
     const readCache = () => queryInfo.getDiff(operation.variables);
 

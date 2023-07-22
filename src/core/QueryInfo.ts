@@ -22,6 +22,7 @@ import {
 } from './networkStatus.js';
 import type { ApolloError } from '../errors/index.js';
 import type { QueryManager } from './QueryManager.js';
+import type { GraphQLOperation } from './GraphQLOperation.js';
 
 export type QueryStoreValue = Pick<QueryInfo,
   | "variables"
@@ -111,30 +112,31 @@ export class QueryInfo {
     }
   }
 
-  public init(query: {
-    document: DocumentNode;
-    variables: Record<string, any> | undefined,
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
-    networkStatus?: NetworkStatus,
-    observableQuery?: ObservableQuery<any>;
-    lastRequestId?: number;
-  }): this {
+  public init(
+    operation: GraphQLOperation,
+    query: {
+      // The initial networkStatus for this fetch, most often
+      // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
+      // or setVariables.
+      networkStatus?: NetworkStatus,
+      observableQuery?: ObservableQuery<any>;
+      lastRequestId?: number;
+    } = Object.create(null)
+  ): this {
     let networkStatus = query.networkStatus || NetworkStatus.loading;
     if (this.variables &&
         this.networkStatus !== NetworkStatus.loading &&
-        !equal(this.variables, query.variables)) {
+        !equal(this.variables, operation.variables)) {
       networkStatus = NetworkStatus.setVariables;
     }
 
-    if (!equal(query.variables, this.variables)) {
+    if (!equal(operation.variables, this.variables)) {
       this.lastDiff = void 0;
     }
 
     Object.assign(this, {
-      document: query.document,
-      variables: query.variables,
+      document: operation.query,
+      variables: operation.variables,
       networkError: null,
       graphQLErrors: this.graphQLErrors || [],
       networkStatus,

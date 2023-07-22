@@ -27,8 +27,8 @@ export class GraphQLOperation<
   TVariables extends OperationVariables = OperationVariables,
   TContext extends DefaultContext = DefaultContext
 > {
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  variables: TVariables | undefined;
+  readonly query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  readonly variables: TVariables | undefined;
   context: TContext | undefined;
 
   static from<

@@ -39,12 +39,7 @@ export class GraphQLOperation<
     other: GraphQLOperation<TData, TVariables, TContext>,
     operation: Partial<RawOperation<TData, TVariables, TContext>>
   ) {
-    return new GraphQLOperation({
-      query: other.query,
-      variables: other.variables,
-      context: other.context,
-      ...operation,
-    });
+    return new GraphQLOperation({ ...other.toPlainObject(), ...operation });
   }
 
   constructor(operation: RawOperation<TData, TVariables, TContext>) {
@@ -72,13 +67,16 @@ export class GraphQLOperation<
     return this;
   }
 
-  toGraphQLRequest(): GraphQLRequest {
+  toPlainObject() {
     return {
       query: this.query,
       variables: this.variables,
-      operationName: this.operationName,
       context: this.context,
     };
+  }
+
+  toGraphQLRequest(): GraphQLRequest {
+    return { ...this.toPlainObject(), operationName: this.operationName };
   }
 }
 

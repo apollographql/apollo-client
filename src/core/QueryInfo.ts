@@ -22,7 +22,7 @@ import {
 } from './networkStatus.js';
 import type { ApolloError } from '../errors/index.js';
 import type { QueryManager } from './QueryManager.js';
-import type { GraphQLOperation } from './GraphQLOperation.js';
+import { GraphQLOperation } from './GraphQLOperation.js';
 
 export type QueryStoreValue = Pick<QueryInfo,
   | "variables"
@@ -85,7 +85,7 @@ export class QueryInfo {
   document: DocumentNode | null = null;
   lastRequestId = 1;
   subscriptions = new Set<ObservableSubscription>();
-  variables?: Record<string, any>;
+  operation?: GraphQLOperation;
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
   graphQLErrors?: ReadonlyArray<GraphQLError>;
@@ -112,6 +112,16 @@ export class QueryInfo {
     }
   }
 
+  get variables() {
+    return this.operation?.variables;
+  }
+
+  set variables(newValue) {
+    this.operation = GraphQLOperation.from(this.operation!, {
+      variables: newValue
+    });
+  }
+
   public init(
     operation: GraphQLOperation,
     query: {
@@ -135,8 +145,8 @@ export class QueryInfo {
     }
 
     Object.assign(this, {
+      operation,
       document: operation.query,
-      variables: operation.variables,
       networkError: null,
       graphQLErrors: this.graphQLErrors || [],
       networkStatus,

@@ -289,7 +289,7 @@ Here `documentTransform1` is combined with `documentTransform2` into a single do
 
 Combining multiple transforms is a powerful feature that makes it easy to split up transform logic, which can boost maintainability. It should be noted however that depending on the implementation of your visitor, this can result in the traversal of the GraphQL document AST multiple times. Most of the time this shouldn't be an issue. We recommend using the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinal from GraphQL where necessary to prevent unnecessary traversal. 
 
-If, however, you are sending very large queries that require a lot of traversal, and have already optimized your visitors with the `BREAK` sentinal, you may find it optimal to combine the transforms into a single visitor that traverses the AST once. 
+If, however, you are sending very large queries that require a lot of traversal and have already optimized your visitors with the `BREAK` sentinal, you may find it optimal to combine the transforms into a single visitor that traverses the AST once. 
 
 See the section on [document caching](#document-caching) to learn how Apollo Client applies optimizations to individual document transforms to mitigate the performance impact when transforming the same GraphQL document multiple times.
 
@@ -358,5 +358,68 @@ const documentTransform = DocumentTransform.split(
   documentTransform1
     .concat(documentTransform2)
     .concat(documentTransform3)
+);
+```
+
+## Document caching
+
+You should strive to make your document transforms be deterministic, meaning the document transform should always output the same transformed GraphQL document when given the same input GraphQL document. The `DocumentTransform` class optimizes for this case by caching the transformed result for each input GraphQL document. This speeds up repeated calls to the document transform to avoid unnecessary work.
+
+
+### Non-deterministic document transforms
+
+In rare circumstances, you may need to rely on a runtime condition from outside the transform function that changes the result of the document transform. Due to the automatic caching of the document transform, this becomes a problem when that runtime condition changes between calls to `transformDocument()` since your document transform will not know it needs to be run again.
+
+Instead of completely disabling the document cache in these situations, you can provide a custom cache key that will be used to cache the result of the document transform. This ensures your transform is only called as often as necessary, while maintaining the flexiblity of the runtime condition.
+
+To customize the cache key, pass the `getCacheKey` function as an option to the second argument of the `DocumentTransform` constructor. This function receives the `document` that will be passed to your transform function and is expected to return an array.
+
+As an example, here is a document transform that depends on whether the user is connected to the network.
+
+```ts
+const documentTransform = new DocumentTransform(
+  (document) => {
+    if (window.navigator.onLine) {
+      // Transform the document when the user is online
+    } else {
+      // Transform the document when the user is offline
+    }
+  },
+  {
+    getCacheKey: (document) => [document, window.navigator.onLine]
+  }
+);
+```
+
+> It is **HIGHLY** recommended you use the `document` as part of your cache key. In this example, if the `document` is omitted from the cache key, the document transform will only ever output two transformed documents: one for the `true` condition and one for the `false` condition. Using the `document` in the cache key ensures that each unique document in your application will be transformed accordingly.
+
+You may conditionally disable the cache for select GraphQL documents by returning `undefined` from the `getCacheKey` function. This will force the document transform to run, regardless of whether the input GraphQL document has been seen or not.
+
+```ts
+const documentTransform = new DocumentTransform(
+  (document) => {
+    // ...
+  },
+  {
+    getCacheKey: (document) => {
+      // Always run the transform function when `shouldCache` is `false`
+      if (shouldCache(document)) {
+        return [document] 
+      }
+    }
+  }
+);
+```
+
+As a last resort, you may completely disable document caching to force your document transform to run each time `transformDocument()` is called. Set the `cache` option to `false` to disable the cache.
+
+```ts
+const documentTransform = new DocumentTransform(
+  (document) => {
+    // ...
+  },
+  {
+    cache: false
+  }
 );
 ```

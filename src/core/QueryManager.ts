@@ -1185,23 +1185,15 @@ export class QueryManager<TStore> {
     } = options;
 
     const normalized = Object.assign({}, options, {
-      query,
-      variables,
       fetchPolicy,
       errorPolicy,
       returnPartialData,
       notifyOnNetworkStatusChange,
-      context,
     });
 
     const operation = new GraphQLOperation({ query, variables, context });
 
     const fromVariables = (operation: GraphQLOperation<TData, TVars>) => {
-      // Since normalized is always a fresh copy of options, it's safe to
-      // modify its properties here, rather than creating yet another new
-      // WatchQueryOptions object.
-      normalized.variables = operation.variables!;
-
       const sourcesWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         operation,
@@ -1242,7 +1234,7 @@ export class QueryManager<TStore> {
     // since the timing of result delivery is (unfortunately) important
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
-    if (this.getDocumentInfo(normalized.query).hasClientExports) {
+    if (this.getDocumentInfo(operation.query).hasClientExports) {
       concast = new Concast(
         this.localState
           .addExportedVariables(operation)

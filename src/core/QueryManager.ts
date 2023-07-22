@@ -56,6 +56,7 @@ import type {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
+  DefaultContext,
 } from './types.js';
 import { LocalState } from './LocalState.js';
 
@@ -230,10 +231,19 @@ export class QueryManager<TStore> {
     const { hasClientExports } = this.getDocumentInfo(mutation);
 
     variables = this.getVariables(mutation, variables) as TVariables;
+
+    let operation = new GraphQLOperation({ 
+      query: mutation,
+      variables,
+      context
+    });
+
     if (hasClientExports) {
       variables = await this.localState.addExportedVariables(
-        new GraphQLOperation({ query: mutation, variables, context })
+        operation
       ) as TVariables;
+
+      operation = GraphQLOperation.from(operation, { variables });
     }
 
     const mutationStoreValue =
@@ -251,13 +261,10 @@ export class QueryManager<TStore> {
         TVariables,
         TContext,
         TCache
-      >(optimisticResponse, {
+      >(optimisticResponse, operation, {
         mutationId,
-        document: mutation,
-        variables,
         fetchPolicy,
         errorPolicy,
-        context,
         updateQueries,
         update: updateWithProxyFn,
         keepRootFields,
@@ -570,28 +577,34 @@ export class QueryManager<TStore> {
     return Promise.resolve(result);
   }
 
-  public markMutationOptimistic<TData, TVariables, TContext, TCache extends ApolloCache<any>>(
+  public markMutationOptimistic<
+    TData,
+    TVariables extends OperationVariables,
+    TContext extends DefaultContext, 
+    TCache extends ApolloCache<any>
+  >(
     optimisticResponse: any,
+    operation: GraphQLOperation<TData, TVariables, TContext>,
     mutation: {
       mutationId: string;
-      document: DocumentNode;
-      variables?: TVariables;
       fetchPolicy?: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
-      context?: TContext;
       updateQueries: UpdateQueries<TData>,
       update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
       keepRootFields?: boolean,
     },
   ) {
     const data = typeof optimisticResponse === "function"
-      ? optimisticResponse(mutation.variables)
+      ? optimisticResponse(operation.variables)
       : optimisticResponse;
 
     return this.cache.recordOptimisticTransaction(cache => {
       try {
         this.markMutationResult<TData, TVariables, TContext, TCache>({
           ...mutation,
+          variables: operation.variables,
+          context: operation.context,
+          document: operation.query,
           result: { data },
         }, cache);
       } catch (error) {

@@ -347,7 +347,7 @@ const documentTransform3 = new DocumentTransform(transform3);
 
 const documentTransform = documentTransform1
   .concat(documentTransform2)
-  .concat(documentTransform3)
+  .concat(documentTransform3);
 ```
 
 The `split()` function makes it easier to skip the _entire_ chain of document transforms.
@@ -368,9 +368,9 @@ You should strive to make your document transforms be deterministic, meaning the
 The `DocumentTransform` class takes this one step further and will record all transformed documents. This means that passing an _already_ transformed document to the `transformDocument()` function will immediately return the GraphQL document.
 
 ```ts
-const transformedDocument = documentTransform.transformDocument(document)
+const transformedDocument = documentTransform.transformDocument(document);
 
-transformedDocument === documentTransform.transformDocument(transformedDocument) // => true
+transformedDocument === documentTransform.transformDocument(transformedDocument); // => true
 ```
 
 ### Non-deterministic document transforms

@@ -134,7 +134,7 @@ const transformedDocument = visit(document, {
 
 > To keep our document transform simple, it does not traverse fragments within the `currentUser` field to determine if those fragments contain an `id` field. A more complete version of this document transform might perform this check.
 
-Now that we know the `id` field is missing, we can add it to our `currentUser` field's selection set. To do so, let's first create a new field node and give it a name of `id`. This is just a plain object with the `kind` property set to `Kind.FIELD` and a `name` node that define's the field's name.
+Now that we know the `id` field is missing, we can add it to our `currentUser` field's selection set. To do so, let's first create a new field node and give it a name of `id`. This is just a plain object with the `kind` property set to `Kind.FIELD` and a `name` node that defines the field's name.
 
 ```ts
 const idField = {

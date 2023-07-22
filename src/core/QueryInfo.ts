@@ -111,11 +111,11 @@ export class QueryInfo {
     }
   }
 
-  get variables() {
+  public get variables() {
     return this.operation?.variables;
   }
 
-  set variables(newValue) {
+  private set variables(newValue) {
     this.operation = GraphQLOperation.from(this.operation!, {
       variables: newValue
     });

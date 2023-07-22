@@ -267,3 +267,96 @@ console.log(print(modifiedQuery));
 //   }
 // }
 ```
+
+## Composing multiple document transforms
+
+You may have noticed that the `ApolloClient` constructor only takes a single `documentTransform` option. As you add new capabities to your document transforms, you may find that a your document transform function starts to grow unwieldy. The `DocumentTransform` class makes it easy to split your transforms up and compose multiple transforms together into a single transform. 
+
+### Combining multiple document transforms
+
+You can combine multiple document transforms together using the `concat()` function. This forms a "chain" of document transforms that are run one right after the other.
+
+```ts
+const documentTransform1 = new DocumentTransform(transform1);
+const documentTransform2 = new DocumentTransform(transform2);
+
+const documentTransform = documentTransform1.concat(documentTransform2);
+```
+
+Here `documentTransform1` is combined with `documentTransform2` into a single document transform. Calling the `transformDocument()` function on `documentTransform` will first run the GraphQL document through `documentTransform1`, then through `documentTransform2`. Changes made to the GraphQL document in `documentTransform1` are seen by `documentTransform2`.
+
+#### A note about performance
+
+Combining multiple transforms is a powerful feature that makes it easy to split up transform logic, which can boost maintainability. It should be noted however that depending on the implementation of your visitor, this can result in the traversal of the GraphQL document AST multiple times. Most of the time this shouldn't be an issue. We recommend using the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinal from GraphQL where necessary to prevent unnecessary traversal. 
+
+If, however, you are sending very large queries that require a lot of traversal, and have already optimized your visitors with the `BREAK` sentinal, you may find it optimal to combine the transforms into a single visitor that traverses the AST once. 
+
+See the section on [document caching](#document-caching) to learn how Apollo Client applies optimizations to individual document transforms to mitigate the performance impact when transforming the same GraphQL document multiple times.
+
+### Conditionally running document transforms
+
+At times, you may want to conditionally run a document transform depending on the GraphQL document. You can conditionally run a transform by calling the `split()` static function on the `DocumentTransform` constructor.
+
+```ts
+const documentTransform = new DocumentTransform(transform);
+
+const subscriptionTransforms = DocumentTransform.split(
+  (document) => isSubscriptionOperation(document),
+  documentTransform
+);
+```
+
+Here the `documentTransform` is only run for subscription operations. For all other operations, no modifications are made to the GraphQL document. Calling the `transformDocument()` function on `subscriptionTransforms` will first check to see if the `document` is a subscription operation, and if so, proceed to run the `documentTransform`. If not, the document transform is bypassed and the GraphQL document is returned as-is.
+
+The `split` function also allows you to pass a second document transform to its function, allowing you to replicate an if/else condition.
+
+```ts
+const subscriptionTransform = new DocumentTransform(transform1);
+const defaultTransform = new DocumentTransform(transform2)
+
+const documentTransform = DocumentTransform.split(
+  (document) => isSubscriptionOperation(document),
+  subscriptionTransform,
+  defaultTransform
+);
+```
+
+Here the `subscriptionTransform` is only run for subscription operations. For all other operations, the GraphQL document is run through the `defaultTransform`.
+
+#### Why should I use the `split()` function instead of a conditional check inside of the transform function?
+
+It is certainly possible to conditionally run a transform by adding a conditional check inside the transform function itself. 
+
+```ts
+const documentTransform = new DocumentTransform((document) => {
+  if (shouldTransform(document)) {
+    // ...
+    return transformedDocument
+  }
+
+  return document
+});
+```
+
+Consider the case though where you've combined multiple document transforms together using the `concat()` function.
+
+```ts
+const documentTransform1 = new DocumentTransform(transform1);
+const documentTransform2 = new DocumentTransform(transform2);
+const documentTransform3 = new DocumentTransform(transform3);
+
+const documentTransform = documentTransform1
+  .concat(documentTransform2)
+  .concat(documentTransform3)
+```
+
+The `split()` function makes it easier to skip the _entire_ chain of document transforms.
+
+```ts
+const documentTransform = DocumentTransform.split(
+  (document) => shouldTransform(document),
+  documentTransform1
+    .concat(documentTransform2)
+    .concat(documentTransform3)
+);
+```

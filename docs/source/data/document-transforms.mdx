@@ -3,17 +3,15 @@ title: Document transforms
 description: Make custom modifications to your GraphQL documents
 ---
 
-Have you noticed that Apollo Client makes modifications to your queries, such as adding the `__typename` field, before those queries are sent to your GraphQL server? Apollo Client includes an advanced capability that allows you to define your own GraphQL document transforms that make modifications to your GraphQL queries. Let's learn how you can make and utilize your own GraphQL document transforms.
+> This article assumes you're familiar with the [anatomy of a GraphQL query](https://www.apollographql.com/blog/graphql/basics/the-anatomy-of-a-graphql-query/) and the concept of an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree). To explore a GraphQL AST, visit [AST Explorer](https://astexplorer.net/).
+
+Have you noticed that Apollo Client makes modifications to your queries, such as adding the `__typename` field, before those queries are sent to your GraphQL server? Apollo Client provides an advanced capability that allows you to define your own GraphQL document transforms that make modifications to your GraphQL queries. Let's learn how you can make and utilize your own GraphQL document transforms.
 
 > This feature requires Apollo Client `v3.8` or greater.
 
-## Prerequisites
+## Overview
 
-This article assumes you're familiar with the concept of an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree). Document transforms make modifications to the GraphQL AST, which is parsed from a raw GraphQL query string using the `gql` function. A GraphQL document is a GraphQL string that defines one or more operations and fragments.
-
-## Writing your own document transform
-
-You create your own document transforms using the `DocumentTransform` class. The created transform is then passed to the `ApolloClient` constructor.
+Document transforms make modifications to GraphQL documents. A GraphQL document is an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) that defines one or more operations and fragments, parsed from a raw GraphQL query string using the `gql` function. You can create your own document transforms using the `DocumentTransform` class. The created transform is then passed to the `ApolloClient` constructor.
 
 ```ts
 import { DocumentTransform } from '@apollo/client';
@@ -27,6 +25,25 @@ const client = new ApolloClient({
   documentTransform
 });
 ```
+
+### Lifecycle 
+
+Document transforms are run before every GraphQL request, for all operations, made through Apollo Client. This extends to any API that performs a network request, such as the [`useQuery`](/react/api/react/hooks#usequery) hook or the [`refetch`](/react/api/core/ObservableQuery#refetch) function on [`ObservableQuery`](/react/api/core/ObservableQuery).
+
+Document transforms are run very early in the request's lifecycle which makes it possible for modifications to GraphQL documents to be seen by the cache; an important distinction from modifications made to GraphQL documents in an [Apollo Link](/react/api/link/introduction). Because document transforms are run very early in the request lifecycle, it is also possible to add [`@client`](/react/data/directives#client) directives to fields in your document transform to turn the field into a [local-only field](/react/local-state/managing-state-with-field-policies).
+
+### Interacting with built-in transforms
+
+Apollo Client ships with built-in document transforms that are important to the functionality of the client.
+
+- The `__typename` field is added to every selection set in a query to identify the type of all objects returned by the GraphQL operation.
+- Queries that use fragments defined in the [fragment registry](/react/data/fragments#registering-named-fragments-using-createfragmentregistry) are added to the query before the request is sent over the network (requires Apollo Client 3.7 or later).
+
+It's important for custom document transforms to be able to interact with these built-in features. To make the most of your custom document transform, Apollo Client will run these built-in transforms twice: once before and once after your transform.
+
+Running the built-in transforms before your custom transform allows your transform to both see the `__typename` fields added to each selection set and makes it possible to modify fragment definitions defined in the fragment registry. Apollo Client understands that your transform may add new selection sets or add new fragment selections to the GraphQL document. Because of this, Apollo Client will run the built-in transforms again after your transform. This is a convenient capability for you because it means that you do not have to remember to include the `__typename` field for any added selection sets, nor do you need to lookup fragment definitions in the fragment registry for fragment selections added to the GraphQL document.
+
+## Writing your own document transform
 
 As an example, let's write a document transform that ensures an `id` field is selected anytime `currentUser` is queried. We will use several helper functions and utilities provided by the [`graphql-js`](https://graphql.org/graphql-js/) library to help us traverse the AST and make modifications to the GraphQL document.
 

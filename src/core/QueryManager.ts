@@ -21,7 +21,6 @@ import type {
 import {
   getDefaultValues,
   getOperationDefinition,
-  getOperationName,
   hasClientExports,
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
@@ -428,11 +427,13 @@ export class QueryManager<TStore> {
             return;
           }
           const updater = updateQueries[queryName];
-          const { document, variables } = this.queries.get(queryId)!;
+          const { operation } = this.queries.get(queryId)!;
+          const document = operation!.query;
+          const variables = operation!.variables;
 
           // Read the current query result from the store.
           const { result: currentQueryResult, complete } = cache.diff<TData>({
-            query: document!,
+            query: document,
             variables,
             returnPartialData: true,
             optimistic: false,
@@ -442,7 +443,7 @@ export class QueryManager<TStore> {
             // Run our reducer using the current query result and the mutation result.
             const nextQueryResult = updater(currentQueryResult, {
               mutationResult: result,
-              queryName: document && getOperationName(document) || void 0,
+              queryName: operation!.operationName,
               queryVariables: variables!,
             });
 

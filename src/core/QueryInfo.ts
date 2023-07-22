@@ -208,7 +208,7 @@ export class QueryInfo {
 
   private getDiffOptions(variables = this.variables): Cache.DiffOptions {
     return {
-      query: this.document!,
+      query: this.operation!.query,
       variables,
       returnPartialData: true,
       optimistic: true,

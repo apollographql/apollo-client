@@ -82,7 +82,6 @@ function cancelNotifyTimeout(info: QueryInfo) {
 // interface is ongoing, and further improvements are welcome.
 export class QueryInfo {
   listeners = new Set<QueryListener>();
-  document: DocumentNode | null = null;
   lastRequestId = 1;
   subscriptions = new Set<ObservableSubscription>();
   operation?: GraphQLOperation;
@@ -146,7 +145,6 @@ export class QueryInfo {
 
     Object.assign(this, {
       operation,
-      document: operation.query,
       networkError: null,
       graphQLErrors: this.graphQLErrors || [],
       networkStatus,

@@ -834,7 +834,7 @@ export class QueryManager<TStore> {
       });
     }
 
-    this.queries.forEach(({ observableQuery: oq, document }, queryId) => {
+    this.queries.forEach(({ observableQuery: oq, operation }, queryId) => {
       if (oq) {
         if (include === "all") {
           queries.set(queryId, oq);
@@ -856,11 +856,11 @@ export class QueryManager<TStore> {
         if (
           include === "active" ||
           (queryName && queryNamesAndDocs.has(queryName)) ||
-          (document && queryNamesAndDocs.has(document))
+          (operation && queryNamesAndDocs.has(operation.query))
         ) {
           queries.set(queryId, oq);
           if (queryName) queryNamesAndDocs.set(queryName, true);
-          if (document) queryNamesAndDocs.set(document, true);
+          if (operation) queryNamesAndDocs.set(operation.query, true);
         }
       }
     });

@@ -460,3 +460,37 @@ const documentTransform =
     .concat(conditionalCachedTransform)
     .concat(nonCachedTransform);
 ```
+
+## TypeScript and GraphQL Code Generator
+
+[GraphQL Code Generator](https://the-guild.dev/graphql/codegen) is a popular tool that generates TypeScript types for your GraphQL documents. It does this by statically analyzing your code to search for GraphQL query strings.
+
+Document transforms present a challenge for this tool. Because these transforms are used at runtime, we have no way to for static analysis to pick up the changes applied to GraphQL documents from our transform.
+
+Thankfully, GraphQL Code Generator provides the ability to run [document transforms](https://the-guild.dev/graphql/codegen/docs/advanced/document-transform) on the documents seen by this tool. We can hook into this ability by using our custom document transform inside the `transform` function passed to the GraphQL Code Generator config.
+
+```ts title="codegen.ts" {2,12-18}
+import type { CodegenConfig } from '@graphql-codegen/cli';
+import { documentTransform } from './path/to/your/transform';
+ 
+const config: CodegenConfig = {
+  schema: 'https://localhost:4000/graphql',
+  documents: ['src/**/*.tsx'],
+  generates: {
+    './src/gql/': {
+      preset: 'client',
+      documentTransforms: [
+        {
+          transform: ({ documents }) => {
+            return documents.map((documentFile) => {
+              documentFile.document = documentTransform.transformDocument(documentFile.document);
+
+              return documentFile;
+            });
+          }
+        }
+      ]
+    }
+  }
+}
+```

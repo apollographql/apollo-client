@@ -1,7 +1,7 @@
 const checks = [
   {
     path: "dist/apollo-client.min.cjs",
-    limit: "37965"
+    limit: "37990"
   },
   {
     path: "dist/main.cjs",

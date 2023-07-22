@@ -1,5 +1,9 @@
 import type { DocumentNode } from 'graphql';
-import type { DefaultContext, OperationVariables } from './types.js';
+import type {
+  DefaultContext,
+  OperationVariables,
+  TypedDocumentNode,
+} from './types.js';
 import type { GraphQLRequest } from '../link/core/index.js';
 import type { LocalState } from './LocalState.js';
 import {
@@ -8,18 +12,33 @@ import {
   removeDirectivesFromDocument,
 } from '../utilities/index.js';
 
-interface RawOperation {
-  query: DocumentNode;
-  variables: OperationVariables | undefined;
-  context: DefaultContext | undefined;
+interface RawOperation<
+  TData,
+  TVariables extends OperationVariables,
+  TContext extends DefaultContext
+> {
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  variables: TVariables | undefined;
+  context: TContext | undefined;
 }
 
-export class GraphQLOperation {
-  query: DocumentNode;
-  variables: OperationVariables | undefined;
-  context: DefaultContext | undefined;
+export class GraphQLOperation<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+  TContext extends DefaultContext = DefaultContext
+> {
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  variables: TVariables | undefined;
+  context: TContext | undefined;
 
-  static from(other: GraphQLOperation, operation: Partial<RawOperation>) {
+  static from<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+    TContext extends DefaultContext = DefaultContext
+  >(
+    other: GraphQLOperation<TData, TVariables, TContext>,
+    operation: Partial<RawOperation<TData, TVariables, TContext>>
+  ) {
     return new GraphQLOperation({
       query: other.query,
       variables: other.variables,
@@ -28,7 +47,7 @@ export class GraphQLOperation {
     });
   }
 
-  constructor(operation: RawOperation) {
+  constructor(operation: RawOperation<TData, TVariables, TContext>) {
     this.query = operation.query;
     this.variables = operation.variables;
     this.context = operation.context;

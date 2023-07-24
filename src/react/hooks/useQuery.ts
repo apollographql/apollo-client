@@ -508,7 +508,6 @@ class InternalState<TData, TVariables extends OperationVariables> {
 
   private setResult(nextResult: ApolloQueryResult<TData>) {
     const previousResult = this.result;
-    //console.dir({equal: equal(previousResult, nextResult), previousResult, nextResult}, {maxDepth: 3})
     if (previousResult && previousResult.data) {
       this.previousData = previousResult.data;
     }

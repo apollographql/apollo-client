@@ -289,9 +289,9 @@ Here `documentTransform1` is combined with `documentTransform2` into a single do
 
 #### A note about performance
 
-Combining multiple transforms is a powerful feature that makes it easy to split up transform logic, which can boost maintainability. It should be noted however that depending on the implementation of your visitor, this can result in the traversal of the GraphQL document AST multiple times. Most of the time this shouldn't be an issue. We recommend using the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinal from GraphQL where necessary to prevent unnecessary traversal. 
+Combining multiple transforms is a powerful feature that makes it easy to split up transform logic, which can boost maintainability. It should be noted however that depending on the implementation of your visitor, this can result in the traversal of the GraphQL document AST multiple times. Most of the time this shouldn't be an issue. We recommend using the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinel from GraphQL where necessary to prevent unnecessary traversal. 
 
-If, however, you are sending very large queries that require a lot of traversal and have already optimized your visitors with the `BREAK` sentinal, you may find it optimal to combine the transforms into a single visitor that traverses the AST once. 
+If, however, you are sending very large queries that require a lot of traversal and have already optimized your visitors with the `BREAK` sentinel, you may find it optimal to combine the transforms into a single visitor that traverses the AST once. 
 
 See the section on [document caching](#document-caching) to learn how Apollo Client applies optimizations to individual document transforms to mitigate the performance impact when transforming the same GraphQL document multiple times.
 

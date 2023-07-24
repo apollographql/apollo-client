@@ -135,6 +135,41 @@ describe('useQuery Hook SSR', () => {
     });
   });
 
+	it('should skip SSR tree rendering if `fetchPolicy` option is `standby`', () => {
+    const link = mockSingleLink({
+      request: { query: CAR_QUERY },
+      result: { data: CAR_RESULT_DATA }
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      ssrMode: true
+    });
+
+		let renderCount = 0;
+    const Component = () => {
+      const { data, loading } = useQuery(CAR_QUERY, { fetchPolicy:'standby' }); 
+			renderCount += 1;
+			if (!loading && data) {
+        const { make } = data.cars[0];
+        return <div>{make}</div>;
+      }
+      return null;
+    };
+
+    const app = (
+      <ApolloProvider client={client}>
+        <Component />
+      </ApolloProvider>
+    );
+
+    return renderToStringWithData(app).then(result => {
+      expect(renderCount).toBe(1);
+			expect(result).toEqual('');
+    });
+  });
+
   it('should skip both SSR tree rendering and SSR component rendering if `ssr` option is `false` and `ssrMode` is `true`',
     async () => {
       const link = mockSingleLink({

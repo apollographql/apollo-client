@@ -11,8 +11,6 @@ import { Query as QueryComponent } from '../../../components';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
-const IS_REACT_18 = React.version.startsWith('18');
-
 describe('[queries] lifecycle', () => {
   // lifecycle
   it('reruns the query if it changes', async () => {
@@ -512,9 +510,7 @@ describe('[queries] lifecycle', () => {
     rerender = render(app).rerender;
 
     await waitFor(() => {
-      if (!IS_REACT_18) {
-        expect(done).toBeTruthy()
-      }
+      expect(done).toBeTruthy()
     });
   });
 
@@ -603,11 +599,7 @@ describe('[queries] lifecycle', () => {
                 refetchQuery!();
                 break;
               case 3:
-                if (IS_REACT_18) {
-                  expect({ loading }).toEqual({ loading: true });
-                } else {
-                  expect({ loading }).toEqual({ loading: true });
-                }
+                expect({ loading }).toEqual({ loading: true });
                 expect({ a, b, c }).toEqual({
                   a: 1,
                   b: 2,
@@ -734,15 +726,11 @@ describe('[queries] lifecycle', () => {
     render(<ClientSwitcher />);
 
     await waitFor(() => {
-      if (IS_REACT_18) {
-        expect(count).toBe(12)
-      } else {
-        expect(count).toBe(12)
+      if (testFailures.length > 0) {
+        throw testFailures[0];
       }
+      expect(count).toBe(12)
     });
-    if (testFailures.length > 0) {
-      throw testFailures[0];
-    }
   });
 
   it('handles synchronous racecondition with prefilled data from the server', async () => {

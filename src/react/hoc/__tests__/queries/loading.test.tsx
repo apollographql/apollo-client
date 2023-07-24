@@ -10,8 +10,6 @@ import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
-const IS_REACT_18 = React.version.startsWith('18');
-
 describe('[queries] loading', () => {
   // networkStatus / loading
   itAsync('exposes networkStatus as a part of the props api', (resolve, reject) => {
@@ -300,13 +298,8 @@ describe('[queries] loading', () => {
               });
               break;
             case 1:
-              if (IS_REACT_18) {
-                expect(data!.loading).toBeTruthy();
-                expect(data!.networkStatus).toBe(NetworkStatus.refetch);
-              } else {
-                expect(data!.loading).toBeTruthy();
-                expect(data!.networkStatus).toBe(NetworkStatus.refetch);
-              }
+              expect(data!.loading).toBeTruthy();
+              expect(data!.networkStatus).toBe(NetworkStatus.refetch);
               expect(data!.allPeople).toEqual(data!.allPeople);
               break;
             case 2:
@@ -332,11 +325,7 @@ describe('[queries] loading', () => {
     );
 
     waitFor(() => {
-      if (IS_REACT_18) {
-        expect(count).toBe(3)
-      } else {
-        expect(count).toBe(3)
-      }
+      expect(count).toBe(3)
     }).then(resolve, reject);
   });
 
@@ -474,6 +463,7 @@ describe('[queries] loading', () => {
     });
     let renderFn: (num: number) => React.ReactElement<any>,
       count = 0;
+    const testFailures: any[] = [];
 
     interface Props {
       first: number;
@@ -483,25 +473,33 @@ describe('[queries] loading', () => {
     })(
       class extends React.Component<ChildProps<Props, Data, Vars>> {
         componentDidUpdate() {
-          if (count === 0) {
-            // has data
-            unmount();
-            setTimeout(() => {
-              render(renderFn(2));
-            }, 5);
-          }
+          try {
+            if (count === 0) {
+              // has data
+              unmount();
+              setTimeout(() => {
+                render(renderFn(2));
+              }, 5);
+            }
 
-          if (count === 2) {
-            // remounted data after fetch
-            expect(this.props.data!.loading).toBeFalsy();
+            if (count === 2) {
+              // remounted data after fetch
+              expect(this.props.data!.loading).toBeFalsy();
+            }
+            count++;
+          } catch (e) {
+            testFailures.push(e);
           }
-          count++;
         }
 
         render() {
-          if (count === 1) {
-            expect(this.props.data!.loading).toBeTruthy(); // on remount
-            count++;
+          try {
+            if (count === 1) {
+              expect(this.props.data!.loading).toBeTruthy(); // on remount
+              count++;
+            }
+          } catch (e) {
+            testFailures.push(e);
           }
 
           return null;
@@ -516,11 +514,10 @@ describe('[queries] loading', () => {
     );
     const { unmount } = render(renderFn(1));
     waitFor(() => {
-      if (IS_REACT_18) {
-        expect(count).toBe(0)
-      } else {
-        expect(count).toBe(3)
+      if (testFailures.length > 0) {
+        throw testFailures[0];
       }
+      expect(count).toBe(3);
     }).then(resolve, reject);
   });
 

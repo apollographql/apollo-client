@@ -13,8 +13,6 @@ import { Query } from '../../../components/Query';
 import { graphql } from '../../graphql';
 import { ChildProps, DataValue } from '../../types';
 
-const IS_REACT_18 = React.version.startsWith('18');
-
 describe('[queries] errors', () => {
   let error: typeof console.error;
   beforeEach(() => {
@@ -376,11 +374,7 @@ describe('[queries] errors', () => {
                 });
                 break;
               case 1:
-                if (IS_REACT_18) {
-                  expect(props.data!.loading).toBeTruthy();
-                } else {
-                  expect(props.data!.loading).toBeTruthy();
-                }
+                expect(props.data!.loading).toBeTruthy();
                 expect(props.data!.allPeople).toEqual(
                   data.allPeople
                 );
@@ -413,11 +407,7 @@ describe('[queries] errors', () => {
     );
 
     waitFor(() => {
-      if (IS_REACT_18) {
-        expect(count).toBe(3);
-      } else {
-        expect(count).toBe(3)
-      }
+      expect(count).toBe(3)
     }).then(resolve, reject);
   });
 
@@ -464,11 +454,7 @@ describe('[queries] errors', () => {
                   .catch(noop);
                 break;
               case 1:
-                if (IS_REACT_18) {
-                  expect(props.data!.loading).toBeTruthy();
-                } else {
-                  expect(props.data!.loading).toBeTruthy();
-                }
+                expect(props.data!.loading).toBeTruthy();
                 break;
               case 2:
                 expect(props.data!.loading).toBeFalsy();
@@ -511,11 +497,7 @@ describe('[queries] errors', () => {
     );
 
     waitFor(() => {
-      if (IS_REACT_18) {
-        expect(count).toBe(5)
-      } else {
-        expect(count).toBe(5)
-      }
+      expect(count).toBe(5)
     }).then(resolve, reject);
   });
 
@@ -636,9 +618,7 @@ describe('[queries] errors', () => {
     );
 
     waitFor(() => {
-      if (!IS_REACT_18) {
-        expect(done).toBeTruthy()
-      }
+      expect(done).toBeTruthy()
     }).then(resolve, reject);
   });
 

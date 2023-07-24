@@ -17,8 +17,6 @@ import {
 import { Query } from '../../Query';
 import { Mutation } from '../../Mutation';
 
-const IS_REACT_18 = React.version.startsWith('18');
-
 const mutation = gql`
   mutation createTodo($text: String!) {
     createTodo {
@@ -1089,11 +1087,8 @@ describe('General Mutation testing', () => {
       if (testFailures.length > 0) {
         throw testFailures[0];
       }
-      expect(count).toEqual(IS_REACT_18 ? 7 : 7);
+      expect(count).toEqual(7);
     });
-    if (testFailures.length > 0) {
-      throw testFailures[0];
-    }
   });
 
   it('allows refetchQueries to be passed to the mutate function', () => new Promise((resolve, reject) => {

@@ -484,10 +484,12 @@ describe('should update', () => {
 
     link.simulateResult(results[0]);
 
-    await waitFor(() => expect(count).toBe(5));
-    if (testFailures.length > 0) {
-      throw testFailures[0];
-    }
+    await waitFor(() => {
+      if (testFailures.length > 0) {
+        throw testFailures[0];
+      }
+      expect(count).toBe(5);
+    });
   });
 
   itAsync('if the query changes', (resolve, reject) => {

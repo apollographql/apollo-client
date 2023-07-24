@@ -77,8 +77,9 @@
       "React": {
         "Hooks": "/api/react/hooks",
         "Hooks (experimental)": "/api/react/hooks-experimental",
-        "Testing": "/api/react/testing",
         "SSR": "/api/react/ssr",
+        "Suspense": "/api/react/suspense",
+        "Testing": "/api/react/testing",
         "Components (deprecated)": "/api/react/components",
         "HOC (deprecated)": "/api/react/hoc"
       },

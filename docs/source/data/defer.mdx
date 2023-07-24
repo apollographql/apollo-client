@@ -41,7 +41,7 @@ Using this syntax, _if the queried server supports `@defer`,_ our client can rec
 
 Let's look at an example in React. Here's we can assume `GET_PERSON` is the above query, `PersonQuery`, with a deferred list of friends' `id`s:
 
-```tsx title="index.js"
+```jsx title="app.jsx"
 import { gql, useQuery } from "@apollo/client";
 
 function App() {

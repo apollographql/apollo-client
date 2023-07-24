@@ -101,7 +101,7 @@ Apollo Client supports the following error policies for an operation:
 
 Specify an error policy in the options object you provide your operation hook (such as `useQuery`), like so:
 
-```tsx {9}
+```jsx {9}
 const MY_QUERY = gql`
   query WillFail {
     badField # This field's resolver produces an error
@@ -143,7 +143,7 @@ The example below passes the `ApolloClient` constructor a link chain with two li
 
 <ExpansionPanel title="Click to expand example">
 
-```tsx
+```jsx
 import { ApolloClient, HttpLink, InMemoryCache, from } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
 
@@ -158,7 +158,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 });
 
 const httpLink = new HttpLink({ uri: 'http://localhost:4000/graphql' })
-  
+
 const client = new ApolloClient({
   cache: new InMemoryCache(),
   link: from([errorLink, httpLink]),

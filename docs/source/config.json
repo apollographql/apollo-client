@@ -46,7 +46,8 @@
       "Developer tools": "/development-testing/developer-tooling",
       "Using TypeScript": "/development-testing/static-typing",
       "Testing React components": "/development-testing/testing",
-      "Mocking schema capabilities": "/development-testing/client-schema-mocking"
+      "Mocking schema capabilities": "/development-testing/client-schema-mocking",
+      "Reducing bundle size": "/development-testing/reducing-bundle-size"
     },
     "Performance": {
       "Improving performance": "/performance/performance",

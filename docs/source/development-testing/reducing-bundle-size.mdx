@@ -1,0 +1,183 @@
+---
+title: Reducing bundle size
+description: Squeeze those last few bytes out of your production build
+---
+
+## Inlining `globalThis.__DEV__`
+
+Per default, Apollo Client is in "debugging mode". That means few additional checks are made, and a few extra warnings will be shown in the browser console.
+You can disable that by setting `globalThis.__DEV__` to `false`.
+Doing so will turn off those checks, but they will still end up in your production bundle - you have to tell your bundler to eliminate those checks at build time!
+
+You can expect this to result in a reduction of 1-3kb in your production bundle.
+
+### Bundler-specific configuration
+
+Here are some suggestions on configuring your bundler to remove `globalThis.__DEV__` on build time.
+
+#### Vite
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js title="vite.config.js"
+export default defineConfig({
+  // ...
+  define: {
+    'globalThis.__DEV__': JSON.stringify(false),
+  },
+});
+```
+
+</ExpansionPanel>
+
+#### Next.js
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js title="next.config.js"
+// ...
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  webpack(config, { webpack }) {
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        'globalThis.__DEV__': false,
+      })
+    );
+    return config;
+  },
+};
+
+module.exports = nextConfig;
+```
+
+</ExpansionPanel>
+
+#### create-react-app
+
+With `create-react-app`, you will need to use a third-party package like [`craco`](https://craco.js.org/) to modify the bundler configuration.
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js title="craco.config.js"
+const webpack = require('webpack');
+module.exports = {
+  webpack: {
+    plugins: [
+      new webpack.DefinePlugin({
+        'globalThis.__DEV__': false,
+      }),
+    ],
+  },
+};
+```
+
+</ExpansionPanel>
+
+#### esbuild
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js
+{
+  "define": {
+    "globalThis.__DEV__": "false"
+  }
+}
+```
+
+</ExpansionPanel>
+
+#### Webpack
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js
+config.plugins.push(
+  new webpack.DefinePlugin({
+    'globalThis.__DEV__': false,
+  })
+);
+```
+
+</ExpansionPanel>
+
+#### Rollup
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js
+export default [
+  {
+    // ... input, output, etc.
+    plugins: [
+      minify({
+        mangle: {
+          toplevel: true,
+        },
+        compress: {
+          toplevel: true,
+          global_defs: {
+            '@globalThis.__DEV__': 'false',
+          },
+        },
+      }),
+    ],
+  },
+];
+```
+
+</ExpansionPanel>
+
+#### SWC
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js title=".swcrc"
+{
+  "jsc": {
+    "transform": {
+      "optimizer": {
+        "globals": {
+          "vars": {
+            "globalThis.__DEV__": "false"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+</ExpansionPanel>
+
+### FAQ: Why do we use `globalThis.__DEV__` instead of `process.env.NODE_ENV`?
+
+We use the `__DEV__` variable instead of `process.env.NODE_ENV`, because the latter is not available in non-node environments: If you are using Apollo Client directly from a CDN with an ESM import, if we accessed `process` you would experience a crash.
+
+It's also impossible for us to use a guard statement like `typeof process !== "undefined" && process.env.NODE_ENV !== 'production'`, as some bundlers like `esbuild` cannot replace a statement like `typeof process` at build time - that code could never be removed at build time in those bundlers.
+
+In contrast, checking for `globalThis.__DEV__` does not crash the browser and can be eliminated by every bundler.
+
+## Importing Apollo Client
+
+You can use multiple styles of importing from Apollo Client - depending on your bundler's capabilities and settings, and it can make quite a difference.
+
+### Main Entrypoint Imports vs. Deep Entrypoint Imports
+
+We offer these two styles of imports:
+
+```js
+// "main entrypoint import" style
+import { ApolloClient, InMemoryCache, useQuery } from '@apollo/client';
+
+// "deep entrypoint import" style
+import { ApolloClient, InMemoryCache } from '@apollo/client/core';
+import { useQuery } from '@apollo/client/react/hooks';
+```
+
+With many modern bundlers, it should not matter which of these you choose.<br />
+But it is important to keep in mind that bundlers are complex, and it _might_ make a difference - especially if your bundler picks up the CommonJS artifacts instead of ESM.<br />
+Every bundling setup is different, and we cannot give a guarantee what will result in the smallest bundle size - we recommend that you try out both of these in a small setup to decide which results in the best results in your environment.
+
+Note that some entry points are not part of the "main" entrypoint `'@apollo/client'`. Those can only be imported directly, e.g. from `'@apollo/client/link/batch'`. It's perfectly fine to use these, even if you have decided to stick with the "main" entrypoint strategy where possible.

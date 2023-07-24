@@ -415,7 +415,7 @@ itAsync('renders an error', (resolve, reject) => {
 });
 
 describe('should update', () => {
-  itAsync('if the client changes', (resolve, reject) => {
+  it('if the client changes', async () => {
     const link2 = new MockSubscriptionLink();
     const client2 = new ApolloClient({
       link: link2,
@@ -423,6 +423,7 @@ describe('should update', () => {
     });
 
     let count = 0;
+    let testFailures: any[] = [];
 
     class Component extends React.Component {
       state = {
@@ -436,7 +437,7 @@ describe('should update', () => {
               {(result: any) => {
                 const { loading, data } = result;
                 try {
-                  switch (count) {
+                  switch (count++) {
                     case 0:
                       expect(loading).toBeTruthy();
                       expect(data).toBeUndefined();
@@ -465,12 +466,12 @@ describe('should update', () => {
                       expect(loading).toBeFalsy();
                       expect(data).toEqual(results[1].result.data);
                       break;
+                    default:
+                      throw new Error("too many rerenders");
                   }
                 } catch (error) {
-                  reject(error);
+                  testFailures.push(error);
                 }
-
-                count++;
                 return null;
               }}
             </Subscription>
@@ -483,7 +484,10 @@ describe('should update', () => {
 
     link.simulateResult(results[0]);
 
-    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
+    await waitFor(() => expect(count).toBe(5));
+    if (testFailures.length > 0) {
+      throw testFailures[0];
+    }
   });
 
   itAsync('if the query changes', (resolve, reject) => {

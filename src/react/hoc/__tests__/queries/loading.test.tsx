@@ -301,8 +301,8 @@ describe('[queries] loading', () => {
               break;
             case 1:
               if (IS_REACT_18) {
-                expect(data!.loading).toBeFalsy();
-                expect(data!.networkStatus).toBe(NetworkStatus.ready);
+                expect(data!.loading).toBeTruthy();
+                expect(data!.networkStatus).toBe(NetworkStatus.refetch);
               } else {
                 expect(data!.loading).toBeTruthy();
                 expect(data!.networkStatus).toBe(NetworkStatus.refetch);
@@ -333,7 +333,7 @@ describe('[queries] loading', () => {
 
     waitFor(() => {
       if (IS_REACT_18) {
-        expect(count).toBe(2)
+        expect(count).toBe(3)
       } else {
         expect(count).toBe(3)
       }

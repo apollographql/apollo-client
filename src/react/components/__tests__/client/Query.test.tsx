@@ -294,7 +294,7 @@ describe('Query component', () => {
               if (count === 3) {
                 // second data
                 if (IS_REACT_18) {
-                  expect(data).toEqual(data3);
+                  expect(data).toEqual(data2);
                 } else {
                   expect(data).toEqual(data2);
                 }
@@ -339,7 +339,7 @@ describe('Query component', () => {
 
       waitFor(() => {
         if (IS_REACT_18) {
-          expect(count).toBe(4);
+          expect(count).toBe(6);
         } else {
           expect(count).toBe(6);
         }
@@ -689,7 +689,7 @@ describe('Query component', () => {
               }
               if (count === 2) {
                 if (IS_REACT_18) {
-                  expect(result.loading).toBeFalsy();
+                  expect(result.loading).toBeTruthy();
                 } else {
                   expect(result.loading).toBeTruthy();
                 }
@@ -715,7 +715,7 @@ describe('Query component', () => {
 
       waitFor(() => {
         if (IS_REACT_18) {
-          expect(count).toBe(3)
+          expect(count).toBe(4)
         } else {
           expect(count).toBe(4)
         }
@@ -1379,7 +1379,7 @@ describe('Query component', () => {
                     case 3:
                       // Second response loading
                       if (IS_REACT_18) {
-                        expect(props.loading).toBe(false);
+                        expect(props.loading).toBe(true);
                       } else {
                         expect(props.loading).toBe(true);
                       }
@@ -1417,7 +1417,7 @@ describe('Query component', () => {
 
       waitFor(() => {
         if (IS_REACT_18) {
-          expect(count).toBe(4)
+          expect(count).toBe(7)
         } else {
           expect(count).toBe(7)
         }
@@ -1502,6 +1502,7 @@ describe('Query component', () => {
     });
 
     let count = 0;
+    let testFailures: any[] = [];
     const noop = () => null;
 
     const AllPeopleQuery2 = Query;
@@ -1531,7 +1532,7 @@ describe('Query component', () => {
                 case 2:
                   // Waiting for the second result to load
                   if (IS_REACT_18) {
-                    expect(result.loading).toBe(false);
+                    expect(result.loading).toBe(true);
                   } else {
                     expect(result.loading).toBe(true);
                   }
@@ -1561,7 +1562,10 @@ describe('Query component', () => {
                   throw new Error('Unexpected fall through');
               }
             } catch (e) {
-              fail(e);
+              // if we throw the error inside the component,
+              // we will get more rerenders in the test, but the `expect` error
+              // might not propagate anyways
+              testFailures.push(e);
             }
             return null;
           }}
@@ -1577,11 +1581,14 @@ describe('Query component', () => {
 
     await waitFor(() => {
       if (IS_REACT_18) {
-        expect(count).toBe(3)
+        expect(count).toBe(6)
       } else {
         expect(count).toBe(6)
       }
     });
+    if (testFailures.length > 0) {
+      throw testFailures[0];
+    }
   });
 
   itAsync(

@@ -978,7 +978,7 @@ describe('General Mutation testing', () => {
     );
   });
 
-  it('allows a refetchQueries prop as string and variables have updated', async () => new Promise((resolve, reject) => {
+  it('allows a refetchQueries prop as string and variables have updated', async () => {
     const query = gql`
       query people($first: Int) {
         allPeople(first: $first) {
@@ -1026,6 +1026,7 @@ describe('General Mutation testing', () => {
     const refetchQueries = ['people'];
 
     let count = 0;
+    let testFailures: any[] = [];
 
     const Component: React.FC<PropsWithChildren<PropsWithChildren<any>>> = props => {
       const [variables, setVariables] = useState(props.variables);
@@ -1055,19 +1056,20 @@ describe('General Mutation testing', () => {
                     // mutation loading
                     expect(resultMutation.loading).toBe(true);
                   } else if (count === 5) {
-                    // mutation loaded
-                    expect(resultMutation.loading).toBe(false);
+                    // query refetched or mutation loaded
+                    // or both finished batched together 
+                    // hard to make assumptions here
                   } else if (count === 6) {
-                    // query refetched
+                    // both loaded
                     expect(resultQuery.loading).toBe(false);
                     expect(resultMutation.loading).toBe(false);
                     expect(resultQuery.data).toEqual(peopleData3);
                   } else {
-                    reject(`Too many renders (${count})`);
+                    throw new Error(`Too many renders (${count})`);
                   }
                   count++;
                 } catch (err) {
-                  reject(err);
+                  testFailures.push(err);
                 }
                 return null;
               }}
@@ -1083,10 +1085,16 @@ describe('General Mutation testing', () => {
       </MockedProvider>
     );
 
-    waitFor(() => {
-      expect(count).toEqual(IS_REACT_18 ? 6 : 7);
-    }).then(resolve, reject);
-  }));
+    await waitFor(() => {
+      if (testFailures.length > 0) {
+        throw testFailures[0];
+      }
+      expect(count).toEqual(IS_REACT_18 ? 7 : 7);
+    });
+    if (testFailures.length > 0) {
+      throw testFailures[0];
+    }
+  });
 
   it('allows refetchQueries to be passed to the mutate function', () => new Promise((resolve, reject) => {
     const query = gql`

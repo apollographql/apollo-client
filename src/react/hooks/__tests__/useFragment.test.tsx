@@ -1083,8 +1083,8 @@ describe("useFragment", () => {
       });
     });
 
+    await waitFor(() => void expect(renderResult.current.data).toEqual(data125));
     expect(renderResult.current.complete).toBe(false);
-    expect(renderResult.current.data).toEqual(data125);
     expect(renderResult.current.missing).toEqual({
       list: {
         // Even though Query.list is actually an array in the data, data paths
@@ -1118,8 +1118,8 @@ describe("useFragment", () => {
       });
     });
 
+    await waitFor(() => void expect(renderResult.current.data).toEqual(data182WithText));
     expect(renderResult.current.complete).toBe(true);
-    expect(renderResult.current.data).toEqual(data182WithText);
     expect(renderResult.current.missing).toBeUndefined();
 
     checkHistory(3);
@@ -1143,13 +1143,13 @@ describe("useFragment", () => {
       },
     }));
 
-    expect(renderResult.current.complete).toBe(false);
-    expect(renderResult.current.data).toEqual({
+    await waitFor(() => void expect(renderResult.current.data).toEqual({
       list: [
         { __typename: "Item", id: 1, text: "oyez1" },
         { __typename: "Item", id: 2 },
       ],
-    });
+    }));
+    expect(renderResult.current.complete).toBe(false);
     expect(renderResult.current.missing).toEqual({
       // TODO Figure out why Item:8 is not represented here. Likely because of
       // auto-filtering of dangling references from arrays, but that should

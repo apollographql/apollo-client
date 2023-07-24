@@ -221,7 +221,7 @@ describe('graphql(mutation) query integration', () => {
 
     waitFor(() => {
       if (IS_REACT_18) {
-        expect(renderCount).toBe(3);
+        expect(renderCount).toBe(2);
       } else {
         expect(renderCount).toBe(2);
       }
@@ -326,7 +326,7 @@ describe('graphql(mutation) query integration', () => {
         render() {
           if (count === 1) {
             if (IS_REACT_18) {
-              expect(this.props.data!.mini).toEqual(mutationData.mini);
+              expect(this.props.data!.mini).toEqual(queryData.mini);
             } else {
               expect(this.props.data!.mini).toEqual(queryData.mini);
             }
@@ -355,7 +355,7 @@ describe('graphql(mutation) query integration', () => {
 
     waitFor(() => {
       if (IS_REACT_18) {
-        expect(count).toBe(2);
+        expect(count).toBe(3);
       } else {
         expect(count).toBe(3);
       }

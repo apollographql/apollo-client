@@ -377,7 +377,7 @@ describe('[queries] errors', () => {
                 break;
               case 1:
                 if (IS_REACT_18) {
-                  expect(props.data!.loading).toBeFalsy();
+                  expect(props.data!.loading).toBeTruthy();
                 } else {
                   expect(props.data!.loading).toBeTruthy();
                 }
@@ -414,7 +414,7 @@ describe('[queries] errors', () => {
 
     waitFor(() => {
       if (IS_REACT_18) {
-        expect(count).toBe(2);
+        expect(count).toBe(3);
       } else {
         expect(count).toBe(3)
       }
@@ -465,7 +465,7 @@ describe('[queries] errors', () => {
                 break;
               case 1:
                 if (IS_REACT_18) {
-                  expect(props.data!.loading).toBeFalsy();
+                  expect(props.data!.loading).toBeTruthy();
                 } else {
                   expect(props.data!.loading).toBeTruthy();
                 }
@@ -512,7 +512,7 @@ describe('[queries] errors', () => {
 
     waitFor(() => {
       if (IS_REACT_18) {
-        expect(count).toBe(2)
+        expect(count).toBe(5)
       } else {
         expect(count).toBe(5)
       }

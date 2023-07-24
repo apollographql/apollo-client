@@ -68,7 +68,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
         if (!execOptionsRef.current) {
           execOptionsRef.current = Object.create(null);
           // Only the first time populating execOptionsRef.current matters here.
-          internalState.forceUpdate();
+          internalState.forceUpdateState();
         }
         return method.apply(this, arguments);
       };

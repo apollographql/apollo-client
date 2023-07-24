@@ -69,10 +69,7 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   // setTick function. Updating this state by calling state.forceUpdate is the
   // only way we trigger React component updates (no other useState calls within
   // the InternalState class).
-  const [_tick, setTick] = React.useState(0);
-  state.forceUpdate = () => {
-    setTick(tick => tick + 1);
-  };
+  state.forceUpdateState = React.useReducer(tick => tick + 1, 0)[1];
 
   return state;
 }
@@ -94,10 +91,19 @@ class InternalState<TData, TVariables extends OperationVariables> {
     }
   }
 
-  forceUpdate() {
+  /**
+   * Forces an update using local component state.
+   * As this is not batched with `useSyncExternalStore` updates,
+   * this is only used as a fallback if the `useSyncExternalStore` "force update"
+   * method is not registered at the moment.
+   * See https://github.com/facebook/react/issues/25191
+   *  */
+  forceUpdateState() {
     // Replaced (in useInternalState) with a method that triggers an update.
     invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
+
+  forceUpdate = () => this.forceUpdateState();
 
   executeQuery(options: QueryHookOptions<TData, TVariables> & {
     query?: DocumentNode;
@@ -165,6 +171,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
           return () => {};
         }
 
+        this.forceUpdate = handleStoreChange;
+
         const onNext = () => {
           const previousResult = this.result;
           // We use `getCurrentResult()` instead of the onNext argument because
@@ -181,7 +189,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
             return;
           }
 
-          this.setResult(result, handleStoreChange);
+          this.setResult(result);
         };
 
         const onError = (error: Error) => {
@@ -217,7 +225,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
               error: error as ApolloError,
               loading: false,
               networkStatus: NetworkStatus.error,
-            }, handleStoreChange);
+            });
           }
         };
 
@@ -227,7 +235,10 @@ class InternalState<TData, TVariables extends OperationVariables> {
         // This way, an existing subscription can be reused without an additional
         // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
         // happen in very fast succession.
-        return () => setTimeout(() => subscription.unsubscribe());
+        return () => {
+          setTimeout(() => subscription.unsubscribe());
+          this.forceUpdate = () => this.forceUpdateState();
+        };
       }, [
         // We memoize the subscribe function using useCallback and the following
         // dependency keys, because the subscribe function reference is all that
@@ -495,15 +506,16 @@ class InternalState<TData, TVariables extends OperationVariables> {
   private result: undefined | ApolloQueryResult<TData>;
   private previousData: undefined | TData;
 
-  private setResult(nextResult: ApolloQueryResult<TData>, forceUpdate: () => void) {
+  private setResult(nextResult: ApolloQueryResult<TData>) {
     const previousResult = this.result;
+    //console.dir({equal: equal(previousResult, nextResult), previousResult, nextResult}, {maxDepth: 3})
     if (previousResult && previousResult.data) {
       this.previousData = previousResult.data;
     }
     this.result = nextResult;
     // Calling state.setResult always triggers an update, though some call sites
     // perform additional equality checks before committing to an update.
-    forceUpdate();
+    this.forceUpdate();
     this.handleErrorOrCompleted(nextResult, previousResult);
   }
 

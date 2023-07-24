@@ -692,8 +692,8 @@ describe('[queries] skip', () => {
               case 6:
                 expect(this.props.skip).toBe(false);
                 if (IS_REACT_18) {
-                  expect(this.props.data!.loading).toBe(false);
-                  expect(this.props.data.allPeople).toEqual(finalData.allPeople);
+                  expect(this.props.data!.loading).toBe(true);
+                  expect(this.props.data.allPeople).toEqual(nextData.allPeople);
                 } else {
                   expect(ranQuery).toBe(3);
                   expect(this.props.data.allPeople).toEqual(nextData.allPeople);
@@ -739,7 +739,7 @@ describe('[queries] skip', () => {
 
     waitFor(() => {
       if (IS_REACT_18) {
-        expect(count).toEqual(6)
+        expect(count).toEqual(7)
       } else {
         expect(count).toEqual(7)
       }

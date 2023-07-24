@@ -571,6 +571,7 @@ describe('[queries] lifecycle', () => {
     let switchClient: (client: ApolloClient<any>) => void;
     let refetchQuery: () => void;
     let count = 0;
+    let testFailures: any[] = [];
 
     const Query = graphql<{}, Data>(query, {
       options: { notifyOnNetworkStatusChange: true }
@@ -603,7 +604,7 @@ describe('[queries] lifecycle', () => {
                 break;
               case 3:
                 if (IS_REACT_18) {
-                  expect({ loading }).toEqual({ loading: false });
+                  expect({ loading }).toEqual({ loading: true });
                 } else {
                   expect({ loading }).toEqual({ loading: true });
                 }
@@ -702,7 +703,7 @@ describe('[queries] lifecycle', () => {
                 fail(`Unexpectedly many renders (${count})`);
             }
           } catch (err) {
-            fail(err);
+            testFailures.push(err);
           }
 
           return null;
@@ -734,11 +735,14 @@ describe('[queries] lifecycle', () => {
 
     await waitFor(() => {
       if (IS_REACT_18) {
-        expect(count).toBe(3)
+        expect(count).toBe(12)
       } else {
         expect(count).toBe(12)
       }
     });
+    if (testFailures.length > 0) {
+      throw testFailures[0];
+    }
   });
 
   it('handles synchronous racecondition with prefilled data from the server', async () => {

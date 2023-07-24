@@ -2,4 +2,4 @@
 '@apollo/client': patch
 ---
 
-This needs a changeset for a PR release
+Ensures that `useQuery` triggers rerenders faster or at the same time as `useFragment`.

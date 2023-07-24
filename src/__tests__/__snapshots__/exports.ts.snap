@@ -52,6 +52,7 @@ Array [
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
+  "skipToken",
   "split",
   "throwServerError",
   "toPromise",
@@ -270,6 +271,7 @@ Array [
   "operationName",
   "parser",
   "resetApolloContext",
+  "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
   "useFragment",
@@ -312,6 +314,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
 Array [
+  "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
   "useFragment",

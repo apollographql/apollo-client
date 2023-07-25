@@ -48,7 +48,7 @@ Running the built-in transforms before your custom transform allows your transfo
 
 Running built-in transforms twice is a convenient capability because it means that you don't have to remember to include the `__typename` field for any added selection sets. Nor do you need to look up fragment definitions in the fragment registry for fragment selections added to the GraphQL document.
 
-## Writing your own document transform
+## Write your own document transform
 
 As an example, let's write a document transform that ensures an `id` field is selected anytime `currentUser` is queried. We will use several helper functions and utilities provided by the [`graphql-js`](https://graphql.org/graphql-js/) library to help us traverse the AST and modify to the GraphQL document.
 
@@ -220,7 +220,7 @@ const documentTransform = new DocumentTransform((document) => {
 });
 ```
 
-### Checking our document transform
+### Check our document transform
 
 We can check our custom document transform by calling the `transformDocument` function and passing a GraphQL query to it. 
 

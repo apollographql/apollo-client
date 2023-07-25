@@ -40,7 +40,7 @@ Document transforms are run very early in the request's lifecycle. This makes it
 Apollo Client ships with built-in document transforms that are essential to the client's functionality.
 
 - The `__typename` field is added to every selection set in a query to identify the type of all objects returned by the GraphQL operation.
-- Queries that use fragments defined in the [fragment registry](/react/data/fragments#registering-named-fragments-using-createfragmentregistry) are added to the query before the request is sent over the network (requires Apollo Client 3.7 or later).
+- GraphQL documents that use fragments defined in the [fragment registry](/react/data/fragments#registering-named-fragments-using-createfragmentregistry) are added to the document before the request is sent over the network (requires Apollo Client 3.7 or later).
 
 It's crucial for custom document transforms to be able to interact with these built-in features. To make the most of your custom document transform, Apollo Client runs these built-in transforms twice: once before and once after your transform.
 

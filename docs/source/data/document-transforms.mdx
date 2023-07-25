@@ -33,7 +33,7 @@ const client = new ApolloClient({
 
 Apollo Client runs document transforms before every GraphQL request for all operations. This extends to any API that performs a network request, such as the [`useQuery`](/react/api/react/hooks#usequery) hook or the [`refetch`](/react/api/core/ObservableQuery#refetch) function on [`ObservableQuery`](/react/api/core/ObservableQuery).
 
-Document transforms are run very early in the request's lifecycle. This makes it possible for the cache to see modifications to GraphQL documents—an essential distinction from changes made to GraphQL documents in an [Apollo Link](/react/api/link/introduction). Because document transforms are run early in the request lifecycle, you can also add [`@client`](/react/data/directives#client) directives to fields in your document transform to turn the field into a [local-only field](/react/local-state/managing-state-with-field-policies).
+Document transforms are run very early in the request's lifecycle. This makes it possible for the cache to see modifications to GraphQL documents—an essential distinction from changes made to GraphQL documents in an [Apollo Link](/react/api/link/introduction). Because document transforms are run early in the request lifecycle, this makes it possible to add [`@client`](/react/data/directives#client) directives to fields in your document transform to turn the field into a [local-only field](/react/local-state/managing-state-with-field-policies), or to add fragment selections for fragments defined in the [fragment registry](/react/data/fragments#registering-named-fragments-using-createfragmentregistry).
 
 ### Interacting with built-in transforms
 

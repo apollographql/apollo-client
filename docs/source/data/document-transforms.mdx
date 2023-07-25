@@ -515,9 +515,9 @@ const documentTransform =
 
 [GraphQL Code Generator](https://the-guild.dev/graphql/codegen) is a popular tool that generates TypeScript types for your GraphQL documents. It does this by statically analyzing your code to search for GraphQL query strings.
 
-Document transforms present a challenge for this tool. Because these transforms are used at runtime, there's no way for static analysis to pick up the changes applied to GraphQL documents from our transform
+Document transforms present a challenge for this tool. Because document transforms are used at runtime, there's no way for static analysis to understand the changes applied to GraphQL documents from within document transforms.
 
-Thankfully, GraphQL Code Generator can run [document transforms](https://the-guild.dev/graphql/codegen/docs/advanced/document-transform) on the documents seen by this tool. We can hook into this ability by using our custom document transform inside the `transform` function passed to the GraphQL Code Generator config.
+Thankfully, GraphQL Code Generator provides a [document transform](https://the-guild.dev/graphql/codegen/docs/advanced/document-transform) feature that allows you to connect Apollo Client document transforms to GraphQL Code Generator. Use your document transform inside the `transform` function passed to the GraphQL Code Generator config:
 
 ```ts title="codegen.ts" {2,12-18}
 import type { CodegenConfig } from '@graphql-codegen/cli';

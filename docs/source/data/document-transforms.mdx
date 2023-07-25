@@ -425,7 +425,7 @@ transformedDocument === documentTransform.transformDocument(transformedDocument)
 
 ### Non-deterministic document transforms
 
-In rare circumstances, you may need to rely on a runtime condition from outside the transform function that changes the result of the document transform. Due to the automatic caching of the document transform, this becomes a problem when that runtime condition changes between calls to `transformDocument()` since your document transform will not know it needs to be rerun.
+In rare circumstances, you may need to rely on a runtime condition from outside the transform function that changes the result of the document transform. Due to the automatic caching of the document transform, this becomes a problem when that runtime condition changes between calls to your document transform.
 
 Instead of completely disabling the document cache in these situations, you can provide a custom cache key that will be used to cache the result of the document transform. This ensures your transform is only called as often as necessary while maintaining the flexibility of the runtime condition.
 

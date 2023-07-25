@@ -485,7 +485,7 @@ const documentTransform = new DocumentTransform(
 
 ### Caching within combined transforms
 
-When you combine multiple document transforms using the `concat()` function, each document transform's cache configuration is honored. This allows you to mix and match transforms that contain varying cache configurations and be confident the transformed GraphQL document is correctly transformed.
+When you combine multiple document transforms using the `concat()` function, each document transform's cache configuration is honored. This allows you to mix and match transforms that contain varying cache configurations and be confident the resulting GraphQL document is correctly transformed.
 
 ```ts
 const cachedTransform = new DocumentTransform(transform);

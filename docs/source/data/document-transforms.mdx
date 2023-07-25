@@ -98,7 +98,7 @@ const transformedDocument = visit(document, {
 > });
 > ```
 
-Our document transform only needs to modify a field named `currentUser`, so we need to check the field node's `name` to know if we are working with the `currentUser` field. Let's add a conditional check and return early if we encounter any field not named `currentUser`.
+Our document transform only needs to modify a field named `currentUser`, so we need to check the field node's `name` node to determine if we are working with the `currentUser` field. Let's add a conditional check and return early if we encounter any field not named `currentUser`.
 
 ```ts
 const transformedDocument = visit(document, {

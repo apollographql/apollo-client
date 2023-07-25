@@ -492,7 +492,7 @@ const varyingTransform = new DocumentTransform(transform, {
   getCacheKey: (document) => [document, window.navigator.onLine]
 });
 
-const condtionalCachedTransform = new DocumentTransform(transform, {
+const conditionalCachedTransform = new DocumentTransform(transform, {
   getCacheKey: (document) => {
     if (shouldCache(document)) {
       return [document]

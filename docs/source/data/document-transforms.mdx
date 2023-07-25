@@ -113,7 +113,7 @@ const transformedDocument = visit(document, {
 
 Now that we've determined we are working with the `currentUser` field, we need to figure out if our `id` field is already part of the `currentUser` field's selection set. By checking its selection set, we ensure we don't accidentally select the field twice in our query. 
 
-To do so, let's get the field node's `selectionSet` property and loop over its `selections` property to determine if it includes a field named `id`. It's important to note that a `selectionSet` may contain `selections` of both fields and fragments. Our implementation needs to perform a check against the selection's `kind` property to only check fields and not fragments. If we find a match on a field named `id`, we can stop the traversal of the AST. 
+To do so, let's get the field node's `selectionSet` property and loop over its `selections` property to determine if it includes a field named `id`. It's important to note that a `selectionSet` may contain `selections` of both fields and fragments. Our implementation only needs to perform checks against a field and not a fragment, so we check against the selection node's `kind` property to filter to field nodes. If we find a match on a field named `id`, we can stop traversal of the AST. 
 
 We will bring in both the [`Kind`](https://graphql.org/graphql-js/language/#kind) enum from `graphql-js`, which allows us to compare against the node's `kind` property, and the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinel, which directs the `visit` function to stop traversal of the AST.
 

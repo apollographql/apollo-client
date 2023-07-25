@@ -549,7 +549,7 @@ const config: CodegenConfig = {
 
 Document transforms are a powerful feature of Apollo Client. After reading this article, you may be rushing to find as many use cases for this feature as possible. While we encourage you to use this feature where it makes sense in your application, there can be a hidden cost to using it.
 
-Consider what happens when working in a large production application that spans many teams within your organization. Document transforms are typically defined in the code base far from where GraphQL queries are defined. Not all developers may be aware of their existence nor understand their impact on final GraphQL document.
+Consider what happens when working in a large production application that spans many teams within your organization. Document transforms are typically defined in the code base far from where GraphQL queries are defined. Not all developers may be aware of their existence nor understand their impact on the final GraphQL document.
 
 Because document transforms can make endless modifications to GraphQL documents before they are sent to the network, you may find yourself in a position where the result returned from the GraphQL operation does not match the original GraphQL document. This can get especially confusing when document transforms remove fields or make other destructive changes.
 

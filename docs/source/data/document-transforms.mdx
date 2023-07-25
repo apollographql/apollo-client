@@ -559,7 +559,7 @@ We encourage you to document your own document transforms to create a shared kno
 
 ### Can I use this to define my own custom directives?
 
-At a glance, document transforms seem like a great place to create and define custom directives since they can read and modify directives in the GraphQL document. Document transforms, however, don't have access to the cache, nor can they interact with the data returned from your GraphQL server. If your custom directive needs access to these features in Apollo Client, you will have difficulty finding ways to make this work.
+At a glance, document transforms seem like a great place to create and define custom directives since they can detect their presence in the GraphQL document. Document transforms, however, don't have access to the cache, nor can they interact with the data returned from your GraphQL server. If your custom directive needs access to these features in Apollo Client, you will have difficulty finding ways to make this work.
 
 **Custom directives are limited to use cases that depend on the GraphQL document itself.**
 

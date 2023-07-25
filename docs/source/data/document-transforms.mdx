@@ -1,6 +1,7 @@
 ---
 title: Document transforms
 description: Make custom modifications to your GraphQL documents
+minVersion: 3.8.0
 ---
 
 import DocumentTransformOptions from '../../shared/document-transform-options.mdx';
@@ -10,8 +11,6 @@ import DocumentTransformOptions from '../../shared/document-transform-options.md
 Have you noticed that Apollo Client modifies your queries—such as adding the `__typename` field—before sending those queries to your GraphQL server? It does this through **document transforms**, functions that modify GraphQL documents before query execution.
 
 Apollo Client provides an advanced capability that lets you define your own GraphQL document transforms to modify your GraphQL queries. This article explains how to make and use custom GraphQL document transforms.
-
-> This feature requires Apollo Client `v3.8` or greater.
 
 ## Overview
 

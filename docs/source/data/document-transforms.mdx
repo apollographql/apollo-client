@@ -44,7 +44,7 @@ Apollo Client ships with built-in document transforms that are essential to the 
 
 It's crucial for custom document transforms to interact with these built-in features. To make the most of your custom document transform, Apollo Client runs these built-in transforms twice: once before and once after your transform.
 
-Running the built-in transforms before your custom transform allows your transform to both see the `__typename` fields added to each selection set and modify fragment definitions defined in the fragment registry. Apollo Client understands that your transform may add new selection sets or add new fragment selections to the GraphQL document. Because of this, Apollo Client reruns the built-in transforms after your custom transforms.
+Running the built-in transforms before your custom transform allows your transform to both see the `__typename` fields added to each field's selection set and modify fragment definitions defined in the fragment registry. Apollo Client understands that your transform may add new selection sets or new fragment selections to the GraphQL document. Because of this, Apollo Client reruns the built-in transforms after your custom transforms.
 
 Running built-in transforms twice is a convenient capability because it means that you don't have to remember to include the `__typename` field for any added selection sets. Nor do you need to look up fragment definitions in the fragment registry for fragment selections added to the GraphQL document.
 

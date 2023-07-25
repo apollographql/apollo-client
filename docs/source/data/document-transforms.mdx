@@ -415,13 +415,15 @@ const documentTransform = DocumentTransform.split(
 
 You should strive to make your document transforms deterministic. This means the document transform should always output the same transformed GraphQL document when given the same input GraphQL document. The `DocumentTransform` class optimizes for this case by caching the transformed result for each input GraphQL document. This speeds up repeated calls to the document transform to avoid unnecessary work.
 
-The `DocumentTransform` class takes this further and records all transformed documents. That means that passing an _already_ transformed document to the `transformDocument()` function will immediately return the GraphQL document.
+The `DocumentTransform` class takes this further and records all transformed documents. That means that passing an _already_ transformed document to the document transform will immediately return the GraphQL document.
 
 ```ts
 const transformedDocument = documentTransform.transformDocument(document);
 
 transformedDocument === documentTransform.transformDocument(transformedDocument); // => true
 ```
+
+> In practice, this optimization is invisible to you. Apollo Client calls the `transformDocument` function on the document transform for you. This optimization primarily benefits the internals of Apollo Client where the transformed document is passed around several areas of the code base.
 
 ### Non-deterministic document transforms
 

@@ -574,7 +574,7 @@ const query = gql`
 `;
 
 const documentTransform = new DocumentTransform((document) => {
-  // convert `@feature` directives to `@include` directives
+  // convert `@feature` directives to `@include` directives and update variable definitions
 });
 
 documentTransform.transformDocument(query);

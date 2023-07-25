@@ -563,7 +563,7 @@ At a glance, document transforms seem like a great place to create and define cu
 
 **Custom directives are limited to use cases that depend on modifications to the GraphQL document itself.**
 
-Here is an example that uses a DSL-like directive that depends on a feature flagging system to conditionally include fields in queries. The document transform modifies `@feature` directives down to regular `@include` directives and includes a variable definition.
+Here is an example that uses a DSL-like directive that depends on a feature flagging system to conditionally include fields in queries. The document transform modifies a custom `@feature` directive to a regular `@include` directive and adds a variable definition to the query.
 
 ```ts
 const query = gql`

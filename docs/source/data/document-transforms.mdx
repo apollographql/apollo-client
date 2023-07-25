@@ -570,7 +570,6 @@ const query = gql`
   query MyQuery {
     myCustomField @feature(name: "custom", version: 2)  
   }
-}
 `;
 
 const documentTransform = new DocumentTransform((document) => {

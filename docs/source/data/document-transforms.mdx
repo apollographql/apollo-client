@@ -513,6 +513,8 @@ const documentTransform =
     .concat(nonCachedTransform);
 ```
 
+> We recommend adding non-cached document transforms to the end of the `concat()` chain. Document caching relies on referential equality to determine if the GraphQL document has been seen. If a non-cached document transform is defined before a cached transform, the cached transform will store new GraphQL documents created by the non-cached document transform each run. This could result in a memory leak.
+
 ## TypeScript and GraphQL Code Generator
 
 [GraphQL Code Generator](https://the-guild.dev/graphql/codegen) is a popular tool that generates TypeScript types for your GraphQL documents. It does this by statically analyzing your code to search for GraphQL query strings.

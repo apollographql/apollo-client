@@ -344,17 +344,17 @@ At times, you may need to conditionally run a document transform depending on th
 ```ts
 import { isSubscriptionOperation } from '@apollo/client/utilities';
 
-const documentTransform = new DocumentTransform(transform);
+const subscriptionTransform = new DocumentTransform(transform);
 
-const subscriptionTransforms = DocumentTransform.split(
+const documentTransform = DocumentTransform.split(
   (document) => isSubscriptionOperation(document),
-  documentTransform
+  subscriptionTransform
 );
 ```
 
 > This example uses the `isSubscriptionOperation` utility function added to Apollo Client in 3.8. Similarly, `isQueryOperation` and `isMutationOperation` utility functions are available for use.
 
-Here the `documentTransform` is only run for subscription operations. For all other operations, no modifications are made to the GraphQL document. Calling the `transformDocument()` function on `subscriptionTransforms` will first check to see if the `document` is a subscription operation, and if so, proceed to run the `documentTransform`. If not, the document transform is bypassed, and the GraphQL document is returned as-is.
+Here the `subscriptionTransform` is only run for subscription operations. For all other operations, no modifications are made to the GraphQL document. The resulting document transform will first check to see if the `document` is a subscription operation, and if so, proceed to run `subscriptionTransform`. If not, `subscriptionTransform` is bypassed, and the GraphQL document is returned as-is.
 
 The `split` function also allows you to pass a second document transform to its function, allowing you to replicate an if/else condition.
 

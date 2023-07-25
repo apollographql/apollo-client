@@ -275,6 +275,43 @@ console.log(print(modifiedQuery));
 // }
 ```
 
+### Query your server using the document transform
+
+The `transformDocument` function is useful to spot check your document transform. In practice, however, this will be done for you by Apollo Client.
+
+Let's add our document transform to Apollo Client and send a query to the server. The network request will contain the updated GraphQL query and the data returned from the server will include the `id` field.
+
+```ts
+import { ApolloClient, DocumentTransform } from '@apollo/client';
+
+const query = gql`
+  query TestQuery {
+    currentUser {
+      name
+    }
+  }
+`;
+
+const documentTransform = new DocumentTransform((document) => {
+  // ...
+});
+
+const client = new ApolloClient({
+  // ...
+  documentTransform
+});
+
+const result = await client.query({ query });
+
+console.log(result.data);
+// {
+//   currentUser: {
+//     id: "...",
+//     name: "..."
+//   }
+// }
+```
+
 ## Composing document transforms
 
 You may have noticed that the `ApolloClient` constructor only takes a single `documentTransform` option. As you add new capabilities to your document transforms, it may grow unwieldy. The `DocumentTransform` class makes it easy to split your transforms and compose multiple transforms into a single one.

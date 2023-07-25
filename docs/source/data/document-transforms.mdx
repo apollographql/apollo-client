@@ -77,7 +77,7 @@ const documentTransform = new DocumentTransform((document) => {
 });
 ```
 
-Visitors allow you to visit many types of nodes in the AST, such as directives, fragments, and fields. In our example, we only care about visiting field nodes since we want to  modify the `currentUser` field in our queries. To visit a field node, we need to define a `Field` callback function that will be called whenever the traversal encounters a field node.
+Visitors allow you to visit many types of nodes in the AST, such as directives, fragments, and fields. In our example, we only care about visiting field nodes since we want to modify the `currentUser` field in our queries. To visit a field node, we need to define a `Field` callback function that will be called whenever the traversal encounters a field node.
 
 ```ts {2-4}
 const transformedDocument = visit(document, {

@@ -14,7 +14,7 @@ Apollo Client provides an advanced capability that lets you define your own Grap
 
 ## Overview
 
-Document transforms make modifications to GraphQL documents. A GraphQL document is an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) that defines one or more operations and fragments, parsed from a raw GraphQL query string using the `gql` function. You can create your own document transforms using the `DocumentTransform` class and then pass the transform to the `ApolloClient` constructor.
+Document transforms allow you to programmatically modify GraphQL documents used to query data in your application. A GraphQL document is an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) that defines one or more operations and fragments, parsed from a raw GraphQL query string using the `gql` function. You can create your own document transforms using the `DocumentTransform` class. The created transform is then passed to the `ApolloClient` constructor.
 
 ```ts
 import { DocumentTransform } from '@apollo/client';

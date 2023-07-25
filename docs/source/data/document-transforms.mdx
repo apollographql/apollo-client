@@ -52,7 +52,7 @@ Running built-in transforms twice is a convenient capability because it means th
 
 As an example, let's write a document transform that ensures an `id` field is selected anytime `currentUser` is queried. We will use several helper functions and utilities provided by the [`graphql-js`](https://graphql.org/graphql-js/) library to help us traverse the AST and modify the GraphQL document.
 
-First, we must create a new document transform using the `DocumentTransform` class provided by Apollo Client. The `DocumentTransform` constructor takes a callback function that runs for each GraphQL document being transformed. The GraphQL `document` is passed as the only argument to this callback function.
+First, we must create a new document transform using the `DocumentTransform` class provided by Apollo Client. The `DocumentTransform` constructor takes a callback function that runs for each GraphQL document transformed. The GraphQL `document` is passed as the only argument to this callback function.
 
 ```ts
 import { DocumentTransform } from '@apollo/client';

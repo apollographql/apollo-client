@@ -406,3 +406,31 @@ export function Cart() {
 ```tsx
 function useReactiveVar<T>(rv: ReactiveVar<T>): T {}
 ```
+
+<MinVersion version="3.8.0">
+
+## `useFragment`
+
+</MinVersion>
+
+In version `3.7.0`, Apollo Client introduced preview support for the `useFragment_experimental` hook which represents a lightweight live binding into the Apollo Client Cache. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
+
+> **Note**: this hook is named `useFragment_experimental` in `3.7.x` and `3.8.0-alpha.x` releases. In `3.8.0-beta.0` and greater it no longer has an `_experimental` suffix in its named export.
+
+`useFragment` enables Apollo Client to broadcast very specific fragment results to individual components. Note that the `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
+
+### `useFragment` API
+
+Supported options and result fields for the `useFragment` hook are listed below.
+
+Most calls to `useFragment` can omit the majority of these options, but it's useful to know they exist.
+
+#### Options
+
+The `useFragment` hook accepts the following options:
+
+<UseFragmentOptions />
+
+#### Result
+
+<UseFragmentResult />

@@ -369,6 +369,68 @@ const cache = new InMemoryCache({
 });
 ```
 
+<MinVersion version="3.8.0">
+
 ## `useFragment`
 
-[See the API reference for more details.](../api/react/hooks-experimental)
+</MinVersion>
+
+In version `3.7.0`, Apollo Client introduced preview support for the `useFragment_experimental` hook which represents a lightweight live binding into the Apollo Client Cache. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
+
+> **Note**: this hook is named `useFragment_experimental` in `3.7.x` and `3.8.0-alpha.x` releases. In `3.8.0-beta.0` and greater it no longer has an `_experimental` suffix in its named export.
+
+### Using `useFragment`
+
+> A [GraphQL fragment](http://graphql.org/learn/queries/#fragments) defines a subset of fields on a GraphQL type that can be used to specify component-level data dependencies or allow re-use between multiple queries and mutations. [See the API reference.](../../data/fragments)
+
+Given the following fragment definition:
+
+```js
+const ItemFragment = gql`
+  fragment ItemFragment on Item {
+    text
+  }
+`;
+```
+
+We can first use the `useQuery` hook to retrieve a list of items with `id`s.
+
+```jsx
+const listQuery = gql`
+  query {
+    list {
+      id
+    }
+  }
+`;
+function List() {
+  const { loading, data } = useQuery(listQuery);
+  return (
+    <ol>
+      {data?.list.map(item => (
+        <Item key={item.id} id={item.id}/>
+      ))}
+    </ol>
+  );
+}
+```
+
+We can then use `useFragment` from within the `<Item>` component to create a live binding for each item by providing the `fragment` document, `fragmentName` and object reference via `from`.
+
+```jsx
+function Item(props: { id: number }) {
+  const { complete, data } = useFragment({
+    fragment: ItemFragment,
+    fragmentName: "ItemFragment",
+    from: {
+      __typename: "Item",
+      id: props.id,
+    },
+  });
+  return <li>{complete ? data!.text : "incomplete"}</li>;
+}
+```
+
+> `useFragment` can be used in combination with the `@nonreactive` directive in cases where list items should react to individual cache updates without rerendering the entire list. For more information, see the [`@nonreactive` docs](/react/data/directives#nonreactive).
+
+[See the API reference for more details.](../api/react/hooks#useFragment)

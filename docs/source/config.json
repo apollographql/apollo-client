@@ -18,6 +18,7 @@
       "Fragments": "/data/fragments",
       "Directives": "/data/directives",
       "Error handling": "/data/error-handling",
+      "Document transforms": "/data/document-transforms",
       "Best practices": "/data/operation-best-practices"
     },
     "Caching": {

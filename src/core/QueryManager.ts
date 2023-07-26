@@ -407,14 +407,13 @@ export class QueryManager<TStore> {
           optimistic: false,
           returnPartialData: true,
         });
-        let mergedData: TData | undefined;
+
         if (diff.result) {
-          mergedData = mergeIncrementalData(diff.result, result);
-        }
-        if (typeof mergedData !== 'undefined') {
+          const mergedData = mergeIncrementalData(diff.result, result);
+
           // cast the ExecutionPatchResult to FetchResult here since
           // ExecutionPatchResult never has `data` when returned from the server
-          (result as FetchResult).data = mergedData;
+          (result as FetchResult<TData>).data = mergedData;
           cacheWrites.push({
             result: mergedData,
             dataId: 'ROOT_MUTATION',

@@ -379,7 +379,7 @@ In version `3.7.0`, Apollo Client introduced preview support for the `useFragmen
 
 > **Note**: this hook is named `useFragment_experimental` in `3.7.x` and `3.8.0-alpha.x` releases. In `3.8.0-beta.0` and greater it no longer has an `_experimental` suffix in its named export.
 
-### Using `useFragment`
+### Example
 
 > A [GraphQL fragment](http://graphql.org/learn/queries/#fragments) defines a subset of fields on a GraphQL type that can be used to specify component-level data dependencies or allow re-use between multiple queries and mutations. [See the API reference.](../../data/fragments)
 

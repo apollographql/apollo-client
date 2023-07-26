@@ -162,3 +162,32 @@ const removeTypenameLink = removeTypenameFromVariables({
   }
 });
 ```
+
+## Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+###### `except`
+
+`KeepTypenameConfig`
+</td>
+<td>
+
+Determines which input types should retain `__typename`. This maps the input type to the config, which is either the `KEEP` sentinel or a nested config of fields.
+
+</td>
+</tr>
+
+</tbody>
+</table>
+

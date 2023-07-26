@@ -397,7 +397,7 @@ We can first use the `useQuery` hook to retrieve a list of items with `id`s as w
 
 ```jsx
 const listQuery = gql`
-  query ListQuery {
+  query GetItemList {
     list {
       id
       ...ItemFragment

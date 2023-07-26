@@ -407,7 +407,7 @@ export class QueryManager<TStore> {
           optimistic: false,
           returnPartialData: true,
         });
-        let mergedData;
+        let mergedData: TData | undefined;
         if (diff.result) {
           mergedData = mergeIncrementalData(diff.result, result);
         }

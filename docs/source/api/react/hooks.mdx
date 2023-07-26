@@ -9,6 +9,8 @@ import MutationOptions3 from '../../../shared/mutation-options.mdx';
 import MutationResult3 from '../../../shared/mutation-result.mdx';
 import SubscriptionOptions3 from '../../../shared/subscription-options.mdx';
 import SubscriptionResult3 from '../../../shared/subscription-result.mdx';
+import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
+import UseFragmentResult from '../../../shared/useFragment-result.mdx';
 
 ## Installation
 
@@ -419,18 +421,16 @@ In version `3.7.0`, Apollo Client introduced preview support for the `useFragmen
 
 `useFragment` enables Apollo Client to broadcast very specific fragment results to individual components. Note that the `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
 
-### `useFragment` API
+### Example
 
-Supported options and result fields for the `useFragment` hook are listed below.
+To view a `useFragment` example, see the [Fragments](../../data/fragments#useFragment) page.
 
-Most calls to `useFragment` can omit the majority of these options, but it's useful to know they exist.
-
-#### Options
+### `options`
 
 The `useFragment` hook accepts the following options:
 
 <UseFragmentOptions />
 
-#### Result
+### Result
 
 <UseFragmentResult />

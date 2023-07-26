@@ -61,5 +61,5 @@ export function mergeIncrementalData<TData>(
     mergedData = merger.merge(mergedData, data);
   });
 
-  return mergedData as TData;
+  return mergedData;
 }

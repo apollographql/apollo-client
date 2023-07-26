@@ -440,6 +440,48 @@ describe('useMutation Hook', () => {
         expect(fetchResult.errors[0].message).toEqual(CREATE_TODO_ERROR);
       });
 
+      it(`should call onError when errorPolicy is 'all'`, async () => {
+        const variables = {
+          description: 'Get milk!'
+        };
+
+        const mocks = [
+          {
+            request: {
+              query: CREATE_TODO_MUTATION,
+              variables
+            },
+            result: {
+              data: CREATE_TODO_RESULT,
+              errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            },
+          }
+        ];
+
+        const onError = jest.fn();
+
+        const { result } = renderHook(
+          () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: 'all', onError  }),
+          { wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>
+              {children}
+            </MockedProvider>
+          )},
+        );
+
+        const createTodo = result.current[0];
+
+        let fetchResult: any;
+        await act(async () => {
+          fetchResult = await createTodo({ variables });
+        });
+
+        expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
+        expect(fetchResult.errors[0].message).toEqual(CREATE_TODO_ERROR);
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
+      })
+
       it(`should ignore errors when errorPolicy is 'ignore'`, async () => {
         const errorMock = jest.spyOn(console, "error")
           .mockImplementation(() => {});

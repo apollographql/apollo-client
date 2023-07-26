@@ -433,4 +433,4 @@ function Item(props: { id: number }) {
 
 > `useFragment` can be used in combination with the `@nonreactive` directive in cases where list items should react to individual cache updates without rerendering the entire list. For more information, see the [`@nonreactive` docs](/react/data/directives#nonreactive).
 
-[See the API reference for more details.](../api/react/hooks#useFragment)
+[See the API reference for more details.](../api/react/hooks#usefragment)

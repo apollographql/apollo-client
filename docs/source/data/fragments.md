@@ -403,6 +403,7 @@ const listQuery = gql`
     }
   }
 `;
+
 function List() {
   const { loading, data } = useQuery(listQuery);
 

@@ -29,7 +29,6 @@ import {
   canUseWeakMap,
   Observable,
   asyncMap,
-  isNonEmptyArray,
   Concast,
   makeUniqueId,
   isDocumentNode,

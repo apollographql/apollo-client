@@ -1,6 +1,6 @@
-import { ApolloCache, ApolloClient } from '../../core';
-import { ApolloError } from '../../errors';
-import {
+import type { ApolloCache, ApolloClient } from '../../core/index.js';
+import type { ApolloError } from '../../errors/index.js';
+import type {
   ApolloQueryResult,
   OperationVariables,
   FetchMoreOptions,
@@ -8,13 +8,13 @@ import {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   DefaultContext,
-} from '../../core';
-import {
+} from '../../core/index.js';
+import type {
   MutationFunction,
   BaseQueryOptions,
   BaseMutationOptions,
   MutationResult
-} from '../types/types';
+} from '../types/types.js';
 
 export interface QueryControls<
   TData = any,

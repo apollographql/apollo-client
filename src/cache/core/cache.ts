@@ -1,17 +1,20 @@
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
 
-import {
+import type {
   StoreObject,
-  Reference,
+  Reference} from '../../utilities/index.js';
+import {
   getFragmentQueryDocument,
-} from '../../utilities';
-import { DataProxy } from './types/DataProxy';
-import { Cache } from './types/Cache';
+} from '../../utilities/index.js';
+import type { DataProxy } from './types/DataProxy.js';
+import type { Cache } from './types/Cache.js';
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
 export abstract class ApolloCache<TSerialized> implements DataProxy {
+  public readonly assumeImmutableResults: boolean = false;
+
   // required to implement
   // core API
   public abstract read<TData = any, TVariables = any>(
@@ -117,7 +120,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     return [];
   }
 
-  public modify(options: Cache.ModifyOptions): boolean {
+  public modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache.ModifyOptions<Entity>): boolean {
     return false;
   }
 

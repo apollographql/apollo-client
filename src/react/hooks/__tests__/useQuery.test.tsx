@@ -13,7 +13,7 @@ import {
   WatchQueryFetchPolicy,
 } from '../../../core';
 import { InMemoryCache } from '../../../cache';
-import { ApolloProvider, resetApolloContext } from '../../context';
+import { ApolloProvider } from '../../context';
 import { Observable, Reference, concatPagination } from '../../../utilities';
 import { ApolloLink } from '../../../link/core';
 import {
@@ -28,9 +28,6 @@ import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 
 describe('useQuery Hook', () => {
-  afterEach(() => {
-    resetApolloContext();
-  });
   describe('General use', () => {
     it('should handle a simple query', async () => {
       const query = gql`{ hello }`;
@@ -1710,15 +1707,18 @@ describe('useQuery Hook', () => {
       }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world 1" });
 
-      const requestCount = requestSpy.mock.calls.length;
-      expect(requestSpy).toHaveBeenCalledTimes(requestCount);
+      const requestSpyCallCount = requestSpy.mock.calls.length;
+      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
 
       unmount();
 
+      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
       await expect(waitFor(() => {
-        expect(requestSpy).toHaveBeenCalledTimes(requestCount + 1)
+        expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount + 1);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
+      expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+
       requestSpy.mockRestore();
     });
 
@@ -3872,9 +3872,12 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
 
+      expect(onCompleted).toHaveBeenCalledTimes(0)
+
       await expect(waitFor(() => {
-        expect(onCompleted).not.toHaveBeenCalledTimes(0);
+        expect(onCompleted).toHaveBeenCalledTimes(1);
       }, { interval: 1, timeout: 20 })).rejects.toThrow();
+
       expect(onCompleted).toHaveBeenCalledTimes(0);
     });
 
@@ -3922,7 +3925,7 @@ describe('useQuery Hook', () => {
       expect(onCompleted).toHaveBeenCalledTimes(1);
     });
 
-    it('onCompleted should work with polling', async () => {
+    it('onCompleted should not fire for polling queries without notifyOnNetworkStatusChange: true', async () => {
       const query = gql`{ hello }`;
       const mocks = [
         {
@@ -3944,6 +3947,61 @@ describe('useQuery Hook', () => {
       const { result } = renderHook(
         () => useQuery(query, {
           onCompleted,
+          pollInterval: 10,
+        }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+        },
+      );
+
+      expect(result.current.loading).toBe(true);
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: 'world 1' });
+      }, { interval: 1 });
+      expect(result.current.loading).toBe(false);
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: 'world 2' });
+      }, { interval: 1 });
+      expect(result.current.loading).toBe(false);
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: 'world 3' });
+      }, { interval: 1 });
+      expect(result.current.loading).toBe(false);
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+    });
+
+    it('onCompleted should fire when polling with notifyOnNetworkStatusChange: true', async () => {
+      const query = gql`{ hello }`;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: 'world 1' } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: 'world 2' } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: 'world 3' } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const onCompleted = jest.fn();
+      const { result } = renderHook(
+        () => useQuery(query, {
+          onCompleted,
+          notifyOnNetworkStatusChange: true,
           pollInterval: 10,
         }),
         {
@@ -4020,6 +4078,133 @@ describe('useQuery Hook', () => {
       await screen.findByText("onCompletedCalled: true");
       expect(errorSpy).not.toHaveBeenCalled();
       errorSpy.mockRestore();
+    });
+
+    it("onCompleted should not execute on cache writes after initial query execution", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "foo" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "bar" } },
+        },
+      ];
+      const link = new MockLink(mocks);
+      const cache = new InMemoryCache();
+      const onCompleted = jest.fn();
+
+      const ChildComponent: React.FC = () => {
+        const { data, client } = useQuery(query, { onCompleted });
+        function refetchQueries() {
+          client.refetchQueries({ include: 'active' })
+        }
+        function writeQuery() {
+          client.writeQuery({ query, data: { hello: 'baz'}})
+        }
+        return (
+          <div>
+            <span>Data: {data?.hello}</span>
+            <button onClick={() => refetchQueries()}>Refetch queries</button>
+            <button onClick={() => writeQuery()}>Update word</button>
+          </div>
+        );
+      };
+
+      const ParentComponent: React.FC = () => {
+        return (
+          <MockedProvider link={link} cache={cache}>
+            <div>
+              <ChildComponent />
+            </div>
+          </MockedProvider>
+        );
+      };
+
+      render(<ParentComponent />);
+
+      await screen.findByText("Data: foo");
+      await userEvent.click(screen.getByRole('button', { name: /refetch queries/i }));
+      expect(onCompleted).toBeCalledTimes(1);
+      await screen.findByText("Data: bar");
+      await userEvent.click(screen.getByRole('button', { name: /update word/i }));
+      expect(onCompleted).toBeCalledTimes(1);
+      await screen.findByText("Data: baz");
+      expect(onCompleted).toBeCalledTimes(1);
+    });
+
+    it("onCompleted should execute on cache writes after initial query execution with notifyOnNetworkStatusChange: true", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "foo" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "bar" } },
+        },
+      ];
+      const link = new MockLink(mocks);
+      const cache = new InMemoryCache();
+      const onCompleted = jest.fn();
+
+      const ChildComponent: React.FC = () => {
+        const { data, client } = useQuery(
+          query,
+          {
+            onCompleted,
+            notifyOnNetworkStatusChange: true
+          }
+        );
+        function refetchQueries() {
+          client.refetchQueries({ include: 'active' })
+        }
+        function writeQuery() {
+          client.writeQuery({ query, data: { hello: 'baz'}})
+        }
+        return (
+          <div>
+            <span>Data: {data?.hello}</span>
+            <button onClick={() => refetchQueries()}>Refetch queries</button>
+            <button onClick={() => writeQuery()}>Update word</button>
+          </div>
+        );
+      };
+
+      const ParentComponent: React.FC = () => {
+        return (
+          <MockedProvider link={link} cache={cache}>
+            <div>
+              <ChildComponent />
+            </div>
+          </MockedProvider>
+        );
+      };
+
+      render(<ParentComponent />);
+
+      await screen.findByText("Data: foo");
+      expect(onCompleted).toBeCalledTimes(1);
+      await userEvent.click(screen.getByRole('button', { name: /refetch queries/i }));
+      // onCompleted increments when refetch occurs since we're hitting the network...
+      expect(onCompleted).toBeCalledTimes(2);
+      await screen.findByText("Data: bar");
+      await userEvent.click(screen.getByRole('button', { name: /update word/i }));
+      // but not on direct cache write, since there's no network request to complete
+      expect(onCompleted).toBeCalledTimes(2);
+      await screen.findByText("Data: baz");
+      expect(onCompleted).toBeCalledTimes(2);
     });
   });
 
@@ -4829,15 +5014,15 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual(carData);
       expect(result.current.error).toBeUndefined();
 
-      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalled();
       expect(errorSpy).toHaveBeenLastCalledWith(
-        `Missing field 'vin' while writing result ${JSON.stringify({
+        `Missing field '%s' while writing result %o`, 'vin', {
           id: 1,
           make: "Audi",
           model: "RS8",
           vine: "DOLLADOLLABILL",
           __typename: "Car"
-        }, null, 2)}`
+        }
       );
       errorSpy.mockRestore();
     });
@@ -7089,3 +7274,19 @@ describe('useQuery Hook', () => {
     );
   });
 });
+
+describe.skip("Type Tests", () => {
+  test('NoInfer prevents adding arbitrary additional variables', () => {
+    const typedNode = {} as TypedDocumentNode<{ foo: string}, { bar: number }>
+    const { variables } = useQuery(typedNode, {
+      variables: {
+        bar: 4,
+        // @ts-expect-error
+        nonExistingVariable: "string"
+      }
+    });
+    variables?.bar
+    // @ts-expect-error
+    variables?.nonExistingVariable
+  })
+})

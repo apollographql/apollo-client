@@ -2,7 +2,6 @@
 // to avoid incurring an indirect dependency on ua-parser-js via fbjs.
 
 import React, { createFactory, Component } from "react";
-import '../../../../utilities/globals'; // For __DEV__
 
 const setStatic =
   (key: string, value: string) => (BaseComponent: React.ComponentClass) => {

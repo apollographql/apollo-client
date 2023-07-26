@@ -12,7 +12,7 @@ import {
   TypedDocumentNode 
 } from '../../../core';
 import { Observable } from '../../../utilities';
-import { ApolloProvider, resetApolloContext } from '../../../react';
+import { ApolloProvider } from '../../../react';
 import { 
   MockedProvider,
   mockSingleLink,
@@ -26,9 +26,6 @@ import { QueryResult } from '../../types/types';
 const IS_REACT_18 = React.version.startsWith("18");
 
 describe('useLazyQuery Hook', () => {
-  afterEach(() => {
-    resetApolloContext();
-  });
   const helloQuery: TypedDocumentNode<{
     hello: string;
   }> = gql`query { hello }`;
@@ -1559,3 +1556,19 @@ describe('useLazyQuery Hook', () => {
     });
   });
 });
+
+describe.skip("Type Tests", () => {
+  test('NoInfer prevents adding arbitrary additional variables', () => {
+    const typedNode = {} as TypedDocumentNode<{ foo: string}, { bar: number }>
+    const [_, { variables }] = useLazyQuery(typedNode, {
+      variables: {
+        bar: 4,
+        // @ts-expect-error
+        nonExistingVariable: "string"
+      }
+    });
+    variables?.bar
+    // @ts-expect-error
+    variables?.nonExistingVariable
+  })
+})

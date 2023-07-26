@@ -1,13 +1,13 @@
-import { invariant, InvariantError } from '../globals';
+import { invariant, newInvariantError } from '../globals/index.js';
 
-import {
+import type {
   DocumentNode,
   OperationDefinitionNode,
   FragmentDefinitionNode,
   ValueNode,
 } from 'graphql';
 
-import { valueToObjectRepresentation } from './storeUtils';
+import { valueToObjectRepresentation } from './storeUtils.js';
 
 type OperationDefinitionWithName = OperationDefinitionNode & {
   name: NonNullable<OperationDefinitionNode['name']>;
@@ -25,10 +25,9 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
     .filter(d => d.kind !== 'FragmentDefinition')
     .map(definition => {
       if (definition.kind !== 'OperationDefinition') {
-        throw new InvariantError(
-          `Schema type definitions not allowed in queries. Found: "${
-            definition.kind
-          }"`,
+        throw newInvariantError(
+          `Schema type definitions not allowed in queries. Found: "%s"`,
+          definition.kind
         );
       }
       return definition;
@@ -36,7 +35,8 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
 
   invariant(
     operations.length <= 1,
-    `Ambiguous GraphQL document: contains ${operations.length} operations`,
+    `Ambiguous GraphQL document: contains %s operations`,
+    operations.length
   );
 
   return doc;
@@ -142,7 +142,7 @@ export function getMainDefinition(
     return fragmentDefinition;
   }
 
-  throw new InvariantError(
+  throw newInvariantError(
     'Expected a parsed GraphQL query with a query, mutation, subscription, or a fragment.',
   );
 }

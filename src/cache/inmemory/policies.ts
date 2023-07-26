@@ -1,30 +1,31 @@
-import { invariant, InvariantError } from '../../utilities/globals';
+import { invariant, newInvariantError } from '../../utilities/globals/index.js';
 
-import {
+import type {
   InlineFragmentNode,
   FragmentDefinitionNode,
   SelectionSetNode,
   FieldNode,
 } from 'graphql';
 
-import {
+import type {
   FragmentMap,
-  storeKeyNameFromField,
   StoreValue,
   StoreObject,
+  Reference} from '../../utilities/index.js';
+import {
+  storeKeyNameFromField,
   argumentsObjectFromField,
-  Reference,
   isReference,
   getStoreKeyName,
   isNonNullObject,
   stringifyForDisplay,
-} from '../../utilities';
-import {
+} from '../../utilities/index.js';
+import type {
   IdGetter,
   MergeInfo,
   NormalizedCache,
   ReadMergeModifyContext,
-} from "./types";
+} from "./types.js";
 import {
   hasOwn,
   fieldNameFromStoreName,
@@ -33,24 +34,24 @@ import {
   TypeOrFieldNameRegExp,
   defaultDataIdFromObject,
   isArray,
-} from './helpers';
-import { cacheSlot } from './reactiveVars';
-import { InMemoryCache } from './inMemoryCache';
-import {
+} from './helpers.js';
+import { cacheSlot } from './reactiveVars.js';
+import type { InMemoryCache } from './inMemoryCache.js';
+import type {
   SafeReadonly,
   FieldSpecifier,
   ToReferenceFunction,
   ReadFieldFunction,
   ReadFieldOptions,
   CanReadFunction,
-} from '../core/types/common';
-import { WriteContext } from './writeToStore';
+} from '../core/types/common.js';
+import type { WriteContext } from './writeToStore.js';
 
 // Upgrade to a faster version of the default stable JSON.stringify function
 // used by getStoreKeyName. This function is used when computing storeFieldName
 // strings (when no keyArgs has been configured for a field).
-import { canonicalStringify } from './object-canon';
-import { keyArgsFnFromSpecifier, keyFieldsFnFromSpecifier } from './key-extractor';
+import { canonicalStringify } from './object-canon.js';
+import { keyArgsFnFromSpecifier, keyFieldsFnFromSpecifier } from './key-extractor.js';
 
 getStoreKeyName.setStringify(canonicalStringify);
 
@@ -512,7 +513,7 @@ export class Policies {
     const rootId = "ROOT_" + which.toUpperCase();
     const old = this.rootTypenamesById[rootId];
     if (typename !== old) {
-      invariant(!old || old === which, `Cannot change root ${which} __typename more than once`);
+      invariant(!old || old === which, `Cannot change root %s __typename more than once`, which);
       // First, delete any old __typename associated with this rootId from
       // rootIdsByTypename.
       if (old) delete this.rootIdsByTypename[old];
@@ -565,11 +566,33 @@ export class Policies {
       // and merge functions often need to cooperate, so changing only one
       // of them would be a recipe for inconsistency.
       //
-      // Once the TypePolicy for typename has been accessed, its
-      // properties can still be updated directly using addTypePolicies,
-      // but future changes to supertype policies will not be reflected in
-      // this policy, because this code runs at most once per typename.
-      const supertypes = this.supertypeMap.get(typename);
+      // Once the TypePolicy for typename has been accessed, its properties can
+      // still be updated directly using addTypePolicies, but future changes to
+      // inherited supertype policies will not be reflected in this subtype
+      // policy, because this code runs at most once per typename.
+      let supertypes = this.supertypeMap.get(typename);
+      if (!supertypes && this.fuzzySubtypes.size) {
+        // To make the inheritance logic work for unknown typename strings that
+        // may have fuzzy supertypes, we give this typename an empty supertype
+        // set and then populate it with any fuzzy supertypes that match.
+        supertypes = this.getSupertypeSet(typename, true)!;
+        // This only works for typenames that are directly matched by a fuzzy
+        // supertype. What if there is an intermediate chain of supertypes?
+        // While possible, that situation can only be solved effectively by
+        // specifying the intermediate relationships via possibleTypes, manually
+        // and in a non-fuzzy way.
+        this.fuzzySubtypes.forEach((regExp, fuzzy) => {
+          if (regExp.test(typename)) {
+            // The fuzzy parameter is just the original string version of regExp
+            // (not a valid __typename string), but we can look up the
+            // associated supertype(s) in this.supertypeMap.
+            const fuzzySupertypes = this.supertypeMap.get(fuzzy);
+            if (fuzzySupertypes) {
+              fuzzySupertypes.forEach(supertype => supertypes!.add(supertype));
+            }
+          }
+        });
+      }
       if (supertypes && supertypes.size) {
         supertypes.forEach(supertype => {
           const { fields, ...rest } = this.getTypePolicy(supertype);
@@ -664,7 +687,7 @@ export class Policies {
         if (supertypeSet.has(supertype)) {
           if (!typenameSupertypeSet.has(supertype)) {
             if (checkingFuzzySubtypes) {
-              invariant.warn(`Inferring subtype ${typename} of supertype ${supertype}`);
+              invariant.warn(`Inferring subtype %s of supertype %s`, typename, supertype);
             }
             // Record positive results for faster future lookup.
             // Unfortunately, we cannot safely cache negative results,
@@ -951,9 +974,7 @@ export function normalizeReadFieldOptions(
   }
 
   if (__DEV__ && options.from === void 0) {
-    invariant.warn(`Undefined 'from' passed to readField with arguments ${
-      stringifyForDisplay(Array.from(readFieldArgs))
-    }`);
+    invariant.warn(`Undefined 'from' passed to readField with arguments %s`, stringifyForDisplay(Array.from(readFieldArgs)));
   }
 
   if (void 0 === options.variables) {
@@ -968,7 +989,7 @@ function makeMergeObjectsFunction(
 ): MergeObjectsFunction {
   return function mergeObjects(existing, incoming) {
     if (isArray(existing) || isArray(incoming)) {
-      throw new InvariantError("Cannot automatically merge arrays");
+      throw newInvariantError("Cannot automatically merge arrays");
     }
 
     // These dynamic checks are necessary because the parameters of a

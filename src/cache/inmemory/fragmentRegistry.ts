@@ -1,14 +1,16 @@
-import {
+import type {
   DocumentNode,
   ASTNode,
   FragmentDefinitionNode,
-  FragmentSpreadNode,
+  FragmentSpreadNode} from "graphql";
+import {
   visit,
 } from "graphql";
 
 import { wrap } from "optimism";
 
-import { FragmentMap, getFragmentDefinitions } from "../../utilities";
+import type { FragmentMap} from "../../utilities/index.js";
+import { getFragmentDefinitions } from "../../utilities/index.js";
 
 export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;

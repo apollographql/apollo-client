@@ -13,7 +13,7 @@ import { HttpLink } from '../HttpLink';
 import { createHttpLink } from '../createHttpLink';
 import { ClientParseError } from '../serializeFetchParameter';
 import { ServerParseError } from '../parseAndCheckHttpResponse';
-import { ServerError } from '../../..';
+import { FetchResult, ServerError } from '../../..';
 import { voidFetchDuringEachTest } from './helpers';
 import { itAsync } from '../../../testing';
 
@@ -454,7 +454,7 @@ describe('HttpLink', () => {
     it('raises warning if called with concat', () => {
       const link = createHttpLink();
       const _warn = console.warn;
-      console.warn = (warning: any) => expect(warning['message']).toBeDefined();
+      console.warn = (...args: any) => expect(args).toEqual(["You are calling concat on a terminating link, which will have no effect %o", link]);
       expect(link.concat((operation, forward) => forward(operation))).toEqual(
         link,
       );
@@ -1041,6 +1041,76 @@ describe('HttpLink', () => {
         () => {},
       );
     });
+
+    it('removes @client fields from the query before sending it to the server', async () => {
+      fetchMock.mock('https://example.com/graphql', {
+        status: 200,
+        body: JSON.stringify({
+          data: {
+            author: { __typename: 'Author', name: 'Test User' }
+          }
+        }),
+        headers: { 'content-type': 'application/json' }
+      });
+
+      const query = gql`
+        query {
+          author {
+            name
+            isInCollection @client
+          }
+        }
+      `;
+
+      const serverQuery = gql`
+        query {
+          author {
+            name
+          }
+        }
+      `;
+
+      const link = createHttpLink({ uri: 'https://example.com/graphql' });
+
+      await new Promise((resolve, reject) => {
+        execute(link, { query }).subscribe({
+          next: resolve,
+          error: reject
+        });
+      });
+
+      const [, options] = fetchMock.lastCall()!;
+      const { body } = options!
+
+      expect(JSON.parse(body!.toString())).toEqual({
+        query: print(serverQuery),
+        variables: {}
+      });
+    });
+
+    it('responds with error when trying to send a client-only query', async () => {
+      const errorHandler = jest.fn()
+      const query = gql`
+        query {
+          author @client {
+            name
+          }
+        }
+      `;
+
+      const link = createHttpLink({ uri: 'https://example.com/graphql' });
+
+      await new Promise<void>((resolve, reject) => {
+        execute(link, { query }).subscribe({
+          next: reject,
+          error: errorHandler.mockImplementation(resolve)
+        });
+      });
+
+      expect(errorHandler).toHaveBeenCalledWith(
+        new Error('HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or set the `transformOptions.removeClientFields` option to `true`.')
+      );
+    });
   });
 
   describe('Dev warnings', () => {
@@ -1255,46 +1325,123 @@ describe('HttpLink', () => {
         }),
       );
     });
-    itAsync('supports being cancelled and does not throw', (resolve, reject) => {
-      let called = false;
-      class AbortController {
-        signal: {};
-        abort = () => {
-          called = true;
-        };
+
+    describe('AbortController', () => {
+      const originalAbortController = globalThis.AbortController;
+      afterEach(() => {
+        globalThis.AbortController = originalAbortController;
+      });
+
+      function trackGlobalAbortControllers() {
+        const instances: AbortController[] = []
+        class AbortControllerMock {
+          constructor() {
+            const instance = new originalAbortController()
+            instances.push(instance)
+            return instance
+          }
+        }
+
+        globalThis.AbortController = AbortControllerMock as any;
+        return instances;
       }
 
-      (global as any).AbortController = AbortController;
-
-      fetch.mockReturnValueOnce(Promise.resolve({ text }));
-      text.mockReturnValueOnce(
-        Promise.resolve('{ "data": { "hello": "world" } }'),
-      );
-
-      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
-
-      const sub = execute(link, { query: sampleQuery }).subscribe({
-        next: result => {
-          reject('result should not have been called');
+      const failingObserver: Observer<FetchResult> = {
+        next: () => {
+          fail('result should not have been called');
         },
         error: e => {
-          reject(e);
+          fail(e);
         },
         complete: () => {
-          reject('complete should not have been called');
+          fail('complete should not have been called');
         },
-      });
-      sub.unsubscribe();
+      }
 
-      setTimeout(
-        makeCallback(resolve, reject, () => {
-          delete (global as any).AbortController;
-          expect(called).toBe(true);
-          fetch.mockReset();
-          text.mockReset();
-        }),
-        150,
-      );
+      function mockFetch() {
+        const text = jest.fn(async () => '{ "data": { "stub": { "id": "foo" } } }');
+        const fetch = jest.fn(async (uri, options) => ({ text }));
+        return { text, fetch }
+      }
+
+      it("aborts the request when unsubscribing before the request has completed", () => {
+        const { fetch } = mockFetch();
+        const abortControllers = trackGlobalAbortControllers();
+
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+        const sub = execute(link, { query: sampleQuery }).subscribe(failingObserver);
+        sub.unsubscribe();
+
+        expect(abortControllers.length).toBe(1);
+        expect(abortControllers[0].signal.aborted).toBe(true);
+      });
+
+      it('a passed-in signal will be forwarded to the `fetch` call and not be overwritten by an internally-created one', () => {
+        const { fetch } = mockFetch();
+        const externalAbortController = new AbortController();
+
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any, fetchOptions: { signal: externalAbortController.signal } });
+
+        const sub = execute(link, { query: sampleQuery } ).subscribe(failingObserver);
+        sub.unsubscribe();
+
+        expect(fetch.mock.calls.length).toBe(1);
+        expect(fetch.mock.calls[0][1]).toEqual(expect.objectContaining({ signal: externalAbortController.signal }))
+      });
+
+      it('a passed-in signal that is cancelled will fail the observable with an `AbortError`', async () => {
+        try { 
+          fetchMock.restore();
+          fetchMock.postOnce('data', async () => '{ "data": { "stub": { "id": "foo" } } }');
+
+          const externalAbortController = new AbortController();
+
+          const link = createHttpLink({ uri: '/data', fetchOptions: { signal: externalAbortController.signal } });
+
+          const error = await new Promise<Error>(resolve => {
+            execute(link, { query: sampleQuery } ).subscribe({
+              ...failingObserver,
+              error: resolve,
+            });
+            externalAbortController.abort();
+          });
+          expect(error.name).toBe("AbortError")
+        } finally {
+          fetchMock.restore();
+        }
+      });
+
+      it('resolving fetch does not cause the AbortController to be aborted', async () => {
+        const { text, fetch } = mockFetch();
+        const abortControllers = trackGlobalAbortControllers();
+        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
+
+        // (the request is already finished at that point)
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+        await new Promise<void>(resolve => execute(link, { query: sampleQuery }).subscribe({
+          complete: resolve
+        }));
+
+        expect(abortControllers.length).toBe(1);
+        expect(abortControllers[0].signal.aborted).toBe(false);
+      });
+
+      it('an unsuccessful fetch does not cause the AbortController to be aborted', async () => {
+        const { fetch } = mockFetch();
+        const abortControllers = trackGlobalAbortControllers();
+        fetch.mockRejectedValueOnce("This is an error!")
+        // the request would be closed by the browser in the case of an error anyways
+        const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+        await new Promise<void>(resolve => execute(link, { query: sampleQuery }).subscribe({
+          error: resolve
+        }));
+
+        expect(abortControllers.length).toBe(1);
+        expect(abortControllers[0].signal.aborted).toBe(false);
+      });
     });
 
     const body = '{';

@@ -1,18 +1,18 @@
 import * as React from 'react';
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
-import { parser } from '../parser';
-import { BaseQueryOptions } from '../types/types';
-import { Subscription } from '../components';
+import { parser } from '../parser/index.js';
+import type { BaseQueryOptions } from '../types/types.js';
+import { Subscription } from '../components/index.js';
 import {
   getDisplayName,
   GraphQLBase,
   calculateVariablesFromProps,
   defaultMapPropsToOptions,
   defaultMapPropsToSkip
-} from './hoc-utils';
-import { OperationOption, OptionProps, DataProps } from './types';
+} from './hoc-utils.js';
+import type { OperationOption, OptionProps, DataProps } from './types.js';
 
 export function withSubscription<
   TProps extends TGraphQLVariables | {} = {},

@@ -1,15 +1,19 @@
-import { ApolloLink, Operation, FetchResult, NextLink } from '../core';
-import { Observable, Observer, ObservableSubscription } from '../../utilities';
-import {
+import type { Operation, FetchResult, NextLink } from '../core/index.js';
+import { ApolloLink } from '../core/index.js';
+import type { Observer, ObservableSubscription } from '../../utilities/index.js';
+import { Observable } from '../../utilities/index.js';
+import type {
   DelayFunction,
-  DelayFunctionOptions,
-  buildDelayFunction,
-} from './delayFunction';
+  DelayFunctionOptions} from './delayFunction.js';
 import {
+  buildDelayFunction,
+} from './delayFunction.js';
+import type {
   RetryFunction,
-  RetryFunctionOptions,
+  RetryFunctionOptions} from './retryFunction.js';
+import {
   buildRetryFunction,
-} from './retryFunction';
+} from './retryFunction.js';
 
 export namespace RetryLink {
   export interface Options {

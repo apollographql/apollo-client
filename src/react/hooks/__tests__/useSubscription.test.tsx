@@ -2,18 +2,20 @@ import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import gql from 'graphql-tag';
 
-import { ApolloClient, ApolloError, ApolloLink, concat } from '../../../core';
+import {
+  ApolloClient,
+  ApolloError,
+  ApolloLink,
+  concat,
+  TypedDocumentNode
+} from '../../../core';
 import { PROTOCOL_ERRORS_SYMBOL } from '../../../errors';
 import { InMemoryCache as Cache } from '../../../cache';
-import { ApolloProvider, resetApolloContext } from '../../context';
+import { ApolloProvider } from '../../context';
 import { MockSubscriptionLink } from '../../../testing';
 import { useSubscription } from '../useSubscription';
 
 describe('useSubscription Hook', () => {
-  afterEach(() => {
-    resetApolloContext();
-  });
-
   it('should handle a simple subscription properly', async () => {
     const subscription = gql`
       subscription {
@@ -532,8 +534,8 @@ describe('useSubscription Hook', () => {
     expect(result.current.data).toBe(null);
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy.mock.calls[0][0]).toBe(
-      "Missing field 'car' while writing result {}",
+    expect(errorSpy.mock.calls[0]).toStrictEqual(
+      ["Missing field '%s' while writing result %o", "car", Object.create(null)]
     );
     errorSpy.mockRestore();
   });
@@ -598,14 +600,14 @@ describe('useSubscription Hook', () => {
     expect(result.current.sub3.data).toBe(null);
 
     expect(errorSpy).toHaveBeenCalledTimes(3);
-    expect(errorSpy.mock.calls[0][0]).toBe(
-      "Missing field 'car' while writing result {}",
+    expect(errorSpy.mock.calls[0]).toStrictEqual(
+      ["Missing field '%s' while writing result %o", "car", Object.create(null)]
     );
-    expect(errorSpy.mock.calls[1][0]).toBe(
-      "Missing field 'car' while writing result {}",
+    expect(errorSpy.mock.calls[1]).toStrictEqual(
+      ["Missing field '%s' while writing result %o", "car", Object.create(null)]
     );
-    expect(errorSpy.mock.calls[2][0]).toBe(
-      "Missing field 'car' while writing result {}",
+    expect(errorSpy.mock.calls[2]).toStrictEqual(
+      ["Missing field '%s' while writing result %o", "car", Object.create(null)]
     );
     errorSpy.mockRestore();
   });
@@ -1066,3 +1068,19 @@ followed by new in-flight setup', async () => {
     unmount();
   });
 });
+
+describe.skip("Type Tests", () => {
+  test('NoInfer prevents adding arbitrary additional variables', () => {
+    const typedNode = {} as TypedDocumentNode<{ foo: string}, { bar: number }>
+    const { variables } = useSubscription(typedNode, {
+      variables: {
+        bar: 4,
+        // @ts-expect-error
+        nonExistingVariable: "string"
+      }
+    });
+    variables?.bar
+    // @ts-expect-error
+    variables?.nonExistingVariable
+  })
+})

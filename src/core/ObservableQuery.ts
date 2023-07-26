@@ -1,38 +1,39 @@
-import { invariant } from '../utilities/globals';
-import { DocumentNode } from 'graphql';
+import { invariant } from '../utilities/globals/index.js';
+import type { DocumentNode } from 'graphql';
 import { equal } from '@wry/equality';
 
-import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus';
-import {
+import { NetworkStatus, isNetworkRequestInFlight } from './networkStatus.js';
+import type {
   Concast,
+  Observer,
+  ObservableSubscription} from '../utilities/index.js';
+import {
   cloneDeep,
   compact,
   getOperationDefinition,
   Observable,
-  Observer,
-  ObservableSubscription,
   iterateObserversSafely,
-  isNonEmptyArray,
   fixObservableSubclass,
   getQueryDefinition,
-} from '../utilities';
-import { ApolloError } from '../errors';
-import { QueryManager } from './QueryManager';
-import {
+} from '../utilities/index.js';
+import type { ApolloError } from '../errors/index.js';
+import type { QueryManager } from './QueryManager.js';
+import type {
   ApolloQueryResult,
   OperationVariables,
   TypedDocumentNode,
-} from './types';
-import {
+} from './types.js';
+import type {
   WatchQueryOptions,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
   WatchQueryFetchPolicy,
-} from './watchQueryOptions';
-import { QueryInfo } from './QueryInfo';
-import { MissingFieldError } from '../cache';
-import { MissingTree } from '../cache/core/types/common';
+} from './watchQueryOptions.js';
+import type { QueryInfo } from './QueryInfo.js';
+import type { MissingFieldError } from '../cache/index.js';
+import type { MissingTree } from '../cache/core/types/common.js';
+import { equalByQuery } from './equalByQuery.js';
 
 const {
   assign,
@@ -70,10 +71,12 @@ export class ObservableQuery<
   public readonly queryId: string;
   public readonly queryName?: string;
 
+  // The `query` computed property will always reflect the document transformed
+  // by the last run query. `this.options.query` will always reflect the raw
+  // untransformed query to ensure document transforms with runtime conditionals
+  // are run on the original document.
   public get query(): TypedDocumentNode<TData, TVariables> {
-    // This transform is heavily cached, so it should not be expensive to
-    // transform the same this.options.query document repeatedly.
-    return this.queryManager.transform(this.options.query).document;
+    return this.lastQuery || this.options.query;
   }
 
   // Computed shorthand for this.options.variables, preserved for
@@ -89,6 +92,7 @@ export class ObservableQuery<
 
   private waitForOwnResult: boolean;
   private last?: Last<TData, TVariables>;
+  private lastQuery?: DocumentNode;
 
   private queryInfo: QueryInfo;
 
@@ -248,7 +252,7 @@ export class ObservableQuery<
       // trust diff.result, since it was read from the cache without running
       // local resolvers (and it's too late to run resolvers now, since we must
       // return a result synchronously).
-      this.queryManager.transform(this.options.query).hasForcedResolvers
+      this.queryManager.getDocumentInfo(this.query).hasForcedResolvers
     ) {
       // Fall through. 
     } else if (this.waitForOwnResult) {
@@ -313,9 +317,22 @@ export class ObservableQuery<
     newResult: ApolloQueryResult<TData>,
     variables?: TVariables
   ) {
+    if (!this.last) {
+      return true;
+    }
+
+    const resultIsDifferent =
+      this.queryManager.getDocumentInfo(this.query).hasNonreactiveDirective
+        ? !equalByQuery(
+            this.query,
+            this.last.result,
+            newResult,
+            this.variables,
+          )
+        : !equal(this.last.result, newResult);
+
     return (
-      !this.last ||
-      !equal(this.last.result, newResult) ||
+      resultIsDifferent ||
       (variables && !equal(this.last.variables, variables))
     );
   }
@@ -380,12 +397,11 @@ export class ObservableQuery<
       const queryDef = getQueryDefinition(this.query);
       const vars = queryDef.variableDefinitions;
       if (!vars || !vars.some(v => v.variable.name.value === "variables")) {
-        invariant.warn(`Called refetch(${
-          JSON.stringify(variables)
-        }) for query ${
-          queryDef.name?.value || JSON.stringify(queryDef)
-        }, which does not declare a $variables variable.
-Did you mean to call refetch(variables) instead of refetch({ variables })?`);
+        invariant.warn(`Called refetch(%o) for query %o, which does not declare a $variables variable.
+Did you mean to call refetch(variables) instead of refetch({ variables })?`,
+          variables,
+          queryDef.name?.value || queryDef
+        );
       }
     }
 
@@ -416,7 +432,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : {
         ...this.options,
-        query: this.query,
+        query: this.options.query,
         ...fetchMoreOptions,
         variables: {
           ...this.options.variables,
@@ -431,7 +447,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       fetchPolicy: "no-cache",
     } as WatchQueryOptions<TFetchVars, TFetchData>;
 
+    combinedOptions.query = this.transformDocument(combinedOptions.query);
+
     const qid = this.queryManager.generateQueryId();
+
+    // If a temporary query is passed to `fetchMore`, we don't want to store
+    // it as the last query result since it may be an optimized query for
+    // pagination. We will however run the transforms on the original document
+    // as well as the document passed in `fetchMoreOptions` to ensure the cache
+    // uses the most up-to-date document which may rely on runtime conditionals.
+    this.lastQuery = fetchMoreOptions.query
+      ? this.transformDocument(this.options.query)
+      : combinedOptions.query;
 
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.
@@ -563,6 +590,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>,
   ): Promise<ApolloQueryResult<TData>> {
     return this.reobserve(newOptions);
+  }
+
+  public silentSetOptions(
+    newOptions: Partial<WatchQueryOptions<TVariables, TData>>,
+  ) {
+    const mergedOptions = compact(this.options, newOptions || {});
+    assign(this.options, mergedOptions);
   }
 
   /**
@@ -774,17 +808,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     newResult: ApolloQueryResult<TData>,
     variables = this.variables,
   ) {
-    this.last = {
-      ...this.last,
+    let error: ApolloError | undefined = this.getLastError();
+    // Preserve this.last.error unless the variables have changed.
+    if (error && this.last && !equal(variables, this.last.variables)) {
+      error = void 0;
+    }
+    return this.last = {
       result: this.queryManager.assumeImmutableResults
         ? newResult
         : cloneDeep(newResult),
       variables,
+      ...(error ? { error } : null),
     };
-    if (!isNonEmptyArray(newResult.errors)) {
-      delete this.last.error;
-    }
-    return this.last;
   }
 
   public reobserveAsConcast(
@@ -816,6 +851,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       ? mergedOptions
       : assign(this.options, mergedOptions);
 
+    // Don't update options.query with the transformed query to avoid
+    // overwriting this.options.query when we aren't using a disposable concast.
+    // We want to ensure we can re-run the custom document transforms the next
+    // time a request is made against the original query.
+    const query = this.transformDocument(options.query);
+
+    this.lastQuery = query;
+
     if (!useDisposableConcast) {
       // We can skip calling updatePolling if we're not changing this.options.
       this.updatePolling();
@@ -839,15 +882,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       }
     }
 
-    this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
+    // If the transform doesn't change the document, leave `options` alone and
+    // use the original object.
+    const fetchOptions = query === options.query ? options : { ...options, query };
+
+    this.waitForOwnResult &&= skipCacheDataFor(fetchOptions.fetchPolicy);
     const finishWaitingForOwnResult = () => {
       if (this.concast === concast) {
         this.waitForOwnResult = false;
       }
     };
     
-    const variables = options.variables && { ...options.variables };
-    const { concast, fromLink } = this.fetch(options, newNetworkStatus);
+    const variables = fetchOptions.variables && { ...fetchOptions.variables };
+    const { concast, fromLink } = this.fetch(fetchOptions, newNetworkStatus);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: result => {
         finishWaitingForOwnResult();
@@ -859,7 +906,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
       },
     };
 
-    if (!useDisposableConcast && fromLink) {
+    if (!useDisposableConcast && (fromLink || !this.concast)) {
       // We use the {add,remove}Observer methods directly to avoid wrapping
       // observer with an unnecessary SubscriptionObserver object.
       if (this.concast && this.observer) {
@@ -900,12 +947,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     variables: TVariables | undefined,
   ) {
     const lastError = this.getLastError();
-    if (lastError || this.isDifferentFromLastResult(result, variables)) {
-      if (lastError || !result.partial || this.options.returnPartialData) {
-        this.updateLastResult(result, variables);
-      }
-
-      iterateObserversSafely(this.observers, 'next', result);
+    const isDifferent = this.isDifferentFromLastResult(result, variables);
+    // Update the last result even when isDifferentFromLastResult returns false,
+    // because the query may be using the @nonreactive directive, and we want to
+    // save the the latest version of any nonreactive subtrees (in case
+    // getCurrentResult is called), even though we skip broadcasting changes.
+    if (lastError || !result.partial || this.options.returnPartialData) {
+      this.updateLastResult(result, variables);
+    }
+    if (lastError || isDifferent) {
+      iterateObserversSafely(this.observers, "next", result);
     }
   }
 
@@ -947,6 +998,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`);
     this.queryManager.stopQuery(this.queryId);
     this.observers.clear();
     this.isTornDown = true;
+  }
+
+  private transformDocument(document: DocumentNode) {
+    return this.queryManager.transform(document);
   }
 }
 
@@ -1000,9 +1055,7 @@ export function logMissingFieldErrors(
   missing: MissingFieldError[] | MissingTree | undefined,
 ) {
   if (__DEV__ && missing) {
-    invariant.debug(`Missing cache result fields: ${
-      JSON.stringify(missing)
-    }`, missing);
+    invariant.debug(`Missing cache result fields: %o`, missing);
   }
 }
 

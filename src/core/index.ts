@@ -1,18 +1,16 @@
 /* Core */
 
-import { DEV } from '../utilities/globals';
-
 export {
   ApolloClient,
   ApolloClientOptions,
   DefaultOptions,
   mergeOptions,
-} from './ApolloClient';
+} from './ApolloClient.js';
 export {
   ObservableQuery,
   FetchMoreOptions,
   UpdateQueryOptions,
-} from './ObservableQuery';
+} from './ObservableQuery.js';
 export {
   QueryOptions,
   WatchQueryOptions,
@@ -23,15 +21,14 @@ export {
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-} from './watchQueryOptions';
-export { NetworkStatus } from './networkStatus';
-export * from './types';
+} from './watchQueryOptions.js';
+export { NetworkStatus, isNetworkRequestSettled } from './networkStatus.js';
+export * from './types.js';
 export {
   Resolver,
   FragmentMatcher,
-} from './LocalState';
-export { isApolloError, ApolloError } from '../errors';
-
+} from './LocalState.js';
+export { isApolloError, ApolloError } from '../errors/index.js';
 /* Cache */
 
 export {
@@ -54,25 +51,27 @@ export {
   FieldMergeFunction,
   FieldFunctionOptions,
   PossibleTypesMap,
-} from '../cache';
+} from '../cache/index.js';
 
-export * from '../cache/inmemory/types';
+export * from '../cache/inmemory/types.js';
 
 /* Link */
 
-export * from '../link/core';
-export * from '../link/http';
+export * from '../link/core/index.js';
+export * from '../link/http/index.js';
 export {
   fromError,
   toPromise,
   fromPromise,
   ServerError,
   throwServerError,
-} from '../link/utils';
+} from '../link/utils/index.js';
 
 /* Utilities */
 
 export {
+  DocumentTransform,
+  DocumentTransformCacheKey,
   Observable,
   Observer,
   ObservableSubscription,
@@ -80,7 +79,7 @@ export {
   isReference,
   makeReference,
   StoreObject,
-} from '../utilities';
+} from '../utilities/index.js';
 
 /* Supporting */
 
@@ -90,7 +89,7 @@ export {
 // Note that all invariant.* logging is hidden in production.
 import { setVerbosity } from "ts-invariant";
 export { setVerbosity as setLogVerbosity }
-setVerbosity(DEV ? "log" : "silent");
+setVerbosity(__DEV__ ? "log" : "silent");
 
 // Note that importing `gql` by itself, then destructuring
 // additional properties separately before exporting, is intentional.

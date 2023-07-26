@@ -1,9 +1,9 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 import * as React from 'react';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
-import { ApolloConsumer } from '../context';
-import { OperationOption, WithApolloClient } from './types';
+import { ApolloConsumer } from '../context/index.js';
+import type { OperationOption, WithApolloClient } from './types.js';
 
 function getDisplayName<P>(WrappedComponent: React.ComponentType<P>) {
   return WrappedComponent.displayName || WrappedComponent.name || 'Component';

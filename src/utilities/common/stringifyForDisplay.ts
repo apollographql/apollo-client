@@ -1,8 +1,8 @@
-import { makeUniqueId } from "./makeUniqueId";
+import { makeUniqueId } from "./makeUniqueId.js";
 
-export function stringifyForDisplay(value: any): string {
+export function stringifyForDisplay(value: any, space = 0): string {
   const undefId = makeUniqueId("stringifyForDisplay");
   return JSON.stringify(value, (key, value) => {
     return value === void 0 ? undefId : value;
-  }).split(JSON.stringify(undefId)).join("<undefined>");
+  }, space).split(JSON.stringify(undefId)).join("<undefined>");
 }

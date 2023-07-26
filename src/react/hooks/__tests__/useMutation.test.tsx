@@ -9,16 +9,13 @@ import fetchMock from "fetch-mock";
 import { ApolloClient, ApolloLink, ApolloQueryResult, Cache, NetworkStatus, Observable, ObservableQuery, TypedDocumentNode } from '../../../core';
 import { InMemoryCache } from '../../../cache';
 import { itAsync, MockedProvider, MockSubscriptionLink, mockSingleLink, subscribeAndCount } from '../../../testing';
-import { ApolloProvider, resetApolloContext } from '../../context';
+import { ApolloProvider } from '../../context';
 import { useQuery } from '../useQuery';
 import { useMutation } from '../useMutation';
 import { BatchHttpLink } from '../../../link/batch-http';
 import { FetchResult } from '../../../link/core';
 
 describe('useMutation Hook', () => {
-  afterEach(() => {
-    resetApolloContext();
-  });
   interface Todo {
     id: number;
     description: string;
@@ -2595,3 +2592,16 @@ describe('useMutation Hook', () => {
     });
   });
 });
+
+describe.skip("Type Tests", () => {
+  test('NoInfer prevents adding arbitrary additional variables', () => {
+    const typedNode = {} as TypedDocumentNode<{ foo: string}, { bar: number }>
+    useMutation(typedNode, {
+      variables: {
+        bar: 4,
+        // @ts-expect-error
+        nonExistingVariable: "string"
+      }
+    });
+  })
+})

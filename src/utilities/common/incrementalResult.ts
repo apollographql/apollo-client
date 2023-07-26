@@ -47,10 +47,9 @@ export function mergeIncrementalData<TData>(
     return prevResult;
   }
 
-  let mergedData = prevResult;
   const merger = new DeepMerger();
 
-  result.incremental.forEach(({ data, path }) => {
+  return result.incremental.reduce((mergedData, { data, path }) => {
     for (let i = path.length - 1; i >= 0; --i) {
       const key = path[i];
       const isNumericKey = !isNaN(+key);
@@ -58,8 +57,7 @@ export function mergeIncrementalData<TData>(
       parent[key] = data;
       data = parent as typeof data;
     }
-    mergedData = merger.merge(mergedData, data);
-  });
 
-  return mergedData;
+    return merger.merge(mergedData, data);
+  }, prevResult);
 }

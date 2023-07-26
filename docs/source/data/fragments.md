@@ -375,13 +375,13 @@ const cache = new InMemoryCache({
 
 </MinVersion>
 
-In version `3.7.0`, Apollo Client introduced preview support for the `useFragment_experimental` hook which represents a lightweight live binding into the Apollo Client Cache. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
+`useFragment` represents a lightweight live binding into the Apollo Client Cache and enables Apollo Client to broadcast very specific fragment results to individual components. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
 
-> **Note**: this hook is named `useFragment_experimental` in `3.7.x` and `3.8.0-alpha.x` releases. In `3.8.0-beta.0` and greater it no longer has an `_experimental` suffix in its named export.
+Note that the `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
+
+> **Note**: this hook was introduced in `3.7.0` as experimental but stabilized in `3.8.0`. In `3.7.x` and `3.8.0-alpha.x` releases, this hook is exported as `useFragment_experimental`. Starting with `3.8.0-beta.0` and greater the `_experimental` suffix was removed in its named export.
 
 ### Example
-
-> A [GraphQL fragment](http://graphql.org/learn/queries/#fragments) defines a subset of fields on a GraphQL type that can be used to specify component-level data dependencies or allow re-use between multiple queries and mutations. [See the API reference.](../../data/fragments)
 
 Given the following fragment definition:
 

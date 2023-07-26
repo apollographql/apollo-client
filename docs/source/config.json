@@ -90,6 +90,7 @@
         "Context": "/api/link/apollo-link-context",
         "Error": "/api/link/apollo-link-error",
         "Persisted Queries": "/api/link/persisted-queries",
+        "Remove Typename": "/api/link/apollo-link-remove-typename",
         "REST": "/api/link/apollo-link-rest",
         "Retry": "/api/link/apollo-link-retry",
         "Schema": "/api/link/apollo-link-schema",

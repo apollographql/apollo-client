@@ -41,14 +41,12 @@ export function isApolloPayloadResult(
 
 export function mergeIncrementalData<TData>(
   prevResult: TData,
-  result: ExecutionPatchResult<TData>
+  result: ExecutionPatchIncrementalResult<TData>
 ) {
   let mergedData = prevResult;
   const merger = new DeepMerger();
-  if (
-    isExecutionPatchIncrementalResult(result) &&
-    isNonEmptyArray(result.incremental)
-  ) {
+
+  if (isNonEmptyArray(result.incremental)) {
     result.incremental.forEach(({ data, path }) => {
       for (let i = path.length - 1; i >= 0; --i) {
         const key = path[i];
@@ -60,5 +58,6 @@ export function mergeIncrementalData<TData>(
       mergedData = merger.merge(mergedData, data);
     });
   }
+
   return mergedData as TData;
 }

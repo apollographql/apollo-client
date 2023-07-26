@@ -396,7 +396,7 @@ export class QueryManager<TStore> {
           variables: mutation.variables,
         });
       }
-      if (isExecutionPatchIncrementalResult(result) && isNonEmptyArray(result.incremental)) {
+      if (isExecutionPatchIncrementalResult(result)) {
         const diff = cache.diff<TData>({
           id: "ROOT_MUTATION",
           // The cache complains if passed a mutation where it expects a

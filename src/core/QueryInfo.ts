@@ -2,7 +2,7 @@ import type { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
 import type { Cache, ApolloCache } from '../cache/index.js';
-import { DeepMerger } from "../utilities/index.js"
+import { DeepMerger, isExecutionPatchIncrementalResult } from "../utilities/index.js"
 import { mergeIncrementalData } from '../utilities/index.js';
 import type { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions.js';
 import type { ObservableQuery} from './ObservableQuery.js';
@@ -375,7 +375,7 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.reset();
 
-    if ('incremental' in result && isNonEmptyArray(result.incremental)) {
+    if (isExecutionPatchIncrementalResult(result)) {
       const diff = this.getDiff();
       result.data = mergeIncrementalData(diff.result, result);
 

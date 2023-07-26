@@ -112,7 +112,10 @@ export function useMutation<
       }
 
       const onCompleted = executeOptions.onCompleted || ref.current.options?.onCompleted
-      onCompleted?.(response.data!, clientOptions);
+
+      if (!error) {
+        onCompleted?.(response.data!, clientOptions);
+      }
 
       return response;
     }).catch((error) => {

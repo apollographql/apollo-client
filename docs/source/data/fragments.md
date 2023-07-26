@@ -393,15 +393,17 @@ const ItemFragment = gql`
 `;
 ```
 
-We can first use the `useQuery` hook to retrieve a list of items with `id`s.
+We can first use the `useQuery` hook to retrieve a list of items with `id`s as well as any fields selected on the named `ItemFragment` fragment by spreading `ItemFragment` inside of `list` in `ListQuery`.
 
 ```jsx
 const listQuery = gql`
-  query {
+  query ListQuery {
     list {
       id
+      ...ItemFragment
     }
   }
+  ${ItemFragment}
 `;
 
 function List() {
@@ -416,6 +418,8 @@ function List() {
   );
 }
 ```
+
+> **Note:** instead of interpolating fragments within each query document, we can use Apollo Client's `createFragmentRegistry` method to pre-register named fragments with our `InMemoryCache`. This allows Apollo Client to include the definitions for registered fragments in the document sent over the network before the request is sent. For more information, see [Registering named fragments using `createFragmentRegistry`](./#registering-named-fragments-using-createFragmentRegistry).
 
 We can then use `useFragment` from within the `<Item>` component to create a live binding for each item by providing the `fragment` document, `fragmentName` and object reference via `from`.
 

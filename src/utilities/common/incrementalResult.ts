@@ -39,7 +39,7 @@ export function isApolloPayloadResult(
   return isNonNullObject(value) && "payload" in value;
 }
 
-export function mergeIncrementalData<TData extends object>(
+export function mergeIncrementalData<TData>(
   prevResult: TData,
   result: ExecutionPatchResult<TData>
 ) {

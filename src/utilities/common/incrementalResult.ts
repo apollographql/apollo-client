@@ -43,21 +43,23 @@ export function mergeIncrementalData<TData>(
   prevResult: TData,
   result: ExecutionPatchIncrementalResult<TData>
 ) {
+  if (!isNonEmptyArray(result.incremental)) {
+    return prevResult;
+  }
+
   let mergedData = prevResult;
   const merger = new DeepMerger();
 
-  if (isNonEmptyArray(result.incremental)) {
-    result.incremental.forEach(({ data, path }) => {
-      for (let i = path.length - 1; i >= 0; --i) {
-        const key = path[i];
-        const isNumericKey = !isNaN(+key);
-        const parent: Record<string | number, any> = isNumericKey ? [] : {};
-        parent[key] = data;
-        data = parent as typeof data;
-      }
-      mergedData = merger.merge(mergedData, data);
-    });
-  }
+  result.incremental.forEach(({ data, path }) => {
+    for (let i = path.length - 1; i >= 0; --i) {
+      const key = path[i];
+      const isNumericKey = !isNaN(+key);
+      const parent: Record<string | number, any> = isNumericKey ? [] : {};
+      parent[key] = data;
+      data = parent as typeof data;
+    }
+    mergedData = merger.merge(mergedData, data);
+  });
 
   return mergedData as TData;
 }

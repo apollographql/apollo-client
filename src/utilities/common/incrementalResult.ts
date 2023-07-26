@@ -11,7 +11,7 @@ import { DeepMerger } from "./mergeDeep.js";
 
 export function isExecutionPatchIncrementalResult<T>(
   value: FetchResult<T>
-): value is ExecutionPatchIncrementalResult {
+): value is ExecutionPatchIncrementalResult<T> {
   return "incremental" in value;
 }
 

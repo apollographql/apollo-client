@@ -427,7 +427,7 @@ function Item(props: { id: number }) {
       id: props.id,
     },
   });
-  return <li>{complete ? data!.text : "incomplete"}</li>;
+  return <li>{complete ? data.text : "incomplete"}</li>;
 }
 ```
 

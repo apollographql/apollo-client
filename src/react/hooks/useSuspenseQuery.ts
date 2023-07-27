@@ -178,12 +178,11 @@ export function useSuspenseQuery<
       > = Object.create(null)
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
-  const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
-  const queryRef = suspenseCache.getQueryRef(
+  const queryRef = getSuspenseCache(client).getQueryRef(
     [query, canonicalStringify(variables), ...([] as any[]).concat(queryKey)],
     () => client.watchQuery(watchQueryOptions)
   );

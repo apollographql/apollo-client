@@ -14,7 +14,7 @@ In this guide, we'll look at Apollo Client's new data fetching hooks introduced 
 
 `useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is in flight. It can be thought of as a drop-in replacement for `useQuery` that allows you to take advantage of React's concurrent features while fetching during render.
 
-More details on `useSuspenseQuery`'s API can be found in [its API docs](./hooks-experimental#usesuspensequery-api).
+More details on `useSuspenseQuery`'s API can be found in [its API docs](../api/react/hooks/#usesuspensequery-api).
 
 > **Note:** a component using `useSuspenseQuery` to fetch data will **suspend on first render** unless it can access all of the data for the fields it is querying via the cache (or is configured with `returnPartialData: true` and partial data is present in the cache), so it **may not render until its initial network request finishes**. Keep this in mind and avoid creating "request waterfalls" whereby a series of components fetch data, suspend, receive data and render children which then initiate new network requests causing a "waterfall" of suspense boundaries to display. In some scenarios this can be avoided by using `useBackgroundQuery` and `useReadQuery` (see below).
 
@@ -240,7 +240,7 @@ In Apollo Client's new `Suspense` hooks introduced in v3.8, **both network and G
 
 `useBackgroundQuery` initiates a request for data in a parent component and returns a `QueryReference` which is used to read the data in a child component via `useReadQuery`. If the child component attempts to render before the data can be found in the cache, the child component will suspend until the data is available.
 
-More details on `useBackgroundQuery` and `useReadQuery`'s API can be found in [their API docs](./hooks-experimental#usebackgroundquery-and-usereadquery).
+More details on `useBackgroundQuery` and `useReadQuery`'s API can be found in [their API docs](../api/react/hooks/#usebackgroundquery-and-usereadquery).
 
 ### Example
 

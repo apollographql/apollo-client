@@ -2,6 +2,7 @@ const entryPoints = [
   { dirs: [], bundleName: "main" },
   { dirs: ['cache'] },
   { dirs: ['core'] },
+  { dirs: ['dev'] },
   { dirs: ['errors'] },
   { dirs: ['link', 'batch'] },
   { dirs: ['link', 'batch-http'] },
@@ -11,6 +12,7 @@ const entryPoints = [
   { dirs: ['link', 'http'] },
   { dirs: ['link', 'persisted-queries'] },
   { dirs: ['link', 'retry'] },
+  { dirs: ['link', 'remove-typename'] },
   { dirs: ['link', 'schema'] },
   { dirs: ['link', 'subscriptions'] },
   { dirs: ['link', 'utils'] },
@@ -86,6 +88,9 @@ exports.check = function (id, parentId) {
 function partsAfterDist(id) {
   const parts = id.split(path.sep);
   const distIndex = parts.lastIndexOf("dist");
+  if (/^index.jsx?$/.test(parts[parts.length - 1])) {
+    parts.pop();
+  }
   if (distIndex >= 0) {
     return parts.slice(distIndex + 1);
   }

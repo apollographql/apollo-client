@@ -1,16 +1,18 @@
-import { DocumentNode } from 'graphql';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { useCallback, useMemo, useRef } from 'react';
+import type { DocumentNode } from 'graphql';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import * as React from 'react';
 
-import { OperationVariables } from '../../core';
-import { mergeOptions } from '../../utilities';
-import {
+import type { OperationVariables } from '../../core/index.js';
+import { mergeOptions } from '../../utilities/index.js';
+import type {
+  LazyQueryHookExecOptions,
   LazyQueryHookOptions,
   LazyQueryResultTuple,
+  NoInfer,
   QueryResult,
-} from '../types/types';
-import { useInternalState } from './useQuery';
-import { useApolloClient } from './useApolloClient';
+} from '../types/types.js';
+import { useInternalState } from './useQuery.js';
+import { useApolloClient } from './useApolloClient.js';
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -25,15 +27,15 @@ const EAGER_METHODS = [
 
 export function useLazyQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LazyQueryHookOptions<TData, TVariables>
+  options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
-  const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
-  const optionsRef = useRef<LazyQueryHookOptions<TData, TVariables>>();
-  const queryRef = useRef<DocumentNode | TypedDocumentNode<TData, TVariables>>();
-  const merged = execOptionsRef.current ? mergeOptions(options, execOptionsRef.current) : options;
+  const execOptionsRef = React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
+  const optionsRef = React.useRef<LazyQueryHookOptions<TData, TVariables>>();
+  const queryRef = React.useRef<DocumentNode | TypedDocumentNode<TData, TVariables>>();
+  const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
 
-  // Use refs to track options and the used query to ensure the `execute` 
+  // Use refs to track options and the used query to ensure the `execute`
   // function remains referentially stable between renders.
   optionsRef.current = merged;
   queryRef.current = document;
@@ -58,7 +60,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
     });
 
   // We use useMemo here to make sure the eager methods have a stable identity.
-  const eagerMethods = useMemo(() => {
+  const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
       const method = result[key];
@@ -77,7 +79,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
 
   Object.assign(result, eagerMethods);
 
-  const execute = useCallback<
+  const execute = React.useCallback<
     LazyQueryResultTuple<TData, TVariables>[0]
   >(executeOptions => {
     execOptionsRef.current = executeOptions ? {
@@ -93,7 +95,7 @@ export function useLazyQuery<TData = any, TVariables extends OperationVariables 
     })
 
     const promise = internalState
-      .executeQuery({ ...options, skip: false }) 
+      .executeQuery({ ...options, skip: false })
       .then((queryResult) => Object.assign(queryResult, eagerMethods));
 
     // Because the return value of `useLazyQuery` is usually floated, we need

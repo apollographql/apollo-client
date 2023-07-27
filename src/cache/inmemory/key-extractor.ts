@@ -1,18 +1,18 @@
-import { invariant } from "../../utilities/globals";
+import { invariant } from "../../utilities/globals/index.js";
 
 import {
   argumentsObjectFromField,
   DeepMerger,
   isNonEmptyArray,
   isNonNullObject,
-} from "../../utilities";
+} from "../../utilities/index.js";
 
-import { hasOwn, isArray } from "./helpers";
-import {
+import { hasOwn, isArray } from "./helpers.js";
+import type {
   KeySpecifier,
   KeyFieldsFunction,
   KeyArgsFunction,
-} from "./policies";
+} from "./policies.js";
 
 // Mapping from JSON-encoded KeySpecifier strings to associated information.
 const specifierInfoCache: Record<string, {
@@ -73,9 +73,9 @@ export function keyFieldsFnFromSpecifier(
 
         invariant(
           extracted !== void 0,
-          `Missing field '${schemaKeyPath.join('.')}' while extracting keyFields from ${
-            JSON.stringify(object)
-          }`,
+          `Missing field '%s' while extracting keyFields from %s`,
+          schemaKeyPath.join('.'),
+          object,
         );
 
         return extracted;

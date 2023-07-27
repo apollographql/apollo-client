@@ -1,5 +1,6 @@
 {
   "extends": ["apollo-open-source"],
+  "ignorePaths": ["**/integration-tests/**"],
   "dependencyDashboard": true,
   "pathRules": [
     {

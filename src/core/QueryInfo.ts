@@ -1,25 +1,27 @@
-import { DocumentNode, GraphQLError } from 'graphql';
+import type { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
-import { Cache, ApolloCache } from '../cache';
-import { DeepMerger } from "../utilities"
-import { mergeIncrementalData } from '../utilities/common/incrementalResult';
-import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
-import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
-import { QueryListener } from './types';
-import { FetchResult } from '../link/core';
+import type { Cache, ApolloCache } from '../cache/index.js';
+import { DeepMerger } from "../utilities/index.js"
+import { mergeIncrementalData } from '../utilities/index.js';
+import type { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions.js';
+import type { ObservableQuery} from './ObservableQuery.js';
+import { reobserveCacheFirst } from './ObservableQuery.js';
+import type { QueryListener, MethodKeys } from './types.js';
+import type { FetchResult } from '../link/core/index.js';
+import type {
+  ObservableSubscription} from '../utilities/index.js';
 import {
-  ObservableSubscription,
   isNonEmptyArray,
   graphQLResultHasError,
   canUseWeakMap,
-} from '../utilities';
+} from '../utilities/index.js';
 import {
   NetworkStatus,
   isNetworkRequestInFlight,
-} from './networkStatus';
-import { ApolloError } from '../errors';
-import { QueryManager } from './QueryManager';
+} from './networkStatus.js';
+import type { ApolloError } from '../errors/index.js';
+import type { QueryManager } from './QueryManager.js';
 
 export type QueryStoreValue = Pick<QueryInfo,
   | "variables"
@@ -40,7 +42,7 @@ const destructiveMethodCounts = new (
 
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,
-  methodName: keyof ApolloCache<any>,
+  methodName: MethodKeys<ApolloCache<any>>,
 ) {
   const original = cache[methodName];
   if (typeof original === "function") {

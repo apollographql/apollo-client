@@ -1,7 +1,7 @@
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 
-import { ObservableQuery, OperationVariables } from '../../core';
-import { QueryDataOptions } from '../types/types';
+import type { ObservableQuery, OperationVariables } from '../../core/index.js';
+import type { QueryDataOptions } from '../types/types.js';
 
 // TODO: A vestigial interface from when hooks were implemented with utility
 // classes, which should be deleted in the future.

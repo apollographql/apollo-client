@@ -1,11 +1,11 @@
-import '../utilities/globals';
+import '../utilities/globals/index.js';
 
-import { GraphQLError, GraphQLErrorExtensions } from 'graphql';
+import type { GraphQLError, GraphQLErrorExtensions } from 'graphql';
 
-import { isNonNullObject } from '../utilities';
-import { ServerParseError } from '../link/http';
-import { ServerError } from '../link/utils';
-import { FetchResult } from "../link/core";
+import { isNonNullObject } from '../utilities/index.js';
+import type { ServerParseError } from '../link/http/index.js';
+import type { ServerError } from '../link/utils/index.js';
+import type { FetchResult } from "../link/core/index.js";
 
 // This Symbol allows us to pass transport-specific errors from the link chain
 // into QueryManager/client internals without risking a naming collision within

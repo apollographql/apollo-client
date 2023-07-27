@@ -1,8 +1,8 @@
-import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentNode } from 'graphql'; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { MissingFieldError } from './common';
-import { Reference } from '../../../utilities';
+import type { MissingFieldError } from './common.js';
+import type { Reference } from '../../../utilities/index.js';
 
 export namespace DataProxy {
   export interface Query<TVariables, TData> {

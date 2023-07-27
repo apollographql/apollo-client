@@ -4,9 +4,10 @@ import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
 
 import { ApolloLink } from '../../core/ApolloLink';
 import { execute } from '../../core/execute';
-import { Observable } from '../../../utilities/observables/Observable';
+import { Observable, Observer } from '../../../utilities/observables/Observable';
 import { BatchHttpLink } from '../batchHttpLink';
 import { itAsync } from '../../../testing';
+import { FetchResult } from '../../core';
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -298,7 +299,7 @@ describe('SharedHttpTest', () => {
   it('raises warning if called with concat', () => {
     const link = createHttpLink();
     const _warn = console.warn;
-    console.warn = (warning: any) => expect(warning['message']).toBeDefined();
+    console.warn = (...args: any) => expect(args).toEqual(["You are calling concat on a terminating link, which will have no effect %o", link]);
     expect(link.concat((operation, forward) => forward(operation))).toEqual(
       link,
     );
@@ -352,6 +353,62 @@ describe('SharedHttpTest', () => {
     );
   });
 
+  itAsync('strips unused variables, respecting nested fragments', (resolve, reject) => {
+    const link = createHttpLink({ uri: '/data' });
+
+    const query = gql`
+      query PEOPLE (
+        $declaredAndUsed: String,
+        $declaredButUnused: Int,
+      ) {
+        people(
+          surprise: $undeclared,
+          noSurprise: $declaredAndUsed,
+        ) {
+          ... on Doctor {
+            specialty(var: $usedByInlineFragment)
+          }
+          ...LawyerFragment
+        }
+      }
+      fragment LawyerFragment on Lawyer {
+        caseCount(var: $usedByNamedFragment)
+      }
+    `;
+
+    const variables = {
+      unused: 'strip',
+      declaredButUnused: 'strip',
+      declaredAndUsed: 'keep',
+      undeclared: 'keep',
+      usedByInlineFragment: 'keep',
+      usedByNamedFragment: 'keep',
+    };
+
+    execute(link, {
+      query,
+      variables,
+    }).subscribe({
+      next: makeCallback(resolve, reject, () => {
+        const [uri, options] = fetchMock.lastCall()!;
+        const { method, body } = options!;
+        expect(JSON.parse(body as string)).toEqual([{
+          operationName: "PEOPLE",
+          query: print(query),
+          variables: {
+            declaredAndUsed: 'keep',
+            undeclared: 'keep',
+            usedByInlineFragment: 'keep',
+            usedByNamedFragment: 'keep',
+          },
+        }]);
+        expect(method).toBe('POST');
+        expect(uri).toBe('/data');
+      }),
+      error: error => reject(error),
+    });
+  });
+
   itAsync('unsubscribes without calling subscriber', (resolve, reject) => {
     const link = createHttpLink({ uri: '/data' });
     const observable = execute(link, {
@@ -371,6 +428,7 @@ describe('SharedHttpTest', () => {
     link: ApolloLink,
     after: () => void,
     includeExtensions: boolean,
+    includeUnusedVariables: boolean,
     reject: (e: Error) => void,
   ) => {
     const next = jest.fn();
@@ -389,7 +447,7 @@ describe('SharedHttpTest', () => {
         try {
           let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
           expect(body.query).toBe(print(sampleMutation));
-          expect(body.variables).toEqual(variables);
+          expect(body.variables).toEqual(includeUnusedVariables ? variables : {});
           expect(body.context).not.toBeDefined();
           if (includeExtensions) {
             expect(body.extensions).toBeDefined();
@@ -410,8 +468,9 @@ describe('SharedHttpTest', () => {
     const link = createHttpLink({ uri: '/data', includeExtensions: true });
     verifyRequest(
       link,
-      () => verifyRequest(link, resolve, true, reject),
+      () => verifyRequest(link, resolve, true, false, reject),
       true,
+      false,
       reject,
     );
   });
@@ -420,7 +479,8 @@ describe('SharedHttpTest', () => {
     const link = createHttpLink({ uri: '/data' });
     verifyRequest(
       link,
-      () => verifyRequest(link, resolve, false, reject),
+      () => verifyRequest(link, resolve, false, false, reject),
+      false,
       false,
       reject,
     );
@@ -582,7 +642,7 @@ describe('SharedHttpTest', () => {
     const variables = { params: 'stub' };
     const link = createHttpLink({
       uri: '/data',
-      headers: { 
+      headers: {
         authorization: '1234',
         AUTHORIZATION: '1234',
         'CONTENT-TYPE': 'application/json',
@@ -897,5 +957,187 @@ describe('SharedHttpTest', () => {
       },
       () => {},
     );
+  });
+
+  it('removes @client fields from the query before sending it to the server', async () => {
+    fetchMock.mock('https://example.com/graphql', {
+      status: 200,
+      body: JSON.stringify({
+        data: {
+          author: { __typename: 'Author', name: 'Test User' }
+        }
+      }),
+      headers: { 'content-type': 'application/json' }
+    });
+
+    const query = gql`
+      query {
+        author {
+          name
+          isInCollection @client
+        }
+      }
+    `;
+
+    const serverQuery = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+
+    const link = createHttpLink({ uri: 'https://example.com/graphql' });
+
+    await new Promise((resolve, reject) => {
+      execute(link, { query }).subscribe({
+        next: resolve,
+        error: reject
+      });
+    });
+
+    const [, options] = fetchMock.lastCall()!;
+    const { body } = options!
+
+    expect(JSON.parse(body!.toString())).toEqual([
+      {
+        query: print(serverQuery),
+        variables: {}
+      }
+    ]);
+  });
+
+  it('responds with error when trying to send a client-only query', async () => {
+    const errorHandler = jest.fn()
+    const query = gql`
+      query {
+        author @client {
+          name
+        }
+      }
+    `;
+
+    const link = createHttpLink({ uri: 'https://example.com/graphql' });
+
+    await new Promise<void>((resolve, reject) => {
+      execute(link, { query }).subscribe({
+        next: reject,
+        error: errorHandler.mockImplementation(resolve)
+      });
+    });
+
+    expect(errorHandler).toHaveBeenCalledWith(
+      new Error('BatchHttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or enable the `transformOptions.removeClientFields` option.')
+    );
+  });
+
+  describe('AbortController', () => {
+    const originalAbortController = globalThis.AbortController;
+    afterEach(() => {
+      globalThis.AbortController = originalAbortController;
+    });
+
+    function trackGlobalAbortControllers() {
+      const instances: AbortController[] = []
+      class AbortControllerMock {
+        constructor() {
+          const instance = new originalAbortController()
+          instances.push(instance)
+          return instance
+        }
+      }
+
+      globalThis.AbortController = AbortControllerMock as any;
+      return instances;
+    }
+
+    const failingObserver: Observer<FetchResult> = {
+      next: () => {
+        fail('result should not have been called');
+      },
+      error: e => {
+        fail(e);
+      },
+      complete: () => {
+        fail('complete should not have been called');
+      },
+    }
+
+    function mockFetch() {
+      const text = jest.fn(async () => '{ "data": { "stub": { "id": "foo" } } }');
+      const fetch = jest.fn(async (uri, options) => ({ text }));
+      return { text, fetch }
+    }
+
+    it("aborts the request when unsubscribing before the request has completed", () => {
+      const { fetch } = mockFetch();
+      const abortControllers = trackGlobalAbortControllers();
+
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+      const sub = execute(link, { query: sampleQuery }).subscribe(failingObserver);
+      sub.unsubscribe();
+
+      expect(abortControllers.length).toBe(1);
+      expect(abortControllers[0].signal.aborted).toBe(true);
+    });
+
+    it('a passed-in signal will be forwarded to the `fetch` call and not be overwritten by an internally-created one', () => {
+      const { fetch } = mockFetch();
+      const externalAbortController = new AbortController();
+
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any, fetchOptions: { signal: externalAbortController.signal } });
+
+      const sub = execute(link, { query: sampleQuery } ).subscribe(failingObserver);
+      sub.unsubscribe();
+
+      expect(fetch.mock.calls.length).toBe(1);
+      expect(fetch.mock.calls[0][1]).toEqual(expect.objectContaining({ signal: externalAbortController.signal }))
+    });
+
+    it('aborting the internal signal will not cause an error', async () => {
+      try { 
+        fetchMock.restore();
+        fetchMock.postOnce('data', async () => '{ "data": { "stub": { "id": "foo" } } }');
+        const abortControllers = trackGlobalAbortControllers();
+
+        const link = createHttpLink({ uri: '/data' });
+        execute(link, { query: sampleQuery } ).subscribe(failingObserver);
+        abortControllers[0].abort();
+      } finally {
+        fetchMock.restore();
+      }
+    });
+
+    it('resolving fetch does not cause the AbortController to be aborted', async () => {
+      const { text, fetch } = mockFetch();
+      const abortControllers = trackGlobalAbortControllers();
+      text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
+
+      // (the request is already finished at that point)
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+      await new Promise<void>(resolve => execute(link, { query: sampleQuery }).subscribe({
+        complete: resolve
+      }));
+
+      expect(abortControllers.length).toBe(1);
+      expect(abortControllers[0].signal.aborted).toBe(false);
+    });
+
+    it('an unsuccessful fetch does not cause the AbortController to be aborted', async () => {
+      const { fetch } = mockFetch();
+      const abortControllers = trackGlobalAbortControllers();
+      fetch.mockRejectedValueOnce("This is an error!")
+      // the request would be closed by the browser in the case of an error anyways
+      const link = createHttpLink({ uri: 'data', fetch: fetch as any });
+
+      await new Promise<void>(resolve => execute(link, { query: sampleQuery }).subscribe({
+        error: resolve
+      }));
+
+      expect(abortControllers.length).toBe(1);
+      expect(abortControllers[0].signal.aborted).toBe(false);
+    });
   });
 });

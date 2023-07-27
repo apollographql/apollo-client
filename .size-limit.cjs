@@ -1,7 +1,7 @@
 const checks = [
   {
     path: "dist/apollo-client.min.cjs",
-    limit: "36.64kb"
+    limit: "38000"
   },
   {
     path: "dist/main.cjs",
@@ -10,7 +10,7 @@ const checks = [
   {
     path: "dist/index.js",
     import: "{ ApolloClient, InMemoryCache, HttpLink }",
-    limit: "34.99kb"
+    limit: "31971"
   },
   ...[
     "ApolloProvider",
@@ -18,8 +18,10 @@ const checks = [
     "useLazyQuery",
     "useMutation",
     "useSubscription",
-    //"useSuspenseQuery_experimental",
-    "useFragment_experimental"
+    "useSuspenseQuery",
+    "useBackgroundQuery",
+    "useReadQuery",
+    "useFragment"
   ].map((name) => ({ path: "dist/react/index.js", import: `{ ${name} }` })),
 ].map((config) => ({
   ...config,
@@ -47,7 +49,6 @@ const checks = [
   name: `${value.name} (production)`,
   modifyEsbuildConfig(config){
     config.define = {
-      "__DEV__": `false`,
       "globalThis.__DEV__": `false`,
     }
     return config

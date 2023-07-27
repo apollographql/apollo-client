@@ -1,36 +1,34 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 
-import {
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { useSyncExternalStore } from './useSyncExternalStore';
+import * as React from 'react';
+import { useSyncExternalStore } from './useSyncExternalStore.js';
 import { equal } from '@wry/equality';
 
-import { mergeOptions, OperationVariables, WatchQueryFetchPolicy } from '../../core';
-import { ApolloContextValue, getApolloContext } from '../context';
-import { ApolloError } from '../../errors';
-import {
+import type { OperationVariables, WatchQueryFetchPolicy } from '../../core/index.js';
+import { mergeOptions } from '../../utilities/index.js';
+import type { ApolloContextValue} from '../context/index.js';
+import { getApolloContext } from '../context/index.js';
+import { ApolloError } from '../../errors/index.js';
+import type {
   ApolloClient,
   ApolloQueryResult,
-  NetworkStatus,
   ObservableQuery,
   DocumentNode,
   TypedDocumentNode,
-  WatchQueryOptions,
-} from '../../core';
+  WatchQueryOptions} from '../../core/index.js';
 import {
+  NetworkStatus
+} from '../../core/index.js';
+import type {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
-} from '../types/types';
+  NoInfer,
+} from '../types/types.js';
 
-import { DocumentType, verifyDocumentType } from '../parser';
-import { useApolloClient } from './useApolloClient';
-import { canUseWeakMap, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities';
+import { DocumentType, verifyDocumentType } from '../parser/index.js';
+import { useApolloClient } from './useApolloClient.js';
+import { canUseWeakMap, compact, isNonEmptyArray, maybeDeepFreeze } from '../../utilities/index.js';
 
 const {
   prototype: {
@@ -43,7 +41,7 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<TData, TVariables> = Object.create(null),
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> = Object.create(null),
 ): QueryResult<TData, TVariables> {
   return useInternalState(
     useApolloClient(options.client),
@@ -55,7 +53,7 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
 ): InternalState<TData, TVariables> {
-  const stateRef = useRef<InternalState<TData, TVariables>>();
+  const stateRef = React.useRef<InternalState<TData, TVariables>>();
   if (
     !stateRef.current ||
     client !== stateRef.current.client ||
@@ -71,7 +69,7 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   // setTick function. Updating this state by calling state.forceUpdate is the
   // only way we trigger React component updates (no other useState calls within
   // the InternalState class).
-  const [_tick, setTick] = useState(0);
+  const [_tick, setTick] = React.useState(0);
   state.forceUpdate = () => {
     setTick(tick => tick + 1);
   };
@@ -101,7 +99,9 @@ class InternalState<TData, TVariables extends OperationVariables> {
     invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
 
-  executeQuery(options: QueryHookOptions<TData, TVariables>) {
+  executeQuery(options: QueryHookOptions<TData, TVariables> & {
+    query?: DocumentNode;
+  }) {
     if (options.query) {
       Object.assign(this, { query: options.query })
     }
@@ -124,7 +124,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     return new Promise<QueryResult<TData, TVariables>>((resolve) => {
       let result: ApolloQueryResult<TData>;
 
-      // Subscribe to the concast independently of the ObservableQuery in case 
+      // Subscribe to the concast independently of the ObservableQuery in case
       // the component gets unmounted before the promise resolves. This prevents
       // the concast from terminating early and resolving with `undefined` when
       // there are no more subscribers for the concast.
@@ -153,14 +153,14 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // initialization, this.renderPromises is usually undefined (unless SSR is
     // happening), but that's fine as long as it has been initialized that way,
     // rather than left uninitialized.
-    this.renderPromises = useContext(getApolloContext()).renderPromises;
+    this.renderPromises = React.useContext(getApolloContext()).renderPromises;
 
     this.useOptions(options);
 
     const obsQuery = this.useObservableQuery();
 
     const result = useSyncExternalStore(
-      useCallback(() => {
+      React.useCallback(() => {
         if (this.renderPromises) {
           return () => {};
         }
@@ -225,7 +225,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
 
         // Do the "unsubscribe" with a short delay.
         // This way, an existing subscription can be reused without an additional
-        // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery 
+        // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
         // happen in very fast succession.
         return () => setTimeout(() => subscription.unsubscribe());
       }, [
@@ -463,7 +463,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
         || this.observable // Reuse this.observable if possible (and not SSR)
         || this.client.watchQuery(this.getObsQueryOptions());
 
-    this.obsQueryFields = useMemo(() => ({
+    this.obsQueryFields = React.useMemo(() => ({
       refetch: obsQuery.refetch.bind(obsQuery),
       reobserve: obsQuery.reobserve.bind(obsQuery),
       fetchMore: obsQuery.fetchMore.bind(obsQuery),
@@ -504,10 +504,13 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // Calling state.setResult always triggers an update, though some call sites
     // perform additional equality checks before committing to an update.
     this.forceUpdate();
-    this.handleErrorOrCompleted(nextResult);
+    this.handleErrorOrCompleted(nextResult, previousResult);
   }
 
-  private handleErrorOrCompleted(result: ApolloQueryResult<TData>) {
+  private handleErrorOrCompleted(
+    result: ApolloQueryResult<TData>,
+    previousResult?: ApolloQueryResult<TData>
+  ) {
     if (!result.loading) {
       const error = this.toApolloError(result);
 
@@ -515,7 +518,11 @@ class InternalState<TData, TVariables extends OperationVariables> {
       Promise.resolve().then(() => {
         if (error) {
           this.onError(error);
-        } else if (result.data) {
+        } else if (
+          result.data &&
+          previousResult?.networkStatus !== result.networkStatus &&
+          result.networkStatus === NetworkStatus.ready
+        ) {
           this.onCompleted(result.data);
         }
       }).catch(error => {

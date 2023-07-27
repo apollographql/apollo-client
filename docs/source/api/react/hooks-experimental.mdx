@@ -17,19 +17,9 @@ import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
 
 > ⚠️ **The `useBackgroundQuery` and `useReadQuery` hooks are currently at the [beta stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in Apollo Client.** If you have feedback on them, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
-Apollo Client has beta support for the `useBackgroundQuery` and `useReadQuery` hooks, which work with React's [Suspense](https://react.dev/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@beta`.
+Apollo Client has beta support for the `useBackgroundQuery` and `useReadQuery` hooks, which work with React's [Suspense](https://react.dev/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@rc`.
 
 ### Using `useBackgroundQuery` and `useReadQuery`
-
-Create and provide a `SuspenseCache` instance to your `ApolloProvider`.
-
-```js
-import { SuspenseCache } from '@apollo/client';
-
-const suspenseCache = new SuspenseCache();
-
-<ApolloProvider suspenseCache={suspenseCache} />;
-```
 
 `useBackgroundQuery` allows a user to initiate a query outside of the component that will read and render the data with `useReadQuery`, which triggers the nearest Suspense boundary while the query is pending. This means a query can be initiated higher up in the React render tree and your application can begin requesting data before the component that has a dependency on that data begins rendering.
 
@@ -42,7 +32,6 @@ import { Suspense } from 'react';
 import {
   ApolloClient,
   InMemoryCache,
-  SuspenseCache,
   useBackgroundQuery,
   useReadQuery,
 } from '@apollo/client';
@@ -52,8 +41,6 @@ const query = gql`
     bar
   }
 `;
-
-const suspenseCache = new SuspenseCache();
 
 const client = new ApolloClient({
   uri: "http://localhost:4000/graphql",
@@ -82,7 +69,7 @@ function Parent() {
 
 function App() {
   return (
-    <ApolloProvider client={client} suspenseCache={suspenseCache}>
+    <ApolloProvider client={client}>
       <ErrorBoundary fallback={<div>Error</div>}>
         <Parent />
       </ErrorBoundary>
@@ -237,19 +224,9 @@ The `useFragment` hook accepts the following options:
 
 > ⚠️ **The `useSuspenseQuery` hook is currently at the [beta stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in Apollo Client.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
-Apollo Client has beta support for the `useSuspenseQuery` hook, which works with React's [Suspense](https://react.dev/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@beta`.
+Apollo Client has beta support for the `useSuspenseQuery` hook, which works with React's [Suspense](https://react.dev/reference/react/Suspense) feature. You can install it via `npm install @apollo/client@rc`.
 
 ### Using `useSuspenseQuery`
-
-Create and provide a `SuspenseCache` instance to your `ApolloProvider`.
-
-```js
-import { SuspenseCache } from '@apollo/client';
-
-const suspenseCache = new SuspenseCache();
-
-<ApolloProvider suspenseCache={suspenseCache} />;
-```
 
 Write queries using `useSuspenseQuery`. Ensure the component is wrapped with React's [`Suspense`](https://react.dev/reference/react/Suspense) component. Note that the hook returns only `data` and `error`: since Suspense provides the tools to manage our application's loading states, `useSuspenseQuery` does not return a `loading` boolean.
 

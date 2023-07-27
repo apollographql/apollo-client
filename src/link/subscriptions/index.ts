@@ -28,12 +28,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { print } from "graphql";
+import { print } from '../../utilities/index.js';
 import type { Client } from "graphql-ws";
 
-import { ApolloLink, Operation, FetchResult } from "../core";
-import { isNonNullObject, Observable } from "../../utilities";
-import { ApolloError } from "../../errors";
+import type { Operation, FetchResult } from "../core/index.js";
+import { ApolloLink } from "../core/index.js";
+import { isNonNullObject, Observable } from "../../utilities/index.js";
+import { ApolloError } from "../../errors/index.js";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event
 function isLikeCloseEvent(val: unknown): val is CloseEvent {

@@ -1,6 +1,109 @@
+##### DISCLAIMER ######
+# We have disabled the use of prettier in this project for a variety of reasons.
+# Because much of this project has not been formatted, we don't want to want to
+# apply formatting to everything and skew `git blame` stats. Instead, we should
+# only format newly created files that we can guarantee have no existing git
+# history. For this reason, we have disabled prettier project-wide except for
+# a handful of files.
+#
+# ONLY ADD NEWLY CREATED FILES/PATHS TO THE LIST BELOW. DO NOT ADD EXISTING
+# PROJECT FILES.
+
 # ignores all files in /docs directory
 /docs/**
 
 # Ignore all mdx & md files:
 *.mdx
 *.md
+
+# Do not format anything automatically except files listed below
+/*
+
+!config/
+config/*
+!config/processInvariants.ts
+
+!integration-tests/
+!integration-tests/**
+
+#####  PATHS TO BE FORMATTED #####
+!src/
+src/*
+!src/react/
+src/react/*
+
+!src/dev
+
+# Allow src/react/cache/ApolloProvider
+!src/react/context/
+src/react/context/*
+!src/react/context/ApolloProvider.tsx
+!src/react/context/ApolloContext.ts
+!src/react/context/__tests__/
+src/react/context/__tests__/*
+!src/react/context/__tests__/ApolloProvider.test.tsx
+
+# Allow src/react/cache
+!src/react/cache/
+
+# Allow certain core files
+!src/core
+src/core/*
+!src/core/__tests__/
+src/core/tests/*
+!src/core/__tests__/equalByQuery.ts
+!src/core/equalByQuery.ts
+
+# Allowed utilities
+!src/utilities/
+src/utilities/*
+!src/utilities/promises/
+!src/utilities/types/
+src/utilities/types/*
+!src/utilities/types/DeepOmit.ts
+!src/utilities/types/DeepPartial.ts
+!src/utilities/types/Primitive.ts
+!src/utilities/common
+src/utilities/common/*
+!src/utilities/common/stripTypename.ts
+!src/utilities/common/omitDeep.ts
+!src/utilities/common/tap.ts
+!src/utilities/common/__tests__/
+src/utilities/common/__tests__/*
+!src/utilities/common/__tests__/omitDeep.ts
+!src/utilities/common/__tests__/stripTypename.ts
+!src/utilities/globals
+src/utilities/globals/*
+!src/utilities/globals/invariantWrappers.ts
+!src/utilities/graphql
+src/utilities/graphql/*
+!src/utilities/graphql/operations.ts
+!src/utilities/graphql/print.ts
+!src/utilities/graphql/DocumentTransform.ts
+!src/utilities/graphql/__tests__/
+src/utilities/graphql/__tests__/*
+!src/utilities/graphql/__tests__/DocumentTransform.ts
+
+# Allowed links
+!src/link
+src/link/*
+!src/link/remove-typename
+
+## Allowed React Hooks
+!src/react/hooks/
+src/react/hooks/*
+!src/react/hooks/internal
+!src/react/hooks/useSuspenseCache.ts
+!src/react/hooks/useSuspenseQuery.ts
+!src/react/hooks/useBackgroundQuery.ts
+
+## Allowed React hook tests
+!src/react/hooks/__tests__/
+src/react/hooks/__tests__/*
+!src/react/hooks/__tests__/useSuspenseQuery.test.tsx
+!src/react/hooks/__tests__/useBackgroundQuery.test.tsx
+
+## Allowed testing utils
+!src/testing
+src/testing/*
+!src/testing/matchers

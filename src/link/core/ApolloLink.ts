@@ -1,18 +1,19 @@
-import { InvariantError, invariant } from '../../utilities/globals';
+import { newInvariantError, invariant } from '../../utilities/globals/index.js';
 
-import { Observable, Observer } from '../../utilities';
-import {
+import type { Observer } from '../../utilities/index.js';
+import { Observable } from '../../utilities/index.js';
+import type {
   NextLink,
   Operation,
   RequestHandler,
   FetchResult,
   GraphQLRequest
-} from './types';
+} from './types.js';
 import {
   validateOperation,
   createOperation,
   transformOperation,
-} from '../utils';
+} from '../utils/index.js';
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;
@@ -24,14 +25,6 @@ function toLink(handler: RequestHandler | ApolloLink) {
 
 function isTerminating(link: ApolloLink): boolean {
   return link.request.length <= 1;
-}
-
-class LinkError extends Error {
-  public link?: ApolloLink;
-  constructor(message?: string, link?: ApolloLink) {
-    super(message);
-    this.link = link;
-  }
 }
 
 export class ApolloLink {
@@ -88,10 +81,8 @@ export class ApolloLink {
     const firstLink = toLink(first);
     if (isTerminating(firstLink)) {
       invariant.warn(
-        new LinkError(
-          `You are calling concat on a terminating link, which will have no effect`,
+          `You are calling concat on a terminating link, which will have no effect %o`,
           firstLink,
-        ),
       );
       return firstLink;
     }
@@ -138,7 +129,7 @@ export class ApolloLink {
     operation: Operation,
     forward?: NextLink,
   ): Observable<FetchResult> | null {
-    throw new InvariantError('request is not implemented');
+    throw newInvariantError('request is not implemented');
   }
 
   protected onError(

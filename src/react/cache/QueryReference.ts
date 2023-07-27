@@ -72,6 +72,8 @@ export class InternalQueryReference<TData = unknown> {
     this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
+    // Don't save this result as last result to prevent delivery of last result
+    // when first subscribing
     this.result = observable.getCurrentResult(false);
     this.key = options.key;
 

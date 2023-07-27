@@ -60,7 +60,7 @@ Without the use of the `removeTypenameFromVariables` link, the server will retur
 
 ## Keep `__typename` in JSON scalars
 
-The [GraphQL spec](https://spec.graphql.org/October2021/#sec-Input-Objects.Type-Validation) disallows input fields that begin with the characters "\_\_" (two underscores). When the input field is a JSON scalar (i.e. a scalar type that accepts raw JSON as input), this restriction is not applied. If your GraphQL server relies on the `__typename` field within a JSON scalar, you can configure the `removeTypenameFromVariables` link to keep `__typename`.
+While the [GraphQL spec](https://spec.graphql.org/October2021/#sec-Input-Objects.Type-Validation) disallows input fields that begin with the characters "\_\_" (two underscores), this restriction is not applied when the input field is a JSON scalar (i.e. a scalar type that accepts raw JSON as input). When your server relies on `__typename` within certain `JSON` scalars, you can configure the `removeTypenameFromVariables` link to retain `__typename`.
 
 > Note: the JSON scalar type does not need to be literally named `JSON` to be considered a JSON scalar.
 

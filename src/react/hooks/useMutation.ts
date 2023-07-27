@@ -88,11 +88,9 @@ export function useMutation<
           ? new ApolloError({ graphQLErrors: errors })
           : void 0;
 
-      const errorPolicy = clientOptions.errorPolicy;
-
       const onError = executeOptions.onError || ref.current.options?.onError
 
-      if (error && errorPolicy === 'all' && onError) {
+      if (error && onError) {
         onError(error, clientOptions);
       }
 

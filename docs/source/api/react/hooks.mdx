@@ -593,13 +593,16 @@ function App() {
 ### Signature
 
 ```ts
-function useBackgroundQuery<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables
->(
+function useBackgroundQuery<TData, TVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptions<TData, TVariables>,
-): UseBackgroundQueryResult<TData> {}
+): [
+  QueryReference<TData>,
+  {
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    refetch: RefetchFunction<TData, TVariables>;
+  }
+]
 ```
 
 ### Params

@@ -11,6 +11,11 @@ import SubscriptionOptions3 from '../../../shared/subscription-options.mdx';
 import SubscriptionResult3 from '../../../shared/subscription-result.mdx';
 import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
 import UseFragmentResult from '../../../shared/useFragment-result.mdx';
+import UseSuspenseQueryOptions from '../../../shared/useSuspenseQuery-options.mdx';
+import UseBackgroundQueryOptions from '../../../shared/useBackgroundQuery-options.mdx';
+import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx';
+import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
+import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
 
 ## Installation
 
@@ -90,7 +95,7 @@ function Hello() {
 
 > Refer to the [Queries](../../data/queries/) section for a more in-depth overview of `useQuery`.
 
-### Function Signature
+### Signature
 
 ```ts
 function useQuery<TData = any, TVariables = OperationVariables>(
@@ -145,7 +150,7 @@ function Hello() {
 
 > Refer to the [Queries](../../data/queries/) section for a more in-depth overview of `useLazyQuery`.
 
-### Function Signature
+### Signature
 
 ```ts
 function useLazyQuery<TData = any, TVariables = OperationVariables>(
@@ -224,7 +229,7 @@ function AddTodo() {
 
 > Refer to the [Mutations](../../data/mutations/) section for a more in-depth overview of `useMutation`.
 
-### Function Signature
+### Signature
 
 ```ts
 function useMutation<TData = any, TVariables = OperationVariables>(
@@ -331,7 +336,7 @@ export function Subscriptions() {
 
 Now, the first message will be added to the `accumulatedData` array since `onData` is called _before_ the component re-renders. React 18 automatic batching is still in effect and results in a single re-render, but with `onData` we can guarantee each message received after the component mounts is added to `accumulatedData`.
 
-### Function Signature
+### Signature
 
 ```ts
 function useSubscription<TData = any, TVariables = OperationVariables>(
@@ -375,7 +380,7 @@ function SomeComponent() {
 }
 ```
 
-### Function Signature
+### Signature
 
 ```ts
 function useApolloClient(): ApolloClient<object> {}
@@ -403,7 +408,7 @@ export function Cart() {
   // ...
 ```
 
-### Function Signature
+### Signature
 
 ```tsx
 function useReactiveVar<T>(rv: ReactiveVar<T>): T {}
@@ -451,3 +456,194 @@ function useFragment<
 ### Result
 
 <UseFragmentResult />
+
+<MinVersion version="3.8.0">
+
+## `useSuspenseQuery`
+
+</MinVersion>
+
+For a detailed explanation of `useSuspenseQuery`, see the [Suspense reference](../../data/suspense#usesuspensequery).
+
+See the [API reference](#usesuspensequery-api) for supported options.
+
+### Example
+
+```jsx
+import { Suspense } from 'react';
+import { useSuspenseQuery } from '@apollo/client';
+
+const listQuery = gql`
+  query {
+    list {
+      id
+    }
+  }
+`;
+
+function App() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <List />
+    </Suspense>
+  );
+}
+
+function List() {
+  const { data } = useSuspenseQuery(listQuery);
+
+  return (
+    <ol>
+      {data.list.map(item => <Item key={item.id} id={item.id}/>)}
+    </ol>
+  );
+}
+
+```
+
+### Signature
+
+```ts
+function useSuspenseQuery<TData, TVariables>(
+  query: DocumentNode,
+  options?: SuspenseQueryHookOptions<TData, TVariables>,
+): UseSuspenseQueryResult<TData, TVariables>
+```
+
+### Params
+
+#### `query`
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `query` | (Typed)DocumentNode | A GraphQL query document parsed into an AST by `gql`. |
+
+
+#### `options`
+
+<UseSuspenseQueryOptions />
+
+### Result
+
+<UseSuspenseQueryResult />
+
+<MinVersion version="3.8.0">
+
+## `useBackgroundQuery` and `useReadQuery`
+
+</MinVersion>
+
+For a detailed explanation of `useBackgroundQuery` and `useReadQuery`, see the [Suspense reference](../../data/suspense#usebackgroundquery-and-usereadquery).
+
+See the API references for [`useBackgroundQuery`](#usebackgroundquery-api) and [`useReadQuery`](#usereadquery-api) for supported options.
+
+### Example
+
+```jsx
+import { Suspense } from 'react';
+import {
+  ApolloClient,
+  InMemoryCache,
+  useBackgroundQuery,
+  useReadQuery,
+} from '@apollo/client';
+
+const query = gql`
+  foo {
+    bar
+  }
+`;
+
+const client = new ApolloClient({
+  uri: "http://localhost:4000/graphql",
+  cache: new InMemoryCache()
+});
+
+function SuspenseFallback() {
+  return <div>Loading...</div>;
+}
+
+function Child({ queryRef }) {
+  const { data } = useReadQuery(queryRef);
+
+  return <div>{data.foo.bar}</div>;
+}
+
+function Parent() {
+  const [queryRef] = useBackgroundQuery(query);
+
+  return (
+    <Suspense fallback={<SuspenseFallback />}>
+      <Child queryRef={queryRef} />
+    </Suspense>
+  );
+}
+
+function App() {
+  return (
+    <ApolloProvider client={client}>
+      <Parent />
+    </ApolloProvider>
+  );
+}
+```
+
+### `useBackgroundQuery` API
+
+### Signature
+
+```ts
+function useBackgroundQuery<TData, TVariables>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: BackgroundQueryHookOptions<TData, TVariables>,
+): [
+  QueryReference<TData>,
+  {
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    refetch: RefetchFunction<TData, TVariables>;
+  }
+]
+```
+
+### Params
+
+#### `query`
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `query` | (Typed)DocumentNode | A GraphQL query document parsed into an AST by `gql`. |
+
+
+#### `options`
+
+<UseBackgroundQueryOptions />
+
+### Result
+
+<UseBackgroundQueryResult />
+
+### `useReadQuery` API
+
+#### Signature
+
+```ts
+function useReadQuery<TData>(
+  queryRef: QueryReference<TData>
+): {
+  data: TData;
+  networkStatus: NetworkStatus;
+  error: ApolloError | undefined;
+} {}
+```
+
+### Params
+
+#### `queryRef`
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `queryRef` | QueryReference | The [`queryRef`](#queryref) that was generated via `useBackgroundQuery`. |
+
+### Result
+
+<UseReadQueryResult />

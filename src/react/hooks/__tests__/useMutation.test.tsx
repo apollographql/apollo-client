@@ -560,8 +560,7 @@ describe('useMutation Hook', () => {
 
         expect(fetchResult).toEqual({});
         expect(onError).not.toHaveBeenCalled();
-
-      })
+      });
     });
 
     it('should return the current client instance in the result object', async () => {

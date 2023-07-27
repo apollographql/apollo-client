@@ -406,21 +406,15 @@ export class QueryManager<TStore> {
           // cast the ExecutionPatchResult to FetchResult here since
           // ExecutionPatchResult never has `data` when returned from the server
           (result as FetchResult<TData>).data = mergedData;
-          cacheWrites.push({
-            result: mergedData,
-            dataId: 'ROOT_MUTATION',
-            query: mutation.document,
-            variables: mutation.variables,
-          })
         }
-      } else {
-        cacheWrites.push({
-          result: result.data,
-          dataId: 'ROOT_MUTATION',
-          query: mutation.document,
-          variables: mutation.variables,
-        });
       }
+
+      cacheWrites.push({
+        result: result.data,
+        dataId: 'ROOT_MUTATION',
+        query: mutation.document,
+        variables: mutation.variables,
+      });
 
       const { updateQueries } = mutation;
       if (updateQueries) {

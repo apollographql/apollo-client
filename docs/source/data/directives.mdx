@@ -99,8 +99,6 @@ For more information and other considerations when using the `@export` directive
 
 ## `@nonreactive`
 
-> ⚠️ **The `@nonreactive` directive is currently at the [preview stage](/resources/product-launch-stages/#general-availability) in Apollo Client, and is available by installing `@apollo/client@alpha`.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
-
 The `@nonreactive` directive can be used to mark query fields or fragment spreads and is used to indicate that changes to the data contained within the subtrees marked `@nonreactive` should _not_ trigger rerendering. This allows parent components to fetch data to be rendered by their children without rerendering themselves when the data corresponding with fields marked as `@nonreactive` change.
 
 Consider an `App` component that fetches and renders a list of ski trails:

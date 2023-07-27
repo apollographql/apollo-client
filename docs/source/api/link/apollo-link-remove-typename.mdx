@@ -66,7 +66,7 @@ The [GraphQL spec](https://spec.graphql.org/October2021/#sec-Input-Objects.Type-
 
 Provide an `except` option to map all variable types that should maintain `__typename`. This is done using the `KEEP` sentinel. Each key in the `except` option should correspond to an input type in your GraphQL schema.
 
-Here we tell the `removeTypenameFromVariables` link to keep all `__typename` fields for any variable that defines itself as a `JSON` scalar type.
+Here we tell the `removeTypenameFromVariables` link to keep all `__typename` fields for any variable that is declared as a `JSON` type.
 
 ```ts
 import { removeTypenameFromVariables, KEEP } from '@apollo/client/link/remove-typename';

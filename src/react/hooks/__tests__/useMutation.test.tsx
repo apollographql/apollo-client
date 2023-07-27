@@ -482,7 +482,7 @@ describe('useMutation Hook', () => {
         expect(onError).toHaveBeenCalledTimes(1);
         expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
         expect(onCompleted).not.toHaveBeenCalled();
-      })
+      });
 
       it(`should ignore errors when errorPolicy is 'ignore'`, async () => {
         const errorMock = jest.spyOn(console, "error")

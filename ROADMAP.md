@@ -15,7 +15,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ## [3.8.0](https://github.com/apollographql/apollo-client/milestone/30)
 
-_Approximate Date: July 31, 2023_
+_Approximate Date: August 7th, 2023_
 
 Currently in active development and in the beta stage.  React 18 users will get a lot out of this release since it introduces support for Suspense.  There are also new features added to the core as well.  Here's a brief overview:
 

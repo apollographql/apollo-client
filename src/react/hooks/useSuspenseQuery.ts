@@ -24,6 +24,7 @@ import { useDeepMemo, __use } from './internal/index.js';
 import { getSuspenseCache } from '../cache/index.js';
 import { canonicalStringify } from '../../cache/index.js';
 import type { CacheKey } from '../cache/types.js';
+import type { SkipToken } from './constants.js';
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -147,11 +148,35 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = Object.create(null)
+  query: SkipToken | DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | SkipToken
+    | (SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+        returnPartialData: true;
+      })
+): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: SkipToken | DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?:
+    | SkipToken
+    | SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+): UseSuspenseQueryResult<TData | undefined, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+>(
+  query: SkipToken | DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | SkipToken
+    | SuspenseQueryHookOptions<
+        NoInfer<TData>,
+        NoInfer<TVariables>
+      > = Object.create(null)
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);

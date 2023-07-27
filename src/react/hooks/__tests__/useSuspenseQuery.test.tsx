@@ -9740,6 +9740,110 @@ describe('useSuspenseQuery', () => {
       expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
     });
 
+    it('returns TData | undefined when using `skipToken` as the query', () => {
+      const query = true ? useVariablesQueryCase().query : undefined;
+
+      const { data: inferred } = useSuspenseQuery(query || skipToken);
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(skipToken);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns DeepPartial<TData> | undefined when using `skipToken` with `returnPartialData` option', () => {
+      const query = true ? useVariablesQueryCase().query : undefined;
+
+      const { data: inferred } = useSuspenseQuery(query || skipToken, {
+        returnPartialData: true,
+      });
+
+      expectTypeOf(inferred).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query || skipToken, { returnPartialData: true });
+
+      expectTypeOf(explicit).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns unknown when using `skipToken` with unspecified TData', () => {
+      const query = true
+        ? gql`
+            query {
+              greeting
+            }
+          `
+        : undefined;
+
+      const { data } = useSuspenseQuery(query || skipToken);
+
+      expectTypeOf(data).toEqualTypeOf<unknown>();
+    });
+
+    it('returns TData | undefined when using `skipToken` as options', () => {
+      const { query } = useVariablesQueryCase();
+      const options = {
+        skip: true,
+      };
+
+      const { data: inferred } = useSuspenseQuery(
+        query,
+        options.skip ? skipToken : { variables: { id: '1' } }
+      );
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, options.skip ? skipToken : { variables: { id: '1' } });
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
+    it('returns DeepPartial<TData> | undefined when using `skipToken` as options with `returnPartialData`', () => {
+      const { query } = useVariablesQueryCase();
+      const options = {
+        skip: true,
+      };
+
+      const { data: inferred } = useSuspenseQuery(
+        query,
+        options.skip ? skipToken : { returnPartialData: true }
+      );
+
+      expectTypeOf(inferred).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, options.skip ? skipToken : { returnPartialData: true });
+
+      expectTypeOf(explicit).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
     it('returns TData when passing an option that does not affect TData', () => {
       const { query } = useVariablesQueryCase();
 

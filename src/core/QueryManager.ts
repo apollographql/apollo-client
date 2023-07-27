@@ -8,6 +8,7 @@ import { equal } from '@wry/equality';
 import type { ApolloLink, FetchResult } from '../link/core/index.js';
 import { execute } from '../link/core/index.js';
 import {
+  DeepMerger,
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
@@ -1147,6 +1148,23 @@ export class QueryManager<TStore> {
               graphQLErrors,
             }));
           }
+
+          const merger = new DeepMerger();
+
+          if (isExecutionPatchIncrementalResult(result)) {
+            const diff = queryInfo.getDiff();
+            result.data = mergeIncrementalData(diff.result, result);
+
+          // Detect the first chunk of a deferred query and merge it with existing
+          // cache data. This ensures a `cache-first` fetch policy that returns
+          // partial cache data or a `cache-and-network` fetch policy that already
+          // has full data in the cache does not complain when trying to merge the
+          // initial deferred server data with existing cache data.
+          } else if ('hasNext' in result && result.hasNext) {
+            const diff = queryInfo.getDiff();
+            result.data = merger.merge(diff.result, result.data)
+          }
+
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
           // ones used to obtain it from the link.

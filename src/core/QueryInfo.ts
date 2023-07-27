@@ -2,8 +2,6 @@ import type { DocumentNode, GraphQLError } from 'graphql';
 import { equal } from "@wry/equality";
 
 import type { Cache, ApolloCache } from '../cache/index.js';
-import { DeepMerger, isExecutionPatchIncrementalResult } from "../utilities/index.js"
-import { mergeIncrementalData } from '../utilities/index.js';
 import type { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions.js';
 import type { ObservableQuery} from './ObservableQuery.js';
 import { reobserveCacheFirst } from './ObservableQuery.js';
@@ -366,7 +364,6 @@ export class QueryInfo {
       | "errorPolicy">,
     cacheWriteBehavior: CacheWriteBehavior,
   ) {
-    const merger = new DeepMerger();
     const graphQLErrors = isNonEmptyArray(result.errors)
       ? result.errors.slice(0)
       : [];
@@ -374,20 +371,6 @@ export class QueryInfo {
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.reset();
-
-    if (isExecutionPatchIncrementalResult(result)) {
-      const diff = this.getDiff();
-      result.data = mergeIncrementalData(diff.result, result);
-
-    // Detect the first chunk of a deferred query and merge it with existing
-    // cache data. This ensures a `cache-first` fetch policy that returns
-    // partial cache data or a `cache-and-network` fetch policy that already
-    // has full data in the cache does not complain when trying to merge the
-    // initial deferred server data with existing cache data.
-    } else if ('hasNext' in result && result.hasNext) {
-      const diff = this.getDiff();
-      result.data = merger.merge(diff.result, result.data)
-    }
 
     this.graphQLErrors = graphQLErrors;
 

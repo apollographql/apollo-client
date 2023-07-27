@@ -209,6 +209,9 @@ export class InternalQueryReference<TData = unknown> {
         break;
       }
       case 'idle': {
+        // This occurs when switching to a result that is fully cached when this
+        // class is instantiated. ObservableQuery will deliver the most recent
+        // result, which means the current result is equal to the next result
         if (result.data === this.result.data) {
           return;
         }

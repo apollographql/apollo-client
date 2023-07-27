@@ -23,7 +23,6 @@ import type {
 import { useDeepMemo, __use } from './internal/index.js';
 import { getSuspenseCache } from '../cache/index.js';
 import { canonicalStringify } from '../../cache/index.js';
-import type { CacheKey } from '../cache/types.js';
 import type { SkipToken } from './constants.js';
 
 export interface UseSuspenseQueryResult<
@@ -184,14 +183,9 @@ export function useSuspenseQuery<
   const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
-  const cacheKey: CacheKey = [
-    query,
-    canonicalStringify(variables),
-    ...([] as any[]).concat(queryKey),
-  ];
-
-  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-    client.watchQuery(watchQueryOptions)
+  const queryRef = suspenseCache.getQueryRef(
+    [query, canonicalStringify(variables), ...([] as any[]).concat(queryKey)],
+    () => client.watchQuery(watchQueryOptions)
   );
 
   const [promiseCache, setPromiseCache] = React.useState(

@@ -10,15 +10,13 @@ In this guide, we'll look at Apollo Client's new data fetching hooks introduced 
 
 > To follow along with the examples below, open up our [Suspense demo](https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-client/v3/suspense-hooks?file=/src/App.tsx) on CodeSandbox.
 
-## `useSuspenseQuery`
+## Fetching with Suspense
 
 `useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is in flight. It can be thought of as a drop-in replacement for `useQuery` that allows you to take advantage of React's concurrent features while fetching during render.
 
 More details on `useSuspenseQuery`'s API can be found in [its API docs](../api/react/hooks/#usesuspensequery-api).
 
 > **Note:** a component using `useSuspenseQuery` to fetch data will **suspend on first render** unless it can access all of the data for the fields it is querying via the cache (or is configured with `returnPartialData: true` and partial data is present in the cache), so it **may not render until its initial network request finishes**. Keep this in mind and avoid creating "request waterfalls" whereby a series of components fetch data, suspend, receive data and render children which then initiate new network requests causing a "waterfall" of suspense boundaries to display. In some scenarios this can be avoided by using `useBackgroundQuery` and `useReadQuery` (see below).
-
-### Example
 
 ```tsx
 import { Suspense } from 'react';
@@ -129,11 +127,11 @@ function Dog({ name }: { name: string }) {
 
 Changing the dog via the `select` will cause the component to suspend each time we select a dog whose record **does not yet exist in the cache**. Once we've loaded a given dog's record into Apollo Client's `InMemoryCache`, however, selecting that dog again from our dropdown will not cause the component to re-suspend, since under our default `cache-first` fetch policy Apollo Client will not make a network request after a cache hit.
 
-### Updating state without blocking the UI
+### Updating state without suspending
 
 While we may sometimes want to suspend while we update some state that results in a pending network request, there are many cases when we would prefer to keep displaying the previous render while React prepares to update in the background (thank you, Concurrent React!).
 
-In these cases, we can use a pair of React APIs designed to allow us to update state without blocking the UI: [`startTransition`](https://react.dev/reference/react/startTransition)/[`useTransition`](https://react.dev/reference/react/useTransition) and [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue). Please see the React documentation for a full set of usage examples and caveats.
+In these cases, we can use a pair of React APIs that allow us to update state without suspending: [`startTransition`](https://react.dev/reference/react/startTransition)/[`useTransition`](https://react.dev/reference/react/useTransition) and [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue). Please see the React documentation for a full set of usage examples and caveats.
 
 Following from our last example of fetching with a dynamic `variable` that changes on user interaction, let's modify our code so that the previously displayed dog remains on the screen while the next one is fetched in the background:
 
@@ -236,13 +234,11 @@ In Apollo Client's new `Suspense` hooks introduced in v3.8, **both network and G
 
 ### Distinguishing between queries that use the same query document and variables with `queryKey`
 
-## `useBackgroundQuery` and `useReadQuery`
+## Avoiding request waterfalls
 
 `useBackgroundQuery` initiates a request for data in a parent component and returns a `QueryReference` which is used to read the data in a child component via `useReadQuery`. If the child component attempts to render before the data can be found in the cache, the child component will suspend until the data is available.
 
 More details on `useBackgroundQuery` and `useReadQuery`'s API can be found in [their API docs](../api/react/hooks/#usebackgroundquery-and-usereadquery).
-
-### Example
 
 ```tsx
 function App() {

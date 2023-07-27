@@ -83,7 +83,7 @@ Let's look at how that works!
 
 ## Step 4: Connect your client to React
 
-You connect Apollo Client to React with the `ApolloProvider` component. Similar to React's [`Context.Provider`](https://reactjs.org/docs/context.html#contextprovider), `ApolloProvider` wraps your React app and places Apollo Client on the context, enabling you to access it from anywhere in your component tree.
+You connect Apollo Client to React with the `ApolloProvider` component. Similar to React's [`Context.Provider`](https://react.dev/reference/react/useContext), `ApolloProvider` wraps your React app and places Apollo Client on the context, enabling you to access it from anywhere in your component tree.
 
 In `index.js`, let's wrap our React app with an `ApolloProvider`. We suggest putting the `ApolloProvider` somewhere high in your app, above any component that might need to access GraphQL data.
 
@@ -110,7 +110,7 @@ root.render(
 
 ## Step 5: Fetch data with `useQuery`
 
-After your `ApolloProvider` is hooked up, you can start requesting data with `useQuery`. The `useQuery` hook is a [React hook](https://reactjs.org/docs/hooks-intro.html) that shares GraphQL data with your UI.
+After your `ApolloProvider` is hooked up, you can start requesting data with `useQuery`. The `useQuery` hook is a [React hook](https://react.dev/reference/react) that shares GraphQL data with your UI.
 
 Switching over to our `App.js` file, we'll start by replacing our existing file contents with the code snippet below:
 

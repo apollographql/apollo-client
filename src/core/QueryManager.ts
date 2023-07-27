@@ -401,11 +401,9 @@ export class QueryManager<TStore> {
         });
 
         if (diff.result) {
-          const mergedData = mergeIncrementalData(diff.result, result);
-
           // cast the ExecutionPatchResult to FetchResult here since
           // ExecutionPatchResult never has `data` when returned from the server
-          (result as FetchResult<TData>).data = mergedData;
+          (result as FetchResult<TData>).data = mergeIncrementalData(diff.result, result);
         }
       }
 

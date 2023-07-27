@@ -68,10 +68,8 @@ export class InternalQueryReference<TData = unknown> {
     observable: ObservableQuery<TData>,
     options: InternalQueryReferenceOptions
   ) {
-    this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
-    this.initiateFetch = this.initiateFetch.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
     this.result = observable.getCurrentResult(false);

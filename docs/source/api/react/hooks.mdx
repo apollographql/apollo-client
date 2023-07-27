@@ -504,13 +504,10 @@ function List() {
 ### Signature
 
 ```ts
-function useSuspenseQuery<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables
->(
+function useSuspenseQuery<TData, TVariables>(
   query: DocumentNode,
   options?: SuspenseQueryHookOptions<TData, TVariables>,
-): UseSuspenseQueryResult<TData, TVariables> {}
+): UseSuspenseQueryResult<TData, TVariables>
 ```
 
 ### Params

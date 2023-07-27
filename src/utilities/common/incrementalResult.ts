@@ -49,7 +49,7 @@ export function mergeIncrementalData<TData>(
 
   const merger = new DeepMerger();
 
-  return result.incremental.reduce((mergedData, { data, path }) => {
+  return result.incremental.reduce<TData>((mergedData, { data, path }) => {
     for (let i = path.length - 1; i >= 0; --i) {
       const key = path[i];
       const isNumericKey = !isNaN(+key);

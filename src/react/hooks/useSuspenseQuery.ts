@@ -350,12 +350,14 @@ export function toApolloError(result: ApolloQueryResult<any>) {
     : result.error;
 }
 
-function toFulfilledQueryResult<TData>(result: ApolloQueryResult<TData>) {
-  const error = toApolloError(result);
+function toFulfilledQueryResult<TData>(
+  result: ApolloQueryResult<TData> | undefined
+) {
+  const error = result ? toApolloError(result) : void 0;
 
   return createFulfilledPromise({
     loading: false,
-    data: result.data,
+    data: result?.data,
     networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
     error,
   });

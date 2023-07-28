@@ -47,7 +47,10 @@ import {
 import { ApolloProvider } from '../../context';
 import { SuspenseQueryHookFetchPolicy, skipToken } from '../../../react';
 import { useSuspenseQuery } from '../useSuspenseQuery';
-import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
+import {
+  RefetchWritePolicy,
+  WatchQueryFetchPolicy,
+} from '../../../core/watchQueryOptions';
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -307,6 +310,41 @@ describe('useSuspenseQuery', () => {
         renderHook(() => useSuspenseQuery(query, { fetchPolicy }), {
           wrapper: ({ children }) => (
             <MockedProvider>{children}</MockedProvider>
+          ),
+        });
+      }).toThrowError(
+        new InvariantError(
+          `The fetch policy \`${fetchPolicy}\` is not supported with suspense.`
+        )
+      );
+    });
+
+    consoleSpy.mockRestore();
+  });
+
+  it('ensures a valid fetch policy is used when defined via global options', () => {
+    const INVALID_FETCH_POLICIES: WatchQueryFetchPolicy[] = [
+      'cache-only',
+      'standby',
+    ];
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    const { query } = useSimpleQueryCase();
+
+    INVALID_FETCH_POLICIES.forEach((fetchPolicy) => {
+      expect(() => {
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: new MockLink([]),
+          defaultOptions: {
+            watchQuery: {
+              fetchPolicy,
+            },
+          },
+        });
+
+        renderHook(() => useSuspenseQuery(query), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
         });
       }).toThrowError(

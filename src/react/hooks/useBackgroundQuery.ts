@@ -197,13 +197,5 @@ export function useBackgroundQuery<
 
   queryRef.promiseCache = promiseCache;
 
-  return React.useMemo(() => {
-    return [
-      { [QUERY_REFERENCE_SYMBOL]: queryRef },
-      {
-        fetchMore,
-        refetch,
-      },
-    ];
-  }, [queryRef, fetchMore, refetch]);
+  return [{ [QUERY_REFERENCE_SYMBOL]: queryRef }, { fetchMore, refetch }];
 }

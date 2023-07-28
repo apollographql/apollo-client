@@ -184,7 +184,6 @@ export function useSuspenseQuery<
 
   const watchQueryOptions = {
     ...options,
-    query,
     ...WATCH_QUERY_OPTION_OVERRIDES,
   };
 
@@ -202,7 +201,7 @@ export function useSuspenseQuery<
       canonicalStringify(options.variables),
       ...([] as any[]).concat(options.queryKey ?? []),
     ],
-    () => client.watchQuery({ ...watchQueryOptions, fetchPolicy })
+    () => client.watchQuery({ ...watchQueryOptions, query, fetchPolicy })
   );
 
   const [promiseCache, setPromiseCache] = React.useState(
@@ -211,8 +210,12 @@ export function useSuspenseQuery<
 
   let promise = promiseCache.get(queryRef.key);
 
-  if (queryRef.didChangeOptions({ ...watchQueryOptions, fetchPolicy })) {
-    promise = queryRef.applyOptions({ ...watchQueryOptions, fetchPolicy });
+  if (queryRef.didChangeOptions({ ...watchQueryOptions, query, fetchPolicy })) {
+    promise = queryRef.applyOptions({
+      ...watchQueryOptions,
+      query,
+      fetchPolicy,
+    });
     promiseCache.set(queryRef.key, promise);
   }
 

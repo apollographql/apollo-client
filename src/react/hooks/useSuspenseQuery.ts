@@ -151,7 +151,7 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
-  query: SkipToken | DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
     | (SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -163,7 +163,7 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
-  query: SkipToken | DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?:
     | SkipToken
     | SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
@@ -173,7 +173,7 @@ export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 >(
-  query: SkipToken | DocumentNode | TypedDocumentNode<TData, TVariables>,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
     | SuspenseQueryHookOptions<

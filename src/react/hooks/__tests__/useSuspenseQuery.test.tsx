@@ -45,11 +45,7 @@ import {
   MockLink,
 } from '../../../testing';
 import { ApolloProvider } from '../../context';
-import {
-  SkipToken,
-  SuspenseQueryHookFetchPolicy,
-  skipToken,
-} from '../../../react';
+import { SuspenseQueryHookFetchPolicy, skipToken } from '../../../react';
 import { useSuspenseQuery } from '../useSuspenseQuery';
 import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
 
@@ -10018,60 +10014,6 @@ describe('useSuspenseQuery', () => {
 
       expectTypeOf(dynamic).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
-    });
-
-    it('returns TData | undefined when using `skipToken` as the query', () => {
-      const query = true ? useVariablesQueryCase().query : undefined;
-
-      const { data: inferred } = useSuspenseQuery(query || skipToken);
-
-      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
-
-      const { data: explicit } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(skipToken);
-
-      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
-    });
-
-    it('returns DeepPartial<TData> | undefined when using `skipToken` with `returnPartialData` option', () => {
-      const query = true ? useVariablesQueryCase().query : undefined;
-
-      const { data: inferred } = useSuspenseQuery(query || skipToken, {
-        returnPartialData: true,
-      });
-
-      expectTypeOf(inferred).toEqualTypeOf<
-        DeepPartial<VariablesCaseData> | undefined
-      >();
-      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
-
-      const { data: explicit } = useSuspenseQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query || skipToken, { returnPartialData: true });
-
-      expectTypeOf(explicit).toEqualTypeOf<
-        DeepPartial<VariablesCaseData> | undefined
-      >();
-      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
-    });
-
-    it('returns unknown when using `skipToken` with unspecified TData', () => {
-      const query = true
-        ? gql`
-            query {
-              greeting
-            }
-          `
-        : undefined;
-
-      const { data } = useSuspenseQuery(query || skipToken);
-
-      expectTypeOf(data).toEqualTypeOf<unknown>();
     });
 
     it('returns TData | undefined when using `skipToken` as options', () => {

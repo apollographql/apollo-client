@@ -1,5 +1,6 @@
-import { invariant } from '../../utilities/globals/index.js';
 import * as React from 'react';
+import equal from '@wry/equality';
+import { invariant } from '../../utilities/globals/index.js';
 import type {
   ApolloClient,
   ApolloQueryResult,
@@ -182,6 +183,8 @@ export function useSuspenseQuery<
   );
   const watchQueryOptions = useWatchQueryOptions({ query, options });
 
+  useValidateOptions(query, options);
+
   const fetchPolicy: WatchQueryFetchPolicy = options.skip
     ? 'standby'
     : options.fetchPolicy ||
@@ -336,6 +339,20 @@ interface UseWatchQueryOptionsHookOptions<
   options: SuspenseQueryHookOptions<TData, TVariables>;
 }
 
+function useValidateOptions(
+  query: DocumentNode,
+  options: SuspenseQueryHookOptions
+) {
+  if (__DEV__) {
+    const ref = React.useRef<[DocumentNode, SuspenseQueryHookOptions]>();
+
+    if (!equal(ref.current, [query, options])) {
+      ref.current = [query, options];
+      validateOptions({ ...options, query });
+    }
+  }
+}
+
 export function useWatchQueryOptions<
   TData,
   TVariables extends OperationVariables
@@ -353,10 +370,6 @@ export function useWatchQueryOptions<
       notifyOnNetworkStatusChange: false,
       nextFetchPolicy: void 0,
     };
-
-    if (__DEV__) {
-      validateOptions(watchQueryOptions);
-    }
 
     return watchQueryOptions;
   }, [options, query]);

@@ -549,11 +549,7 @@ function renderSuspenseHook<Result, Props>(
     frames: [],
   };
 
-  const {
-    mocks = [],
-    strictMode,
-    ...renderHookOptions
-  } = options;
+  const { mocks = [], strictMode, ...renderHookOptions } = options;
 
   const client =
     options.client ||
@@ -587,9 +583,7 @@ function renderSuspenseHook<Result, Props>(
                   renders.errors.push(error);
                 }}
               >
-                <ApolloProvider client={client}>
-                  {children}
-                </ApolloProvider>
+                <ApolloProvider client={client}>{children}</ApolloProvider>
               </ErrorBoundary>
             </Suspense>
           </Wrapper>
@@ -693,9 +687,7 @@ describe('useBackgroundQuery', () => {
         }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider link={link}>
-            {children}
-          </MockedProvider>
+          <MockedProvider link={link}>{children}</MockedProvider>
         ),
       }
     );
@@ -755,9 +747,7 @@ describe('useBackgroundQuery', () => {
         }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider cache={cache}>
-            {children}
-          </MockedProvider>
+          <MockedProvider cache={cache}>{children}</MockedProvider>
         ),
       }
     );
@@ -818,9 +808,7 @@ describe('useBackgroundQuery', () => {
         }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider cache={cache}>
-            {children}
-          </MockedProvider>
+          <MockedProvider cache={cache}>{children}</MockedProvider>
         ),
       }
     );
@@ -862,9 +850,7 @@ describe('useBackgroundQuery', () => {
       () => useBackgroundQuery(query, { fetchPolicy: 'cache-and-network' }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       }
     );
@@ -904,9 +890,7 @@ describe('useBackgroundQuery', () => {
       () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       }
     );
@@ -953,9 +937,7 @@ describe('useBackgroundQuery', () => {
       () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       }
     );
@@ -995,9 +977,7 @@ describe('useBackgroundQuery', () => {
       () => useBackgroundQuery(query, { fetchPolicy: 'network-only' }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       }
     );
@@ -1040,9 +1020,7 @@ describe('useBackgroundQuery', () => {
       () => useBackgroundQuery(query, { fetchPolicy: 'no-cache' }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       }
     );

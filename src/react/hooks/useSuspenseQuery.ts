@@ -7,7 +7,6 @@ import type {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
-  WatchQueryOptions,
   WatchQueryFetchPolicy,
   FetchMoreQueryOptions,
 } from '../../core/index.js';
@@ -21,7 +20,7 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from '../types/types.js';
-import { useDeepMemo, __use } from './internal/index.js';
+import { __use } from './internal/index.js';
 import { getSuspenseCache } from '../cache/index.js';
 import { canonicalStringify } from '../../cache/index.js';
 import { skipToken, type SkipToken } from './constants.js';
@@ -181,7 +180,13 @@ export function useSuspenseQuery<
   const client = useApolloClient(
     options === skipToken ? void 0 : options.client
   );
-  const watchQueryOptions = useWatchQueryOptions({ query, options });
+
+  const watchQueryOptions = {
+    ...options,
+    query,
+    notifyOnNetworkStatusChange: false,
+    nextFetchPolicy: void 0,
+  };
 
   useValidateOptions(query, options);
 
@@ -334,14 +339,6 @@ export function toApolloError(result: ApolloQueryResult<any>) {
     : result.error;
 }
 
-interface UseWatchQueryOptionsHookOptions<
-  TData,
-  TVariables extends OperationVariables
-> {
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  options: SuspenseQueryHookOptions<TData, TVariables>;
-}
-
 function useValidateOptions(
   query: DocumentNode,
   options: SuspenseQueryHookOptions
@@ -354,26 +351,4 @@ function useValidateOptions(
       validateOptions(query, options);
     }
   }
-}
-
-export function useWatchQueryOptions<
-  TData,
-  TVariables extends OperationVariables
->({
-  query,
-  options,
-}: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
-  TVariables,
-  TData
-> {
-  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
-    const watchQueryOptions = {
-      ...options,
-      query,
-      notifyOnNetworkStatusChange: false,
-      nextFetchPolicy: void 0,
-    };
-
-    return watchQueryOptions;
-  }, [options, query]);
 }

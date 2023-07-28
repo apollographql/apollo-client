@@ -13,7 +13,10 @@ import type {
 } from '../../core/index.js';
 import { ApolloError, NetworkStatus } from '../../core/index.js';
 import type { DeepPartial } from '../../utilities/index.js';
-import { isNonEmptyArray } from '../../utilities/index.js';
+import {
+  createFulfilledPromise,
+  isNonEmptyArray,
+} from '../../utilities/index.js';
 import { useApolloClient } from './useApolloClient.js';
 import { DocumentType, verifyDocumentType } from '../parser/index.js';
 import type {
@@ -243,15 +246,15 @@ export function useSuspenseQuery<
   const skipResult = React.useMemo(() => {
     const error = toApolloError(queryRef.result);
 
-    return {
+    return createFulfilledPromise({
       loading: false,
       data: queryRef.result.data,
       networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
       error,
-    };
+    });
   }, [queryRef.result]);
 
-  const result = fetchPolicy === 'standby' ? skipResult : __use(promise);
+  const result = __use(fetchPolicy === 'standby' ? skipResult : promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {

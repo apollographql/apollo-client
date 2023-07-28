@@ -303,14 +303,19 @@ const WATCH_QUERY_OPTION_OVERRIDES: Partial<WatchQueryOptions> = {
 };
 
 function validateOptions(
-  query: DocumentNode,
-  options: SuspenseQueryHookOptions
+  query: SkipToken | DocumentNode,
+  options: SkipToken | SuspenseQueryHookOptions
 ) {
-  const { fetchPolicy, returnPartialData } = options;
+  if (query !== skipToken) {
+    verifyDocumentType(query, DocumentType.Query);
+  }
 
-  verifyDocumentType(query, DocumentType.Query);
-  validateFetchPolicy(fetchPolicy);
-  validatePartialDataReturn(fetchPolicy, returnPartialData);
+  if (options !== skipToken) {
+    const { fetchPolicy } = options;
+
+    validateFetchPolicy(fetchPolicy);
+    validatePartialDataReturn(fetchPolicy, options.returnPartialData);
+  }
 }
 
 function validateFetchPolicy(
@@ -348,11 +353,14 @@ export function toApolloError(result: ApolloQueryResult<any>) {
 }
 
 function useValidateOptions(
-  query: DocumentNode,
-  options: SuspenseQueryHookOptions
+  query: SkipToken | DocumentNode,
+  options: SkipToken | SuspenseQueryHookOptions
 ) {
   if (__DEV__) {
-    const ref = React.useRef<[DocumentNode, SuspenseQueryHookOptions]>();
+    const ref =
+      React.useRef<
+        [SkipToken | DocumentNode, SkipToken | SuspenseQueryHookOptions]
+      >();
 
     if (!equal(ref.current, [query, options])) {
       ref.current = [query, options];

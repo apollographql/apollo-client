@@ -243,16 +243,10 @@ export function useSuspenseQuery<
     };
   }, [queryRef]);
 
-  const skipResult = React.useMemo(() => {
-    const error = toApolloError(queryRef.result);
-
-    return createFulfilledPromise({
-      loading: false,
-      data: queryRef.result.data,
-      networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
-      error,
-    });
-  }, [queryRef.result]);
+  const skipResult = React.useMemo(
+    () => toFulfilledQueryResult(queryRef.result),
+    [queryRef.result]
+  );
 
   const result = __use(fetchPolicy === 'standby' ? skipResult : promise);
 
@@ -354,6 +348,17 @@ export function toApolloError(result: ApolloQueryResult<any>) {
   return isNonEmptyArray(result.errors)
     ? new ApolloError({ graphQLErrors: result.errors })
     : result.error;
+}
+
+function toFulfilledQueryResult<TData>(result: ApolloQueryResult<TData>) {
+  const error = toApolloError(result);
+
+  return createFulfilledPromise({
+    loading: false,
+    data: result.data,
+    networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
+    error,
+  });
 }
 
 function useValidateOptions(

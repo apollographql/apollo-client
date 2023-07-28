@@ -96,6 +96,7 @@ src/react/hooks/*
 !src/react/hooks/useSuspenseCache.ts
 !src/react/hooks/useSuspenseQuery.ts
 !src/react/hooks/useBackgroundQuery.ts
+!src/react/hooks/useReadQuery.ts
 !src/react/hooks/constants.ts
 
 ## Allowed React hook tests

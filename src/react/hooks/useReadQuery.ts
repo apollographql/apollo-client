@@ -1,9 +1,12 @@
-import * as React from "react";
-import invariant from "ts-invariant";
-import { NetworkStatus } from "../../core/index.js";
-import { QUERY_REFERENCE_SYMBOL, type QueryReference } from "../cache/QueryReference.js";
-import { __use } from "./internal/index.js";
-import { toApolloError } from "./useSuspenseQuery.js";
+import * as React from 'react';
+import invariant from 'ts-invariant';
+import { NetworkStatus } from '../../core/index.js';
+import {
+  QUERY_REFERENCE_SYMBOL,
+  type QueryReference,
+} from '../cache/QueryReference.js';
+import { __use } from './internal/index.js';
+import { toApolloError } from './useSuspenseQuery.js';
 
 export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   const [, forceUpdate] = React.useState(0);

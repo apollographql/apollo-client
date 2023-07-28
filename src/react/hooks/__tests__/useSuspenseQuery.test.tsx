@@ -5423,11 +5423,84 @@ describe('useSuspenseQuery', () => {
     expect(fetchCount).toBe(1);
   });
 
+  it('does not make network requests when using `skipToken` for options', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.query, operation.query)
+        );
+
+        if (!mock) {
+          throw new Error('Could not find mock for operation');
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, skip ? skipToken : void 0),
+      { mocks, link, initialProps: { skip: true } }
+    );
+
+    expect(fetchCount).toBe(0);
+
+    rerender({ skip: false });
+
+    expect(fetchCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ skip: true });
+
+    expect(fetchCount).toBe(1);
+  });
+
   it('`skip` result is referentially stable', async () => {
     const { query, mocks } = useSimpleQueryCase();
 
     const { result, rerender } = renderSuspenseHook(
       ({ skip }) => useSuspenseQuery(query, { skip }),
+      { mocks, initialProps: { skip: true } }
+    );
+
+    const skipResult = result.current;
+
+    rerender({ skip: true });
+
+    expect(result.current).toBe(skipResult);
+
+    rerender({ skip: false });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mocks[0].result.data);
+    });
+
+    const fetchedSkipResult = result.current;
+
+    rerender({ skip: false });
+
+    expect(fetchedSkipResult).toBe(fetchedSkipResult);
+  });
+
+  it('`skip` result is referentially stable when using `skipToken` as options', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, skip ? skipToken : void 0),
       { mocks, initialProps: { skip: true } }
     );
 
@@ -5623,6 +5696,106 @@ describe('useSuspenseQuery', () => {
         skip: !id,
         variables: { id: id ?? '0' },
       });
+
+      const todo = data?.todo;
+
+      return todo ? (
+        <div data-testid="todo">
+          {todo.name}
+          {todo.completed && ' (completed)'}
+        </div>
+      ) : null;
+    }
+
+    render(<App />);
+
+    expect(screen.queryByTestId('todo')).not.toBeInTheDocument();
+
+    const button = screen.getByText('Fetch to-do 1');
+    await act(() => user.click(button));
+    // startTransition will avoid rendering the suspense fallback for already
+    // revealed content if the state update inside the transition causes the
+    // component to suspend.
+    //
+    // Here we should not see the suspense fallback while the component suspends
+    // until the todo is finished loading. Seeing the suspense fallback is an
+    // indication that we are suspending the component too late in the process.
+    expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+    // We can ensure this works with isPending from useTransition in the process
+    expect(button).toBeDisabled();
+    // Eventually we should see the updated todo content once its done
+    // suspending.
+    expect(await screen.findByTestId('todo')).toHaveTextContent('Clean room');
+  });
+
+  it('`skipToken` works with `startTransition` when used for options', async () => {
+    type Variables = {
+      id: string;
+    };
+    interface Data {
+      todo: {
+        id: string;
+        name: string;
+        completed: boolean;
+      };
+    }
+    const user = userEvent.setup();
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query TodoItemQuery($id: ID!) {
+        todo(id: $id) {
+          id
+          name
+          completed
+        }
+      }
+    `;
+    const mocks: MockedResponse<Data, Variables>[] = [
+      {
+        request: { query, variables: { id: '1' } },
+        result: {
+          data: { todo: { id: '1', name: 'Clean room', completed: false } },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function App() {
+      const [id, setId] = React.useState<string | null>(null);
+      const [isPending, startTransition] = React.useTransition();
+
+      return (
+        <ApolloProvider client={client}>
+          <button
+            disabled={isPending}
+            onClick={() => {
+              startTransition(() => {
+                setId('1');
+              });
+            }}
+          >
+            Fetch to-do 1
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Todo id={id} />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function SuspenseFallback() {
+      return <p>Loading</p>;
+    }
+
+    function Todo({ id }: { id: string | null }) {
+      const { data } = useSuspenseQuery(
+        query,
+        id ? { variables: { id } } : skipToken
+      );
 
       const todo = data?.todo;
 

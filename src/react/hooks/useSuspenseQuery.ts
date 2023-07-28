@@ -211,10 +211,9 @@ export function useSuspenseQuery<
 
   let promise = promiseCache.get(queryRef.key);
 
-  if (queryRef.didChangeOptions({ ...options, query, fetchPolicy })) {
+  if (queryRef.didChangeOptions({ ...options, fetchPolicy })) {
     promise = queryRef.applyOptions({
       ...options,
-      query,
       fetchPolicy,
     });
     promiseCache.set(queryRef.key, promise);

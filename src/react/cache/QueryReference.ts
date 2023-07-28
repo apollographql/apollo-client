@@ -37,14 +37,19 @@ interface InternalQueryReferenceOptions {
   autoDisposeTimeoutMs?: number;
 }
 
-const OBSERVED_CHANGED_OPTIONS: Array<keyof WatchQueryOptions> = [
+const OBSERVED_CHANGED_OPTIONS = [
   'canonizeResults',
   'context',
   'errorPolicy',
   'fetchPolicy',
   'refetchWritePolicy',
   'returnPartialData',
-];
+] as const;
+
+type ObservedOptions = Pick<
+  WatchQueryOptions,
+  typeof OBSERVED_CHANGED_OPTIONS[number]
+>;
 
 export class InternalQueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
@@ -138,14 +143,14 @@ export class InternalQueryReference<TData = unknown> {
     };
   }
 
-  didChangeOptions(watchQueryOptions: WatchQueryOptions) {
+  didChangeOptions(watchQueryOptions: ObservedOptions) {
     return OBSERVED_CHANGED_OPTIONS.some(
       (option) =>
         !equal(this.watchQueryOptions[option], watchQueryOptions[option])
     );
   }
 
-  applyOptions(watchQueryOptions: WatchQueryOptions) {
+  applyOptions(watchQueryOptions: ObservedOptions) {
     const {
       fetchPolicy: currentFetchPolicy,
       canonizeResults: currentCanonizeResults,

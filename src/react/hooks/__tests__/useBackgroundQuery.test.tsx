@@ -42,13 +42,12 @@ import {
 import { useBackgroundQuery } from '../useBackgroundQuery';
 import { useReadQuery } from '../useReadQuery';
 import { ApolloProvider } from '../../context';
-import { QUERY_REFERENCE_SYMBOL } from '../../cache/QueryReference';
-import { InMemoryCache } from '../../../cache';
 import {
-  FetchMoreFunction,
-  RefetchFunction,
+  QUERY_REFERENCE_SYMBOL,
   QueryReference,
-} from '../../../react';
+} from '../../cache/QueryReference';
+import { InMemoryCache } from '../../../cache';
+import { FetchMoreFunction, RefetchFunction } from '../useSuspenseQuery.js';
 import {
   SuspenseQueryHookFetchPolicy,
   SuspenseQueryHookOptions,

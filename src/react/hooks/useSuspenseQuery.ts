@@ -182,13 +182,19 @@ export function useSuspenseQuery<
   );
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
 
+  const fetchPolicy: WatchQueryFetchPolicy = options.skip
+    ? 'standby'
+    : options.fetchPolicy ||
+      client.defaultOptions.watchQuery?.fetchPolicy ||
+      'cache-first';
+
   const queryRef = getSuspenseCache(client).getQueryRef(
     [
       query,
       canonicalStringify(options.variables),
       ...([] as any[]).concat(options.queryKey ?? []),
     ],
-    () => client.watchQuery(watchQueryOptions)
+    () => client.watchQuery({ ...watchQueryOptions, fetchPolicy })
   );
 
   const [promiseCache, setPromiseCache] = React.useState(
@@ -197,8 +203,8 @@ export function useSuspenseQuery<
 
   let promise = promiseCache.get(queryRef.key);
 
-  if (queryRef.didChangeOptions(watchQueryOptions)) {
-    promise = queryRef.applyOptions(watchQueryOptions);
+  if (queryRef.didChangeOptions({ ...watchQueryOptions, fetchPolicy })) {
+    promise = queryRef.applyOptions({ ...watchQueryOptions, fetchPolicy });
     promiseCache.set(queryRef.key, promise);
   }
 
@@ -233,8 +239,7 @@ export function useSuspenseQuery<
     };
   }, [queryRef.result]);
 
-  const result =
-    watchQueryOptions.fetchPolicy === 'standby' ? skipResult : __use(promise);
+  const result = fetchPolicy === 'standby' ? skipResult : __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
@@ -344,14 +349,8 @@ export function useWatchQueryOptions<
   TData
 > {
   return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
-    const fetchPolicy =
-      options.fetchPolicy ||
-      client.defaultOptions.watchQuery?.fetchPolicy ||
-      'cache-first';
-
     const watchQueryOptions = {
       ...options,
-      fetchPolicy,
       query,
       notifyOnNetworkStatusChange: false,
       nextFetchPolicy: void 0,
@@ -359,12 +358,6 @@ export function useWatchQueryOptions<
 
     if (__DEV__) {
       validateOptions(watchQueryOptions);
-    }
-
-    // Assign the updated fetch policy after our validation since `standby` is
-    // not a supported fetch policy on its own without the use of `skip`.
-    if (options.skip) {
-      watchQueryOptions.fetchPolicy = 'standby';
     }
 
     return watchQueryOptions;

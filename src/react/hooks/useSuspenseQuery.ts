@@ -180,7 +180,7 @@ export function useSuspenseQuery<
   const client = useApolloClient(
     options === skipToken ? void 0 : options.client
   );
-  const watchQueryOptions = useWatchQueryOptions({ client, query, options });
+  const watchQueryOptions = useWatchQueryOptions({ query, options });
 
   const fetchPolicy: WatchQueryFetchPolicy = options.skip
     ? 'standby'
@@ -332,7 +332,6 @@ interface UseWatchQueryOptionsHookOptions<
   TData,
   TVariables extends OperationVariables
 > {
-  client: ApolloClient<unknown>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   options: SuspenseQueryHookOptions<TData, TVariables>;
 }
@@ -341,7 +340,6 @@ export function useWatchQueryOptions<
   TData,
   TVariables extends OperationVariables
 >({
-  client,
   query,
   options,
 }: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
@@ -361,5 +359,5 @@ export function useWatchQueryOptions<
     }
 
     return watchQueryOptions;
-  }, [client, options, query]);
+  }, [options, query]);
 }

@@ -5331,6 +5331,52 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
+  it('renders skip result, does not suspend, and maintains `data` when skipping a query with `skipToken` as options after it was enabled', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ skip }) => useSuspenseQuery(query, skip ? skipToken : void 0),
+      { cache, mocks, initialProps: { skip: false } }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ skip: true });
+
+    expect(renders.suspenseCount).toBe(1);
+
+    expect(result.current).toMatchObject({
+      ...mocks[0].result,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
   it('does not make network requests when `skip` is `true`', async () => {
     const { query, mocks } = useSimpleQueryCase();
 

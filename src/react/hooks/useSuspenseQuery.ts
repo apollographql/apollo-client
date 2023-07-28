@@ -1,5 +1,4 @@
 import * as React from 'react';
-import equal from '@wry/equality';
 import { invariant } from '../../utilities/globals/index.js';
 import type {
   ApolloClient,
@@ -13,10 +12,7 @@ import type {
 } from '../../core/index.js';
 import { ApolloError, NetworkStatus } from '../../core/index.js';
 import type { DeepPartial } from '../../utilities/index.js';
-import {
-  createFulfilledPromise,
-  isNonEmptyArray,
-} from '../../utilities/index.js';
+import { isNonEmptyArray } from '../../utilities/index.js';
 import { useApolloClient } from './useApolloClient.js';
 import { DocumentType, verifyDocumentType } from '../parser/index.js';
 import type {
@@ -24,10 +20,11 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from '../types/types.js';
-import { __use } from './internal/index.js';
+import { __use, useDeepMemo } from './internal/index.js';
 import { getSuspenseCache } from '../cache/index.js';
 import { canonicalStringify } from '../../cache/index.js';
 import { skipToken, type SkipToken } from './constants.js';
+import type { CacheKey } from '../cache/types.js';
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -184,32 +181,19 @@ export function useSuspenseQuery<
   const client = useApolloClient(
     options === skipToken ? void 0 : options.client
   );
+  const suspenseCache = getSuspenseCache(client);
+  const watchQueryOptions = useWatchQueryOptions({ client, query, options });
+  const { fetchPolicy, variables } = watchQueryOptions;
+  const queryKey = options === skipToken ? [] : options.queryKey ?? [];
 
-  useValidateOptions(query, options);
+  const cacheKey: CacheKey = [
+    query,
+    canonicalStringify(variables),
+    ...([] as any[]).concat(queryKey),
+  ];
 
-  const fetchPolicy: WatchQueryFetchPolicy =
-    options === skipToken || options.skip
-      ? 'standby'
-      : options.fetchPolicy ||
-        client.defaultOptions.watchQuery?.fetchPolicy ||
-        'cache-first';
-
-  const watchQueryOptions =
-    options === skipToken ? { fetchPolicy } : { ...options, fetchPolicy };
-
-  const queryRef = getSuspenseCache(client).getQueryRef(
-    [
-      query,
-      canonicalStringify(watchQueryOptions.variables),
-      ...([] as any[]).concat(watchQueryOptions.queryKey ?? []),
-    ],
-    () =>
-      client.watchQuery({
-        ...watchQueryOptions,
-        query,
-        fetchPolicy,
-        ...WATCH_QUERY_OPTION_OVERRIDES,
-      })
+  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
+    client.watchQuery(watchQueryOptions)
   );
 
   const [promiseCache, setPromiseCache] = React.useState(
@@ -243,12 +227,18 @@ export function useSuspenseQuery<
     };
   }, [queryRef]);
 
-  const skipResult = React.useMemo(
-    () => toFulfilledQueryResult(queryRef.result),
-    [queryRef.result]
-  );
+  const skipResult = React.useMemo(() => {
+    const error = toApolloError(queryRef.result);
 
-  const result = __use(fetchPolicy === 'standby' ? skipResult : promise);
+    return {
+      loading: false,
+      data: queryRef.result.data,
+      networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
+      error,
+    };
+  }, [queryRef.result]);
+
+  const result = fetchPolicy === 'standby' ? skipResult : __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
@@ -295,10 +285,13 @@ export function useSuspenseQuery<
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
 
-const WATCH_QUERY_OPTION_OVERRIDES: Partial<WatchQueryOptions> = {
-  notifyOnNetworkStatusChange: false,
-  nextFetchPolicy: void 0,
-};
+function validateOptions(options: WatchQueryOptions) {
+  const { query, fetchPolicy, returnPartialData } = options;
+
+  verifyDocumentType(query, DocumentType.Query);
+  validateFetchPolicy(fetchPolicy);
+  validatePartialDataReturn(fetchPolicy, returnPartialData);
+}
 
 function validateFetchPolicy(
   fetchPolicy: WatchQueryFetchPolicy = 'cache-first'
@@ -334,40 +327,54 @@ export function toApolloError(result: ApolloQueryResult<any>) {
     : result.error;
 }
 
-function toFulfilledQueryResult<TData>(
-  result: ApolloQueryResult<TData> | undefined
-) {
-  const error = result ? toApolloError(result) : void 0;
-
-  return createFulfilledPromise({
-    loading: false,
-    data: result?.data,
-    networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
-    error,
-  });
+interface UseWatchQueryOptionsHookOptions<
+  TData,
+  TVariables extends OperationVariables
+> {
+  client: ApolloClient<unknown>;
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  options: SkipToken | SuspenseQueryHookOptions<TData, TVariables>;
 }
 
-function useValidateOptions(
-  query: DocumentNode,
-  options: SkipToken | SuspenseQueryHookOptions
-) {
-  if (__DEV__) {
-    const ref =
-      React.useRef<[DocumentNode, SkipToken | SuspenseQueryHookOptions]>();
-
-    if (equal(ref.current, [query, options])) {
-      return;
+export function useWatchQueryOptions<
+  TData,
+  TVariables extends OperationVariables
+>({
+  client,
+  query,
+  options,
+}: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
+  TVariables,
+  TData
+> {
+  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
+    if (options === skipToken) {
+      return { query, fetchPolicy: 'standby' };
     }
 
-    ref.current = [query, options];
+    const fetchPolicy =
+      options.fetchPolicy ||
+      client.defaultOptions.watchQuery?.fetchPolicy ||
+      'cache-first';
 
-    verifyDocumentType(query, DocumentType.Query);
+    const watchQueryOptions = {
+      ...options,
+      fetchPolicy,
+      query,
+      notifyOnNetworkStatusChange: false,
+      nextFetchPolicy: void 0,
+    };
 
-    if (options !== skipToken) {
-      const { fetchPolicy } = options;
-
-      validateFetchPolicy(fetchPolicy);
-      validatePartialDataReturn(fetchPolicy, options.returnPartialData);
+    if (__DEV__) {
+      validateOptions(watchQueryOptions);
     }
-  }
+
+    // Assign the updated fetch policy after our validation since `standby` is
+    // not a supported fetch policy on its own without the use of `skip`.
+    if (options.skip) {
+      watchQueryOptions.fetchPolicy = 'standby';
+    }
+
+    return watchQueryOptions;
+  }, [client, options, query]);
 }

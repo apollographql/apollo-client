@@ -9,6 +9,7 @@ import type {
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   FetchMoreQueryOptions,
+  WatchQueryOptions,
 } from '../../core/index.js';
 import { ApolloError, NetworkStatus } from '../../core/index.js';
 import type { DeepPartial } from '../../utilities/index.js';
@@ -184,8 +185,7 @@ export function useSuspenseQuery<
   const watchQueryOptions = {
     ...options,
     query,
-    notifyOnNetworkStatusChange: false,
-    nextFetchPolicy: void 0,
+    ...WATCH_QUERY_OPTION_OVERRIDES,
   };
 
   useValidateOptions(query, options);
@@ -293,6 +293,11 @@ export function useSuspenseQuery<
     };
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
+
+const WATCH_QUERY_OPTION_OVERRIDES: Partial<WatchQueryOptions> = {
+  notifyOnNetworkStatusChange: false,
+  nextFetchPolicy: void 0,
+};
 
 function validateOptions(
   query: DocumentNode,

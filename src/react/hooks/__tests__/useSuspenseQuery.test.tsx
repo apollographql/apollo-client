@@ -45,7 +45,12 @@ import {
   MockLink,
 } from '../../../testing';
 import { ApolloProvider } from '../../context';
-import { SuspenseQueryHookFetchPolicy } from '../../../react';
+import {
+  SkipToken,
+  SuspenseQueryHookFetchPolicy,
+  SuspenseQueryHookOptions,
+  skipToken,
+} from '../../../react';
 import { useSuspenseQuery } from '../useSuspenseQuery';
 import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
 

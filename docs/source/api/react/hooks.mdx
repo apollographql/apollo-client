@@ -9,6 +9,13 @@ import MutationOptions3 from '../../../shared/mutation-options.mdx';
 import MutationResult3 from '../../../shared/mutation-result.mdx';
 import SubscriptionOptions3 from '../../../shared/subscription-options.mdx';
 import SubscriptionResult3 from '../../../shared/subscription-result.mdx';
+import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
+import UseFragmentResult from '../../../shared/useFragment-result.mdx';
+import UseSuspenseQueryOptions from '../../../shared/useSuspenseQuery-options.mdx';
+import UseBackgroundQueryOptions from '../../../shared/useBackgroundQuery-options.mdx';
+import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx';
+import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
+import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
 
 ## Installation
 
@@ -16,7 +23,7 @@ Apollo Client >= 3 includes React hooks functionality out of the box. You don't 
 
 ## The `ApolloProvider` component
 
-The `ApolloProvider` component leverages [React's Context API](https://reactjs.org/docs/context.html) to make a configured Apollo Client instance available throughout a React component tree. This component can be imported directly from the `@apollo/client` package.
+The `ApolloProvider` component leverages [React's Context API](https://react.dev/reference/react/useContext) to make a configured Apollo Client instance available throughout a React component tree. This component can be imported directly from the `@apollo/client` package.
 
 ```js
 import { ApolloProvider } from '@apollo/client';
@@ -46,7 +53,7 @@ ReactDOM.render(
 
 ## The `ApolloConsumer` component
 
-One way to access the configured Apollo Client instance directly is to create an `ApolloConsumer` component and provide a render prop function as its child. The render prop function will be called with your `ApolloClient` instance as its only argument. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [React Context API](https://reactjs.org/docs/context.html).
+One way to access the configured Apollo Client instance directly is to create an `ApolloConsumer` component and provide a render prop function as its child. The render prop function will be called with your `ApolloClient` instance as its only argument. You can think of the `ApolloConsumer` component as similar to the `Consumer` component from the [React Context API](https://react.dev/reference/react/useContext).
 
 ### Example
 
@@ -88,7 +95,7 @@ function Hello() {
 
 > Refer to the [Queries](../../data/queries/) section for a more in-depth overview of `useQuery`.
 
-### Function Signature
+### Signature
 
 ```ts
 function useQuery<TData = any, TVariables = OperationVariables>(
@@ -143,7 +150,7 @@ function Hello() {
 
 > Refer to the [Queries](../../data/queries/) section for a more in-depth overview of `useLazyQuery`.
 
-### Function Signature
+### Signature
 
 ```ts
 function useLazyQuery<TData = any, TVariables = OperationVariables>(
@@ -222,7 +229,7 @@ function AddTodo() {
 
 > Refer to the [Mutations](../../data/mutations/) section for a more in-depth overview of `useMutation`.
 
-### Function Signature
+### Signature
 
 ```ts
 function useMutation<TData = any, TVariables = OperationVariables>(
@@ -272,7 +279,64 @@ function DontReadTheComments({ repoFullName }) {
 
 > Refer to the [Subscriptions](../../data/subscriptions/) section for a more in-depth overview of `useSubscription`.
 
-### Function Signature
+#### Subscriptions and React 18 Automatic Batching
+
+With React 18's [automatic batching](https://react.dev/blog/2022/03/29/react-v18#new-feature-automatic-batching), multiple state updates may be grouped into a single re-render for better performance.
+
+If your subscription API sends multiple messages at the same time or in very fast succession (within fractions of a millisecond), it is likely that only the last message received in that narrow time frame will result in a re-render.
+
+Consider the following component:
+
+```jsx
+export function Subscriptions() {
+  const { data, error, loading } = useSubscription(query);
+  const [accumulatedData, setAccumulatedData] = useState([]);
+
+  useEffect(() => {
+    setAccumulatedData((prev) => [...prev, data]);
+  }, [data]);
+
+  return (
+    <>
+      {loading && <p>Loading...</p>}
+      {JSON.stringify(accumulatedData, undefined, 2)}
+    </>
+  );
+}
+```
+
+If your subscription back-end emits two messages with the same timestamp, only the last message received by Apollo Client will be rendered. This is because React 18 will batch these two state updates into a single re-render.
+
+Since the component above is using `useEffect` to push `data` into a piece of local state on each `Subscriptions` re-render, the first message will never be added to the `accumulatedData` array since its render was skipped.
+
+Instead of using `useEffect` here, we can re-write this component to use the `onData` callback function accepted in `useSubscription`'s `options` object:
+
+```jsx
+export function Subscriptions() {
+  const [accumulatedData, setAccumulatedData] = useState([]);
+  const { data, error, loading } = useSubscription(
+    query,
+    {
+      onData({ data }) {
+        setAccumulatedData((prev) => [...prev, data])
+      }
+    }
+  );
+
+  return (
+    <>
+      {loading && <p>Loading...</p>}
+      {JSON.stringify(accumulatedData, undefined, 2)}
+    </>
+  );
+}
+```
+
+> ⚠️ **Note:** The `useSubscription` option `onData` is available in Apollo Client >= 3.7. In previous versions, the equivalent option is named `onSubscriptionData`.
+
+Now, the first message will be added to the `accumulatedData` array since `onData` is called _before_ the component re-renders. React 18 automatic batching is still in effect and results in a single re-render, but with `onData` we can guarantee each message received after the component mounts is added to `accumulatedData`.
+
+### Signature
 
 ```ts
 function useSubscription<TData = any, TVariables = OperationVariables>(
@@ -316,7 +380,7 @@ function SomeComponent() {
 }
 ```
 
-### Function Signature
+### Signature
 
 ```ts
 function useApolloClient(): ApolloClient<object> {}
@@ -344,8 +408,242 @@ export function Cart() {
   // ...
 ```
 
-### Function Signature
+### Signature
 
 ```tsx
 function useReactiveVar<T>(rv: ReactiveVar<T>): T {}
 ```
+
+<MinVersion version="3.8.0">
+
+## `useFragment`
+
+</MinVersion>
+
+`useFragment` represents a lightweight live binding into the Apollo Client Cache and enables Apollo Client to broadcast very specific fragment results to individual components. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
+
+Note that the `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
+
+> **Note**: this hook was introduced in `3.7.0` as experimental but stabilized in `3.8.0`. In `3.7.x` and `3.8.0-alpha.x` releases, this hook is exported as `useFragment_experimental`. Starting with `3.8.0-beta.0` and greater the `_experimental` suffix was removed in its named export.
+
+### Example
+
+To view a `useFragment` example, see the [Fragments](../../data/fragments#usefragment) page.
+
+### Function Signature
+
+```ts
+function useFragment<
+  TData = any,
+  TVars = OperationVariables
+>({
+  from: string | StoreObject | Reference;
+  fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+  fragmentName?: string;
+  optimistic?: boolean;
+  variables?: TVars;
+  returnPartialData?: boolean;
+  canonizeResults?: boolean;
+}): UseFragmentResult<TData> {}
+```
+
+### Params
+
+#### `options`
+
+<UseFragmentOptions />
+
+### Result
+
+<UseFragmentResult />
+
+<MinVersion version="3.8.0">
+
+## `useSuspenseQuery`
+
+</MinVersion>
+
+For a detailed explanation of `useSuspenseQuery`, see the [Suspense reference](../../data/suspense#usesuspensequery).
+
+See the [API reference](#usesuspensequery-api) for supported options.
+
+### Example
+
+```jsx
+import { Suspense } from 'react';
+import { useSuspenseQuery } from '@apollo/client';
+
+const listQuery = gql`
+  query {
+    list {
+      id
+    }
+  }
+`;
+
+function App() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <List />
+    </Suspense>
+  );
+}
+
+function List() {
+  const { data } = useSuspenseQuery(listQuery);
+
+  return (
+    <ol>
+      {data.list.map(item => <Item key={item.id} id={item.id}/>)}
+    </ol>
+  );
+}
+
+```
+
+### Signature
+
+```ts
+function useSuspenseQuery<TData, TVariables>(
+  query: DocumentNode,
+  options?: SuspenseQueryHookOptions<TData, TVariables>,
+): UseSuspenseQueryResult<TData, TVariables>
+```
+
+### Params
+
+#### `query`
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `query` | (Typed)DocumentNode | A GraphQL query document parsed into an AST by `gql`. |
+
+
+#### `options`
+
+<UseSuspenseQueryOptions />
+
+### Result
+
+<UseSuspenseQueryResult />
+
+<MinVersion version="3.8.0">
+
+## `useBackgroundQuery` and `useReadQuery`
+
+</MinVersion>
+
+For a detailed explanation of `useBackgroundQuery` and `useReadQuery`, see the [Suspense reference](../../data/suspense#usebackgroundquery-and-usereadquery).
+
+See the API references for [`useBackgroundQuery`](#usebackgroundquery-api) and [`useReadQuery`](#usereadquery-api) for supported options.
+
+### Example
+
+```jsx
+import { Suspense } from 'react';
+import {
+  ApolloClient,
+  InMemoryCache,
+  useBackgroundQuery,
+  useReadQuery,
+} from '@apollo/client';
+
+const query = gql`
+  foo {
+    bar
+  }
+`;
+
+const client = new ApolloClient({
+  uri: "http://localhost:4000/graphql",
+  cache: new InMemoryCache()
+});
+
+function SuspenseFallback() {
+  return <div>Loading...</div>;
+}
+
+function Child({ queryRef }) {
+  const { data } = useReadQuery(queryRef);
+
+  return <div>{data.foo.bar}</div>;
+}
+
+function Parent() {
+  const [queryRef] = useBackgroundQuery(query);
+
+  return (
+    <Suspense fallback={<SuspenseFallback />}>
+      <Child queryRef={queryRef} />
+    </Suspense>
+  );
+}
+
+function App() {
+  return (
+    <ApolloProvider client={client}>
+      <Parent />
+    </ApolloProvider>
+  );
+}
+```
+
+### `useBackgroundQuery` API
+
+### Signature
+
+```ts
+function useBackgroundQuery<TData, TVariables>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: BackgroundQueryHookOptions<TData, TVariables>,
+): [
+  QueryReference<TData>,
+  {
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    refetch: RefetchFunction<TData, TVariables>;
+  }
+]
+```
+
+### Params
+
+#### `query`
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `query` | (Typed)DocumentNode | A GraphQL query document parsed into an AST by `gql`. |
+
+
+#### `options`
+
+<UseBackgroundQueryOptions />
+
+### Result
+
+<UseBackgroundQueryResult />
+
+### `useReadQuery` API
+
+#### Signature
+
+```ts
+function useReadQuery<TData>(
+  queryRef: QueryReference<TData>
+): {
+  data: TData;
+  networkStatus: NetworkStatus;
+  error: ApolloError | undefined;
+} {}
+```
+
+### Params
+
+#### `queryRef`
+
+| Param   | Type         | Description                                                   |
+| ------- | ------------ | ------------------------------------------------------------- |
+| `queryRef` | QueryReference | The [`queryRef`](#queryref) that was generated via `useBackgroundQuery`. |
+
+### Result
+
+<UseReadQueryResult />

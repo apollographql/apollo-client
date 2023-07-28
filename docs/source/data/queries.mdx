@@ -18,7 +18,7 @@ This article also assumes that you've already set up Apollo Client and have wrap
 
 ## Executing a query
 
-The `useQuery` [React hook](https://reactjs.org/docs/hooks-intro.html) is the primary API for executing queries in an Apollo application. To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
+The `useQuery` [React hook](https://react.dev/reference/react) is the primary API for executing queries in an Apollo application. To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
 
 > **Note:** in Apollo Client >= v3.8, data fetching hooks `useSuspenseQuery` and `useBackgroundQuery` are available for querying data within `<Suspense />` boundaries using React 18's new concurrent rendering model. For more information see Apollo Client's [Suspense docs](../react/suspense/).
 

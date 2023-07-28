@@ -10,9 +10,6 @@ export * from './useFragment.js';
 export {
   useSuspenseQuery,
   UseSuspenseQueryResult,
-  FetchMoreFunction,
-  RefetchFunction,
-  SubscribeToMoreFunction,
 } from './useSuspenseQuery.js';
 export {
   useBackgroundQuery,

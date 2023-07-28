@@ -289,8 +289,11 @@ export function useSuspenseQuery<
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
 
-function validateOptions(options: WatchQueryOptions) {
-  const { query, fetchPolicy, returnPartialData } = options;
+function validateOptions(
+  query: DocumentNode,
+  options: SuspenseQueryHookOptions
+) {
+  const { fetchPolicy, returnPartialData } = options;
 
   verifyDocumentType(query, DocumentType.Query);
   validateFetchPolicy(fetchPolicy);
@@ -348,7 +351,7 @@ function useValidateOptions(
 
     if (!equal(ref.current, [query, options])) {
       ref.current = [query, options];
-      validateOptions({ ...options, query });
+      validateOptions(query, options);
     }
   }
 }

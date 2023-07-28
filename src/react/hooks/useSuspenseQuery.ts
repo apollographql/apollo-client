@@ -182,11 +182,6 @@ export function useSuspenseQuery<
     options === skipToken ? void 0 : options.client
   );
 
-  const watchQueryOptions = {
-    ...options,
-    ...WATCH_QUERY_OPTION_OVERRIDES,
-  };
-
   useValidateOptions(query, options);
 
   const fetchPolicy: WatchQueryFetchPolicy = options.skip
@@ -201,7 +196,13 @@ export function useSuspenseQuery<
       canonicalStringify(options.variables),
       ...([] as any[]).concat(options.queryKey ?? []),
     ],
-    () => client.watchQuery({ ...watchQueryOptions, query, fetchPolicy })
+    () =>
+      client.watchQuery({
+        ...options,
+        query,
+        fetchPolicy,
+        ...WATCH_QUERY_OPTION_OVERRIDES,
+      })
   );
 
   const [promiseCache, setPromiseCache] = React.useState(
@@ -210,9 +211,9 @@ export function useSuspenseQuery<
 
   let promise = promiseCache.get(queryRef.key);
 
-  if (queryRef.didChangeOptions({ ...watchQueryOptions, query, fetchPolicy })) {
+  if (queryRef.didChangeOptions({ ...options, query, fetchPolicy })) {
     promise = queryRef.applyOptions({
-      ...watchQueryOptions,
+      ...options,
       query,
       fetchPolicy,
     });

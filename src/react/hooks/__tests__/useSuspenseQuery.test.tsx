@@ -48,7 +48,6 @@ import { ApolloProvider } from '../../context';
 import {
   SkipToken,
   SuspenseQueryHookFetchPolicy,
-  SuspenseQueryHookOptions,
   skipToken,
 } from '../../../react';
 import { useSuspenseQuery } from '../useSuspenseQuery';

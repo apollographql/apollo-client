@@ -153,7 +153,7 @@ export default [
 
 ### Why use `globalThis.__DEV__` instead of `process.env.NODE_ENV`?
 
-Apollo Client uses the `__DEV__` variable instead of `process.env.NODE_ENV` because the latter is not available in non-node environments. Apollo Client can be used from a CDN with an ESM import. Usage of the `process` variable within the library in this scenario would cause a crash in your application.
+Apollo Client uses the `__DEV__` variable instead of `process.env.NODE_ENV` because the latter is not available in non-Node.js environments. Apollo Client can be used from a CDN with an ESM import. Usage of the `process` variable within the library in this scenario would cause a crash in your application.
 
 It's impossible for Apollo Client to use a guard statement like `typeof process !== "undefined" && process.env.NODE_ENV !== 'production'` because some bundlers, such as `esbuild`, cannot replace a statement like `typeof process` at build time. The development-only code would remain after the build, resulting in no bundle size reduction.
 

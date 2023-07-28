@@ -54,6 +54,7 @@ import {
 } from '../../types/types';
 import equal from '@wry/equality';
 import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
+import { skipToken, type SkipToken } from '../constants';
 
 function renderIntegrationTest({
   client,
@@ -4856,13 +4857,41 @@ describe('useBackgroundQuery', () => {
       >();
     });
 
-    it('returns QueryReference<DeepPartial<TData>> | undefined when `skip` is present with `returnPartialData`', () => {
+    it('returns QueryReference<TData> | undefined when using `skipToken` for options', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useBackgroundQuery(query, {
+      const [inferredQueryRef] = useBackgroundQuery(query, skipToken);
+
+      expectTypeOf(inferredQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, skipToken);
+
+      expectTypeOf(explicitQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+    });
+
+    it('returns QueryReference<DeepPartial<TData>> | undefined when using `skipToken` with `returnPartialData`', () => {
+      const { query } = useVariablesIntegrationTestCase();
+      const options = {
         skip: true,
-        returnPartialData: true,
-      });
+      };
+
+      const [inferredQueryRef] = useBackgroundQuery(
+        query,
+        options.skip ? skipToken : { returnPartialData: true }
+      );
 
       expectTypeOf(inferredQueryRef).toEqualTypeOf<
         QueryReference<DeepPartial<VariablesCaseData>> | undefined
@@ -4871,33 +4900,15 @@ describe('useBackgroundQuery', () => {
         QueryReference<VariablesCaseData>
       >();
 
-      const [explicitQueryRef] = useBackgroundQuery<VariablesCaseData>(query, {
-        skip: true,
-        returnPartialData: true,
-      });
+      const [explicitQueryRef] = useBackgroundQuery<VariablesCaseData>(
+        query,
+        options.skip ? skipToken : { returnPartialData: true }
+      );
 
       expectTypeOf(explicitQueryRef).toEqualTypeOf<
         QueryReference<DeepPartial<VariablesCaseData>> | undefined
       >();
       expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData>
-      >();
-
-      // TypeScript is too smart and using a `const` or `let` boolean variable
-      // for the `skip` option results in a false positive. Using an options
-      // object allows us to properly check for a dynamic case.
-      const options = {
-        skip: true,
-      };
-
-      const [dynamicQueryRef] = useBackgroundQuery(query, {
-        skip: options.skip,
-      });
-
-      expectTypeOf(dynamicQueryRef).toEqualTypeOf<
-        QueryReference<VariablesCaseData> | undefined
-      >();
-      expectTypeOf(dynamicQueryRef).not.toEqualTypeOf<
         QueryReference<VariablesCaseData>
       >();
     });

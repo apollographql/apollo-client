@@ -5245,13 +5245,8 @@ describe('useSuspenseQuery', () => {
     const { query, mocks } = useSimpleQueryCase();
 
     const { result, renders, rerender } = renderSuspenseHook(
-      ({ options }) => useSuspenseQuery(query, options),
-      {
-        mocks,
-        initialProps: { options: skipToken } as {
-          options: SuspenseQueryHookOptions<SimpleQueryData> | SkipToken;
-        },
-      }
+      ({ skip }) => useSuspenseQuery(query, skip ? skipToken : void 0),
+      { mocks, initialProps: { skip: true } }
     );
 
     expect(renders.suspenseCount).toBe(0);
@@ -5261,7 +5256,7 @@ describe('useSuspenseQuery', () => {
       error: undefined,
     });
 
-    rerender({ options: { fetchPolicy: 'cache-first' } });
+    rerender({ skip: false });
 
     expect(renders.suspenseCount).toBe(1);
 

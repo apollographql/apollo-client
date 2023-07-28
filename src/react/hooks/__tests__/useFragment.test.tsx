@@ -1083,7 +1083,7 @@ describe("useFragment", () => {
       });
     });
 
-    await waitFor(() => void expect(renderResult.current.data).toEqual(data125));
+    await waitFor(() => expect(renderResult.current.data).toEqual(data125));
     expect(renderResult.current.complete).toBe(false);
     expect(renderResult.current.missing).toEqual({
       list: {
@@ -1118,7 +1118,7 @@ describe("useFragment", () => {
       });
     });
 
-    await waitFor(() => void expect(renderResult.current.data).toEqual(data182WithText));
+    await waitFor(() => expect(renderResult.current.data).toEqual(data182WithText));
     expect(renderResult.current.complete).toBe(true);
     expect(renderResult.current.missing).toBeUndefined();
 
@@ -1143,7 +1143,7 @@ describe("useFragment", () => {
       },
     }));
 
-    await waitFor(() => void expect(renderResult.current.data).toEqual({
+    await waitFor(() => expect(renderResult.current.data).toEqual({
       list: [
         { __typename: "Item", id: 1, text: "oyez1" },
         { __typename: "Item", id: 2 },
@@ -1563,6 +1563,17 @@ describe("has the same timing as `useQuery`", () => {
     }
   });
 
+  /**
+   * This would be optimal, but would only work if `useFragment` and
+   * `useQuery` had exactly the same timing, which is not the case with
+   * the current implementation.
+   * The best we can do is to make sure that `useFragment` is not
+   * faster than `useQuery` in reasonable cases (of course, `useQuery`
+   * could trigger a network request on cache update, which would be slower 
+   * than `useFragment`, no matter how much we delay it).
+   * If we change the core implementation into a more synchronous one,
+   * we should try to get this test to work, too.
+   */
   it.failing("`useFragment` in parent, `useQuery` in child", async () => {
     const item1 = { __typename: "Item", id: 1, title: "Item #1" };
     const item2 = { __typename: "Item", id: 2, title: "Item #2" };

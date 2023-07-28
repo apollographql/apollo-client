@@ -103,6 +103,10 @@ class InternalState<TData, TVariables extends OperationVariables> {
     invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
 
+  /**
+   * Will be overwritten by the `useSyncExternalStore` "force update" method
+   * whenever it is available and reset to `forceUpdateState` when it isn't.
+   */
   forceUpdate = () => this.forceUpdateState();
 
   executeQuery(options: QueryHookOptions<TData, TVariables> & {

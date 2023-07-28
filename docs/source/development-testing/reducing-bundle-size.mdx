@@ -3,6 +3,8 @@ title: Reducing bundle size
 description: Squeeze those last few bytes out of your production build
 ---
 
+Two quick configuration changes can help your reduce your bundle size: turning off Apollo Client's development mode and picking a consistent style for your imports.  
+Every byte counts in optimizing your app's performance.
 ## Turning off development mode
 
 By default, Apollo Client is in "development mode". That means Apollo Client performs additional checks and the browser console displays warnings.
@@ -163,7 +165,7 @@ In contrast, checking for `globalThis.__DEV__` does not crash the browser and ca
 
 Depending on your bundler's capabilities and settings, you can use multiple styles of importing from Apollo Client.
 
-### Main Entrypoint Imports vs. Deep Entrypoint Imports
+### Picking an import style
 
 Apollo Client offers these two styles of imports:
 

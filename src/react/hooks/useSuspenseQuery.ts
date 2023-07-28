@@ -23,7 +23,7 @@ import type {
 import { useDeepMemo, __use } from './internal/index.js';
 import { getSuspenseCache } from '../cache/index.js';
 import { canonicalStringify } from '../../cache/index.js';
-import type { SkipToken } from './constants.js';
+import { skipToken, type SkipToken } from './constants.js';
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -177,7 +177,9 @@ export function useSuspenseQuery<
         NoInfer<TVariables>
       > = Object.create(null)
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
-  const client = useApolloClient(options.client);
+  const client = useApolloClient(
+    options === skipToken ? void 0 : options.client
+  );
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;

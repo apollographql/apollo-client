@@ -184,11 +184,12 @@ export function useSuspenseQuery<
 
   useValidateOptions(query, options);
 
-  const fetchPolicy: WatchQueryFetchPolicy = options.skip
-    ? 'standby'
-    : options.fetchPolicy ||
-      client.defaultOptions.watchQuery?.fetchPolicy ||
-      'cache-first';
+  const fetchPolicy: WatchQueryFetchPolicy =
+    options === skipToken || options.skip
+      ? 'standby'
+      : options.fetchPolicy ||
+        client.defaultOptions.watchQuery?.fetchPolicy ||
+        'cache-first';
 
   const queryRef = getSuspenseCache(client).getQueryRef(
     [

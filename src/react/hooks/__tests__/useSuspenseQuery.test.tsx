@@ -5182,6 +5182,24 @@ describe('useSuspenseQuery', () => {
     });
   });
 
+  it('does not suspend when using `skipToken` token as options', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const cache = new InMemoryCache();
+
+    const { result, renders } = renderSuspenseHook(
+      () => useSuspenseQuery(query, skipToken),
+      { cache, mocks }
+    );
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(result.current).toMatchObject({
+      data: undefined,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  });
+
   it('suspends when `skip` becomes `false` after it was `true`', async () => {
     const { query, mocks } = useSimpleQueryCase();
 
@@ -5200,6 +5218,50 @@ describe('useSuspenseQuery', () => {
     });
 
     rerender({ skip: false });
+
+    expect(renders.suspenseCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    expect(renders.count).toBe(3);
+    expect(renders.suspenseCount).toBe(1);
+    expect(renders.frames).toMatchObject([
+      { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
+      {
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+    ]);
+  });
+
+  it('suspends when options are set after using `skipToken`', async () => {
+    const { query, mocks } = useSimpleQueryCase();
+
+    const { result, renders, rerender } = renderSuspenseHook(
+      ({ options }) => useSuspenseQuery(query, options),
+      {
+        mocks,
+        initialProps: { options: skipToken } as {
+          options: SuspenseQueryHookOptions<SimpleQueryData> | SkipToken;
+        },
+      }
+    );
+
+    expect(renders.suspenseCount).toBe(0);
+    expect(result.current).toMatchObject({
+      data: undefined,
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    rerender({ options: { fetchPolicy: 'cache-first' } });
 
     expect(renders.suspenseCount).toBe(1);
 

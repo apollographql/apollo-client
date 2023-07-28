@@ -185,7 +185,7 @@ export function useSuspenseQuery<
   const queryRef = getSuspenseCache(client).getQueryRef(
     [
       query,
-      canonicalStringify(watchQueryOptions.variables),
+      canonicalStringify(options.variables),
       ...([] as any[]).concat(options.queryKey ?? []),
     ],
     () => client.watchQuery(watchQueryOptions)

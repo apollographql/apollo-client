@@ -1,6 +1,5 @@
 import * as React from 'react';
 import invariant from 'ts-invariant';
-import { NetworkStatus } from '../../core/index.js';
 import {
   QUERY_REFERENCE_SYMBOL,
   type QueryReference,
@@ -18,17 +17,6 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
       'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
   );
 
-  const skipResult = React.useMemo(() => {
-    const error = toApolloError(internalQueryRef.result);
-
-    return {
-      loading: false,
-      data: internalQueryRef.result.data,
-      networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
-      error,
-    };
-  }, [internalQueryRef.result]);
-
   let promise = internalQueryRef.promiseCache.get(internalQueryRef.key);
 
   if (!promise) {
@@ -43,10 +31,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
     });
   }, [queryRef]);
 
-  const result =
-    internalQueryRef.watchQueryOptions.fetchPolicy === 'standby'
-      ? skipResult
-      : __use(promise);
+  const result = __use(promise);
 
   return React.useMemo(() => {
     return {

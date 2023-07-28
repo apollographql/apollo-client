@@ -11,8 +11,6 @@ import { itAsync, mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
-const IS_REACT_18 = React.version.startsWith('18');
-
 describe('[queries] skip', () => {
   itAsync('allows you to skip a query without running it', (resolve, reject) => {
     const query: DocumentNode = gql`
@@ -691,14 +689,9 @@ describe('[queries] skip', () => {
                 break;
               case 6:
                 expect(this.props.skip).toBe(false);
-                if (IS_REACT_18) {
-                  expect(this.props.data!.loading).toBe(false);
-                  expect(this.props.data.allPeople).toEqual(finalData.allPeople);
-                } else {
-                  expect(ranQuery).toBe(3);
-                  expect(this.props.data.allPeople).toEqual(nextData.allPeople);
-                  expect(this.props.data!.loading).toBe(true);
-                }
+                expect(ranQuery).toBe(3);
+                expect(this.props.data.allPeople).toEqual(nextData.allPeople);
+                expect(this.props.data!.loading).toBe(true);
                 break;
               case 7:
                 // The next batch of data has loaded.
@@ -738,11 +731,7 @@ describe('[queries] skip', () => {
     );
 
     waitFor(() => {
-      if (IS_REACT_18) {
-        expect(count).toEqual(6)
-      } else {
-        expect(count).toEqual(7)
-      }
+      expect(count).toEqual(7)
     }).then(resolve, reject);
   }));
 

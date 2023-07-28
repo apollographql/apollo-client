@@ -69,10 +69,7 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   // setTick function. Updating this state by calling state.forceUpdate is the
   // only way we trigger React component updates (no other useState calls within
   // the InternalState class).
-  const [_tick, setTick] = React.useState(0);
-  state.forceUpdate = () => {
-    setTick(tick => tick + 1);
-  };
+  state.forceUpdateState = React.useReducer(tick => tick + 1, 0)[1];
 
   return state;
 }
@@ -94,10 +91,23 @@ class InternalState<TData, TVariables extends OperationVariables> {
     }
   }
 
-  forceUpdate() {
+  /**
+   * Forces an update using local component state.
+   * As this is not batched with `useSyncExternalStore` updates,
+   * this is only used as a fallback if the `useSyncExternalStore` "force update"
+   * method is not registered at the moment.
+   * See https://github.com/facebook/react/issues/25191
+   *  */
+  forceUpdateState() {
     // Replaced (in useInternalState) with a method that triggers an update.
     invariant.warn("Calling default no-op implementation of InternalState#forceUpdate");
   }
+
+  /**
+   * Will be overwritten by the `useSyncExternalStore` "force update" method
+   * whenever it is available and reset to `forceUpdateState` when it isn't.
+   */
+  forceUpdate = () => this.forceUpdateState();
 
   executeQuery(options: QueryHookOptions<TData, TVariables> & {
     query?: DocumentNode;
@@ -160,10 +170,12 @@ class InternalState<TData, TVariables extends OperationVariables> {
     const obsQuery = this.useObservableQuery();
 
     const result = useSyncExternalStore(
-      React.useCallback(() => {
+      React.useCallback((handleStoreChange) => {
         if (this.renderPromises) {
           return () => {};
         }
+
+        this.forceUpdate = handleStoreChange;
 
         const onNext = () => {
           const previousResult = this.result;
@@ -227,7 +239,10 @@ class InternalState<TData, TVariables extends OperationVariables> {
         // This way, an existing subscription can be reused without an additional
         // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
         // happen in very fast succession.
-        return () => setTimeout(() => subscription.unsubscribe());
+        return () => {
+          setTimeout(() => subscription.unsubscribe());
+          this.forceUpdate = () => this.forceUpdateState();
+        };
       }, [
         // We memoize the subscribe function using useCallback and the following
         // dependency keys, because the subscribe function reference is all that

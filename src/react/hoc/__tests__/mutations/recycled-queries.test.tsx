@@ -11,8 +11,6 @@ import { mockSingleLink } from '../../../../testing';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
-const IS_REACT_18 = React.version.startsWith('18')
-
 describe('graphql(mutation) update queries', () => {
   // This is a long test that keeps track of a lot of stuff. It is testing
   // whether or not the `options.update` reducers will run even when a given
@@ -128,6 +126,7 @@ describe('graphql(mutation) update queries', () => {
     let queryMountCount = 0;
     let queryUnmountCount = 0;
     let queryRenderCount = 0;
+    const testFailures: any[] = [];
 
     const MyQuery = graphql<{}, QueryData>(query)(
       class extends React.Component<ChildProps<{}, QueryData>> {
@@ -140,55 +139,60 @@ describe('graphql(mutation) update queries', () => {
         }
 
         render() {
-          switch (queryRenderCount) {
-            case 0:
-              expect(this.props.data!.loading).toBeTruthy();
-              expect(this.props.data!.todo_list).toBeFalsy();
-              break;
-            case 1:
-              expect(this.props.data!.loading).toBeFalsy();
-              if (!IS_REACT_18) {
+          try {
+            switch (queryRenderCount) {
+              case 0:
+                expect(this.props.data!.loading).toBeTruthy();
+                expect(this.props.data!.todo_list).toBeFalsy();
+                break;
+              case 1:
+                expect(this.props.data!.loading).toBeFalsy();
                 expect(this.props.data!.todo_list).toEqual({
                   id: '123',
                   title: 'how to apollo',
                   tasks: []
                 });
-              }
-              break;
-            case 2:
-              expect(this.props.data!.loading).toBeFalsy();
-              expect(queryMountCount).toBe(1);
-              expect(this.props.data!.todo_list).toEqual({
-                id: '123',
-                title: 'how to apollo',
-                tasks: [
-                  {
-                    id: '99',
-                    text: 'This one was created with a mutation.',
-                    completed: true
-                  }
-                ]
-              });
-              break;
-            case 3:
-              expect(this.props.data!.todo_list).toEqual({
-                id: '123',
-                title: 'how to apollo',
-                tasks: [
-                  {
-                    id: '99',
-                    text: 'This one was created with a mutation.',
-                    completed: true
-                  },
-                  {
-                    id: '99',
-                    text: 'This one was created with a mutation.',
-                    completed: true
-                  }
-                ]
-              });
-              break;
-            default:
+                break;
+              case 2:
+                expect(this.props.data!.loading).toBeFalsy();
+                expect(queryMountCount).toBe(1);
+                expect(this.props.data!.todo_list).toEqual({
+                  id: '123',
+                  title: 'how to apollo',
+                  tasks: [
+                    {
+                      id: '99',
+                      text: 'This one was created with a mutation.',
+                      completed: true
+                    },
+                  ]
+                });
+                break;
+              case 3:
+                expect(this.props.data!.loading).toBeFalsy();
+                expect(queryMountCount).toBe(1);
+                expect(this.props.data!.todo_list).toEqual({
+                  id: '123',
+                  title: 'how to apollo',
+                  tasks: [
+                    {
+                      id: '99',
+                      text: 'This one was created with a mutation.',
+                      completed: true
+                    },
+                    {
+                      id: '99',
+                      text: 'This one was created with a mutation.',
+                      completed: true
+                    }
+                  ]
+                });
+                break;
+              default:
+                throw new Error("too many rerenders")
+            }
+          } catch (e) {
+            testFailures.push(e);
           }
 
           queryRenderCount += 1;
@@ -209,35 +213,41 @@ describe('graphql(mutation) update queries', () => {
       </ApolloProvider>
     );
 
-    setTimeout(() => {
+    let resolveLastTimeout: () => void;
+    const allTimeoutsFinished = new Promise<void>(r => { resolveLastTimeout = r });
+
+    const catchingSetTimeout = (cb: (args: void) => void, ms: number) => {
+      return setTimeout(() => {
+        try { cb() } catch (e) { testFailures.push(e) }
+      }, ms);
+    }
+
+    catchingSetTimeout(() => {
       mutate();
 
-      setTimeout(() => {
-        if (IS_REACT_18) {
-          expect(queryUnmountCount).toBe(1);
-        } else {
-          expect(queryUnmountCount).toBe(0);
-        }
+      catchingSetTimeout(() => {
+        expect(queryUnmountCount).toBe(0);
         query1Unmount();
         expect(queryUnmountCount).toBe(1);
 
-        setTimeout(() => {
+        catchingSetTimeout(() => {
           mutate();
 
-          setTimeout(() => {
+          catchingSetTimeout(() => {
             const { unmount: query2Unmount } = render(
               <ApolloProvider client={client}>
                 <MyQuery />
               </ApolloProvider>
             );
 
-            setTimeout(() => {
+            catchingSetTimeout(() => {
               mutationUnmount();
               query2Unmount();
 
               expect(todoUpdateQueryCount).toBe(2);
               expect(queryMountCount).toBe(2);
               expect(queryUnmountCount).toBe(2);
+              resolveLastTimeout!();
             }, 5);
           }, 5);
         }, 5);
@@ -245,10 +255,12 @@ describe('graphql(mutation) update queries', () => {
     }, 5);
 
     await waitFor(() => {
-      if (!IS_REACT_18) {
-        expect(queryRenderCount).toBe(4);
-      }
+      expect(queryRenderCount).toBe(4);
     });
+    await allTimeoutsFinished;
+    if (testFailures.length > 0) {
+      throw testFailures[0];
+    }
   });
 
   it('will run `refetchQueries` for a recycled queries', async () => {

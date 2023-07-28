@@ -4849,26 +4849,31 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     });
 
-    it('returns TData | undefined when `skip` is present', () => {
+    it('returns QueryReference<TData> | undefined when `skip` is present', () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, {
         skip: true,
       });
 
-      const { data: inferred } = useReadQuery(inferredQueryRef);
+      expectTypeOf(inferredQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
 
-      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { skip: true });
 
-      const [explicitQueryRef] = useBackgroundQuery<VariablesCaseData>(query, {
-        skip: true,
-      });
-
-      const { data: explicit } = useReadQuery(explicitQueryRef);
-
-      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicitQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
 
       // TypeScript is too smart and using a `const` or `let` boolean variable
       // for the `skip` option results in a false positive. Using an options
@@ -4881,10 +4886,58 @@ describe('useBackgroundQuery', () => {
         skip: options.skip,
       });
 
-      const { data: dynamic } = useReadQuery(dynamicQueryRef);
+      expectTypeOf(dynamicQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(dynamicQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+    });
 
-      expectTypeOf(dynamic).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
+    it('returns QueryReference<DeepPartial<TData>> | undefined when `skip` is present with `returnPartialData`', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, {
+        skip: true,
+        returnPartialData: true,
+      });
+
+      expectTypeOf(inferredQueryRef).toEqualTypeOf<
+        QueryReference<DeepPartial<VariablesCaseData>> | undefined
+      >();
+      expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+
+      const [explicitQueryRef] = useBackgroundQuery<VariablesCaseData>(query, {
+        skip: true,
+        returnPartialData: true,
+      });
+
+      expectTypeOf(explicitQueryRef).toEqualTypeOf<
+        QueryReference<DeepPartial<VariablesCaseData>> | undefined
+      >();
+      expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+
+      // TypeScript is too smart and using a `const` or `let` boolean variable
+      // for the `skip` option results in a false positive. Using an options
+      // object allows us to properly check for a dynamic case.
+      const options = {
+        skip: true,
+      };
+
+      const [dynamicQueryRef] = useBackgroundQuery(query, {
+        skip: options.skip,
+      });
+
+      expectTypeOf(dynamicQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(dynamicQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
     });
   });
 });

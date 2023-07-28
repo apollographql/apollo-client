@@ -29,10 +29,32 @@ export type UseBackgroundQueryResult<
   }
 ];
 
+export type SkippedUseBackgroundQueryResult<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables
+> = [
+  QueryReference<TData> | undefined,
+  {
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    refetch: RefetchFunction<TData, TVariables>;
+  }
+];
+
 type BackgroundQueryHookOptionsNoInfer<
   TData,
   TVariables extends OperationVariables
 > = BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+
+type BackgroundQueryHookData<
+  TData,
+  TOptions extends BackgroundQueryHookOptions<TData>
+> = TOptions['errorPolicy'] extends 'ignore' | 'all'
+  ? TOptions['returnPartialData'] extends true
+    ? DeepPartial<TData> | undefined
+    : TData | undefined
+  : TOptions['returnPartialData'] extends true
+  ? DeepPartial<TData>
+  : TData;
 
 export function useBackgroundQuery<
   TData,
@@ -41,20 +63,15 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions
-): UseBackgroundQueryResult<
-  TOptions['errorPolicy'] extends 'ignore' | 'all'
-    ? TOptions['returnPartialData'] extends true
-      ? DeepPartial<TData> | undefined
-      : TData | undefined
-    : TOptions['returnPartialData'] extends true
-    ? TOptions['skip'] extends boolean
-      ? DeepPartial<TData> | undefined
-      : DeepPartial<TData>
-    : TOptions['skip'] extends boolean
-    ? TData | undefined
-    : TData,
-  TVariables
->;
+): TOptions['skip'] extends boolean
+  ? SkippedUseBackgroundQueryResult<
+      BackgroundQueryHookData<TData, TOptions>,
+      TVariables
+    >
+  : UseBackgroundQueryResult<
+      BackgroundQueryHookData<TData, TOptions>,
+      TVariables
+    >;
 
 export function useBackgroundQuery<
   TData = unknown,
@@ -86,7 +103,7 @@ export function useBackgroundQuery<
     skip: boolean;
     returnPartialData: true;
   }
-): UseBackgroundQueryResult<DeepPartial<TData> | undefined, TVariables>;
+): SkippedUseBackgroundQueryResult<DeepPartial<TData>, TVariables>;
 
 export function useBackgroundQuery<
   TData = unknown,
@@ -106,7 +123,7 @@ export function useBackgroundQuery<
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     skip: boolean;
   }
-): UseBackgroundQueryResult<TData | undefined, TVariables>;
+): SkippedUseBackgroundQueryResult<TData, TVariables>;
 
 export function useBackgroundQuery<
   TData = unknown,

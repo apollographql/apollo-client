@@ -191,15 +191,18 @@ export function useSuspenseQuery<
         client.defaultOptions.watchQuery?.fetchPolicy ||
         'cache-first';
 
+  const watchQueryOptions =
+    options === skipToken ? { fetchPolicy } : { ...options, fetchPolicy };
+
   const queryRef = getSuspenseCache(client).getQueryRef(
     [
       query,
-      canonicalStringify(options.variables),
-      ...([] as any[]).concat(options.queryKey ?? []),
+      canonicalStringify(watchQueryOptions.variables),
+      ...([] as any[]).concat(watchQueryOptions.queryKey ?? []),
     ],
     () =>
       client.watchQuery({
-        ...options,
+        ...watchQueryOptions,
         query,
         fetchPolicy,
         ...WATCH_QUERY_OPTION_OVERRIDES,
@@ -212,11 +215,8 @@ export function useSuspenseQuery<
 
   let promise = promiseCache.get(queryRef.key);
 
-  if (queryRef.didChangeOptions({ ...options, fetchPolicy })) {
-    promise = queryRef.applyOptions({
-      ...options,
-      fetchPolicy,
-    });
+  if (queryRef.didChangeOptions(watchQueryOptions)) {
+    promise = queryRef.applyOptions(watchQueryOptions);
     promiseCache.set(queryRef.key, promise);
   }
 

@@ -300,22 +300,6 @@ const WATCH_QUERY_OPTION_OVERRIDES: Partial<WatchQueryOptions> = {
   nextFetchPolicy: void 0,
 };
 
-function validateOptions(
-  query: SkipToken | DocumentNode,
-  options: SkipToken | SuspenseQueryHookOptions
-) {
-  if (query !== skipToken) {
-    verifyDocumentType(query, DocumentType.Query);
-  }
-
-  if (options !== skipToken) {
-    const { fetchPolicy } = options;
-
-    validateFetchPolicy(fetchPolicy);
-    validatePartialDataReturn(fetchPolicy, options.returnPartialData);
-  }
-}
-
 function validateFetchPolicy(
   fetchPolicy: WatchQueryFetchPolicy = 'cache-first'
 ) {
@@ -364,18 +348,26 @@ function toFulfilledQueryResult<TData>(
 }
 
 function useValidateOptions(
-  query: SkipToken | DocumentNode,
+  query: DocumentNode,
   options: SkipToken | SuspenseQueryHookOptions
 ) {
   if (__DEV__) {
     const ref =
-      React.useRef<
-        [SkipToken | DocumentNode, SkipToken | SuspenseQueryHookOptions]
-      >();
+      React.useRef<[DocumentNode, SkipToken | SuspenseQueryHookOptions]>();
 
-    if (!equal(ref.current, [query, options])) {
-      ref.current = [query, options];
-      validateOptions(query, options);
+    if (equal(ref.current, [query, options])) {
+      return;
+    }
+
+    ref.current = [query, options];
+
+    verifyDocumentType(query, DocumentType.Query);
+
+    if (options !== skipToken) {
+      const { fetchPolicy } = options;
+
+      validateFetchPolicy(fetchPolicy);
+      validatePartialDataReturn(fetchPolicy, options.returnPartialData);
     }
   }
 }

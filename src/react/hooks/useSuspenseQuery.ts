@@ -181,11 +181,13 @@ export function useSuspenseQuery<
     options === skipToken ? void 0 : options.client
   );
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { fetchPolicy, variables } = watchQueryOptions;
-  const { queryKey = [] } = options;
 
   const queryRef = getSuspenseCache(client).getQueryRef(
-    [query, canonicalStringify(variables), ...([] as any[]).concat(queryKey)],
+    [
+      query,
+      canonicalStringify(watchQueryOptions.variables),
+      ...([] as any[]).concat(options.queryKey ?? []),
+    ],
     () => client.watchQuery(watchQueryOptions)
   );
 
@@ -231,7 +233,8 @@ export function useSuspenseQuery<
     };
   }, [queryRef.result]);
 
-  const result = fetchPolicy === 'standby' ? skipResult : __use(promise);
+  const result =
+    watchQueryOptions.fetchPolicy === 'standby' ? skipResult : __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {

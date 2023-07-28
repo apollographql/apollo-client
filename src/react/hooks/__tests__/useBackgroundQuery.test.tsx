@@ -1411,21 +1411,15 @@ describe('useBackgroundQuery', () => {
 
       return (
         <Suspense fallback={<SuspenseFallback />}>
-          <Greeting queryRef={queryRef} />
+          {queryRef && <Greeting queryRef={queryRef} />}
         </Suspense>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
-      return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
-      );
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1438,7 +1432,7 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    expect(screen.getByTestId('greeting')).toHaveTextContent('Unknown');
+    expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
   });
 
   it('suspends when `skip` becomes `false` after it was `true`', async () => {
@@ -1478,22 +1472,16 @@ describe('useBackgroundQuery', () => {
         <>
           <button onClick={() => setSkip(false)}>Run query</button>
           <Suspense fallback={<SuspenseFallback />}>
-            <Greeting queryRef={queryRef} />
+            {queryRef && <Greeting queryRef={queryRef} />}
           </Suspense>
         </>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
-      return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
-      );
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1506,16 +1494,14 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    const greeting = screen.getByTestId('greeting');
-
-    expect(greeting).toHaveTextContent('Unknown');
+    expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
 
     await act(() => user.click(screen.getByText('Run query')));
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(greeting).toHaveTextContent('Hello');
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
     });
   });
 
@@ -1556,22 +1542,16 @@ describe('useBackgroundQuery', () => {
         <>
           <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
           <Suspense fallback={<SuspenseFallback />}>
-            <Greeting queryRef={queryRef} />
+            {queryRef && <Greeting queryRef={queryRef} />}
           </Suspense>
         </>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
-      return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
-      );
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1651,22 +1631,16 @@ describe('useBackgroundQuery', () => {
         <>
           <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
           <Suspense fallback={<SuspenseFallback />}>
-            <Greeting queryRef={queryRef} />
+            {queryRef && <Greeting queryRef={queryRef} />}
           </Suspense>
         </>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
-      return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
-      );
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1741,24 +1715,18 @@ describe('useBackgroundQuery', () => {
         <>
           <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
           <Suspense fallback={<SuspenseFallback />}>
-            <Greeting queryRef={queryRef} />
+            {queryRef && <Greeting queryRef={queryRef} />}
           </Suspense>
         </>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
       result.current = data;
 
-      return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
-      );
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1841,22 +1809,16 @@ describe('useBackgroundQuery', () => {
             Toggle skip
           </button>
           <Suspense fallback={<SuspenseFallback />}>
-            <Greeting queryRef={queryRef} />
+            {queryRef && <Greeting queryRef={queryRef} />}
           </Suspense>
         </>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
-      return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
-      );
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1876,7 +1838,7 @@ describe('useBackgroundQuery', () => {
 
     expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     expect(button).toBeDisabled();
-    expect(screen.getByTestId('greeting')).toHaveTextContent('Unknown');
+    expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');

@@ -141,12 +141,19 @@ export function useBackgroundQuery<
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(
     null
   )
-): UseBackgroundQueryResult<TData> {
+): SkippedUseBackgroundQueryResult<TData> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
-  const { variables } = watchQueryOptions;
+  const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
+
+  // We are in a skipped state when the `fetchPolicy` is set to `standby`. We
+  // only want to return `undefined` for the `queryRef` the first time we
+  // skip. Once switched to `skip: false`, we can always return the query ref
+  // to return the last result.
+  const didFetchResult = React.useRef(fetchPolicy !== 'standby');
+  didFetchResult.current ||= fetchPolicy !== 'standby';
 
   const cacheKey: CacheKey = [
     query,
@@ -197,5 +204,8 @@ export function useBackgroundQuery<
 
   queryRef.promiseCache = promiseCache;
 
-  return [{ [QUERY_REFERENCE_SYMBOL]: queryRef }, { fetchMore, refetch }];
+  return [
+    didFetchResult.current ? { [QUERY_REFERENCE_SYMBOL]: queryRef } : void 0,
+    { fetchMore, refetch },
+  ];
 }

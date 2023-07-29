@@ -29,7 +29,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
       internalQueryRef.promiseCache!.set(internalQueryRef.key, promise);
       forceUpdate((prevState) => prevState + 1);
     });
-  }, [queryRef]);
+  }, [internalQueryRef]);
 
   const result = __use(promise);
 

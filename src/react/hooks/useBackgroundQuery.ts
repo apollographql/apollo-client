@@ -140,7 +140,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?:
+  options:
     | SkipToken
     | (BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
         returnPartialData: true;

@@ -4859,8 +4859,14 @@ describe('useBackgroundQuery', () => {
 
     it('returns QueryReference<TData> | undefined when using `skipToken` for options', () => {
       const { query } = useVariablesIntegrationTestCase();
+      const options = {
+        skip: true,
+      };
 
-      const [inferredQueryRef] = useBackgroundQuery(query, skipToken);
+      const [inferredQueryRef] = useBackgroundQuery(
+        query,
+        options.skip ? skipToken : undefined
+      );
 
       expectTypeOf(inferredQueryRef).toEqualTypeOf<
         QueryReference<VariablesCaseData> | undefined
@@ -4872,7 +4878,7 @@ describe('useBackgroundQuery', () => {
       const [explicitQueryRef] = useBackgroundQuery<
         VariablesCaseData,
         VariablesCaseVariables
-      >(query, skipToken);
+      >(query, options.skip ? skipToken : undefined);
 
       expectTypeOf(explicitQueryRef).toEqualTypeOf<
         QueryReference<VariablesCaseData> | undefined

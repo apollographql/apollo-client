@@ -42,10 +42,7 @@ import {
 import { useBackgroundQuery } from '../useBackgroundQuery';
 import { useReadQuery } from '../useReadQuery';
 import { ApolloProvider } from '../../context';
-import {
-  QUERY_REFERENCE_SYMBOL,
-  QueryReference,
-} from '../../cache/QueryReference';
+import { unwrapQueryRef, QueryReference } from '../../cache/QueryReference';
 import { InMemoryCache } from '../../../cache';
 import { FetchMoreFunction, RefetchFunction } from '../useSuspenseQuery.js';
 import {
@@ -617,7 +614,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { hello: 'world 1' },
@@ -654,7 +651,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     await waitFor(() => {
       expect(_result).toEqual({
@@ -695,7 +692,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     await waitFor(() => {
       expect(_result).toMatchObject({
@@ -755,7 +752,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
     const resultSet = new Set(_result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -816,7 +813,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
     const resultSet = new Set(_result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -858,7 +855,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { hello: 'from link' },
@@ -898,7 +895,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { hello: 'from cache' },
@@ -945,7 +942,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { foo: 'bar', hello: 'from link' },
@@ -985,7 +982,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { hello: 'from link' },
@@ -1028,7 +1025,7 @@ describe('useBackgroundQuery', () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { hello: 'from link' },

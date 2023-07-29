@@ -5,10 +5,7 @@ import type {
   TypedDocumentNode,
 } from '../../core/index.js';
 import { useApolloClient } from './useApolloClient.js';
-import {
-  QUERY_REFERENCE_SYMBOL,
-  type QueryReference,
-} from '../cache/QueryReference.js';
+import { wrapQueryRef, type QueryReference } from '../cache/QueryReference.js';
 import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
 import { __use } from './internal/index.js';
 import { getSuspenseCache } from '../cache/index.js';
@@ -238,7 +235,7 @@ export function useBackgroundQuery<
   queryRef.promiseCache = promiseCache;
 
   return [
-    didFetchResult.current ? { [QUERY_REFERENCE_SYMBOL]: queryRef } : void 0,
+    didFetchResult.current ? wrapQueryRef(queryRef) : void 0,
     { fetchMore, refetch },
   ];
 }

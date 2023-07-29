@@ -21,7 +21,7 @@ type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>['fetchMore']
 >[0];
 
-export const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
+const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 /**
  * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
  * A child component reading the `QueryReference` via {@link useReadQuery} will
@@ -35,6 +35,18 @@ interface InternalQueryReferenceOptions {
   key: CacheKey;
   onDispose?: () => void;
   autoDisposeTimeoutMs?: number;
+}
+
+export function wrapQueryRef<TData>(
+  internalQueryRef: InternalQueryReference<TData>
+): QueryReference<TData> {
+  return { [QUERY_REFERENCE_SYMBOL]: internalQueryRef };
+}
+
+export function unwrapQueryRef<TData>(
+  queryRef: QueryReference<TData>
+): InternalQueryReference<TData> {
+  return queryRef[QUERY_REFERENCE_SYMBOL];
 }
 
 const OBSERVED_CHANGED_OPTIONS = [

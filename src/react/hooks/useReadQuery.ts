@@ -1,7 +1,7 @@
 import * as React from 'react';
 import invariant from 'ts-invariant';
 import {
-  QUERY_REFERENCE_SYMBOL,
+  unwrapQueryRef,
   type QueryReference,
 } from '../cache/QueryReference.js';
 import { __use } from './internal/index.js';
@@ -9,7 +9,7 @@ import { toApolloError } from './useSuspenseQuery.js';
 
 export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   const [, forceUpdate] = React.useState(0);
-  const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
+  const internalQueryRef = unwrapQueryRef(queryRef);
   invariant(
     internalQueryRef.promiseCache,
     'It appears that `useReadQuery` was used outside of `useBackgroundQuery`. ' +

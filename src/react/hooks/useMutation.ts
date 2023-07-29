@@ -88,6 +88,12 @@ export function useMutation<
           ? new ApolloError({ graphQLErrors: errors })
           : void 0;
 
+      const onError = executeOptions.onError || ref.current.options?.onError
+
+      if (error && onError) {
+        onError(error, clientOptions);
+      }
+
       if (
         mutationId === ref.current.mutationId &&
         !clientOptions.ignoreResults
@@ -106,7 +112,10 @@ export function useMutation<
       }
 
       const onCompleted = executeOptions.onCompleted || ref.current.options?.onCompleted
-      onCompleted?.(response.data!, clientOptions);
+
+      if (!error) {
+        onCompleted?.(response.data!, clientOptions);
+      }
 
       return response;
     }).catch((error) => {

@@ -11,8 +11,6 @@ import { Query as QueryComponent } from '../../../components';
 import { graphql } from '../../graphql';
 import { ChildProps } from '../../types';
 
-const IS_REACT_18 = React.version.startsWith('18');
-
 describe('[queries] lifecycle', () => {
   // lifecycle
   it('reruns the query if it changes', async () => {
@@ -512,9 +510,7 @@ describe('[queries] lifecycle', () => {
     rerender = render(app).rerender;
 
     await waitFor(() => {
-      if (!IS_REACT_18) {
-        expect(done).toBeTruthy()
-      }
+      expect(done).toBeTruthy()
     });
   });
 
@@ -571,6 +567,7 @@ describe('[queries] lifecycle', () => {
     let switchClient: (client: ApolloClient<any>) => void;
     let refetchQuery: () => void;
     let count = 0;
+    let testFailures: any[] = [];
 
     const Query = graphql<{}, Data>(query, {
       options: { notifyOnNetworkStatusChange: true }
@@ -602,11 +599,7 @@ describe('[queries] lifecycle', () => {
                 refetchQuery!();
                 break;
               case 3:
-                if (IS_REACT_18) {
-                  expect({ loading }).toEqual({ loading: false });
-                } else {
-                  expect({ loading }).toEqual({ loading: true });
-                }
+                expect({ loading }).toEqual({ loading: true });
                 expect({ a, b, c }).toEqual({
                   a: 1,
                   b: 2,
@@ -702,7 +695,7 @@ describe('[queries] lifecycle', () => {
                 fail(`Unexpectedly many renders (${count})`);
             }
           } catch (err) {
-            fail(err);
+            testFailures.push(err);
           }
 
           return null;
@@ -733,11 +726,10 @@ describe('[queries] lifecycle', () => {
     render(<ClientSwitcher />);
 
     await waitFor(() => {
-      if (IS_REACT_18) {
-        expect(count).toBe(3)
-      } else {
-        expect(count).toBe(12)
+      if (testFailures.length > 0) {
+        throw testFailures[0];
       }
+      expect(count).toBe(12)
     });
   });
 

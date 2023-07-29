@@ -1433,6 +1433,62 @@ describe('useBackgroundQuery', () => {
     expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
   });
 
+  it('does not suspend when using `skipToken` in options', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [queryRef] = useBackgroundQuery(query, skipToken);
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Greeting queryRef={queryRef} />}
+        </Suspense>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
+  });
+
   it('suspends when `skip` becomes `false` after it was `true`', async () => {
     interface Data {
       greeting: string;
@@ -1465,6 +1521,79 @@ describe('useBackgroundQuery', () => {
     function Parent() {
       const [skip, setSkip] = React.useState(true);
       const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button onClick={() => setSkip(false)}>Run query</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
+
+    await act(() => user.click(screen.getByText('Run query')));
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+  });
+
+  it('suspends when options are set after using `skipToken` becomes `false` after it was `true`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(
+        query,
+        skip ? skipToken : undefined
+      );
 
       return (
         <>
@@ -1573,6 +1702,79 @@ describe('useBackgroundQuery', () => {
     expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
   });
 
+  it('renders skip result, does not suspend, and maintains `data` when switching back to `skipToken`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(false);
+      const [queryRef] = useBackgroundQuery(
+        query,
+        skip ? skipToken : undefined
+      );
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+
+    await act(() => user.click(screen.getByText('Toggle skip')));
+
+    expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+  });
+
   it('does not make network requests when `skip` is `true`', async () => {
     interface Data {
       greeting: string;
@@ -1624,6 +1826,104 @@ describe('useBackgroundQuery', () => {
     function Parent() {
       const [skip, setSkip] = React.useState(true);
       const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(fetchCount).toBe(0);
+
+    // Toggle skip to `false`
+    await act(() => user.click(screen.getByText('Toggle skip')));
+
+    expect(fetchCount).toBe(1);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+
+    // Toggle skip to `true`
+    await act(() => user.click(screen.getByText('Toggle skip')));
+
+    expect(fetchCount).toBe(1);
+  });
+
+  it('does not make network requests when `skipToken` is used', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.query, operation.query)
+        );
+
+        if (!mock) {
+          throw new Error('Could not find mock for operation');
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(
+        query,
+        skip ? skipToken : undefined
+      );
 
       return (
         <>
@@ -1759,6 +2059,100 @@ describe('useBackgroundQuery', () => {
     expect(result.current).toBe(fetchedResult);
   });
 
+  it('`skip` result is referentially stable when using `skipToken`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    interface CurrentResult {
+      current: Data | undefined;
+    }
+
+    const user = userEvent.setup();
+
+    const result: CurrentResult = {
+      current: undefined,
+    };
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(
+        query,
+        skip ? skipToken : undefined
+      );
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      result.current = data;
+
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    const { rerender } = render(<App />);
+
+    const skipResult = result.current;
+
+    rerender(<App />);
+
+    expect(result.current).toBe(skipResult);
+
+    // Toggle skip to `false`
+    await act(() => user.click(screen.getByText('Toggle skip')));
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+
+    const fetchedResult = result.current;
+
+    rerender(<App />);
+
+    expect(result.current).toBe(fetchedResult);
+  });
+
   it('`skip` option works with `startTransition`', async () => {
     interface Data {
       greeting: string;
@@ -1793,6 +2187,93 @@ describe('useBackgroundQuery', () => {
       const [skip, setSkip] = React.useState(true);
       const [isPending, startTransition] = React.useTransition();
       const [queryRef] = useBackgroundQuery(query, { skip });
+
+      return (
+        <>
+          <button
+            disabled={isPending}
+            onClick={() =>
+              startTransition(() => {
+                setSkip((skip) => !skip);
+              })
+            }
+          >
+            Toggle skip
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    const button = screen.getByText('Toggle skip');
+
+    // Toggle skip to `false`
+    await act(() => user.click(button));
+
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    expect(button).toBeDisabled();
+    expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    });
+  });
+
+  it('`skipToken` works with `startTransition`', async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: 'Hello' } },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [isPending, startTransition] = React.useTransition();
+      const [queryRef] = useBackgroundQuery(
+        query,
+        skip ? skipToken : undefined
+      );
 
       return (
         <>

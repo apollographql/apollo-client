@@ -1,11 +1,11 @@
 import * as React from 'react';
-import invariant from 'ts-invariant';
 import {
   unwrapQueryRef,
   type QueryReference,
 } from '../cache/QueryReference.js';
 import { __use } from './internal/index.js';
 import { toApolloError } from './useSuspenseQuery.js';
+import { invariant } from '../../utilities/globals/index.js';
 
 export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   const [, forceUpdate] = React.useState(0);

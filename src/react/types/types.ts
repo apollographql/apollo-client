@@ -124,11 +124,18 @@ export interface SuspenseQueryHookOptions<
   | 'canonizeResults'
   | 'returnPartialData'
   | 'refetchWritePolicy'
-  | 'skip'
 > {
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
   suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
+
+  /**
+   * If `true`, the query is not executed. The default value is `false`.
+   *
+   * @deprecated We recommend using skipToken in place of the skip option. This 
+   * is more type-safe in most cases.
+   */
+  skip?: boolean;
 }
 
 export type BackgroundQueryHookFetchPolicy = Extract<
@@ -151,11 +158,18 @@ export interface BackgroundQueryHookOptions<
   | 'canonizeResults'
   | 'returnPartialData'
   | 'refetchWritePolicy'
-  | 'skip'
 > {
   fetchPolicy?: BackgroundQueryHookFetchPolicy;
   suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
+
+  /**
+   * If `true`, the query is not executed. The default value is `false`.
+   *
+   * @deprecated We recommend using skipToken in place of the skip option. This 
+   * is more type-safe in most cases.
+   */
+  skip?: boolean;
 }
 
 /**

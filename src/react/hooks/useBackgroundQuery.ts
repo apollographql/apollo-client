@@ -189,10 +189,12 @@ export function useBackgroundQuery<
   const { fetchPolicy, variables } = watchQueryOptions;
   const queryKey = options === skipToken ? [] : options.queryKey ?? [];
 
-  // We are in a skipped state when the `fetchPolicy` is set to `standby`. We
-  // only want to return `undefined` for the `queryRef` the first time we
-  // skip. Once switched to `skip: false`, we can always return the query ref
-  // to return the last result.
+  // This ref tracks the first time query execution is enabled to determine
+  // whether to return a query ref or `undefined`. When initialized
+  // in a skipped state (either via `skip: true` or `skipToken`) we return
+  // `undefined` for the `queryRef` until the query has been enabled. Once
+  // enabled, a query ref is always returned regardless of whether the query is
+  // skipped again later.
   const didFetchResult = React.useRef(fetchPolicy !== 'standby');
   didFetchResult.current ||= fetchPolicy !== 'standby';
 

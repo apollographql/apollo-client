@@ -10077,6 +10077,29 @@ describe('useSuspenseQuery', () => {
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     });
 
+    it('returns TData | undefined when using `skipToken` with undefined options', () => {
+      const { query } = useVariablesQueryCase();
+      const options = {
+        skip: true,
+      };
+
+      const { data: inferred } = useSuspenseQuery(
+        query,
+        options.skip ? skipToken : undefined
+      );
+
+      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { data: explicit } = useSuspenseQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, options.skip ? skipToken : undefined);
+
+      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+    });
+
     it('returns DeepPartial<TData> | undefined when using `skipToken` as options with `returnPartialData`', () => {
       const { query } = useVariablesQueryCase();
       const options = {

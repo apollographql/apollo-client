@@ -6,9 +6,9 @@ import {
 import { __use } from './internal/index.js';
 import { toApolloError } from './useSuspenseQuery.js';
 import { invariant } from '../../utilities/globals/index.js';
+import { useSyncExternalStore } from './useSyncExternalStore.js';
 
 export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
-  const [, forceUpdate] = React.useState(0);
   const internalQueryRef = unwrapQueryRef(queryRef);
   invariant(
     internalQueryRef.promiseCache,
@@ -17,19 +17,25 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
       'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
   );
 
-  let promise = internalQueryRef.promiseCache.get(internalQueryRef.key);
+  const { promiseCache, key } = internalQueryRef;
 
-  if (!promise) {
-    promise = internalQueryRef.promise;
-    internalQueryRef.promiseCache.set(internalQueryRef.key, promise);
+  if (!promiseCache.has(key)) {
+    internalQueryRef.promiseCache.set(key, internalQueryRef.promise);
   }
 
-  React.useEffect(() => {
-    return internalQueryRef.listen((promise) => {
-      internalQueryRef.promiseCache!.set(internalQueryRef.key, promise);
-      forceUpdate((prevState) => prevState + 1);
-    });
-  }, [internalQueryRef]);
+  const promise = useSyncExternalStore(
+    React.useCallback(
+      (forceUpdate) => {
+        return internalQueryRef.listen((promise) => {
+          internalQueryRef.promiseCache!.set(internalQueryRef.key, promise);
+          forceUpdate();
+        });
+      },
+      [internalQueryRef]
+    ),
+    () => promiseCache.get(key)!,
+    () => promiseCache.get(key)!
+  );
 
   const result = __use(promise);
 

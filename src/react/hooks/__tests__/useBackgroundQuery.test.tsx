@@ -54,7 +54,7 @@ import {
 } from '../../types/types';
 import equal from '@wry/equality';
 import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
-import { skipToken, type SkipToken } from '../constants';
+import { skipToken } from '../constants';
 
 function renderIntegrationTest({
   client,

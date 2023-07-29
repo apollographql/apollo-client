@@ -4854,7 +4854,32 @@ describe('useBackgroundQuery', () => {
       >();
     });
 
-    it('returns QueryReference<TData> | undefined when using `skipToken` for options', () => {
+    it('returns QueryReference<TData> | undefined when `skipToken` for options', () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, skipToken);
+
+      expectTypeOf(inferredQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, skipToken);
+
+      expectTypeOf(explicitQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+    });
+
+    it('returns QueryReference<TData> | undefined when using conditional `skipToken` and `undefined` for options', () => {
       const { query } = useVariablesIntegrationTestCase();
       const options = {
         skip: true,

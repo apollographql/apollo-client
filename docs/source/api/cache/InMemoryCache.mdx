@@ -304,9 +304,11 @@ writeQuery<TData = any, TVariables = any>(
 ): Reference | undefined
 ```
 
+<MinVersion version="3.5">
+
 ## `updateQuery`
 
-> This method is available in Apollo Client 3.5 and later.
+</MinVersion>
 
 Fetches data from the cache in the shape of a provided GraphQL query, then _updates_ that cached data according to a provided update function.
 
@@ -758,10 +760,11 @@ writeFragment<TData = any, TVariables = any>(
   options: Cache.WriteFragmentOptions<TData, TVariables>,
 ): Reference | undefined
 ```
+<MinVersion version="3.5">
 
 ## `updateFragment`
 
-> This method is available in Apollo Client 3.5 and later.
+</MinVersion>
 
 Fetches data from the cache in the shape of a provided GraphQL fragment, then _updates_ that cached data according to a provided update function.
 

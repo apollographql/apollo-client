@@ -16,4 +16,5 @@ export {
   UseBackgroundQueryResult,
 } from './useBackgroundQuery.js';
 export { useReadQuery } from './useReadQuery.js';
-export { skipToken, SkipToken } from './constants.js';
+export { skipToken } from './constants.js';
+export type { SkipToken } from './constants.js';

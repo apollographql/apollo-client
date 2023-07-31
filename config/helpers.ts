@@ -5,17 +5,17 @@ import glob = require("glob");
 
 export const distDir = path.resolve(__dirname, "..", "dist");
 
-export function eachFile(dir: string, callback: (
-  absPath: string,
-  relPath: string,
-) => any) {
+export function eachFile(
+  dir: string,
+  callback: (absPath: string, relPath: string) => any
+) {
   const promises: Promise<any>[] = [];
 
   return new Promise<void>((resolve, reject) => {
-    glob(`${dir.replace(/\\/g, '/')}/**/*.js`, (error, files) => {
+    glob(`${dir.replace(/\\/g, "/")}/**/*.js`, (error, files) => {
       if (error) return reject(error);
 
-      files.sort().forEach(file => {
+      files.sort().forEach((file) => {
         const relPath = path.relative(dir, file);
 
         // Outside the distDir, somehow.
@@ -32,9 +32,11 @@ export function eachFile(dir: string, callback: (
         // This file is not meant to be imported or processed.
         if (relPath.endsWith("invariantErrorCodes.js")) return;
 
-        promises.push(new Promise(resolve => {
-          resolve(callback(file, relPath));
-        }));
+        promises.push(
+          new Promise((resolve) => {
+            resolve(callback(file, relPath));
+          })
+        );
       });
 
       resolve();

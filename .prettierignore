@@ -22,10 +22,6 @@ node_modules/
 .yalc/
 .next/
 
-/config
-config/*
-!config/processInvariants.ts
-
 /src/__tests__/ApolloClient.ts
 /src/__tests__/__snapshots__/ApolloClient.ts.snap
 /src/__tests__/__snapshots__/client.ts.snap

@@ -11,23 +11,22 @@
 // - Create a new `package.json` for each sub-set bundle we support, and
 //   store it in the appropriate dist sub-directory.
 
-const fs = require('fs');
-const path = require('path');
-const recast = require('recast');
+const fs = require("fs");
+const path = require("path");
+const recast = require("recast");
 
 const distRoot = `${__dirname}/../dist`;
 
-
 /* @apollo/client */
 
-const packageJson = require('../package.json');
-const entryPoints = require('./entryPoints.js');
+const packageJson = require("../package.json");
+const entryPoints = require("./entryPoints.js");
 
 // Enable default interpretation of .js files as ECMAScript modules. We don't
 // put this in the source ../package.json file because it interferes with tools
 // like ts-node, which we use to run various ../config/*.ts scripts.
 // TODO(benjamn) Fully diagnose that interference.
-packageJson.type = 'module';
+packageJson.type = "module";
 
 // The root package.json is marked as private to prevent publishing
 // from happening in the root of the project. This sets the package back to
@@ -43,14 +42,19 @@ delete packageJson.engines;
 // on-going package development (e.g. running tests, supporting npm link, etc.).
 // When publishing from "dist" however, we need to update the package.json
 // to point to the files within the same directory.
-const distPackageJson = JSON.stringify(packageJson, (_key, value) => {
-  if (typeof value === 'string' && value.startsWith('./dist/')) {
-    const parts = value.split('/');
-    parts.splice(1, 1); // remove dist
-    return parts.join('/');
-  }
-  return value;
-}, 2) + "\n";
+const distPackageJson =
+  JSON.stringify(
+    packageJson,
+    (_key, value) => {
+      if (typeof value === "string" && value.startsWith("./dist/")) {
+        const parts = value.split("/");
+        parts.splice(1, 1); // remove dist
+        return parts.join("/");
+      }
+      return value;
+    },
+    2
+  ) + "\n";
 
 // Save the modified package.json to "dist"
 fs.writeFileSync(`${distRoot}/package.json`, distPackageJson);
@@ -58,8 +62,8 @@ fs.writeFileSync(`${distRoot}/package.json`, distPackageJson);
 // Copy supporting files into "dist"
 const srcDir = `${__dirname}/..`;
 const destDir = `${srcDir}/dist`;
-fs.copyFileSync(`${srcDir}/README.md`,  `${destDir}/README.md`);
-fs.copyFileSync(`${srcDir}/LICENSE`,  `${destDir}/LICENSE`);
+fs.copyFileSync(`${srcDir}/README.md`, `${destDir}/README.md`);
+fs.copyFileSync(`${srcDir}/LICENSE`, `${destDir}/LICENSE`);
 
 // Create individual bundle package.json files, storing them in their
 // associated dist directory. This helps provide a way for the Apollo Client
@@ -73,14 +77,18 @@ entryPoints.forEach(function buildPackageJson({
 }) {
   if (!dirs.length) return;
   fs.writeFileSync(
-    path.join(distRoot, ...dirs, 'package.json'),
-    JSON.stringify({
-      name: path.posix.join('@apollo', 'client', ...dirs),
-      type: "module",
-      main: `${bundleName}.cjs`,
-      module: 'index.js',
-      types: 'index.d.ts',
-      sideEffects,
-    }, null, 2) + "\n",
+    path.join(distRoot, ...dirs, "package.json"),
+    JSON.stringify(
+      {
+        name: path.posix.join("@apollo", "client", ...dirs),
+        type: "module",
+        main: `${bundleName}.cjs`,
+        module: "index.js",
+        types: "index.d.ts",
+        sideEffects,
+      },
+      null,
+      2
+    ) + "\n"
   );
 });

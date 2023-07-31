@@ -132,8 +132,15 @@ export interface SuspenseQueryHookOptions<
   /**
    * If `true`, the query is not executed. The default value is `false`.
    *
-   * @deprecated We recommend using skipToken in place of the skip option. This 
-   * is more type-safe in most cases.
+   * @deprecated We recommend using `skipToken` in place of the `skip` option as 
+   * it is more type-safe.
+   *
+   * @example Recommended usage of `skipToken`:
+   * ```ts
+   * import { skipToken, useSuspenseQuery } from '@apollo/client';
+   *
+   * const { data } = useSuspenseQuery(query, id ? { variables: { id } } : skipToken);
+   * ```
    */
   skip?: boolean;
 }
@@ -166,8 +173,15 @@ export interface BackgroundQueryHookOptions<
   /**
    * If `true`, the query is not executed. The default value is `false`.
    *
-   * @deprecated We recommend using skipToken in place of the skip option. This 
-   * is more type-safe in most cases.
+   * @deprecated We recommend using `skipToken` in place of the `skip` option as 
+   * it is more type-safe.
+   *
+   * @example Recommended usage of `skipToken`:
+   * ```ts
+   * import { skipToken, useBackgroundQuery } from '@apollo/client';
+   *
+   * const [queryRef] = useBackgroundQuery(query, id ? { variables: { id } } : skipToken);
+   * ```
    */
   skip?: boolean;
 }

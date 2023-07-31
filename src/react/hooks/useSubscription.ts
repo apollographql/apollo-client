@@ -1,26 +1,31 @@
-import { invariant } from '../../utilities/globals/index.js';
-import * as React from 'react';
-import type { DocumentNode } from 'graphql';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { equal } from '@wry/equality';
+import { invariant } from "../../utilities/globals/index.js";
+import * as React from "react";
+import type { DocumentNode } from "graphql";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { equal } from "@wry/equality";
 
-import { DocumentType, verifyDocumentType } from '../parser/index.js';
+import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import type {
   NoInfer,
   SubscriptionHookOptions,
-  SubscriptionResult
-} from '../types/types.js';
-import type { OperationVariables } from '../../core/index.js';
-import { useApolloClient } from './useApolloClient.js';
+  SubscriptionResult,
+} from "../types/types.js";
+import type { OperationVariables } from "../../core/index.js";
+import { useApolloClient } from "./useApolloClient.js";
 
-export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(
+export function useSubscription<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+  options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options?.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
-  const [result, setResult] = React.useState<SubscriptionResult<TData, TVariables>>({
+  const [result, setResult] = React.useState<
+    SubscriptionResult<TData, TVariables>
+  >({
     loading: !options?.skip,
     error: void 0,
     data: void 0,
@@ -70,12 +75,15 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
   const ref = React.useRef({ client, subscription, options });
   React.useEffect(() => {
     let shouldResubscribe = options?.shouldResubscribe;
-    if (typeof shouldResubscribe === 'function') {
+    if (typeof shouldResubscribe === "function") {
       shouldResubscribe = !!shouldResubscribe(options!);
     }
 
     if (options?.skip) {
-      if (!options?.skip !== !ref.current.options?.skip || canResetObservableRef.current) {
+      if (
+        !options?.skip !== !ref.current.options?.skip ||
+        canResetObservableRef.current
+      ) {
         setResult({
           loading: false,
           data: void 0,
@@ -100,12 +108,14 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
         error: void 0,
         variables: options?.variables,
       });
-      setObservable(client.subscribe({
-        query: subscription,
-        variables: options?.variables,
-        fetchPolicy: options?.fetchPolicy,
-        context: options?.context,
-      }));
+      setObservable(
+        client.subscribe({
+          query: subscription,
+          variables: options?.variables,
+          fetchPolicy: options?.fetchPolicy,
+          context: options?.context,
+        })
+      );
       canResetObservableRef.current = false;
     }
 
@@ -137,12 +147,12 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
         if (ref.current.options?.onData) {
           ref.current.options.onData({
             client,
-            data: result
+            data: result,
           });
         } else if (ref.current.options?.onSubscriptionData) {
           ref.current.options.onSubscriptionData({
             client,
-            subscriptionData: result
+            subscriptionData: result,
           });
         }
       },
@@ -155,7 +165,7 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
             variables: options?.variables,
           });
           ref.current.options?.onError?.(error);
-        };
+        }
       },
       complete() {
         if (!subscriptionStopped) {

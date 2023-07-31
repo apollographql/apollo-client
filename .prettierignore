@@ -23,17 +23,10 @@ node_modules/
 .next/
 
 /src/__tests__/ApolloClient.ts
-/src/__tests__/__snapshots__/ApolloClient.ts.snap
-/src/__tests__/__snapshots__/client.ts.snap
-/src/__tests__/__snapshots__/exports.ts.snap
-/src/__tests__/__snapshots__/graphqlSubscriptions.ts.snap
-/src/__tests__/__snapshots__/mutationResults.ts.snap
 /src/__tests__/client.ts
 /src/__tests__/exports.ts
 /src/__tests__/fetchMore.ts
 /src/__tests__/graphqlSubscriptions.ts
-/src/__tests__/local-state/__snapshots__/export.ts.snap
-/src/__tests__/local-state/__snapshots__/general.ts.snap
 /src/__tests__/local-state/export.ts
 /src/__tests__/local-state/general.ts
 /src/__tests__/local-state/resolvers.ts
@@ -49,13 +42,6 @@ node_modules/
 /src/cache/core/types/DataProxy.ts
 /src/cache/core/types/common.ts
 /src/cache/index.ts
-/src/cache/inmemory/__tests__/__snapshots__/cache.ts.snap
-/src/cache/inmemory/__tests__/__snapshots__/entityStore.ts.snap
-/src/cache/inmemory/__tests__/__snapshots__/fragmentMatcher.ts.snap
-/src/cache/inmemory/__tests__/__snapshots__/policies.ts.snap
-/src/cache/inmemory/__tests__/__snapshots__/readFromStore.ts.snap
-/src/cache/inmemory/__tests__/__snapshots__/roundtrip.ts.snap
-/src/cache/inmemory/__tests__/__snapshots__/writeToStore.ts.snap
 /src/cache/inmemory/__tests__/cache.ts
 /src/cache/inmemory/__tests__/diffAgainstStore.ts
 /src/cache/inmemory/__tests__/entityStore.ts
@@ -198,7 +184,6 @@ node_modules/
 /src/react/hoc/__tests__/mutations/lifecycle.test.tsx
 /src/react/hoc/__tests__/mutations/queries.test.tsx
 /src/react/hoc/__tests__/mutations/recycled-queries.test.tsx
-/src/react/hoc/__tests__/queries/__snapshots__/lifecycle.test.tsx.snap
 /src/react/hoc/__tests__/queries/api.test.tsx
 /src/react/hoc/__tests__/queries/errors.test.tsx
 /src/react/hoc/__tests__/queries/index.test.tsx
@@ -243,7 +228,6 @@ node_modules/
 /src/react/parser/__tests__/parser.test.ts
 /src/react/parser/index.ts
 /src/react/ssr/RenderPromises.ts
-/src/react/ssr/__tests__/__snapshots__/useQuery.test.tsx.snap
 /src/react/ssr/__tests__/useLazyQuery.test.tsx
 /src/react/ssr/__tests__/useQuery.test.tsx
 /src/react/ssr/__tests__/useReactiveVar.test.tsx
@@ -267,7 +251,6 @@ node_modules/
 /src/testing/index.ts
 /src/testing/react/MockedProvider.tsx
 /src/testing/react/__tests__/MockedProvider.test.tsx
-/src/testing/react/__tests__/__snapshots__/MockedProvider.test.tsx.snap
 /src/testing/react/__tests__/mockSubscriptionLink.test.tsx
 /src/utilities/common/__tests__/canUse.ts
 /src/utilities/common/__tests__/cloneDeep.ts

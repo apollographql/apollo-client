@@ -172,19 +172,14 @@ export function useSuspenseQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
-    | SkipToken
-    | SuspenseQueryHookOptions<
-        NoInfer<TData>,
-        NoInfer<TVariables>
-      > = Object.create(null)
+    | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
+    | SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
-  const client = useApolloClient(
-    options === skipToken ? void 0 : options.client
-  );
+  const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { fetchPolicy, variables } = watchQueryOptions;
-  const queryKey = options === skipToken ? [] : options.queryKey ?? [];
+  const { queryKey = [] } = options;
 
   const cacheKey: CacheKey = [
     query,

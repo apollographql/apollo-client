@@ -14,7 +14,7 @@ import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
 import { canonicalStringify } from '../../cache/index.js';
 import type { DeepPartial } from '../../utilities/index.js';
 import type { CacheKey } from '../cache/types.js';
-import { skipToken, type SkipToken } from './constants.js';
+import type { SkipToken } from './constants.js';
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -170,19 +170,18 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
-    | SkipToken
+    | (SkipToken &
+        Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
     | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(null)
 ): [
   QueryReference<TData> | undefined,
   UseBackgroundQueryResult<TData, TVariables>
 ] {
-  const client = useApolloClient(
-    options === skipToken ? void 0 : options.client
-  );
+  const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { fetchPolicy, variables } = watchQueryOptions;
-  const queryKey = options === skipToken ? [] : options.queryKey ?? [];
+  const { queryKey = [] } = options;
 
   // This ref tracks the first time query execution is enabled to determine
   // whether to return a query ref or `undefined`. When initialized

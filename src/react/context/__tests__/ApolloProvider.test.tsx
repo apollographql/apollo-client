@@ -114,7 +114,7 @@ describe('<ApolloProvider /> Component', () => {
     [
       string,
       Omit<ApolloProviderProps<any>, 'children'>,
-      Omit<ApolloProviderProps<any>, 'children'>
+      Omit<ApolloProviderProps<any>, 'children'>,
     ]
   >([['client', { client }, { client: anotherClient }]])(
     'context value stability, %s prop',

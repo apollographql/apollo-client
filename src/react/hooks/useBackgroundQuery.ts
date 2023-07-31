@@ -20,24 +20,24 @@ import type { CacheKey } from '../cache/types.js';
 
 export type UseBackgroundQueryResult<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > = [
   QueryReference<TData>,
   {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
-  }
+  },
 ];
 
 type BackgroundQueryHookOptionsNoInfer<
   TData,
-  TVariables extends OperationVariables
+  TVariables extends OperationVariables,
 > = BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
 
 export function useBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<BackgroundQueryHookOptions<TData>, 'variables'>
+  TOptions extends Omit<BackgroundQueryHookOptions<TData>, 'variables'>,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions
@@ -58,7 +58,7 @@ export function useBackgroundQuery<
 
 export function useBackgroundQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
@@ -69,7 +69,7 @@ export function useBackgroundQuery<
 
 export function useBackgroundQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
@@ -79,7 +79,7 @@ export function useBackgroundQuery<
 
 export function useBackgroundQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
@@ -90,7 +90,7 @@ export function useBackgroundQuery<
 
 export function useBackgroundQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
@@ -100,7 +100,7 @@ export function useBackgroundQuery<
 
 export function useBackgroundQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
@@ -110,7 +110,7 @@ export function useBackgroundQuery<
 
 export function useBackgroundQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>
@@ -118,7 +118,7 @@ export function useBackgroundQuery<
 
 export function useBackgroundQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(

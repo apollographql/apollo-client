@@ -12,7 +12,7 @@ export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
     options: {
       variables?: OperationVariables;
       queryKey?: string | number | any[];
-    }
+    },
   ]
 > = function (
   client,

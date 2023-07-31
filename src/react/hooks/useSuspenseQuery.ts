@@ -27,7 +27,7 @@ import type { CacheKey } from '../cache/types.js';
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > {
   client: ApolloClient<any>;
   data: TData;
@@ -52,18 +52,18 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
 
 export type RefetchFunction<
   TData,
-  TVariables extends OperationVariables
+  TVariables extends OperationVariables,
 > = ObservableQueryFields<TData, TVariables>['refetch'];
 
 export type SubscribeToMoreFunction<
   TData,
-  TVariables extends OperationVariables
+  TVariables extends OperationVariables,
 > = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
 
 export function useSuspenseQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<SuspenseQueryHookOptions<TData>, 'variables'>
+  TOptions extends Omit<SuspenseQueryHookOptions<TData>, 'variables'>,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
@@ -85,7 +85,7 @@ export function useSuspenseQuery<
 
 export function useSuspenseQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -96,7 +96,7 @@ export function useSuspenseQuery<
 
 export function useSuspenseQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -106,7 +106,7 @@ export function useSuspenseQuery<
 
 export function useSuspenseQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -117,7 +117,7 @@ export function useSuspenseQuery<
 
 export function useSuspenseQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -127,7 +127,7 @@ export function useSuspenseQuery<
 
 export function useSuspenseQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
@@ -137,7 +137,7 @@ export function useSuspenseQuery<
 
 export function useSuspenseQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
@@ -145,7 +145,7 @@ export function useSuspenseQuery<
 
 export function useSuspenseQuery<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<
@@ -302,7 +302,7 @@ export function toApolloError(result: ApolloQueryResult<any>) {
 
 interface UseWatchQueryOptionsHookOptions<
   TData,
-  TVariables extends OperationVariables
+  TVariables extends OperationVariables,
 > {
   client: ApolloClient<unknown>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -311,7 +311,7 @@ interface UseWatchQueryOptionsHookOptions<
 
 export function useWatchQueryOptions<
   TData,
-  TVariables extends OperationVariables
+  TVariables extends OperationVariables,
 >({
   client,
   query,

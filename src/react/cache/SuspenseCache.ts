@@ -19,7 +19,9 @@ export interface SuspenseCacheOptions {
 }
 
 export class SuspenseCache {
-  private queryRefs = new Trie<{ current?: InternalQueryReference }>(canUseWeakMap);
+  private queryRefs = new Trie<{ current?: InternalQueryReference }>(
+    canUseWeakMap
+  );
   private options: SuspenseCacheOptions;
 
   constructor(options: SuspenseCacheOptions = Object.create(null)) {

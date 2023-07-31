@@ -26,11 +26,13 @@ export function getApolloContext(): React.Context<ApolloContextValue> {
       // TODO: change to React documentation once React documentation contains information about Client Components
       'For more information, see https://nextjs.org/docs/getting-started/react-essentials#client-components'
   );
-  
-  let context = (React.createContext as any)[contextKey] as React.Context<ApolloContextValue>;
+
+  let context = (React.createContext as any)[
+    contextKey
+  ] as React.Context<ApolloContextValue>;
   if (!context) {
     Object.defineProperty(React.createContext, contextKey, {
-      value: context = React.createContext<ApolloContextValue>({}),
+      value: (context = React.createContext<ApolloContextValue>({})),
       enumerable: false,
       writable: false,
       configurable: true,

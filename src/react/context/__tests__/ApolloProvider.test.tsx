@@ -116,61 +116,62 @@ describe('<ApolloProvider /> Component', () => {
       Omit<ApolloProviderProps<any>, 'children'>,
       Omit<ApolloProviderProps<any>, 'children'>
     ]
-  >([
-    ['client', { client }, { client: anotherClient }],
-  ])('context value stability, %s prop', (prop, value, childValue) => {
-    it(`should not recreate the context value if the ${prop} prop didn't change`, () => {
-      let lastContext: ApolloContextValue | undefined;
+  >([['client', { client }, { client: anotherClient }]])(
+    'context value stability, %s prop',
+    (prop, value, childValue) => {
+      it(`should not recreate the context value if the ${prop} prop didn't change`, () => {
+        let lastContext: ApolloContextValue | undefined;
 
-      const TestChild = () => {
-        lastContext = useContext(getApolloContext());
-        return null;
-      };
+        const TestChild = () => {
+          lastContext = useContext(getApolloContext());
+          return null;
+        };
 
-      const { rerender } = render(
-        <ApolloProvider {...value}>
-          <TestChild />
-        </ApolloProvider>
-      );
-
-      const firstContextValue = lastContext;
-
-      rerender(
-        <ApolloProvider {...value}>
-          <TestChild />
-        </ApolloProvider>
-      );
-
-      expect(lastContext).toBe(firstContextValue);
-    });
-
-    it(`should not recreate the context if the parent context value differs, but the ${prop} prop didn't change`, () => {
-      let lastContext: ApolloContextValue | undefined;
-
-      const TestChild = () => {
-        lastContext = useContext(getApolloContext());
-        return null;
-      };
-
-      const { rerender } = render(
-        <ApolloProvider {...value}>
-          <ApolloProvider {...childValue}>
+        const { rerender } = render(
+          <ApolloProvider {...value}>
             <TestChild />
           </ApolloProvider>
-        </ApolloProvider>
-      );
+        );
 
-      const firstContextValue = lastContext;
+        const firstContextValue = lastContext;
 
-      rerender(
-        <ApolloProvider {...value}>
-          <ApolloProvider {...childValue}>
+        rerender(
+          <ApolloProvider {...value}>
             <TestChild />
           </ApolloProvider>
-        </ApolloProvider>
-      );
+        );
 
-      expect(lastContext).toBe(firstContextValue);
-    });
-  });
+        expect(lastContext).toBe(firstContextValue);
+      });
+
+      it(`should not recreate the context if the parent context value differs, but the ${prop} prop didn't change`, () => {
+        let lastContext: ApolloContextValue | undefined;
+
+        const TestChild = () => {
+          lastContext = useContext(getApolloContext());
+          return null;
+        };
+
+        const { rerender } = render(
+          <ApolloProvider {...value}>
+            <ApolloProvider {...childValue}>
+              <TestChild />
+            </ApolloProvider>
+          </ApolloProvider>
+        );
+
+        const firstContextValue = lastContext;
+
+        rerender(
+          <ApolloProvider {...value}>
+            <ApolloProvider {...childValue}>
+              <TestChild />
+            </ApolloProvider>
+          </ApolloProvider>
+        );
+
+        expect(lastContext).toBe(firstContextValue);
+      });
+    }
+  );
 });

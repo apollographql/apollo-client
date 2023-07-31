@@ -1,10 +1,10 @@
-import type { MatcherFunction } from 'expect';
-import type { DocumentNode } from 'graphql';
-import type { OperationVariables } from '../../core/index.js';
-import { ApolloClient } from '../../core/index.js';
-import { canonicalStringify } from '../../cache/index.js';
-import { getSuspenseCache } from '../../react/cache/index.js';
-import type { CacheKey } from '../../react/cache/types.js';
+import type { MatcherFunction } from "expect";
+import type { DocumentNode } from "graphql";
+import type { OperationVariables } from "../../core/index.js";
+import { ApolloClient } from "../../core/index.js";
+import { canonicalStringify } from "../../cache/index.js";
+import { getSuspenseCache } from "../../react/cache/index.js";
+import type { CacheKey } from "../../react/cache/types.js";
 
 export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
   [
@@ -20,7 +20,7 @@ export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
   { variables, queryKey = [] } = Object.create(null)
 ) {
   if (!(client instanceof ApolloClient)) {
-    throw new Error('Actual must be an instance of `ApolloClient`');
+    throw new Error("Actual must be an instance of `ApolloClient`");
   }
 
   const suspenseCache = getSuspenseCache(client);
@@ -30,13 +30,13 @@ export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
     canonicalStringify(variables),
     ...([] as any[]).concat(queryKey),
   ];
-  const queryRef = suspenseCache['queryRefs'].lookupArray(cacheKey)?.current;
+  const queryRef = suspenseCache["queryRefs"].lookupArray(cacheKey)?.current;
 
   return {
     pass: !!queryRef,
     message: () => {
       return `Expected suspense cache ${
-        queryRef ? 'not ' : ''
+        queryRef ? "not " : ""
       }to have cache entry using key`;
     },
   };

@@ -1,8 +1,8 @@
-import { Trie } from '@wry/trie';
-import type { ObservableQuery } from '../../core/index.js';
-import { canUseWeakMap } from '../../utilities/index.js';
-import { InternalQueryReference } from './QueryReference.js';
-import type { CacheKey } from './types.js';
+import { Trie } from "@wry/trie";
+import type { ObservableQuery } from "../../core/index.js";
+import { canUseWeakMap } from "../../utilities/index.js";
+import { InternalQueryReference } from "./QueryReference.js";
+import type { CacheKey } from "./types.js";
 
 export interface SuspenseCacheOptions {
   /**

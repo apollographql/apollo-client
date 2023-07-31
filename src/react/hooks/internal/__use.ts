@@ -1,11 +1,11 @@
-import { wrapPromiseWithState } from '../../../utilities/index.js';
-import * as React from 'react';
+import { wrapPromiseWithState } from "../../../utilities/index.js";
+import * as React from "react";
 
 type Use = <T>(promise: Promise<T>) => T;
 // Prevent webpack from complaining about our feature detection of the
 // use property of the React namespace, which is expected not
 // to exist when using current stable versions, and that's fine.
-const useKey = 'use' as keyof typeof React;
+const useKey = "use" as keyof typeof React;
 const realHook = React[useKey] as Use | undefined;
 
 // This is named with two underscores to allow this hook to evade typical rules of
@@ -16,11 +16,11 @@ export const __use =
     const statefulPromise = wrapPromiseWithState(promise);
 
     switch (statefulPromise.status) {
-      case 'pending':
+      case "pending":
         throw statefulPromise;
-      case 'rejected':
+      case "rejected":
         throw statefulPromise.reason;
-      case 'fulfilled':
+      case "fulfilled":
         return statefulPromise.value;
     }
   };

@@ -1,4 +1,4 @@
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from "graphql";
 
 export type CacheKey = [
   query: DocumentNode,

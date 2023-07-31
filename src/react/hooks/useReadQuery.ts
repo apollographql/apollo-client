@@ -1,21 +1,21 @@
-import * as React from 'react';
-import invariant from 'ts-invariant';
-import { NetworkStatus } from '../../core/index.js';
+import * as React from "react";
+import invariant from "ts-invariant";
+import { NetworkStatus } from "../../core/index.js";
 import {
   QUERY_REFERENCE_SYMBOL,
   type QueryReference,
-} from '../cache/QueryReference.js';
-import { __use } from './internal/index.js';
-import { toApolloError } from './useSuspenseQuery.js';
+} from "../cache/QueryReference.js";
+import { __use } from "./internal/index.js";
+import { toApolloError } from "./useSuspenseQuery.js";
 
 export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   const [, forceUpdate] = React.useState(0);
   const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
   invariant(
     internalQueryRef.promiseCache,
-    'It appears that `useReadQuery` was used outside of `useBackgroundQuery`. ' +
-      '`useReadQuery` is only supported for use with `useBackgroundQuery`. ' +
-      'Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`.'
+    "It appears that `useReadQuery` was used outside of `useBackgroundQuery`. " +
+      "`useReadQuery` is only supported for use with `useBackgroundQuery`. " +
+      "Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`."
   );
 
   const skipResult = React.useMemo(() => {
@@ -44,7 +44,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   }, [queryRef]);
 
   const result =
-    internalQueryRef.watchQueryOptions.fetchPolicy === 'standby'
+    internalQueryRef.watchQueryOptions.fetchPolicy === "standby"
       ? skipResult
       : __use(promise);
 

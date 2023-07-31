@@ -2,7 +2,7 @@ import type {
   ApolloClient,
   DocumentNode,
   OperationVariables,
-} from '../../core/index.js';
+} from "../../core/index.js";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -22,7 +22,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
           queryKey?: string | number | any[];
         }
       ) => R
-    : { error: 'matcher needs to be called on an ApolloClient instance' };
+    : { error: "matcher needs to be called on an ApolloClient instance" };
 }
 
 declare global {

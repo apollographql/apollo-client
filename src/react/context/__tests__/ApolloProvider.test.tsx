@@ -1,13 +1,13 @@
-import React, { useContext } from 'react';
-import { render, screen } from '@testing-library/react';
+import React, { useContext } from "react";
+import { render, screen } from "@testing-library/react";
 
-import { ApolloLink } from '../../../link/core';
-import { ApolloClient } from '../../../core';
-import { InMemoryCache as Cache } from '../../../cache';
-import { ApolloProvider, ApolloProviderProps } from '../ApolloProvider';
-import { ApolloContextValue, getApolloContext } from '../ApolloContext';
+import { ApolloLink } from "../../../link/core";
+import { ApolloClient } from "../../../core";
+import { InMemoryCache as Cache } from "../../../cache";
+import { ApolloProvider, ApolloProviderProps } from "../ApolloProvider";
+import { ApolloContextValue, getApolloContext } from "../ApolloContext";
 
-describe('<ApolloProvider /> Component', () => {
+describe("<ApolloProvider /> Component", () => {
   const client = new ApolloClient({
     cache: new Cache(),
     link: new ApolloLink((o, f) => (f ? f(o) : null)),
@@ -18,27 +18,27 @@ describe('<ApolloProvider /> Component', () => {
     link: new ApolloLink((o, f) => (f ? f(o) : null)),
   });
 
-  it('should render children components', () => {
+  it("should render children components", () => {
     render(
       <ApolloProvider client={client}>
         <div className="unique">Test</div>
       </ApolloProvider>
     );
 
-    expect(screen.getByText('Test')).toBeTruthy();
+    expect(screen.getByText("Test")).toBeTruthy();
   });
 
-  it('should support the 2.0', () => {
+  it("should support the 2.0", () => {
     render(
       <ApolloProvider client={{} as ApolloClient<any>}>
         <div className="unique">Test</div>
       </ApolloProvider>
     );
 
-    expect(screen.getByText('Test')).toBeTruthy();
+    expect(screen.getByText("Test")).toBeTruthy();
   });
 
-  it('should require a client', () => {
+  it("should require a client", () => {
     const originalConsoleError = console.error;
     console.error = () => {
       /* noop */
@@ -55,22 +55,22 @@ describe('<ApolloProvider /> Component', () => {
         </ApolloContext.Provider>
       );
     }).toThrowError(
-      'ApolloProvider was not passed a client instance. Make ' +
+      "ApolloProvider was not passed a client instance. Make " +
         'sure you pass in your client via the "client" prop.'
     );
     console.error = originalConsoleError;
   });
 
-  it('should not require a store', () => {
+  it("should not require a store", () => {
     render(
       <ApolloProvider client={client}>
         <div className="unique">Test</div>
       </ApolloProvider>
     );
-    expect(screen.getByText('Test')).toBeTruthy();
+    expect(screen.getByText("Test")).toBeTruthy();
   });
 
-  it('should add the client to the children context', () => {
+  it("should add the client to the children context", () => {
     const TestChild = () => {
       const context = useContext(getApolloContext());
       expect(context.client).toEqual(client);
@@ -84,7 +84,7 @@ describe('<ApolloProvider /> Component', () => {
     );
   });
 
-  it('should update props when the client changes', () => {
+  it("should update props when the client changes", () => {
     let clientToCheck = client;
 
     const TestChild = () => {
@@ -113,11 +113,11 @@ describe('<ApolloProvider /> Component', () => {
   describe.each<
     [
       string,
-      Omit<ApolloProviderProps<any>, 'children'>,
-      Omit<ApolloProviderProps<any>, 'children'>,
+      Omit<ApolloProviderProps<any>, "children">,
+      Omit<ApolloProviderProps<any>, "children">,
     ]
-  >([['client', { client }, { client: anotherClient }]])(
-    'context value stability, %s prop',
+  >([["client", { client }, { client: anotherClient }]])(
+    "context value stability, %s prop",
     (prop, value, childValue) => {
       it(`should not recreate the context value if the ${prop} prop didn't change`, () => {
         let lastContext: ApolloContextValue | undefined;

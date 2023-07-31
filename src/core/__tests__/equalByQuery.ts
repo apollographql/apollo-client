@@ -1,13 +1,13 @@
-import { GraphQLError } from 'graphql';
-import { TypedDocumentNode, gql } from '../index';
-import { equalByQuery } from '../equalByQuery';
+import { GraphQLError } from "graphql";
+import { TypedDocumentNode, gql } from "../index";
+import { equalByQuery } from "../equalByQuery";
 
-describe('equalByQuery', () => {
-  it('is importable and a function', () => {
-    expect(typeof equalByQuery).toBe('function');
+describe("equalByQuery", () => {
+  it("is importable and a function", () => {
+    expect(typeof equalByQuery).toBe("function");
   });
 
-  it('works with a basic single-field query', () => {
+  it("works with a basic single-field query", () => {
     const query = gql`
       query {
         hello
@@ -15,34 +15,34 @@ describe('equalByQuery', () => {
     `;
 
     expect(
-      equalByQuery(query, { data: { hello: 'hi' } }, { data: { hello: 'hi' } })
+      equalByQuery(query, { data: { hello: "hi" } }, { data: { hello: "hi" } })
     ).toBe(true);
 
     expect(
       equalByQuery(
         query,
-        { data: { hello: 'hi', unrelated: 1 } },
-        { data: { hello: 'hi', unrelated: 100 } }
+        { data: { hello: "hi", unrelated: 1 } },
+        { data: { hello: "hi", unrelated: 100 } }
       )
     ).toBe(true);
 
     expect(
-      equalByQuery(query, { data: { hello: 'hi' } }, { data: { hello: 'hey' } })
+      equalByQuery(query, { data: { hello: "hi" } }, { data: { hello: "hey" } })
     ).toBe(false);
 
-    expect(equalByQuery(query, { data: {} }, { data: { hello: 'hi' } })).toBe(
+    expect(equalByQuery(query, { data: {} }, { data: { hello: "hi" } })).toBe(
       false
     );
 
-    expect(equalByQuery(query, { data: { hello: 'hi' } }, { data: {} })).toBe(
+    expect(equalByQuery(query, { data: { hello: "hi" } }, { data: {} })).toBe(
       false
     );
 
-    expect(equalByQuery(query, { data: { hello: 'hi' } }, { data: null })).toBe(
+    expect(equalByQuery(query, { data: { hello: "hi" } }, { data: null })).toBe(
       false
     );
 
-    expect(equalByQuery(query, { data: null }, { data: { hello: 'hi' } })).toBe(
+    expect(equalByQuery(query, { data: null }, { data: { hello: "hi" } })).toBe(
       false
     );
 
@@ -53,13 +53,13 @@ describe('equalByQuery', () => {
     expect(
       equalByQuery(
         query,
-        { data: { unrelated: 'whatever' } },
-        { data: { unrelated: 'no matter' } }
+        { data: { unrelated: "whatever" } },
+        { data: { unrelated: "no matter" } }
       )
     ).toBe(true);
   });
 
-  it('is not confused by properties in different orders', () => {
+  it("is not confused by properties in different orders", () => {
     const query = gql`
       query {
         a
@@ -79,13 +79,13 @@ describe('equalByQuery', () => {
     expect(
       equalByQuery(
         query,
-        { data: { d: 'bogus', a: 1, b: 2, c: 3 } },
-        { data: { b: 2, c: 3, a: 1, d: 'also bogus' } }
+        { data: { d: "bogus", a: 1, b: 2, c: 3 } },
+        { data: { b: 2, c: 3, a: 1, d: "also bogus" } }
       )
     ).toBe(true);
   });
 
-  it('respects the @nonreactive directive on fields', () => {
+  it("respects the @nonreactive directive on fields", () => {
     const query = gql`
       query {
         a
@@ -98,7 +98,7 @@ describe('equalByQuery', () => {
       equalByQuery(
         query,
         { data: { a: 1, b: 2, c: 3 } },
-        { data: { a: 1, b: 2, c: 'different' } }
+        { data: { a: 1, b: 2, c: "different" } }
       )
     ).toBe(true);
 
@@ -106,19 +106,19 @@ describe('equalByQuery', () => {
       equalByQuery(
         query,
         { data: { a: 1, b: 2, c: 3 } },
-        { data: { a: 'different', b: 2, c: 4 } }
+        { data: { a: "different", b: 2, c: 4 } }
       )
     ).toBe(false);
   });
 
-  describe('@skip and @include directives', () => {
+  describe("@skip and @include directives", () => {
     // The @skip and @include directives use query variables to determine
     // whether subtrees of the query should be executed at all, so they can
     // influence the comparison of results in ways similar to @nonreactive. The
     // key difference is that @skip and @include will be sent to the server,
     // whereas @nonreactive is a client-only directive, and does not prevent
     // execution of nonreactive fields/subtrees on the server.
-    it('respects @skip directive, depending on variables', () => {
+    it("respects @skip directive, depending on variables", () => {
       const skipQuery = gql`
         query SkipC($condition: Boolean!) {
           a
@@ -191,7 +191,7 @@ describe('equalByQuery', () => {
       ).toBe(true);
     });
 
-    it('respects @include directive, depending on variables', () => {
+    it("respects @include directive, depending on variables", () => {
       const includeQuery = gql`
         query IncludeC($condition: Boolean!) {
           a
@@ -265,7 +265,7 @@ describe('equalByQuery', () => {
     });
   });
 
-  it('considers errors as well as data', () => {
+  it("considers errors as well as data", () => {
     const query = gql`
       query {
         a
@@ -275,8 +275,8 @@ describe('equalByQuery', () => {
     `;
 
     const data123 = { a: 1, b: 2, c: 3 };
-    const oopsError = new GraphQLError('oops');
-    const differentError = new GraphQLError('different');
+    const oopsError = new GraphQLError("oops");
+    const differentError = new GraphQLError("different");
 
     expect(
       equalByQuery(
@@ -343,7 +343,7 @@ describe('equalByQuery', () => {
     ).toBe(true);
   });
 
-  it('respects the @nonreactive directive on inline fragments', () => {
+  it("respects the @nonreactive directive on inline fragments", () => {
     const query = gql`
       query {
         a
@@ -371,7 +371,7 @@ describe('equalByQuery', () => {
     ).toBe(false);
   });
 
-  it('respects the @nonreactive directive on named fragment ...spreads', () => {
+  it("respects the @nonreactive directive on named fragment ...spreads", () => {
     const query = gql`
       query {
         a
@@ -417,7 +417,7 @@ describe('equalByQuery', () => {
     ).toBe(false);
   });
 
-  it('respects the @nonreactive directive on named fragment definitions', () => {
+  it("respects the @nonreactive directive on named fragment definitions", () => {
     const query = gql`
       query {
         a
@@ -463,7 +463,7 @@ describe('equalByQuery', () => {
     ).toBe(false);
   });
 
-  it('traverses fragments without @nonreactive', () => {
+  it("traverses fragments without @nonreactive", () => {
     const query = gql`
       query {
         a
@@ -526,7 +526,7 @@ describe('equalByQuery', () => {
   });
 
   type Thing = {
-    __typename: 'Thing';
+    __typename: "Thing";
     id: string;
     stable: number;
     volatile: number;
@@ -608,11 +608,11 @@ describe('equalByQuery', () => {
       }
     `,
   ])(
-    'iterates over array-valued result fields ignoring @nonreactive (%#)',
+    "iterates over array-valued result fields ignoring @nonreactive (%#)",
     (query) => {
       let nextVolatileIntegerPart = 0;
       const makeThing = (id: string, stable = 1): Thing => ({
-        __typename: 'Thing',
+        __typename: "Thing",
         id,
         stable,
         // Thing.volatile is always a different randomized number, which normally
@@ -626,69 +626,69 @@ describe('equalByQuery', () => {
       const makeThings = (
         lettersToSplit: string,
         stable: number = 1
-      ): Thing[] => lettersToSplit.split('').map((id) => makeThing(id, stable));
+      ): Thing[] => lettersToSplit.split("").map((id) => makeThing(id, stable));
 
       expect(
         equalByQuery(
           query,
-          { data: { things: makeThings('abc') } },
-          { data: { things: [makeThing('a'), makeThing('b'), makeThing('c')] } }
+          { data: { things: makeThings("abc") } },
+          { data: { things: [makeThing("a"), makeThing("b"), makeThing("c")] } }
         )
       ).toBe(true);
 
       expect(
         equalByQuery(
           query,
-          { data: { things: makeThings('abcdefg', 2) } },
-          { data: { things: makeThings('abcdefg') } }
+          { data: { things: makeThings("abcdefg", 2) } },
+          { data: { things: makeThings("abcdefg") } }
         )
       ).toBe(false);
 
       expect(
         equalByQuery(
           query,
-          { data: { things: makeThings('abcdefg', 2) } },
-          { data: { things: makeThings('abcdefg', 3) } }
+          { data: { things: makeThings("abcdefg", 2) } },
+          { data: { things: makeThings("abcdefg", 3) } }
         )
       ).toBe(false);
 
       expect(
         equalByQuery(
           query,
-          { data: { things: makeThings('abcdefg', 3) } },
-          { data: { things: makeThings('abcdefg', 3) } }
+          { data: { things: makeThings("abcdefg", 3) } },
+          { data: { things: makeThings("abcdefg", 3) } }
         )
       ).toBe(true);
 
       expect(
         equalByQuery(
           query,
-          { data: { things: makeThings('ab', 2345) } },
-          { data: { things: [makeThing('a'), makeThing('b', 2345)] } }
+          { data: { things: makeThings("ab", 2345) } },
+          { data: { things: [makeThing("a"), makeThing("b", 2345)] } }
         )
       ).toBe(false);
 
       expect(
         equalByQuery(
           query,
-          { data: { things: makeThings('ab', 3456) } },
-          { data: { things: [makeThing('a', 3456), makeThing('b')] } }
+          { data: { things: makeThings("ab", 3456) } },
+          { data: { things: [makeThing("a", 3456), makeThing("b")] } }
         )
       ).toBe(false);
 
       expect(
         equalByQuery(
           query,
-          { data: { things: makeThings('ab', 3456) } },
-          { data: { things: [makeThing('a', 3456), makeThing('b', 3456)] } }
+          { data: { things: makeThings("ab", 3456) } },
+          { data: { things: [makeThing("a", 3456), makeThing("b", 3456)] } }
         )
       ).toBe(true);
 
       expect(
         equalByQuery(
           query,
-          { data: { things: makeThings('abc') } },
-          { data: { things: 'not an array' } }
+          { data: { things: makeThings("abc") } },
+          { data: { things: "not an array" } }
         )
       ).toBe(false);
 

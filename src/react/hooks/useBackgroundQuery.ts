@@ -1,22 +1,22 @@
-import * as React from 'react';
+import * as React from "react";
 import type {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
-} from '../../core/index.js';
-import { useApolloClient } from './useApolloClient.js';
+} from "../../core/index.js";
+import { useApolloClient } from "./useApolloClient.js";
 import {
   QUERY_REFERENCE_SYMBOL,
   type QueryReference,
-} from '../cache/QueryReference.js';
-import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
-import { __use } from './internal/index.js';
-import { getSuspenseCache } from '../cache/index.js';
-import { useWatchQueryOptions } from './useSuspenseQuery.js';
-import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
-import { canonicalStringify } from '../../cache/index.js';
-import type { DeepPartial } from '../../utilities/index.js';
-import type { CacheKey } from '../cache/types.js';
+} from "../cache/QueryReference.js";
+import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
+import { __use } from "./internal/index.js";
+import { getSuspenseCache } from "../cache/index.js";
+import { useWatchQueryOptions } from "./useSuspenseQuery.js";
+import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
+import { canonicalStringify } from "../../cache/index.js";
+import type { DeepPartial } from "../../utilities/index.js";
+import type { CacheKey } from "../cache/types.js";
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -37,20 +37,20 @@ type BackgroundQueryHookOptionsNoInfer<
 export function useBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<BackgroundQueryHookOptions<TData>, 'variables'>,
+  TOptions extends Omit<BackgroundQueryHookOptions<TData>, "variables">,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions
 ): UseBackgroundQueryResult<
-  TOptions['errorPolicy'] extends 'ignore' | 'all'
-    ? TOptions['returnPartialData'] extends true
+  TOptions["errorPolicy"] extends "ignore" | "all"
+    ? TOptions["returnPartialData"] extends true
       ? DeepPartial<TData> | undefined
       : TData | undefined
-    : TOptions['returnPartialData'] extends true
-    ? TOptions['skip'] extends boolean
+    : TOptions["returnPartialData"] extends true
+    ? TOptions["skip"] extends boolean
       ? DeepPartial<TData> | undefined
       : DeepPartial<TData>
-    : TOptions['skip'] extends boolean
+    : TOptions["skip"] extends boolean
     ? TData | undefined
     : TData,
   TVariables
@@ -63,7 +63,7 @@ export function useBackgroundQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
-    errorPolicy: 'ignore' | 'all';
+    errorPolicy: "ignore" | "all";
   }
 ): UseBackgroundQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
@@ -73,7 +73,7 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
-    errorPolicy: 'ignore' | 'all';
+    errorPolicy: "ignore" | "all";
   }
 ): UseBackgroundQueryResult<TData | undefined, TVariables>;
 

@@ -1,4 +1,4 @@
-import React, { Fragment, StrictMode, Suspense } from 'react';
+import React, { Fragment, StrictMode, Suspense } from "react";
 import {
   act,
   render,
@@ -6,11 +6,11 @@ import {
   renderHook,
   RenderHookOptions,
   waitFor,
-} from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { ErrorBoundary, ErrorBoundaryProps } from 'react-error-boundary';
-import { expectTypeOf } from 'expect-type';
-import { GraphQLError } from 'graphql';
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ErrorBoundary, ErrorBoundaryProps } from "react-error-boundary";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
 import {
   gql,
   ApolloError,
@@ -26,35 +26,35 @@ import {
   FetchMoreQueryOptions,
   OperationVariables,
   ApolloQueryResult,
-} from '../../../core';
+} from "../../../core";
 import {
   MockedResponse,
   MockedProvider,
   MockLink,
   MockSubscriptionLink,
   mockSingleLink,
-} from '../../../testing';
+} from "../../../testing";
 import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
-} from '../../../utilities';
-import { useBackgroundQuery } from '../useBackgroundQuery';
-import { useReadQuery } from '../useReadQuery';
-import { ApolloProvider } from '../../context';
-import { QUERY_REFERENCE_SYMBOL } from '../../cache/QueryReference';
-import { InMemoryCache } from '../../../cache';
+} from "../../../utilities";
+import { useBackgroundQuery } from "../useBackgroundQuery";
+import { useReadQuery } from "../useReadQuery";
+import { ApolloProvider } from "../../context";
+import { QUERY_REFERENCE_SYMBOL } from "../../cache/QueryReference";
+import { InMemoryCache } from "../../../cache";
 import {
   FetchMoreFunction,
   RefetchFunction,
   QueryReference,
-} from '../../../react';
+} from "../../../react";
 import {
   SuspenseQueryHookFetchPolicy,
   SuspenseQueryHookOptions,
-} from '../../types/types';
-import equal from '@wry/equality';
-import { RefetchWritePolicy } from '../../../core/watchQueryOptions';
+} from "../../types/types";
+import equal from "@wry/equality";
+import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 
 function renderIntegrationTest({
   client,
@@ -72,7 +72,7 @@ function renderIntegrationTest({
   const mocks = [
     {
       request: { query },
-      result: { data: { foo: { bar: 'hello' } } },
+      result: { data: { foo: { bar: "hello" } } },
     },
   ];
   const _client =
@@ -166,7 +166,7 @@ function useVariablesIntegrationTestCase() {
       }
     }
   `;
-  const CHARACTERS = ['Spider-Man', 'Black Widow', 'Iron Man', 'Hulk'];
+  const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
   let mocks = [...CHARACTERS].map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
     result: { data: { character: { id: String(index + 1), name } } },
@@ -285,7 +285,7 @@ function renderVariablesIntegrationTest({
         </button>
         <button
           onClick={() => {
-            setVariables({ id: '2' });
+            setVariables({ id: "2" });
           }}
         >
           Set variables to id: 2
@@ -297,7 +297,7 @@ function renderVariablesIntegrationTest({
 
   function ParentWithVariables({
     variables,
-    errorPolicy = 'none',
+    errorPolicy = "none",
   }: {
     variables: VariablesCaseVariables;
     errorPolicy?: ErrorPolicy;
@@ -384,8 +384,8 @@ function renderPaginatedIntegrationTest({
     }
   `;
 
-  const data = 'ABCDEFG'
-    .split('')
+  const data = "ABCDEFG"
+    .split("")
     .map((letter, index) => ({ letter, position: index + 1 }));
 
   const link = new ApolloLink((operation) => {
@@ -511,7 +511,7 @@ function renderPaginatedIntegrationTest({
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
-  'wrapper'
+  "wrapper"
 > & {
   client?: ApolloClient<TSerializedCache>;
   link?: ApolloLink;
@@ -596,8 +596,8 @@ function renderSuspenseHook<Result, Props>(
   return { ...view, renders };
 }
 
-describe('useBackgroundQuery', () => {
-  it('fetches a simple query with minimal config', async () => {
+describe("useBackgroundQuery", () => {
+  it("fetches a simple query with minimal config", async () => {
     const query = gql`
       query {
         hello
@@ -606,7 +606,7 @@ describe('useBackgroundQuery', () => {
     const mocks = [
       {
         request: { query },
-        result: { data: { hello: 'world 1' } },
+        result: { data: { hello: "world 1" } },
       },
     ];
     const { result } = renderHook(() => useBackgroundQuery(query), {
@@ -620,13 +620,13 @@ describe('useBackgroundQuery', () => {
     const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
 
     expect(_result).toEqual({
-      data: { hello: 'world 1' },
+      data: { hello: "world 1" },
       loading: false,
       networkStatus: 7,
     });
   });
 
-  it('allows the client to be overridden', async () => {
+  it("allows the client to be overridden", async () => {
     const query: TypedDocumentNode<SimpleQueryData> = gql`
       query UserQuery {
         greeting
@@ -635,14 +635,14 @@ describe('useBackgroundQuery', () => {
 
     const globalClient = new ApolloClient({
       link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: 'global hello' } })
+        Observable.of({ data: { greeting: "global hello" } })
       ),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
       link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: 'local hello' } })
+        Observable.of({ data: { greeting: "local hello" } })
       ),
       cache: new InMemoryCache(),
     });
@@ -658,14 +658,14 @@ describe('useBackgroundQuery', () => {
 
     await waitFor(() => {
       expect(_result).toEqual({
-        data: { greeting: 'local hello' },
+        data: { greeting: "local hello" },
         loading: false,
         networkStatus: NetworkStatus.ready,
       });
     });
   });
 
-  it('passes context to the link', async () => {
+  it("passes context to the link", async () => {
     const query = gql`
       query ContextQuery {
         context
@@ -684,7 +684,7 @@ describe('useBackgroundQuery', () => {
     const { result } = renderHook(
       () =>
         useBackgroundQuery(query, {
-          context: { valueA: 'A', valueB: 'B' },
+          context: { valueA: "A", valueB: "B" },
         }),
       {
         wrapper: ({ children }) => (
@@ -699,7 +699,7 @@ describe('useBackgroundQuery', () => {
 
     await waitFor(() => {
       expect(_result).toMatchObject({
-        data: { context: { valueA: 'A', valueB: 'B' } },
+        data: { context: { valueA: "A", valueB: "B" } },
         networkStatus: NetworkStatus.ready,
       });
     });
@@ -728,12 +728,12 @@ describe('useBackgroundQuery', () => {
     `;
 
     const results: Result[] = [
-      { __typename: 'Result', value: 0 },
-      { __typename: 'Result', value: 1 },
-      { __typename: 'Result', value: 1 },
-      { __typename: 'Result', value: 2 },
-      { __typename: 'Result', value: 3 },
-      { __typename: 'Result', value: 5 },
+      { __typename: "Result", value: 0 },
+      { __typename: "Result", value: 1 },
+      { __typename: "Result", value: 1 },
+      { __typename: "Result", value: 2 },
+      { __typename: "Result", value: 3 },
+      { __typename: "Result", value: 5 },
     ];
 
     cache.writeQuery({
@@ -789,12 +789,12 @@ describe('useBackgroundQuery', () => {
     `;
 
     const results: Result[] = [
-      { __typename: 'Result', value: 0 },
-      { __typename: 'Result', value: 1 },
-      { __typename: 'Result', value: 1 },
-      { __typename: 'Result', value: 2 },
-      { __typename: 'Result', value: 3 },
-      { __typename: 'Result', value: 5 },
+      { __typename: "Result", value: 0 },
+      { __typename: "Result", value: 1 },
+      { __typename: "Result", value: 1 },
+      { __typename: "Result", value: 2 },
+      { __typename: "Result", value: 3 },
+      { __typename: "Result", value: 5 },
     ];
 
     cache.writeQuery({
@@ -827,7 +827,7 @@ describe('useBackgroundQuery', () => {
   });
 
   // TODO(FIXME): test fails, should return cache data first if it exists
-  it.skip('returns initial cache data followed by network data when the fetch policy is `cache-and-network`', async () => {
+  it.skip("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
     const query = gql`
       {
         hello
@@ -836,7 +836,7 @@ describe('useBackgroundQuery', () => {
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query },
-      result: { data: { hello: 'from link' } },
+      result: { data: { hello: "from link" } },
       delay: 20,
     });
 
@@ -845,10 +845,10 @@ describe('useBackgroundQuery', () => {
       cache,
     });
 
-    cache.writeQuery({ query, data: { hello: 'from cache' } });
+    cache.writeQuery({ query, data: { hello: "from cache" } });
 
     const { result } = renderHook(
-      () => useBackgroundQuery(query, { fetchPolicy: 'cache-and-network' }),
+      () => useBackgroundQuery(query, { fetchPolicy: "cache-and-network" }),
       {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -861,13 +861,13 @@ describe('useBackgroundQuery', () => {
     const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
 
     expect(_result).toEqual({
-      data: { hello: 'from link' },
+      data: { hello: "from link" },
       loading: false,
       networkStatus: 7,
     });
   });
 
-  it('all data is present in the cache, no network request is made', async () => {
+  it("all data is present in the cache, no network request is made", async () => {
     const query = gql`
       {
         hello
@@ -876,7 +876,7 @@ describe('useBackgroundQuery', () => {
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query },
-      result: { data: { hello: 'from link' } },
+      result: { data: { hello: "from link" } },
       delay: 20,
     });
 
@@ -885,10 +885,10 @@ describe('useBackgroundQuery', () => {
       cache,
     });
 
-    cache.writeQuery({ query, data: { hello: 'from cache' } });
+    cache.writeQuery({ query, data: { hello: "from cache" } });
 
     const { result } = renderHook(
-      () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
+      () => useBackgroundQuery(query, { fetchPolicy: "cache-first" }),
       {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -901,12 +901,12 @@ describe('useBackgroundQuery', () => {
     const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
 
     expect(_result).toEqual({
-      data: { hello: 'from cache' },
+      data: { hello: "from cache" },
       loading: false,
       networkStatus: 7,
     });
   });
-  it('partial data is present in the cache so it is ignored and network request is made', async () => {
+  it("partial data is present in the cache so it is ignored and network request is made", async () => {
     const query = gql`
       {
         hello
@@ -916,7 +916,7 @@ describe('useBackgroundQuery', () => {
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query },
-      result: { data: { hello: 'from link', foo: 'bar' } },
+      result: { data: { hello: "from link", foo: "bar" } },
       delay: 20,
     });
 
@@ -931,11 +931,11 @@ describe('useBackgroundQuery', () => {
     console.error = () => {
       /* noop */
     };
-    cache.writeQuery({ query, data: { hello: 'from cache' } });
+    cache.writeQuery({ query, data: { hello: "from cache" } });
     console.error = originalConsoleError;
 
     const { result } = renderHook(
-      () => useBackgroundQuery(query, { fetchPolicy: 'cache-first' }),
+      () => useBackgroundQuery(query, { fetchPolicy: "cache-first" }),
       {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -948,13 +948,13 @@ describe('useBackgroundQuery', () => {
     const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
 
     expect(_result).toEqual({
-      data: { foo: 'bar', hello: 'from link' },
+      data: { foo: "bar", hello: "from link" },
       loading: false,
       networkStatus: 7,
     });
   });
 
-  it('existing data in the cache is ignored', async () => {
+  it("existing data in the cache is ignored", async () => {
     const query = gql`
       {
         hello
@@ -963,7 +963,7 @@ describe('useBackgroundQuery', () => {
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query },
-      result: { data: { hello: 'from link' } },
+      result: { data: { hello: "from link" } },
       delay: 20,
     });
 
@@ -972,10 +972,10 @@ describe('useBackgroundQuery', () => {
       cache,
     });
 
-    cache.writeQuery({ query, data: { hello: 'from cache' } });
+    cache.writeQuery({ query, data: { hello: "from cache" } });
 
     const { result } = renderHook(
-      () => useBackgroundQuery(query, { fetchPolicy: 'network-only' }),
+      () => useBackgroundQuery(query, { fetchPolicy: "network-only" }),
       {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -988,16 +988,16 @@ describe('useBackgroundQuery', () => {
     const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
 
     expect(_result).toEqual({
-      data: { hello: 'from link' },
+      data: { hello: "from link" },
       loading: false,
       networkStatus: 7,
     });
     expect(client.cache.extract()).toEqual({
-      ROOT_QUERY: { __typename: 'Query', hello: 'from link' },
+      ROOT_QUERY: { __typename: "Query", hello: "from link" },
     });
   });
 
-  it('fetches data from the network but does not update the cache', async () => {
+  it("fetches data from the network but does not update the cache", async () => {
     const query = gql`
       {
         hello
@@ -1006,7 +1006,7 @@ describe('useBackgroundQuery', () => {
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query },
-      result: { data: { hello: 'from link' } },
+      result: { data: { hello: "from link" } },
       delay: 20,
     });
 
@@ -1015,10 +1015,10 @@ describe('useBackgroundQuery', () => {
       cache,
     });
 
-    cache.writeQuery({ query, data: { hello: 'from cache' } });
+    cache.writeQuery({ query, data: { hello: "from cache" } });
 
     const { result } = renderHook(
-      () => useBackgroundQuery(query, { fetchPolicy: 'no-cache' }),
+      () => useBackgroundQuery(query, { fetchPolicy: "no-cache" }),
       {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -1031,29 +1031,29 @@ describe('useBackgroundQuery', () => {
     const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
 
     expect(_result).toEqual({
-      data: { hello: 'from link' },
+      data: { hello: "from link" },
       loading: false,
       networkStatus: 7,
     });
     // ...but not updated in the cache
     expect(client.cache.extract()).toEqual({
-      ROOT_QUERY: { __typename: 'Query', hello: 'from cache' },
+      ROOT_QUERY: { __typename: "Query", hello: "from cache" },
     });
   });
 
-  describe('integration tests with useReadQuery', () => {
-    it('suspends and renders hello', async () => {
+  describe("integration tests with useReadQuery", () => {
+    it("suspends and renders hello", async () => {
       const { renders } = renderIntegrationTest();
       // ensure the hook suspends immediately
       expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      expect(screen.getByText("loading")).toBeInTheDocument();
 
       // the parent component re-renders when promise fulfilled
-      expect(await screen.findByText('hello')).toBeInTheDocument();
+      expect(await screen.findByText("hello")).toBeInTheDocument();
       expect(renders.count).toBe(1);
     });
 
-    it('works with startTransition to change variables', async () => {
+    it("works with startTransition to change variables", async () => {
       type Variables = {
         id: string;
       };
@@ -1079,17 +1079,17 @@ describe('useBackgroundQuery', () => {
 
       const mocks: MockedResponse<Data, Variables>[] = [
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            data: { todo: { id: '1', name: 'Clean room', completed: false } },
+            data: { todo: { id: "1", name: "Clean room", completed: false } },
           },
           delay: 10,
         },
         {
-          request: { query, variables: { id: '2' } },
+          request: { query, variables: { id: "2" } },
           result: {
             data: {
-              todo: { id: '2', name: 'Take out trash', completed: true },
+              todo: { id: "2", name: "Take out trash", completed: true },
             },
           },
           delay: 10,
@@ -1116,7 +1116,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [id, setId] = React.useState('1');
+        const [id, setId] = React.useState("1");
         const [queryRef] = useBackgroundQuery(query, {
           variables: { id },
         });
@@ -1139,7 +1139,7 @@ describe('useBackgroundQuery', () => {
             <button
               onClick={() => {
                 startTransition(() => {
-                  onChange('2');
+                  onChange("2");
                 });
               }}
             >
@@ -1147,7 +1147,7 @@ describe('useBackgroundQuery', () => {
             </button>
             <div data-testid="todo" aria-busy={isPending}>
               {todo.name}
-              {todo.completed && ' (completed)'}
+              {todo.completed && " (completed)"}
             </div>
           </>
         );
@@ -1155,14 +1155,14 @@ describe('useBackgroundQuery', () => {
 
       render(<App />);
 
-      expect(screen.getByText('Loading')).toBeInTheDocument();
+      expect(screen.getByText("Loading")).toBeInTheDocument();
 
-      expect(await screen.findByTestId('todo')).toBeInTheDocument();
+      expect(await screen.findByTestId("todo")).toBeInTheDocument();
 
-      const todo = screen.getByTestId('todo');
-      const button = screen.getByText('Refresh');
+      const todo = screen.getByTestId("todo");
+      const button = screen.getByText("Refresh");
 
-      expect(todo).toHaveTextContent('Clean room');
+      expect(todo).toHaveTextContent("Clean room");
 
       await act(() => user.click(button));
 
@@ -1173,18 +1173,18 @@ describe('useBackgroundQuery', () => {
       // Here we should not see the suspense fallback while the component suspends
       // until the todo is finished loading. Seeing the suspense fallback is an
       // indication that we are suspending the component too late in the process.
-      expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
 
       // We can ensure this works with isPending from useTransition in the process
-      expect(todo).toHaveAttribute('aria-busy', 'true');
+      expect(todo).toHaveAttribute("aria-busy", "true");
 
       // Ensure we are showing the stale UI until the new todo has loaded
-      expect(todo).toHaveTextContent('Clean room');
+      expect(todo).toHaveTextContent("Clean room");
 
       // Eventually we should see the updated todo content once its done
       // suspending.
       await waitFor(() => {
-        expect(todo).toHaveTextContent('Take out trash (completed)');
+        expect(todo).toHaveTextContent("Take out trash (completed)");
       });
     });
 
@@ -1216,9 +1216,9 @@ describe('useBackgroundQuery', () => {
         query,
         data: {
           greeting: {
-            __typename: 'Greeting',
-            message: 'Hello cached',
-            recipient: { __typename: 'Person', name: 'Cached Alice' },
+            __typename: "Greeting",
+            message: "Hello cached",
+            recipient: { __typename: "Person", name: "Cached Alice" },
           },
         },
       });
@@ -1243,7 +1243,7 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [queryRef] = useBackgroundQuery(query, {
-          fetchPolicy: 'cache-and-network',
+          fetchPolicy: "cache-and-network",
         });
         return <Todo queryRef={queryRef} />;
       }
@@ -1258,7 +1258,7 @@ describe('useBackgroundQuery', () => {
             <div>Message: {greeting.message}</div>
             <div>Recipient: {greeting.recipient.name}</div>
             <div>Network status: {networkStatus}</div>
-            <div>Error: {error ? error.message : 'none'}</div>
+            <div>Error: {error ? error.message : "none"}</div>
           </>
         );
       }
@@ -1266,20 +1266,20 @@ describe('useBackgroundQuery', () => {
       render(<App />);
 
       expect(screen.getByText(/Message/i)).toHaveTextContent(
-        'Message: Hello cached'
+        "Message: Hello cached"
       );
       expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-        'Recipient: Cached Alice'
+        "Recipient: Cached Alice"
       );
       expect(screen.getByText(/Network status/i)).toHaveTextContent(
-        'Network status: 1' // loading
+        "Network status: 1" // loading
       );
-      expect(screen.getByText(/Error/i)).toHaveTextContent('none');
+      expect(screen.getByText(/Error/i)).toHaveTextContent("none");
 
       link.simulateResult({
         result: {
           data: {
-            greeting: { __typename: 'Greeting', message: 'Hello world' },
+            greeting: { __typename: "Greeting", message: "Hello world" },
           },
           hasNext: true,
         },
@@ -1287,26 +1287,26 @@ describe('useBackgroundQuery', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/Message/i)).toHaveTextContent(
-          'Message: Hello world'
+          "Message: Hello world"
         );
       });
       expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-        'Recipient: Cached Alice'
+        "Recipient: Cached Alice"
       );
       expect(screen.getByText(/Network status/i)).toHaveTextContent(
-        'Network status: 7' // ready
+        "Network status: 7" // ready
       );
-      expect(screen.getByText(/Error/i)).toHaveTextContent('none');
+      expect(screen.getByText(/Error/i)).toHaveTextContent("none");
 
       link.simulateResult({
         result: {
           incremental: [
             {
               data: {
-                recipient: { name: 'Alice', __typename: 'Person' },
-                __typename: 'Greeting',
+                recipient: { name: "Alice", __typename: "Person" },
+                __typename: "Greeting",
               },
-              path: ['greeting'],
+              path: ["greeting"],
             },
           ],
           hasNext: false,
@@ -1315,72 +1315,72 @@ describe('useBackgroundQuery', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-          'Recipient: Alice'
+          "Recipient: Alice"
         );
       });
       expect(screen.getByText(/Message/i)).toHaveTextContent(
-        'Message: Hello world'
+        "Message: Hello world"
       );
       expect(screen.getByText(/Network status/i)).toHaveTextContent(
-        'Network status: 7' // ready
+        "Network status: 7" // ready
       );
-      expect(screen.getByText(/Error/i)).toHaveTextContent('none');
+      expect(screen.getByText(/Error/i)).toHaveTextContent("none");
 
       expect(renders).toBe(3);
       expect(suspenseCount).toBe(0);
     });
   });
 
-  it('reacts to cache updates', async () => {
+  it("reacts to cache updates", async () => {
     const { renders, client, query } = renderIntegrationTest();
 
     expect(renders.suspenseCount).toBe(1);
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(screen.getByText("loading")).toBeInTheDocument();
 
     // the parent component re-renders when promise fulfilled
-    expect(await screen.findByText('hello')).toBeInTheDocument();
+    expect(await screen.findByText("hello")).toBeInTheDocument();
     expect(renders.count).toBe(1);
 
     client.writeQuery({
       query,
-      data: { foo: { bar: 'baz' } },
+      data: { foo: { bar: "baz" } },
     });
 
     // the parent component re-renders when promise fulfilled
-    expect(await screen.findByText('baz')).toBeInTheDocument();
+    expect(await screen.findByText("baz")).toBeInTheDocument();
 
     expect(renders.count).toBe(2);
     expect(renders.suspenseCount).toBe(1);
 
     client.writeQuery({
       query,
-      data: { foo: { bar: 'bat' } },
+      data: { foo: { bar: "bat" } },
     });
 
-    expect(await screen.findByText('bat')).toBeInTheDocument();
+    expect(await screen.findByText("bat")).toBeInTheDocument();
 
     expect(renders.suspenseCount).toBe(1);
   });
 
-  it('reacts to variables updates', async () => {
+  it("reacts to variables updates", async () => {
     const { renders, rerender } = renderVariablesIntegrationTest({
-      variables: { id: '1' },
+      variables: { id: "1" },
     });
 
     expect(renders.suspenseCount).toBe(1);
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(screen.getByText("loading")).toBeInTheDocument();
 
-    expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
+    expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
 
-    rerender({ variables: { id: '2' } });
+    rerender({ variables: { id: "2" } });
 
     expect(renders.suspenseCount).toBe(2);
-    expect(screen.getByText('loading')).toBeInTheDocument();
+    expect(screen.getByText("loading")).toBeInTheDocument();
 
-    expect(await screen.findByText('2 - Black Widow')).toBeInTheDocument();
+    expect(await screen.findByText("2 - Black Widow")).toBeInTheDocument();
   });
 
-  it('does not suspend when `skip` is true', async () => {
+  it("does not suspend when `skip` is true", async () => {
     interface Data {
       greeting: string;
     }
@@ -1394,7 +1394,7 @@ describe('useBackgroundQuery', () => {
     const mocks = [
       {
         request: { query },
-        result: { data: { greeting: 'Hello' } },
+        result: { data: { greeting: "Hello" } },
       },
     ];
 
@@ -1425,7 +1425,7 @@ describe('useBackgroundQuery', () => {
       const { data } = useReadQuery(queryRef);
 
       return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
       );
     }
 
@@ -1439,10 +1439,10 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    expect(screen.getByTestId('greeting')).toHaveTextContent('Unknown');
+    expect(screen.getByTestId("greeting")).toHaveTextContent("Unknown");
   });
 
-  it('suspends when `skip` becomes `false` after it was `true`', async () => {
+  it("suspends when `skip` becomes `false` after it was `true`", async () => {
     interface Data {
       greeting: string;
     }
@@ -1458,7 +1458,7 @@ describe('useBackgroundQuery', () => {
     const mocks = [
       {
         request: { query },
-        result: { data: { greeting: 'Hello' } },
+        result: { data: { greeting: "Hello" } },
       },
     ];
 
@@ -1493,7 +1493,7 @@ describe('useBackgroundQuery', () => {
       const { data } = useReadQuery(queryRef);
 
       return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
       );
     }
 
@@ -1507,20 +1507,20 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    const greeting = screen.getByTestId('greeting');
+    const greeting = screen.getByTestId("greeting");
 
-    expect(greeting).toHaveTextContent('Unknown');
+    expect(greeting).toHaveTextContent("Unknown");
 
-    await act(() => user.click(screen.getByText('Run query')));
+    await act(() => user.click(screen.getByText("Run query")));
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(greeting).toHaveTextContent('Hello');
+      expect(greeting).toHaveTextContent("Hello");
     });
   });
 
-  it('renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`', async () => {
+  it("renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`", async () => {
     interface Data {
       greeting: string;
     }
@@ -1536,7 +1536,7 @@ describe('useBackgroundQuery', () => {
     const mocks = [
       {
         request: { query },
-        result: { data: { greeting: 'Hello' } },
+        result: { data: { greeting: "Hello" } },
       },
     ];
 
@@ -1571,7 +1571,7 @@ describe('useBackgroundQuery', () => {
       const { data } = useReadQuery(queryRef);
 
       return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
       );
     }
 
@@ -1585,18 +1585,18 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+      expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
     });
 
-    await act(() => user.click(screen.getByText('Toggle skip')));
+    await act(() => user.click(screen.getByText("Toggle skip")));
 
-    expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+    expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
   });
 
-  it('does not make network requests when `skip` is `true`', async () => {
+  it("does not make network requests when `skip` is `true`", async () => {
     interface Data {
       greeting: string;
     }
@@ -1612,7 +1612,7 @@ describe('useBackgroundQuery', () => {
     const mocks = [
       {
         request: { query },
-        result: { data: { greeting: 'Hello' } },
+        result: { data: { greeting: "Hello" } },
       },
     ];
 
@@ -1627,7 +1627,7 @@ describe('useBackgroundQuery', () => {
         );
 
         if (!mock) {
-          throw new Error('Could not find mock for operation');
+          throw new Error("Could not find mock for operation");
         }
 
         observer.next(mock.result);
@@ -1666,7 +1666,7 @@ describe('useBackgroundQuery', () => {
       const { data } = useReadQuery(queryRef);
 
       return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
       );
     }
 
@@ -1683,21 +1683,21 @@ describe('useBackgroundQuery', () => {
     expect(fetchCount).toBe(0);
 
     // Toggle skip to `false`
-    await act(() => user.click(screen.getByText('Toggle skip')));
+    await act(() => user.click(screen.getByText("Toggle skip")));
 
     expect(fetchCount).toBe(1);
 
     await waitFor(() => {
-      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+      expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
     });
 
     // Toggle skip to `true`
-    await act(() => user.click(screen.getByText('Toggle skip')));
+    await act(() => user.click(screen.getByText("Toggle skip")));
 
     expect(fetchCount).toBe(1);
   });
 
-  it('`skip` result is referentially stable', async () => {
+  it("`skip` result is referentially stable", async () => {
     interface Data {
       greeting: string;
     }
@@ -1721,7 +1721,7 @@ describe('useBackgroundQuery', () => {
     const mocks = [
       {
         request: { query },
-        result: { data: { greeting: 'Hello' } },
+        result: { data: { greeting: "Hello" } },
       },
     ];
 
@@ -1758,7 +1758,7 @@ describe('useBackgroundQuery', () => {
       result.current = data;
 
       return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
       );
     }
 
@@ -1779,12 +1779,12 @@ describe('useBackgroundQuery', () => {
     expect(result.current).toBe(skipResult);
 
     // Toggle skip to `false`
-    await act(() => user.click(screen.getByText('Toggle skip')));
+    await act(() => user.click(screen.getByText("Toggle skip")));
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+      expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
     });
 
     const fetchedResult = result.current;
@@ -1794,7 +1794,7 @@ describe('useBackgroundQuery', () => {
     expect(result.current).toBe(fetchedResult);
   });
 
-  it('`skip` option works with `startTransition`', async () => {
+  it("`skip` option works with `startTransition`", async () => {
     interface Data {
       greeting: string;
     }
@@ -1810,7 +1810,7 @@ describe('useBackgroundQuery', () => {
     const mocks = [
       {
         request: { query },
-        result: { data: { greeting: 'Hello' } },
+        result: { data: { greeting: "Hello" } },
         delay: 10,
       },
     ];
@@ -1856,7 +1856,7 @@ describe('useBackgroundQuery', () => {
       const { data } = useReadQuery(queryRef);
 
       return (
-        <div data-testid="greeting">{data ? data.greeting : 'Unknown'}</div>
+        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
       );
     }
 
@@ -1870,21 +1870,21 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    const button = screen.getByText('Toggle skip');
+    const button = screen.getByText("Toggle skip");
 
     // Toggle skip to `false`
     await act(() => user.click(button));
 
-    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     expect(button).toBeDisabled();
-    expect(screen.getByTestId('greeting')).toHaveTextContent('Unknown');
+    expect(screen.getByTestId("greeting")).toHaveTextContent("Unknown");
 
     await waitFor(() => {
-      expect(screen.getByTestId('greeting')).toHaveTextContent('Hello');
+      expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
     });
   });
 
-  it('applies `errorPolicy` on next fetch when it changes between renders', async () => {
+  it("applies `errorPolicy` on next fetch when it changes between renders", async () => {
     interface Data {
       greeting: string;
     }
@@ -1900,12 +1900,12 @@ describe('useBackgroundQuery', () => {
     const mocks = [
       {
         request: { query },
-        result: { data: { greeting: 'Hello' } },
+        result: { data: { greeting: "Hello" } },
       },
       {
         request: { query },
         result: {
-          errors: [new GraphQLError('oops')],
+          errors: [new GraphQLError("oops")],
         },
       },
     ];
@@ -1920,14 +1920,14 @@ describe('useBackgroundQuery', () => {
     }
 
     function Parent() {
-      const [errorPolicy, setErrorPolicy] = React.useState<ErrorPolicy>('none');
+      const [errorPolicy, setErrorPolicy] = React.useState<ErrorPolicy>("none");
       const [queryRef, { refetch }] = useBackgroundQuery(query, {
         errorPolicy,
       });
 
       return (
         <>
-          <button onClick={() => setErrorPolicy('all')}>
+          <button onClick={() => setErrorPolicy("all")}>
             Change error policy
           </button>
           <button onClick={() => refetch()}>Refetch greeting</button>
@@ -1962,17 +1962,17 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    expect(await screen.findByTestId('greeting')).toHaveTextContent('Hello');
+    expect(await screen.findByTestId("greeting")).toHaveTextContent("Hello");
 
-    await act(() => user.click(screen.getByText('Change error policy')));
-    await act(() => user.click(screen.getByText('Refetch greeting')));
+    await act(() => user.click(screen.getByText("Change error policy")));
+    await act(() => user.click(screen.getByText("Refetch greeting")));
 
     // Ensure we aren't rendering the error boundary and instead rendering the
     // error message in the Greeting component.
-    expect(await screen.findByTestId('error')).toHaveTextContent('oops');
+    expect(await screen.findByTestId("error")).toHaveTextContent("oops");
   });
 
-  it('applies `context` on next fetch when it changes between renders', async () => {
+  it("applies `context` on next fetch when it changes between renders", async () => {
     interface Data {
       context: Record<string, any>;
     }
@@ -2003,14 +2003,14 @@ describe('useBackgroundQuery', () => {
     }
 
     function Parent() {
-      const [phase, setPhase] = React.useState('initial');
+      const [phase, setPhase] = React.useState("initial");
       const [queryRef, { refetch }] = useBackgroundQuery(query, {
         context: { phase },
       });
 
       return (
         <>
-          <button onClick={() => setPhase('rerender')}>Update context</button>
+          <button onClick={() => setPhase("rerender")}>Update context</button>
           <button onClick={() => refetch()}>Refetch</button>
           <Suspense fallback={<SuspenseFallback />}>
             <Context queryRef={queryRef} />
@@ -2035,18 +2035,18 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    expect(await screen.findByTestId('context')).toHaveTextContent('initial');
+    expect(await screen.findByTestId("context")).toHaveTextContent("initial");
 
-    await act(() => user.click(screen.getByText('Update context')));
-    await act(() => user.click(screen.getByText('Refetch')));
+    await act(() => user.click(screen.getByText("Update context")));
+    await act(() => user.click(screen.getByText("Refetch")));
 
-    expect(await screen.findByTestId('context')).toHaveTextContent('rerender');
+    expect(await screen.findByTestId("context")).toHaveTextContent("rerender");
   });
 
   // NOTE: We only test the `false` -> `true` path here. If the option changes
   // from `true` -> `false`, the data has already been canonized, so it has no
   // effect on the output.
-  it('returns canonical results immediately when `canonizeResults` changes from `false` to `true` between renders', async () => {
+  it("returns canonical results immediately when `canonizeResults` changes from `false` to `true` between renders", async () => {
     interface Result {
       __typename: string;
       value: number;
@@ -2073,12 +2073,12 @@ describe('useBackgroundQuery', () => {
     `;
 
     const results: Result[] = [
-      { __typename: 'Result', value: 0 },
-      { __typename: 'Result', value: 1 },
-      { __typename: 'Result', value: 1 },
-      { __typename: 'Result', value: 2 },
-      { __typename: 'Result', value: 3 },
-      { __typename: 'Result', value: 5 },
+      { __typename: "Result", value: 0 },
+      { __typename: "Result", value: 1 },
+      { __typename: "Result", value: 1 },
+      { __typename: "Result", value: 2 },
+      { __typename: "Result", value: 3 },
+      { __typename: "Result", value: 5 },
     ];
 
     const user = userEvent.setup();
@@ -2156,12 +2156,12 @@ describe('useBackgroundQuery', () => {
 
     verifyCanonicalResults(result.current!, false);
 
-    await act(() => user.click(screen.getByText('Canonize results')));
+    await act(() => user.click(screen.getByText("Canonize results")));
 
     verifyCanonicalResults(result.current!, true);
   });
 
-  it('applies changed `refetchWritePolicy` to next fetch when changing between renders', async () => {
+  it("applies changed `refetchWritePolicy` to next fetch when changing between renders", async () => {
     interface Data {
       primes: number[];
     }
@@ -2220,7 +2220,7 @@ describe('useBackgroundQuery', () => {
 
     function Parent() {
       const [refetchWritePolicy, setRefetchWritePolicy] =
-        React.useState<RefetchWritePolicy>('merge');
+        React.useState<RefetchWritePolicy>("merge");
 
       const [queryRef, { refetch }] = useBackgroundQuery(query, {
         refetchWritePolicy,
@@ -2229,7 +2229,7 @@ describe('useBackgroundQuery', () => {
 
       return (
         <>
-          <button onClick={() => setRefetchWritePolicy('overwrite')}>
+          <button onClick={() => setRefetchWritePolicy("overwrite")}>
             Change refetch write policy
           </button>
           <button onClick={() => refetch({ min: 12, max: 30 })}>
@@ -2248,7 +2248,7 @@ describe('useBackgroundQuery', () => {
     function Primes({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
-      return <span data-testid="primes">{data.primes.join(', ')}</span>;
+      return <span data-testid="primes">{data.primes.join(", ")}</span>;
     }
 
     function App() {
@@ -2261,15 +2261,15 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    const primes = await screen.findByTestId('primes');
+    const primes = await screen.findByTestId("primes");
 
-    expect(primes).toHaveTextContent('2, 3, 5, 7, 11');
+    expect(primes).toHaveTextContent("2, 3, 5, 7, 11");
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    await act(() => user.click(screen.getByText('Refetch next')));
+    await act(() => user.click(screen.getByText("Refetch next")));
 
     await waitFor(() => {
-      expect(primes).toHaveTextContent('2, 3, 5, 7, 11, 13, 17, 19, 23, 29');
+      expect(primes).toHaveTextContent("2, 3, 5, 7, 11, 13, 17, 19, 23, 29");
     });
 
     expect(mergeParams).toEqual([
@@ -2281,13 +2281,13 @@ describe('useBackgroundQuery', () => {
     ]);
 
     await act(() =>
-      user.click(screen.getByText('Change refetch write policy'))
+      user.click(screen.getByText("Change refetch write policy"))
     );
 
-    await act(() => user.click(screen.getByText('Refetch last')));
+    await act(() => user.click(screen.getByText("Refetch last")));
 
     await waitFor(() => {
-      expect(primes).toHaveTextContent('31, 37, 41, 43, 47');
+      expect(primes).toHaveTextContent("31, 37, 41, 43, 47");
     });
 
     expect(mergeParams).toEqual([
@@ -2300,10 +2300,10 @@ describe('useBackgroundQuery', () => {
     ]);
   });
 
-  it('applies `returnPartialData` on next fetch when it changes between renders', async () => {
+  it("applies `returnPartialData` on next fetch when it changes between renders", async () => {
     interface Data {
       character: {
-        __typename: 'Character';
+        __typename: "Character";
         id: string;
         name: string;
       };
@@ -2311,7 +2311,7 @@ describe('useBackgroundQuery', () => {
 
     interface PartialData {
       character: {
-        __typename: 'Character';
+        __typename: "Character";
         id: string;
       };
     }
@@ -2343,9 +2343,9 @@ describe('useBackgroundQuery', () => {
         result: {
           data: {
             character: {
-              __typename: 'Character',
-              id: '1',
-              name: 'Doctor Strange',
+              __typename: "Character",
+              id: "1",
+              name: "Doctor Strange",
             },
           },
         },
@@ -2355,9 +2355,9 @@ describe('useBackgroundQuery', () => {
         result: {
           data: {
             character: {
-              __typename: 'Character',
-              id: '1',
-              name: 'Doctor Strange (refetched)',
+              __typename: "Character",
+              id: "1",
+              name: "Doctor Strange (refetched)",
             },
           },
         },
@@ -2369,7 +2369,7 @@ describe('useBackgroundQuery', () => {
 
     cache.writeQuery({
       query: partialQuery,
-      data: { character: { __typename: 'Character', id: '1' } },
+      data: { character: { __typename: "Character", id: "1" } },
     });
 
     const client = new ApolloClient({
@@ -2404,7 +2404,7 @@ describe('useBackgroundQuery', () => {
       const { data } = useReadQuery(queryRef);
 
       return (
-        <span data-testid="character">{data.character.name ?? 'unknown'}</span>
+        <span data-testid="character">{data.character.name ?? "unknown"}</span>
       );
     }
 
@@ -2418,32 +2418,32 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    const character = await screen.findByTestId('character');
+    const character = await screen.findByTestId("character");
 
-    expect(character).toHaveTextContent('Doctor Strange');
+    expect(character).toHaveTextContent("Doctor Strange");
 
-    await act(() => user.click(screen.getByText('Update partial data')));
+    await act(() => user.click(screen.getByText("Update partial data")));
 
     cache.modify({
-      id: cache.identify({ __typename: 'Character', id: '1' }),
+      id: cache.identify({ __typename: "Character", id: "1" }),
       fields: {
         name: (_, { DELETE }) => DELETE,
       },
     });
 
     await waitFor(() => {
-      expect(character).toHaveTextContent('unknown');
+      expect(character).toHaveTextContent("unknown");
     });
 
     await waitFor(() => {
-      expect(character).toHaveTextContent('Doctor Strange (refetched)');
+      expect(character).toHaveTextContent("Doctor Strange (refetched)");
     });
   });
 
-  it('applies updated `fetchPolicy` on next fetch when it changes between renders', async () => {
+  it("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {
     interface Data {
       character: {
-        __typename: 'Character';
+        __typename: "Character";
         id: string;
         name: string;
       };
@@ -2467,9 +2467,9 @@ describe('useBackgroundQuery', () => {
         result: {
           data: {
             character: {
-              __typename: 'Character',
-              id: '1',
-              name: 'Doctor Strange',
+              __typename: "Character",
+              id: "1",
+              name: "Doctor Strange",
             },
           },
         },
@@ -2483,9 +2483,9 @@ describe('useBackgroundQuery', () => {
       query,
       data: {
         character: {
-          __typename: 'Character',
-          id: '1',
-          name: 'Doctor Strangecache',
+          __typename: "Character",
+          id: "1",
+          name: "Doctor Strangecache",
         },
       },
     });
@@ -2501,7 +2501,7 @@ describe('useBackgroundQuery', () => {
 
     function Parent() {
       const [fetchPolicy, setFetchPolicy] =
-        React.useState<SuspenseQueryHookFetchPolicy>('cache-first');
+        React.useState<SuspenseQueryHookFetchPolicy>("cache-first");
 
       const [queryRef, { refetch }] = useBackgroundQuery(query, {
         fetchPolicy,
@@ -2509,7 +2509,7 @@ describe('useBackgroundQuery', () => {
 
       return (
         <>
-          <button onClick={() => setFetchPolicy('no-cache')}>
+          <button onClick={() => setFetchPolicy("no-cache")}>
             Change fetch policy
           </button>
           <button onClick={() => refetch()}>Refetch</button>
@@ -2536,31 +2536,31 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    const character = await screen.findByTestId('character');
+    const character = await screen.findByTestId("character");
 
-    expect(character).toHaveTextContent('Doctor Strangecache');
+    expect(character).toHaveTextContent("Doctor Strangecache");
 
-    await act(() => user.click(screen.getByText('Change fetch policy')));
-    await act(() => user.click(screen.getByText('Refetch')));
+    await act(() => user.click(screen.getByText("Change fetch policy")));
+    await act(() => user.click(screen.getByText("Refetch")));
     await waitFor(() => {
-      expect(character).toHaveTextContent('Doctor Strange');
+      expect(character).toHaveTextContent("Doctor Strange");
     });
 
     // Because we switched to a `no-cache` fetch policy, we should not see the
     // newly fetched data in the cache after the fetch occured.
     expect(cache.readQuery({ query })).toEqual({
       character: {
-        __typename: 'Character',
-        id: '1',
-        name: 'Doctor Strangecache',
+        __typename: "Character",
+        id: "1",
+        name: "Doctor Strangecache",
       },
     });
   });
 
-  it('properly handles changing options along with changing `variables`', async () => {
+  it("properly handles changing options along with changing `variables`", async () => {
     interface Data {
       character: {
-        __typename: 'Character';
+        __typename: "Character";
         id: string;
         name: string;
       };
@@ -2579,20 +2579,20 @@ describe('useBackgroundQuery', () => {
 
     const mocks = [
       {
-        request: { query, variables: { id: '1' } },
+        request: { query, variables: { id: "1" } },
         result: {
-          errors: [new GraphQLError('oops')],
+          errors: [new GraphQLError("oops")],
         },
         delay: 10,
       },
       {
-        request: { query, variables: { id: '2' } },
+        request: { query, variables: { id: "2" } },
         result: {
           data: {
             character: {
-              __typename: 'Character',
-              id: '2',
-              name: 'Hulk',
+              __typename: "Character",
+              id: "2",
+              name: "Hulk",
             },
           },
         },
@@ -2605,13 +2605,13 @@ describe('useBackgroundQuery', () => {
     cache.writeQuery({
       query,
       variables: {
-        id: '1',
+        id: "1",
       },
       data: {
         character: {
-          __typename: 'Character',
-          id: '1',
-          name: 'Doctor Strangecache',
+          __typename: "Character",
+          id: "1",
+          name: "Doctor Strangecache",
         },
       },
     });
@@ -2626,17 +2626,17 @@ describe('useBackgroundQuery', () => {
     }
 
     function Parent() {
-      const [id, setId] = React.useState('1');
+      const [id, setId] = React.useState("1");
 
       const [queryRef, { refetch }] = useBackgroundQuery(query, {
-        errorPolicy: id === '1' ? 'all' : 'none',
+        errorPolicy: id === "1" ? "all" : "none",
         variables: { id },
       });
 
       return (
         <>
-          <button onClick={() => setId('1')}>Get first character</button>
-          <button onClick={() => setId('2')}>Get second character</button>
+          <button onClick={() => setId("1")}>Get first character</button>
+          <button onClick={() => setId("2")}>Get second character</button>
           <button onClick={() => refetch()}>Refetch</button>
           <ErrorBoundary
             fallback={<div data-testid="error">Error boundary</div>}
@@ -2669,41 +2669,41 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
-    const character = await screen.findByTestId('character');
+    const character = await screen.findByTestId("character");
 
-    expect(character).toHaveTextContent('Doctor Strangecache');
+    expect(character).toHaveTextContent("Doctor Strangecache");
 
-    await act(() => user.click(screen.getByText('Get second character')));
-
-    await waitFor(() => {
-      expect(character).toHaveTextContent('Hulk');
-    });
-
-    await act(() => user.click(screen.getByText('Get first character')));
+    await act(() => user.click(screen.getByText("Get second character")));
 
     await waitFor(() => {
-      expect(character).toHaveTextContent('Doctor Strangecache');
+      expect(character).toHaveTextContent("Hulk");
     });
 
-    await act(() => user.click(screen.getByText('Refetch')));
+    await act(() => user.click(screen.getByText("Get first character")));
+
+    await waitFor(() => {
+      expect(character).toHaveTextContent("Doctor Strangecache");
+    });
+
+    await act(() => user.click(screen.getByText("Refetch")));
 
     // Ensure we render the inline error instead of the error boundary, which
     // tells us the error policy was properly applied.
-    expect(await screen.findByTestId('error')).toHaveTextContent('oops');
+    expect(await screen.findByTestId("error")).toHaveTextContent("oops");
   });
 
-  describe('refetch', () => {
-    it('re-suspends when calling `refetch`', async () => {
+  describe("refetch", () => {
+    it("re-suspends when calling `refetch`", async () => {
       const { renders } = renderVariablesIntegrationTest({
-        variables: { id: '1' },
+        variables: { id: "1" },
       });
 
       expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      expect(screen.getByText("loading")).toBeInTheDocument();
 
-      expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
+      expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
 
-      const button = screen.getByText('Refetch');
+      const button = screen.getByText("Refetch");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
@@ -2712,10 +2712,10 @@ describe('useBackgroundQuery', () => {
       expect(renders.count).toBe(2);
 
       expect(
-        await screen.findByText('1 - Spider-Man (updated)')
+        await screen.findByText("1 - Spider-Man (updated)")
       ).toBeInTheDocument();
     });
-    it('re-suspends when calling `refetch` with new variables', async () => {
+    it("re-suspends when calling `refetch` with new variables", async () => {
       interface QueryData {
         character: {
           id: string;
@@ -2737,39 +2737,39 @@ describe('useBackgroundQuery', () => {
 
       const mocks = [
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            data: { character: { id: '1', name: 'Captain Marvel' } },
+            data: { character: { id: "1", name: "Captain Marvel" } },
           },
         },
         {
-          request: { query, variables: { id: '2' } },
+          request: { query, variables: { id: "2" } },
           result: {
-            data: { character: { id: '2', name: 'Captain America' } },
+            data: { character: { id: "2", name: "Captain America" } },
           },
         },
       ];
 
       const { renders } = renderVariablesIntegrationTest({
-        variables: { id: '1' },
+        variables: { id: "1" },
         mocks,
       });
 
       expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      expect(screen.getByText("loading")).toBeInTheDocument();
 
-      expect(await screen.findByText('1 - Captain Marvel')).toBeInTheDocument();
+      expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
 
       const newVariablesRefetchButton = screen.getByText(
-        'Set variables to id: 2'
+        "Set variables to id: 2"
       );
-      const refetchButton = screen.getByText('Refetch');
+      const refetchButton = screen.getByText("Refetch");
       const user = userEvent.setup();
       await act(() => user.click(newVariablesRefetchButton));
       await act(() => user.click(refetchButton));
 
       expect(
-        await screen.findByText('2 - Captain America')
+        await screen.findByText("2 - Captain America")
       ).toBeInTheDocument();
 
       // parent component re-suspends
@@ -2795,17 +2795,17 @@ describe('useBackgroundQuery', () => {
         },
       ]);
     });
-    it('re-suspends multiple times when calling `refetch` multiple times', async () => {
+    it("re-suspends multiple times when calling `refetch` multiple times", async () => {
       const { renders } = renderVariablesIntegrationTest({
-        variables: { id: '1' },
+        variables: { id: "1" },
       });
 
       expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      expect(screen.getByText("loading")).toBeInTheDocument();
 
-      expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
+      expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
 
-      const button = screen.getByText('Refetch');
+      const button = screen.getByText("Refetch");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
@@ -2814,7 +2814,7 @@ describe('useBackgroundQuery', () => {
       expect(renders.count).toBe(2);
 
       expect(
-        await screen.findByText('1 - Spider-Man (updated)')
+        await screen.findByText("1 - Spider-Man (updated)")
       ).toBeInTheDocument();
 
       await act(() => user.click(button));
@@ -2824,11 +2824,11 @@ describe('useBackgroundQuery', () => {
       expect(renders.count).toBe(3);
 
       expect(
-        await screen.findByText('1 - Spider-Man (updated again)')
+        await screen.findByText("1 - Spider-Man (updated again)")
       ).toBeInTheDocument();
     });
-    it('throws errors when errors are returned after calling `refetch`', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    it("throws errors when errors are returned after calling `refetch`", async () => {
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
       interface QueryData {
         character: {
           id: string;
@@ -2849,29 +2849,29 @@ describe('useBackgroundQuery', () => {
       `;
       const mocks = [
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            data: { character: { id: '1', name: 'Captain Marvel' } },
+            data: { character: { id: "1", name: "Captain Marvel" } },
           },
         },
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            errors: [new GraphQLError('Something went wrong')],
+            errors: [new GraphQLError("Something went wrong")],
           },
         },
       ];
       const { renders } = renderVariablesIntegrationTest({
-        variables: { id: '1' },
+        variables: { id: "1" },
         mocks,
       });
 
       expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      expect(screen.getByText("loading")).toBeInTheDocument();
 
-      expect(await screen.findByText('1 - Captain Marvel')).toBeInTheDocument();
+      expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
 
-      const button = screen.getByText('Refetch');
+      const button = screen.getByText("Refetch");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
@@ -2881,7 +2881,7 @@ describe('useBackgroundQuery', () => {
 
       expect(renders.errors).toEqual([
         new ApolloError({
-          graphQLErrors: [new GraphQLError('Something went wrong')],
+          graphQLErrors: [new GraphQLError("Something went wrong")],
         }),
       ]);
 
@@ -2908,28 +2908,28 @@ describe('useBackgroundQuery', () => {
       `;
       const mocks = [
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            data: { character: { id: '1', name: 'Captain Marvel' } },
+            data: { character: { id: "1", name: "Captain Marvel" } },
           },
         },
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            errors: [new GraphQLError('Something went wrong')],
+            errors: [new GraphQLError("Something went wrong")],
           },
         },
       ];
 
       const { renders } = renderVariablesIntegrationTest({
-        variables: { id: '1' },
-        errorPolicy: 'ignore',
+        variables: { id: "1" },
+        errorPolicy: "ignore",
         mocks,
       });
 
-      expect(await screen.findByText('1 - Captain Marvel')).toBeInTheDocument();
+      expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
 
-      const button = screen.getByText('Refetch');
+      const button = screen.getByText("Refetch");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
@@ -2957,28 +2957,28 @@ describe('useBackgroundQuery', () => {
       `;
       const mocks = [
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            data: { character: { id: '1', name: 'Captain Marvel' } },
+            data: { character: { id: "1", name: "Captain Marvel" } },
           },
         },
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            errors: [new GraphQLError('Something went wrong')],
+            errors: [new GraphQLError("Something went wrong")],
           },
         },
       ];
 
       const { renders } = renderVariablesIntegrationTest({
-        variables: { id: '1' },
-        errorPolicy: 'all',
+        variables: { id: "1" },
+        errorPolicy: "all",
         mocks,
       });
 
-      expect(await screen.findByText('1 - Captain Marvel')).toBeInTheDocument();
+      expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
 
-      const button = screen.getByText('Refetch');
+      const button = screen.getByText("Refetch");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
@@ -2986,7 +2986,7 @@ describe('useBackgroundQuery', () => {
       expect(renders.errors).toEqual([]);
 
       expect(
-        await screen.findByText('Something went wrong')
+        await screen.findByText("Something went wrong")
       ).toBeInTheDocument();
     });
     it('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
@@ -3010,29 +3010,29 @@ describe('useBackgroundQuery', () => {
       `;
       const mocks = [
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            data: { character: { id: '1', name: 'Captain Marvel' } },
+            data: { character: { id: "1", name: "Captain Marvel" } },
           },
         },
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            data: { character: { id: '1', name: null } },
-            errors: [new GraphQLError('Something went wrong')],
+            data: { character: { id: "1", name: null } },
+            errors: [new GraphQLError("Something went wrong")],
           },
         },
       ];
 
       const { renders } = renderVariablesIntegrationTest({
-        variables: { id: '1' },
-        errorPolicy: 'all',
+        variables: { id: "1" },
+        errorPolicy: "all",
         mocks,
       });
 
-      expect(await screen.findByText('1 - Captain Marvel')).toBeInTheDocument();
+      expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
 
-      const button = screen.getByText('Refetch');
+      const button = screen.getByText("Refetch");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
@@ -3040,11 +3040,11 @@ describe('useBackgroundQuery', () => {
       expect(renders.errors).toEqual([]);
 
       expect(
-        await screen.findByText('Something went wrong')
+        await screen.findByText("Something went wrong")
       ).toBeInTheDocument();
 
       const expectedError = new ApolloError({
-        graphQLErrors: [new GraphQLError('Something went wrong')],
+        graphQLErrors: [new GraphQLError("Something went wrong")],
       });
 
       expect(renders.frames).toMatchObject([
@@ -3060,7 +3060,7 @@ describe('useBackgroundQuery', () => {
         },
       ]);
     });
-    it('`refetch` works with startTransition to allow React to show stale UI until finished suspending', async () => {
+    it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {
       type Variables = {
         id: string;
       };
@@ -3086,16 +3086,16 @@ describe('useBackgroundQuery', () => {
 
       const mocks: MockedResponse<Data, Variables>[] = [
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            data: { todo: { id: '1', name: 'Clean room', completed: false } },
+            data: { todo: { id: "1", name: "Clean room", completed: false } },
           },
           delay: 10,
         },
         {
-          request: { query, variables: { id: '1' } },
+          request: { query, variables: { id: "1" } },
           result: {
-            data: { todo: { id: '1', name: 'Clean room', completed: true } },
+            data: { todo: { id: "1", name: "Clean room", completed: true } },
           },
           delay: 10,
         },
@@ -3121,7 +3121,7 @@ describe('useBackgroundQuery', () => {
       }
 
       function Parent() {
-        const [id, setId] = React.useState('1');
+        const [id, setId] = React.useState("1");
         const [queryRef, { refetch }] = useBackgroundQuery(query, {
           variables: { id },
         });
@@ -3153,7 +3153,7 @@ describe('useBackgroundQuery', () => {
             </button>
             <div data-testid="todo" aria-busy={isPending}>
               {todo.name}
-              {todo.completed && ' (completed)'}
+              {todo.completed && " (completed)"}
             </div>
           </>
         );
@@ -3161,14 +3161,14 @@ describe('useBackgroundQuery', () => {
 
       render(<App />);
 
-      expect(screen.getByText('Loading')).toBeInTheDocument();
+      expect(screen.getByText("Loading")).toBeInTheDocument();
 
-      expect(await screen.findByTestId('todo')).toBeInTheDocument();
+      expect(await screen.findByTestId("todo")).toBeInTheDocument();
 
-      const todo = screen.getByTestId('todo');
-      const button = screen.getByText('Refresh');
+      const todo = screen.getByTestId("todo");
+      const button = screen.getByText("Refresh");
 
-      expect(todo).toHaveTextContent('Clean room');
+      expect(todo).toHaveTextContent("Clean room");
 
       await act(() => user.click(button));
 
@@ -3179,40 +3179,40 @@ describe('useBackgroundQuery', () => {
       // Here we should not see the suspense fallback while the component suspends
       // until the todo is finished loading. Seeing the suspense fallback is an
       // indication that we are suspending the component too late in the process.
-      expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
 
       // We can ensure this works with isPending from useTransition in the process
-      expect(todo).toHaveAttribute('aria-busy', 'true');
+      expect(todo).toHaveAttribute("aria-busy", "true");
 
       // Ensure we are showing the stale UI until the new todo has loaded
-      expect(todo).toHaveTextContent('Clean room');
+      expect(todo).toHaveTextContent("Clean room");
 
       // Eventually we should see the updated todo content once its done
       // suspending.
       await waitFor(() => {
-        expect(todo).toHaveTextContent('Clean room (completed)');
+        expect(todo).toHaveTextContent("Clean room (completed)");
       });
     });
   });
 
-  describe('fetchMore', () => {
+  describe("fetchMore", () => {
     function getItemTexts() {
       return screen.getAllByTestId(/letter/).map(
         // eslint-disable-next-line testing-library/no-node-access
         (li) => li.firstChild!.textContent
       );
     }
-    it('re-suspends when calling `fetchMore` with different variables', async () => {
+    it("re-suspends when calling `fetchMore` with different variables", async () => {
       const { renders } = renderPaginatedIntegrationTest();
 
       expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      expect(screen.getByText("loading")).toBeInTheDocument();
 
       const items = await screen.findAllByTestId(/letter/i);
       expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(['A', 'B']);
+      expect(getItemTexts()).toStrictEqual(["A", "B"]);
 
-      const button = screen.getByText('Fetch more');
+      const button = screen.getByText("Fetch more");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
@@ -3222,22 +3222,22 @@ describe('useBackgroundQuery', () => {
         expect(renders.count).toBe(2);
       });
 
-      expect(getItemTexts()).toStrictEqual(['C', 'D']);
+      expect(getItemTexts()).toStrictEqual(["C", "D"]);
     });
-    it('properly uses `updateQuery` when calling `fetchMore`', async () => {
+    it("properly uses `updateQuery` when calling `fetchMore`", async () => {
       const { renders } = renderPaginatedIntegrationTest({
         updateQuery: true,
       });
 
       expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      expect(screen.getByText("loading")).toBeInTheDocument();
 
       const items = await screen.findAllByTestId(/letter/i);
 
       expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(['A', 'B']);
+      expect(getItemTexts()).toStrictEqual(["A", "B"]);
 
-      const button = screen.getByText('Fetch more');
+      const button = screen.getByText("Fetch more");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
@@ -3249,21 +3249,21 @@ describe('useBackgroundQuery', () => {
 
       const moreItems = await screen.findAllByTestId(/letter/i);
       expect(moreItems).toHaveLength(4);
-      expect(getItemTexts()).toStrictEqual(['A', 'B', 'C', 'D']);
+      expect(getItemTexts()).toStrictEqual(["A", "B", "C", "D"]);
     });
-    it('properly uses cache field policies when calling `fetchMore` without `updateQuery`', async () => {
+    it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
       const { renders } = renderPaginatedIntegrationTest({
         fieldPolicies: true,
       });
       expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText('loading')).toBeInTheDocument();
+      expect(screen.getByText("loading")).toBeInTheDocument();
 
       const items = await screen.findAllByTestId(/letter/i);
 
       expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(['A', 'B']);
+      expect(getItemTexts()).toStrictEqual(["A", "B"]);
 
-      const button = screen.getByText('Fetch more');
+      const button = screen.getByText("Fetch more");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
@@ -3275,15 +3275,15 @@ describe('useBackgroundQuery', () => {
 
       const moreItems = await screen.findAllByTestId(/letter/i);
       expect(moreItems).toHaveLength(4);
-      expect(getItemTexts()).toStrictEqual(['A', 'B', 'C', 'D']);
+      expect(getItemTexts()).toStrictEqual(["A", "B", "C", "D"]);
     });
-    it('`fetchMore` works with startTransition to allow React to show stale UI until finished suspending', async () => {
+    it("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {
       type Variables = {
         offset: number;
       };
 
       interface Todo {
-        __typename: 'Todo';
+        __typename: "Todo";
         id: string;
         name: string;
         completed: boolean;
@@ -3310,9 +3310,9 @@ describe('useBackgroundQuery', () => {
             data: {
               todos: [
                 {
-                  __typename: 'Todo',
-                  id: '1',
-                  name: 'Clean room',
+                  __typename: "Todo",
+                  id: "1",
+                  name: "Clean room",
                   completed: false,
                 },
               ],
@@ -3326,9 +3326,9 @@ describe('useBackgroundQuery', () => {
             data: {
               todos: [
                 {
-                  __typename: 'Todo',
-                  id: '2',
-                  name: 'Take out trash',
+                  __typename: "Todo",
+                  id: "2",
+                  name: "Take out trash",
                   completed: true,
                 },
               ],
@@ -3398,7 +3398,7 @@ describe('useBackgroundQuery', () => {
               {todos.map((todo) => (
                 <div data-testid={`todo:${todo.id}`} key={todo.id}>
                   {todo.name}
-                  {todo.completed && ' (completed)'}
+                  {todo.completed && " (completed)"}
                 </div>
               ))}
             </div>
@@ -3408,13 +3408,13 @@ describe('useBackgroundQuery', () => {
 
       render(<App />);
 
-      expect(screen.getByText('Loading')).toBeInTheDocument();
+      expect(screen.getByText("Loading")).toBeInTheDocument();
 
-      expect(await screen.findByTestId('todos')).toBeInTheDocument();
+      expect(await screen.findByTestId("todos")).toBeInTheDocument();
 
-      const todos = screen.getByTestId('todos');
-      const todo1 = screen.getByTestId('todo:1');
-      const button = screen.getByText('Load more');
+      const todos = screen.getByTestId("todos");
+      const todo1 = screen.getByTestId("todo:1");
+      const button = screen.getByText("Load more");
 
       expect(todo1).toBeInTheDocument();
 
@@ -3427,21 +3427,21 @@ describe('useBackgroundQuery', () => {
       // Here we should not see the suspense fallback while the component suspends
       // until the todo is finished loading. Seeing the suspense fallback is an
       // indication that we are suspending the component too late in the process.
-      expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
 
       // We can ensure this works with isPending from useTransition in the process
-      expect(todos).toHaveAttribute('aria-busy', 'true');
+      expect(todos).toHaveAttribute("aria-busy", "true");
 
       // Ensure we are showing the stale UI until the new todo has loaded
-      expect(todo1).toHaveTextContent('Clean room');
+      expect(todo1).toHaveTextContent("Clean room");
 
       // Eventually we should see the updated todos content once its done
       // suspending.
       await waitFor(() => {
-        expect(screen.getByTestId('todo:2')).toHaveTextContent(
-          'Take out trash (completed)'
+        expect(screen.getByTestId("todo:2")).toHaveTextContent(
+          "Take out trash (completed)"
         );
-        expect(todo1).toHaveTextContent('Clean room');
+        expect(todo1).toHaveTextContent("Clean room");
       });
     });
 
@@ -3519,9 +3519,9 @@ describe('useBackgroundQuery', () => {
             >
               Refetch
             </button>
-            <div data-testid="primes">{data?.primes.join(', ')}</div>
+            <div data-testid="primes">{data?.primes.join(", ")}</div>
             <div data-testid="network-status">{networkStatus}</div>
-            <div data-testid="error">{error?.message || 'undefined'}</div>
+            <div data-testid="error">{error?.message || "undefined"}</div>
           </div>
         );
       }
@@ -3529,7 +3529,7 @@ describe('useBackgroundQuery', () => {
       function Parent() {
         const [queryRef, { refetch }] = useBackgroundQuery(query, {
           variables: { min: 0, max: 12 },
-          refetchWritePolicy: 'merge',
+          refetchWritePolicy: "merge",
         });
         return <Child refetch={refetch} queryRef={queryRef} />;
       }
@@ -3547,27 +3547,27 @@ describe('useBackgroundQuery', () => {
       render(<App />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('primes')).toHaveTextContent(
-          '2, 3, 5, 7, 11'
+        expect(screen.getByTestId("primes")).toHaveTextContent(
+          "2, 3, 5, 7, 11"
         );
       });
-      expect(screen.getByTestId('network-status')).toHaveTextContent(
-        '7' // ready
+      expect(screen.getByTestId("network-status")).toHaveTextContent(
+        "7" // ready
       );
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
       expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-      await act(() => user.click(screen.getByText('Refetch')));
+      await act(() => user.click(screen.getByText("Refetch")));
 
       await waitFor(() => {
-        expect(screen.getByTestId('primes')).toHaveTextContent(
-          '2, 3, 5, 7, 11, 13, 17, 19, 23, 29'
+        expect(screen.getByTestId("primes")).toHaveTextContent(
+          "2, 3, 5, 7, 11, 13, 17, 19, 23, 29"
         );
       });
-      expect(screen.getByTestId('network-status')).toHaveTextContent(
-        '7' // ready
+      expect(screen.getByTestId("network-status")).toHaveTextContent(
+        "7" // ready
       );
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
       expect(mergeParams).toEqual([
         [undefined, [2, 3, 5, 7, 11]],
         [
@@ -3651,9 +3651,9 @@ describe('useBackgroundQuery', () => {
             >
               Refetch
             </button>
-            <div data-testid="primes">{data?.primes.join(', ')}</div>
+            <div data-testid="primes">{data?.primes.join(", ")}</div>
             <div data-testid="network-status">{networkStatus}</div>
-            <div data-testid="error">{error?.message || 'undefined'}</div>
+            <div data-testid="error">{error?.message || "undefined"}</div>
           </div>
         );
       }
@@ -3678,27 +3678,27 @@ describe('useBackgroundQuery', () => {
       render(<App />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('primes')).toHaveTextContent(
-          '2, 3, 5, 7, 11'
+        expect(screen.getByTestId("primes")).toHaveTextContent(
+          "2, 3, 5, 7, 11"
         );
       });
-      expect(screen.getByTestId('network-status')).toHaveTextContent(
-        '7' // ready
+      expect(screen.getByTestId("network-status")).toHaveTextContent(
+        "7" // ready
       );
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
       expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-      await act(() => user.click(screen.getByText('Refetch')));
+      await act(() => user.click(screen.getByText("Refetch")));
 
       await waitFor(() => {
-        expect(screen.getByTestId('primes')).toHaveTextContent(
-          '13, 17, 19, 23, 29'
+        expect(screen.getByTestId("primes")).toHaveTextContent(
+          "13, 17, 19, 23, 29"
         );
       });
-      expect(screen.getByTestId('network-status')).toHaveTextContent(
-        '7' // ready
+      expect(screen.getByTestId("network-status")).toHaveTextContent(
+        "7" // ready
       );
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
       expect(mergeParams).toEqual([
         [undefined, [2, 3, 5, 7, 11]],
         [undefined, [13, 17, 19, 23, 29]],
@@ -3732,7 +3732,7 @@ describe('useBackgroundQuery', () => {
       const mocks = [
         {
           request: { query: fullQuery },
-          result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+          result: { data: { character: { id: "1", name: "Doctor Strange" } } },
         },
       ];
 
@@ -3753,7 +3753,7 @@ describe('useBackgroundQuery', () => {
 
       cache.writeQuery({
         query: partialQuery,
-        data: { character: { id: '1' } },
+        data: { character: { id: "1" } },
       });
 
       const client = new ApolloClient({
@@ -3778,7 +3778,7 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [queryRef] = useBackgroundQuery(fullQuery, {
-          fetchPolicy: 'cache-first',
+          fetchPolicy: "cache-first",
           returnPartialData: true,
         });
         return <Todo queryRef={queryRef} />;
@@ -3797,7 +3797,7 @@ describe('useBackgroundQuery', () => {
             <div data-testid="character-id">{data.character?.id}</div>
             <div data-testid="character-name">{data.character?.name}</div>
             <div data-testid="network-status">{networkStatus}</div>
-            <div data-testid="error">{error?.message || 'undefined'}</div>
+            <div data-testid="error">{error?.message || "undefined"}</div>
           </>
         );
       }
@@ -3805,19 +3805,19 @@ describe('useBackgroundQuery', () => {
       render(<App />);
 
       expect(renders.suspenseCount).toBe(0);
-      expect(screen.getByTestId('character-id')).toHaveTextContent('1');
-      expect(screen.getByTestId('character-name')).toHaveTextContent('');
-      expect(screen.getByTestId('network-status')).toHaveTextContent('1'); // loading
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("character-id")).toHaveTextContent("1");
+      expect(screen.getByTestId("character-name")).toHaveTextContent("");
+      expect(screen.getByTestId("network-status")).toHaveTextContent("1"); // loading
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
 
       await waitFor(() => {
-        expect(screen.getByTestId('character-name')).toHaveTextContent(
-          'Doctor Strange'
+        expect(screen.getByTestId("character-name")).toHaveTextContent(
+          "Doctor Strange"
         );
       });
-      expect(screen.getByTestId('character-id')).toHaveTextContent('1');
-      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("character-id")).toHaveTextContent("1");
+      expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
 
       expect(renders.count).toBe(2);
       expect(renders.suspenseCount).toBe(0);
@@ -3836,25 +3836,25 @@ describe('useBackgroundQuery', () => {
 
       cache.writeQuery({
         query: partialQuery,
-        data: { character: { id: '1' } },
-        variables: { id: '1' },
+        data: { character: { id: "1" } },
+        variables: { id: "1" },
       });
 
       const { renders, mocks, rerender } = renderVariablesIntegrationTest({
-        variables: { id: '1' },
+        variables: { id: "1" },
         cache,
         options: {
-          fetchPolicy: 'cache-first',
+          fetchPolicy: "cache-first",
           returnPartialData: true,
         },
       });
       expect(renders.suspenseCount).toBe(0);
 
-      expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
+      expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
 
-      rerender({ variables: { id: '2' } });
+      rerender({ variables: { id: "2" } });
 
-      expect(await screen.findByText('2 - Black Widow')).toBeInTheDocument();
+      expect(await screen.findByText("2 - Black Widow")).toBeInTheDocument();
 
       expect(renders.frames[2]).toMatchObject({
         ...mocks[1].result,
@@ -3866,7 +3866,7 @@ describe('useBackgroundQuery', () => {
       expect(renders.suspenseCount).toBe(1);
       expect(renders.frames).toMatchObject([
         {
-          data: { character: { id: '1' } },
+          data: { character: { id: "1" } },
           networkStatus: NetworkStatus.loading,
           error: undefined,
         },
@@ -3910,7 +3910,7 @@ describe('useBackgroundQuery', () => {
       const mocks = [
         {
           request: { query: fullQuery },
-          result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+          result: { data: { character: { id: "1", name: "Doctor Strange" } } },
         },
       ];
 
@@ -3937,7 +3937,7 @@ describe('useBackgroundQuery', () => {
 
       cache.writeQuery({
         query: partialQuery,
-        data: { character: { id: '1' } },
+        data: { character: { id: "1" } },
       });
 
       const client = new ApolloClient({
@@ -3962,7 +3962,7 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [queryRef] = useBackgroundQuery(fullQuery, {
-          fetchPolicy: 'network-only',
+          fetchPolicy: "network-only",
           returnPartialData: true,
         });
 
@@ -3982,7 +3982,7 @@ describe('useBackgroundQuery', () => {
             <div data-testid="character-id">{data.character?.id}</div>
             <div data-testid="character-name">{data.character?.name}</div>
             <div data-testid="network-status">{networkStatus}</div>
-            <div data-testid="error">{error?.message || 'undefined'}</div>
+            <div data-testid="error">{error?.message || "undefined"}</div>
           </>
         );
       }
@@ -3992,13 +3992,13 @@ describe('useBackgroundQuery', () => {
       expect(renders.suspenseCount).toBe(1);
 
       await waitFor(() => {
-        expect(screen.getByTestId('character-name')).toHaveTextContent(
-          'Doctor Strange'
+        expect(screen.getByTestId("character-name")).toHaveTextContent(
+          "Doctor Strange"
         );
       });
-      expect(screen.getByTestId('character-id')).toHaveTextContent('1');
-      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("character-id")).toHaveTextContent("1");
+      expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
 
       expect(renders.count).toBe(1);
       expect(renders.suspenseCount).toBe(1);
@@ -4013,7 +4013,7 @@ describe('useBackgroundQuery', () => {
     });
 
     it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
       interface Data {
         character: {
           id: string;
@@ -4040,7 +4040,7 @@ describe('useBackgroundQuery', () => {
       const mocks = [
         {
           request: { query: fullQuery },
-          result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+          result: { data: { character: { id: "1", name: "Doctor Strange" } } },
         },
       ];
 
@@ -4067,7 +4067,7 @@ describe('useBackgroundQuery', () => {
 
       cache.writeQuery({
         query: partialQuery,
-        data: { character: { id: '1' } },
+        data: { character: { id: "1" } },
       });
 
       const client = new ApolloClient({
@@ -4092,7 +4092,7 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [queryRef] = useBackgroundQuery(fullQuery, {
-          fetchPolicy: 'no-cache',
+          fetchPolicy: "no-cache",
           returnPartialData: true,
         });
 
@@ -4112,7 +4112,7 @@ describe('useBackgroundQuery', () => {
             <div data-testid="character-id">{data.character?.id}</div>
             <div data-testid="character-name">{data.character?.name}</div>
             <div data-testid="network-status">{networkStatus}</div>
-            <div data-testid="error">{error?.message || 'undefined'}</div>
+            <div data-testid="error">{error?.message || "undefined"}</div>
           </>
         );
       }
@@ -4122,13 +4122,13 @@ describe('useBackgroundQuery', () => {
       expect(renders.suspenseCount).toBe(1);
 
       await waitFor(() => {
-        expect(screen.getByTestId('character-name')).toHaveTextContent(
-          'Doctor Strange'
+        expect(screen.getByTestId("character-name")).toHaveTextContent(
+          "Doctor Strange"
         );
       });
-      expect(screen.getByTestId('character-id')).toHaveTextContent('1');
-      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("character-id")).toHaveTextContent("1");
+      expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
 
       expect(renders.count).toBe(1);
       expect(renders.suspenseCount).toBe(1);
@@ -4145,7 +4145,7 @@ describe('useBackgroundQuery', () => {
     });
 
     it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
 
       const query: TypedDocumentNode<SimpleQueryData> = gql`
         query UserQuery {
@@ -4155,14 +4155,14 @@ describe('useBackgroundQuery', () => {
       const mocks = [
         {
           request: { query },
-          result: { data: { greeting: 'Hello' } },
+          result: { data: { greeting: "Hello" } },
         },
       ];
 
       renderSuspenseHook(
         () =>
           useBackgroundQuery(query, {
-            fetchPolicy: 'no-cache',
+            fetchPolicy: "no-cache",
             returnPartialData: true,
           }),
         { mocks }
@@ -4170,7 +4170,7 @@ describe('useBackgroundQuery', () => {
 
       expect(console.warn).toHaveBeenCalledTimes(1);
       expect(console.warn).toHaveBeenCalledWith(
-        'Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy.'
+        "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
       );
 
       consoleSpy.mockRestore();
@@ -4203,7 +4203,7 @@ describe('useBackgroundQuery', () => {
       const mocks = [
         {
           request: { query: fullQuery },
-          result: { data: { character: { id: '1', name: 'Doctor Strange' } } },
+          result: { data: { character: { id: "1", name: "Doctor Strange" } } },
         },
       ];
 
@@ -4230,7 +4230,7 @@ describe('useBackgroundQuery', () => {
 
       cache.writeQuery({
         query: partialQuery,
-        data: { character: { id: '1' } },
+        data: { character: { id: "1" } },
       });
 
       const client = new ApolloClient({
@@ -4255,7 +4255,7 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [queryRef] = useBackgroundQuery(fullQuery, {
-          fetchPolicy: 'cache-and-network',
+          fetchPolicy: "cache-and-network",
           returnPartialData: true,
         });
 
@@ -4275,7 +4275,7 @@ describe('useBackgroundQuery', () => {
             <div data-testid="character-id">{data.character?.id}</div>
             <div data-testid="character-name">{data.character?.name}</div>
             <div data-testid="network-status">{networkStatus}</div>
-            <div data-testid="error">{error?.message || 'undefined'}</div>
+            <div data-testid="error">{error?.message || "undefined"}</div>
           </>
         );
       }
@@ -4283,27 +4283,27 @@ describe('useBackgroundQuery', () => {
       render(<App />);
 
       expect(renders.suspenseCount).toBe(0);
-      expect(screen.getByTestId('character-id')).toHaveTextContent('1');
+      expect(screen.getByTestId("character-id")).toHaveTextContent("1");
       // name is not present yet, since it's missing in partial data
-      expect(screen.getByTestId('character-name')).toHaveTextContent('');
-      expect(screen.getByTestId('network-status')).toHaveTextContent('1'); // loading
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("character-name")).toHaveTextContent("");
+      expect(screen.getByTestId("network-status")).toHaveTextContent("1"); // loading
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
 
       await waitFor(() => {
-        expect(screen.getByTestId('character-name')).toHaveTextContent(
-          'Doctor Strange'
+        expect(screen.getByTestId("character-name")).toHaveTextContent(
+          "Doctor Strange"
         );
       });
-      expect(screen.getByTestId('character-id')).toHaveTextContent('1');
-      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("character-id")).toHaveTextContent("1");
+      expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
 
       expect(renders.count).toBe(2);
       expect(renders.suspenseCount).toBe(0);
 
       expect(renders.frames).toMatchObject([
         {
-          data: { character: { id: '1' } },
+          data: { character: { id: "1" } },
           networkStatus: NetworkStatus.loading,
           error: undefined,
         },
@@ -4328,32 +4328,32 @@ describe('useBackgroundQuery', () => {
 
       cache.writeQuery({
         query: partialQuery,
-        data: { character: { id: '1' } },
-        variables: { id: '1' },
+        data: { character: { id: "1" } },
+        variables: { id: "1" },
       });
 
       const { renders, mocks, rerender } = renderVariablesIntegrationTest({
-        variables: { id: '1' },
+        variables: { id: "1" },
         cache,
         options: {
-          fetchPolicy: 'cache-and-network',
+          fetchPolicy: "cache-and-network",
           returnPartialData: true,
         },
       });
 
       expect(renders.suspenseCount).toBe(0);
 
-      expect(await screen.findByText('1 - Spider-Man')).toBeInTheDocument();
+      expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
 
-      rerender({ variables: { id: '2' } });
+      rerender({ variables: { id: "2" } });
 
-      expect(await screen.findByText('2 - Black Widow')).toBeInTheDocument();
+      expect(await screen.findByText("2 - Black Widow")).toBeInTheDocument();
 
       expect(renders.count).toBe(3);
       expect(renders.suspenseCount).toBe(1);
       expect(renders.frames).toMatchObject([
         {
-          data: { character: { id: '1' } },
+          data: { character: { id: "1" } },
           networkStatus: NetworkStatus.loading,
           error: undefined,
         },
@@ -4400,13 +4400,13 @@ describe('useBackgroundQuery', () => {
 
       // We are intentionally writing partial data to the cache. Supress console
       // warnings to avoid unnecessary noise in the test.
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
       cache.writeQuery({
         query,
         data: {
           greeting: {
-            __typename: 'Greeting',
-            recipient: { __typename: 'Person', name: 'Cached Alice' },
+            __typename: "Greeting",
+            recipient: { __typename: "Person", name: "Cached Alice" },
           },
         },
       });
@@ -4453,7 +4453,7 @@ describe('useBackgroundQuery', () => {
 
       function Parent() {
         const [queryRef] = useBackgroundQuery(query, {
-          fetchPolicy: 'cache-first',
+          fetchPolicy: "cache-first",
           returnPartialData: true,
         });
 
@@ -4473,7 +4473,7 @@ describe('useBackgroundQuery', () => {
             <div data-testid="message">{data.greeting?.message}</div>
             <div data-testid="recipient">{data.greeting?.recipient?.name}</div>
             <div data-testid="network-status">{networkStatus}</div>
-            <div data-testid="error">{error?.message || 'undefined'}</div>
+            <div data-testid="error">{error?.message || "undefined"}</div>
           </>
         );
       }
@@ -4481,37 +4481,37 @@ describe('useBackgroundQuery', () => {
       render(<App />);
 
       expect(renders.suspenseCount).toBe(0);
-      expect(screen.getByTestId('recipient')).toHaveTextContent('Cached Alice');
+      expect(screen.getByTestId("recipient")).toHaveTextContent("Cached Alice");
       // message is not present yet, since it's missing in partial data
-      expect(screen.getByTestId('message')).toHaveTextContent('');
-      expect(screen.getByTestId('network-status')).toHaveTextContent('1'); // loading
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("message")).toHaveTextContent("");
+      expect(screen.getByTestId("network-status")).toHaveTextContent("1"); // loading
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
 
       link.simulateResult({
         result: {
           data: {
-            greeting: { message: 'Hello world', __typename: 'Greeting' },
+            greeting: { message: "Hello world", __typename: "Greeting" },
           },
           hasNext: true,
         },
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('message')).toHaveTextContent('Hello world');
+        expect(screen.getByTestId("message")).toHaveTextContent("Hello world");
       });
-      expect(screen.getByTestId('recipient')).toHaveTextContent('Cached Alice');
-      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("recipient")).toHaveTextContent("Cached Alice");
+      expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
 
       link.simulateResult({
         result: {
           incremental: [
             {
               data: {
-                __typename: 'Greeting',
-                recipient: { name: 'Alice', __typename: 'Person' },
+                __typename: "Greeting",
+                recipient: { name: "Alice", __typename: "Person" },
               },
-              path: ['greeting'],
+              path: ["greeting"],
             },
           ],
           hasNext: false,
@@ -4519,11 +4519,11 @@ describe('useBackgroundQuery', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('recipient').textContent).toEqual('Alice');
+        expect(screen.getByTestId("recipient").textContent).toEqual("Alice");
       });
-      expect(screen.getByTestId('message')).toHaveTextContent('Hello world');
-      expect(screen.getByTestId('network-status')).toHaveTextContent('7'); // ready
-      expect(screen.getByTestId('error')).toHaveTextContent('undefined');
+      expect(screen.getByTestId("message")).toHaveTextContent("Hello world");
+      expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
+      expect(screen.getByTestId("error")).toHaveTextContent("undefined");
 
       expect(renders.count).toBe(3);
       expect(renders.suspenseCount).toBe(0);
@@ -4531,8 +4531,8 @@ describe('useBackgroundQuery', () => {
         {
           data: {
             greeting: {
-              __typename: 'Greeting',
-              recipient: { __typename: 'Person', name: 'Cached Alice' },
+              __typename: "Greeting",
+              recipient: { __typename: "Person", name: "Cached Alice" },
             },
           },
           networkStatus: NetworkStatus.loading,
@@ -4541,9 +4541,9 @@ describe('useBackgroundQuery', () => {
         {
           data: {
             greeting: {
-              __typename: 'Greeting',
-              message: 'Hello world',
-              recipient: { __typename: 'Person', name: 'Cached Alice' },
+              __typename: "Greeting",
+              message: "Hello world",
+              recipient: { __typename: "Person", name: "Cached Alice" },
             },
           },
           networkStatus: NetworkStatus.ready,
@@ -4552,9 +4552,9 @@ describe('useBackgroundQuery', () => {
         {
           data: {
             greeting: {
-              __typename: 'Greeting',
-              message: 'Hello world',
-              recipient: { __typename: 'Person', name: 'Alice' },
+              __typename: "Greeting",
+              message: "Hello world",
+              recipient: { __typename: "Person", name: "Alice" },
             },
           },
           networkStatus: NetworkStatus.ready,
@@ -4564,8 +4564,8 @@ describe('useBackgroundQuery', () => {
     });
   });
 
-  describe.skip('type tests', () => {
-    it('returns unknown when TData cannot be inferred', () => {
+  describe.skip("type tests", () => {
+    it("returns unknown when TData cannot be inferred", () => {
       const query = gql`
         query {
           hello
@@ -4578,14 +4578,14 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(data).toEqualTypeOf<unknown>();
     });
 
-    it('disallows wider variables type than specified', () => {
+    it("disallows wider variables type than specified", () => {
       const { query } = useVariablesIntegrationTestCase();
 
       // @ts-expect-error should not allow wider TVariables type
-      useBackgroundQuery(query, { variables: { id: '1', foo: 'bar' } });
+      useBackgroundQuery(query, { variables: { id: "1", foo: "bar" } });
     });
 
-    it('returns TData in default case', () => {
+    it("returns TData in default case", () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query);
@@ -4609,7 +4609,7 @@ describe('useBackgroundQuery', () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, {
-        errorPolicy: 'ignore',
+        errorPolicy: "ignore",
       });
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
@@ -4620,7 +4620,7 @@ describe('useBackgroundQuery', () => {
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
-        errorPolicy: 'ignore',
+        errorPolicy: "ignore",
       });
 
       const { data: explicit } = useReadQuery(explicitQueryRef);
@@ -4633,7 +4633,7 @@ describe('useBackgroundQuery', () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, {
-        errorPolicy: 'all',
+        errorPolicy: "all",
       });
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
@@ -4641,7 +4641,7 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
 
       const [explicitQueryRef] = useBackgroundQuery(query, {
-        errorPolicy: 'all',
+        errorPolicy: "all",
       });
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
@@ -4653,7 +4653,7 @@ describe('useBackgroundQuery', () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, {
-        errorPolicy: 'none',
+        errorPolicy: "none",
       });
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
@@ -4661,7 +4661,7 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
 
       const [explicitQueryRef] = useBackgroundQuery(query, {
-        errorPolicy: 'none',
+        errorPolicy: "none",
       });
       const { data: explicit } = useReadQuery(explicitQueryRef);
 
@@ -4669,7 +4669,7 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
     });
 
-    it('returns DeepPartial<TData> with returnPartialData: true', () => {
+    it("returns DeepPartial<TData> with returnPartialData: true", () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, {
@@ -4693,7 +4693,7 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     });
 
-    it('returns TData with returnPartialData: false', () => {
+    it("returns TData with returnPartialData: false", () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, {
@@ -4721,11 +4721,11 @@ describe('useBackgroundQuery', () => {
       >();
     });
 
-    it('returns TData when passing an option that does not affect TData', () => {
+    it("returns TData when passing an option that does not affect TData", () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, {
-        fetchPolicy: 'no-cache',
+        fetchPolicy: "no-cache",
       });
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
@@ -4738,7 +4738,7 @@ describe('useBackgroundQuery', () => {
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
-        fetchPolicy: 'no-cache',
+        fetchPolicy: "no-cache",
       });
 
       const { data: explicit } = useReadQuery(explicitQueryRef);
@@ -4749,12 +4749,12 @@ describe('useBackgroundQuery', () => {
       >();
     });
 
-    it('handles combinations of options', () => {
+    it("handles combinations of options", () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredPartialDataIgnoreQueryRef] = useBackgroundQuery(query, {
         returnPartialData: true,
-        errorPolicy: 'ignore',
+        errorPolicy: "ignore",
       });
       const { data: inferredPartialDataIgnore } = useReadQuery(
         inferredPartialDataIgnoreQueryRef
@@ -4772,7 +4772,7 @@ describe('useBackgroundQuery', () => {
         VariablesCaseVariables
       >(query, {
         returnPartialData: true,
-        errorPolicy: 'ignore',
+        errorPolicy: "ignore",
       });
 
       const { data: explicitPartialDataIgnore } = useReadQuery(
@@ -4788,7 +4788,7 @@ describe('useBackgroundQuery', () => {
 
       const [inferredPartialDataNoneQueryRef] = useBackgroundQuery(query, {
         returnPartialData: true,
-        errorPolicy: 'none',
+        errorPolicy: "none",
       });
 
       const { data: inferredPartialDataNone } = useReadQuery(
@@ -4807,7 +4807,7 @@ describe('useBackgroundQuery', () => {
         VariablesCaseVariables
       >(query, {
         returnPartialData: true,
-        errorPolicy: 'none',
+        errorPolicy: "none",
       });
 
       const { data: explicitPartialDataNone } = useReadQuery(
@@ -4822,13 +4822,13 @@ describe('useBackgroundQuery', () => {
       ).not.toEqualTypeOf<VariablesCaseData>();
     });
 
-    it('returns correct TData type when combined options that do not affect TData', () => {
+    it("returns correct TData type when combined options that do not affect TData", () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, {
-        fetchPolicy: 'no-cache',
+        fetchPolicy: "no-cache",
         returnPartialData: true,
-        errorPolicy: 'none',
+        errorPolicy: "none",
       });
       const { data: inferred } = useReadQuery(inferredQueryRef);
 
@@ -4839,9 +4839,9 @@ describe('useBackgroundQuery', () => {
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {
-        fetchPolicy: 'no-cache',
+        fetchPolicy: "no-cache",
         returnPartialData: true,
-        errorPolicy: 'none',
+        errorPolicy: "none",
       });
 
       const { data: explicit } = useReadQuery(explicitQueryRef);
@@ -4850,7 +4850,7 @@ describe('useBackgroundQuery', () => {
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     });
 
-    it('returns TData | undefined when `skip` is present', () => {
+    it("returns TData | undefined when `skip` is present", () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, {

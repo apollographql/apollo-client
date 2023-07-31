@@ -1,5 +1,5 @@
-import { invariant } from '../../utilities/globals/index.js';
-import * as React from 'react';
+import { invariant } from "../../utilities/globals/index.js";
+import * as React from "react";
 import type {
   ApolloClient,
   ApolloQueryResult,
@@ -9,21 +9,21 @@ import type {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
   FetchMoreQueryOptions,
-} from '../../core/index.js';
-import { ApolloError, NetworkStatus } from '../../core/index.js';
-import type { DeepPartial } from '../../utilities/index.js';
-import { isNonEmptyArray } from '../../utilities/index.js';
-import { useApolloClient } from './useApolloClient.js';
-import { DocumentType, verifyDocumentType } from '../parser/index.js';
+} from "../../core/index.js";
+import { ApolloError, NetworkStatus } from "../../core/index.js";
+import type { DeepPartial } from "../../utilities/index.js";
+import { isNonEmptyArray } from "../../utilities/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import type {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
   NoInfer,
-} from '../types/types.js';
-import { useDeepMemo, __use } from './internal/index.js';
-import { getSuspenseCache } from '../cache/index.js';
-import { canonicalStringify } from '../../cache/index.js';
-import type { CacheKey } from '../cache/types.js';
+} from "../types/types.js";
+import { useDeepMemo, __use } from "./internal/index.js";
+import { getSuspenseCache } from "../cache/index.js";
+import { canonicalStringify } from "../../cache/index.js";
+import type { CacheKey } from "../cache/types.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -53,31 +53,31 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
 export type RefetchFunction<
   TData,
   TVariables extends OperationVariables,
-> = ObservableQueryFields<TData, TVariables>['refetch'];
+> = ObservableQueryFields<TData, TVariables>["refetch"];
 
 export type SubscribeToMoreFunction<
   TData,
   TVariables extends OperationVariables,
-> = ObservableQueryFields<TData, TVariables>['subscribeToMore'];
+> = ObservableQueryFields<TData, TVariables>["subscribeToMore"];
 
 export function useSuspenseQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<SuspenseQueryHookOptions<TData>, 'variables'>,
+  TOptions extends Omit<SuspenseQueryHookOptions<TData>, "variables">,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
     TOptions
 ): UseSuspenseQueryResult<
-  TOptions['errorPolicy'] extends 'ignore' | 'all'
-    ? TOptions['returnPartialData'] extends true
+  TOptions["errorPolicy"] extends "ignore" | "all"
+    ? TOptions["returnPartialData"] extends true
       ? DeepPartial<TData> | undefined
       : TData | undefined
-    : TOptions['returnPartialData'] extends true
-    ? TOptions['skip'] extends boolean
+    : TOptions["returnPartialData"] extends true
+    ? TOptions["skip"] extends boolean
       ? DeepPartial<TData> | undefined
       : DeepPartial<TData>
-    : TOptions['skip'] extends boolean
+    : TOptions["skip"] extends boolean
     ? TData | undefined
     : TData,
   TVariables
@@ -90,7 +90,7 @@ export function useSuspenseQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: true;
-    errorPolicy: 'ignore' | 'all';
+    errorPolicy: "ignore" | "all";
   }
 ): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
@@ -100,7 +100,7 @@ export function useSuspenseQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
-    errorPolicy: 'ignore' | 'all';
+    errorPolicy: "ignore" | "all";
   }
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
@@ -211,7 +211,7 @@ export function useSuspenseQuery<
     };
   }, [queryRef.result]);
 
-  const result = fetchPolicy === 'standby' ? skipResult : __use(promise);
+  const result = fetchPolicy === "standby" ? skipResult : __use(promise);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
@@ -267,13 +267,13 @@ function validateOptions(options: WatchQueryOptions) {
 }
 
 function validateFetchPolicy(
-  fetchPolicy: WatchQueryFetchPolicy = 'cache-first'
+  fetchPolicy: WatchQueryFetchPolicy = "cache-first"
 ) {
   const supportedFetchPolicies: WatchQueryFetchPolicy[] = [
-    'cache-first',
-    'network-only',
-    'no-cache',
-    'cache-and-network',
+    "cache-first",
+    "network-only",
+    "no-cache",
+    "cache-and-network",
   ];
 
   invariant(
@@ -287,9 +287,9 @@ function validatePartialDataReturn(
   fetchPolicy: WatchQueryFetchPolicy | undefined,
   returnPartialData: boolean | undefined
 ) {
-  if (fetchPolicy === 'no-cache' && returnPartialData) {
+  if (fetchPolicy === "no-cache" && returnPartialData) {
     invariant.warn(
-      'Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy.'
+      "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
     );
   }
 }
@@ -324,7 +324,7 @@ export function useWatchQueryOptions<
     const fetchPolicy =
       options.fetchPolicy ||
       client.defaultOptions.watchQuery?.fetchPolicy ||
-      'cache-first';
+      "cache-first";
 
     const watchQueryOptions = {
       ...options,
@@ -341,7 +341,7 @@ export function useWatchQueryOptions<
     // Assign the updated fetch policy after our validation since `standby` is
     // not a supported fetch policy on its own without the use of `skip`.
     if (options.skip) {
-      watchQueryOptions.fetchPolicy = 'standby';
+      watchQueryOptions.fetchPolicy = "standby";
     }
 
     return watchQueryOptions;

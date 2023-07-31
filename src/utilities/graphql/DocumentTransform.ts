@@ -1,8 +1,8 @@
-import { Trie } from '@wry/trie';
-import { canUseWeakMap, canUseWeakSet } from '../common/canUse.js';
-import { checkDocument } from './getFromAST.js';
-import { invariant } from '../globals/index.js';
-import type { DocumentNode } from 'graphql';
+import { Trie } from "@wry/trie";
+import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
+import { checkDocument } from "./getFromAST.js";
+import { invariant } from "../globals/index.js";
+import type { DocumentNode } from "graphql";
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 
@@ -124,7 +124,7 @@ export class DocumentTransform {
     if (cacheKeys) {
       invariant(
         Array.isArray(cacheKeys),
-        '`getCacheKey` must return an array or undefined'
+        "`getCacheKey` must return an array or undefined"
       );
       return this.stableCacheKeys.lookupArray(cacheKeys);
     }

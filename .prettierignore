@@ -22,6 +22,9 @@ node_modules/
 .yalc/
 .next/
 
+# Ignore all files in /scripts directory
+/scripts
+
 /src/__tests__/ApolloClient.ts
 /src/__tests__/client.ts
 /src/__tests__/exports.ts

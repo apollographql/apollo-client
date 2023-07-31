@@ -24,11 +24,14 @@
       "files": ["**/*.ts", "**/*.tsx"],
       "excludedFiles": ["**/__tests__/**/*.*"],
       "rules": {
-        "@typescript-eslint/consistent-type-imports": ["error", {
-          "prefer": "type-imports",
-          "disallowTypeAnnotations": false,
-          "fixStyle": "separate-type-imports"
-        }],
+        "@typescript-eslint/consistent-type-imports": [
+          "error",
+          {
+            "prefer": "type-imports",
+            "disallowTypeAnnotations": false,
+            "fixStyle": "separate-type-imports"
+          }
+        ],
         "@typescript-eslint/no-import-type-side-effects": "error",
         "no-restricted-syntax": [
           "error",

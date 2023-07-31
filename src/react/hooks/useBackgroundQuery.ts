@@ -29,17 +29,6 @@ type BackgroundQueryHookOptionsNoInfer<
   TVariables extends OperationVariables
 > = BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
 
-type BackgroundQueryHookData<
-  TData,
-  TOptions extends BackgroundQueryHookOptions<TData>
-> = TOptions['errorPolicy'] extends 'ignore' | 'all'
-  ? TOptions['returnPartialData'] extends true
-    ? DeepPartial<TData> | undefined
-    : TData | undefined
-  : TOptions['returnPartialData'] extends true
-  ? DeepPartial<TData>
-  : TData;
-
 export function useBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
@@ -47,15 +36,21 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions
-): TOptions['skip'] extends boolean
-  ? [
-      QueryReference<BackgroundQueryHookData<TData, TOptions>> | undefined,
-      UseBackgroundQueryResult<TData, TVariables>
-    ]
-  : [
-      QueryReference<BackgroundQueryHookData<TData, TOptions>>,
-      UseBackgroundQueryResult<TData, TVariables>
-    ];
+): [
+  (
+    | QueryReference<
+        TOptions['errorPolicy'] extends 'ignore' | 'all'
+          ? TOptions['returnPartialData'] extends true
+            ? DeepPartial<TData> | undefined
+            : TData | undefined
+          : TOptions['returnPartialData'] extends true
+          ? DeepPartial<TData>
+          : TData
+      >
+    | (TOptions['skip'] extends boolean ? undefined : never)
+  ),
+  UseBackgroundQueryResult<TData, TVariables>
+];
 
 export function useBackgroundQuery<
   TData = unknown,

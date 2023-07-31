@@ -1,4 +1,4 @@
-import { ApolloWrapper } from './ApolloWrapper';
+import { ApolloWrapper } from "./ApolloWrapper";
 
 export default async function Layout({
   children,

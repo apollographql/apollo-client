@@ -1,15 +1,15 @@
 // TODO This entire file doesn't work yet without appending `/index.js` to all imports manually!
 
-import assert from 'node:assert';
-import path from 'path';
-import { importMetaResolve } from 'resolve-esm';
+import assert from "node:assert";
+import path from "path";
+import { importMetaResolve } from "resolve-esm";
 
-import { ApolloClient } from '@apollo/client/index.js';
-import { useQuery } from '@apollo/client/react/index.js';
-import { HttpLink } from '@apollo/client/link/http/index.js';
+import { ApolloClient } from "@apollo/client/index.js";
+import { useQuery } from "@apollo/client/react/index.js";
+import { HttpLink } from "@apollo/client/link/http/index.js";
 
 console.log(
-  'Testing Node with ESM imports...  (user-side workaround with `/index.js)'
+  "Testing Node with ESM imports...  (user-side workaround with `/index.js)"
 );
 
 function checkFunctionName(fn, name, category) {
@@ -21,9 +21,9 @@ function checkFunctionName(fn, name, category) {
 }
 
 const entries = [
-  [ApolloClient, 'ApolloClient', 'Barrel Import'],
-  [useQuery, 'useQuery', 'Apollo React'],
-  [HttpLink, 'HttpLink', 'Link'],
+  [ApolloClient, "ApolloClient", "Barrel Import"],
+  [useQuery, "useQuery", "Apollo React"],
+  [HttpLink, "HttpLink", "Link"],
 ];
 
 for (let [fn, name, category] of entries) {
@@ -35,9 +35,9 @@ for (let [fn, name, category] of entries) {
 }
 
 const moduleNames = [
-  ['@apollo/client/index.js', '/index.js'],
-  ['@apollo/client/react/index.js', '/react/index.js'],
-  ['@apollo/client/link/http/index.js', '/link/http/index.js'],
+  ["@apollo/client/index.js", "/index.js"],
+  ["@apollo/client/react/index.js", "/react/index.js"],
+  ["@apollo/client/link/http/index.js", "/link/http/index.js"],
 ];
 
 (async () => {

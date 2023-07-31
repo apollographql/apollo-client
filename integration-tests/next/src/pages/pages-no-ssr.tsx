@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import type { TypedDocumentNode } from '@apollo/client';
-import { gql, useQuery } from '@apollo/client';
+import type { TypedDocumentNode } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
 
 const QUERY: TypedDocumentNode<{
   products: {

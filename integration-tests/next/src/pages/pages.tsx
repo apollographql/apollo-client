@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import type { TypedDocumentNode } from '@apollo/client';
-import { gql, useQuery } from '@apollo/client';
-import type { GetStaticProps } from 'next';
-import { addApolloState, initializeApollo } from '@/libs/apolloClient';
+import type { TypedDocumentNode } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
+import type { GetStaticProps } from "next";
+import { addApolloState, initializeApollo } from "@/libs/apolloClient";
 
 const QUERY: TypedDocumentNode<{
   products: {
@@ -23,7 +23,7 @@ export default function Page() {
   const { data } = useQuery(QUERY);
 
   if (!data) {
-    throw new Error('should not happen, we have getServerSideProps!');
+    throw new Error("should not happen, we have getServerSideProps!");
   }
 
   return (

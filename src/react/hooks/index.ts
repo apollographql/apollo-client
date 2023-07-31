@@ -7,15 +7,8 @@ export { useQuery } from './useQuery.js';
 export * from './useSubscription.js';
 export * from './useReactiveVar.js';
 export * from './useFragment.js';
-export {
-  useSuspenseQuery,
-  UseSuspenseQueryResult,
-  FetchMoreFunction,
-  RefetchFunction,
-  SubscribeToMoreFunction,
-} from './useSuspenseQuery.js';
-export {
-  useBackgroundQuery,
-  UseBackgroundQueryResult,
-} from './useBackgroundQuery.js';
+export type { UseSuspenseQueryResult, FetchMoreFunction, RefetchFunction, SubscribeToMoreFunction } from './useSuspenseQuery.js';
+export { useSuspenseQuery } from './useSuspenseQuery.js';
+export type { UseBackgroundQueryResult } from './useBackgroundQuery.js';
+export { useBackgroundQuery } from './useBackgroundQuery.js';
 export { useReadQuery } from './useReadQuery.js';

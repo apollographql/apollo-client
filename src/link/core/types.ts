@@ -1,7 +1,7 @@
 import type { ExecutionResult, GraphQLError } from "graphql";
-import { DocumentNode } from "graphql";
+import type { DocumentNode } from "graphql";
 import type { DefaultContext } from "../../core/index.js";
-export { DocumentNode };
+export type { DocumentNode };
 
 import type { Observable } from "../../utilities/index.js";
 

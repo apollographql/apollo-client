@@ -22,13 +22,17 @@
   "overrides": [
     {
       "files": ["**/*.ts", "**/*.tsx"],
-      "excludedFiles": ["**/__tests__/**/*.*"],
+      "excludedFiles": ["**/__tests__/**/*.*", "*.d.ts"],
+      "parserOptions": {
+        "project": "./tsconfig.json"
+      },
       "rules": {
         "@typescript-eslint/consistent-type-imports": ["error", {
           "prefer": "type-imports",
           "disallowTypeAnnotations": false,
           "fixStyle": "separate-type-imports"
         }],
+        "@typescript-eslint/consistent-type-exports": ["error"],
         "@typescript-eslint/no-import-type-side-effects": "error",
         "no-restricted-syntax": [
           "error",

@@ -1,17 +1,10 @@
 /* Core */
 
-export {
-  ApolloClient,
-  ApolloClientOptions,
-  DefaultOptions,
-  mergeOptions,
-} from './ApolloClient.js';
-export {
-  ObservableQuery,
-  FetchMoreOptions,
-  UpdateQueryOptions,
-} from './ObservableQuery.js';
-export {
+export type { ApolloClientOptions, DefaultOptions } from './ApolloClient.js';
+export { ApolloClient, mergeOptions } from './ApolloClient.js';
+export type { FetchMoreOptions, UpdateQueryOptions } from './ObservableQuery.js';
+export { ObservableQuery } from './ObservableQuery.js';
+export type {
   QueryOptions,
   WatchQueryOptions,
   MutationOptions,
@@ -24,34 +17,15 @@ export {
 } from './watchQueryOptions.js';
 export { NetworkStatus, isNetworkRequestSettled } from './networkStatus.js';
 export * from './types.js';
-export {
+export type {
   Resolver,
   FragmentMatcher,
 } from './LocalState.js';
 export { isApolloError, ApolloError } from '../errors/index.js';
 /* Cache */
 
-export {
-  // All the exports (types and values) from ../cache, minus cacheSlot,
-  // which we want to keep semi-private.
-  Cache,
-  ApolloCache,
-  Transaction,
-  DataProxy,
-  InMemoryCache,
-  InMemoryCacheConfig,
-  MissingFieldError,
-  defaultDataIdFromObject,
-  ReactiveVar,
-  makeVar,
-  TypePolicies,
-  TypePolicy,
-  FieldPolicy,
-  FieldReadFunction,
-  FieldMergeFunction,
-  FieldFunctionOptions,
-  PossibleTypesMap,
-} from '../cache/index.js';
+export type { Transaction, DataProxy, InMemoryCacheConfig, ReactiveVar, TypePolicies, TypePolicy, FieldPolicy, FieldReadFunction, FieldMergeFunction, FieldFunctionOptions, PossibleTypesMap } from '../cache/index.js';
+export { Cache, ApolloCache, InMemoryCache, MissingFieldError, defaultDataIdFromObject, makeVar } from '../cache/index.js';
 
 export * from '../cache/inmemory/types.js';
 
@@ -59,27 +33,13 @@ export * from '../cache/inmemory/types.js';
 
 export * from '../link/core/index.js';
 export * from '../link/http/index.js';
-export {
-  fromError,
-  toPromise,
-  fromPromise,
-  ServerError,
-  throwServerError,
-} from '../link/utils/index.js';
+export type { ServerError } from '../link/utils/index.js';
+export { fromError, toPromise, fromPromise, throwServerError } from '../link/utils/index.js';
 
 /* Utilities */
 
-export {
-  DocumentTransform,
-  DocumentTransformCacheKey,
-  Observable,
-  Observer,
-  ObservableSubscription,
-  Reference,
-  isReference,
-  makeReference,
-  StoreObject,
-} from '../utilities/index.js';
+export type { DocumentTransformCacheKey, Observer, ObservableSubscription, Reference, StoreObject } from '../utilities/index.js';
+export { DocumentTransform, Observable, isReference, makeReference } from '../utilities/index.js';
 
 /* Supporting */
 

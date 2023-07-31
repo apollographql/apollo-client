@@ -223,18 +223,92 @@ The `Dog` component **does not suspend** while this request is being made. This 
 
 ### Error handling
 
-In the concurrent React paradigm, errors thrown in React components are caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror) on the client. (On the server, if you use a streaming server rendering API, or a framework built with one, [the behavior is slightly different](https://react.dev/reference/react/Suspense#providing-a-fallback-for-server-errors-and-client-only-content): the nearest `Suspense` boundary will be rendered by the server so the user initially sees a loading indicator, and the client will attempt to render the component again. If it succeeds, the user is never aware of the error thrown on the server; if it errors again on the client, the error boundary is displayed.)
+In the concurrent React paradigm, errors thrown in React components are caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror) _on the client_. _On the server_, if you're use a streaming server rendering API or a framework built with one, [the behavior is slightly different](https://react.dev/reference/react/Suspense#providing-a-fallback-for-server-errors-and-client-only-content): the nearest `Suspense` boundary will be rendered by the server so the user initially sees a loading indicator, and the client will attempt to render the component again. If it succeeds, the user is never aware of the error thrown on the server. If it errors again on the client, the error boundary is displayed.
 
-In Apollo Client's new `Suspense` hooks introduced in v3.8, **both network and GraphQL errors are thrown by default**. Let's take a look at an example:
+> **Note:** An error boundary is a **class component** that implements `static getDerivedStateFromError`. If you don't want to write an error boundary class component yourself, you can use a library like [`react-error-boundary`](https://github.com/bvaughn/react-error-boundary) instead. For more information, see the React docs for [catching rendering errors with an error boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+In Apollo Client's new `Suspense` hooks introduced in 3.8, **both network and GraphQL errors are thrown by default**. Let's take a look at an example:
 
 ```tsx
+function App() {
+  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
+  const [selectedDog, setSelectedDog] = useState(data.dogs[0].name);
+  return (
+    <>
+      <select
+        onChange={(e) => setSelectedDog(e.target.value)}
+      >
+        {data.dogs.map((dog) => (
+          <option key={dog.name} value={dog.name}>
+            {dog.name}
+          </option>
+        ))}
+      </select>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Dog name={selectedDog} />
+      </Suspense>
+    </>
+  );
+}
+
+function Dog({ name }: { name: string }) {
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { name },
+  });
+  return (
+    <>
+      <div>Name: {data.dog.name}</div>
+      <div>Breed: {data.dog.breed}</div>
+    </>
+  );
+}
 ```
 
-> **Note:** summarize the note found here https://react.dev/reference/react/Component#static-getderivedstatefromerror
+If the `GET_DOG_QUERY` inside of the `Dog` component were to return with a GraphQL error or a network error, the `Dog` component would throw and the nearest error boundary would render its fallback component. But our component tree doesn't have an error boundary yet—let's add one!
+
+```tsx {1,18,22}
+import { ErrorBoundary } from "react-error-boundary";
+
+function App() {
+  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
+  const [selectedDog, setSelectedDog] = useState(data.dogs[0].name);
+
+  return (
+    <>
+      <select
+        onChange={(e) => setSelectedDog(e.target.value)}
+      >
+        {data.dogs.map((dog) => (
+          <option key={dog.name} value={dog.name}>
+            {dog.name}
+          </option>
+        ))}
+      </select>
+      <ErrorBoundary FallbackComponent={() => <div>Something went wrong</div>}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Dog name={selectedDog} />
+        </Suspense>
+      </ErrorBoundary>
+    </>
+  );
+}
+```
+
+Here, we're using the `ErrorBoundary` component from [`react-error-boundary`](https://github.com/bvaughn/react-error-boundary) and placing it **outside** of our `Dog` component in our React component tree. Now, when our `Dog` component throws an error **when using the default `errorPolicy` of `none`**, the `ErrorBoundary` will catch it and display the `FallbackComponent` we've provided.
+
+> **Note:** as is the case with many React frameworks, in development mode you may still see an error dialog overlay when errors are thrown even **with** an error boundary. This is because, while the error boundary provides useful information to users in production, in development mode many frameworks still want to make sure developers see the error in case it's unexpected.
+
+#### Rendering partial data alongside errors
+
+In some cases, you may want to ignore GraphQL errors and render partial data instead or alongside an error message. To do this, you can set the `errorPolicy` option to `ignore` (`graphQLErrors` are ignored and `error.graphQLErrors` is _not_ populated) or `all` (both `data` and `error.graphQLErrors` are populated, enabling you to render both partial results and error information).
+
+Note that with both error policies of `ignore` and `all`, when encountering a network error Apollo Client's suspense hooks will always throw an error wherever the data is being read (i.e. the component calling `useSuspenseQuery` or `useReadQuery`).
 
 ### Distinguishing between queries that use the same query document and variables with `queryKey`
 
 ## Avoiding request waterfalls
+
+Since `useSuspenseQuery` will usually cause a component to suspend on first render while data is being fetched, a tree of components that all use `useSuspenseQuery` to query different data can cause a "waterfall" of suspense boundaries to display since each component will suspend before rendering its children (which will then suspend while fetching, and so on). In some cases, this can be avoided by using `useBackgroundQuery` and `useReadQuery` instead.
 
 `useBackgroundQuery` initiates a request for data in a parent component and returns a `QueryReference` which is used to read the data in a child component via `useReadQuery`. If the child component attempts to render before the data can be found in the cache, the child component will suspend until the data is available.
 

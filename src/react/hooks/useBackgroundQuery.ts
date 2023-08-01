@@ -1,20 +1,20 @@
-import * as React from 'react';
+import * as React from "react";
 import type {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
-} from '../../core/index.js';
-import { useApolloClient } from './useApolloClient.js';
-import { wrapQueryRef, type QueryReference } from '../cache/QueryReference.js';
-import type { BackgroundQueryHookOptions, NoInfer } from '../types/types.js';
-import { __use } from './internal/index.js';
-import { getSuspenseCache } from '../cache/index.js';
-import { useWatchQueryOptions } from './useSuspenseQuery.js';
-import type { FetchMoreFunction, RefetchFunction } from './useSuspenseQuery.js';
-import { canonicalStringify } from '../../cache/index.js';
-import type { DeepPartial } from '../../utilities/index.js';
-import type { CacheKey } from '../cache/types.js';
-import type { SkipToken } from './constants.js';
+} from "../../core/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { wrapQueryRef, type QueryReference } from "../cache/QueryReference.js";
+import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
+import { __use } from "./internal/index.js";
+import { getSuspenseCache } from "../cache/index.js";
+import { useWatchQueryOptions } from "./useSuspenseQuery.js";
+import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
+import { canonicalStringify } from "../../cache/index.js";
+import type { DeepPartial } from "../../utilities/index.js";
+import type { CacheKey } from "../cache/types.js";
+import type { SkipToken } from "./constants.js";
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -32,22 +32,22 @@ type BackgroundQueryHookOptionsNoInfer<
 export function useBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<BackgroundQueryHookOptions<TData>, 'variables'>
+  TOptions extends Omit<BackgroundQueryHookOptions<TData>, "variables">
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions
 ): [
   (
     | QueryReference<
-        TOptions['errorPolicy'] extends 'ignore' | 'all'
-          ? TOptions['returnPartialData'] extends true
+        TOptions["errorPolicy"] extends "ignore" | "all"
+          ? TOptions["returnPartialData"] extends true
             ? DeepPartial<TData> | undefined
             : TData | undefined
-          : TOptions['returnPartialData'] extends true
+          : TOptions["returnPartialData"] extends true
           ? DeepPartial<TData>
           : TData
       >
-    | (TOptions['skip'] extends boolean ? undefined : never)
+    | (TOptions["skip"] extends boolean ? undefined : never)
   ),
   UseBackgroundQueryResult<TData, TVariables>
 ];
@@ -59,7 +59,7 @@ export function useBackgroundQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
-    errorPolicy: 'ignore' | 'all';
+    errorPolicy: "ignore" | "all";
   }
 ): [
   QueryReference<DeepPartial<TData> | undefined>,
@@ -72,7 +72,7 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
-    errorPolicy: 'ignore' | 'all';
+    errorPolicy: "ignore" | "all";
   }
 ): [
   QueryReference<TData | undefined>,
@@ -186,8 +186,8 @@ export function useBackgroundQuery<
   // `undefined` for the `queryRef` until the query has been enabled. Once
   // enabled, a query ref is always returned regardless of whether the query is
   // skipped again later.
-  const didFetchResult = React.useRef(fetchPolicy !== 'standby');
-  didFetchResult.current ||= fetchPolicy !== 'standby';
+  const didFetchResult = React.useRef(fetchPolicy !== "standby");
+  didFetchResult.current ||= fetchPolicy !== "standby";
 
   const cacheKey: CacheKey = [
     query,

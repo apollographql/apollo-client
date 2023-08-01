@@ -1,12 +1,12 @@
-import { invariant as originalInvariant, InvariantError } from 'ts-invariant';
-import { version } from '../../version.js';
-import global from './global.js';
-import type { ErrorCodes } from '../../invariantErrorCodes.js';
-import { stringifyForDisplay } from '../common/stringifyForDisplay.js';
+import { invariant as originalInvariant, InvariantError } from "ts-invariant";
+import { version } from "../../version.js";
+import global from "./global.js";
+import type { ErrorCodes } from "../../invariantErrorCodes.js";
+import { stringifyForDisplay } from "../common/stringifyForDisplay.js";
 
 function wrap(fn: (msg?: string, ...args: any[]) => void) {
   return function (message: string | number, ...args: any[]) {
-    fn(typeof message === 'number' ? getErrorMsg(message) : message, ...args);
+    fn(typeof message === "number" ? getErrorMsg(message) : message, ...args);
   };
 }
 
@@ -92,7 +92,7 @@ function newInvariantError(
 }
 
 const ApolloErrorMessageHandler = Symbol.for(
-  'ApolloErrorMessageHandler_' + version
+  "ApolloErrorMessageHandler_" + version
 );
 declare global {
   interface Window {
@@ -105,7 +105,7 @@ declare global {
 function getErrorMsg(message?: string | number, messageArgs: unknown[] = []) {
   if (!message) return;
   const args = messageArgs.map((arg) =>
-    typeof arg == 'string' ? arg : stringifyForDisplay(arg, 2).slice(0, 1000)
+    typeof arg == "string" ? arg : stringifyForDisplay(arg, 2).slice(0, 1000)
   );
   return (
     (global[ApolloErrorMessageHandler] &&

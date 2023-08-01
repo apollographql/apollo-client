@@ -1,6 +1,12 @@
 import * as React from "react";
-import { render, waitFor, screen, renderHook, within } from "@testing-library/react";
-import userEvent from '@testing-library/user-event';
+import {
+  render,
+  waitFor,
+  screen,
+  renderHook,
+  within,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { act } from "react-dom/test-utils";
 
 import { UseFragmentOptions, useFragment } from "../useFragment";
@@ -21,7 +27,7 @@ import {
 import { useQuery } from "../useQuery";
 import { concatPagination } from "../../../utilities";
 import assert from "assert";
-import { expectTypeOf } from 'expect-type'
+import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
 
 describe("useFragment", () => {
@@ -90,7 +96,7 @@ describe("useFragment", () => {
           { __typename: "Item", id: 5 },
         ],
       },
-    })
+    });
 
     const renders: string[] = [];
 
@@ -99,9 +105,7 @@ describe("useFragment", () => {
       const { loading, data } = useQuery(listQuery);
       expect(loading).toBe(false);
       return (
-        <ol>
-          {data?.list.map(item => <Item key={item.id} id={item.id}/>)}
-        </ol>
+        <ol>{data?.list.map((item) => <Item key={item.id} id={item.id} />)}</ol>
       );
     }
 
@@ -127,24 +131,15 @@ describe("useFragment", () => {
     function getItemTexts() {
       return screen.getAllByText(/^Item/).map(
         // eslint-disable-next-line testing-library/no-node-access
-        li => li.firstChild!.textContent
+        (li) => li.firstChild!.textContent
       );
     }
 
     await waitFor(() => {
-      expect(getItemTexts()).toEqual([
-        "Item #1",
-        "Item #2",
-        "Item #5",
-      ]);
+      expect(getItemTexts()).toEqual(["Item #1", "Item #2", "Item #5"]);
     });
 
-    expect(renders).toEqual([
-      "list",
-      "item 1",
-      "item 2",
-      "item 5",
-    ]);
+    expect(renders).toEqual(["list", "item 1", "item 2", "item 5"]);
 
     act(() => {
       cache.writeFragment({
@@ -158,11 +153,7 @@ describe("useFragment", () => {
     });
 
     await waitFor(() => {
-      expect(getItemTexts()).toEqual([
-        "Item #1",
-        "Item #2 updated",
-        "Item #5",
-      ]);
+      expect(getItemTexts()).toEqual(["Item #1", "Item #2 updated", "Item #5"]);
     });
 
     expect(renders).toEqual([
@@ -196,10 +187,11 @@ describe("useFragment", () => {
                   text: "Item #4 from cache.modify",
                 },
               })!,
-            ].sort((ref1, ref2) => (
-              readField<Item["id"]>("id", ref1)! -
-              readField<Item["id"]>("id", ref2)!
-            ));
+            ].sort(
+              (ref1, ref2) =>
+                readField<Item["id"]>("id", ref1)! -
+                readField<Item["id"]>("id", ref2)!
+            );
           },
         },
       });
@@ -302,47 +294,43 @@ describe("useFragment", () => {
         ],
       },
       __META: {
-        extraRootIds: [
-          "Item:2",
-          "Item:3",
-          "Item:4",
-        ],
+        extraRootIds: ["Item:2", "Item:3", "Item:4"],
       },
     });
   });
 
   it("returns data on first render", () => {
     const ItemFragment: TypedDocumentNode<Item> = gql`
-    fragment ItemFragment on Item {
-      id
-      text
-    }
+      fragment ItemFragment on Item {
+        id
+        text
+      }
     `;
     const cache = new InMemoryCache();
-    const item  = { __typename: "Item", id: 1, text: "Item #1" };
+    const item = { __typename: "Item", id: 1, text: "Item #1" };
     cache.writeFragment({
       fragment: ItemFragment,
       data: item,
-    })
+    });
     const client = new ApolloClient({
       cache,
-    })
-    function Component(){
+    });
+    function Component() {
       const { data } = useFragment({
         fragment: ItemFragment,
-        from: { __typename: "Item", id: 1 }
-      })
-      return <>{data.text}</>
+        from: { __typename: "Item", id: 1 },
+      });
+      return <>{data.text}</>;
     }
     render(
       <ApolloProvider client={client}>
         <Component />
-      </ApolloProvider>,
+      </ApolloProvider>
     );
 
     // would throw if not present synchronously
     screen.getByText(/Item #1/);
-  })
+  });
 
   it.each<TypedDocumentNode<{ list: Item[] }>>([
     // This query uses a basic field-level @nonreactive directive.
@@ -388,335 +376,333 @@ describe("useFragment", () => {
         text
       }
     `,
-  ])("Parent list component can use @nonreactive to avoid rerendering", async (query) => {
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            list: concatPagination(),
+  ])(
+    "Parent list component can use @nonreactive to avoid rerendering",
+    async (query) => {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              list: concatPagination(),
+            },
+          },
+          Item: {
+            keyFields: ["id"],
+            // Configuring keyArgs:false for Item.text is one way to prevent field
+            // keys like text@nonreactive, but it's not the only way. Since
+            // @nonreactive is now in the KNOWN_DIRECTIVES array defined in
+            // utilities/graphql/storeUtils.ts, the '@nonreactive' suffix won't be
+            // automatically appended to field keys by default.
+            // fields: {
+            //   text: {
+            //     keyArgs: false,
+            //   },
+            // },
           },
         },
-        Item: {
-          keyFields: ["id"],
-          // Configuring keyArgs:false for Item.text is one way to prevent field
-          // keys like text@nonreactive, but it's not the only way. Since
-          // @nonreactive is now in the KNOWN_DIRECTIVES array defined in
-          // utilities/graphql/storeUtils.ts, the '@nonreactive' suffix won't be
-          // automatically appended to field keys by default.
-          // fields: {
-          //   text: {
-          //     keyArgs: false,
-          //   },
-          // },
-        },
-      },
-    });
-
-    const client = new ApolloClient({
-      cache,
-      link: ApolloLink.empty(),
-    });
-
-    const renders: string[] = [];
-
-    function List() {
-      const { data } = useQuery(query);
-
-      renders.push("list");
-
-      return (
-        <ul>
-          {data?.list.map(item => <Item key={item.id} item={item} />)}
-        </ul>
-      );
-    }
-
-    function Item({ item }: { item: Item }) {
-      const { data } = useFragment({
-        fragment: ItemFragment,
-        fragmentName: "ItemFragment",
-        from: item,
       });
 
-      renders.push(`item ${item.id}`);
-
-      if (!data) return null;
-
-      return <li>{`Item #${item.id}: ${data.text}`}</li>;
-    }
-
-    act(() => {
-      cache.writeQuery({
-        query,
-        data: {
-          list: [
-            { __typename: "Item", id: 1, text: "first" },
-            { __typename: "Item", id: 2, text: "second" },
-            { __typename: "Item", id: 3, text: "third" },
-          ],
-        },
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
       });
-    });
 
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        list: [
-          { __ref: 'Item:{"id":1}' },
-          { __ref: 'Item:{"id":2}' },
-          { __ref: 'Item:{"id":3}' },
-        ],
-      },
-      'Item:{"id":1}': {
-        __typename: "Item",
-        id: 1,
-        text: "first",
-      },
-      'Item:{"id":2}': {
-        __typename: "Item",
-        id: 2,
-        text: "second",
-      },
-      'Item:{"id":3}': {
-        __typename: "Item",
-        id: 3,
-        text: "third",
-      },
-    });
+      const renders: string[] = [];
 
-    render(
-      <ApolloProvider client={client}>
-        <List />
-      </ApolloProvider>,
-    );
+      function List() {
+        const { data } = useQuery(query);
 
-    function getItemTexts() {
-      return screen.getAllByText(/Item #\d+/).map(el => el.textContent);
-    }
+        renders.push("list");
 
-    await waitFor(() => {
-      expect(getItemTexts()).toEqual([
-        "Item #1: first",
-        "Item #2: second",
-        "Item #3: third",
-      ]);
-    });
+        return (
+          <ul>
+            {data?.list.map((item) => <Item key={item.id} item={item} />)}
+          </ul>
+        );
+      }
 
-    expect(renders).toEqual([
-      "list",
-      "item 1",
-      "item 2",
-      "item 3",
-    ]);
+      function Item({ item }: { item: Item }) {
+        const { data } = useFragment({
+          fragment: ItemFragment,
+          fragmentName: "ItemFragment",
+          from: item,
+        });
 
-    function appendLyToText(id: number) {
+        renders.push(`item ${item.id}`);
+
+        if (!data) return null;
+
+        return <li>{`Item #${item.id}: ${data.text}`}</li>;
+      }
+
       act(() => {
-        cache.modify({
-          id: cache.identify({ __typename: "Item", id })!,
-          fields: {
-            text(existing) {
-              return existing + "ly";
-            },
+        cache.writeQuery({
+          query,
+          data: {
+            list: [
+              { __typename: "Item", id: 1, text: "first" },
+              { __typename: "Item", id: 2, text: "second" },
+              { __typename: "Item", id: 3, text: "third" },
+            ],
           },
         });
       });
-    }
 
-    appendLyToText(2);
-
-    await waitFor(() => {
-      expect(renders).toEqual([
-        "list",
-        "item 1",
-        "item 2",
-        "item 3",
-        "item 2",
-      ]);
-
-      expect(getItemTexts()).toEqual([
-        "Item #1: first",
-        "Item #2: secondly",
-        "Item #3: third",
-      ]);
-    });
-
-    appendLyToText(1);
-
-    await waitFor(() => {
-      expect(renders).toEqual([
-        "list",
-        "item 1",
-        "item 2",
-        "item 3",
-        "item 2",
-        "item 1",
-      ]);
-
-      expect(getItemTexts()).toEqual([
-        "Item #1: firstly",
-        "Item #2: secondly",
-        "Item #3: third",
-      ]);
-    });
-
-    appendLyToText(3);
-
-    await waitFor(() => {
-      expect(renders).toEqual([
-        "list",
-        "item 1",
-        "item 2",
-        "item 3",
-        "item 2",
-        "item 1",
-        "item 3",
-      ]);
-
-      expect(getItemTexts()).toEqual([
-        "Item #1: firstly",
-        "Item #2: secondly",
-        "Item #3: thirdly",
-      ]);
-    });
-
-    act(() => {
-      cache.writeQuery({
-        query,
-        data: {
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
           list: [
-            { __typename: "Item", id: 4, text: "fourth" },
-            { __typename: "Item", id: 5, text: "fifth" },
+            { __ref: 'Item:{"id":1}' },
+            { __ref: 'Item:{"id":2}' },
+            { __ref: 'Item:{"id":3}' },
           ],
         },
+        'Item:{"id":1}': {
+          __typename: "Item",
+          id: 1,
+          text: "first",
+        },
+        'Item:{"id":2}': {
+          __typename: "Item",
+          id: 2,
+          text: "second",
+        },
+        'Item:{"id":3}': {
+          __typename: "Item",
+          id: 3,
+          text: "third",
+        },
       });
-    });
 
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        list: [
-          { __ref: 'Item:{"id":1}' },
-          { __ref: 'Item:{"id":2}' },
-          { __ref: 'Item:{"id":3}' },
-          { __ref: 'Item:{"id":4}' },
-          { __ref: 'Item:{"id":5}' },
-        ],
-      },
-      'Item:{"id":1}': {
-        __typename: "Item",
-        id: 1,
-        text: "firstly",
-      },
-      'Item:{"id":2}': {
-        __typename: "Item",
-        id: 2,
-        text: "secondly",
-      },
-      'Item:{"id":3}': {
-        __typename: "Item",
-        id: 3,
-        text: "thirdly",
-      },
-      'Item:{"id":4}': {
-        __typename: "Item",
-        id: 4,
-        text: "fourth",
-      },
-      'Item:{"id":5}': {
-        __typename: "Item",
-        id: 5,
-        text: "fifth",
-      },
-    });
+      render(
+        <ApolloProvider client={client}>
+          <List />
+        </ApolloProvider>
+      );
 
-    await waitFor(() => {
-      expect(renders).toEqual([
-        "list",
-        "item 1",
-        "item 2",
-        "item 3",
-        "item 2",
-        "item 1",
-        "item 3",
-        // The whole list had to be rendered again to append 4 and 5
-        "list",
-        "item 1",
-        "item 2",
-        "item 3",
-        "item 4",
-        "item 5",
-      ]);
+      function getItemTexts() {
+        return screen.getAllByText(/Item #\d+/).map((el) => el.textContent);
+      }
 
-      expect(getItemTexts()).toEqual([
-        "Item #1: firstly",
-        "Item #2: secondly",
-        "Item #3: thirdly",
-        "Item #4: fourth",
-        "Item #5: fifth",
-      ]);
-    });
+      await waitFor(() => {
+        expect(getItemTexts()).toEqual([
+          "Item #1: first",
+          "Item #2: second",
+          "Item #3: third",
+        ]);
+      });
 
-    appendLyToText(5);
+      expect(renders).toEqual(["list", "item 1", "item 2", "item 3"]);
 
-    await waitFor(() => {
-      expect(renders).toEqual([
-        "list",
-        "item 1",
-        "item 2",
-        "item 3",
-        "item 2",
-        "item 1",
-        "item 3",
-        "list",
-        "item 1",
-        "item 2",
-        "item 3",
-        "item 4",
-        "item 5",
-        // A single new render:
-        "item 5",
-      ]);
+      function appendLyToText(id: number) {
+        act(() => {
+          cache.modify({
+            id: cache.identify({ __typename: "Item", id })!,
+            fields: {
+              text(existing) {
+                return existing + "ly";
+              },
+            },
+          });
+        });
+      }
 
-      expect(getItemTexts()).toEqual([
-        "Item #1: firstly",
-        "Item #2: secondly",
-        "Item #3: thirdly",
-        "Item #4: fourth",
-        "Item #5: fifthly",
-      ]);
-    });
+      appendLyToText(2);
 
-    appendLyToText(4);
+      await waitFor(() => {
+        expect(renders).toEqual([
+          "list",
+          "item 1",
+          "item 2",
+          "item 3",
+          "item 2",
+        ]);
 
-    await waitFor(() => {
-      expect(renders).toEqual([
-        "list",
-        "item 1",
-        "item 2",
-        "item 3",
-        "item 2",
-        "item 1",
-        "item 3",
-        "list",
-        "item 1",
-        "item 2",
-        "item 3",
-        "item 4",
-        "item 5",
-        "item 5",
-        // A single new render:
-        "item 4",
-      ]);
+        expect(getItemTexts()).toEqual([
+          "Item #1: first",
+          "Item #2: secondly",
+          "Item #3: third",
+        ]);
+      });
 
-      expect(getItemTexts()).toEqual([
-        "Item #1: firstly",
-        "Item #2: secondly",
-        "Item #3: thirdly",
-        "Item #4: fourthly",
-        "Item #5: fifthly",
-      ]);
-    });
-  });
+      appendLyToText(1);
+
+      await waitFor(() => {
+        expect(renders).toEqual([
+          "list",
+          "item 1",
+          "item 2",
+          "item 3",
+          "item 2",
+          "item 1",
+        ]);
+
+        expect(getItemTexts()).toEqual([
+          "Item #1: firstly",
+          "Item #2: secondly",
+          "Item #3: third",
+        ]);
+      });
+
+      appendLyToText(3);
+
+      await waitFor(() => {
+        expect(renders).toEqual([
+          "list",
+          "item 1",
+          "item 2",
+          "item 3",
+          "item 2",
+          "item 1",
+          "item 3",
+        ]);
+
+        expect(getItemTexts()).toEqual([
+          "Item #1: firstly",
+          "Item #2: secondly",
+          "Item #3: thirdly",
+        ]);
+      });
+
+      act(() => {
+        cache.writeQuery({
+          query,
+          data: {
+            list: [
+              { __typename: "Item", id: 4, text: "fourth" },
+              { __typename: "Item", id: 5, text: "fifth" },
+            ],
+          },
+        });
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          list: [
+            { __ref: 'Item:{"id":1}' },
+            { __ref: 'Item:{"id":2}' },
+            { __ref: 'Item:{"id":3}' },
+            { __ref: 'Item:{"id":4}' },
+            { __ref: 'Item:{"id":5}' },
+          ],
+        },
+        'Item:{"id":1}': {
+          __typename: "Item",
+          id: 1,
+          text: "firstly",
+        },
+        'Item:{"id":2}': {
+          __typename: "Item",
+          id: 2,
+          text: "secondly",
+        },
+        'Item:{"id":3}': {
+          __typename: "Item",
+          id: 3,
+          text: "thirdly",
+        },
+        'Item:{"id":4}': {
+          __typename: "Item",
+          id: 4,
+          text: "fourth",
+        },
+        'Item:{"id":5}': {
+          __typename: "Item",
+          id: 5,
+          text: "fifth",
+        },
+      });
+
+      await waitFor(() => {
+        expect(renders).toEqual([
+          "list",
+          "item 1",
+          "item 2",
+          "item 3",
+          "item 2",
+          "item 1",
+          "item 3",
+          // The whole list had to be rendered again to append 4 and 5
+          "list",
+          "item 1",
+          "item 2",
+          "item 3",
+          "item 4",
+          "item 5",
+        ]);
+
+        expect(getItemTexts()).toEqual([
+          "Item #1: firstly",
+          "Item #2: secondly",
+          "Item #3: thirdly",
+          "Item #4: fourth",
+          "Item #5: fifth",
+        ]);
+      });
+
+      appendLyToText(5);
+
+      await waitFor(() => {
+        expect(renders).toEqual([
+          "list",
+          "item 1",
+          "item 2",
+          "item 3",
+          "item 2",
+          "item 1",
+          "item 3",
+          "list",
+          "item 1",
+          "item 2",
+          "item 3",
+          "item 4",
+          "item 5",
+          // A single new render:
+          "item 5",
+        ]);
+
+        expect(getItemTexts()).toEqual([
+          "Item #1: firstly",
+          "Item #2: secondly",
+          "Item #3: thirdly",
+          "Item #4: fourth",
+          "Item #5: fifthly",
+        ]);
+      });
+
+      appendLyToText(4);
+
+      await waitFor(() => {
+        expect(renders).toEqual([
+          "list",
+          "item 1",
+          "item 2",
+          "item 3",
+          "item 2",
+          "item 1",
+          "item 3",
+          "list",
+          "item 1",
+          "item 2",
+          "item 3",
+          "item 4",
+          "item 5",
+          "item 5",
+          // A single new render:
+          "item 4",
+        ]);
+
+        expect(getItemTexts()).toEqual([
+          "Item #1: firstly",
+          "Item #2: secondly",
+          "Item #3: thirdly",
+          "Item #4: fourthly",
+          "Item #5: fifthly",
+        ]);
+      });
+    }
+  );
 
   it("List can use useFragment with ListFragment", async () => {
     const cache = new InMemoryCache({
@@ -752,7 +738,7 @@ describe("useFragment", () => {
         ],
         extra: "from ListFragment",
       },
-    })
+    });
 
     const renders: string[] = [];
 
@@ -763,10 +749,12 @@ describe("useFragment", () => {
         from: { __typename: "Query" },
       });
       expect(complete).toBe(true);
-      assert(!!complete)
+      assert(!!complete);
       return (
         <ol>
-          {data.list.map(item => <Item key={item.id} id={item.id}/>)}
+          {data.list.map((item) => (
+            <Item key={item.id} id={item.id} />
+          ))}
         </ol>
       );
     }
@@ -792,24 +780,15 @@ describe("useFragment", () => {
     function getItemTexts() {
       return screen.getAllByText(/^Item/).map(
         // eslint-disable-next-line testing-library/no-node-access
-        li => li.firstChild!.textContent
+        (li) => li.firstChild!.textContent
       );
     }
 
     await waitFor(() => {
-      expect(getItemTexts()).toEqual([
-        "Item #1",
-        "Item #2",
-        "Item #5",
-      ]);
+      expect(getItemTexts()).toEqual(["Item #1", "Item #2", "Item #5"]);
     });
 
-    expect(renders).toEqual([
-      "list",
-      "item 1",
-      "item 2",
-      "item 5",
-    ]);
+    expect(renders).toEqual(["list", "item 1", "item 2", "item 5"]);
 
     act(() => {
       cache.writeFragment({
@@ -823,11 +802,7 @@ describe("useFragment", () => {
     });
 
     await waitFor(() => {
-      expect(getItemTexts()).toEqual([
-        "Item #1",
-        "Item #2 updated",
-        "Item #5",
-      ]);
+      expect(getItemTexts()).toEqual(["Item #1", "Item #2 updated", "Item #5"]);
     });
 
     expect(renders).toEqual([
@@ -859,10 +834,11 @@ describe("useFragment", () => {
                   id: 4,
                 },
               })!,
-            ].sort((ref1, ref2) => (
-              readField<Item["id"]>("id", ref1)! -
-              readField<Item["id"]>("id", ref2)!
-            ));
+            ].sort(
+              (ref1, ref2) =>
+                readField<Item["id"]>("id", ref1)! -
+                readField<Item["id"]>("id", ref2)!
+            );
           },
         },
       });
@@ -965,11 +941,7 @@ describe("useFragment", () => {
         extra: "from ListFragment",
       },
       __META: {
-        extraRootIds: [
-          "Item:2",
-          "Item:3",
-          "Item:4",
-        ],
+        extraRootIds: ["Item:2", "Item:3", "Item:4"],
       },
     });
   });
@@ -987,9 +959,9 @@ describe("useFragment", () => {
               // filtering explicitly here, so this test won't be broken.
               return items && items.filter(canRead);
             },
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     const wrapper = ({ children }: any) => (
@@ -1024,18 +996,18 @@ describe("useFragment", () => {
     `;
 
     const { result: renderResult } = renderHook(
-      () => useFragment({
-        fragment: ListAndItemFragments,
-        fragmentName: "ListFragment",
-        from: { __typename: "Query" },
-      }),
-      { wrapper },
+      () =>
+        useFragment({
+          fragment: ListAndItemFragments,
+          fragmentName: "ListFragment",
+          from: { __typename: "Query" },
+        }),
+      { wrapper }
     );
 
     function checkHistory(expectedResultCount: number) {
       // Temporarily disabling this check until we can come up with a better
       // (more opt-in) system than result.previousResult.previousResult...
-
       // function historyToArray(
       //   result: UseFragmentResult<QueryData>,
       // ): UseFragmentResult<QueryData>[] {
@@ -1048,7 +1020,6 @@ describe("useFragment", () => {
       // const all = historyToArray(renderResult.current);
       // expect(all.length).toBe(expectedResultCount);
       // expect(all).toEqual(renderResult.all);
-
       // if (renderResult.current.complete) {
       //   expect(renderResult.current).toBe(
       //     renderResult.current.lastCompleteResult
@@ -1118,37 +1089,43 @@ describe("useFragment", () => {
       });
     });
 
-    await waitFor(() => expect(renderResult.current.data).toEqual(data182WithText));
+    await waitFor(() =>
+      expect(renderResult.current.data).toEqual(data182WithText)
+    );
     expect(renderResult.current.complete).toBe(true);
     expect(renderResult.current.missing).toBeUndefined();
 
     checkHistory(3);
 
-    await act(async () => cache.batch({
-      update(cache) {
-        cache.evict({
-          id: cache.identify({
-            __typename: "Item",
-            id: 8,
-          }),
-        });
+    await act(async () =>
+      cache.batch({
+        update(cache) {
+          cache.evict({
+            id: cache.identify({
+              __typename: "Item",
+              id: 8,
+            }),
+          });
 
-        cache.evict({
-          id: cache.identify({
-            __typename: "Item",
-            id: 2,
-          }),
-          fieldName: "text",
-        });
-      },
-    }));
+          cache.evict({
+            id: cache.identify({
+              __typename: "Item",
+              id: 2,
+            }),
+            fieldName: "text",
+          });
+        },
+      })
+    );
 
-    await waitFor(() => expect(renderResult.current.data).toEqual({
-      list: [
-        { __typename: "Item", id: 1, text: "oyez1" },
-        { __typename: "Item", id: 2 },
-      ],
-    }));
+    await waitFor(() =>
+      expect(renderResult.current.data).toEqual({
+        list: [
+          { __typename: "Item", id: 1, text: "oyez1" },
+          { __typename: "Item", id: 2 },
+        ],
+      })
+    );
     expect(renderResult.current.complete).toBe(false);
     expect(renderResult.current.missing).toEqual({
       // TODO Figure out why Item:8 is not represented here. Likely because of
@@ -1179,11 +1156,7 @@ describe("useFragment", () => {
       },
       ROOT_QUERY: {
         __typename: "Query",
-        list: [
-          { __ref: "Item:1" },
-          { __ref: "Item:8" },
-          { __ref: "Item:2" },
-        ],
+        list: [{ __ref: "Item:1" }, { __ref: "Item:8" }, { __ref: "Item:2" }],
       },
     });
 
@@ -1213,27 +1186,29 @@ describe("useFragment", () => {
 
     const client = new ApolloClient({
       cache,
-      link: new ApolloLink(operation => new Observable(observer => {
-        if (operation.operationName === "ListQueryWithItemFragment") {
-          setTimeout(() => {
-            observer.next({
-              data: {
-                list: [
-                  { __typename: "Item", id: 1 },
-                  { __typename: "Item", id: 2 },
-                  { __typename: "Item", id: 5 },
-                ],
-              }
-            });
-            observer.complete();
-          }, 10);
-        } else {
-          observer.error(`unexpected query ${
-            operation.operationName ||
-            operation.query
-          }`);
-        }
-      })),
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            if (operation.operationName === "ListQueryWithItemFragment") {
+              setTimeout(() => {
+                observer.next({
+                  data: {
+                    list: [
+                      { __typename: "Item", id: 1 },
+                      { __typename: "Item", id: 2 },
+                      { __typename: "Item", id: 5 },
+                    ],
+                  },
+                });
+                observer.complete();
+              }, 10);
+            } else {
+              observer.error(
+                `unexpected query ${operation.operationName || operation.query}`
+              );
+            }
+          })
+      ),
     });
 
     const listQuery: TypedDocumentNode<QueryData> = gql`
@@ -1257,16 +1232,24 @@ describe("useFragment", () => {
 
       return complete ? (
         <>
-          <select onChange={(e) => {
-            setCurrentItem(parseInt(e.currentTarget.value))
-          }}>
-            {data.list.map(item => <option key={item.id} value={item.id}>Select item {item.id}</option>)}
+          <select
+            onChange={(e) => {
+              setCurrentItem(parseInt(e.currentTarget.value));
+            }}
+          >
+            {data.list.map((item) => (
+              <option key={item.id} value={item.id}>
+                Select item {item.id}
+              </option>
+            ))}
           </select>
           <div>
             <Item id={currentItem} />
           </div>
           <ol>
-          {data.list.map(item => <Item key={item.id} id={item.id}/>)}
+            {data.list.map((item) => (
+              <Item key={item.id} id={item.id} />
+            ))}
           </ol>
         </>
       ) : null;
@@ -1292,7 +1275,7 @@ describe("useFragment", () => {
     function getItemTexts() {
       return screen.getAllByText(/^Item/).map(
         // eslint-disable-next-line testing-library/no-node-access
-        li => li.firstChild!.textContent
+        (li) => li.firstChild!.textContent
       );
     }
 
@@ -1310,8 +1293,8 @@ describe("useFragment", () => {
     // Select "Item #2" via <select />
     const user = userEvent.setup();
     await user.selectOptions(
-      screen.getByRole('combobox'),
-      screen.getByRole('option', { name: 'Select item 2' })
+      screen.getByRole("combobox"),
+      screen.getByRole("option", { name: "Select item 2" })
     );
 
     await waitFor(() => {
@@ -1337,10 +1320,12 @@ describe("useFragment", () => {
 
     beforeEach(() => {
       cache = new InMemoryCache();
-      wrapper = ({ children }: any) => <MockedProvider cache={cache}>{children}</MockedProvider>;
+      wrapper = ({ children }: any) => (
+        <MockedProvider cache={cache}>{children}</MockedProvider>
+      );
 
       // silence the console for the incomplete fragment write
-      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const spy = jest.spyOn(console, "error").mockImplementation(() => {});
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -1377,7 +1362,9 @@ describe("useFragment", () => {
 
     beforeEach(() => {
       cache = new InMemoryCache();
-      wrapper = ({ children }: any) => <MockedProvider cache={cache}>{children}</MockedProvider>;
+      wrapper = ({ children }: any) => (
+        <MockedProvider cache={cache}>{children}</MockedProvider>
+      );
     });
 
     test("if all data is available, `complete` is `true`", () => {
@@ -1475,10 +1462,12 @@ describe("has the same timing as `useQuery`", () => {
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
-      link: new ApolloLink(operation => new Observable(o => void (observer = o))),
+      link: new ApolloLink(
+        (operation) => new Observable((o) => void (observer = o))
+      ),
     });
 
-    function Component(){
+    function Component() {
       const { data: queryData } = useQuery(query, { returnPartialData: true });
       const { data: fragmentData, complete } = useFragment({
         fragment: itemFragment,
@@ -1490,25 +1479,27 @@ describe("has the same timing as `useQuery`", () => {
       } else {
         expect({ item: fragmentData }).toStrictEqual(queryData);
       }
-      return complete ? JSON.stringify(fragmentData) : 'loading';
+      return complete ? JSON.stringify(fragmentData) : "loading";
     }
-    render(<Component />, { wrapper: ({ children }) => (
-      <ApolloProvider client={client}>{children}</ApolloProvider>
-    )});
+    render(<Component />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
     await screen.findByText(/loading/);
-    assert(observer!)
+    assert(observer!);
     observer.next({ data: { item: initialItem } });
     observer.complete();
-    await screen.findByText(/Item #initial/)
+    await screen.findByText(/Item #initial/);
     cache.writeQuery({ query, data: { item: updatedItem } });
-    await screen.findByText(/Item #updated/)
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await screen.findByText(/Item #updated/);
+    await new Promise((resolve) => setTimeout(resolve, 50));
   });
 
   it("`useQuery` in parent, `useFragment` in child", async () => {
     const item1 = { __typename: "Item", id: 1, title: "Item #1" };
     const item2 = { __typename: "Item", id: 2, title: "Item #2" };
-    const query: TypedDocumentNode<{items: Array<typeof item1>}> = gql`
+    const query: TypedDocumentNode<{ items: Array<typeof item1> }> = gql`
       query {
         items {
           ...ItemFragment
@@ -1518,48 +1509,70 @@ describe("has the same timing as `useQuery`", () => {
     `;
     const cache = new InMemoryCache();
     const client = new ApolloClient({
-      cache
+      cache,
     });
-    cache.writeQuery({ query, data: { items: [ item1, item2 ] } });
+    cache.writeQuery({ query, data: { items: [item1, item2] } });
 
-    const valuePairs: Array<[item: string, parentCount: number, childCount: number]> = []
-    function captureDOMState(){
+    const valuePairs: Array<
+      [item: string, parentCount: number, childCount: number]
+    > = [];
+    function captureDOMState() {
       const parent = screen.getByTestId("parent");
       const children = screen.getByTestId("children");
-      valuePairs.push(['Item 1', within(parent).queryAllByText(/Item #1/).length, within(children).queryAllByText(/Item #1/).length])
-      valuePairs.push(['Item 2', within(parent).queryAllByText(/Item #2/).length, within(children).queryAllByText(/Item #2/).length])
+      valuePairs.push([
+        "Item 1",
+        within(parent).queryAllByText(/Item #1/).length,
+        within(children).queryAllByText(/Item #1/).length,
+      ]);
+      valuePairs.push([
+        "Item 2",
+        within(parent).queryAllByText(/Item #2/).length,
+        within(children).queryAllByText(/Item #2/).length,
+      ]);
     }
 
-    function Parent(){
+    function Parent() {
       const { data } = useQuery(query);
-      if (!data) throw new Error("should never happen")
+      if (!data) throw new Error("should never happen");
       React.useEffect(captureDOMState);
-      return <>
-        <div data-testid="parent"><p>{JSON.stringify(data)}</p></div>
-        <div data-testid="children">{data.items.map((item, i) => <p key={i}><Child id={item.id} /></p>)}</div>
-      </>
+      return (
+        <>
+          <div data-testid="parent">
+            <p>{JSON.stringify(data)}</p>
+          </div>
+          <div data-testid="children">
+            {data.items.map((item, i) => (
+              <p key={i}>
+                <Child id={item.id} />
+              </p>
+            ))}
+          </div>
+        </>
+      );
     }
-    function Child({ id }: { id: number }){
-      const {data} = useFragment({
+    function Child({ id }: { id: number }) {
+      const { data } = useFragment({
         fragment: itemFragment,
         from: { __typename: "Item", id },
-      })
+      });
       React.useEffect(captureDOMState);
-      return <>{JSON.stringify({item: data })}</>
+      return <>{JSON.stringify({ item: data })}</>;
     }
 
-    render(<Parent />, { wrapper: ({ children }) => (
-      <ApolloProvider client={client}>{children}</ApolloProvider>
-    )});
+    render(<Parent />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
     cache.evict({
-      id: cache.identify(item2)
+      id: cache.identify(item2),
     });
     await waitFor(() => {
-      expect(() => screen.getByText(/Item #2/)).toThrow()
-    })
+      expect(() => screen.getByText(/Item #2/)).toThrow();
+    });
 
     for (const [_item, parentChount, childCount] of valuePairs) {
-      expect(parentChount).toBe(childCount)
+      expect(parentChount).toBe(childCount);
     }
   });
 
@@ -1569,7 +1582,7 @@ describe("has the same timing as `useQuery`", () => {
    * the current implementation.
    * The best we can do is to make sure that `useFragment` is not
    * faster than `useQuery` in reasonable cases (of course, `useQuery`
-   * could trigger a network request on cache update, which would be slower 
+   * could trigger a network request on cache update, which would be slower
    * than `useFragment`, no matter how much we delay it).
    * If we change the core implementation into a more synchronous one,
    * we should try to get this test to work, too.
@@ -1577,7 +1590,7 @@ describe("has the same timing as `useQuery`", () => {
   it.failing("`useFragment` in parent, `useQuery` in child", async () => {
     const item1 = { __typename: "Item", id: 1, title: "Item #1" };
     const item2 = { __typename: "Item", id: 2, title: "Item #2" };
-    const query: TypedDocumentNode<{items: Array<typeof item1>}> = gql`
+    const query: TypedDocumentNode<{ items: Array<typeof item1> }> = gql`
       query {
         items {
           ...ItemFragment
@@ -1587,79 +1600,102 @@ describe("has the same timing as `useQuery`", () => {
     `;
     const cache = new InMemoryCache();
     const client = new ApolloClient({
-      cache
+      cache,
     });
-    cache.writeQuery({ query, data: { items: [ item1, item2 ] } });
+    cache.writeQuery({ query, data: { items: [item1, item2] } });
 
-    const valuePairs: Array<[item: string, parentCount: number, childCount: number]> = []
-    function captureDOMState(){
+    const valuePairs: Array<
+      [item: string, parentCount: number, childCount: number]
+    > = [];
+    function captureDOMState() {
       const parent = screen.getByTestId("parent");
       const children = screen.getByTestId("children");
-      valuePairs.push(['Item 1', within(parent).queryAllByText(/Item #1/).length, within(children).queryAllByText(/Item #1/).length])
-      valuePairs.push(['Item 2', within(parent).queryAllByText(/Item #2/).length, within(children).queryAllByText(/Item #2/).length])
+      valuePairs.push([
+        "Item 1",
+        within(parent).queryAllByText(/Item #1/).length,
+        within(children).queryAllByText(/Item #1/).length,
+      ]);
+      valuePairs.push([
+        "Item 2",
+        within(parent).queryAllByText(/Item #2/).length,
+        within(children).queryAllByText(/Item #2/).length,
+      ]);
     }
 
-    function Parent(){
-      const {data: data1} = useFragment({
+    function Parent() {
+      const { data: data1 } = useFragment({
         fragment: itemFragment,
         from: { __typename: "Item", id: 1 },
-      })
-      const {data: data2} = useFragment({
+      });
+      const { data: data2 } = useFragment({
         fragment: itemFragment,
         from: { __typename: "Item", id: 2 },
-      })
+      });
       React.useEffect(captureDOMState);
-      return <>
-        <div data-testid="parent"><p>{JSON.stringify(data1)}</p><p>{JSON.stringify(data2)}</p></div>
-        <div data-testid="children"><p><Child /></p></div>
-      </>
+      return (
+        <>
+          <div data-testid="parent">
+            <p>{JSON.stringify(data1)}</p>
+            <p>{JSON.stringify(data2)}</p>
+          </div>
+          <div data-testid="children">
+            <p>
+              <Child />
+            </p>
+          </div>
+        </>
+      );
     }
-    function Child(){
+    function Child() {
       const { data } = useQuery(query);
-      if (!data) throw new Error("should never happen")
+      if (!data) throw new Error("should never happen");
       React.useEffect(captureDOMState);
-      return <>{JSON.stringify(data)}</>
+      return <>{JSON.stringify(data)}</>;
     }
 
-    render(<Parent />, { wrapper: ({ children }) => (
-      <ApolloProvider client={client}>{children}</ApolloProvider>
-    )});
-    act(() => void cache.evict({
-      id: cache.identify(item2)
-    }));
+    render(<Parent />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+    act(
+      () =>
+        void cache.evict({
+          id: cache.identify(item2),
+        })
+    );
     await waitFor(() => {
-      expect(() => screen.getByText(/Item #2/)).toThrow()
-    })
+      expect(() => screen.getByText(/Item #2/)).toThrow();
+    });
 
     for (const [_item, parentChount, childCount] of valuePairs) {
-      expect(parentChount).toBe(childCount)
+      expect(parentChount).toBe(childCount);
     }
   });
 });
 
 describe.skip("Type Tests", () => {
-  test('NoInfer prevents adding arbitrary additional variables', () => {
-    const typedNode = {} as TypedDocumentNode<{ foo: string}, { bar: number }>
+  test("NoInfer prevents adding arbitrary additional variables", () => {
+    const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
     useFragment({
       fragment: typedNode,
       from: { __typename: "Query" },
       variables: {
         bar: 4,
         // @ts-expect-error
-        nonExistingVariable: "string"
-      }
+        nonExistingVariable: "string",
+      },
     });
-  })
+  });
 
-  test("UseFragmentOptions interface shape", <TData, TVars>()=>{
-    expectTypeOf<UseFragmentOptions<TData, TVars>>()
-      .toEqualTypeOf<{
-        from: string | StoreObject | Reference;
-        fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-        fragmentName?: string;
-        optimistic?: boolean;
-        variables?: TVars;
-        canonizeResults?: boolean;
-      }>();
-  })
-})
+  test("UseFragmentOptions interface shape", <TData, TVars>() => {
+    expectTypeOf<UseFragmentOptions<TData, TVars>>().toEqualTypeOf<{
+      from: string | StoreObject | Reference;
+      fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+      fragmentName?: string;
+      optimistic?: boolean;
+      variables?: TVars;
+      canonizeResults?: boolean;
+    }>();
+  });
+});

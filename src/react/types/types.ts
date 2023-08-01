@@ -1,10 +1,13 @@
-import type { ReactNode } from 'react';
-import type { DocumentNode } from 'graphql';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { ReactNode } from "react";
+import type { DocumentNode } from "graphql";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import type { Observable, ObservableSubscription } from '../../utilities/index.js';
-import type { FetchResult } from '../../link/core/index.js';
-import type { ApolloError } from '../../errors/index.js';
+import type {
+  Observable,
+  ObservableSubscription,
+} from "../../utilities/index.js";
+import type { FetchResult } from "../../link/core/index.js";
+import type { ApolloError } from "../../errors/index.js";
 import type {
   ApolloCache,
   ApolloClient,
@@ -17,12 +20,12 @@ import type {
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
-} from '../../core/index.js';
-import type { SuspenseCache } from '../cache/index.js';
+} from "../../core/index.js";
+import type { SuspenseCache } from "../cache/index.js";
 
 /* QueryReference type */
 
-export type { QueryReference } from '../cache/QueryReference.js';
+export type { QueryReference } from "../cache/QueryReference.js";
 
 /* Common types */
 
@@ -34,8 +37,9 @@ export type CommonOptions<TOptions> = TOptions & {
 
 /* Query types */
 
-export interface BaseQueryOptions<TVariables extends OperationVariables = OperationVariables>
-extends Omit<WatchQueryOptions<TVariables>, "query"> {
+export interface BaseQueryOptions<
+  TVariables extends OperationVariables = OperationVariables
+> extends Omit<WatchQueryOptions<TVariables>, "query"> {
   ssr?: boolean;
   client?: ApolloClient<any>;
   context?: DefaultContext;
@@ -57,20 +61,25 @@ export interface QueryFunctionOptions<
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 
-export type ObservableQueryFields<TData, TVariables extends OperationVariables> = Pick<
+export type ObservableQueryFields<
+  TData,
+  TVariables extends OperationVariables
+> = Pick<
   ObservableQuery<TData, TVariables>,
-  | 'startPolling'
-  | 'stopPolling'
-  | 'subscribeToMore'
-  | 'updateQuery'
-  | 'refetch'
-  | 'reobserve'
-  | 'variables'
-  | 'fetchMore'
+  | "startPolling"
+  | "stopPolling"
+  | "subscribeToMore"
+  | "updateQuery"
+  | "refetch"
+  | "reobserve"
+  | "variables"
+  | "fetchMore"
 >;
 
-export interface QueryResult<TData = any, TVariables extends OperationVariables = OperationVariables>
-  extends ObservableQueryFields<TData, TVariables> {
+export interface QueryResult<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+> extends ObservableQueryFields<TData, TVariables> {
   client: ApolloClient<any>;
   observable: ObservableQuery<TData, TVariables>;
   data: TData | undefined;
@@ -81,21 +90,23 @@ export interface QueryResult<TData = any, TVariables extends OperationVariables 
   called: boolean;
 }
 
-export interface QueryDataOptions<TData = any, TVariables extends OperationVariables = OperationVariables>
-  extends QueryFunctionOptions<TData, TVariables> {
+export interface QueryDataOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+> extends QueryFunctionOptions<TData, TVariables> {
   children?: (result: QueryResult<TData, TVariables>) => ReactNode;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-export interface QueryHookOptions<TData = any, TVariables extends OperationVariables = OperationVariables>
-  extends QueryFunctionOptions<TData, TVariables> {
-}
+export interface QueryHookOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables
+> extends QueryFunctionOptions<TData, TVariables> {}
 
 export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
-> extends Omit<QueryHookOptions<TData, TVariables>, 'skip'> {
-}
+> extends Omit<QueryHookOptions<TData, TVariables>, "skip"> {}
 
 export interface LazyQueryHookExecOptions<
   TData = any,
@@ -106,25 +117,22 @@ export interface LazyQueryHookExecOptions<
 
 export type SuspenseQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
-  | 'cache-first'
-  | 'network-only'
-  | 'no-cache'
-  | 'cache-and-network'
+  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
 >;
 
 export interface SuspenseQueryHookOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 > extends Pick<
-  QueryHookOptions<TData, TVariables>,
-  | 'client'
-  | 'variables'
-  | 'errorPolicy'
-  | 'context'
-  | 'canonizeResults'
-  | 'returnPartialData'
-  | 'refetchWritePolicy'
-> {
+    QueryHookOptions<TData, TVariables>,
+    | "client"
+    | "variables"
+    | "errorPolicy"
+    | "context"
+    | "canonizeResults"
+    | "returnPartialData"
+    | "refetchWritePolicy"
+  > {
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
   suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
@@ -132,7 +140,7 @@ export interface SuspenseQueryHookOptions<
   /**
    * If `true`, the query is not executed. The default value is `false`.
    *
-   * @deprecated We recommend using `skipToken` in place of the `skip` option as 
+   * @deprecated We recommend using `skipToken` in place of the `skip` option as
    * it is more type-safe.
    *
    * @example Recommended usage of `skipToken`:
@@ -147,25 +155,22 @@ export interface SuspenseQueryHookOptions<
 
 export type BackgroundQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
-  | 'cache-first'
-  | 'network-only'
-  | 'no-cache'
-  | 'cache-and-network'
+  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
 >;
 
 export interface BackgroundQueryHookOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables
 > extends Pick<
-  QueryHookOptions<TData, TVariables>,
-  | 'client'
-  | 'variables'
-  | 'errorPolicy'
-  | 'context'
-  | 'canonizeResults'
-  | 'returnPartialData'
-  | 'refetchWritePolicy'
-> {
+    QueryHookOptions<TData, TVariables>,
+    | "client"
+    | "variables"
+    | "errorPolicy"
+    | "context"
+    | "canonizeResults"
+    | "returnPartialData"
+    | "refetchWritePolicy"
+  > {
   fetchPolicy?: BackgroundQueryHookFetchPolicy;
   suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
@@ -173,7 +178,7 @@ export interface BackgroundQueryHookOptions<
   /**
    * If `true`, the query is not executed. The default value is `false`.
    *
-   * @deprecated We recommend using `skipToken` in place of the `skip` option as 
+   * @deprecated We recommend using `skipToken` in place of the `skip` option as
    * it is more type-safe.
    *
    * @example Recommended usage of `skipToken`:
@@ -197,22 +202,30 @@ export interface QueryLazyOptions<TVariables> {
 /**
  * @deprecated TODO Delete this unused type alias.
  */
-export type LazyQueryResult<TData, TVariables extends OperationVariables> = QueryResult<TData, TVariables>;
+export type LazyQueryResult<
+  TData,
+  TVariables extends OperationVariables
+> = QueryResult<TData, TVariables>;
 
 /**
  * @deprecated TODO Delete this unused type alias.
  */
-export type QueryTuple<TData, TVariables extends OperationVariables> =
-  LazyQueryResultTuple<TData, TVariables>;
+export type QueryTuple<
+  TData,
+  TVariables extends OperationVariables
+> = LazyQueryResultTuple<TData, TVariables>;
 
-export type LazyQueryExecFunction<TData, TVariables extends OperationVariables> = (
-  options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>,
+export type LazyQueryExecFunction<
+  TData,
+  TVariables extends OperationVariables
+> = (
+  options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
 ) => Promise<QueryResult<TData, TVariables>>;
 
-export type LazyQueryResultTuple<TData, TVariables extends OperationVariables> = [
-  LazyQueryExecFunction<TData, TVariables>,
-  QueryResult<TData, TVariables>,
-];
+export type LazyQueryResultTuple<
+  TData,
+  TVariables extends OperationVariables
+> = [LazyQueryExecFunction<TData, TVariables>, QueryResult<TData, TVariables>];
 
 /* Mutation types */
 
@@ -226,9 +239,9 @@ export interface BaseMutationOptions<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>
 > extends Omit<
-  MutationOptions<TData, TVariables, TContext, TCache>,
-  | "mutation"
-> {
+    MutationOptions<TData, TVariables, TContext, TCache>,
+    "mutation"
+  > {
   client?: ApolloClient<object>;
   notifyOnNetworkStatusChange?: boolean;
   onCompleted?: (data: TData, clientOptions?: BaseMutationOptions) => void;
@@ -240,7 +253,7 @@ export interface MutationFunctionOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache<any> = ApolloCache<any>
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -258,7 +271,7 @@ export declare type MutationFunction<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache<any> = ApolloCache<any>
 > = (
   options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
 ) => Promise<FetchResult<TData>>;
@@ -267,15 +280,14 @@ export interface MutationHookOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
-> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
-}
+  TCache extends ApolloCache<any> = ApolloCache<any>
+> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {}
 
 export interface MutationDataOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache<any> = ApolloCache<any>
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -284,14 +296,14 @@ export type MutationTuple<
   TData,
   TVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache<any> = ApolloCache<any>
 > = [
   (
     options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
     // TODO This FetchResult<TData> seems strange here, as opposed to an
     // ApolloQueryResult<TData>
   ) => Promise<FetchResult<TData>>,
-  MutationResult<TData>,
+  MutationResult<TData>
 ];
 
 /* Subscription types */
@@ -321,13 +333,13 @@ export interface BaseSubscriptionOptions<
   onComplete?: () => void;
   onData?: (options: OnDataOptions<TData>) => any;
   /**
-  * @deprecated Use onData instead
-  */
+   * @deprecated Use onData instead
+   */
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
   onError?: (error: ApolloError) => void;
   /**
-  * @deprecated Use onComplete instead
-  */
+   * @deprecated Use onComplete instead
+   */
   onSubscriptionComplete?: () => void;
 }
 
@@ -343,8 +355,7 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
 export interface SubscriptionHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables
-> extends BaseSubscriptionOptions<TData, TVariables> {
-}
+> extends BaseSubscriptionOptions<TData, TVariables> {}
 
 export interface SubscriptionDataOptions<
   TData = any,
@@ -384,4 +395,4 @@ const { variables } = useQuery(typedNode, { variables: { bar: 4, nonExistingVari
 Without the use of `NoInfer`, `variables` would now be of the type `{ bar: number, nonExistingVariable: "string" }`.
 With `NoInfer`, it will instead give an error on `nonExistingVariable`.
  */
-export type NoInfer<T> = [T][T extends any ? 0 : never]
+export type NoInfer<T> = [T][T extends any ? 0 : never];

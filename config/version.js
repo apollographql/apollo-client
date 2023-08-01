@@ -7,8 +7,9 @@ const pkgJsonPath = path.join(__dirname, "..", "package.json");
 
 const { version } = JSON.parse(fs.readFileSync(pkgJsonPath));
 assert.strictEqual(
-  typeof version, "string",
-  '"version" field missing from package.json',
+  typeof version,
+  "string",
+  '"version" field missing from package.json'
 );
 
 switch (process.argv[2]) {
@@ -18,8 +19,9 @@ switch (process.argv[2]) {
       .replace(/\blocal\b/, version);
 
     assert.notEqual(
-      updated.indexOf(version), -1,
-      "Failed to update dist/version.js with @apollo/client version",
+      updated.indexOf(version),
+      -1,
+      "Failed to update dist/version.js with @apollo/client version"
     );
 
     fs.writeFileSync(versionPath, updated);
@@ -28,15 +30,16 @@ switch (process.argv[2]) {
   }
 
   case "verify": {
-    const {
-      ApolloClient,
-      InMemoryCache,
-    } = require(path.join(distRoot, "core", "core.cjs"));
+    const { ApolloClient, InMemoryCache } = require(path.join(
+      distRoot,
+      "core",
+      "core.cjs"
+    ));
 
     // Though this may seem like overkill, verifying that ApolloClient is
     // constructible in Node.js is actually pretty useful, too!
     const client = new ApolloClient({
-      cache: new InMemoryCache,
+      cache: new InMemoryCache(),
     });
 
     // Probably not necessary, but it seems wise to clean up any resources
@@ -50,17 +53,16 @@ switch (process.argv[2]) {
     // convenient because dist/version.js uses ECMAScript module syntax, and is
     // thus not importable in all versions of Node.js.
     assert.strictEqual(
-      client.version, version,
-      "Failed to update dist/version.js and dist/core/core.cjs",
+      client.version,
+      version,
+      "Failed to update dist/version.js and dist/core/core.cjs"
     );
 
     break;
   }
 
   default:
-    throw new Error(
-      "Pass either 'update' or 'verify' to config/version.js"
-    );
+    throw new Error("Pass either 'update' or 'verify' to config/version.js");
 }
 
 console.log("ok");

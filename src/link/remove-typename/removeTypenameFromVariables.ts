@@ -1,11 +1,11 @@
-import { wrap } from 'optimism';
-import type { DocumentNode, TypeNode } from 'graphql';
-import { Kind, visit } from 'graphql';
-import { ApolloLink } from '../core/index.js';
-import { stripTypename, isPlainObject } from '../../utilities/index.js';
-import type { OperationVariables } from '../../core/index.js';
+import { wrap } from "optimism";
+import type { DocumentNode, TypeNode } from "graphql";
+import { Kind, visit } from "graphql";
+import { ApolloLink } from "../core/index.js";
+import { stripTypename, isPlainObject } from "../../utilities/index.js";
+import type { OperationVariables } from "../../core/index.js";
 
-export const KEEP = '__KEEP';
+export const KEEP = "__KEEP";
 
 interface KeepTypenameConfig {
   [key: string]: typeof KEEP | KeepTypenameConfig;
@@ -75,7 +75,7 @@ function maybeStripTypename(
     Object.keys(value).forEach((key) => {
       const child = value[key];
 
-      if (key === '__typename') {
+      if (key === "__typename") {
         return;
       }
 

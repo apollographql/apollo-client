@@ -1,13 +1,13 @@
 import {
   KEEP,
   removeTypenameFromVariables,
-} from '../removeTypenameFromVariables';
-import { ApolloLink, Operation } from '../../core';
-import { Observable, gql } from '../../../core';
-import { createOperation, toPromise } from '../../utils';
+} from "../removeTypenameFromVariables";
+import { ApolloLink, Operation } from "../../core";
+import { Observable, gql } from "../../../core";
+import { createOperation, toPromise } from "../../utils";
 
-type PartialOperation = Partial<Pick<Operation, 'variables'>> &
-  Pick<Operation, 'query'>;
+type PartialOperation = Partial<Pick<Operation, "variables">> &
+  Pick<Operation, "query">;
 
 // Since this link modifies the `operation` and we only care to test against
 // the changed operation, we use a custom `execute` helper here instead of the
@@ -26,7 +26,7 @@ async function execute(link: ApolloLink, operation: PartialOperation) {
   return data as Operation;
 }
 
-test('strips all __typename keys by default', async () => {
+test("strips all __typename keys by default", async () => {
   const query = gql`
     query Test($foo: FooInput!, $bar: BarInput!) {
       someField(foo: $foo, bar: $bar)
@@ -39,20 +39,20 @@ test('strips all __typename keys by default', async () => {
     query,
     variables: {
       foo: {
-        __typename: 'Foo',
+        __typename: "Foo",
         foo: true,
-        bar: 'Bar',
-        baz: { __typename: 'Baz', baz: true },
-        qux: [{ __typename: 'Qux', qux: 0 }],
+        bar: "Bar",
+        baz: { __typename: "Baz", baz: true },
+        qux: [{ __typename: "Qux", qux: 0 }],
       },
-      bar: [{ __typename: 'Bar', bar: true }],
+      bar: [{ __typename: "Bar", bar: true }],
     },
   });
 
   expect(variables).toStrictEqual({
     foo: {
       foo: true,
-      bar: 'Bar',
+      bar: "Bar",
       baz: { baz: true },
       qux: [{ qux: 0 }],
     },
@@ -60,7 +60,7 @@ test('strips all __typename keys by default', async () => {
   });
 });
 
-test('does nothing when no variables are passed', async () => {
+test("does nothing when no variables are passed", async () => {
   const query = gql`
     query Test {
       foo {
@@ -77,7 +77,7 @@ test('does nothing when no variables are passed', async () => {
   expect(resultOperation).toBe(operation);
 });
 
-test('does nothing when no variables are passed even if variables are declared in the document', async () => {
+test("does nothing when no variables are passed even if variables are declared in the document", async () => {
   const query = gql`
     query Test($unused: Boolean) {
       foo {
@@ -94,7 +94,7 @@ test('does nothing when no variables are passed even if variables are declared i
   expect(resultOperation).toBe(operation);
 });
 
-test('keeps __typename for variables with types defined by `except`', async () => {
+test("keeps __typename for variables with types defined by `except`", async () => {
   const query = gql`
     query Test($foo: JSON, $bar: BarInput) {
       someField(foo: $foo, bar: $bar)
@@ -111,25 +111,25 @@ test('keeps __typename for variables with types defined by `except`', async () =
     query,
     variables: {
       foo: {
-        __typename: 'Foo',
+        __typename: "Foo",
         foo: true,
-        baz: { __typename: 'Baz', baz: true },
+        baz: { __typename: "Baz", baz: true },
       },
-      bar: { __typename: 'Bar', bar: true },
+      bar: { __typename: "Bar", bar: true },
     },
   });
 
   expect(variables).toStrictEqual({
     foo: {
-      __typename: 'Foo',
+      __typename: "Foo",
       foo: true,
-      baz: { __typename: 'Baz', baz: true },
+      baz: { __typename: "Baz", baz: true },
     },
     bar: { bar: true },
   });
 });
 
-test('keeps __typename in all variables with types configured with `except`', async () => {
+test("keeps __typename in all variables with types configured with `except`", async () => {
   const query = gql`
     query Test($foo: JSON, $bar: Config, $baz: BazInput) {
       someField(foo: $foo, bar: $bar, baz: $baz)
@@ -146,20 +146,20 @@ test('keeps __typename in all variables with types configured with `except`', as
   const { variables } = await execute(link, {
     query,
     variables: {
-      foo: { __typename: 'Foo', foo: true },
-      bar: { __typename: 'Bar', bar: true },
-      baz: { __typename: 'Baz', baz: true },
+      foo: { __typename: "Foo", foo: true },
+      bar: { __typename: "Bar", bar: true },
+      baz: { __typename: "Baz", baz: true },
     },
   });
 
   expect(variables).toStrictEqual({
-    foo: { __typename: 'Foo', foo: true },
-    bar: { __typename: 'Bar', bar: true },
+    foo: { __typename: "Foo", foo: true },
+    bar: { __typename: "Bar", bar: true },
     baz: { baz: true },
   });
 });
 
-test('handles variable declarations declared as non null and list types', async () => {
+test("handles variable declarations declared as non null and list types", async () => {
   const query = gql`
     query Test($foo: JSON!, $bar: [JSON], $baz: [JSON!]!, $qux: QuxInput!) {
       someField(foo: $foo, bar: $bar, baz: $baz)
@@ -175,32 +175,32 @@ test('handles variable declarations declared as non null and list types', async 
   const { variables } = await execute(link, {
     query,
     variables: {
-      foo: { __typename: 'Foo', foo: true },
+      foo: { __typename: "Foo", foo: true },
       bar: [
-        { __typename: 'Bar', bar: true, baz: { __typename: 'Baz', baz: true } },
+        { __typename: "Bar", bar: true, baz: { __typename: "Baz", baz: true } },
       ],
       baz: [
-        { __typename: 'Baz', baz: true },
-        { __typename: 'Baz', baz: true },
+        { __typename: "Baz", baz: true },
+        { __typename: "Baz", baz: true },
       ],
-      qux: { __typename: 'Qux', qux: true },
+      qux: { __typename: "Qux", qux: true },
     },
   });
 
   expect(variables).toStrictEqual({
-    foo: { __typename: 'Foo', foo: true },
+    foo: { __typename: "Foo", foo: true },
     bar: [
-      { __typename: 'Bar', bar: true, baz: { __typename: 'Baz', baz: true } },
+      { __typename: "Bar", bar: true, baz: { __typename: "Baz", baz: true } },
     ],
     baz: [
-      { __typename: 'Baz', baz: true },
-      { __typename: 'Baz', baz: true },
+      { __typename: "Baz", baz: true },
+      { __typename: "Baz", baz: true },
     ],
     qux: { qux: true },
   });
 });
 
-test('keeps __typename at configured fields under input object types', async () => {
+test("keeps __typename at configured fields under input object types", async () => {
   const query = gql`
     query Test($foo: FooInput) {
       someField(foo: $foo)
@@ -220,18 +220,18 @@ test('keeps __typename at configured fields under input object types', async () 
     query,
     variables: {
       foo: {
-        __typename: 'Foo',
+        __typename: "Foo",
         aa: true,
         bar: {
-          __typename: 'Bar',
+          __typename: "Bar",
           bb: true,
         },
         baz: {
-          __typename: 'Baz',
+          __typename: "Baz",
           cc: true,
         },
         qux: {
-          __typename: 'Qux',
+          __typename: "Qux",
           dd: true,
         },
       },
@@ -242,11 +242,11 @@ test('keeps __typename at configured fields under input object types', async () 
     foo: {
       aa: true,
       bar: {
-        __typename: 'Bar',
+        __typename: "Bar",
         bb: true,
       },
       baz: {
-        __typename: 'Baz',
+        __typename: "Baz",
         cc: true,
       },
       qux: {
@@ -256,7 +256,7 @@ test('keeps __typename at configured fields under input object types', async () 
   });
 });
 
-test('keeps __typename at a deeply nested field', async () => {
+test("keeps __typename at a deeply nested field", async () => {
   const query = gql`
     query Test($foo: FooInput) {
       someField(foo: $foo)
@@ -279,13 +279,13 @@ test('keeps __typename at a deeply nested field', async () => {
     query,
     variables: {
       foo: {
-        __typename: 'Foo',
+        __typename: "Foo",
         bar: {
-          __typename: 'Bar',
+          __typename: "Bar",
           baz: {
-            __typename: 'Baz',
+            __typename: "Baz",
             qux: {
-              __typename: 'Qux',
+              __typename: "Qux",
               quux: true,
             },
           },
@@ -299,7 +299,7 @@ test('keeps __typename at a deeply nested field', async () => {
       bar: {
         baz: {
           qux: {
-            __typename: 'Qux',
+            __typename: "Qux",
             quux: true,
           },
         },
@@ -308,7 +308,7 @@ test('keeps __typename at a deeply nested field', async () => {
   });
 });
 
-test('handles configured fields varying nesting levels', async () => {
+test("handles configured fields varying nesting levels", async () => {
   const query = gql`
     query Test($foo: FooInput) {
       someField(foo: $foo)
@@ -330,15 +330,15 @@ test('handles configured fields varying nesting levels', async () => {
     query,
     variables: {
       foo: {
-        __typename: 'Foo',
+        __typename: "Foo",
         bar: {
-          __typename: 'Bar',
+          __typename: "Bar",
           aa: true,
         },
         baz: {
-          __typename: 'Baz',
+          __typename: "Baz",
           qux: {
-            __typename: 'Qux',
+            __typename: "Qux",
             quux: true,
           },
         },
@@ -349,12 +349,12 @@ test('handles configured fields varying nesting levels', async () => {
   expect(variables).toStrictEqual({
     foo: {
       bar: {
-        __typename: 'Bar',
+        __typename: "Bar",
         aa: true,
       },
       baz: {
         qux: {
-          __typename: 'Qux',
+          __typename: "Qux",
           quux: true,
         },
       },
@@ -362,7 +362,7 @@ test('handles configured fields varying nesting levels', async () => {
   });
 });
 
-test('handles multiple configured types with fields', async () => {
+test("handles multiple configured types with fields", async () => {
   const query = gql`
     query Test($foo: FooInput, $baz: BazInput) {
       someField(foo: $foo, baz: $baz)
@@ -384,16 +384,16 @@ test('handles multiple configured types with fields', async () => {
     query,
     variables: {
       foo: {
-        __typename: 'Foo',
+        __typename: "Foo",
         bar: {
-          __typename: 'Bar',
+          __typename: "Bar",
           aa: true,
         },
       },
       baz: {
-        __typename: 'Bar',
+        __typename: "Bar",
         qux: {
-          __typename: 'Qux',
+          __typename: "Qux",
           bb: true,
         },
       },
@@ -403,20 +403,20 @@ test('handles multiple configured types with fields', async () => {
   expect(variables).toStrictEqual({
     foo: {
       bar: {
-        __typename: 'Bar',
+        __typename: "Bar",
         aa: true,
       },
     },
     baz: {
       qux: {
-        __typename: 'Qux',
+        __typename: "Qux",
         bb: true,
       },
     },
   });
 });
 
-test('handles when __typename is not present in all paths', async () => {
+test("handles when __typename is not present in all paths", async () => {
   const query = gql`
     query Test($foo: JSON, $bar: BarInput) {
       someField(foo: $foo, bar: $bar)
@@ -434,24 +434,24 @@ test('handles when __typename is not present in all paths', async () => {
     variables: {
       foo: {
         foo: true,
-        baz: { __typename: 'Baz', baz: true },
+        baz: { __typename: "Baz", baz: true },
       },
       bar: { bar: true },
-      qux: { __typename: 'Qux', bar: true },
+      qux: { __typename: "Qux", bar: true },
     },
   });
 
   expect(variables).toStrictEqual({
     foo: {
       foo: true,
-      baz: { __typename: 'Baz', baz: true },
+      baz: { __typename: "Baz", baz: true },
     },
     bar: { bar: true },
     qux: { bar: true },
   });
 });
 
-test('handles when __typename is not present in variables', async () => {
+test("handles when __typename is not present in variables", async () => {
   const query = gql`
     query Test($foo: JSON, $bar: BarInput) {
       someField(foo: $foo, bar: $bar)
@@ -486,7 +486,7 @@ test('handles when __typename is not present in variables', async () => {
   });
 });
 
-test('handles when declared variables are unused', async () => {
+test("handles when declared variables are unused", async () => {
   const query = gql`
     query Test($foo: FooInput, $unused: JSON) {
       someField(foo: $foo, bar: $bar)
@@ -503,9 +503,9 @@ test('handles when declared variables are unused', async () => {
     query,
     variables: {
       foo: {
-        __typename: 'Foo',
+        __typename: "Foo",
         foo: true,
-        baz: { __typename: 'Bar', baz: true },
+        baz: { __typename: "Bar", baz: true },
       },
     },
   });
@@ -518,7 +518,7 @@ test('handles when declared variables are unused', async () => {
   });
 });
 
-test('ensures operation.getContext and operation.setContext functions are properly forwarded', async () => {
+test("ensures operation.getContext and operation.setContext functions are properly forwarded", async () => {
   const query = gql`
     query Test($foo: FooInput) {
       someField(foo: $foo)
@@ -530,11 +530,11 @@ test('ensures operation.getContext and operation.setContext functions are proper
   const operationWithoutVariables = await execute(link, { query });
   const operationWithVariables = await execute(link, {
     query,
-    variables: { foo: { __typename: 'FooInput', bar: true } },
+    variables: { foo: { __typename: "FooInput", bar: true } },
   });
 
-  expect(typeof operationWithoutVariables.getContext).toBe('function');
-  expect(typeof operationWithoutVariables.setContext).toBe('function');
-  expect(typeof operationWithVariables.getContext).toBe('function');
-  expect(typeof operationWithVariables.setContext).toBe('function');
+  expect(typeof operationWithoutVariables.getContext).toBe("function");
+  expect(typeof operationWithoutVariables.setContext).toBe("function");
+  expect(typeof operationWithVariables.getContext).toBe("function");
+  expect(typeof operationWithVariables.setContext).toBe("function");
 });

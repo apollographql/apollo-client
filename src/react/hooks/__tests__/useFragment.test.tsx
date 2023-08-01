@@ -1534,7 +1534,6 @@ describe("has the same timing as `useQuery`", () => {
     function Parent() {
       const { data } = useQuery(query);
       if (!data) throw new Error("should never happen");
-      React.useEffect(captureDOMState);
       return (
         <>
           <div data-testid="parent">
@@ -1555,13 +1554,16 @@ describe("has the same timing as `useQuery`", () => {
         fragment: itemFragment,
         from: { __typename: "Item", id },
       });
-      React.useEffect(captureDOMState);
       return <>{JSON.stringify({ item: data })}</>;
     }
 
     render(<Parent />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
+        <ApolloProvider client={client}>
+          <React.Profiler id="test" onRender={captureDOMState}>
+            {children}
+          </React.Profiler>
+        </ApolloProvider>
       ),
     });
     cache.evict({
@@ -1571,8 +1573,9 @@ describe("has the same timing as `useQuery`", () => {
       expect(() => screen.getByText(/Item #2/)).toThrow();
     });
 
-    for (const [_item, parentChount, childCount] of valuePairs) {
-      expect(parentChount).toBe(childCount);
+    expect(valuePairs.length).toBe(4);
+    for (const [_item, parentCount, childCount] of valuePairs) {
+      expect(parentCount).toBe(childCount);
     }
   });
 
@@ -1631,7 +1634,6 @@ describe("has the same timing as `useQuery`", () => {
         fragment: itemFragment,
         from: { __typename: "Item", id: 2 },
       });
-      React.useEffect(captureDOMState);
       return (
         <>
           <div data-testid="parent">
@@ -1649,13 +1651,16 @@ describe("has the same timing as `useQuery`", () => {
     function Child() {
       const { data } = useQuery(query);
       if (!data) throw new Error("should never happen");
-      React.useEffect(captureDOMState);
       return <>{JSON.stringify(data)}</>;
     }
 
     render(<Parent />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
+        <ApolloProvider client={client}>
+          <React.Profiler id="test" onRender={captureDOMState}>
+            {children}
+          </React.Profiler>
+        </ApolloProvider>
       ),
     });
     act(
@@ -1668,8 +1673,9 @@ describe("has the same timing as `useQuery`", () => {
       expect(() => screen.getByText(/Item #2/)).toThrow();
     });
 
-    for (const [_item, parentChount, childCount] of valuePairs) {
-      expect(parentChount).toBe(childCount);
+    expect(valuePairs.length).toBe(4);
+    for (const [_item, parentCount, childCount] of valuePairs) {
+      expect(parentCount).toBe(childCount);
     }
   });
 });

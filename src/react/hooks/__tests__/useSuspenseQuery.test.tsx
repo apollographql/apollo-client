@@ -5279,7 +5279,7 @@ describe('useSuspenseQuery', () => {
     ]);
   });
 
-  it('suspends when options are set after using `skipToken`', async () => {
+  it('suspends when switching away from `skipToken` in options', async () => {
     const { query, mocks } = useSimpleQueryCase();
 
     const { result, renders, rerender } = renderSuspenseHook(

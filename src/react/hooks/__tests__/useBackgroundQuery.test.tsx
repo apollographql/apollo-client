@@ -1562,7 +1562,7 @@ describe('useBackgroundQuery', () => {
     });
   });
 
-  it('suspends when options are set after using `skipToken` becomes `false` after it was `true`', async () => {
+  it('suspends when switching away from `skipToken` in options', async () => {
     interface Data {
       greeting: string;
     }

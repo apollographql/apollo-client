@@ -191,6 +191,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
     if (connectToDevTools && typeof window === 'object') {
+      type DevToolsConnector = {
+        push(client: ApolloClient<any>): void;
+      };
+      const windowWithDevTools = window as Window & { [devtoolsSymbol]?: DevToolsConnector; };
+      const devtoolsSymbol = Symbol.for("apollo.devtools");
+      (windowWithDevTools[devtoolsSymbol] = windowWithDevTools[devtoolsSymbol] || [] as DevToolsConnector).push(this);
       (window as any).__APOLLO_CLIENT__ = this;
     }
 

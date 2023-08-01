@@ -20,7 +20,7 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
   const { promiseCache, key } = internalQueryRef;
 
   if (!promiseCache.has(key)) {
-    internalQueryRef.promiseCache.set(key, internalQueryRef.promise);
+    promiseCache.set(key, internalQueryRef.promise);
   }
 
   const promise = useSyncExternalStore(

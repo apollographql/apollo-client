@@ -1,13 +1,25 @@
 export { DEV, maybe } from './globals/index.js';
 
 export type { DirectiveInfo, InclusionDirectives } from './graphql/directives.js';
-export { shouldInclude, hasDirectives, hasAnyDirectives, hasAllDirectives, hasClientExports, getDirectiveNames, getInclusionDirectives } from './graphql/directives.js';
+export {
+  shouldInclude,
+  hasDirectives,
+  hasAnyDirectives,
+  hasAllDirectives,
+  hasClientExports,
+  getDirectiveNames,
+  getInclusionDirectives,
+} from './graphql/directives.js';
 
 export type { DocumentTransformCacheKey } from './graphql/DocumentTransform.js';
 export { DocumentTransform } from './graphql/DocumentTransform.js';
 
 export type { FragmentMap, FragmentMapFunction } from './graphql/fragments.js';
-export { createFragmentMap, getFragmentQueryDocument, getFragmentFromSelection } from './graphql/fragments.js';
+export {
+  createFragmentMap,
+  getFragmentQueryDocument,
+  getFragmentFromSelection,
+} from './graphql/fragments.js';
 
 export {
   checkDocument,
@@ -24,11 +36,47 @@ export {
   print
 } from './graphql/print.js';
 
-export type { StoreObject, Reference, StoreValue, Directives, VariableValue } from './graphql/storeUtils.js';
-export { makeReference, isDocumentNode, isReference, isField, isInlineFragment, valueToObjectRepresentation, storeKeyNameFromField, argumentsObjectFromField, resultKeyNameFromField, getStoreKeyName, getTypenameFromResult } from './graphql/storeUtils.js';
+export type {
+  StoreObject,
+  Reference,
+  StoreValue,
+  Directives,
+  VariableValue,
+} from './graphql/storeUtils.js';
+export {
+  makeReference,
+  isDocumentNode,
+  isReference,
+  isField,
+  isInlineFragment,
+  valueToObjectRepresentation,
+  storeKeyNameFromField,
+  argumentsObjectFromField,
+  resultKeyNameFromField,
+  getStoreKeyName,
+  getTypenameFromResult,
+} from './graphql/storeUtils.js';
 
-export type { RemoveNodeConfig, GetNodeConfig, RemoveDirectiveConfig, GetDirectiveConfig, RemoveArgumentsConfig, GetFragmentSpreadConfig, RemoveFragmentSpreadConfig, RemoveFragmentDefinitionConfig, RemoveVariableDefinitionConfig } from './graphql/transform.js';
-export { addTypenameToDocument, buildQueryFromSelectionSet, removeDirectivesFromDocument, removeConnectionDirectiveFromDocument, removeArgumentsFromDocument, removeFragmentSpreadFromDocument, removeClientSetsFromDocument } from './graphql/transform.js';
+export type {
+  RemoveNodeConfig,
+  GetNodeConfig,
+  RemoveDirectiveConfig,
+  GetDirectiveConfig,
+  RemoveArgumentsConfig,
+  GetFragmentSpreadConfig,
+  RemoveFragmentSpreadConfig,
+  RemoveFragmentDefinitionConfig,
+  RemoveVariableDefinitionConfig,
+} from './graphql/transform.js';
+export {
+  addTypenameToDocument,
+  buildQueryFromSelectionSet,
+  removeDirectivesFromDocument,
+  removeConnectionDirectiveFromDocument,
+  removeArgumentsFromDocument,
+  removeFragmentSpreadFromDocument,
+  removeClientSetsFromDocument,
+} from './graphql/transform.js';
 
 export {
   isMutationOperation,

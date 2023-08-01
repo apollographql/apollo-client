@@ -24,7 +24,21 @@ export type {
 export { isApolloError, ApolloError } from '../errors/index.js';
 /* Cache */
 
-export type { Transaction, DataProxy, InMemoryCacheConfig, ReactiveVar, TypePolicies, TypePolicy, FieldPolicy, FieldReadFunction, FieldMergeFunction, FieldFunctionOptions, PossibleTypesMap } from '../cache/index.js';
+export type {
+  // All the exports (types) from ../cache, minus cacheSlot,
+  // which we want to keep semi-private.
+  Transaction,
+  DataProxy,
+  InMemoryCacheConfig,
+  ReactiveVar,
+  TypePolicies,
+  TypePolicy,
+  FieldPolicy,
+  FieldReadFunction,
+  FieldMergeFunction,
+  FieldFunctionOptions,
+  PossibleTypesMap,
+} from '../cache/index.js';
 export { Cache, ApolloCache, InMemoryCache, MissingFieldError, defaultDataIdFromObject, makeVar } from '../cache/index.js';
 
 export * from '../cache/inmemory/types.js';
@@ -38,7 +52,13 @@ export { fromError, toPromise, fromPromise, throwServerError } from '../link/uti
 
 /* Utilities */
 
-export type { DocumentTransformCacheKey, Observer, ObservableSubscription, Reference, StoreObject } from '../utilities/index.js';
+export type {
+  DocumentTransformCacheKey,
+  Observer,
+  ObservableSubscription,
+  Reference,
+  StoreObject,
+} from '../utilities/index.js';
 export { DocumentTransform, Observable, isReference, makeReference } from '../utilities/index.js';
 
 /* Supporting */

@@ -1,7 +1,12 @@
 import '../utilities/globals/index.js';
 
 export type { ApolloContextValue } from './context/index.js';
-export { ApolloProvider, ApolloConsumer, getApolloContext, resetApolloContext } from './context/index.js';
+export {
+  ApolloProvider,
+  ApolloConsumer,
+  getApolloContext,
+  resetApolloContext,
+} from './context/index.js';
 
 export * from './hooks/index.js';
 // TODO: remove export with release 3.8

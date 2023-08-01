@@ -4,7 +4,13 @@ export type { Transaction } from './core/cache.js';
 export { ApolloCache } from './core/cache.js';
 export { Cache } from './core/types/Cache.js';
 export type { DataProxy } from './core/types/DataProxy.js';
-export type { MissingTree, Modifier, Modifiers, ModifierDetails, ReadFieldOptions } from './core/types/common.js';
+export type {
+  MissingTree,
+  Modifier,
+  Modifiers,
+  ModifierDetails,
+  ReadFieldOptions
+} from './core/types/common.js';
 export { MissingFieldError } from './core/types/common.js';
 
 export type { Reference } from '../utilities/index.js';
@@ -23,7 +29,15 @@ export {
 export type { ReactiveVar } from './inmemory/reactiveVars.js';
 export { makeVar, cacheSlot } from './inmemory/reactiveVars.js';
 
-export type { TypePolicies, TypePolicy, FieldPolicy, FieldReadFunction, FieldMergeFunction, FieldFunctionOptions, PossibleTypesMap } from './inmemory/policies.js';
+export type {
+  TypePolicies,
+  TypePolicy,
+  FieldPolicy,
+  FieldReadFunction,
+  FieldMergeFunction,
+  FieldFunctionOptions,
+  PossibleTypesMap,
+} from './inmemory/policies.js';
 export { Policies } from './inmemory/policies.js';
 
 export {

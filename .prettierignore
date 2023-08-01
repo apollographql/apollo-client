@@ -85,7 +85,6 @@ node_modules/
 /src/core/__tests__/QueryManager/multiple-results.ts
 /src/core/__tests__/QueryManager/recycler.ts
 /src/core/__tests__/fetchPolicies.ts
-/src/core/index.ts
 /src/core/networkStatus.ts
 /src/core/types.ts
 /src/core/watchQueryOptions.ts
@@ -168,7 +167,6 @@ node_modules/
 /src/link/utils/validateOperation.ts
 /src/link/ws/__tests__/webSocketLink.ts
 /src/link/ws/index.ts
-/src/testing/core/index.ts
 /src/testing/core/itAsync.ts
 /src/testing/core/mocking/mockClient.ts
 /src/testing/core/mocking/mockFetch.ts
@@ -217,7 +215,6 @@ node_modules/
 /src/utilities/graphql/getFromAST.ts
 /src/utilities/graphql/storeUtils.ts
 /src/utilities/graphql/transform.ts
-/src/utilities/index.ts
 /src/utilities/observables/Concast.ts
 /src/utilities/observables/Observable.ts
 /src/utilities/observables/__tests__/Concast.ts

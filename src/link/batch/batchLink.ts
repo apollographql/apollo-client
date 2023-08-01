@@ -3,7 +3,8 @@ import { ApolloLink } from '../core/index.js';
 import type { Observable } from '../../utilities/index.js';
 import type { BatchHandler } from './batching.js';
 import { OperationBatcher } from './batching.js';
-export { OperationBatcher, BatchableRequest, BatchHandler } from './batching.js';
+export type { BatchableRequest, BatchHandler } from './batching.js';
+export { OperationBatcher } from './batching.js';
 
 
 export namespace BatchLink {

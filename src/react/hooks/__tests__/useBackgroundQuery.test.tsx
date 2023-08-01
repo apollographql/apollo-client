@@ -5335,16 +5335,14 @@ describe('useBackgroundQuery', () => {
       >();
     });
 
-    it('returns QueryReference<TData> | undefined when `skipToken` for options', () => {
+    it('returns `undefined` when using `skipToken` unconditionally', () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, skipToken);
 
-      expectTypeOf(inferredQueryRef).toEqualTypeOf<
-        QueryReference<VariablesCaseData> | undefined
-      >();
+      expectTypeOf(inferredQueryRef).toEqualTypeOf<undefined>();
       expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData>
+        QueryReference<VariablesCaseData> | undefined
       >();
 
       const [explicitQueryRef] = useBackgroundQuery<
@@ -5352,15 +5350,13 @@ describe('useBackgroundQuery', () => {
         VariablesCaseVariables
       >(query, skipToken);
 
-      expectTypeOf(explicitQueryRef).toEqualTypeOf<
-        QueryReference<VariablesCaseData> | undefined
-      >();
+      expectTypeOf(explicitQueryRef).toEqualTypeOf<undefined>();
       expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData>
+        QueryReference<VariablesCaseData> | undefined
       >();
     });
 
-    it('returns QueryReference<TData> | undefined when using conditional `skipToken` and `undefined` for options', () => {
+    it('returns QueryReference<TData> | undefined when using conditional `skipToken`', () => {
       const { query } = useVariablesIntegrationTestCase();
       const options = {
         skip: true,

@@ -133,10 +133,7 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SkipToken
-): [
-  QueryReference<TData> | undefined,
-  UseBackgroundQueryResult<TData, TVariables>
-];
+): [undefined, UseBackgroundQueryResult<TData, TVariables>];
 
 export function useBackgroundQuery<
   TData = unknown,

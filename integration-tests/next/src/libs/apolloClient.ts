@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import type { NormalizedCacheObject } from '@apollo/client';
+import { useRef } from "react";
+import type { NormalizedCacheObject } from "@apollo/client";
 import {
   ApolloClient,
   HttpLink,
@@ -7,14 +7,14 @@ import {
   from,
   ApolloLink,
   Observable,
-} from '@apollo/client';
-import { onError } from '@apollo/client/link/error';
-import merge from 'deepmerge';
-import isEqual from 'lodash/isEqual';
-import type { GetServerSidePropsResult } from 'next';
-import { schemaLink } from './schemaLink';
+} from "@apollo/client";
+import { onError } from "@apollo/client/link/error";
+import merge from "deepmerge";
+import isEqual from "lodash/isEqual";
+import type { GetServerSidePropsResult } from "next";
+import { schemaLink } from "./schemaLink";
 
-export const APOLLO_STATE_PROP_NAME = '__APOLLO_STATE__';
+export const APOLLO_STATE_PROP_NAME = "__APOLLO_STATE__";
 
 let apolloClient: ApolloClient<NormalizedCacheObject>;
 
@@ -39,13 +39,17 @@ const delayLink = new ApolloLink((operation, forward) => {
 });
 
 const httpLink = new HttpLink({
-  uri: 'https://main--hack-the-e-commerce.apollographos.net/graphql',
+  uri: "https://main--hack-the-e-commerce.apollographos.net/graphql",
 });
 
 function createApolloClient() {
   return new ApolloClient({
-    ssrMode: typeof window === 'undefined',
-    link: from([errorLink, delayLink, typeof window === "undefined" ? schemaLink : httpLink]),
+    ssrMode: typeof window === "undefined",
+    link: from([
+      errorLink,
+      delayLink,
+      typeof window === "undefined" ? schemaLink : httpLink,
+    ]),
     cache: new InMemoryCache(),
   });
 }
@@ -75,7 +79,7 @@ export function initializeApollo(
     _apolloClient.cache.restore(data);
   }
   // For SSG and SSR always create a new Apollo Client
-  if (typeof window === 'undefined') return _apolloClient;
+  if (typeof window === "undefined") return _apolloClient;
   // Create the Apollo Client once in the client
   if (!apolloClient) apolloClient = _apolloClient;
   return _apolloClient;

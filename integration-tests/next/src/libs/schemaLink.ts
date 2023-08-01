@@ -1,6 +1,6 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { gql } from "graphql-tag";
-import { SchemaLink } from '@apollo/client/link/schema'
+import { SchemaLink } from "@apollo/client/link/schema";
 
 const typeDefs = gql`
   type Product {

@@ -1,24 +1,24 @@
-import * as fs from 'fs';
-import { posix, join as osPathJoin } from 'path';
-import { distDir, eachFile, reparse, reprint } from './helpers.ts';
-import type { ExpressionKind } from 'ast-types/lib/gen/kinds';
+import * as fs from "fs";
+import { posix, join as osPathJoin } from "path";
+import { distDir, eachFile, reparse, reprint } from "./helpers.ts";
+import type { ExpressionKind } from "ast-types/lib/gen/kinds";
 
 eachFile(distDir, (file, relPath) => {
-  const source = fs.readFileSync(file, 'utf8');
+  const source = fs.readFileSync(file, "utf8");
   const output = transform(source, relPath);
   if (source !== output) {
-    fs.writeFileSync(file, output, 'utf8');
+    fs.writeFileSync(file, output, "utf8");
   }
 }).then(() => {
   fs.writeFileSync(
-    osPathJoin(distDir, 'invariantErrorCodes.js'),
+    osPathJoin(distDir, "invariantErrorCodes.js"),
     recast.print(program, {
       tabWidth: 2,
-    }).code + '\n'
+    }).code + "\n"
   );
 });
 
-import * as recast from 'recast';
+import * as recast from "recast";
 const b = recast.types.builders;
 const n = recast.types.namedTypes;
 type Node = recast.types.namedTypes.Node;
@@ -28,28 +28,28 @@ let nextErrorCode = 1;
 
 const program = b.program([]);
 const allExports = {
-  errorCodes: getExportObject('errorCodes'),
-  devDebug: getExportObject('devDebug'),
-  devLog: getExportObject('devLog'),
-  devWarn: getExportObject('devWarn'),
-  devError: getExportObject('devError'),
+  errorCodes: getExportObject("errorCodes"),
+  devDebug: getExportObject("devDebug"),
+  devLog: getExportObject("devLog"),
+  devWarn: getExportObject("devWarn"),
+  devError: getExportObject("devError"),
 };
 type ExportName = keyof typeof allExports;
 
 allExports.errorCodes.comments = [
   b.commentLine(
-    ' This file is used by the error message display website and the',
+    " This file is used by the error message display website and the",
     true
   ),
-  b.commentLine(' @apollo/client/includeErrors entry point.', true),
-  b.commentLine(' This file is not meant to be imported manually.', true),
+  b.commentLine(" @apollo/client/includeErrors entry point.", true),
+  b.commentLine(" This file is not meant to be imported manually.", true),
 ];
 
 function getExportObject(exportName: string) {
   const object = b.objectExpression([]);
   program.body.push(
     b.exportNamedDeclaration(
-      b.variableDeclaration('const', [
+      b.variableDeclaration("const", [
         b.variableDeclarator(b.identifier(exportName), object),
       ])
     )
@@ -62,7 +62,7 @@ function getErrorCode(
   expr: CallExpression | NewExpression,
   type: keyof typeof allExports
 ): ExpressionKind {
-  if (isIdWithName(expr.callee, 'invariant')) {
+  if (isIdWithName(expr.callee, "invariant")) {
     return extractString(
       file,
       allExports[type].properties,
@@ -75,44 +75,43 @@ function getErrorCode(
 
   function extractString(
     file: string,
-    target: typeof allExports[ExportName]['properties'],
+    target: (typeof allExports)[ExportName]["properties"],
     message: recast.types.namedTypes.SpreadElement | ExpressionKind,
     condition?: recast.types.namedTypes.SpreadElement | ExpressionKind
   ): ExpressionKind {
-    if (message.type === 'ConditionalExpression') {
+    if (message.type === "ConditionalExpression") {
       return b.conditionalExpression(
         message.test,
         extractString(file, target, message.consequent, condition),
         extractString(file, target, message.alternate, condition)
       );
     } else if (isStringOnly(message)) {
-
       const messageText = reprint(message);
-      if (messageText.includes('Apollo DevTools')) {
+      if (messageText.includes("Apollo DevTools")) {
         return message;
       }
 
       const obj = b.objectExpression([]);
       const numLit = b.numericLiteral(nextErrorCode++);
-      target.push(b.property('init', numLit, obj));
+      target.push(b.property("init", numLit, obj));
 
       obj.properties.push(
         b.property(
-          'init',
-          b.identifier('file'),
-          b.stringLiteral('@apollo/client/' + file)
+          "init",
+          b.identifier("file"),
+          b.stringLiteral("@apollo/client/" + file)
         )
       );
       if (condition) {
         obj.properties.push(
           b.property(
-            'init',
-            b.identifier('condition'),
+            "init",
+            b.identifier("condition"),
             b.stringLiteral(reprint(expr.arguments[0]))
           )
         );
       }
-      obj.properties.push(b.property('init', b.identifier('message'), message));
+      obj.properties.push(b.property("init", b.identifier("message"), message));
 
       return numLit;
     } else {
@@ -134,12 +133,12 @@ function transform(code: string, relativeFilePath: string) {
       this.traverse(path);
       const node = path.node;
 
-      if (isCallWithLength(node, 'invariant', 1)) {
+      if (isCallWithLength(node, "invariant", 1)) {
         const newArgs = [...node.arguments];
         newArgs.splice(
           1,
           1,
-          getErrorCode(relativeFilePath, node, 'errorCodes')
+          getErrorCode(relativeFilePath, node, "errorCodes")
         );
 
         return b.callExpression.from({
@@ -148,12 +147,12 @@ function transform(code: string, relativeFilePath: string) {
         });
       }
 
-      if (isCallWithLength(node, 'newInvariantError', 0)) {
+      if (isCallWithLength(node, "newInvariantError", 0)) {
         const newArgs = [...node.arguments];
         newArgs.splice(
           0,
           1,
-          getErrorCode(relativeFilePath, node, 'errorCodes')
+          getErrorCode(relativeFilePath, node, "errorCodes")
         );
 
         return b.callExpression.from({
@@ -163,14 +162,14 @@ function transform(code: string, relativeFilePath: string) {
       }
 
       if (
-        node.callee.type === 'MemberExpression' &&
-        isIdWithName(node.callee.object, 'invariant') &&
-        isIdWithName(node.callee.property, 'debug', 'log', 'warn', 'error')
+        node.callee.type === "MemberExpression" &&
+        isIdWithName(node.callee.object, "invariant") &&
+        isIdWithName(node.callee.property, "debug", "log", "warn", "error")
       ) {
         let newNode = node;
-        if (node.arguments[0].type !== 'Identifier') {
+        if (node.arguments[0].type !== "Identifier") {
           const prop = node.callee.property;
-          if (!n.Identifier.check(prop)) throw new Error('unexpected type');
+          if (!n.Identifier.check(prop)) throw new Error("unexpected type");
 
           const newArgs = [...node.arguments];
           newArgs.splice(
@@ -179,7 +178,7 @@ function transform(code: string, relativeFilePath: string) {
             getErrorCode(
               relativeFilePath,
               node,
-              ('dev' + capitalize(prop.name)) as ExportName
+              ("dev" + capitalize(prop.name)) as ExportName
             )
           );
           newNode = b.callExpression.from({
@@ -191,22 +190,26 @@ function transform(code: string, relativeFilePath: string) {
         if (isDEVLogicalAnd(path.parent.node)) {
           return newNode;
         }
-        return b.logicalExpression('&&', makeDEVExpr(), newNode);
+        return b.logicalExpression("&&", makeDEVExpr(), newNode);
       }
     },
   });
 
-  if (!['utilities/globals/index.js', 'config/jest/setup.js'].includes(relativeFilePath))
+  if (
+    !["utilities/globals/index.js", "config/jest/setup.js"].includes(
+      relativeFilePath
+    )
+  )
     recast.visit(ast, {
       visitIdentifier(path) {
         this.traverse(path);
         const node = path.node;
         if (isDEVExpr(node)) {
           return b.binaryExpression(
-            '!==',
+            "!==",
             b.memberExpression(
-              b.identifier('globalThis'),
-              b.identifier('__DEV__')
+              b.identifier("globalThis"),
+              b.identifier("__DEV__")
             ),
             b.literal(false)
           );
@@ -235,33 +238,33 @@ function isCallWithLength(
 function isDEVLogicalAnd(node: Node) {
   return (
     n.LogicalExpression.check(node) &&
-    node.operator === '&&' &&
+    node.operator === "&&" &&
     isDEVExpr(node.left)
   );
 }
 
 function makeDEVExpr() {
-  return b.identifier('__DEV__');
+  return b.identifier("__DEV__");
 }
 
 function isDEVExpr(node: Node) {
-  return isIdWithName(node, '__DEV__');
+  return isIdWithName(node, "__DEV__");
 }
 
 function isStringOnly(
   node: recast.types.namedTypes.ASTNode
 ): node is ExpressionKind {
   switch (node.type) {
-    case 'StringLiteral':
-    case 'Literal':
+    case "StringLiteral":
+    case "Literal":
       return true;
-    case 'TemplateLiteral':
+    case "TemplateLiteral":
       return (node.expressions as recast.types.namedTypes.ASTNode[]).every(
         isStringOnly
       );
-    case 'BinaryExpression':
+    case "BinaryExpression":
       return (
-        node.operator == '+' &&
+        node.operator == "+" &&
         isStringOnly(node.left) &&
         isStringOnly(node.right)
       );

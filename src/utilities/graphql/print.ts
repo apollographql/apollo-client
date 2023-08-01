@@ -1,5 +1,5 @@
-import { print as origPrint } from 'graphql';
-import { canUseWeakMap } from '../common/canUse.js';
+import { print as origPrint } from "graphql";
+import { canUseWeakMap } from "../common/canUse.js";
 
 const printCache = canUseWeakMap ? new WeakMap() : undefined;
 export const print: typeof origPrint = (ast) => {

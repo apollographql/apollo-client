@@ -34,7 +34,10 @@ export const withState =
   (stateName: string, stateUpdaterName: string, initialState: unknown) =>
   (BaseComponent: React.ComponentClass) => {
     const factory = createFactory(BaseComponent);
-    class WithState extends Component<Record<string, unknown>, { stateValue: unknown }> {
+    class WithState extends Component<
+      Record<string, unknown>,
+      { stateValue: unknown }
+    > {
       state = {
         stateValue:
           typeof initialState === "function"

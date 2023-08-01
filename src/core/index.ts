@@ -1,9 +1,12 @@
 /* Core */
 
-export type { ApolloClientOptions, DefaultOptions } from './ApolloClient.js';
-export { ApolloClient, mergeOptions } from './ApolloClient.js';
-export type { FetchMoreOptions, UpdateQueryOptions } from './ObservableQuery.js';
-export { ObservableQuery } from './ObservableQuery.js';
+export type { ApolloClientOptions, DefaultOptions } from "./ApolloClient.js";
+export { ApolloClient, mergeOptions } from "./ApolloClient.js";
+export type {
+  FetchMoreOptions,
+  UpdateQueryOptions,
+} from "./ObservableQuery.js";
+export { ObservableQuery } from "./ObservableQuery.js";
 export type {
   QueryOptions,
   WatchQueryOptions,
@@ -14,14 +17,11 @@ export type {
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-} from './watchQueryOptions.js';
-export { NetworkStatus, isNetworkRequestSettled } from './networkStatus.js';
-export * from './types.js';
-export type {
-  Resolver,
-  FragmentMatcher,
-} from './LocalState.js';
-export { isApolloError, ApolloError } from '../errors/index.js';
+} from "./watchQueryOptions.js";
+export { NetworkStatus, isNetworkRequestSettled } from "./networkStatus.js";
+export * from "./types.js";
+export type { Resolver, FragmentMatcher } from "./LocalState.js";
+export { isApolloError, ApolloError } from "../errors/index.js";
 /* Cache */
 
 export type {
@@ -38,17 +38,29 @@ export type {
   FieldMergeFunction,
   FieldFunctionOptions,
   PossibleTypesMap,
-} from '../cache/index.js';
-export { Cache, ApolloCache, InMemoryCache, MissingFieldError, defaultDataIdFromObject, makeVar } from '../cache/index.js';
+} from "../cache/index.js";
+export {
+  Cache,
+  ApolloCache,
+  InMemoryCache,
+  MissingFieldError,
+  defaultDataIdFromObject,
+  makeVar,
+} from "../cache/index.js";
 
-export * from '../cache/inmemory/types.js';
+export * from "../cache/inmemory/types.js";
 
 /* Link */
 
-export * from '../link/core/index.js';
-export * from '../link/http/index.js';
-export type { ServerError } from '../link/utils/index.js';
-export { fromError, toPromise, fromPromise, throwServerError } from '../link/utils/index.js';
+export * from "../link/core/index.js";
+export * from "../link/http/index.js";
+export type { ServerError } from "../link/utils/index.js";
+export {
+  fromError,
+  toPromise,
+  fromPromise,
+  throwServerError,
+} from "../link/utils/index.js";
 
 /* Utilities */
 
@@ -58,8 +70,13 @@ export type {
   ObservableSubscription,
   Reference,
   StoreObject,
-} from '../utilities/index.js';
-export { DocumentTransform, Observable, isReference, makeReference } from '../utilities/index.js';
+} from "../utilities/index.js";
+export {
+  DocumentTransform,
+  Observable,
+  isReference,
+  makeReference,
+} from "../utilities/index.js";
 
 /* Supporting */
 
@@ -68,7 +85,7 @@ export { DocumentTransform, Observable, isReference, makeReference } from '../ut
 // "warn", "error", or "silent" to setVerbosity ("log" is the default).
 // Note that all invariant.* logging is hidden in production.
 import { setVerbosity } from "ts-invariant";
-export { setVerbosity as setLogVerbosity }
+export { setVerbosity as setLogVerbosity };
 setVerbosity(__DEV__ ? "log" : "silent");
 
 // Note that importing `gql` by itself, then destructuring
@@ -89,4 +106,4 @@ export {
   disableFragmentWarnings,
   enableExperimentalFragmentVariables,
   disableExperimentalFragmentVariables,
-} from 'graphql-tag';
+} from "graphql-tag";

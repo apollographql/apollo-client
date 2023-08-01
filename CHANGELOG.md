@@ -1,5 +1,76 @@
 # @apollo/client
 
+## 3.8.0-rc.2
+
+### Minor Changes
+
+- [#11112](https://github.com/apollographql/apollo-client/pull/11112) [`b4aefcfe9`](https://github.com/apollographql/apollo-client/commit/b4aefcfe97213461b9ce01946344e6a5e6d80704) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds support for a `skipToken` sentinel that can be used as `options` in `useSuspenseQuery` and `useBackgroundQuery` to skip execution of a query. This works identically to the `skip` option but is more type-safe and as such, becomes the recommended way to skip query execution. As such, the `skip` option has been deprecated in favor of `skipToken`.
+
+  We are considering the removal of the `skip` option from `useSuspenseQuery` and `useBackgroundQuery` in the next major. We are releasing with it now to make migration from `useQuery` easier and make `skipToken` more discoverable.
+
+  ```ts
+  import { skipToken } from "@apollo/client";
+
+  const id: number | undefined;
+
+  const { data } = useSuspenseQuery(
+    query,
+    id ? { variables: { id } } : skipToken
+  );
+  ```
+
+  ### Breaking change
+
+  Previously `useBackgroundQuery` would always return a `queryRef` whenever query execution was skipped. This behavior been updated to return a `queryRef` only when query execution is enabled. If initializing the hook with it skipped, `queryRef` is now returned as `undefined`.
+
+  To migrate, conditionally render the component that accepts the `queryRef` as props.
+
+  **Before**
+
+  ```ts
+  function Parent() {
+    const [queryRef] = useBackgroundQuery(query, skip ? skipToken : undefined);
+    //      ^? QueryReference<TData | undefined>
+
+    return <Child queryRef={queryRef} />;
+  }
+
+  function Child({
+    queryRef,
+  }: {
+    queryRef: QueryReference<TData | undefined>;
+  }) {
+    const { data } = useReadQuery(queryRef);
+  }
+  ```
+
+  **After**
+
+  ```ts
+  function Parent() {
+    const [queryRef] = useBackgroundQuery(query, skip ? skipToken : undefined);
+    //      ^? QueryReference<TData> | undefined
+
+    return queryRef ? <Child queryRef={queryRef} /> : null;
+  }
+
+  function Child({ queryRef }: { queryRef: QueryReference<TData> }) {
+    const { data } = useReadQuery(queryRef);
+  }
+  ```
+
+### Patch Changes
+
+- [#11086](https://github.com/apollographql/apollo-client/pull/11086) [`0264fee06`](https://github.com/apollographql/apollo-client/commit/0264fee066cb715602eda26c7c0bb1254469eccb) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a call to `refetch`, `fetchMore`, or changing `skip` to `false` that returned a result deeply equal to data in the cache would get stuck in a pending state and never resolve.
+
+- [#11115](https://github.com/apollographql/apollo-client/pull/11115) [`78739e3ef`](https://github.com/apollographql/apollo-client/commit/78739e3efe86f6db959dd792d21fa12e0427b12c) Thanks [@phryneas](https://github.com/phryneas)! - Enforce `export type` for all type-level exports.
+
+- [#11103](https://github.com/apollographql/apollo-client/pull/11103) [`e3d611daf`](https://github.com/apollographql/apollo-client/commit/e3d611daf7a014e5c92d6bed75d67b9187437eda) Thanks [@caylahamann](https://github.com/caylahamann)! - Fixes a bug in `useMutation` so that `onError` is called when an error is returned from the request with `errorPolicy` set to 'all' .
+
+- [#11083](https://github.com/apollographql/apollo-client/pull/11083) [`f766e8305`](https://github.com/apollographql/apollo-client/commit/f766e8305d9f2dbde59a61b8e70c99c4b2b67d55) Thanks [@phryneas](https://github.com/phryneas)! - Adjust the rerender timing of `useQuery` to more closely align with `useFragment`. This means that cache updates delivered to both hooks should trigger renders at relatively the same time. Previously, the `useFragment` might rerender much faster leading to some confusion.
+
+- [#11082](https://github.com/apollographql/apollo-client/pull/11082) [`0f1cde3a2`](https://github.com/apollographql/apollo-client/commit/0f1cde3a207699edb742dfaada817a815488d594) Thanks [@phryneas](https://github.com/phryneas)! - Restore Apollo Client 3.7 `getApolloContext` behaviour
+
 ## 3.8.0-rc.1
 
 ### Patch Changes
@@ -159,8 +230,8 @@
   Bundling the text of error messages and development warnings can be enabled by
 
   ```js
-  import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
-  if (process.env.NODE_ENV !== 'production') {
+  import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
+  if (process.env.NODE_ENV !== "production") {
     loadErrorMessages();
     loadDevMessages();
   }
@@ -171,7 +242,7 @@
   To register a custom document transform, create a transform using the `DocumentTransform` class and pass it to the `documentTransform` option on `ApolloClient`.
 
   ```ts
-  import { DocumentTransform } from '@apollo/client';
+  import { DocumentTransform } from "@apollo/client";
 
   const documentTransform = new DocumentTransform((document) => {
     // do something with `document`
@@ -846,11 +917,11 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 
   ```js
   // NOTE: No longer necessary in @apollo/client@3.6.4!
-  const { getDefaultConfig } = require('metro-config');
+  const { getDefaultConfig } = require("metro-config");
   const { resolver: defaultResolver } = getDefaultConfig.getDefaultValues();
   exports.resolver = {
     ...defaultResolver,
-    sourceExts: [...defaultResolver.sourceExts, 'cjs'],
+    sourceExts: [...defaultResolver.sourceExts, "cjs"],
   };
   ```
 
@@ -898,7 +969,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
       Query: {
         fields: {
           feed: {
-            keyArgs: ['type', '@connection', ['key']],
+            keyArgs: ["type", "@connection", ["key"]],
           },
         },
       },
@@ -1247,7 +1318,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
   new ApolloClient({
     defaultOptions: {
       watchQuery: {
-        refetchWritePolicy: 'merge',
+        refetchWritePolicy: "merge",
       },
     },
   });
@@ -1557,11 +1628,11 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 
 - Internally, Apollo Client now avoids nested imports from the `graphql` package, importing everything from the top-level package instead. For example,
   ```ts
-  import { visit } from 'graphql/language/visitor';
+  import { visit } from "graphql/language/visitor";
   ```
   is now just
   ```ts
-  import { visit } from 'graphql';
+  import { visit } from "graphql";
   ```
   Since the `graphql` package uses `.mjs` modules, your bundler may need to be configured to recognize `.mjs` files as ECMAScript modules rather than CommonJS modules. <br/>
   [@benjamn](https://github.com/benjamn) in [#7185](https://github.com/apollographql/apollo-client/pull/7185)
@@ -1577,11 +1648,11 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 - The verbosity of Apollo Client console messages can be globally adjusted using the `setLogVerbosity` function:
 
   ```ts
-  import { setLogVerbosity } from '@apollo/client';
-  setLogVerbosity('log'); // display all messages
-  setLogVerbosity('warn'); // display only warnings and errors (default)
-  setLogVerbosity('error'); // display only errors
-  setLogVerbosity('silent'); // hide all console messages
+  import { setLogVerbosity } from "@apollo/client";
+  setLogVerbosity("log"); // display all messages
+  setLogVerbosity("warn"); // display only warnings and errors (default)
+  setLogVerbosity("error"); // display only errors
+  setLogVerbosity("silent"); // hide all console messages
   ```
 
   Remember that all logs, warnings, and errors are hidden in production. <br/>
@@ -1978,7 +2049,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
     fields: {
       comments(comments: Reference[], { readField }) {
         return comments.filter(
-          (comment) => idToRemove !== readField('id', comment)
+          (comment) => idToRemove !== readField("id", comment)
         );
       },
     },
@@ -1992,12 +2063,12 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 - `InMemoryCache` provides a new API for storing client state that can be updated from anywhere:
 
   ```ts
-  import { makeVar } from '@apollo/client';
+  import { makeVar } from "@apollo/client";
   const v = makeVar(123);
   console.log(v()); // 123
   console.log(v(v() + 1)); // 124
   console.log(v()); // 124
-  v('asdf'); // TS type error
+  v("asdf"); // TS type error
   ```
 
   These variables are _reactive_ in the sense that updating their values invalidates any previously cached query results that depended on the old values. <br/>
@@ -2049,7 +2120,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 - The contents of the `@apollo/react-hooks` package have been merged into `@apollo/client`, enabling the following all-in-one `import`:
 
   ```ts
-  import { ApolloClient, ApolloProvider, useQuery } from '@apollo/client';
+  import { ApolloClient, ApolloProvider, useQuery } from "@apollo/client";
   ```
 
   [@hwillson](https://github.com/hwillson) in [#5357](https://github.com/apollographql/apollo-client/pull/5357)
@@ -2224,13 +2295,13 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
 
   ```ts
   export type FetchPolicy =
-    | 'cache-first'
-    | 'network-only'
-    | 'cache-only'
-    | 'no-cache'
-    | 'standby';
+    | "cache-first"
+    | "network-only"
+    | "cache-only"
+    | "no-cache"
+    | "standby";
 
-  export type WatchQueryFetchPolicy = FetchPolicy | 'cache-and-network';
+  export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
   ```
 
   The exception thrown if you ignore the type error has also been improved to explain the motivation behind this restriction. <br/>
@@ -2403,7 +2474,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
   purpose now. If you need the old functionality, use a visitor:
 
   ```ts
-  import { visit } from 'graphql/language/visitor';
+  import { visit } from "graphql/language/visitor";
 
   function flattenSelections(selection: SelectionNode) {
     const selections: SelectionNode[] = [];

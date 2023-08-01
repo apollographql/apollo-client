@@ -302,7 +302,7 @@ Here, we're using the `ErrorBoundary` component from [`react-error-boundary`](ht
 
 In some cases, you may want to ignore GraphQL errors and render partial data instead or alongside an error message. To do this, you can set the `errorPolicy` option to `ignore` (`graphQLErrors` are ignored and `error.graphQLErrors` is _not_ populated) or `all` (both `data` and `error.graphQLErrors` are populated, enabling you to render both partial results and error information).
 
-Note that with both error policies of `ignore` and `all`, when encountering a network error Apollo Client's suspense hooks will always throw an error wherever the data is being read (i.e. the component calling `useSuspenseQuery` or `useReadQuery`).
+Note that with both error policies of `ignore` and `all`, when encountering a **network error** Apollo Client's suspense hooks will always throw an error wherever the data is being read (i.e. in the component calling `useSuspenseQuery` or `useReadQuery`).
 
 ### Distinguishing between queries with `queryKey`
 
@@ -310,11 +310,13 @@ By default, Apollo Client uses a query's `DocumentNode` and `Variables` to uniqu
 
 In practice, this means if you have two components both fetching data using the same `DocumentNode` and `variables`, they will both suspend when either component initiates or re-initiates a network request.
 
-__In rare cases__, you may want to avoid suspending in one component when other components are (re-)fetching the same data with the same variables. To do this, you can use the `queryKey` option provided to either `useSuspenseQuery` or `useBackgroundQuery` to uniquely identify a query. When `queryKey` is provided, Apollo Client will use it to identify a query in combination with the `DocumentNode` and `Variables`. For more information, see [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery-and-usereadquery)'s API docs.
+__In rare cases__, you may want to avoid suspending in one component when other components are fetching the same data with the same variables. To do this, you can use the `queryKey` option provided to either `useSuspenseQuery` or `useBackgroundQuery` to uniquely identify a query. When `queryKey` is provided, Apollo Client will use it to identify a query **in combination with its `DocumentNode` and `Variables`**. For more information, see [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery-and-usereadquery)'s API docs.
 
-### `refetch` and `fetchMore`
+### `refetch`, `fetchMore` and `subscribeToMore`
 
-When using `useBackgroundQuery` to initiate a fetch in the background, both `refetch` and `fetchMore` functions can be destructured from the second item in the tuple returned by the hook.
+Both `useSuspenseQuery` and `useBackgroundQuery` return functions for re-initiating the same query (with existing or new variables) or to fetch more paginated data. `useSuspenseQuery` also provides a `subscribeToMore` function to execute a subscription.
+
+When using `useBackgroundQuery`, both `refetch` and `fetchMore` functions can be destructured from the second item in the tuple returned by the hook.
 
 ```tsx
 function App() {
@@ -360,9 +362,6 @@ function Dog({
 ```
 
 In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `refetchHandler` calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query. As a result, the `Breeds` component re-suspends while the new network request is pending.
-
-`useSuspenseQuery` also returns `refetch` and `fetchMore` functions in addition to `subscribeToMore`. Let's take a look at an example:
-
 
 ## Avoiding request waterfalls
 

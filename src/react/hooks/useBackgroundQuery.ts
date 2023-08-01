@@ -238,8 +238,13 @@ export function useBackgroundQuery<
 
   queryRef.promiseCache = promiseCache;
 
+  const wrappedQueryRef = React.useMemo(
+    () => wrapQueryRef(queryRef),
+    [queryRef]
+  );
+
   return [
-    didFetchResult.current ? wrapQueryRef(queryRef) : void 0,
+    didFetchResult.current ? wrappedQueryRef : void 0,
     { fetchMore, refetch },
   ];
 }

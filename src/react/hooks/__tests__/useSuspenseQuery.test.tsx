@@ -5411,7 +5411,7 @@ describe('useSuspenseQuery', () => {
   });
 
   it('does not make network requests when `skip` is `true`', async () => {
-    const { query, mocks } = useSimpleQueryCase();
+    const { query, mocks } = useVariablesQueryCase();
 
     let fetchCount = 0;
 
@@ -5420,7 +5420,7 @@ describe('useSuspenseQuery', () => {
         fetchCount++;
 
         const mock = mocks.find(({ request }) =>
-          equal(request.query, operation.query)
+          equal(request.variables, operation.variables)
         );
 
         if (!mock) {
@@ -5433,13 +5433,13 @@ describe('useSuspenseQuery', () => {
     });
 
     const { result, rerender } = renderSuspenseHook(
-      ({ skip }) => useSuspenseQuery(query, { skip }),
-      { mocks, link, initialProps: { skip: true } }
+      ({ skip, id }) => useSuspenseQuery(query, { skip, variables: { id } }),
+      { mocks, link, initialProps: { skip: true, id: '1' } }
     );
 
     expect(fetchCount).toBe(0);
 
-    rerender({ skip: false });
+    rerender({ skip: false, id: '1' });
 
     expect(fetchCount).toBe(1);
 
@@ -5451,13 +5451,13 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    rerender({ skip: true });
+    rerender({ skip: true, id: '2' });
 
     expect(fetchCount).toBe(1);
   });
 
   it('does not make network requests when using `skipToken` for options', async () => {
-    const { query, mocks } = useSimpleQueryCase();
+    const { query, mocks } = useVariablesQueryCase();
 
     let fetchCount = 0;
 
@@ -5466,7 +5466,7 @@ describe('useSuspenseQuery', () => {
         fetchCount++;
 
         const mock = mocks.find(({ request }) =>
-          equal(request.query, operation.query)
+          equal(request.variables, operation.variables)
         );
 
         if (!mock) {
@@ -5479,13 +5479,14 @@ describe('useSuspenseQuery', () => {
     });
 
     const { result, rerender } = renderSuspenseHook(
-      ({ skip }) => useSuspenseQuery(query, skip ? skipToken : void 0),
-      { mocks, link, initialProps: { skip: true } }
+      ({ skip, id }) =>
+        useSuspenseQuery(query, skip ? skipToken : { variables: { id } }),
+      { mocks, link, initialProps: { skip: true, id: '1' } }
     );
 
     expect(fetchCount).toBe(0);
 
-    rerender({ skip: false });
+    rerender({ skip: false, id: '1' });
 
     expect(fetchCount).toBe(1);
 
@@ -5497,7 +5498,7 @@ describe('useSuspenseQuery', () => {
       });
     });
 
-    rerender({ skip: true });
+    rerender({ skip: true, id: '2' });
 
     expect(fetchCount).toBe(1);
   });

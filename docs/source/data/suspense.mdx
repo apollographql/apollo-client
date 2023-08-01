@@ -304,7 +304,65 @@ In some cases, you may want to ignore GraphQL errors and render partial data ins
 
 Note that with both error policies of `ignore` and `all`, when encountering a network error Apollo Client's suspense hooks will always throw an error wherever the data is being read (i.e. the component calling `useSuspenseQuery` or `useReadQuery`).
 
-### Distinguishing between queries that use the same query document and variables with `queryKey`
+### Distinguishing between queries with `queryKey`
+
+By default, Apollo Client uses a query's `DocumentNode` and `Variables` to uniquely identify a query when using Apollo's `Suspense` data fetching hooks, `useSuspenseQuery` and `useBackgroundQuery`.
+
+In practice, this means if you have two components both fetching data using the same `DocumentNode` and `variables`, they will both suspend when either component initiates or re-initiates a network request.
+
+__In rare cases__, you may want to avoid suspending in one component when other components are (re-)fetching the same data with the same variables. To do this, you can use the `queryKey` option provided to either `useSuspenseQuery` or `useBackgroundQuery` to uniquely identify a query. When `queryKey` is provided, Apollo Client will use it to identify a query in combination with the `DocumentNode` and `Variables`. For more information, see [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery-and-usereadquery)'s API docs.
+
+### `refetch` and `fetchMore`
+
+When using `useBackgroundQuery` to initiate a fetch in the background, both `refetch` and `fetchMore` functions can be destructured from the second item in the tuple returned by the hook.
+
+```tsx
+function App() {
+  const [queryRef, { refetch }] = useBackgroundQuery(GET_BREEDS_QUERY);
+
+  const refetchHandler = () => {
+    refetch();
+  };
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dog
+        name="Mozzarella"
+        queryRef={queryRef}
+        refetchHandler={refetchHandler}
+      />
+    </Suspense>
+  );
+}
+
+function Dog({
+  name,
+  queryRef,
+  refetchHandler,
+}: {
+  name: string;
+  queryRef: QueryReference<BreedData>;
+  refetchHandler: () => void;
+}) {
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { name },
+  });
+  return (
+    <>
+      Name: {data.dog.name}
+      <Suspense fallback={<div>Loading breeds...</div>}>
+        <Breeds queryRef={queryRef} />
+      </Suspense>
+      <button onClick={refetchHandler}>Refetch!</button>
+    </>
+  );
+}
+```
+
+In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `refetchHandler` calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query. As a result, the `Breeds` component re-suspends while the new network request is pending.
+
+`useSuspenseQuery` also returns `refetch` and `fetchMore` functions in addition to `subscribeToMore`. Let's take a look at an example:
+
 
 ## Avoiding request waterfalls
 

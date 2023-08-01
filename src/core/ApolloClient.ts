@@ -60,6 +60,7 @@ export type ApolloClientOptions<TCacheShape> = {
   fragmentMatcher?: FragmentMatcher;
   name?: string;
   version?: string;
+  notifyOnTeardown?: boolean;
 };
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
@@ -123,6 +124,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    *                version of your client, which you may want to increment on
    *                new builds. This is NOT the version of Apollo Client that
    *                you are using.
+   *
+   * @param notifyOnTeardown Defaults to true, but when set to false will
+   *                         prevent the client from notifying any active queries.
+   *                         Could result in substantial performance gains in some cases.
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     const {
@@ -147,6 +152,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
+      notifyOnTeardown = true
     } = options;
 
     let { link } = options;
@@ -253,6 +259,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           });
         }
       } : void 0,
+      notifyOnTeardown
     });
   }
 

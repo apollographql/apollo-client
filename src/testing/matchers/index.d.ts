@@ -2,7 +2,7 @@ import type {
   ApolloClient,
   DocumentNode,
   OperationVariables,
-} from '../../core/index.js';
+} from "../../core/index.js";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -14,13 +14,15 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   /**
    * Used to determine if the Suspense cache has a cache entry.
    */
-  toHaveSuspenseCacheEntryUsing: T extends ApolloClient<any> ? ((
-    query: DocumentNode,
-    options?: {
-      variables?: OperationVariables;
-      queryKey?: string | number | any[];
-    }
-  ) => R) : { error: "matcher needs to be called on an ApolloClient instance" };
+  toHaveSuspenseCacheEntryUsing: T extends ApolloClient<any>
+    ? (
+        query: DocumentNode,
+        options?: {
+          variables?: OperationVariables;
+          queryKey?: string | number | any[];
+        }
+      ) => R
+    : { error: "matcher needs to be called on an ApolloClient instance" };
 }
 
 declare global {

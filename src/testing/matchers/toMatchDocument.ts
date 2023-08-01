@@ -1,16 +1,16 @@
-import { checkDocument, print } from '../../utilities/index.js';
-import type { DocumentNode } from '../../core/index.js';
-import type { MatcherFunction } from 'expect';
+import { checkDocument, print } from "../../utilities/index.js";
+import type { DocumentNode } from "../../core/index.js";
+import type { MatcherFunction } from "expect";
 
 export const toMatchDocument: MatcherFunction<[document: DocumentNode]> =
   function (actual, document) {
-    const hint = this.utils.matcherHint('toMatchDocument');
+    const hint = this.utils.matcherHint("toMatchDocument");
     const actualDocument = print(
       validateDocument(
         actual,
         hint +
           `\n\n${this.utils.RECEIVED_COLOR(
-            'received'
+            "received"
           )} document must be a parsed document.`
       )
     );
@@ -19,7 +19,7 @@ export const toMatchDocument: MatcherFunction<[document: DocumentNode]> =
         document,
         hint +
           `\n\n${this.utils.EXPECTED_COLOR(
-            'expected'
+            "expected"
           )} document must be a parsed document.`
       )
     );
@@ -30,7 +30,7 @@ export const toMatchDocument: MatcherFunction<[document: DocumentNode]> =
       pass,
       message: () => {
         const hint = this.utils.matcherHint(
-          'toMatchDocument',
+          "toMatchDocument",
           undefined,
           undefined,
           { isNot: this.isNot }
@@ -39,14 +39,14 @@ export const toMatchDocument: MatcherFunction<[document: DocumentNode]> =
         if (pass) {
           return (
             hint +
-            '\n\n' +
-            'Received:\n\n' +
+            "\n\n" +
+            "Received:\n\n" +
             this.utils.RECEIVED_COLOR(actualDocument)
           );
         }
 
         return (
-          hint + '\n\n' + this.utils.diff(expectedDocument, actualDocument)
+          hint + "\n\n" + this.utils.diff(expectedDocument, actualDocument)
         );
       },
     };

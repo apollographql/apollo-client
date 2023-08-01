@@ -1,7 +1,7 @@
 import * as React from "react";
 import { equal } from "@wry/equality";
 
-import type { DeepPartial} from "../../utilities/index.js";
+import type { DeepPartial } from "../../utilities/index.js";
 import { mergeDeepArray } from "../../utilities/index.js";
 import type {
   Cache,
@@ -16,18 +16,14 @@ import type { OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
 
 export interface UseFragmentOptions<TData, TVars>
-extends Omit<
-  Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
-  | "id"
-  | "query"
-  | "optimistic"
-  | "previousResult"
-  | "returnPartialData"
->, Omit<Cache.ReadFragmentOptions<TData, TVars>,
-  | "id"
-  | "variables"
-  | "returnPartialData"
-> {
+  extends Omit<
+      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
+      "id" | "query" | "optimistic" | "previousResult" | "returnPartialData"
+    >,
+    Omit<
+      Cache.ReadFragmentOptions<TData, TVars>,
+      "id" | "variables" | "returnPartialData"
+    > {
   from: StoreObject | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
@@ -45,28 +41,19 @@ export type UseFragmentResult<TData> =
       missing?: MissingTree;
     };
 
-export function useFragment<
-  TData = any,
-  TVars = OperationVariables
->(
-  options: UseFragmentOptions<TData, TVars>,
+export function useFragment<TData = any, TVars = OperationVariables>(
+  options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient();
 
-  const {
-    fragment,
-    fragmentName,
-    from,
-    optimistic = true,
-    ...rest
-  } = options;
+  const { fragment, fragmentName, from, optimistic = true, ...rest } = options;
 
   const diffOptions: Cache.DiffOptions<TData, TVars> = {
     ...rest,
     returnPartialData: true,
     id: typeof from === "string" ? from : cache.identify(from),
     query: cache["getFragmentDoc"](fragment, fragmentName),
-    optimistic
+    optimistic,
   };
 
   const resultRef = React.useRef<UseFragmentResult<TData>>();
@@ -97,7 +84,7 @@ export function useFragment<
       return () => {
         unsubcribe();
         clearTimeout(lastTimeout);
-      }
+      };
     },
     getSnapshot,
     getSnapshot
@@ -105,7 +92,7 @@ export function useFragment<
 }
 
 function diffToResult<TData>(
-  diff: Cache.DiffResult<TData>,
+  diff: Cache.DiffResult<TData>
 ): UseFragmentResult<TData> {
   const result = {
     data: diff.result!,
@@ -113,9 +100,7 @@ function diffToResult<TData>(
   } as UseFragmentResult<TData>;
 
   if (diff.missing) {
-    result.missing = mergeDeepArray(
-      diff.missing.map(error => error.missing),
-    );
+    result.missing = mergeDeepArray(diff.missing.map((error) => error.missing));
   }
 
   return result;

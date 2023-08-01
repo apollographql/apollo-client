@@ -1,21 +1,21 @@
-import '../../utilities/globals/index.js';
+import "../../utilities/globals/index.js";
 
-export * from './useApolloClient.js';
-export * from './useLazyQuery.js';
-export * from './useMutation.js';
-export { useQuery } from './useQuery.js';
-export * from './useSubscription.js';
-export * from './useReactiveVar.js';
-export * from './useFragment.js';
+export * from "./useApolloClient.js";
+export * from "./useLazyQuery.js";
+export * from "./useMutation.js";
+export { useQuery } from "./useQuery.js";
+export * from "./useSubscription.js";
+export * from "./useReactiveVar.js";
+export * from "./useFragment.js";
 export {
   useSuspenseQuery,
   UseSuspenseQueryResult,
   FetchMoreFunction,
   RefetchFunction,
   SubscribeToMoreFunction,
-} from './useSuspenseQuery.js';
+} from "./useSuspenseQuery.js";
 export {
   useBackgroundQuery,
   UseBackgroundQueryResult,
-} from './useBackgroundQuery.js';
-export { useReadQuery } from './useReadQuery.js';
+} from "./useBackgroundQuery.js";
+export { useReadQuery } from "./useReadQuery.js";

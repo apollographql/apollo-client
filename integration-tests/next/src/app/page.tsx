@@ -1,6 +1,6 @@
-import type { TypedDocumentNode } from '@apollo/client';
-import { gql } from '@apollo/client';
-import { getClient } from './client';
+import type { TypedDocumentNode } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { getClient } from "./client";
 
 const QUERY: TypedDocumentNode<{
   products: {

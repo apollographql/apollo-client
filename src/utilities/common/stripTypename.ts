@@ -1,5 +1,5 @@
-import { omitDeep } from './omitDeep.js';
+import { omitDeep } from "./omitDeep.js";
 
 export function stripTypename<T>(value: T) {
-  return omitDeep(value, '__typename');
+  return omitDeep(value, "__typename");
 }

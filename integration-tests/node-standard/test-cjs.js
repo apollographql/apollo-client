@@ -1,11 +1,11 @@
-const assert = require('node:assert');
-const path = require('path');
+const assert = require("node:assert");
+const path = require("path");
 
-const { ApolloClient } = require('@apollo/client');
-const { useQuery } = require('@apollo/client/react');
-const { HttpLink } = require('@apollo/client/link/http');
+const { ApolloClient } = require("@apollo/client");
+const { useQuery } = require("@apollo/client/react");
+const { HttpLink } = require("@apollo/client/link/http");
 
-console.log('Testing Node with CJS imports...');
+console.log("Testing Node with CJS imports...");
 
 function checkFunctionName(fn, name, category) {
   console.log(`Checking ${category} '${name}' === '${fn.name}'`);
@@ -16,9 +16,9 @@ function checkFunctionName(fn, name, category) {
 }
 
 const entries = [
-  [ApolloClient, 'ApolloClient', 'Barrel Import'],
-  [useQuery, 'useQuery', 'Apollo React'],
-  [HttpLink, 'HttpLink', 'Link'],
+  [ApolloClient, "ApolloClient", "Barrel Import"],
+  [useQuery, "useQuery", "Apollo React"],
+  [HttpLink, "HttpLink", "Link"],
 ];
 
 for (let [fn, name, category] of entries) {
@@ -30,9 +30,9 @@ for (let [fn, name, category] of entries) {
 }
 
 const moduleNames = [
-  ['@apollo/client', '/main.cjs'],
-  ['@apollo/client/react', '/react/react.cjs'],
-  ['@apollo/client/link/http', '/link/http/http.cjs'],
+  ["@apollo/client", "/main.cjs"],
+  ["@apollo/client/react", "/react/react.cjs"],
+  ["@apollo/client/link/http", "/link/http/http.cjs"],
 ];
 
 for (let [moduleName, expectedFilename] of moduleNames) {
@@ -42,4 +42,4 @@ for (let [moduleName, expectedFilename] of moduleNames) {
   assert(posixPath.endsWith(expectedFilename));
 }
 
-console.log('CJS test succeeded');
+console.log("CJS test succeeded");

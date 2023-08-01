@@ -1,4 +1,4 @@
-import equal from '@wry/equality';
+import equal from "@wry/equality";
 
 import type {
   DirectiveNode,
@@ -9,11 +9,11 @@ import type {
   InlineFragmentNode,
   SelectionNode,
   SelectionSetNode,
-} from 'graphql';
+} from "graphql";
 
-import type { ApolloQueryResult, OperationVariables } from './types.js';
+import type { ApolloQueryResult, OperationVariables } from "./types.js";
 
-import type { FragmentMap } from '../utilities/index.js';
+import type { FragmentMap } from "../utilities/index.js";
 import {
   createFragmentMap,
   getFragmentDefinitions,
@@ -22,7 +22,7 @@ import {
   isField,
   resultKeyNameFromField,
   shouldInclude,
-} from '../utilities/index.js';
+} from "../utilities/index.js";
 
 // Returns true if aResult and bResult are deeply equal according to the fields
 // selected by the given query, ignoring any fields marked as @nonreactive.
@@ -152,5 +152,5 @@ function selectionHasNonreactiveDirective(
 }
 
 function directiveIsNonreactive(dir: DirectiveNode): boolean {
-  return dir.name.value === 'nonreactive';
+  return dir.name.value === "nonreactive";
 }

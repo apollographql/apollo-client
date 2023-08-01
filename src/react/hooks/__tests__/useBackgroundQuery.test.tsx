@@ -1430,6 +1430,7 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
   });
 
@@ -1486,6 +1487,7 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
   });
 
@@ -1548,6 +1550,7 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
 
     await act(() => user.click(screen.getByText('Run query')));
@@ -1621,6 +1624,7 @@ describe('useBackgroundQuery', () => {
 
     render(<App />);
 
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     expect(screen.queryByTestId('greeting')).not.toBeInTheDocument();
 
     await act(() => user.click(screen.getByText('Run query')));

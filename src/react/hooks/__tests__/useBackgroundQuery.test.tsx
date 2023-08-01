@@ -42,19 +42,16 @@ import {
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
-import { QUERY_REFERENCE_SYMBOL } from "../../cache/QueryReference";
+import { unwrapQueryRef, QueryReference } from "../../cache/QueryReference";
 import { InMemoryCache } from "../../../cache";
-import {
-  FetchMoreFunction,
-  RefetchFunction,
-  QueryReference,
-} from "../../../react";
+import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
 import {
   SuspenseQueryHookFetchPolicy,
   SuspenseQueryHookOptions,
 } from "../../types/types";
 import equal from "@wry/equality";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
+import { skipToken } from "../constants";
 
 function renderIntegrationTest({
   client,
@@ -617,7 +614,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { hello: "world 1" },
@@ -654,7 +651,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     await waitFor(() => {
       expect(_result).toEqual({
@@ -695,7 +692,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     await waitFor(() => {
       expect(_result).toMatchObject({
@@ -755,7 +752,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
     const resultSet = new Set(_result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -816,7 +813,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
     const resultSet = new Set(_result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -858,7 +855,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { hello: "from link" },
@@ -898,7 +895,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { hello: "from cache" },
@@ -945,7 +942,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { foo: "bar", hello: "from link" },
@@ -985,7 +982,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { hello: "from link" },
@@ -1028,7 +1025,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    const _result = await unwrapQueryRef(queryRef).promise;
 
     expect(_result).toEqual({
       data: { hello: "from link" },
@@ -1412,21 +1409,15 @@ describe("useBackgroundQuery", () => {
 
       return (
         <Suspense fallback={<SuspenseFallback />}>
-          <Greeting queryRef={queryRef} />
+          {queryRef && <Greeting queryRef={queryRef} />}
         </Suspense>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
-      return (
-        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
-      );
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1439,7 +1430,65 @@ describe("useBackgroundQuery", () => {
 
     render(<App />);
 
-    expect(screen.getByTestId("greeting")).toHaveTextContent("Unknown");
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
+  });
+
+  it("does not suspend when using `skipToken` in options", async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: "Hello" } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [queryRef] = useBackgroundQuery(query, skipToken);
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Greeting queryRef={queryRef} />}
+        </Suspense>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
   });
 
   it("suspends when `skip` becomes `false` after it was `true`", async () => {
@@ -1479,22 +1528,16 @@ describe("useBackgroundQuery", () => {
         <>
           <button onClick={() => setSkip(false)}>Run query</button>
           <Suspense fallback={<SuspenseFallback />}>
-            <Greeting queryRef={queryRef} />
+            {queryRef && <Greeting queryRef={queryRef} />}
           </Suspense>
         </>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
-      return (
-        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
-      );
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1507,16 +1550,89 @@ describe("useBackgroundQuery", () => {
 
     render(<App />);
 
-    const greeting = screen.getByTestId("greeting");
-
-    expect(greeting).toHaveTextContent("Unknown");
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
 
     await act(() => user.click(screen.getByText("Run query")));
 
     expect(screen.getByText("Loading...")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(greeting).toHaveTextContent("Hello");
+      expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
+    });
+  });
+
+  it("suspends when switching away from `skipToken` in options", async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: "Hello" } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(
+        query,
+        skip ? skipToken : undefined
+      );
+
+      return (
+        <>
+          <button onClick={() => setSkip(false)}>Run query</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
+
+    await act(() => user.click(screen.getByText("Run query")));
+
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
     });
   });
 
@@ -1557,22 +1673,89 @@ describe("useBackgroundQuery", () => {
         <>
           <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
           <Suspense fallback={<SuspenseFallback />}>
-            <Greeting queryRef={queryRef} />
+            {queryRef && <Greeting queryRef={queryRef} />}
           </Suspense>
         </>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
       return (
-        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
       );
+    }
+
+    render(<App />);
+
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
+    });
+
+    await act(() => user.click(screen.getByText("Toggle skip")));
+
+    expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
+  });
+
+  it("renders skip result, does not suspend, and maintains `data` when switching back to `skipToken`", async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: "Hello" } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(false);
+      const [queryRef] = useBackgroundQuery(
+        query,
+        skip ? skipToken : undefined
+      );
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1652,22 +1835,114 @@ describe("useBackgroundQuery", () => {
         <>
           <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
           <Suspense fallback={<SuspenseFallback />}>
-            <Greeting queryRef={queryRef} />
+            {queryRef && <Greeting queryRef={queryRef} />}
           </Suspense>
         </>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
       return (
-        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
       );
+    }
+
+    render(<App />);
+
+    expect(fetchCount).toBe(0);
+
+    // Toggle skip to `false`
+    await act(() => user.click(screen.getByText("Toggle skip")));
+
+    expect(fetchCount).toBe(1);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
+    });
+
+    // Toggle skip to `true`
+    await act(() => user.click(screen.getByText("Toggle skip")));
+
+    expect(fetchCount).toBe(1);
+  });
+
+  it("does not make network requests when `skipToken` is used", async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: "Hello" } },
+      },
+    ];
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.query, operation.query)
+        );
+
+        if (!mock) {
+          throw new Error("Could not find mock for operation");
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(
+        query,
+        skip ? skipToken : undefined
+      );
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1742,24 +2017,112 @@ describe("useBackgroundQuery", () => {
         <>
           <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
           <Suspense fallback={<SuspenseFallback />}>
-            <Greeting queryRef={queryRef} />
+            {queryRef && <Greeting queryRef={queryRef} />}
           </Suspense>
         </>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
       result.current = data;
 
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
       return (
-        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
       );
+    }
+
+    const { rerender } = render(<App />);
+
+    const skipResult = result.current;
+
+    rerender(<App />);
+
+    expect(result.current).toBe(skipResult);
+
+    // Toggle skip to `false`
+    await act(() => user.click(screen.getByText("Toggle skip")));
+
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
+    });
+
+    const fetchedResult = result.current;
+
+    rerender(<App />);
+
+    expect(result.current).toBe(fetchedResult);
+  });
+
+  it("`skip` result is referentially stable when using `skipToken`", async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    interface CurrentResult {
+      current: Data | undefined;
+    }
+
+    const user = userEvent.setup();
+
+    const result: CurrentResult = {
+      current: undefined,
+    };
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: "Hello" } },
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [queryRef] = useBackgroundQuery(
+        query,
+        skip ? skipToken : undefined
+      );
+
+      return (
+        <>
+          <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      result.current = data;
+
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1842,22 +2205,16 @@ describe("useBackgroundQuery", () => {
             Toggle skip
           </button>
           <Suspense fallback={<SuspenseFallback />}>
-            <Greeting queryRef={queryRef} />
+            {queryRef && <Greeting queryRef={queryRef} />}
           </Suspense>
         </>
       );
     }
 
-    function Greeting({
-      queryRef,
-    }: {
-      queryRef: QueryReference<Data | undefined>;
-    }) {
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data } = useReadQuery(queryRef);
 
-      return (
-        <div data-testid="greeting">{data ? data.greeting : "Unknown"}</div>
-      );
+      return <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -1877,7 +2234,94 @@ describe("useBackgroundQuery", () => {
 
     expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     expect(button).toBeDisabled();
-    expect(screen.getByTestId("greeting")).toHaveTextContent("Unknown");
+    expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
+    });
+  });
+
+  it("`skipToken` works with `startTransition`", async () => {
+    interface Data {
+      greeting: string;
+    }
+
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data> = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: { data: { greeting: "Hello" } },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    function SuspenseFallback() {
+      return <div>Loading...</div>;
+    }
+
+    function Parent() {
+      const [skip, setSkip] = React.useState(true);
+      const [isPending, startTransition] = React.useTransition();
+      const [queryRef] = useBackgroundQuery(
+        query,
+        skip ? skipToken : undefined
+      );
+
+      return (
+        <>
+          <button
+            disabled={isPending}
+            onClick={() =>
+              startTransition(() => {
+                setSkip((skip) => !skip);
+              })
+            }
+          >
+            Toggle skip
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
+      const { data } = useReadQuery(queryRef);
+
+      return <div data-testid="greeting">{data.greeting}</div>;
+    }
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Parent />
+        </ApolloProvider>
+      );
+    }
+
+    render(<App />);
+
+    const button = screen.getByText("Toggle skip");
+
+    // Toggle skip to `false`
+    await act(() => user.click(button));
+
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    expect(button).toBeDisabled();
+    expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
@@ -4850,26 +5294,31 @@ describe("useBackgroundQuery", () => {
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
     });
 
-    it("returns TData | undefined when `skip` is present", () => {
+    it("returns QueryReference<TData> | undefined when `skip` is present", () => {
       const { query } = useVariablesIntegrationTestCase();
 
       const [inferredQueryRef] = useBackgroundQuery(query, {
         skip: true,
       });
 
-      const { data: inferred } = useReadQuery(inferredQueryRef);
+      expectTypeOf(inferredQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
 
-      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { skip: true });
 
-      const [explicitQueryRef] = useBackgroundQuery<VariablesCaseData>(query, {
-        skip: true,
-      });
-
-      const { data: explicit } = useReadQuery(explicitQueryRef);
-
-      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(explicitQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
 
       // TypeScript is too smart and using a `const` or `let` boolean variable
       // for the `skip` option results in a false positive. Using an options
@@ -4882,10 +5331,95 @@ describe("useBackgroundQuery", () => {
         skip: options.skip,
       });
 
-      const { data: dynamic } = useReadQuery(dynamicQueryRef);
+      expectTypeOf(dynamicQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(dynamicQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+    });
 
-      expectTypeOf(dynamic).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
+    it("returns `undefined` when using `skipToken` unconditionally", () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [inferredQueryRef] = useBackgroundQuery(query, skipToken);
+
+      expectTypeOf(inferredQueryRef).toEqualTypeOf<undefined>();
+      expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, skipToken);
+
+      expectTypeOf(explicitQueryRef).toEqualTypeOf<undefined>();
+      expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+    });
+
+    it("returns QueryReference<TData> | undefined when using conditional `skipToken`", () => {
+      const { query } = useVariablesIntegrationTestCase();
+      const options = {
+        skip: true,
+      };
+
+      const [inferredQueryRef] = useBackgroundQuery(
+        query,
+        options.skip ? skipToken : undefined
+      );
+
+      expectTypeOf(inferredQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, options.skip ? skipToken : undefined);
+
+      expectTypeOf(explicitQueryRef).toEqualTypeOf<
+        QueryReference<VariablesCaseData> | undefined
+      >();
+      expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+    });
+
+    it("returns QueryReference<DeepPartial<TData>> | undefined when using `skipToken` with `returnPartialData`", () => {
+      const { query } = useVariablesIntegrationTestCase();
+      const options = {
+        skip: true,
+      };
+
+      const [inferredQueryRef] = useBackgroundQuery(
+        query,
+        options.skip ? skipToken : { returnPartialData: true }
+      );
+
+      expectTypeOf(inferredQueryRef).toEqualTypeOf<
+        QueryReference<DeepPartial<VariablesCaseData>> | undefined
+      >();
+      expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
+
+      const [explicitQueryRef] = useBackgroundQuery<VariablesCaseData>(
+        query,
+        options.skip ? skipToken : { returnPartialData: true }
+      );
+
+      expectTypeOf(explicitQueryRef).toEqualTypeOf<
+        QueryReference<DeepPartial<VariablesCaseData>> | undefined
+      >();
+      expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
+        QueryReference<VariablesCaseData>
+      >();
     });
   });
 });

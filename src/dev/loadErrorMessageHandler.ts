@@ -1,6 +1,6 @@
-import type { ErrorCodes } from '../invariantErrorCodes.js';
-import { global } from '../utilities/globals/index.js';
-import { ApolloErrorMessageHandler } from '../utilities/globals/invariantWrappers.js';
+import type { ErrorCodes } from "../invariantErrorCodes.js";
+import { global } from "../utilities/globals/index.js";
+import { ApolloErrorMessageHandler } from "../utilities/globals/invariantWrappers.js";
 
 export function loadErrorMessageHandler(...errorCodes: ErrorCodes[]) {
   if (!global[ApolloErrorMessageHandler]) {
@@ -14,13 +14,13 @@ export function loadErrorMessageHandler(...errorCodes: ErrorCodes[]) {
   return global[ApolloErrorMessageHandler];
 
   function handler(message: string | number, args: unknown[]) {
-    if (typeof message === 'number') {
+    if (typeof message === "number") {
       const definition = global[ApolloErrorMessageHandler]![message];
       if (!message || !definition.message) return;
       message = definition.message;
     }
     return args.reduce<string>(
-      (msg, arg) => msg.replace('%s', String(arg)),
+      (msg, arg) => msg.replace("%s", String(arg)),
       String(message)
     );
   }

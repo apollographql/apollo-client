@@ -11,14 +11,14 @@ const defaults = {
   },
   snapshotFormat: {
     escapeString: true,
-    printBasicPrototype: true
+    printBasicPrototype: true,
   },
   transform: {
-    '^.+\\.tsx?$': [
-      'ts-jest',
+    "^.+\\.tsx?$": [
+      "ts-jest",
       {
         diagnostics: {
-          warnOnly: process.env.TEST_ENV !== 'ci'
+          warnOnly: process.env.TEST_ENV !== "ci",
         },
       },
     ],
@@ -26,22 +26,22 @@ const defaults = {
   resolver: "ts-jest-resolver",
 };
 
-const ignoreTSFiles = '.ts$';
-const ignoreTSXFiles = '.tsx$';
+const ignoreTSFiles = ".ts$";
+const ignoreTSXFiles = ".tsx$";
 
 const react17TestFileIgnoreList = [
   ignoreTSFiles,
   // For now, we only support useSuspenseQuery with React 18, so no need to test
   // it with React 17
-  'src/react/hooks/__tests__/useSuspenseQuery.test.tsx',
-  'src/react/hooks/__tests__/useBackgroundQuery.test.tsx'
-]
+  "src/react/hooks/__tests__/useSuspenseQuery.test.tsx",
+  "src/react/hooks/__tests__/useBackgroundQuery.test.tsx",
+];
 
 const tsStandardConfig = {
   ...defaults,
-  displayName: 'Core Tests',
+  displayName: "Core Tests",
   testPathIgnorePatterns: [ignoreTSXFiles],
-}
+};
 
 // For both React (Jest) "projects", ignore core tests (.ts files) as they
 // do not import React, to avoid running them twice.
@@ -65,9 +65,5 @@ const standardReact17Config = {
 };
 
 module.exports = {
-  projects: [
-    tsStandardConfig,
-    standardReact17Config,
-    standardReact18Config,
-  ],
+  projects: [tsStandardConfig, standardReact17Config, standardReact18Config],
 };

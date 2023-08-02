@@ -1,4 +1,4 @@
-import type { TypedDocumentNode } from '@apollo/client';
+import type { TypedDocumentNode } from "@apollo/client";
 
 import {
   useQuery,
@@ -9,7 +9,7 @@ import {
   ApolloLink,
   Observable,
   HttpLink,
-} from '@apollo/client';
+} from "@apollo/client";
 
 const delayLink = new ApolloLink((operation, forward) => {
   return new Observable((observer) => {
@@ -22,7 +22,7 @@ const delayLink = new ApolloLink((operation, forward) => {
 });
 
 const httpLink = new HttpLink({
-  uri: 'https://main--hack-the-e-commerce.apollographos.net/graphql',
+  uri: "https://main--hack-the-e-commerce.apollographos.net/graphql",
 });
 
 const client = new ApolloClient({
@@ -56,11 +56,7 @@ function Main() {
   const { data } = useQuery(QUERY);
 
   return data ? (
-    <ul>
-      {data?.products.map(({ id, title }) => (
-        <li key={id}>{title}</li>
-      ))}
-    </ul>
+    <ul>{data?.products.map(({ id, title }) => <li key={id}>{title}</li>)}</ul>
   ) : (
     <>loading</>
   );

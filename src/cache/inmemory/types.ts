@@ -1,7 +1,7 @@
 import type { DocumentNode, FieldNode } from 'graphql';
 
 import type { Transaction } from '../core/cache.js';
-import {
+import type {
   StoreObject,
   StoreValue,
   Reference,
@@ -23,7 +23,7 @@ import type {
 
 import type { FragmentRegistryAPI } from './fragmentRegistry.js';
 
-export { StoreObject, StoreValue, Reference }
+export type { StoreObject, StoreValue, Reference }
 
 export interface IdGetterObj extends Object {
   __typename?: string;

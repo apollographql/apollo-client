@@ -1,3 +1,4 @@
 import '../utilities/globals/index.js';
-export { MockedProvider, MockedProviderProps } from './react/MockedProvider.js';
+export type { MockedProviderProps } from './react/MockedProvider.js';
+export { MockedProvider } from './react/MockedProvider.js';
 export * from './core/index.js';

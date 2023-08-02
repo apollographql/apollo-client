@@ -1,27 +1,27 @@
-import { equal } from '@wry/equality';
+import { equal } from "@wry/equality";
 import type {
   ApolloError,
   ApolloQueryResult,
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
-} from '../../core/index.js';
-import { isNetworkRequestSettled } from '../../core/index.js';
-import type { ObservableSubscription } from '../../utilities/index.js';
+} from "../../core/index.js";
+import { isNetworkRequestSettled } from "../../core/index.js";
+import type { ObservableSubscription } from "../../utilities/index.js";
 import {
   createFulfilledPromise,
   createRejectedPromise,
-} from '../../utilities/index.js';
-import type { CacheKey } from './types.js';
-import type { useBackgroundQuery, useReadQuery } from '../hooks/index.js';
+} from "../../utilities/index.js";
+import type { CacheKey } from "./types.js";
+import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
 
 type FetchMoreOptions<TData> = Parameters<
-  ObservableQuery<TData>['fetchMore']
+  ObservableQuery<TData>["fetchMore"]
 >[0];
 
-export const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
+const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 /**
  * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
  * A child component reading the `QueryReference` via {@link useReadQuery} will
@@ -37,14 +37,31 @@ interface InternalQueryReferenceOptions {
   autoDisposeTimeoutMs?: number;
 }
 
-const OBSERVED_CHANGED_OPTIONS: Array<keyof WatchQueryOptions> = [
-  'canonizeResults',
-  'context',
-  'errorPolicy',
-  'fetchPolicy',
-  'refetchWritePolicy',
-  'returnPartialData',
-];
+export function wrapQueryRef<TData>(
+  internalQueryRef: InternalQueryReference<TData>
+): QueryReference<TData> {
+  return { [QUERY_REFERENCE_SYMBOL]: internalQueryRef };
+}
+
+export function unwrapQueryRef<TData>(
+  queryRef: QueryReference<TData>
+): InternalQueryReference<TData> {
+  return queryRef[QUERY_REFERENCE_SYMBOL];
+}
+
+const OBSERVED_CHANGED_OPTIONS = [
+  "canonizeResults",
+  "context",
+  "errorPolicy",
+  "fetchPolicy",
+  "refetchWritePolicy",
+  "returnPartialData",
+] as const;
+
+type ObservedOptions = Pick<
+  WatchQueryOptions,
+  typeof OBSERVED_CHANGED_OPTIONS[number]
+>;
 
 export class InternalQueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
@@ -57,7 +74,7 @@ export class InternalQueryReference<TData = unknown> {
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId: NodeJS.Timeout;
-  private status: 'idle' | 'loading' = 'loading';
+  private status: "idle" | "loading" = "loading";
 
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
@@ -68,12 +85,12 @@ export class InternalQueryReference<TData = unknown> {
     observable: ObservableQuery<TData>,
     options: InternalQueryReferenceOptions
   ) {
-    this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
-    this.initiateFetch = this.initiateFetch.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
+    // Don't save this result as last result to prevent delivery of last result
+    // when first subscribing
     this.result = observable.getCurrentResult(false);
     this.key = options.key;
 
@@ -87,7 +104,7 @@ export class InternalQueryReference<TData = unknown> {
         (!this.result.partial || this.watchQueryOptions.returnPartialData))
     ) {
       this.promise = createFulfilledPromise(this.result);
-      this.status = 'idle';
+      this.status = "idle";
     } else {
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
@@ -138,14 +155,14 @@ export class InternalQueryReference<TData = unknown> {
     };
   }
 
-  didChangeOptions(watchQueryOptions: WatchQueryOptions) {
+  didChangeOptions(watchQueryOptions: ObservedOptions) {
     return OBSERVED_CHANGED_OPTIONS.some(
       (option) =>
         !equal(this.watchQueryOptions[option], watchQueryOptions[option])
     );
   }
 
-  applyOptions(watchQueryOptions: WatchQueryOptions) {
+  applyOptions(watchQueryOptions: ObservedOptions) {
     const {
       fetchPolicy: currentFetchPolicy,
       canonizeResults: currentCanonizeResults,
@@ -154,7 +171,7 @@ export class InternalQueryReference<TData = unknown> {
     // "standby" is used when `skip` is set to `true`. Detect when we've
     // enabled the query (i.e. `skip` is `false`) to execute a network request.
     if (
-      currentFetchPolicy === 'standby' &&
+      currentFetchPolicy === "standby" &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy
     ) {
       this.initiateFetch(this.observable.reobserve(watchQueryOptions));
@@ -197,18 +214,21 @@ export class InternalQueryReference<TData = unknown> {
 
   private handleNext(result: ApolloQueryResult<TData>) {
     switch (this.status) {
-      case 'loading': {
+      case "loading": {
         // Maintain the last successful `data` value if the next result does not
         // have one.
         if (result.data === void 0) {
           result.data = this.result.data;
         }
-        this.status = 'idle';
+        this.status = "idle";
         this.result = result;
         this.resolve?.(result);
         break;
       }
-      case 'idle': {
+      case "idle": {
+        // This occurs when switching to a result that is fully cached when this
+        // class is instantiated. ObservableQuery will run reobserve when
+        // subscribing, which delivers a result from the cache.
         if (result.data === this.result.data) {
           return;
         }
@@ -229,12 +249,12 @@ export class InternalQueryReference<TData = unknown> {
 
   private handleError(error: ApolloError) {
     switch (this.status) {
-      case 'loading': {
-        this.status = 'idle';
+      case "loading": {
+        this.status = "idle";
         this.reject?.(error);
         break;
       }
-      case 'idle': {
+      case "idle": {
         this.promise = createRejectedPromise(error);
         this.deliver(this.promise);
       }
@@ -246,7 +266,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private initiateFetch(returnedPromise: Promise<ApolloQueryResult<TData>>) {
-    this.status = 'loading';
+    this.status = "loading";
 
     this.promise = new Promise((resolve, reject) => {
       this.resolve = resolve;
@@ -262,8 +282,8 @@ export class InternalQueryReference<TData = unknown> {
     // promise is resolved correctly.
     returnedPromise
       .then((result) => {
-        if (this.status === 'loading') {
-          this.status = 'idle';
+        if (this.status === "loading") {
+          this.status = "idle";
           this.result = result;
           this.resolve?.(result);
         }

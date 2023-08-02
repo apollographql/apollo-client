@@ -504,7 +504,7 @@ function List() {
 ```ts
 function useSuspenseQuery<TData, TVariables>(
   query: DocumentNode,
-  options?: SuspenseQueryHookOptions<TData, TVariables>,
+  options?: SuspenseQueryHookOptions<TData, TVariables> | SkipToken,
 ): UseSuspenseQueryResult<TData, TVariables>
 ```
 
@@ -518,6 +518,8 @@ function useSuspenseQuery<TData, TVariables>(
 
 
 #### `options`
+
+Instead of passing a `SuspenseQueryHookOptions` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
 
 <UseSuspenseQueryOptions />
 
@@ -589,7 +591,7 @@ function App() {
 ```ts
 function useBackgroundQuery<TData, TVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptions<TData, TVariables>,
+  options: BackgroundQueryHookOptions<TData, TVariables> | SkipToken,
 ): [
   QueryReference<TData>,
   {
@@ -609,6 +611,8 @@ function useBackgroundQuery<TData, TVariables>(
 
 
 #### `options`
+
+Instead of passing a `BackgroundQueryHookOptions` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useBackgroundQuery` hook from executing the query.
 
 <UseBackgroundQueryOptions />
 
@@ -651,3 +655,29 @@ function useReadQuery<TData>(
 ### Result
 
 <UseReadQueryResult />
+
+<MinVersion version="3.8.0">
+
+## `skipToken`
+
+</MinVersion>
+
+While not a hook by itself, `skipToken` is designed to be used with `useSuspenseQuery` and `useBackgroundQuery`.
+If a `skipToken` is passed into one of those hooks instead of the `options` object, that hook will not cause any requests or suspenseful behavior, while keeping the last `data` available.
+
+```js title="Recommended usage of skipToken with useSuspenseQuery"
+import { skipToken, useSuspenseQuery } from '@apollo/client';
+const { data } = useSuspenseQuery(
+  query,
+  id ? { variables: { id } } : skipToken
+);
+```
+
+
+```js title="Recommended usage of skipToken with useBackgroundQuery"
+import { skipToken, useBackgroundQuery } from '@apollo/client';
+const [ queryRef ] = useBackgroundQuery(
+  query,
+  id ? { variables: { id } } : skipToken
+);
+```

@@ -44,7 +44,6 @@ import { useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
 import { unwrapQueryRef, QueryReference } from "../../cache/QueryReference";
 import { InMemoryCache } from "../../../cache";
-import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
 import {
   SuspenseQueryHookFetchPolicy,
   SuspenseQueryHookOptions,
@@ -3569,14 +3568,23 @@ describe("useBackgroundQuery", () => {
         const [queryRef, { refetch }] = useBackgroundQuery(query, {
           variables: { id },
         });
-        return <Todo refetch={refetch} queryRef={queryRef} onChange={setId} />;
+        const onRefetchHandler = () => {
+          refetch();
+        };
+        return (
+          <Todo
+            refetchHandler={onRefetchHandler}
+            queryRef={queryRef}
+            onChange={setId}
+          />
+        );
       }
 
       function Todo({
         queryRef,
-        refetch,
+        refetchHandler,
       }: {
-        refetch: RefetchFunction<Data, OperationVariables>;
+        refetchHandler: () => void;
         queryRef: QueryReference<Data>;
         onChange: (id: string) => void;
       }) {
@@ -3589,7 +3597,7 @@ describe("useBackgroundQuery", () => {
             <button
               onClick={() => {
                 startTransition(() => {
-                  refetch();
+                  refetchHandler();
                 });
               }}
             >
@@ -3813,14 +3821,19 @@ describe("useBackgroundQuery", () => {
         const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
           variables: { offset: 0 },
         });
-        return <Todo fetchMore={fetchMore} queryRef={queryRef} />;
+        const onFetchMoreHandler = (variables: Variables) => {
+          fetchMore({ variables });
+        };
+        return (
+          <Todo fetchMoreHandler={onFetchMoreHandler} queryRef={queryRef} />
+        );
       }
 
       function Todo({
         queryRef,
-        fetchMore,
+        fetchMoreHandler,
       }: {
-        fetchMore: FetchMoreFunction<Data, OperationVariables>;
+        fetchMoreHandler: (variables: Variables) => void;
         queryRef: QueryReference<Data>;
       }) {
         const { data } = useReadQuery(queryRef);
@@ -3832,7 +3845,7 @@ describe("useBackgroundQuery", () => {
             <button
               onClick={() => {
                 startTransition(() => {
-                  fetchMore({ variables: { offset: 1 } });
+                  fetchMoreHandler({ offset: 1 });
                 });
               }}
             >

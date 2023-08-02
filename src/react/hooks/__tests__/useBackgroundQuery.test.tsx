@@ -44,7 +44,6 @@ import { useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
 import { unwrapQueryRef, QueryReference } from "../../cache/QueryReference";
 import { InMemoryCache } from "../../../cache";
-import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
 import {
   SuspenseQueryHookFetchPolicy,
   SuspenseQueryHookOptions,
@@ -438,9 +437,9 @@ function renderPaginatedIntegrationTest({
 
   function Child({
     queryRef,
-    fetchMore,
+    onFetchMore,
   }: {
-    fetchMore: FetchMoreFunction<QueryData, OperationVariables>;
+    onFetchMore: (options: FetchMoreQueryOptions<Variables, QueryData>) => void;
     queryRef: QueryReference<QueryData>;
   }) {
     const { data, error } = useReadQuery(queryRef);
@@ -467,7 +466,7 @@ function renderPaginatedIntegrationTest({
               });
             }
 
-            fetchMore(fetchMoreOpts);
+            onFetchMore(fetchMoreOpts);
           }}
         >
           Fetch more
@@ -487,7 +486,7 @@ function renderPaginatedIntegrationTest({
     const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
       variables: { limit: 2, offset: 0 },
     });
-    return <Child fetchMore={fetchMore} queryRef={queryRef} />;
+    return <Child onFetchMore={fetchMore} queryRef={queryRef} />;
   }
 
   function App() {
@@ -3569,14 +3568,23 @@ describe("useBackgroundQuery", () => {
         const [queryRef, { refetch }] = useBackgroundQuery(query, {
           variables: { id },
         });
-        return <Todo refetch={refetch} queryRef={queryRef} onChange={setId} />;
+        const onRefetchHandler = () => {
+          refetch();
+        };
+        return (
+          <Todo
+            onRefetch={onRefetchHandler}
+            queryRef={queryRef}
+            onChange={setId}
+          />
+        );
       }
 
       function Todo({
         queryRef,
-        refetch,
+        onRefetch,
       }: {
-        refetch: RefetchFunction<Data, OperationVariables>;
+        onRefetch: () => void;
         queryRef: QueryReference<Data>;
         onChange: (id: string) => void;
       }) {
@@ -3589,7 +3597,7 @@ describe("useBackgroundQuery", () => {
             <button
               onClick={() => {
                 startTransition(() => {
-                  refetch();
+                  onRefetch();
                 });
               }}
             >
@@ -3813,14 +3821,17 @@ describe("useBackgroundQuery", () => {
         const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
           variables: { offset: 0 },
         });
-        return <Todo fetchMore={fetchMore} queryRef={queryRef} />;
+        const onFetchMoreHandler = (variables: Variables) => {
+          fetchMore({ variables });
+        };
+        return <Todo onFetchMore={onFetchMoreHandler} queryRef={queryRef} />;
       }
 
       function Todo({
         queryRef,
-        fetchMore,
+        onFetchMore,
       }: {
-        fetchMore: FetchMoreFunction<Data, OperationVariables>;
+        onFetchMore: (variables: Variables) => void;
         queryRef: QueryReference<Data>;
       }) {
         const { data } = useReadQuery(queryRef);
@@ -3832,7 +3843,7 @@ describe("useBackgroundQuery", () => {
             <button
               onClick={() => {
                 startTransition(() => {
-                  fetchMore({ variables: { offset: 1 } });
+                  onFetchMore({ offset: 1 });
                 });
               }}
             >

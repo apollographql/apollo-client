@@ -52,13 +52,13 @@ jobs:
         with:
           files: ".changeset/pre.json"
 
-      - name: Enter alpha prerelease mode
+      - name: Enter prerelease mode (alpha by default)
         # If .changeset/pre.json does not exist and we did not recently exit
         # prerelease mode, enter prerelease mode with tag alpha
         if: steps.check_files.outputs.files_exists == 'false' && !contains(github.event.head_commit.message, 'Exit prerelease')
         run: npx changeset pre enter alpha
 
-      - name: Create alpha release PR
+      - name: Create prerelease PR
         uses: changesets/action@v1
         with:
           version: npm run changeset-version
@@ -76,12 +76,18 @@ jobs:
           path: ".changeset/pre.json"
           prop_path: "tag"
 
-      - name: Run publish
+      - name: Publish to npm + GitHub
         id: changesets
         # Only run publish if we're still in pre mode and the last commit was
         # via an automatically created Version Packages PR
         if: steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')
-        run: npm run changeset-publish
+        uses: changesets/action@v1
+        with:
+          version: echo "This step should never version"
+          publish: npm run changeset-publish # by default, this will publish to npm and GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success'

@@ -278,8 +278,11 @@ const { loading, error, data } = useQuery(GET_DOGS, {
   fetchPolicy: 'network-only', // Doesn't check cache before making a network request
 });
 ```
+<MinVersion version="3.1">
 
 ### `nextFetchPolicy`
+
+</MinVersion>
 
 You can _also_ specify a query's `nextFetchPolicy`. If you do, `fetchPolicy` is used for the query's _first_ execution, and `nextFetchPolicy` is used to determine how the query responds to future cache updates:
 

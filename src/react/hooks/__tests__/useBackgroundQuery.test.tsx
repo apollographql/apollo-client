@@ -437,9 +437,9 @@ function renderPaginatedIntegrationTest({
 
   function Child({
     queryRef,
-    fetchMore,
+    onFetchMore,
   }: {
-    fetchMore: FetchMoreFunction<QueryData, OperationVariables>;
+    onFetchMore: (options: FetchMoreQueryOptions<Variables, QueryData>) => void;
     queryRef: QueryReference<QueryData>;
   }) {
     const { data, error } = useReadQuery(queryRef);
@@ -466,7 +466,7 @@ function renderPaginatedIntegrationTest({
               });
             }
 
-            fetchMore(fetchMoreOpts);
+            onFetchMore(fetchMoreOpts);
           }}
         >
           Fetch more
@@ -486,7 +486,7 @@ function renderPaginatedIntegrationTest({
     const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
       variables: { limit: 2, offset: 0 },
     });
-    return <Child fetchMore={fetchMore} queryRef={queryRef} />;
+    return <Child onFetchMore={fetchMore} queryRef={queryRef} />;
   }
 
   function App() {
@@ -3573,7 +3573,7 @@ describe("useBackgroundQuery", () => {
         };
         return (
           <Todo
-            refetchHandler={onRefetchHandler}
+            onRefetch={onRefetchHandler}
             queryRef={queryRef}
             onChange={setId}
           />
@@ -3582,9 +3582,9 @@ describe("useBackgroundQuery", () => {
 
       function Todo({
         queryRef,
-        refetchHandler,
+        onRefetch,
       }: {
-        refetchHandler: () => void;
+        onRefetch: () => void;
         queryRef: QueryReference<Data>;
         onChange: (id: string) => void;
       }) {
@@ -3597,7 +3597,7 @@ describe("useBackgroundQuery", () => {
             <button
               onClick={() => {
                 startTransition(() => {
-                  refetchHandler();
+                  onRefetch();
                 });
               }}
             >
@@ -3824,16 +3824,14 @@ describe("useBackgroundQuery", () => {
         const onFetchMoreHandler = (variables: Variables) => {
           fetchMore({ variables });
         };
-        return (
-          <Todo fetchMoreHandler={onFetchMoreHandler} queryRef={queryRef} />
-        );
+        return <Todo onFetchMore={onFetchMoreHandler} queryRef={queryRef} />;
       }
 
       function Todo({
         queryRef,
-        fetchMoreHandler,
+        onFetchMore,
       }: {
-        fetchMoreHandler: (variables: Variables) => void;
+        onFetchMore: (variables: Variables) => void;
         queryRef: QueryReference<Data>;
       }) {
         const { data } = useReadQuery(queryRef);
@@ -3845,7 +3843,7 @@ describe("useBackgroundQuery", () => {
             <button
               onClick={() => {
                 startTransition(() => {
-                  fetchMoreHandler({ offset: 1 });
+                  onFetchMore({ offset: 1 });
                 });
               }}
             >

@@ -1,8 +1,8 @@
-import { invariant } from '../globals';
+import { invariant } from '../globals/index.js';
 
 // Provides the methods that allow QueryManager to handle the `skip` and
 // `include` directives within GraphQL.
-import {
+import type {
   SelectionNode,
   VariableNode,
   BooleanValueNode,
@@ -10,7 +10,8 @@ import {
   DocumentNode,
   ArgumentNode,
   ValueNode,
-  ASTNode,
+  ASTNode} from 'graphql';
+import {
   visit,
   BREAK,
 } from 'graphql';
@@ -34,7 +35,8 @@ export function shouldInclude(
       evaledValue = variables && variables[(ifArgument.value as VariableNode).name.value];
       invariant(
         evaledValue !== void 0,
-        `Invalid variable referenced in @${directive.name.value} directive.`,
+        `Invalid variable referenced in @%s directive.`,
+        directive.name.value
       );
     } else {
       evaledValue = (ifArgument.value as BooleanValueNode).value;
@@ -116,13 +118,15 @@ export function getInclusionDirectives(
 
       invariant(
         directiveArguments && directiveArguments.length === 1,
-        `Incorrect number of arguments for the @${directiveName} directive.`,
+        `Incorrect number of arguments for the @%s directive.`,
+        directiveName
       );
 
       const ifArgument = directiveArguments![0];
       invariant(
         ifArgument.name && ifArgument.name.value === 'if',
-        `Invalid argument for the @${directiveName} directive.`,
+        `Invalid argument for the @%s directive.`,
+        directiveName
       );
 
       const ifValue: ValueNode = ifArgument.value;
@@ -131,7 +135,8 @@ export function getInclusionDirectives(
       invariant(
         ifValue &&
           (ifValue.kind === 'Variable' || ifValue.kind === 'BooleanValue'),
-        `Argument for the @${directiveName} directive must be a variable or a boolean value.`,
+        `Argument for the @%s directive must be a variable or a boolean value.`,
+        directiveName
       );
 
       result.push({ directive, ifArgument });

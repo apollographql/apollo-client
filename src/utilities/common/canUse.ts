@@ -1,4 +1,4 @@
-import { maybe } from "../globals";
+import { maybe } from "../globals/index.js";
 
 export const canUseWeakMap =
   typeof WeakMap === 'function' &&

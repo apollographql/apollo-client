@@ -1,11 +1,11 @@
-import gql from 'graphql-tag';
+import gql from "graphql-tag";
 
-import { parser, DocumentType } from '..';
+import { parser, DocumentType } from "..";
 
 type OperationDefinition = any;
 
-describe('parser', () => {
-  it('should error if both a query and a mutation is present', () => {
+describe("parser", () => {
+  it("should error if both a query and a mutation is present", () => {
     const query = gql`
       query {
         user {
@@ -13,7 +13,7 @@ describe('parser', () => {
         }
       }
 
-      mutation($t: String) {
+      mutation ($t: String) {
         addT(t: $t) {
           user {
             name
@@ -25,7 +25,7 @@ describe('parser', () => {
     expect(parser.bind(null, query)).toThrowError(/react-apollo only supports/);
   });
 
-  it('should error if multiple operations are present', () => {
+  it("should error if multiple operations are present", () => {
     const query = gql`
       query One {
         user {
@@ -43,7 +43,7 @@ describe('parser', () => {
     expect(parser.bind(null, query)).toThrowError(/react-apollo only supports/);
   });
 
-  it('should error if not a DocumentNode', () => {
+  it("should error if not a DocumentNode", () => {
     const query = `
       query One { user { name } }
     `;
@@ -52,7 +52,7 @@ describe('parser', () => {
     );
   });
 
-  it('should return the name of the operation', () => {
+  it("should return the name of the operation", () => {
     const query = gql`
       query One {
         user {
@@ -60,7 +60,7 @@ describe('parser', () => {
         }
       }
     `;
-    expect(parser(query).name).toBe('One');
+    expect(parser(query).name).toBe("One");
 
     const mutation = gql`
       mutation One {
@@ -69,7 +69,7 @@ describe('parser', () => {
         }
       }
     `;
-    expect(parser(mutation).name).toBe('One');
+    expect(parser(mutation).name).toBe("One");
 
     const subscription = gql`
       subscription One {
@@ -78,10 +78,10 @@ describe('parser', () => {
         }
       }
     `;
-    expect(parser(subscription).name).toBe('One');
+    expect(parser(subscription).name).toBe("One");
   });
 
-  it('should return data as the name of the operation if not named', () => {
+  it("should return data as the name of the operation if not named", () => {
     const query = gql`
       query {
         user {
@@ -89,7 +89,7 @@ describe('parser', () => {
         }
       }
     `;
-    expect(parser(query).name).toBe('data');
+    expect(parser(query).name).toBe("data");
 
     const unnamedQuery = gql`
       {
@@ -98,7 +98,7 @@ describe('parser', () => {
         }
       }
     `;
-    expect(parser(unnamedQuery).name).toBe('data');
+    expect(parser(unnamedQuery).name).toBe("data");
 
     const mutation = gql`
       mutation {
@@ -107,7 +107,7 @@ describe('parser', () => {
         }
       }
     `;
-    expect(parser(mutation).name).toBe('data');
+    expect(parser(mutation).name).toBe("data");
 
     const subscription = gql`
       subscription {
@@ -116,10 +116,10 @@ describe('parser', () => {
         }
       }
     `;
-    expect(parser(subscription).name).toBe('data');
+    expect(parser(subscription).name).toBe("data");
   });
 
-  it('should return the type of operation', () => {
+  it("should return the type of operation", () => {
     const query = gql`
       query One {
         user {
@@ -157,7 +157,7 @@ describe('parser', () => {
     expect(parser(subscription).type).toBe(DocumentType.Subscription);
   });
 
-  it('should return the variable definitions of the operation', () => {
+  it("should return the variable definitions of the operation", () => {
     const query = gql`
       query One($t: String!) {
         user(t: $t) {
@@ -191,7 +191,7 @@ describe('parser', () => {
     );
   });
 
-  it('should not error if the operation has no variables', () => {
+  it("should not error if the operation has no variables", () => {
     const query = gql`
       query {
         user(t: $t) {

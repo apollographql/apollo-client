@@ -1,6 +1,7 @@
-import { ApolloLink, RequestHandler } from '../core';
-import { HttpOptions } from './selectHttpOptionsAndBody';
-import { createHttpLink } from './createHttpLink';
+import type { RequestHandler } from '../core/index.js';
+import { ApolloLink } from '../core/index.js';
+import type { HttpOptions } from './selectHttpOptionsAndBody.js';
+import { createHttpLink } from './createHttpLink.js';
 
 export class HttpLink extends ApolloLink {
   public requester: RequestHandler;

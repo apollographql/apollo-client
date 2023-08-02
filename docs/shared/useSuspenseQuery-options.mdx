@@ -109,6 +109,23 @@ By default, the instance that's passed down via context is used, but you can pro
 </tr>
 
 <tr>
+<td>
+
+###### `queryKey`
+
+`string | number | any[]`
+</td>
+
+<td>
+
+A unique identifier for the query. Each item in the array must be a stable identifier to prevent infinite fetches.
+
+This is useful when using the same query and variables combination in more than one component, otherwise the components may clobber each other. This can also be used to force the query to re-evaluate fresh.
+
+</td>
+</tr>
+
+<tr>
 <td colspan="2">
 
 **Caching options**

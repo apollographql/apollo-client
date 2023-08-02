@@ -1,30 +1,30 @@
-import { invariant } from '../../utilities/globals';
-import * as React from 'react';
-import hoistNonReactStatics from 'hoist-non-react-statics';
+import { invariant } from "../../utilities/globals/index.js";
+import * as React from "react";
+import hoistNonReactStatics from "hoist-non-react-statics";
 
-import { ApolloConsumer } from '../context';
-import { OperationOption, WithApolloClient } from './types';
+import { ApolloConsumer } from "../context/index.js";
+import type { OperationOption, WithApolloClient } from "./types.js";
 
 function getDisplayName<P>(WrappedComponent: React.ComponentType<P>) {
-  return WrappedComponent.displayName || WrappedComponent.name || 'Component';
+  return WrappedComponent.displayName || WrappedComponent.name || "Component";
 }
 
 export function withApollo<TProps, TResult = any>(
   WrappedComponent: React.ComponentType<
-    WithApolloClient<Omit<TProps, 'client'>>
+    WithApolloClient<Omit<TProps, "client">>
   >,
   operationOptions: OperationOption<TProps, TResult> = {}
-): React.ComponentClass<Omit<TProps, 'client'>> {
+): React.ComponentClass<Omit<TProps, "client">> {
   const withDisplayName = `withApollo(${getDisplayName(WrappedComponent)})`;
 
-  class WithApollo extends React.Component<Omit<TProps, 'client'>> {
+  class WithApollo extends React.Component<Omit<TProps, "client">> {
     static displayName = withDisplayName;
     static WrappedComponent = WrappedComponent;
 
     // wrapped instance
     private wrappedInstance: any;
 
-    constructor(props: Omit<TProps, 'client'>) {
+    constructor(props: Omit<TProps, "client">) {
       super(props);
       this.setWrappedInstance = this.setWrappedInstance.bind(this);
     }
@@ -46,12 +46,12 @@ export function withApollo<TProps, TResult = any>(
     render() {
       return (
         <ApolloConsumer>
-          {client => {
+          {(client) => {
             const props = Object.assign({}, this.props, {
               client,
               ref: operationOptions.withRef
                 ? this.setWrappedInstance
-                : undefined
+                : undefined,
             });
             return <WrappedComponent {...props} />;
           }}

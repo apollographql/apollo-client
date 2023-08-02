@@ -1,10 +1,10 @@
-import '../../utilities/globals';
+import '../../utilities/globals/index.js';
 
-export { empty } from './empty';
-export { from } from './from';
-export { split } from './split';
-export { concat } from './concat';
-export { execute } from './execute';
-export { ApolloLink } from './ApolloLink';
+export { empty } from './empty.js';
+export { from } from './from.js';
+export { split } from './split.js';
+export { concat } from './concat.js';
+export { execute } from './execute.js';
+export { ApolloLink } from './ApolloLink.js';
 
-export * from './types';
+export * from './types.js';

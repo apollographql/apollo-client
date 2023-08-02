@@ -1,6 +1,6 @@
-import { InvariantError } from '../globals';
+import { newInvariantError } from '../globals/index.js';
 
-import {
+import type {
   DirectiveNode,
   FieldNode,
   IntValueNode,
@@ -21,8 +21,9 @@ import {
   FragmentSpreadNode,
 } from 'graphql';
 
-import { isNonNullObject } from '../common/objects';
-import { FragmentMap, getFragmentFromSelection } from './fragments';
+import { isNonNullObject } from '../common/objects.js';
+import type { FragmentMap} from './fragments.js';
+import { getFragmentFromSelection } from './fragments.js';
 
 export interface Reference {
   readonly __ref: string;
@@ -131,10 +132,11 @@ export function valueToObjectRepresentation(
   } else if (isNullValue(value)) {
     argObj[name.value] = null;
   } else {
-    throw new InvariantError(
-      `The inline argument "${name.value}" of kind "${(value as any).kind}"` +
+    throw newInvariantError(
+      `The inline argument "%s" of kind "%s"` +
         'is not supported. Use variables instead of inline arguments to ' +
         'overcome this limitation.',
+        name.value, (value as any).kind
     );
   }
 }
@@ -186,6 +188,7 @@ const KNOWN_DIRECTIVES: string[] = [
   'client',
   'rest',
   'export',
+  'nonreactive',
 ];
 
 export const getStoreKeyName = Object.assign(function (

@@ -8,6 +8,8 @@ import { Cache } from '../../core/types/Cache';
 import { Reference, makeReference, isReference, StoreValue } from '../../../utilities/graphql/storeUtils';
 import { MissingFieldError } from '../..';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { stringifyForDisplay } from '../../../utilities';
+import { InvariantError } from '../../../utilities/globals';
 
 describe('EntityStore', () => {
   it('should support result caching if so configured', () => {
@@ -1782,11 +1784,11 @@ describe('EntityStore', () => {
       try {
         expect(cache.identify(ABCs)).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-        expect(consoleWarnSpy).toHaveBeenCalledWith(
-          new Error(`Missing field 'b' while extracting keyFields from ${
-            JSON.stringify(ABCs)
-          }`),
-        );
+        expect(consoleWarnSpy).toHaveBeenCalledWith(new InvariantError(
+          `Missing field 'b' while extracting keyFields from ${
+            stringifyForDisplay(ABCs, 2)
+          }`,
+        ));
       } finally {
         consoleWarnSpy.mockRestore();
       }

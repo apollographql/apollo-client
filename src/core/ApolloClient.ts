@@ -1,17 +1,19 @@
-import { invariant, InvariantError } from '../utilities/globals';
+import { invariant, newInvariantError } from '../utilities/globals/index.js';
 
-import { ExecutionResult, DocumentNode } from 'graphql';
+import type { ExecutionResult, DocumentNode } from 'graphql';
 
-import { ApolloLink, FetchResult, GraphQLRequest, execute } from '../link/core';
-import { ApolloCache, DataProxy, Reference } from '../cache';
-import { Observable } from '../utilities';
-import { version } from '../version';
-import { HttpLink, UriFunction } from '../link/http';
+import type { FetchResult, GraphQLRequest} from '../link/core/index.js';
+import { ApolloLink, execute } from '../link/core/index.js';
+import type { ApolloCache, DataProxy, Reference } from '../cache/index.js';
+import type { DocumentTransform, Observable } from '../utilities/index.js';
+import { version } from '../version.js';
+import type { UriFunction } from '../link/http/index.js';
+import { HttpLink } from '../link/http/index.js';
 
-import { QueryManager } from './QueryManager';
-import { ObservableQuery } from './ObservableQuery';
+import { QueryManager } from './QueryManager.js';
+import type { ObservableQuery } from './ObservableQuery.js';
 
-import {
+import type {
   ApolloQueryResult,
   DefaultContext,
   OperationVariables,
@@ -20,20 +22,21 @@ import {
   RefetchQueriesResult,
   InternalRefetchQueriesResult,
   RefetchQueriesInclude,
-} from './types';
+} from './types.js';
 
-import {
+import type {
   QueryOptions,
   WatchQueryOptions,
   MutationOptions,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
-} from './watchQueryOptions';
+} from './watchQueryOptions.js';
 
+import type {
+  FragmentMatcher} from './LocalState.js';
 import {
-  LocalState,
-  FragmentMatcher,
-} from './LocalState';
+  LocalState
+} from './LocalState.js';
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
@@ -60,13 +63,14 @@ export type ApolloClientOptions<TCacheShape> = {
   fragmentMatcher?: FragmentMatcher;
   name?: string;
   version?: string;
+  documentTransform?: DocumentTransform
 };
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
 // previously declared and exported from this module, and then reexported from
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
-import { mergeOptions } from "../utilities";
+import { mergeOptions } from "../utilities/index.js";
 export { mergeOptions }
 
 /**
@@ -125,11 +129,20 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    *                you are using.
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
+    if (!options.cache) {
+      throw newInvariantError(
+        "To initialize Apollo Client, you must specify a 'cache' property " +
+        "in the options object. \n" +
+        "For more information, please visit: https://go.apollo.dev/c/docs"
+      );
+    }
+
     const {
       uri,
       credentials,
       headers,
       cache,
+      documentTransform,
       ssrMode = false,
       ssrForceFetchDelay = 0,
       connectToDevTools =
@@ -141,7 +154,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         __DEV__,
       queryDeduplication = true,
       defaultOptions,
-      assumeImmutableResults = false,
+      assumeImmutableResults = cache.assumeImmutableResults,
       resolvers,
       typeDefs,
       fragmentMatcher,
@@ -155,14 +168,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       link = uri
         ? new HttpLink({ uri, credentials, headers })
         : ApolloLink.empty();
-    }
-
-    if (!cache) {
-      throw new InvariantError(
-        "To initialize Apollo Client, you must specify a 'cache' property " +
-        "in the options object. \n" +
-        "For more information, please visit: https://go.apollo.dev/c/docs"
-      );
     }
 
     this.link = link;
@@ -214,7 +219,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         if (url) {
           invariant.log(
             "Download the Apollo DevTools for a better development " +
-              "experience: " + url
+              "experience: %s", url
           );
         }
       }
@@ -233,6 +238,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       cache: this.cache,
       link: this.link,
       defaultOptions: this.defaultOptions,
+      documentTransform,
       queryDeduplication,
       ssrMode,
       clientAwareness: {
@@ -254,6 +260,15 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         }
       } : void 0,
     });
+  }
+
+  /**
+   * The `DocumentTransform` used to modify GraphQL documents before a request
+   * is made. If a custom `DocumentTransform` is not provided, this will be the
+   * default document transform.
+   */
+  get documentTransform() {
+    return this.queryManager.documentTransform;
   }
 
   /**
@@ -567,7 +582,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     // result.queries and result.results instead, you shouldn't have to worry
     // about preventing uncaught rejections for the Promise.all result.
     result.catch(error => {
-      invariant.debug(`In client.refetchQueries, Promise.all promise rejected with error ${error}`);
+      invariant.debug(`In client.refetchQueries, Promise.all promise rejected with error %o`, error);
     });
 
     return result;

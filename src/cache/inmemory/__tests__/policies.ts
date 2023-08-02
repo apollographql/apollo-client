@@ -4,7 +4,7 @@ import { InMemoryCache } from "../inMemoryCache";
 import { ReactiveVar, makeVar } from "../reactiveVars";
 import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode, DocumentNode } from "../../../core";
 import { MissingFieldError } from "../..";
-import { relayStylePagination } from "../../../utilities";
+import { relayStylePagination, stringifyForDisplay } from "../../../utilities";
 import { FieldPolicy, StorageType } from "../policies";
 import {
   itAsync,
@@ -443,8 +443,9 @@ describe("type policies", function () {
         },
       });
     }).toThrowError(
-      `Missing field 'year' while extracting keyFields from ${JSON.stringify(
-        theInformationBookData
+      `Missing field 'year' while extracting keyFields from ${stringifyForDisplay(
+        theInformationBookData,
+        2
       )}`,
     );
   });
@@ -625,6 +626,182 @@ describe("type policies", function () {
       __typename: "DeathAdder",
       tagId: "LethalAbacus666",
     })).toBe('DeathAdder:{"tagId":"LethalAbacus666"}');
+  });
+
+  it("typePolicies can be inherited from supertypes with fuzzy possibleTypes", () => {
+    const cache = new InMemoryCache({
+      possibleTypes: {
+        EntitySupertype: [".*Entity"],
+      },
+      typePolicies: {
+        Query: {
+          fields: {
+            coworkers: {
+              merge(existing, incoming) {
+                return existing ? existing.concat(incoming) : incoming;
+              },
+            },
+          },
+        },
+
+        // The point of this test is to ensure keyFields: ["uid"] can be
+        // registered for all __typename strings matching the RegExp /.*Entity/,
+        // without manually enumerating all of them.
+        EntitySupertype: {
+          keyFields: ["uid"],
+        },
+      },
+    });
+
+    type Coworker = {
+      __typename: "CoworkerEntity" | "ManagerEntity";
+      uid: string;
+      name: string;
+    }
+
+    const query: TypedDocumentNode<{
+      coworkers: Coworker[];
+    }> = gql`
+      query {
+        coworkers {
+          uid
+          name
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query,
+      data: {
+        coworkers: [
+          { __typename: "CoworkerEntity", uid: "qwer", name: "Alessia" },
+          { __typename: "CoworkerEntity", uid: "asdf", name: "Jerel" },
+          { __typename: "CoworkerEntity", uid: "zxcv", name: "Lenz" },
+          { __typename: "ManagerEntity", uid: "uiop", name: "Jeff" },
+        ],
+      },
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        coworkers: [
+          { __ref: 'CoworkerEntity:{"uid":"qwer"}' },
+          { __ref: 'CoworkerEntity:{"uid":"asdf"}' },
+          { __ref: 'CoworkerEntity:{"uid":"zxcv"}' },
+          { __ref: 'ManagerEntity:{"uid":"uiop"}' },
+        ],
+      },
+      'CoworkerEntity:{"uid":"qwer"}': {
+        __typename: "CoworkerEntity",
+        uid: "qwer",
+        name: "Alessia",
+      },
+      'CoworkerEntity:{"uid":"asdf"}': {
+        __typename: "CoworkerEntity",
+        uid: "asdf",
+        name: "Jerel",
+      },
+      'CoworkerEntity:{"uid":"zxcv"}': {
+        __typename: "CoworkerEntity",
+        uid: "zxcv",
+        name: "Lenz",
+      },
+      'ManagerEntity:{"uid":"uiop"}': {
+        __typename: "ManagerEntity",
+        uid: "uiop",
+        name: "Jeff",
+      },
+    });
+
+    interface CoworkerWithAlias extends Omit<Coworker, "uid"> {
+      idAlias: string;
+    }
+
+    const queryWithAlias: TypedDocumentNode<{
+      coworkers: CoworkerWithAlias[];
+    }> = gql`
+      query {
+        coworkers {
+          idAlias: uid
+          name
+        }
+      }
+    `;
+
+    expect(cache.readQuery({ query: queryWithAlias })).toEqual({
+      coworkers: [
+        { __typename: "CoworkerEntity", idAlias: "qwer", name: "Alessia" },
+        { __typename: "CoworkerEntity", idAlias: "asdf", name: "Jerel" },
+        { __typename: "CoworkerEntity", idAlias: "zxcv", name: "Lenz" },
+        { __typename: "ManagerEntity", idAlias: "uiop", name: "Jeff" },
+      ],
+    });
+
+    cache.writeQuery({
+      query: queryWithAlias,
+      data: {
+        coworkers: [
+          { __typename: "CoworkerEntity", idAlias: "hjkl", name: "Martijn" },
+          { __typename: "ManagerEntity", idAlias: "vbnm", name: "Hugh" },
+        ],
+      },
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      coworkers: [
+        { __typename: "CoworkerEntity", uid: "qwer", name: "Alessia" },
+        { __typename: "CoworkerEntity", uid: "asdf", name: "Jerel" },
+        { __typename: "CoworkerEntity", uid: "zxcv", name: "Lenz" },
+        { __typename: "ManagerEntity", uid: "uiop", name: "Jeff" },
+        { __typename: "CoworkerEntity", uid: "hjkl", name: "Martijn" },
+        { __typename: "ManagerEntity", uid: "vbnm", name: "Hugh" },
+      ],
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        coworkers: [
+          { __ref: 'CoworkerEntity:{"uid":"qwer"}' },
+          { __ref: 'CoworkerEntity:{"uid":"asdf"}' },
+          { __ref: 'CoworkerEntity:{"uid":"zxcv"}' },
+          { __ref: 'ManagerEntity:{"uid":"uiop"}' },
+          { __ref: 'CoworkerEntity:{"uid":"hjkl"}' },
+          { __ref: 'ManagerEntity:{"uid":"vbnm"}' },
+        ],
+      },
+      'CoworkerEntity:{"uid":"qwer"}': {
+        __typename: "CoworkerEntity",
+        uid: "qwer",
+        name: "Alessia",
+      },
+      'CoworkerEntity:{"uid":"asdf"}': {
+        __typename: "CoworkerEntity",
+        uid: "asdf",
+        name: "Jerel",
+      },
+      'CoworkerEntity:{"uid":"zxcv"}': {
+        __typename: "CoworkerEntity",
+        uid: "zxcv",
+        name: "Lenz",
+      },
+      'ManagerEntity:{"uid":"uiop"}': {
+        __typename: "ManagerEntity",
+        uid: "uiop",
+        name: "Jeff",
+      },
+      'CoworkerEntity:{"uid":"hjkl"}': {
+        __typename: "CoworkerEntity",
+        uid: "hjkl",
+        name: "Martijn",
+      },
+      'ManagerEntity:{"uid":"vbnm"}': {
+        __typename: "ManagerEntity",
+        uid: "vbnm",
+        name: "Hugh",
+      },
+    });
   });
 
   describe("field policies", function () {

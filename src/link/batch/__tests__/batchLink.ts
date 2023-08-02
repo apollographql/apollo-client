@@ -793,9 +793,9 @@ describe('BatchLink', () => {
     });
     const link_no_op = new BatchLink({ batchHandler: () => Observable.of() });
     const _warn = console.warn;
-    console.warn = (warning: any) => {
+    console.warn = (...args: any) => {
       calls++;
-      expect(warning.message).toBeDefined();
+      expect(args).toEqual(["You are calling concat on a terminating link, which will have no effect %o", expect.any(BatchLink)]);
     };
     expect(
       link_one_op.concat((operation, forward) => forward(operation)),

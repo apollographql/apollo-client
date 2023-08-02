@@ -1,8 +1,8 @@
-import { InvariantError } from '../../utilities/globals';
+import { newInvariantError } from '../../utilities/globals/index.js';
 
 export const checkFetcher = (fetcher: WindowOrWorkerGlobalScope['fetch'] | undefined) => {
   if (!fetcher && typeof fetch === 'undefined') {
-    throw new InvariantError(`
+    throw newInvariantError(`
 "fetch" has not been found globally and no fetcher has been \
 configured. To fix this, install a fetch package (like \
 https://www.npmjs.com/package/cross-fetch), instantiate the \

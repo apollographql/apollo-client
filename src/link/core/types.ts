@@ -1,8 +1,9 @@
-import { DocumentNode, ExecutionResult, GraphQLError } from "graphql";
-import { DefaultContext } from "../../core";
-export { DocumentNode };
+import type { ExecutionResult, GraphQLError } from "graphql";
+import type { DocumentNode } from "graphql";
+import type { DefaultContext } from "../../core/index.js";
+export type { DocumentNode };
 
-import { Observable } from "../../utilities";
+import type { Observable } from "../../utilities/index.js";
 
 export type Path = ReadonlyArray<string | number>;
 

@@ -1,11 +1,11 @@
-import { responseIterator } from "./responseIterator";
-import { Operation } from "../core";
-import { throwServerError } from "../utils";
-import { PROTOCOL_ERRORS_SYMBOL } from '../../errors';
-import { Observer } from "../../utilities";
+import { responseIterator } from "./responseIterator.js";
+import type { Operation } from "../core/index.js";
+import { throwServerError } from "../utils/index.js";
+import { PROTOCOL_ERRORS_SYMBOL } from '../../errors/index.js';
 import {
   isApolloPayloadResult
-} from '../../utilities/common/incrementalResult';
+} from '../../utilities/common/incrementalResult.js';
+import type { SubscriptionObserver } from "zen-observable-ts";
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -17,7 +17,7 @@ export type ServerParseError = Error & {
 
 export async function readMultipartBody<
   T extends object = Record<string, unknown>
->(response: Response, observer: Observer<T>) {
+>(response: Response, nextValue: (value: T) => void) {
   if (TextDecoder === undefined) {
     throw new Error(
       "TextDecoder must be defined in the environment: please import a polyfill."
@@ -74,52 +74,47 @@ export async function readMultipartBody<
       const body = message.slice(i);
 
       if (body) {
-        try {
-          const result = parseJsonBody<T>(response, body);
-          if (
-            Object.keys(result).length > 1 ||
-            "data" in result ||
-            "incremental" in result ||
-            "errors" in result ||
-            "payload" in result
-          ) {
-            if (isApolloPayloadResult(result)) {
-              let next = {};
-              if ("payload" in result) {
-                next = { ...result.payload };
-              }
-              if ("errors" in result) {
-                next = {
-                  ...next,
-                  extensions: {
-                    ...("extensions" in next ? next.extensions : null as any),
-                    [PROTOCOL_ERRORS_SYMBOL]: result.errors
-                  },
-                };
-              }
-              observer.next?.(next as T);
-            } else {
-              // for the last chunk with only `hasNext: false`
-              // we don't need to call observer.next as there is no data/errors
-              observer.next?.(result);
+        const result = parseJsonBody<T>(response, body);
+        if (
+          Object.keys(result).length > 1 ||
+          "data" in result ||
+          "incremental" in result ||
+          "errors" in result ||
+          "payload" in result
+        ) {
+          if (isApolloPayloadResult(result)) {
+            let next = {};
+            if ("payload" in result) {
+              next = { ...result.payload };
             }
-          } else if (
-            // If the chunk contains only a "hasNext: false", we can call
-            // observer.complete() immediately.
-            Object.keys(result).length === 1 &&
-            "hasNext" in result &&
-            !result.hasNext
-          ) {
-            observer.complete?.();
+            if ("errors" in result) {
+              next = {
+                ...next,
+                extensions: {
+                  ...("extensions" in next ? next.extensions : null as any),
+                  [PROTOCOL_ERRORS_SYMBOL]: result.errors
+                },
+              };
+            }
+            nextValue(next as T);
+          } else {
+            // for the last chunk with only `hasNext: false`
+            // we don't need to call observer.next as there is no data/errors
+            nextValue(result);
           }
-        } catch (err) {
-          handleError(err, observer);
+        } else if (
+          // If the chunk contains only a "hasNext: false", we can call
+          // observer.complete() immediately.
+          Object.keys(result).length === 1 &&
+          "hasNext" in result &&
+          !result.hasNext
+        ) {
+          return;
         }
       }
       bi = buffer.indexOf(boundary);
     }
   }
-  observer.complete?.();
 }
 
 export function parseHeaders(headerText: string): Record<string, string> {
@@ -165,8 +160,7 @@ export function parseJsonBody<T>(response: Response, bodyText: string): T {
   }
 }
 
-export function handleError(err: any, observer: Observer<any>) {
-  if (err.name === "AbortError") return;
+export function handleError(err: any, observer: SubscriptionObserver<any>) {
   // if it is a network error, BUT there is graphql result info fire
   // the next observer before calling error this gives apollo-client
   // (and react-apollo) the `graphqlErrors` and `networkErrors` to
@@ -200,23 +194,10 @@ export function handleError(err: any, observer: Observer<any>) {
     // status code of above would be a 401
     // in the UI you want to show data where you can, errors as data where you can
     // and use correct http status codes
-    observer.next?.(err.result);
+    observer.next(err.result);
   }
 
-  observer.error?.(err);
-}
-
-export function readJsonBody<T = Record<string, unknown>>(
-  response: Response,
-  operation: Operation,
-  observer: Observer<T>
-) {
-  parseAndCheckHttpResponse(operation)(response)
-    .then((result) => {
-      observer.next?.(result);
-      observer.complete?.();
-    })
-    .catch((err) => handleError(err, observer));
+  observer.error(err);
 }
 
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {

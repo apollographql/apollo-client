@@ -1,24 +1,24 @@
-import * as React from 'react';
-import { DocumentNode } from 'graphql';
-import hoistNonReactStatics from 'hoist-non-react-statics';
+import * as React from "react";
+import type { DocumentNode } from "graphql";
+import hoistNonReactStatics from "hoist-non-react-statics";
 
-import { parser } from '../parser';
-import { BaseQueryOptions } from '../types/types';
-import { Subscription } from '../components';
+import { parser } from "../parser/index.js";
+import type { BaseQueryOptions } from "../types/types.js";
+import { Subscription } from "../components/index.js";
 import {
   getDisplayName,
   GraphQLBase,
   calculateVariablesFromProps,
   defaultMapPropsToOptions,
-  defaultMapPropsToSkip
-} from './hoc-utils';
-import { OperationOption, OptionProps, DataProps } from './types';
+  defaultMapPropsToSkip,
+} from "./hoc-utils.js";
+import type { OperationOption, OptionProps, DataProps } from "./types.js";
 
 export function withSubscription<
   TProps extends TGraphQLVariables | {} = {},
   TData extends object = {},
   TGraphQLVariables extends object = {},
-  TChildProps extends object = DataProps<TData, TGraphQLVariables>
+  TChildProps extends object = DataProps<TData, TGraphQLVariables>,
 >(
   document: DocumentNode,
   operationOptions: OperationOption<
@@ -34,16 +34,16 @@ export function withSubscription<
   const {
     options = defaultMapPropsToOptions,
     skip = defaultMapPropsToSkip,
-    alias = 'Apollo',
-    shouldResubscribe
+    alias = "Apollo",
+    shouldResubscribe,
   } = operationOptions;
 
   let mapPropsToOptions = options as (props: any) => BaseQueryOptions;
-  if (typeof mapPropsToOptions !== 'function')
+  if (typeof mapPropsToOptions !== "function")
     mapPropsToOptions = () => options as BaseQueryOptions;
 
   let mapPropsToSkip = skip as (props: any) => boolean;
-  if (typeof mapPropsToSkip !== 'function') mapPropsToSkip = () => skip as any;
+  if (typeof mapPropsToSkip !== "function") mapPropsToSkip = () => skip as any;
 
   // allow for advanced referential equality checks
   let lastResultProps: TChildProps | void;
@@ -69,8 +69,7 @@ export function withSubscription<
 
       componentDidUpdate(prevProps: TProps) {
         const resubscribe = !!(
-          shouldResubscribe &&
-          shouldResubscribe(prevProps, this.props)
+          shouldResubscribe && shouldResubscribe(prevProps, this.props)
         );
         if (this.state.resubscribe !== resubscribe) {
           this.updateResubscribe(resubscribe);
@@ -99,7 +98,7 @@ export function withSubscription<
               if (operationOptions.withRef) {
                 this.withRef = true;
                 props = Object.assign({}, props, {
-                  ref: this.setWrappedInstance
+                  ref: this.setWrappedInstance,
                 });
               }
               // if we have skipped, no reason to manage any reshaping
@@ -116,17 +115,14 @@ export function withSubscription<
               // up onto the result since it was passed as a nested prop
               // we massage the Query components shape here to replicate that
               const result = Object.assign(r, data || {});
-              const name = operationOptions.name || 'data';
+              const name = operationOptions.name || "data";
               let childProps = { [name]: result };
               if (operationOptions.props) {
-                const newResult: OptionProps<
-                  TProps,
-                  TData,
-                  TGraphQLVariables
-                > = {
-                  [name]: result,
-                  ownProps: props as TProps
-                };
+                const newResult: OptionProps<TProps, TData, TGraphQLVariables> =
+                  {
+                    [name]: result,
+                    ownProps: props as TProps,
+                  };
                 lastResultProps = operationOptions.props(
                   newResult,
                   lastResultProps

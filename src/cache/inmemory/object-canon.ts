@@ -1,12 +1,10 @@
-import "../../utilities/globals";
-
 import { Trie } from "@wry/trie";
 import {
   canUseWeakMap,
   canUseWeakSet,
   isNonNullObject as isObjectOrArray,
-} from "../../utilities";
-import { isArray } from "./helpers";
+} from "../../utilities/index.js";
+import { isArray } from "./helpers.js";
 
 function shallowCopy<T>(value: T): T {
   if (isObjectOrArray(value)) {

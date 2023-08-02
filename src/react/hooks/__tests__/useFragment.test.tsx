@@ -29,6 +29,7 @@ import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
+import { profile } from "../../../testing/internal";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -1467,33 +1468,53 @@ describe("has the same timing as `useQuery`", () => {
       ),
     });
 
+    let queryData: any, fragmentData: any;
+
     function Component() {
-      const { data: queryData } = useQuery(query, { returnPartialData: true });
-      const { data: fragmentData, complete } = useFragment({
+      ({ data: queryData } = useQuery(query, { returnPartialData: true }));
+      let complete: boolean;
+      ({ data: fragmentData, complete } = useFragment({
         fragment: itemFragment,
         from: initialItem,
-      });
+      }));
 
-      if (!queryData) {
-        expect(fragmentData).toStrictEqual({});
-      } else {
-        expect({ item: fragmentData }).toStrictEqual(queryData);
-      }
       return complete ? JSON.stringify(fragmentData) : "loading";
     }
-    render(<Component />, {
+
+    const ProfiledComponent = profile(Component, () => ({
+      queryData,
+      fragmentData,
+    }));
+
+    render(<ProfiledComponent />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
-    await screen.findByText(/loading/);
+
+    {
+      const { snapshot } = await ProfiledComponent.takeRender();
+      expect(snapshot.queryData).toBe(undefined);
+      expect(snapshot.fragmentData).toStrictEqual({});
+    }
+
     assert(observer!);
     observer.next({ data: { item: initialItem } });
     observer.complete();
-    await screen.findByText(/Item #initial/);
+
+    {
+      const { snapshot } = await ProfiledComponent.takeRender();
+      expect(snapshot.queryData).toStrictEqual({ item: initialItem });
+      expect(snapshot.fragmentData).toStrictEqual(initialItem);
+    }
+
     cache.writeQuery({ query, data: { item: updatedItem } });
-    await screen.findByText(/Item #updated/);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    {
+      const { snapshot } = await ProfiledComponent.takeRender();
+      expect(snapshot.queryData).toStrictEqual({ item: updatedItem });
+      expect(snapshot.fragmentData).toStrictEqual(updatedItem);
+    }
   });
 
   it("`useQuery` in parent, `useFragment` in child", async () => {
@@ -1512,24 +1533,6 @@ describe("has the same timing as `useQuery`", () => {
       cache,
     });
     cache.writeQuery({ query, data: { items: [item1, item2] } });
-
-    const valuePairs: Array<
-      [item: string, parentCount: number, childCount: number]
-    > = [];
-    function captureDOMState() {
-      const parent = screen.getByTestId("parent");
-      const children = screen.getByTestId("children");
-      valuePairs.push([
-        "Item 1",
-        within(parent).queryAllByText(/Item #1/).length,
-        within(children).queryAllByText(/Item #1/).length,
-      ]);
-      valuePairs.push([
-        "Item 2",
-        within(parent).queryAllByText(/Item #2/).length,
-        within(children).queryAllByText(/Item #2/).length,
-      ]);
-    }
 
     function Parent() {
       const { data } = useQuery(query);
@@ -1557,27 +1560,32 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify({ item: data })}</>;
     }
 
-    render(<Parent />, {
+    const ProfiledParent = profile(Parent, function validateDOMState() {
+      const parent = screen.getByTestId("parent");
+      const children = screen.getByTestId("children");
+      expect(within(parent).queryAllByText(/Item #1/).length).toBe(
+        within(children).queryAllByText(/Item #1/).length
+      );
+      expect(within(parent).queryAllByText(/Item #2/).length).toBe(
+        within(children).queryAllByText(/Item #2/).length
+      );
+    });
+
+    render(<ProfiledParent />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <React.Profiler id="test" onRender={captureDOMState}>
-            {children}
-          </React.Profiler>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
+
+    await ProfiledParent.takeRender();
+
     cache.evict({
       id: cache.identify(item2),
     });
-    await waitFor(() => {
-      expect(() => screen.getByText(/Item #2/)).toThrow();
-    });
 
-    expect(valuePairs.length).toBe(4);
-    for (const [_item, parentCount, childCount] of valuePairs) {
-      expect(parentCount).toBe(childCount);
-    }
+    await ProfiledParent.waitForRenderCount(2);
   });
+  2;
 
   /**
    * This would be optimal, but would only work if `useFragment` and
@@ -1606,24 +1614,6 @@ describe("has the same timing as `useQuery`", () => {
       cache,
     });
     cache.writeQuery({ query, data: { items: [item1, item2] } });
-
-    const valuePairs: Array<
-      [item: string, parentCount: number, childCount: number]
-    > = [];
-    function captureDOMState() {
-      const parent = screen.getByTestId("parent");
-      const children = screen.getByTestId("children");
-      valuePairs.push([
-        "Item 1",
-        within(parent).queryAllByText(/Item #1/).length,
-        within(children).queryAllByText(/Item #1/).length,
-      ]);
-      valuePairs.push([
-        "Item 2",
-        within(parent).queryAllByText(/Item #2/).length,
-        within(children).queryAllByText(/Item #2/).length,
-      ]);
-    }
 
     function Parent() {
       const { data: data1 } = useFragment({
@@ -1654,29 +1644,33 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify(data)}</>;
     }
 
-    render(<Parent />, {
+    const ProfiledParent = profile(Parent, function validateDOMState() {
+      const parent = screen.getByTestId("parent");
+      const children = screen.getByTestId("children");
+      expect(within(parent).queryAllByText(/Item #1/).length).toBe(
+        within(children).queryAllByText(/Item #1/).length
+      );
+      expect(within(parent).queryAllByText(/Item #2/).length).toBe(
+        within(children).queryAllByText(/Item #2/).length
+      );
+    });
+
+    render(<ProfiledParent />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <React.Profiler id="test" onRender={captureDOMState}>
-            {children}
-          </React.Profiler>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
+
+    await ProfiledParent.takeRender();
+
     act(
       () =>
         void cache.evict({
           id: cache.identify(item2),
         })
     );
-    await waitFor(() => {
-      expect(() => screen.getByText(/Item #2/)).toThrow();
-    });
 
-    expect(valuePairs.length).toBe(4);
-    for (const [_item, parentCount, childCount] of valuePairs) {
-      expect(parentCount).toBe(childCount);
-    }
+    await ProfiledParent.waitForRenderCount(3);
   });
 });
 

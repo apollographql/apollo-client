@@ -205,6 +205,12 @@
 
   For a detailed explanation, see our [reference on reducing bundle size](https://www.apollographql.com/docs/react/development-testing/reducing-bundle-size).
 
+#### New `@nonreactive` directive 🎬
+
+- [#10722](https://github.com/apollographql/apollo-client/pull/10722) [`c7e60f83d`](https://github.com/apollographql/apollo-client/commit/c7e60f83dd1dfe07a1b6ce60d9675d3616a2ce66) Thanks [@benjamn](https://github.com/benjamn)! - Implement a `@nonreactive` directive for selectively skipping reactive comparisons of query result subtrees.
+
+  For a detailed explanation, see our [`@nonreactive` reference](https://www.apollographql.com/docs/react/data/directives/#nonreactive) and [@alessbell](https://github.com/alessbell)'s [post on the Apollo blog about using `@nonreactive` with `useFragment`](https://www.apollographql.com/blog/apollo-client/introducing-apollo-clients-nonreactive-directive-and-usefragment-hook/).
+
 #### Abort the `AbortController` signal more granularly 🛑
 
 - [#11040](https://github.com/apollographql/apollo-client/pull/11040) [`125ef5b2a`](https://github.com/apollographql/apollo-client/commit/125ef5b2a8fd2de1515b2bdd71785ebab3596cb2) Thanks [@phryneas](https://github.com/phryneas)! - `HttpLink`/`BatchHttpLink`: Abort the `AbortController` signal more granularly.
@@ -212,12 +218,6 @@
   Before this change, when `HttpLink`/`BatchHttpLink` created an `AbortController` internally, the signal would always be `.abort`ed after the request was completed. This could cause issues with Sentry Session Replay and Next.js App Router Cache invalidations, which just replayed the fetch with the same options - including the cancelled `AbortSignal`.
 
   With this change, the `AbortController` will only be `.abort()`ed by outside events, not as a consequence of the request completing.
-
-#### New `@nonreactive` directive 🎬
-
-- [#10722](https://github.com/apollographql/apollo-client/pull/10722) [`c7e60f83d`](https://github.com/apollographql/apollo-client/commit/c7e60f83dd1dfe07a1b6ce60d9675d3616a2ce66) Thanks [@benjamn](https://github.com/benjamn)! - Implement a `@nonreactive` directive for selectively skipping reactive comparisons of query result subtrees.
-
-  For a detailed explanation, see our [`@nonreactive` reference](https://www.apollographql.com/docs/react/data/directives/#nonreactive) and [@alessbell](https://github.com/alessbell)'s [post on the Apollo blog about using `@nonreactive` with `useFragment`](https://www.apollographql.com/blog/apollo-client/introducing-apollo-clients-nonreactive-directive-and-usefragment-hook/).
 
 #### Other minor changes
 

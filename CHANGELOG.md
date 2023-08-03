@@ -10,46 +10,53 @@
 
   `useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is in flight. It can be thought of as a drop-in replacement for `useQuery` that allows you to take advantage of React's concurrent features while fetching during render.
 
-  ```tsx
-  import { Suspense } from 'react';
-  import { gql, TypedDocumentNode, useSuspenseQuery } from '@apollo/client';
+  Consider a `Dog` component that fetches and renders some information about a dog named Mozzarella:
 
-  interface Data {
-    dog: {
-      id: string;
-      name: string;
-    };
-  }
+  <details>
+    <summary>View code 🐶</summary>
 
-  interface Variables {
-    name: string;
-  }
+    ```tsx
+    import { Suspense } from 'react';
+    import { gql, TypedDocumentNode, useSuspenseQuery } from '@apollo/client';
 
-  const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
-    query GetDog($name: String) {
-      dog(name: $name) {
-        id
-        name
-      }
+    interface Data {
+      dog: {
+        id: string;
+        name: string;
+      };
     }
-  `;
 
-  function App() {
-    return (
-      <Suspense fallback={<div>Loading...</div>}>
-        <Dog name="Mozzarella" />
-      </Suspense>
-    );
-  }
+    interface Variables {
+      name: string;
+    }
 
-  function Dog({ name }: { name: string }) {
-    const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-      variables: { name },
-    });
+    const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
+      query GetDog($name: String) {
+        dog(name: $name) {
+          id
+          name
+        }
+      }
+    `;
 
-    return <>Name: {data.dog.name}</>;
-  }
-  ```
+    function App() {
+      return (
+        <Suspense fallback={<div>Loading...</div>}>
+          <Dog name="Mozzarella" />
+        </Suspense>
+      );
+    }
+
+    function Dog({ name }: { name: string }) {
+      const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+        variables: { name },
+      });
+
+      return <>Name: {data.dog.name}</>;
+    }
+    ```
+
+  </details>
 
   For a detailed explanation of `useSuspenseQuery`, see our [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
 
@@ -57,7 +64,12 @@
 
   `useBackgroundQuery` initiates a request for data in a parent component and returns a `QueryReference` which is used to read the data in a child component via `useReadQuery`. If the child component attempts to render before the data can be found in the cache, the child component will suspend until the data is available. On cache updates to watched data, the child component calling `useReadQuery` will re-render with new data **but the parent component will not re-render** (as it would, for example, if it were using `useQuery` to issue the request).
 
-  ```tsx
+  Consider an `App` component that fetches a list of breeds in the background while also fetching and rendering some information about an individual dog, Mozzarella:
+
+  <details>
+    <summary>View code 🐶</summary>
+
+    ```tsx
     function App() {
       const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
       return (
@@ -95,7 +107,9 @@
         ))
       );
     }
-  ```
+    ```
+
+  </details>
 
   For a detailed explanation of `useBackgroundQuery` and `useReadQuery`, see our [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
 
@@ -209,6 +223,87 @@
 
 - [#10722](https://github.com/apollographql/apollo-client/pull/10722) [`c7e60f83d`](https://github.com/apollographql/apollo-client/commit/c7e60f83dd1dfe07a1b6ce60d9675d3616a2ce66) Thanks [@benjamn](https://github.com/benjamn)! - Implement a `@nonreactive` directive for selectively skipping reactive comparisons of query result subtrees.
 
+  The `@nonreactive` directive can be used to mark query fields or fragment spreads and is used to indicate that changes to the data contained within the subtrees marked `@nonreactive` should _not_ trigger re-rendering. This allows parent components to fetch data to be rendered by their children without re-rendering themselves when the data corresponding with fields marked as `@nonreactive` change.
+
+  Consider an `App` component that fetches and renders a list of ski trails:
+
+  <details>
+    <summary>View code 🎿</summary>
+
+    ```jsx
+    const TrailFragment = gql`
+      fragment TrailFragment on Trail {
+        name
+        status
+      }
+    `;
+
+    const ALL_TRAILS = gql`
+      query allTrails {
+        allTrails {
+          id
+          ...TrailFragment @nonreactive
+        }
+      }
+      ${TrailFragment}
+    `;
+
+    function App() {
+      const { data, loading } = useQuery(ALL_TRAILS);
+      return (
+        <main>
+          <h2>Ski Trails</h2>
+          <ul>
+            {data?.trails.map((trail) => (
+              <Trail key={trail.id} id={trail.id} />
+            ))}
+          </ul>
+        </main>
+      );
+    }
+    ```
+
+  </details>
+
+  The `Trail` component renders a trail's name and status and allows the user to execute a mutation to toggle the status of the trail between `"OPEN"` and `"CLOSED"`:
+
+  <details>
+    <summary>View code 🎿</summary>
+
+    ```jsx
+    const Trail = ({ id }) => {
+      const [updateTrail] = useMutation(UPDATE_TRAIL);
+      const { data } = useFragment({
+        fragment: TrailFragment,
+        from: {
+          __typename: "Trail",
+          id,
+        },
+      });
+      return (
+        <li key={id}>
+          {data.name} - {data.status}
+          <input
+            checked={data.status === "OPEN" ? true : false}
+            type="checkbox"
+            onChange={(e) => {
+              updateTrail({
+                variables: {
+                  trailId: id,
+                  status: e.target.checked ? "OPEN" : "CLOSED",
+                },
+              });
+            }}
+          />
+        </li>
+      );
+    };
+    ```
+
+  </details>
+
+  Notice that the `Trail` component isn't receiving the entire `trail` object via props, only the `id` which is used along with the fragment document to create a live binding for each trail item in the cache. This allows each `Trail` component to react to the cache updates for a single trail independently. Updates to a trail's `status` will not cause the parent `App` component to rerender since the `@nonreactive` directive is applied to the `TrailFragment` spread, a fragment that includes the `status` field.
+
   For a detailed explanation, see our [`@nonreactive` reference](https://www.apollographql.com/docs/react/data/directives/#nonreactive) and [@alessbell](https://github.com/alessbell)'s [post on the Apollo blog about using `@nonreactive` with `useFragment`](https://www.apollographql.com/blog/apollo-client/introducing-apollo-clients-nonreactive-directive-and-usefragment-hook/).
 
 #### Abort the `AbortController` signal more granularly 🛑
@@ -224,6 +319,8 @@
 - [#10916](https://github.com/apollographql/apollo-client/pull/10916) [`ea75e18de`](https://github.com/apollographql/apollo-client/commit/ea75e18dec3db090dd4ed3b2d249bf674b90ead4) Thanks [@alessbell](https://github.com/alessbell)! - Remove experimental labels.
 
   `useFragment`, introduced in `3.7.0` as `useFragment_experimental`, is no longer an experimental API 🎉 We've removed the `_experimental` suffix from its named export and have made a number of improvements.
+
+  For a detailed explanation, see our [`useFragment` reference](https://www.apollographql.com/docs/react/api/react/hooks#usefragment) and [@alessbell](https://github.com/alessbell)'s [post on the Apollo blog](https://www.apollographql.com/blog/apollo-client/introducing-apollo-clients-nonreactive-directive-and-usefragment-hook/) about using `useFragment` with `@nonreactive` for improved performance when rendering lists.
 
   <details>
   <summary><h5><code>useFragment</code> improvements</h5></summary>

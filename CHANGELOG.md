@@ -146,8 +146,10 @@
 
   We are considering the removal of the `skip` option from `useSuspenseQuery` and `useBackgroundQuery` in the next major. We are releasing with it now to make migration from `useQuery` easier and make `skipToken` more discoverable.
 
+  **`useSuspenseQuery`**
+
   ```ts
-  import { skipToken } from "@apollo/client";
+  import { skipToken, useSuspenseQuery } from "@apollo/client";
 
   const id: number | undefined;
 
@@ -157,37 +159,16 @@
   );
   ```
 
-  ##### Breaking change
-
-  Previously `useBackgroundQuery` would always return a `queryRef` whenever query execution was skipped. This behavior been updated to return a `queryRef` only when query execution is enabled. If initializing the hook with it skipped, `queryRef` is now returned as `undefined`.
-
-  To migrate, conditionally render the component that accepts the `queryRef` as props.
-
-  **Before**
+  **`useBackgroundQuery`**
 
   ```ts
+  import { skipToken, useBackgroundQuery } from '@apollo/client';
+
   function Parent() {
-    const [queryRef] = useBackgroundQuery(query, skip ? skipToken : undefined);
-    //      ^? QueryReference<TData | undefined>
-
-    return <Child queryRef={queryRef} />;
-  }
-
-  function Child({
-    queryRef,
-  }: {
-    queryRef: QueryReference<TData | undefined>;
-  }) {
-    const { data } = useReadQuery(queryRef);
-  }
-  ```
-
-  **After**
-
-  ```ts
-  function Parent() {
-    const [queryRef] = useBackgroundQuery(query, skip ? skipToken : undefined);
-    //      ^? QueryReference<TData> | undefined
+    const [queryRef] = useBackgroundQuery(
+      query,
+      id ? { variables: { id } } : skipToken
+    );
 
     return queryRef ? <Child queryRef={queryRef} /> : null;
   }

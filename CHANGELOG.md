@@ -389,22 +389,7 @@
 - [#11086](https://github.com/apollographql/apollo-client/pull/11086) [`0264fee06`](https://github.com/apollographql/apollo-client/commit/0264fee066cb715602eda26c7c0bb1254469eccb) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a call to `refetch`, `fetchMore`, or changing `skip` to `false` that returned a result deeply equal to data in the cache would get stuck in a pending state and never resolve.
 
 - [#11053](https://github.com/apollographql/apollo-client/pull/11053) [`c0ca70720`](https://github.com/apollographql/apollo-client/commit/c0ca70720cf5fbedd6e4f128b460c1995d9c55a7) Thanks [@phryneas](https://github.com/phryneas)! - Add `SuspenseCache` as a lazy hidden property on ApolloClient.
-  This means that `SuspenseCache` is now an implementation details of Apollo Client
-  and you no longer need to manually instantiate it and no longer need to pass it
-  into `ApolloProvider`.
-  Trying to instantiate a `SuspenseCache` instance in your code will now throw an
-  error.
-
-  Migration:
-
-  ```diff
-  -import { SuspenseCache } from '@apollo/client';
-
-  -const suspenseCache = new SuspenseCache();
-
-  -<ApolloProvider client={client} suspenseCache={suspenseCache} />;
-  +<ApolloProvider client={client} />;
-  ```
+  This means that `SuspenseCache` is now an implementation details of Apollo Client and you no longer need to manually instantiate it and no longer need to pass it into `ApolloProvider`. Trying to instantiate a `SuspenseCache` instance in your code will now throw an error.
 
 - [#11115](https://github.com/apollographql/apollo-client/pull/11115) [`78739e3ef`](https://github.com/apollographql/apollo-client/commit/78739e3efe86f6db959dd792d21fa12e0427b12c) Thanks [@phryneas](https://github.com/phryneas)! - Enforce `export type` for all type-level exports.
 

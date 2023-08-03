@@ -539,7 +539,7 @@ const { data } = useSuspenseQuery(
 
 ```js title="Recommended usage of skipToken with useBackgroundQuery"
 import { skipToken, useBackgroundQuery } from '@apollo/client';
-const [ queryRef ] = useBackgroundQuery(
+const [queryRef] = useBackgroundQuery(
   query,
   id ? { variables: { id } } : skipToken
 );

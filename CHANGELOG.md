@@ -219,7 +219,8 @@
 
   With this change, the `AbortController` will only be `.abort()`ed by outside events, not as a consequence of the request completing.
 
-#### Other minor changes
+<details>
+  <summary><h4>Other Minor Changes</h4></summary>
 
 - [#10895](https://github.com/apollographql/apollo-client/pull/10895) [`e187866fd`](https://github.com/apollographql/apollo-client/commit/e187866fdfbbd1e1e30646f289367fb4b5afb3c3) Thanks [@Gelio](https://github.com/Gelio)! - Add generic type parameter for the entity modified in `cache.modify`. Improves TypeScript type inference for that type's fields and values of those fields.
 
@@ -266,7 +267,10 @@
 
 - [#10915](https://github.com/apollographql/apollo-client/pull/10915) [`3a62d8228`](https://github.com/apollographql/apollo-client/commit/3a62d8228ab6c15cdb7cd4ea106d13ba3e6f0029) Thanks [@phryneas](https://github.com/phryneas)! - Changes how development-only code is bundled in the library to more reliably enable consuming bundlers to reduce production bundle sizes while keeping compatibility with non-node environments.
 
-### Patch Changes
+</details>
+
+<details>
+  <summary><h3>Patch Changes</h3></summary>
 
 - [#11086](https://github.com/apollographql/apollo-client/pull/11086) [`0264fee06`](https://github.com/apollographql/apollo-client/commit/0264fee066cb715602eda26c7c0bb1254469eccb) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a call to `refetch`, `fetchMore`, or changing `skip` to `false` that returned a result deeply equal to data in the cache would get stuck in a pending state and never resolve.
 
@@ -401,6 +405,8 @@
 - [#10872](https://github.com/apollographql/apollo-client/pull/10872) [`96b4f8837`](https://github.com/apollographql/apollo-client/commit/96b4f8837881db67e951272b775dc62282e50d49) Thanks [@phryneas](https://github.com/phryneas)! - The "per-React-Version-Singleton" ApolloContext is now stored on `globalThis`, not `React.createContext`, and throws an error message when accessed from React Server Components.
 
 - [#10450](https://github.com/apollographql/apollo-client/pull/10450) [`f8bc33387`](https://github.com/apollographql/apollo-client/commit/f8bc33387f66e28456aede53bae75694c9a7a45f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for the `subscribeToMore` and `client` fields returned in the `useSuspenseQuery` result.
+
+</details>
 
 ## 3.7.17
 

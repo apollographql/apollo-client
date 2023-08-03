@@ -593,7 +593,9 @@ function useBackgroundQuery<TData, TVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: BackgroundQueryHookOptions<TData, TVariables> | SkipToken,
 ): [
-  QueryReference<TData>,
+  // Will return `undefined` here if no query has been executed yet and the query
+  // is currently skipped using `skipToken` or { skip: true }
+  QueryReference<TData> | undefined,
   {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
@@ -613,6 +615,8 @@ function useBackgroundQuery<TData, TVariables>(
 #### `options`
 
 Instead of passing a `BackgroundQueryHookOptions` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useBackgroundQuery` hook from executing the query.
+
+If no query has been executed yet and you skip the query, the hook will return `undefined` instead of a `queryRef`.
 
 <UseBackgroundQueryOptions />
 
@@ -681,3 +685,50 @@ const [queryRef] = useBackgroundQuery(
   id ? { variables: { id } } : skipToken
 );
 ```
+
+<blockquote>
+
+Note: **Why do we recommend `skipToken` over `{ skip: true }`?**
+
+Imagine this very common scenario for `skip`: You want to skip your query if a certain variable is not set. You might be tempted to write something like this:
+
+```ts
+const { data } = useSuspenseQuery(query, {
+  variables: { id },
+  skip: !id
+});
+```
+But in that case, TypeScript will complain:
+```
+Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.ts(2769)
+```
+
+To get around that, you have to tell TypeScript to ignore the fact that `id` could be `undefined`:
+```ts
+const { data } = useSuspenseQuery(query, {
+  variables: { id: id! },
+  skip: !id
+});
+```
+Alternatively, you could also use some obscure default value:
+```ts
+const { data } = useSuspenseQuery(query, {
+  variables: { id: id || 0 },
+  skip: !id
+});
+```
+
+What both of these solutions have in common: They hide a potential bug. If your `skip` logic becomes more complex in the future, you might accidentally introduce a bug that causes your query not to be skipped, even though `id` is still `undefined` - and TypeScript won't be able to warn you about it.
+
+So instead, we recommend using `skipToken`, as that will work without a lie to the compiler or an obscure default value:
+
+```ts
+const { data } = useSuspenseQuery(
+  query,
+  id ? { variables: { id } } : skipToken
+);
+```
+In this case, it becomes apparent for TypeScript that there is a direct connection between skipping and the `variables` option - and it will work without unsafe workarounds.
+
+</blockquote>

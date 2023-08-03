@@ -4,32 +4,129 @@
 
 ### Minor Changes
 
-- [#10895](https://github.com/apollographql/apollo-client/pull/10895) [`e187866fd`](https://github.com/apollographql/apollo-client/commit/e187866fdfbbd1e1e30646f289367fb4b5afb3c3) Thanks [@(author)](<https://github.com/(author)>)! - Add generic type parameter for the entity modified in `cache.modify`. Improves
-  TypeScript type inference for that type's fields and values of those fields.
+#### Fetching with Suspense 🎉
 
-  Example:
+- [#10323](https://github.com/apollographql/apollo-client/pull/10323) [`64cb88a4b`](https://github.com/apollographql/apollo-client/commit/64cb88a4b6be8640c4e0d753dd06ddf4c25a2bc3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for React suspense with a new `useSuspenseQuery` hook.
 
-  ```ts
-  cache.modify<Book>({
-    id: cache.identify(someBook),
-    fields: {
-      title: (title) => {
-        // title has type `string`.
-        // It used to be `any`.
-      },
-   => {
-        // author has type `Reference | Book["author"]`.
-        // It used to be `any`.
-      },
-    },
-  });
+  `useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is in flight. It can be thought of as a drop-in replacement for `useQuery` that allows you to take advantage of React's concurrent features while fetching during render.
+
+  ```tsx
+  import { Suspense } from 'react';
+  import { gql, TypedDocumentNode, useSuspenseQuery } from '@apollo/client';
+
+  interface Data {
+    dog: {
+      id: string;
+      name: string;
+    };
+  }
+
+  interface Variables {
+    name: string;
+  }
+
+  const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
+    query GetDog($name: String) {
+      dog(name: $name) {
+        id
+        name
+      }
+    }
+  `;
+
+  function App() {
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <Dog name="Mozzarella" />
+      </Suspense>
+    );
+  }
+
+  function Dog({ name }: { name: string }) {
+    const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+      variables: { name },
+    });
+
+    return <>Name: {data.dog.name}</>;
+  }
   ```
 
-- [#10895](https://github.com/apollographql/apollo-client/pull/10895) [`e187866fd`](https://github.com/apollographql/apollo-client/commit/e187866fdfbbd1e1e30646f289367fb4b5afb3c3) Thanks [@Gelio](https://github.com/Gelio)! - Use unique opaque types for the `DELETE` and `INVALIDATE` Apollo cache modifiers.
+  For a detailed explanation of `useSuspenseQuery`, see our [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
 
-  This increases type safety, since these 2 modifiers no longer have the `any` type.
-  Moreover, it no longer triggers [the `@typescript-eslint/no-unsafe-return`
-  rule](https://typescript-eslint.io/rules/no-unsafe-return/).
+- [#10755](https://github.com/apollographql/apollo-client/pull/10755) [`e3c676deb`](https://github.com/apollographql/apollo-client/commit/e3c676deb59d006f33d24a7211e58725a67641b8) Thanks [@alessbell](https://github.com/alessbell)! - Feature: adds `useBackgroundQuery` and `useReadQuery` hooks
+
+  `useBackgroundQuery` initiates a request for data in a parent component and returns a `QueryReference` which is used to read the data in a child component via `useReadQuery`. If the child component attempts to render before the data can be found in the cache, the child component will suspend until the data is available. On cache updates to watched data, the child component calling `useReadQuery` will re-render with new data **but the parent component will not re-render** (as it would, for example, if it were using `useQuery` to issue the request).
+
+  ```tsx
+    function App() {
+      const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
+      return (
+        <Suspense fallback={<div>Loading...</div>}>
+          <Dog name="Mozzarella" queryRef={queryRef} />
+        </Suspense>
+      );
+    }
+
+    function Dog({
+      name,
+      queryRef,
+    }: {
+      name: string;
+      queryRef: QueryReference<BreedData>;
+    }) {
+      const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+        variables: { name },
+      });
+      return (
+        <>
+          Name: {data.dog.name}
+          <Suspense fallback={<div>Loading breeds...</div>}>
+            <Breeds queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    function Breeds({ queryRef }: { queryRef: QueryReference<BreedData> }) {
+      const { data } = useReadQuery(queryRef);
+      return data.breeds.map(({ characteristics }) =>
+        characteristics.map((characteristic) => (
+          <div key={characteristic}>{characteristic}</div>
+        ))
+      );
+    }
+  ```
+
+  For a detailed explanation of `useBackgroundQuery` and `useReadQuery`, see our [fetching with Suspense reference](https://www.apollographql.com/docs/react/data/suspense).
+
+#### Document transforms 📑
+
+- [#10509](https://github.com/apollographql/apollo-client/pull/10509) [`79df2c7ba`](https://github.com/apollographql/apollo-client/commit/79df2c7ba55b7cfee69fd54024174f77099a2550) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to specify custom GraphQL document transforms. These transforms are run before reading data from the cache, before local state is resolved, and before the query document is sent through the link chain.
+
+  To register a custom document transform, create a transform using the `DocumentTransform` class and pass it to the `documentTransform` option on `ApolloClient`.
+
+  ```ts
+  import { DocumentTransform } from "@apollo/client";
+
+  const documentTransform = new DocumentTransform((document) => {
+    // do something with `document`
+    return transformedDocument;
+  });
+
+  const client = new ApolloClient({ documentTransform: documentTransform });
+  ```
+
+  For additional documentation on the behavior and API of `DocumentTransform`, see the [pull request](https://github.com/apollographql/apollo-client/pull/10509).
+
+#### New `removeTypenameFromVariables` link 🔗
+
+- [#10853](https://github.com/apollographql/apollo-client/pull/10853) [`300957960`](https://github.com/apollographql/apollo-client/commit/300957960a584920f2d346d29a0b3aaeb27d9489) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduce the new `removeTypenameFromVariables` link. This link will automatically remove `__typename` fields from `variables` for all operations. This link can be configured to exclude JSON-scalars for scalars that utilize `__typename`.
+
+  This change undoes some work from #10724 where `__typename` was automatically stripped for all operations with no configuration. This was determined to be a breaking change and therefore moved into this link.
+
+  For a detailed explanation of `removeTypenameFromVariables`, see its [API reference](https://www.apollographql.com/docs/react/api/link/apollo-link-remove-typename).
+
+#### New `skipToken` sentinel ⏭️
 
 - [#11112](https://github.com/apollographql/apollo-client/pull/11112) [`b4aefcfe9`](https://github.com/apollographql/apollo-client/commit/b4aefcfe97213461b9ce01946344e6a5e6d80704) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds support for a `skipToken` sentinel that can be used as `options` in `useSuspenseQuery` and `useBackgroundQuery` to skip execution of a query. This works identically to the `skip` option but is more type-safe and as such, becomes the recommended way to skip query execution. As such, the `skip` option has been deprecated in favor of `skipToken`.
 
@@ -46,7 +143,7 @@
   );
   ```
 
-  ### Breaking change
+  ##### Breaking change
 
   Previously `useBackgroundQuery` would always return a `queryRef` whenever query execution was skipped. This behavior been updated to return a `queryRef` only when query execution is enabled. If initializing the hook with it skipped, `queryRef` is now returned as `undefined`.
 
@@ -86,14 +183,17 @@
   }
   ```
 
-- [#10527](https://github.com/apollographql/apollo-client/pull/10527) [`0cc7e2e19`](https://github.com/apollographql/apollo-client/commit/0cc7e2e194f84e137a502395f26acdaef392ecae) Thanks [@phryneas](https://github.com/phryneas)! - Remove the `query`/`mutation`/`subscription` option from hooks that already take that value as their first argument.
+  For a detailed explanation of `skipToken`, see its [API reference](https://www.apollographql.com/docs/react/api/react/hooks/#skiptoken).
 
-- [#10887](https://github.com/apollographql/apollo-client/pull/10887) [`f8c0b965d`](https://github.com/apollographql/apollo-client/commit/f8c0b965d49fb7d802371bb9cc3cb0b60cf05e5d) Thanks [@phryneas](https://github.com/phryneas)! - Add a new mechanism for Error Extraction to reduce bundle size by including
-  error message texts on an opt-in basis.
+#### New error extraction mechanism, smaller bundles 📉
+
+- [#10887](https://github.com/apollographql/apollo-client/pull/10887) [`f8c0b965d`](https://github.com/apollographql/apollo-client/commit/f8c0b965d49fb7d802371bb9cc3cb0b60cf05e5d) Thanks [@phryneas](https://github.com/phryneas)! - Add a new mechanism for Error Extraction to reduce bundle size by including error message texts on an opt-in basis.
+
   By default, errors will link to an error page with the entire error message.
   This replaces "development" and "production" errors and works without
   additional bundler configuration.
-  Bundling the text of error messages and development warnings can be enabled by
+
+  Bundling the text of error messages and development warnings can be enabled as follows:
 
   ```js
   import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
@@ -103,13 +203,58 @@
   }
   ```
 
-- [#10506](https://github.com/apollographql/apollo-client/pull/10506) [`2dc2e1d4f`](https://github.com/apollographql/apollo-client/commit/2dc2e1d4f77318d8a4c29445344b4f8c5b08b7e3) Thanks [@phryneas](https://github.com/phryneas)! - prevent accidental widening of inferred TData and TVariables generics for query hook option arguments
+  For a detailed explanation, see our [reference on reducing bundle size](https://www.apollographql.com/docs/react/development-testing/reducing-bundle-size).
+
+#### Abort the `AbortController` signal more granularly 🛑
+
+- [#11040](https://github.com/apollographql/apollo-client/pull/11040) [`125ef5b2a`](https://github.com/apollographql/apollo-client/commit/125ef5b2a8fd2de1515b2bdd71785ebab3596cb2) Thanks [@phryneas](https://github.com/phryneas)! - `HttpLink`/`BatchHttpLink`: Abort the `AbortController` signal more granularly.
+
+  Before this change, when `HttpLink`/`BatchHttpLink` created an `AbortController` internally, the signal would always be `.abort`ed after the request was completed. This could cause issues with Sentry Session Replay and Next.js App Router Cache invalidations, which just replayed the fetch with the same options - including the cancelled `AbortSignal`.
+
+  With this change, the `AbortController` will only be `.abort()`ed by outside events, not as a consequence of the request completing.
+
+#### New `@nonreactive` directive 🎬
+
+- [#10722](https://github.com/apollographql/apollo-client/pull/10722) [`c7e60f83d`](https://github.com/apollographql/apollo-client/commit/c7e60f83dd1dfe07a1b6ce60d9675d3616a2ce66) Thanks [@benjamn](https://github.com/benjamn)! - Implement a `@nonreactive` directive for selectively skipping reactive comparisons of query result subtrees.
+
+  For a detailed explanation, see our [`@nonreactive` reference](https://www.apollographql.com/docs/react/data/directives/#nonreactive) and [@alessbell](https://github.com/alessbell)'s [post on the Apollo blog about using `@nonreactive` with `useFragment`](https://www.apollographql.com/blog/apollo-client/introducing-apollo-clients-nonreactive-directive-and-usefragment-hook/).
+
+#### Other minor changes
+
+- [#10895](https://github.com/apollographql/apollo-client/pull/10895) [`e187866fd`](https://github.com/apollographql/apollo-client/commit/e187866fdfbbd1e1e30646f289367fb4b5afb3c3) Thanks [@Gelio](https://github.com/Gelio)! - Add generic type parameter for the entity modified in `cache.modify`. Improves TypeScript type inference for that type's fields and values of those fields.
+
+  Example:
+
+  ```ts
+  cache.modify<Book>({
+    id: cache.identify(someBook),
+    fields: {
+      title: (title) => {
+        // title has type `string`.
+        // It used to be `any`.
+      },
+   => {
+        // author has type `Reference | Book["author"]`.
+        // It used to be `any`.
+      },
+    },
+  });
+  ```
+
+- [#10895](https://github.com/apollographql/apollo-client/pull/10895) [`e187866fd`](https://github.com/apollographql/apollo-client/commit/e187866fdfbbd1e1e30646f289367fb4b5afb3c3) Thanks [@Gelio](https://github.com/Gelio)! - Use unique opaque types for the `DELETE` and `INVALIDATE` Apollo cache modifiers.
+
+  This increases type safety, since these 2 modifiers no longer have the `any` type. Moreover, it no longer triggers [the `@typescript-eslint/no-unsafe-return`
+  rule](https://typescript-eslint.io/rules/no-unsafe-return/).
+
+- [#10340](https://github.com/apollographql/apollo-client/pull/10340) [`4f73c5ca1`](https://github.com/apollographql/apollo-client/commit/4f73c5ca15d367aa23f02018d062f221c4506a4d) Thanks [@alessbell](https://github.com/alessbell)! - Avoid calling `useQuery` `onCompleted` for cache writes
+
+- [#10527](https://github.com/apollographql/apollo-client/pull/10527) [`0cc7e2e19`](https://github.com/apollographql/apollo-client/commit/0cc7e2e194f84e137a502395f26acdaef392ecae) Thanks [@phryneas](https://github.com/phryneas)! - Remove the `query`/`mutation`/`subscription` option from hooks that already take that value as their first argument.
+
+- [#10506](https://github.com/apollographql/apollo-client/pull/10506) [`2dc2e1d4f`](https://github.com/apollographql/apollo-client/commit/2dc2e1d4f77318d8a4c29445344b4f8c5b08b7e3) Thanks [@phryneas](https://github.com/phryneas)! - prevent accidental widening of inferred `TData` and `TVariables` generics for query hook option arguments
 
 - [#10521](https://github.com/apollographql/apollo-client/pull/10521) [`fbf729414`](https://github.com/apollographql/apollo-client/commit/fbf729414b6322a84158d9864bdfb5b17b2c7d77) Thanks [@benjamn](https://github.com/benjamn)! - Simplify `__DEV__` polyfill to use imports instead of global scope
 
 - [#10994](https://github.com/apollographql/apollo-client/pull/10994) [`2ebbd3abb`](https://github.com/apollographql/apollo-client/commit/2ebbd3abb31224ed383896ebea7c2791c9b42a22) Thanks [@phryneas](https://github.com/phryneas)! - Add .js file extensions to imports in src and dist/\*_/_.d.ts
-
-- [#10722](https://github.com/apollographql/apollo-client/pull/10722) [`c7e60f83d`](https://github.com/apollographql/apollo-client/commit/c7e60f83dd1dfe07a1b6ce60d9675d3616a2ce66) Thanks [@benjamn](https://github.com/benjamn)! - Implement a `@nonreactive` directive for selectively skipping reactive comparisons of query result subtrees
 
 - [#11045](https://github.com/apollographql/apollo-client/pull/11045) [`9c1d4a104`](https://github.com/apollographql/apollo-client/commit/9c1d4a104d721993b5b306ca4c21724a974e098d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - When changing variables back to a previously used set of variables, do not automatically cache the result as part of the query reference. Instead, dispose of the query reference so that the `InMemoryCache` can determine the cached behavior. This means that fetch policies that would guarantee a network request are now honored when switching back to previously used variables.
 
@@ -117,41 +262,9 @@
 
 - [#10346](https://github.com/apollographql/apollo-client/pull/10346) [`3bcfc42d3`](https://github.com/apollographql/apollo-client/commit/3bcfc42d394b6a97900495eacdaf58c31ae96d9f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to allow `@client` fields to be sent to the link chain.
 
-- [#10755](https://github.com/apollographql/apollo-client/pull/10755) [`e3c676deb`](https://github.com/apollographql/apollo-client/commit/e3c676deb59d006f33d24a7211e58725a67641b8) Thanks [@alessbell](https://github.com/alessbell)! - Feature: adds `useBackgroundQuery` and `useReadQuery` hooks
-
-- [#10853](https://github.com/apollographql/apollo-client/pull/10853) [`300957960`](https://github.com/apollographql/apollo-client/commit/300957960a584920f2d346d29a0b3aaeb27d9489) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduce the new `removeTypenameFromVariables` link. This link will automatically remove `__typename` fields from `variables` for all operations. This link can be configured to exclude JSON-scalars for scalars that utilize `__typename`.
-
-  This change undoes some work from #10724 where `__typename` was automatically stripped for all operations with no configuration. This was determined to be a breaking change and therefore moved into this link.
-
-- [#10323](https://github.com/apollographql/apollo-client/pull/10323) [`64cb88a4b`](https://github.com/apollographql/apollo-client/commit/64cb88a4b6be8640c4e0d753dd06ddf4c25a2bc3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for React suspense with a new `useSuspenseQuery` hook.
-
 - [#10567](https://github.com/apollographql/apollo-client/pull/10567) [`c2ce6496c`](https://github.com/apollographql/apollo-client/commit/c2ce6496c10e7ae7e29d25161c2d3cef3e2c6144) Thanks [@benjamn](https://github.com/benjamn)! - Allow `ApolloCache` implementations to specify default value for `assumeImmutableResults` client option, improving performance for applications currently using `InMemoryCache` without configuring `new ApolloClient({ assumeImmutableResults: true })`
 
-- [#11040](https://github.com/apollographql/apollo-client/pull/11040) [`125ef5b2a`](https://github.com/apollographql/apollo-client/commit/125ef5b2a8fd2de1515b2bdd71785ebab3596cb2) Thanks [@phryneas](https://github.com/phryneas)! - `HttpLink`/`BatchHttpLink`: Abort the `AbortController` signal more granularly.
-  Before this change, when `HttpLink`/`BatchHttpLink` created an `AbortController`
-  internally, the signal would always be `.abort`ed after the request was completed. This could cause issues with Sentry Session Replay and Next.js App Router Cache invalidations, which just replayed the fetch with the same options - including the cancelled `AbortSignal`.
-
-  With this change, the `AbortController` will only be `.abort()`ed by outside events,
-  not as a consequence of the request completing.
-
 - [#10915](https://github.com/apollographql/apollo-client/pull/10915) [`3a62d8228`](https://github.com/apollographql/apollo-client/commit/3a62d8228ab6c15cdb7cd4ea106d13ba3e6f0029) Thanks [@phryneas](https://github.com/phryneas)! - Changes how development-only code is bundled in the library to more reliably enable consuming bundlers to reduce production bundle sizes while keeping compatibility with non-node environments.
-
-- [#10509](https://github.com/apollographql/apollo-client/pull/10509) [`79df2c7ba`](https://github.com/apollographql/apollo-client/commit/79df2c7ba55b7cfee69fd54024174f77099a2550) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to specify custom GraphQL document transforms. These transforms are run before reading data from the cache, before local state is resolved, and before the query document is sent through the link chain.
-
-  To register a custom document transform, create a transform using the `DocumentTransform` class and pass it to the `documentTransform` option on `ApolloClient`.
-
-  ```ts
-  import { DocumentTransform } from "@apollo/client";
-
-  const documentTransform = new DocumentTransform((document) => {
-    // do something with `document`
-    return transformedDocument;
-  });
-
-  const client = new ApolloClient({ documentTransform: documentTransform });
-  ```
-
-  For additional documentation on the behavior and API of `DocumentTransform`, see the [pull request](https://github.com/apollographql/apollo-client/pull/10509).
 
 ### Patch Changes
 
@@ -193,8 +306,6 @@
 
 - [#10869](https://github.com/apollographql/apollo-client/pull/10869) [`ba1d06166`](https://github.com/apollographql/apollo-client/commit/ba1d0616618ee040e9bcb20874b03d5783f7eff3) Thanks [@phryneas](https://github.com/phryneas)! - Ensure Context value stability when rerendering ApolloProvider with the same `client` and/or `suspenseCache` prop
 
-- [#10340](https://github.com/apollographql/apollo-client/pull/10340) [`4f73c5ca1`](https://github.com/apollographql/apollo-client/commit/4f73c5ca15d367aa23f02018d062f221c4506a4d) Thanks [@alessbell](https://github.com/alessbell)! - Avoid calling `useQuery` `onCompleted` for cache writes
-
 - [#11103](https://github.com/apollographql/apollo-client/pull/11103) [`e3d611daf`](https://github.com/apollographql/apollo-client/commit/e3d611daf7a014e5c92d6bed75d67b9187437eda) Thanks [@caylahamann](https://github.com/caylahamann)! - Fixes a bug in `useMutation` so that `onError` is called when an error is returned from the request with `errorPolicy` set to 'all' .
 
 - [#10657](https://github.com/apollographql/apollo-client/pull/10657) [`db305a800`](https://github.com/apollographql/apollo-client/commit/db305a8005664e9b6ec64046da230f41d293104d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Return `networkStatus` in the `useSuspenseQuery` result.
@@ -222,7 +333,7 @@
 
 - [#10672](https://github.com/apollographql/apollo-client/pull/10672) [`932252b0c`](https://github.com/apollographql/apollo-client/commit/932252b0c54792ec8c5095de1b42c005a91ffe6d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix the compatibility between `useSuspenseQuery` and React's `useDeferredValue` and `startTransition` APIs to allow React to show stale UI while the changes to the variable cause the component to suspend.
 
-  # Breaking change
+  #### Breaking change
 
   `nextFetchPolicy` support has been removed from `useSuspenseQuery`. If you are using this option, remove it, otherwise it will be ignored.
 
@@ -273,7 +384,7 @@
 
 - [#11032](https://github.com/apollographql/apollo-client/pull/11032) [`6a4da900a`](https://github.com/apollographql/apollo-client/commit/6a4da900a1bc5da3524caabd64bb30945e66f675) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Throw errors in `useSuspenseQuery` for errors returned in incremental chunks when `errorPolicy` is `none`. This provides a more consistent behavior of the `errorPolicy` in the hook.
 
-  ### Potentially breaking change
+  #### Potentially breaking change
 
   Previously, if you issued a query with `@defer` and relied on `errorPolicy: 'none'` to set the `error` property returned from `useSuspenseQuery` when the error was returned in an incremental chunk, this error is now thrown. Switch the `errorPolicy` to `all` to avoid throwing the error and instead return it in the `error` property.
 

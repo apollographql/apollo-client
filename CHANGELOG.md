@@ -130,7 +130,7 @@
   const client = new ApolloClient({ documentTransform: documentTransform });
   ```
 
-  For additional documentation on the behavior and API of `DocumentTransform`, see the [pull request](https://github.com/apollographql/apollo-client/pull/10509).
+  For more information on the behavior and API of `DocumentTransform`, see its [reference page in our documentation](https://www.apollographql.com/docs/react/data/document-transforms).
 
 #### New `removeTypenameFromVariables` link 🔗
 
@@ -333,7 +333,7 @@
 
   </details>
 
-<details>
+<details open>
   <summary><h4>More Minor Changes</h4></summary>
 
 - [#10895](https://github.com/apollographql/apollo-client/pull/10895) [`e187866fd`](https://github.com/apollographql/apollo-client/commit/e187866fdfbbd1e1e30646f289367fb4b5afb3c3) Thanks [@Gelio](https://github.com/Gelio)! - Add generic type parameter for the entity modified in `cache.modify`. Improves TypeScript type inference for that type's fields and values of those fields.
@@ -383,7 +383,7 @@
 
 </details>
 
-<details>
+<details open>
   <summary><h3>Patch Changes</h3></summary>
 
 - [#11086](https://github.com/apollographql/apollo-client/pull/11086) [`0264fee06`](https://github.com/apollographql/apollo-client/commit/0264fee066cb715602eda26c7c0bb1254469eccb) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a call to `refetch`, `fetchMore`, or changing `skip` to `false` that returned a result deeply equal to data in the cache would get stuck in a pending state and never resolve.

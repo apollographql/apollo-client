@@ -122,7 +122,7 @@
 
 - [#10853](https://github.com/apollographql/apollo-client/pull/10853) [`300957960`](https://github.com/apollographql/apollo-client/commit/300957960a584920f2d346d29a0b3aaeb27d9489) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduce the new `removeTypenameFromVariables` link. This link will automatically remove `__typename` fields from `variables` for all operations. This link can be configured to exclude JSON-scalars for scalars that utilize `__typename`.
 
-  This change undoes some work from #10724 where `__typename` was automatically stripped for all operations with no configuration. This was determined to be a breaking change and therefore moved into this link.
+  This change undoes some work from [#10724](https://github.com/apollographql/apollo-client/pull/10724) where `__typename` was automatically stripped for all operations with no configuration. This was determined to be a breaking change and therefore moved into this link.
 
   For a detailed explanation of `removeTypenameFromVariables`, see its [API reference](https://www.apollographql.com/docs/react/api/link/apollo-link-remove-typename).
 
@@ -219,8 +219,25 @@
 
   With this change, the `AbortController` will only be `.abort()`ed by outside events, not as a consequence of the request completing.
 
+#### `useFragment` drops its experimental label 🎓
+
+- [#10916](https://github.com/apollographql/apollo-client/pull/10916) [`ea75e18de`](https://github.com/apollographql/apollo-client/commit/ea75e18dec3db090dd4ed3b2d249bf674b90ead4) Thanks [@alessbell](https://github.com/alessbell)! - Remove experimental labels.
+
+  `useFragment`, introduced in `3.7.0` as `useFragment_experimental`, is no longer an experimental API 🎉 We've removed the `_experimental` suffix from its named export and have made a number of improvements.
+
+  <details>
+  <summary><h5><code>useFragment</code> improvements</h5></summary>
+
+    - [#10765](https://github.com/apollographql/apollo-client/pull/10765) [`35f36c5aa`](https://github.com/apollographql/apollo-client/commit/35f36c5aaefe1f215044e09fdf9386042bc59dd2) Thanks [@phryneas](https://github.com/phryneas)! - More robust types for the `data` property on `UseFragmentResult`. When a partial result is given, the type is now correctly set to `Partial<TData>`.
+
+    - [#11083](https://github.com/apollographql/apollo-client/pull/11083) [`f766e8305`](https://github.com/apollographql/apollo-client/commit/f766e8305d9f2dbde59a61b8e70c99c4b2b67d55) Thanks [@phryneas](https://github.com/phryneas)! - Adjust the rerender timing of `useQuery` to more closely align with `useFragment`. This means that cache updates delivered to both hooks should trigger renders at relatively the same time. Previously, the `useFragment` might rerender much faster leading to some confusion.
+
+    - [#10836](https://github.com/apollographql/apollo-client/pull/10836) [`6794893c2`](https://github.com/apollographql/apollo-client/commit/6794893c29cc945aa99f6fe54a9e4e70ec3e57fd) Thanks [@phryneas](https://github.com/phryneas)! - Remove the deprecated `returnPartialData` option from `useFragment` hook.
+
+  </details>
+
 <details>
-  <summary><h4>Other Minor Changes</h4></summary>
+  <summary><h4>More Minor Changes</h4></summary>
 
 - [#10895](https://github.com/apollographql/apollo-client/pull/10895) [`e187866fd`](https://github.com/apollographql/apollo-client/commit/e187866fdfbbd1e1e30646f289367fb4b5afb3c3) Thanks [@Gelio](https://github.com/Gelio)! - Add generic type parameter for the entity modified in `cache.modify`. Improves TypeScript type inference for that type's fields and values of those fields.
 
@@ -320,10 +337,6 @@
 
 - [#10651](https://github.com/apollographql/apollo-client/pull/10651) [`8355d0e1e`](https://github.com/apollographql/apollo-client/commit/8355d0e1e9c1cee58cabd7df68d3ba09a3afaf6c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes an issue where `useSuspenseQuery` would not respond to cache updates when using a cache-first `fetchPolicy` after the hook was mounted with data already in the cache.
 
-- [#10765](https://github.com/apollographql/apollo-client/pull/10765) [`35f36c5aa`](https://github.com/apollographql/apollo-client/commit/35f36c5aaefe1f215044e09fdf9386042bc59dd2) Thanks [@phryneas](https://github.com/phryneas)! - More robust types for the `data` property on `UseFragmentResult`. When a partial result is given, the type is now correctly set to `Partial<TData>`.
-
-- [#11083](https://github.com/apollographql/apollo-client/pull/11083) [`f766e8305`](https://github.com/apollographql/apollo-client/commit/f766e8305d9f2dbde59a61b8e70c99c4b2b67d55) Thanks [@phryneas](https://github.com/phryneas)! - Adjust the rerender timing of `useQuery` to more closely align with `useFragment`. This means that cache updates delivered to both hooks should trigger renders at relatively the same time. Previously, the `useFragment` might rerender much faster leading to some confusion.
-
 - [#11026](https://github.com/apollographql/apollo-client/pull/11026) [`b8d405eee`](https://github.com/apollographql/apollo-client/commit/b8d405eee2a81df92861be5abd9bd874d7cad111) Thanks [@phryneas](https://github.com/phryneas)! - Store React.Context instance mapped by React.createContext instance, not React.version.
   Using `React.version` can cause problems with `preact`, as multiple versions of `preact` will all identify themselves as React `17.0.2`.
 
@@ -340,8 +353,6 @@
   #### Breaking change
 
   `nextFetchPolicy` support has been removed from `useSuspenseQuery`. If you are using this option, remove it, otherwise it will be ignored.
-
-- [#10916](https://github.com/apollographql/apollo-client/pull/10916) [`ea75e18de`](https://github.com/apollographql/apollo-client/commit/ea75e18dec3db090dd4ed3b2d249bf674b90ead4) Thanks [@alessbell](https://github.com/alessbell)! - Remove experimental labels from hooks, move to beta.
 
 - [#10964](https://github.com/apollographql/apollo-client/pull/10964) [`f33171506`](https://github.com/apollographql/apollo-client/commit/f331715066d65291b1f5df5e6fa2b6618dfc70b1) Thanks [@alessbell](https://github.com/alessbell)! - Fixes a bug in `BatchHttpLink` that removed variables from all requests by default.
 
@@ -366,8 +377,6 @@
 - [#10401](https://github.com/apollographql/apollo-client/pull/10401) [`3e5b41a75`](https://github.com/apollographql/apollo-client/commit/3e5b41a751673bb2120c0b624e22afd3b7b860e5) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Always throw network errors in `useSuspenseQuery` regardless of the set `errorPolicy`.
 
 - [#10877](https://github.com/apollographql/apollo-client/pull/10877) [`f40248598`](https://github.com/apollographql/apollo-client/commit/f402485985cc2551b51602c0bff213b7ffb856b9) Thanks [@phryneas](https://github.com/phryneas)! - Change an import in `useQuery` and `useMutation` that added an unnecessary runtime dependency on `@apollo/client/core`. This drastically reduces the bundle size of each the hooks.
-
-- [#10836](https://github.com/apollographql/apollo-client/pull/10836) [`6794893c2`](https://github.com/apollographql/apollo-client/commit/6794893c29cc945aa99f6fe54a9e4e70ec3e57fd) Thanks [@phryneas](https://github.com/phryneas)! - Remove the deprecated `returnPartialData` option from `useFragment` hook.
 
 - [#10656](https://github.com/apollographql/apollo-client/pull/10656) [`54c4d2f3c`](https://github.com/apollographql/apollo-client/commit/54c4d2f3c719654e38e537ec38f1cb415c7c3f58) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `refetch`, `fetchMore`, and `subscribeToMore` functions returned by `useSuspenseQuery` are referentially stable between renders, even as `data` is updated.
 

@@ -228,7 +228,7 @@ In this example, we write some partial data for Buck to the cache in `App` to si
 
 The `Dog` component **does not suspend** while this request is being made. This is because we've opted to render partial data _instead_ of suspending by setting `returnPartialData: true`. Once the network request is complete, `Dog` re-renders with the `breed` now displayed.
 
-> **Note for TypeScript users**: with `returnPartialData` to `true` in `UseSuspenseQueryOptions`, the type for the returned `data` still accurately reflects the shape of the result we expect, but all fields are now also possibly `undefined` since we don't know what data will exist in the cache on first render.
+> **Note for TypeScript users**: with `returnPartialData` set to `true`, the returned type for the `data` property will mark all fields in the query type as [optional](https://www.typescriptlang.org/docs/handbook/2/objects.html#optional-properties). Apollo Client cannot accurately determine which fields are present in the cache at any given time when returning partial data.
 
 ### Error handling
 

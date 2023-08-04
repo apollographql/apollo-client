@@ -65,7 +65,7 @@ function Dog({ name }: DogProps) {
 
 > **Note:** this example manually defines TypeScript interfaces for `Data` and `Variables` as well as the type for `GET_DOG_QUERY` using `TypedDocumentNode`. [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) is a popular tool that will create these type definitions automatically for you. See the reference on [Using TypeScript](../development-testing/static-typing) for more information on integrating GraphQL Code Generator with Apollo Client.
 
-In this example, our `App` component renders a `Dog` component which fetches the record for a single dog via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, Apollo's `InMemoryCache` is empty, so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest Suspense boundary _above_ the suspending component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for Mozzarella the Corgi.
+In this example, our `App` component renders a `Dog` component which fetches the record for a single dog via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache is empty so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest Suspense boundary _above_ the suspending component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for Mozzarella the Corgi.
 
 You may have noticed that `useSuspenseQuery` does not return a `loading` boolean: this is because the component calling `useSuspenseQuery` will always suspend when fetching data. A corollary is that when it _does_ render, `data` is always defined! With React 18's concurrent features, Suspense fallbacks that exist **outside of suspending components** take the place of loading states that components were responsible for rendering themselves in the previous React paradigm. When using concurrent React features, `Suspense` boundaries should be used throughout your application to render loading UI while components are suspended. The placement of Suspense boundaries is a key part of designing a good user experience under React's concurrent rendering model.
 
@@ -133,7 +133,7 @@ function Dog({ name }: DogProps) {
 }
 ```
 
-Changing the dog via the `select` will cause the component to suspend each time we select a dog whose record **does not yet exist in the cache**. Once we've loaded a given dog's record into Apollo Client's `InMemoryCache`, however, selecting that dog again from our dropdown will not cause the component to re-suspend, since under our default `cache-first` fetch policy Apollo Client will not make a network request after a cache hit.
+Changing the dog via the `select` will cause the component to suspend each time we select a dog whose record **does not yet exist in the cache**. Once we've loaded a given dog's record in the cache, however, selecting that dog again from our dropdown will not cause the component to re-suspend, since under our default `cache-first` fetch policy Apollo Client will not make a network request after a cache hit.
 
 ### Updating state without suspending
 
@@ -224,7 +224,7 @@ function Dog({ name }: DogProps) {
 }
 ```
 
-In this example, we write some partial data for Buck to the cache in `App` to simulate partial data already existing in Apollo Client's `InMemoryCache` from a previous query with overlapping fields. When `Dog` attempts to render for the first time, it does **not** suspend. Instead, it renders with the partial data for Buck, displaying `Name: Buck` on the first line and `Breed:` with no value (`data.dog.breed` is initially `undefined` since we don't have a value for it in the cache). With a default `fetchPolicy` of `cache-first`, Apollo Client's `InMemoryCache` registers the cache miss for the `breed` field and initiates a `GET_DOG_QUERY` network request.
+In this example, we write some partial data for Buck to the cache in `App` to simulate partial data already existing from a previous query with overlapping fields. When `Dog` attempts to render for the first time, it does **not** suspend. Instead, it renders with the partial data for Buck, displaying `Name: Buck` on the first line and `Breed:` with no value (`data.dog.breed` is initially `undefined` since we don't have a value for it in the cache). With a default `fetchPolicy` of `cache-first`, the cache registers the cache miss for the `breed` field and initiates a `GET_DOG_QUERY` network request.
 
 The `Dog` component **does not suspend** while this request is being made. This is because we've opted to render partial data _instead_ of suspending by setting `returnPartialData: true`. Once the network request is complete, `Dog` re-renders with the `breed` now displayed.
 

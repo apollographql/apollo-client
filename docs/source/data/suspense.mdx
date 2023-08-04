@@ -40,6 +40,9 @@ interface DogProps {
 const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
   query GetDog($name: String) {
     dog(name: $name) {
+      # By default, an object's cache key is a combination of
+      # its __typename and id fields, so we need to fetch the
+      # id so our data can be normalized and cached properly.
       id
       name
     }

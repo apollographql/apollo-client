@@ -371,7 +371,9 @@ In rare cases, you might need to render multiple components that use the same `q
 
 This presents a problem, however, because it means multiple hooks may end up with the same identity. These hooks will suspend together, regardless of which component initiates or re-initiates a network request.
 
-__In rare cases__, you may want to avoid suspending in one component when other components are fetching the same data with the same variables. To do this, you can use the `queryKey` option provided to either `useSuspenseQuery` or `useBackgroundQuery` to uniquely identify a query. When `queryKey` is provided, Apollo Client will use it to identify a query **in combination with its `DocumentNode` and `Variables`**. For more information, see [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery-and-usereadquery)'s API docs.
+You can prevent this with `queryKey` option to ensure each hook has a unique identity. When `queryKey` is provided, Apollo Client will use as part of the hook's identity in combination with its `query` and `variables`. 
+
+For more information, see the [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery-and-usereadquery) API docs.
 
 ### Avoiding request waterfalls
 

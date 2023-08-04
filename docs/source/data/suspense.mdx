@@ -157,7 +157,7 @@ In these cases, we can use a pair of React APIs that allow us to update state wi
 
 Let's modify our code so that the previously displayed dog remains on the screen while the next one is fetched in the background:
 
-```tsx {1,11-13}
+```tsx {1,13-15}
 import { useState, Suspense, startTransition } from "react";
 
 function App() {
@@ -193,11 +193,11 @@ By wrapping our call to `setSelectedDog` in our `App` component in React's `star
 
 You may want to render your component immediately if partial data is available in the cache without suspending first. To do this, you can use the `returnPartialData` option **combined with one of two `fetchPolicy` settings**: `cache-first` (default) or `cache-and-network`.
 
-> **A note on the `fetchPolicy` option:** when fetching data with `useSuspenseQuery` or `useBackgroundQuery`, the four supported fetch policies are `cache-first` (default), `network-only`, `no-cache` and `cache-and-network`. For details on these fetch policies, see [Setting a fetch policy](./queries/#setting-a-fetch-policy).
+> **A note on the `fetchPolicy` option:** when fetching data with Apollo Client's Suspense hooks, the four supported fetch policies are `cache-first` (default), `network-only`, `no-cache` and `cache-and-network`. For details on these fetch policies, see [Setting a fetch policy](./queries/#setting-a-fetch-policy).
 
 Consider how we can adjust our example `App` and `Dog` components to render partial data on first render:
 
-```tsx
+```tsx {31}
 const GET_DOG_QUERY_PARTIAL: TypedDocumentNode = gql`
   query GetDog($id: String) {
     dog(id: $id) {
@@ -339,69 +339,13 @@ Note that with both error policies of `ignore` and `all`, when encountering a **
 
 ### Distinguishing between queries with `queryKey`
 
-By default, Apollo Client uses a query's `DocumentNode` and `Variables` to uniquely identify a query when using Apollo's `Suspense` data fetching hooks, `useSuspenseQuery` and `useBackgroundQuery`.
+By default, Apollo Client uses a query's `DocumentNode` and `Variables` to uniquely identify a query when using Apollo's `Suspense` data fetching hooks.
 
 In practice, this means if you have two components both fetching data using the same `DocumentNode` and `variables`, they will both suspend when either component initiates or re-initiates a network request.
 
 __In rare cases__, you may want to avoid suspending in one component when other components are fetching the same data with the same variables. To do this, you can use the `queryKey` option provided to either `useSuspenseQuery` or `useBackgroundQuery` to uniquely identify a query. When `queryKey` is provided, Apollo Client will use it to identify a query **in combination with its `DocumentNode` and `Variables`**. For more information, see [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery-and-usereadquery)'s API docs.
 
-### `refetch`, `fetchMore` and `subscribeToMore`
-
-Both `useSuspenseQuery` and `useBackgroundQuery` return functions for re-initiating the same query (with existing or new variables) or to fetch more paginated data. `useSuspenseQuery` also provides a `subscribeToMore` function to execute a subscription.
-
-When using `useBackgroundQuery`, both `refetch` and `fetchMore` functions can be destructured from the second item in the tuple returned by the hook.
-
-```tsx
-function App() {
-  const [queryRef, { refetch }] = useBackgroundQuery(
-    GET_BREEDS_QUERY
-  );
-
-  const refetchHandler = () => {
-    refetch();
-  };
-
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Dog
-        id="3"
-        queryRef={queryRef}
-        refetchHandler={refetchHandler}
-      />
-    </Suspense>
-  );
-}
-
-interface DogProps {
-  id: string;
-  queryRef: QueryReference<BreedData>;
-  refetchHandler: () => void;
-}
-
-function Dog({
-  id,
-  queryRef,
-  refetchHandler,
-}: DogProps) {
-  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-    variables: { id },
-  });
-
-  return (
-    <>
-      Name: {data.dog.name}
-      <Suspense fallback={<div>Loading breeds...</div>}>
-        <Breeds queryRef={queryRef} />
-      </Suspense>
-      <button onClick={refetchHandler}>Refetch!</button>
-    </>
-  );
-}
-```
-
-In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `refetchHandler` calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query. As a result, the `Breeds` component re-suspends while the new network request is pending.
-
-## Avoiding request waterfalls
+### Avoiding request waterfalls
 
 Since `useSuspenseQuery` will usually cause a component to suspend on first render while data is being fetched, a tree of components that all use `useSuspenseQuery` to query different data can cause a "waterfall" of Suspense boundaries to display since each component will suspend before rendering its children (which will then suspend while fetching, and so on). In some cases, this can be avoided by using `useBackgroundQuery` and `useReadQuery` instead.
 
@@ -460,9 +404,63 @@ Since we began fetching our `GET_BREEDS_QUERY` in the background when the parent
 
 When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsuspends and continues rendering, reaching the `Breeds` component. Since our `GET_BREEDS_QUERY` request was initiated higher up in our component tree using `useBackgroundQuery`, the network request for `GET_BREEDS_QUERY` **has already completed**! For that reason, when the `Breeds` component attempts to read the data using the `queryRef` for the original query, it **doesn't suspend**. Instead, it can render immediately with the data from the cache.
 
-> **Note:** in a client-rendered application, `useBackgroundQuery` can be used to avoid request waterfalls, but its impact can be even more noticeable in an application using streaming SSR ([when using Apollo Client's Suspense hooks with Next.js's App Router](./#usage-with-nextjs-13-app-router), for example). This is because the server can begin streaming content to the client, bringing even greater performance benefits.
-
 More details on `useBackgroundQuery` and `useReadQuery`'s API can be found in [their API docs](../api/react/hooks/#usebackgroundquery-and-usereadquery).
+
+### `refetch`, `fetchMore` and `subscribeToMore`
+
+Apollo's Suspense data fetching hooks return functions for re-initiating the same query (with existing or new variables) or to fetch more paginated data. `useSuspenseQuery` also provides a `subscribeToMore` function to execute a subscription.
+
+When using `useBackgroundQuery`, both `refetch` and `fetchMore` functions can be destructured from the second item in the tuple returned by the hook.
+
+```tsx
+function App() {
+  const [queryRef, { refetch }] = useBackgroundQuery(
+    GET_BREEDS_QUERY
+  );
+
+  const refetchHandler = () => {
+    refetch();
+  };
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dog
+        id="3"
+        queryRef={queryRef}
+        refetchHandler={refetchHandler}
+      />
+    </Suspense>
+  );
+}
+
+interface DogProps {
+  id: string;
+  queryRef: QueryReference<BreedData>;
+  refetchHandler: () => void;
+}
+
+function Dog({
+  id,
+  queryRef,
+  refetchHandler,
+}: DogProps) {
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { id },
+  });
+
+  return (
+    <>
+      Name: {data.dog.name}
+      <Suspense fallback={<div>Loading breeds...</div>}>
+        <Breeds queryRef={queryRef} />
+      </Suspense>
+      <button onClick={refetchHandler}>Refetch!</button>
+    </>
+  );
+}
+```
+
+In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `refetchHandler` calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query. As a result, the `Breeds` component re-suspends while the new network request is pending.
 
 ## React Server Components (RSC)
 
@@ -471,6 +469,10 @@ More details on `useBackgroundQuery` and `useReadQuery`'s API can be found in [t
 In Next.js v13, Next.js's new [App Router](https://nextjs.org/docs/app) brought the React community the first framework with full support for [React Server Components (RSC)](https://react.dev/blog/2023/03/22/react-labs-what-we-have-been-working-on-march-2023#react-server-components) and Streaming SSR, integrating Suspense as a first-class concept from your application's routing layer all the way down.
 
 In order to integrate with these features, our Apollo Client team released an experimental package, [`@apollo/experimental-nextjs-app-support`](https://github.com/apollographql/apollo-client-nextjs), which allows for seamless use of Apollo Client with both RSC and Streaming SSR, one of the first of its kind for data fetching libraries. See its [README](https://github.com/apollographql/apollo-client-nextjs#readme) and our [introductory blog post](https://www.apollographql.com/blog/apollo-client/next-js/how-to-use-apollo-client-with-next-js-13/) for more details.
+
+#### Streaming while fetching with `useBackgroundQuery` during streaming SSR
+
+In a client-rendered application, `useBackgroundQuery` can be used to avoid request waterfalls, but its impact can be even more noticeable in an application using streaming SSR as the App Router does. This is because the server can begin streaming content to the client, bringing even greater performance benefits.
 
 ### Error handling
 

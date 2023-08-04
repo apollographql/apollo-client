@@ -83,7 +83,7 @@ In the previous example, we fetched the record for a single dog by passing a har
 
 Let's take a look at some code:
 
-```tsx
+```tsx {28-30,35,42,49-51}
 export const GET_DOG_QUERY: TypedDocumentNode<
   DogData,
   Variables
@@ -410,15 +410,15 @@ When using `useBackgroundQuery`, both `refetch` and `fetchMore` functions can be
 
 Let's take a look at an example:
 
-```tsx {1,12,18-20,61}
+```tsx {1,3-5,12-15,18-20,49,57,62}
 import { Suspense, useTransition } from "react";
 import {
+  useSuspenseQuery,
+  useBackgroundQuery,
+  useReadQuery,
   gql,
   TypedDocumentNode,
-  useBackgroundQuery,
-  useSuspenseQuery,
   QueryReference,
-  useReadQuery,
 } from "@apollo/client";
 
 function App() {
@@ -468,6 +468,7 @@ function Dog({
 
 function Breeds({ queryRef, isPending }: BreedsProps) {
   const { data } = useReadQuery(queryRef);
+
   return data.breeds.map(({ characteristics }) =>
     characteristics.map((characteristic) => (
       <div

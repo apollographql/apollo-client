@@ -46,7 +46,7 @@ import {
 } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import { SuspenseQueryHookFetchPolicy } from "../../../react";
-import { useSuspenseQuery } from "../useSuspenseQuery";
+import { UseSuspenseQueryResult, useSuspenseQuery } from "../useSuspenseQuery";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import { profile } from "../../../testing/internal";
 
@@ -323,29 +323,56 @@ describe("useSuspenseQuery", () => {
   it("suspends a query and returns results", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
-    const { result, renders } = renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      { mocks }
-    );
+    let result: UseSuspenseQueryResult<SimpleQueryData> | undefined;
+    const Component = () => {
+      result = useSuspenseQuery(query);
+      return <div>{result.data.greeting}</div>;
+    };
 
-    // ensure the hook suspends immediately
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
-        error: undefined,
-      });
+    const App = () => {
+      return (
+        <Suspense fallback={<div>loading</div>}>
+          <ErrorBoundary fallback={<div>Error</div>}>
+            <Component />
+          </ErrorBoundary>
+        </Suspense>
+      );
+    };
+
+    const ProfiledApp = profile({
+      Component: App,
+      takeSnapshot: () => result,
+      snapshotDOM: true,
     });
 
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.count).toBe(2);
-    expect(renders.frames).toMatchObject([
-      {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    render(<ProfiledApp />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      // ensure the hook suspends immediately
+      const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+      expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      expect(snapshot).toBeUndefined();
+    }
+
+    {
+      const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+      expect(withinDOM().queryByText("loading")).not.toBeInTheDocument();
+      expect(withinDOM().getByText("Hello")).toBeInTheDocument();
+      expect(snapshot).toMatchObject({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-    ]);
+      });
+    }
   });
 
   it("suspends a query with variables and returns results", async () => {

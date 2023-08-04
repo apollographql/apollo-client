@@ -297,7 +297,7 @@ function Dog({ id }: DogProps) {
 
 If the `GET_DOG_QUERY` inside of the `Dog` component were to return with a GraphQL error or a network error, the `Dog` component would throw and the nearest error boundary would render its fallback component. But our component tree doesn't have an error boundary yet—let's add one!
 
-```tsx {1,18,22}
+```tsx {1,18-20,22,24}
 import { ErrorBoundary } from "react-error-boundary";
 
 function App() {
@@ -418,7 +418,6 @@ import {
 } from '@apollo/client';
 
 function App() {
-  // Fetch now
   const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
 
   return (
@@ -448,7 +447,6 @@ interface BreedsProps {
 }
 
 function Breeds({ queryRef }: BreedsProps) {
-  // Suspend later
   const { data } = useReadQuery(queryRef);
 
   return data.breeds.map(({ characteristics }) =>

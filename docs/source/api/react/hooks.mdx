@@ -529,13 +529,11 @@ function useSuspenseQuery<TData, TVariables>(
 
 <MinVersion version="3.8.0">
 
-## `useBackgroundQuery` and `useReadQuery`
+## `useBackgroundQuery`
 
 </MinVersion>
 
-For a detailed explanation of `useBackgroundQuery` and `useReadQuery`, see the [fetching with Suspense reference](../../data/suspense#avoiding-request-waterfalls).
-
-See the API references for [`useBackgroundQuery`](#usebackgroundquery-api) and [`useReadQuery`](#usereadquery-api) for supported options.
+For a detailed explanation of `useBackgroundQuery`, see the [fetching with Suspense reference](../../data/suspense#avoiding-request-waterfalls).
 
 ### Example
 
@@ -588,8 +586,6 @@ function App() {
 }
 ```
 
-### `useBackgroundQuery` API
-
 ### Signature
 
 ```ts
@@ -622,9 +618,19 @@ function useBackgroundQuery<TData, TVariables>(
 
 <UseBackgroundQueryResult />
 
-### `useReadQuery` API
+<MinVersion version="3.8.0">
 
-#### Signature
+## `useReadQuery`
+
+</MinVersion>
+
+For a detailed explanation of `useReadQuery`, see the [fetching with Suspense reference](../../data/suspense#avoiding-request-waterfalls).
+
+### Example
+
+See the [example](./#example-10) in the `useBackgroundQuery` section above.
+
+### Signature
 
 ```ts
 function useReadQuery<TData>(

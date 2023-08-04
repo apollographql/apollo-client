@@ -12,11 +12,9 @@ In this guide, we'll look at Apollo Client's data fetching hooks introduced in 3
 
 ## Fetching with Suspense
 
-`useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is in flight. It can be thought of as a Suspense-ready replacement for `useQuery` that allows you to take advantage of React's Suspense features while fetching during render.
+`useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is being made. It can be thought of as a Suspense-ready replacement for `useQuery` that allows you to take advantage of React's Suspense features while fetching during render.
 
-More details on `useSuspenseQuery`'s API can be found in [its API docs](../api/react/hooks/#usesuspensequery).
-
-> **Note:** a component using `useSuspenseQuery` to fetch data will **suspend on first render** unless it can access all of the data for the fields it is querying via the cache (or is configured with `returnPartialData: true` and partial data is present in the cache), so it **may not render until its initial network request finishes**. Keep this in mind and avoid creating "request waterfalls" whereby a series of components fetch data, suspend, receive data and render children which then initiate new network requests causing a "waterfall" of Suspense boundaries to display. In some scenarios this can be avoided by using `useBackgroundQuery` and `useReadQuery` (see below).
+Let's take a look at an example:
 
 ```tsx
 import { Suspense } from 'react';
@@ -404,8 +402,6 @@ Since we began fetching our `GET_BREEDS_QUERY` in the background when the parent
 
 When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsuspends and continues rendering, reaching the `Breeds` component. Since our `GET_BREEDS_QUERY` request was initiated higher up in our component tree using `useBackgroundQuery`, the network request for `GET_BREEDS_QUERY` **has already completed**! For that reason, when the `Breeds` component attempts to read the data using the `queryRef` for the original query, it **doesn't suspend**. Instead, it can render immediately with the data from the cache.
 
-More details on `useBackgroundQuery` and `useReadQuery`'s API can be found in [their API docs](../api/react/hooks/#usebackgroundquery-and-usereadquery).
-
 ### `refetch`, `fetchMore` and `subscribeToMore`
 
 Apollo's Suspense data fetching hooks return functions for re-initiating the same query (with existing or new variables) or to fetch more paginated data. `useSuspenseQuery` also provides a `subscribeToMore` function to execute a subscription.
@@ -483,3 +479,15 @@ Errors thrown on the server when using one of the [streaming server rendering AP
 ## Further reading
 
 To view a larger codebase that makes use of Apollo Client's Suspense hooks (and many other new features introduced in Apollo Client 3.8), check out Apollo's [Spotify Showcase](https://github.com/apollographql/spotify-showcase) on GitHub. It's a full-stack web application that pays homage to Spotify's iconic UI by building a clone using Apollo Client, Apollo Server and GraphOS.
+
+## useSuspenseQuery API
+
+More details on `useSuspenseQuery`'s API can be found in [its API docs](../api/react/hooks/#usesuspensequery).
+
+## useBackgroundQuery API
+
+More details on `useBackgroundQuery`'s API can be found in [its API docs](../api/react/hooks/#usebackgroundquery).
+
+## useReadQuery API
+
+More details on `useReadQuery`'s API can be found in [its API docs](../api/react/hooks/#usereadquery).

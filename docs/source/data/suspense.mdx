@@ -408,14 +408,29 @@ Apollo's Suspense data fetching hooks return functions for re-initiating the sam
 
 When using `useBackgroundQuery`, both `refetch` and `fetchMore` functions can be destructured from the second item in the tuple returned by the hook.
 
-```tsx {6-8,15,30,42}
+Let's take a look at an example:
+
+```tsx {1,12,18-20,61}
+import { Suspense, useTransition } from "react";
+import {
+  gql,
+  TypedDocumentNode,
+  useBackgroundQuery,
+  useSuspenseQuery,
+  QueryReference,
+  useReadQuery,
+} from "@apollo/client";
+
 function App() {
+  const [isPending, startTransition] = useTransition();
   const [queryRef, { refetch }] = useBackgroundQuery(
     GET_BREEDS_QUERY
   );
 
   const refetchHandler = () => {
-    refetch();
+    startTransition(() => {
+      refetch();
+    });
   };
 
   return (
@@ -423,21 +438,17 @@ function App() {
       <Dog
         id="3"
         queryRef={queryRef}
+        isPending={isPending}
         refetchHandler={refetchHandler}
       />
     </Suspense>
   );
 }
 
-interface DogProps {
-  id: string;
-  queryRef: QueryReference<BreedData>;
-  refetchHandler: () => void;
-}
-
 function Dog({
   id,
   queryRef,
+  isPending,
   refetchHandler,
 }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
@@ -448,15 +459,31 @@ function Dog({
     <>
       Name: {data.dog.name}
       <Suspense fallback={<div>Loading breeds...</div>}>
-        <Breeds queryRef={queryRef} />
+        <Breeds isPending={isPending} queryRef={queryRef} />
       </Suspense>
       <button onClick={refetchHandler}>Refetch!</button>
     </>
   );
 }
+
+function Breeds({ queryRef, isPending }: BreedsProps) {
+  const { data } = useReadQuery(queryRef);
+  return data.breeds.map(({ characteristics }) =>
+    characteristics.map((characteristic) => (
+      <div
+        style={{ opacity: `${isPending ? 0.5 : 1}` }}
+        key={characteristic}
+      >
+        {characteristic}
+      </div>
+    ))
+  );
+}
 ```
 
-In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `refetchHandler` calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query. As a result, the `Breeds` component re-suspends while the new network request is pending.
+In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `refetchHandler` calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query.
+
+While each `refetch` would normally cause the `Breeds` component to re-suspend and display its nearest Suspense boundary by default, by wrapping it in `startTransition` we can avoid suspending and instead continue displaying the previous render while we fetch new data! React's `useTransition` hook also provides an `isPending` boolean we can use to determine whether our transition is pending. In this example, we use `isPending` to render our list of breed characteristics with a lower opacity while refetching the data.
 
 ## React Server Components (RSC)
 

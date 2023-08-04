@@ -227,9 +227,9 @@ function App() {
 
 ### Rendering partial data
 
-You may want to render your component immediately if partial data is available in the cache without suspending first. To do this, you can use the `returnPartialData` option **combined with one of two `fetchPolicy` settings**: `cache-first` (default) or `cache-and-network`.
+When the cache contains partial data, you may prefer to render that data immediately without suspending. To do this, use the `returnPartialData` option.
 
-> **A note on the `fetchPolicy` option:** when fetching data with Apollo Client's Suspense hooks, the four supported fetch policies are `cache-first` (default), `network-only`, `no-cache` and `cache-and-network`. For details on these fetch policies, see [Setting a fetch policy](./queries/#setting-a-fetch-policy).
+> **Note:** this option only works when combined with either the `cache-first` (default) or `cache-and-network` fetch policy. `cache-only` is not currently supported by `useSuspenseQuery`. For details on these fetch policies, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
 
 Consider how we can adjust our example `App` and `Dog` components to render partial data on first render:
 

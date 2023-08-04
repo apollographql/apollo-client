@@ -323,9 +323,11 @@ class ErrorBoundary extends React.Component {
 
 > **Note:** In a real application, your error boundary might need a more robust implementation. Consider using a library like [`react-error-boundary`](https://github.com/bvaughn/react-error-boundary) when you need a high degree of flexibility and reusability.
 
-If the `GET_DOG_QUERY` inside of the `Dog` component were to return with a GraphQL error or a network error, the `Dog` component would throw and the nearest error boundary would render its fallback component. But our component tree doesn't have an error boundary yet—let's add one!
+When the `GET_DOG_QUERY` inside of the `Dog` component returns a GraphQL error or a network error, `useSuspenseQuery` throws and the nearest error boundary renders its fallback component.
 
-```tsx {1,20-22,26}
+Our example doesn't have an error boundary yet—let's add one!
+
+```tsx {18-20,24}
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
   const [selectedDog, setSelectedDog] = useState(
@@ -344,7 +346,7 @@ function App() {
         ))}
       </select>
       <ErrorBoundary
-        FallbackComponent={() => <div>Something went wrong</div>}
+        fallback={<div>Something went wrong</div>}
       >
         <Suspense fallback={<div>Loading...</div>}>
           <Dog id={selectedDog} />

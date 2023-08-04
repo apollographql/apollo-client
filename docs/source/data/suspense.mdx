@@ -365,16 +365,6 @@ Here, we're using our `ErrorBoundary` component and placing it **outside** of ou
 
 In some cases, you may want to render partial data alongside an error. To do this, set the `errorPolicy` option to `all`. `useSuspenseQuery` will avoid throwing the error and instead set an `error` property returned by the hook. To ignore errors altogether, set the `errorPolicy` to `ignore`. See the [`errorPolicy` documentation](/react/data/error-handling#graphql-error-policies) for more information.
 
-### Distinguishing between queries with `queryKey`
-
-In rare cases, you might need to render multiple components that use the same `query` and `variables` combination. Due to the mechanics of Suspense, Apollo Client uses the combination of `query` and `variables` to uniquely identify the query when using Apollo's `Suspense` data fetching hooks.
-
-This presents a problem, however, because it means multiple hooks may end up with the same identity. These hooks will suspend together, regardless of which component initiates or re-initiates a network request.
-
-You can prevent this with `queryKey` option to ensure each hook has a unique identity. When `queryKey` is provided, Apollo Client will use as part of the hook's identity in combination with its `query` and `variables`. 
-
-For more information, see the [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery-and-usereadquery) API docs.
-
 ### Avoiding request waterfalls
 
 Since `useSuspenseQuery` will usually cause a component to suspend on first render while data is being fetched, a tree of components that all use `useSuspenseQuery` to query different data can cause a "waterfall" of Suspense boundaries to display since each component will suspend before rendering its children (which will then suspend while fetching, and so on). In some cases, this can be avoided by using `useBackgroundQuery` and `useReadQuery` instead.
@@ -517,6 +507,16 @@ function Breeds({ queryRef, isPending }: BreedsProps) {
 In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `refetchHandler` calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query.
 
 While each `refetch` would normally cause the `Breeds` component to re-suspend and display its nearest Suspense boundary by default, by wrapping it in `startTransition` we can avoid suspending and instead continue displaying the previous render while we fetch new data! React's `useTransition` hook also provides an `isPending` boolean we can use to determine whether our transition is pending. In this example, we use `isPending` to render our list of breed characteristics with a lower opacity while refetching the data.
+
+## Distinguishing between queries with `queryKey`
+
+In rare cases, you might need to render multiple components that use the same `query` and `variables` combination. Due to the mechanics of Suspense, Apollo Client uses the combination of `query` and `variables` to uniquely identify the query when using Apollo's `Suspense` data fetching hooks.
+
+This presents a problem, however, because it means multiple hooks may end up with the same identity. These hooks will suspend together, regardless of which component initiates or re-initiates a network request.
+
+You can prevent this with `queryKey` option to ensure each hook has a unique identity. When `queryKey` is provided, Apollo Client will use as part of the hook's identity in combination with its `query` and `variables`. 
+
+For more information, see the [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery-and-usereadquery) API docs.
 
 ## React Server Components (RSC)
 

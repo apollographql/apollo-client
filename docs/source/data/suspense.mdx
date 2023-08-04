@@ -373,7 +373,7 @@ Since `useSuspenseQuery` suspends while data is being fetched, a tree of compone
 
 Let's look at an example:
 
-```tsx {2,8,33,37}
+```tsx {2-3,10,35,39}
 import {
   useBackgroundQuery,
   useReadQuery,
@@ -381,6 +381,8 @@ import {
 } from '@apollo/client';
 
 function App() {
+  // We can start the request here, even though `Dog` 
+  // suspends and the data is read by a grandchild component.
   const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
 
   return (

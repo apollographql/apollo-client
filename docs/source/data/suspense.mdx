@@ -12,7 +12,7 @@ In this guide, we'll look at Apollo Client's new data fetching hooks introduced 
 
 ## Fetching with Suspense
 
-`useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is in flight. It can be thought of as a drop-in replacement for `useQuery` that allows you to take advantage of React's concurrent features while fetching during render.
+`useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is in flight. It can be thought of as a Suspense-ready replacement for `useQuery` that allows you to take advantage of React's concurrent features while fetching during render.
 
 More details on `useSuspenseQuery`'s API can be found in [its API docs](../api/react/hooks/#usesuspensequery-api).
 

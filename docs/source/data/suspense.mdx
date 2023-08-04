@@ -14,13 +14,17 @@ In this guide, we'll look at Apollo Client's new data fetching hooks introduced 
 
 `useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is in flight. It can be thought of as a Suspense-ready replacement for `useQuery` that allows you to take advantage of React's concurrent features while fetching during render.
 
-More details on `useSuspenseQuery`'s API can be found in [its API docs](../api/react/hooks/#usesuspensequery-api).
+More details on `useSuspenseQuery`'s API can be found in [its API docs](../api/react/hooks/#usesuspensequery).
 
 > **Note:** a component using `useSuspenseQuery` to fetch data will **suspend on first render** unless it can access all of the data for the fields it is querying via the cache (or is configured with `returnPartialData: true` and partial data is present in the cache), so it **may not render until its initial network request finishes**. Keep this in mind and avoid creating "request waterfalls" whereby a series of components fetch data, suspend, receive data and render children which then initiate new network requests causing a "waterfall" of Suspense boundaries to display. In some scenarios this can be avoided by using `useBackgroundQuery` and `useReadQuery` (see below).
 
 ```tsx
 import { Suspense } from 'react';
-import { gql, TypedDocumentNode, useSuspenseQuery } from '@apollo/client';
+import {
+  gql,
+  TypedDocumentNode,
+  useSuspenseQuery
+} from '@apollo/client';
 
 interface Data {
   dog: {
@@ -40,9 +44,10 @@ interface DogProps {
 const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
   query GetDog($id: String) {
     dog(id: $id) {
-    # By default, an object's cache key is a combination of its
-    # __typename and id fields, so we should always make sure the
-    # id is in the response so our data can be normalized and cached properly.
+    # By default, an object's cache key is a combination of
+    # its __typename and id fields, so we should always make
+    # sure the id is in the response so our data can be
+    # normalized and cached properly.
       id
       name
     }
@@ -70,7 +75,7 @@ function Dog({ id }: DogProps) {
 
 In this example, our `App` component renders a `Dog` component which fetches the record for a single dog via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache is empty so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest Suspense boundary _above_ the suspending component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for Mozzarella the Corgi.
 
-You may have noticed that `useSuspenseQuery` does not return a `loading` boolean: this is because the component calling `useSuspenseQuery` will always suspend when fetching data. A corollary is that when it _does_ render, `data` is always defined! With React 18's concurrent features, Suspense fallbacks that exist **outside of suspending components** take the place of loading states that components were responsible for rendering themselves in the previous React paradigm. When using concurrent React features, `Suspense` boundaries should be used throughout your application to render loading UI while components are suspended. The placement of Suspense boundaries is a key part of designing a good user experience under React's concurrent rendering model.
+You may have noticed that `useSuspenseQuery` does not return a `loading` boolean: this is because the component calling `useSuspenseQuery` will always suspend when fetching data. A corollary is that when it _does_ render, `data` is always defined! With React 18's concurrent features, Suspense fallbacks that exist **outside of suspending components** take the place of loading states that components were responsible for rendering themselves in the previous React paradigm.
 
 > **Note for TypeScript users**: since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` will have the shape `{ id: string; name: string; breed: string; }`.
 
@@ -81,7 +86,10 @@ In the previous example, we fetched the record for a single dog by passing a har
 Let's take a look at some code:
 
 ```tsx
-export const GET_DOG_QUERY: TypedDocumentNode<DogData, Variables> = gql`
+export const GET_DOG_QUERY: TypedDocumentNode<
+  DogData,
+  Variables
+> = gql`
   query GetDog($id: String) {
     dog(id: $id) {
       id
@@ -91,7 +99,10 @@ export const GET_DOG_QUERY: TypedDocumentNode<DogData, Variables> = gql`
   }
 `;
 
-export const GET_DOGS_QUERY: TypedDocumentNode<DogsData, Variables> = gql`
+export const GET_DOGS_QUERY: TypedDocumentNode<
+  DogsData,
+  Variables
+> = gql`
   query GetDogs {
     dogs {
       id
@@ -146,7 +157,7 @@ In these cases, we can use a pair of React APIs that allow us to update state wi
 
 Let's modify our code so that the previously displayed dog remains on the screen while the next one is fetched in the background:
 
-```tsx {1,10-12}
+```tsx {1,11-13}
 import { useState, Suspense, startTransition } from "react";
 
 function App() {
@@ -180,7 +191,7 @@ By wrapping our call to `setSelectedDog` in our `App` component in React's `star
 
 You may want to render your component immediately if partial data is available in the cache without suspending first. To do this, you can use the `returnPartialData` option **combined with one of two `fetchPolicy` settings**: `cache-first` (default) or `cache-and-network`.
 
-> **A note on the `fetchPolicy` option:** when fetching data with `useSuspenseQuery` or `useBackgroundQuery`, the four supported fetch policies are `cache-first` (default), `network-only`, `no-cache` and `cache-and-network`. For details on these fetch policies, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy)
+> **A note on the `fetchPolicy` option:** when fetching data with `useSuspenseQuery` or `useBackgroundQuery`, the four supported fetch policies are `cache-first` (default), `network-only`, `no-cache` and `cache-and-network`. For details on these fetch policies, see [Setting a fetch policy](./queries/#setting-a-fetch-policy).
 
 Consider how we can adjust our example `App` and `Dog` components to render partial data on first render:
 
@@ -397,6 +408,7 @@ import {
 } from '@apollo/client';
 
 function App() {
+  // Fetch now
   const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
 
   return (
@@ -426,7 +438,9 @@ interface BreedsProps {
 }
 
 function Breeds({ queryRef }: BreedsProps) {
+  // Suspend later
   const { data } = useReadQuery(queryRef);
+
   return data.breeds.map(({ characteristics }) =>
     characteristics.map((characteristic) => (
       <div key={characteristic}>{characteristic}</div>

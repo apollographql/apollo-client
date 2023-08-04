@@ -30,19 +30,19 @@ interface Data {
 }
 
 interface Variables {
-  name: string;
+  id: string;
 }
 
 interface DogProps {
-  name: string
+  id: string
 }
 
 const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
-  query GetDog($name: String) {
-    dog(name: $name) {
-      # By default, an object's cache key is a combination of
-      # its __typename and id fields, so we need to fetch the
-      # id so our data can be normalized and cached properly.
+  query GetDog($id: String) {
+    dog(id: $id) {
+    # By default, an object's cache key is a combination of its
+    # __typename and id fields, so we should always make sure the
+    # id is in the response so our data can be normalized and cached properly.
       id
       name
     }
@@ -52,14 +52,14 @@ const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
 function App() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Dog name="Mozzarella" />
+      <Dog id="3" />
     </Suspense>
   );
 }
 
-function Dog({ name }: DogProps) {
+function Dog({ id }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-    variables: { name },
+    variables: { id },
   });
 
   return <>Name: {data.dog.name}</>;
@@ -76,14 +76,14 @@ You may have noticed that `useSuspenseQuery` does not return a `loading` boolean
 
 ### Changing variables
 
-In the previous example, we fetched the record for a single dog by passing a hard-coded `name` variable, Mozzarella, to `useSuspenseQuery`. Now, let's say we want to fetch the record for a different dog using a dynamic value instead. We'll fetch the list of dogs with just their `name` and `id`, and once the user selects an individual dog we can fetch more details, including their `breed`.
+In the previous example, we fetched the record for a single dog by passing a hard-coded `id` variable, Mozzarella, to `useSuspenseQuery`. Now, let's say we want to fetch the record for a different dog using a dynamic value instead. We'll fetch the list of dogs with just their `name` and `id`, and once the user selects an individual dog we can fetch more details, including their `breed`.
 
 Let's take a look at some code:
 
 ```tsx
 export const GET_DOG_QUERY: TypedDocumentNode<DogData, Variables> = gql`
-  query GetDog($name: String) {
-    dog(name: $name) {
+  query GetDog($id: String) {
+    dog(id: $id) {
       id
       name
       breed
@@ -112,19 +112,19 @@ function App() {
         }}
       >
         {data.dogs.map((dog) => (
-          <option value={dog.name}>{dog.name}</option>
+          <option value={dog.id}>{dog.name}</option>
         ))}
       </select>
       <Suspense fallback={<div>Loading...</div>}>
-        <Dog name={selectedDog} />
+        <Dog id={selectedDog} />
       </Suspense>
     </>
   );
 }
 
-function Dog({ name }: DogProps) {
+function Dog({ id }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-    variables: { name },
+    variables: { id },
   });
 
   return (
@@ -151,7 +151,7 @@ import { useState, Suspense, startTransition } from "react";
 
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(data.dogs[0].name);
+  const [selectedDog, setSelectedDog] = useState(data.dogs[0].id);
 
   return (
     <>
@@ -163,11 +163,11 @@ function App() {
         }}
       >
         {data.dogs.map((dog) => (
-          <option value={dog.name}>{dog.name}</option>
+          <option value={dog.id}>{dog.name}</option>
         ))}
       </select>
       <Suspense fallback={<div>Loading...</div>}>
-        <Dog name={selectedDog} />
+        <Dog id={selectedDog} />
       </Suspense>
     </>
   );
@@ -186,8 +186,8 @@ Consider how we can adjust our example `App` and `Dog` components to render part
 
 ```tsx
 const GET_DOG_QUERY_PARTIAL: TypedDocumentNode = gql`
-  query GetDog($name: String) {
-    dog(name: $name) {
+  query GetDog($id: String) {
+    dog(id: $id) {
       id
       name
     }
@@ -201,20 +201,20 @@ function App() {
   // so it is available when Dog renders...
   client.cache.writeQuery({
     query: GET_DOG_QUERY_PARTIAL,
-    variables: { name: 'Buck' },
-    data: { dog: { id: '1', name: 'Buck' } },
+    variables: { id: "1" },
+    data: { dog: { id: "1", name: "Buck" } },
   });
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Dog name="Buck" />
+      <Dog id="1" />
     </Suspense>
   );
 }
 
-function Dog({ name }: DogProps) {
+function Dog({ id }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-    variables: { name },
+    variables: { id },
     returnPartialData: true,
   });
 
@@ -258,15 +258,15 @@ function App() {
         ))}
       </select>
       <Suspense fallback={<div>Loading...</div>}>
-        <Dog name={selectedDog} />
+        <Dog id={selectedDog} />
       </Suspense>
     </>
   );
 }
 
-function Dog({ name }: DogProps) {
+function Dog({ id }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-    variables: { name },
+    variables: { id },
   });
 
   return (
@@ -285,7 +285,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(data.dogs[0].name);
+  const [selectedDog, setSelectedDog] = useState(data.dogs[0].id);
 
   return (
     <>
@@ -293,14 +293,14 @@ function App() {
         onChange={(e) => setSelectedDog(e.target.value)}
       >
         {data.dogs.map((dog) => (
-          <option key={dog.name} value={dog.name}>
+          <option key={dog.id} value={dog.id}>
             {dog.name}
           </option>
         ))}
       </select>
       <ErrorBoundary FallbackComponent={() => <div>Something went wrong</div>}>
         <Suspense fallback={<div>Loading...</div>}>
-          <Dog name={selectedDog} />
+          <Dog id={selectedDog} />
         </Suspense>
       </ErrorBoundary>
     </>
@@ -343,7 +343,7 @@ function App() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Dog
-        name="Mozzarella"
+        id="3"
         queryRef={queryRef}
         refetchHandler={refetchHandler}
       />
@@ -352,18 +352,18 @@ function App() {
 }
 
 interface DogProps {
-  name: string;
+  id: string;
   queryRef: QueryReference<BreedData>;
   refetchHandler: () => void;
 }
 
 function Dog({
-  name,
+  id,
   queryRef,
   refetchHandler,
 }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-    variables: { name },
+    variables: { id },
   });
   return (
     <>
@@ -401,14 +401,14 @@ function App() {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Dog name="Mozzarella" queryRef={queryRef} />
+      <Dog id="3" queryRef={queryRef} />
     </Suspense>
   );
 }
 
-function Dog({ name, queryRef }: DogProps) {
+function Dog({ id, queryRef }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-    variables: { name },
+    variables: { id },
   });
 
   return (

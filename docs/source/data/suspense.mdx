@@ -12,7 +12,7 @@ In this guide, we'll look at Apollo Client's data fetching hooks introduced in 3
 
 ## Fetching with Suspense
 
-`useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is being made. It can be thought of as a Suspense-ready replacement for `useQuery` that allows you to take advantage of React's Suspense features while fetching during render.
+`useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is made. It can be thought of as a Suspense-ready replacement for `useQuery` that allows you to take advantage of React's Suspense features while fetching during render.
 
 Let's take a look at an example:
 
@@ -71,11 +71,11 @@ function Dog({ id }: DogProps) {
 
 > **Note:** this example manually defines TypeScript interfaces for `Data` and `Variables` as well as the type for `GET_DOG_QUERY` using `TypedDocumentNode`. [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) is a popular tool that will create these type definitions automatically for you. See the reference on [Using TypeScript](../development-testing/static-typing) for more information on integrating GraphQL Code Generator with Apollo Client.
 
-In this example, our `App` component renders a `Dog` component which fetches the record for a single dog via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache is empty so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest Suspense boundary _above_ the suspending component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for Mozzarella the Corgi.
+In this example, our `App` component renders a `Dog` component which fetches the record for a single dog via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache is empty so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest Suspense boundary _above_ the suspended component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for Mozzarella the Corgi.
 
-You may have noticed that `useSuspenseQuery` does not return a `loading` boolean: this is because the component calling `useSuspenseQuery` will always suspend when fetching data. A corollary is that when it _does_ render, `data` is always defined! Suspense fallbacks that exist **outside of suspending components** take the place of loading states that components were responsible for rendering themselves in the previous React paradigm.
+You may have noticed that `useSuspenseQuery` does not return a `loading` boolean: this is because the component calling `useSuspenseQuery` will always suspend when fetching data. A corollary is that when it _does_ render, `data` is always defined! Suspense fallbacks that exist **outside of suspended components** take the place of loading states that components were responsible for rendering themselves in the previous React paradigm.
 
-> **Note for TypeScript users**: since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` will have the shape `{ id: string; name: string; breed: string; }`.
+> **Note for TypeScript users**: since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic type argument, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` will have the shape `{ id: string; name: string; breed: string; }`.
 
 ### Changing variables
 

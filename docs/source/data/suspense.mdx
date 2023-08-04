@@ -16,7 +16,7 @@ In this guide, we'll look at Apollo Client's data fetching hooks introduced in 3
 
 Let's take a look at an example:
 
-```tsx
+```tsx {5,38,40,45-47}
 import { Suspense } from 'react';
 import {
   gql,
@@ -42,10 +42,10 @@ interface DogProps {
 const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
   query GetDog($id: String) {
     dog(id: $id) {
-    # By default, an object's cache key is a combination of
-    # its __typename and id fields, so we should always make
-    # sure the id is in the response so our data can be
-    # normalized and cached properly.
+      # By default, an object's cache key is a combination of
+      # its __typename and id fields, so we should always make
+      # sure the id is in the response so our data can be
+      # properly cached.
       id
       name
     }

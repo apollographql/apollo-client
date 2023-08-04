@@ -286,7 +286,7 @@ function Dog({ id }: DogProps) {
 }
 ```
 
-In this example, we write some partial data for Buck to the cache in `App` to simulate partial data already existing from a previous query with overlapping fields. When `Dog` attempts to render for the first time, it does **not** suspend. Instead, it renders with the partial data for Buck, displaying `Name: Buck` on the first line and `Breed:` with no value (`data.dog.breed` is initially `undefined` since we don't have a value for it in the cache). With a default `fetchPolicy` of `cache-first`, the cache registers the cache miss for the `breed` field and initiates a `GET_DOG_QUERY` network request.
+In this example, we write some partial data for Buck to the cache to simulate partial data already existing from a previous query with overlapping fields. When `Dog` attempts to render for the first time, it does **not** suspend. Instead, it renders with the partial data for Buck, displaying `Name: Buck` on the first line and `Breed:` with no value (`data.dog.breed` is initially `undefined` since we don't have a value for it in the cache). With a default `fetchPolicy` of `cache-first`, the cache registers the cache miss for the `breed` field and initiates a `GET_DOG_QUERY` network request.
 
 The `Dog` component **does not suspend** while this request is being made. This is because we've opted to render partial data _instead_ of suspending by setting `returnPartialData: true`. Once the network request is complete, `Dog` re-renders with the `breed` now displayed.
 

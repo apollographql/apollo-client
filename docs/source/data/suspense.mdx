@@ -286,9 +286,9 @@ function Dog({ id }: DogProps) {
 }
 ```
 
-In this example, we write some partial data for Buck to the cache to simulate partial data already existing from a previous query with overlapping fields. When `Dog` attempts to render for the first time, it does **not** suspend. Instead, it renders with the partial data for Buck, displaying `Name: Buck` on the first line and `Breed:` with no value (`data.dog.breed` is initially `undefined` since we don't have a value for it in the cache). With a default `fetchPolicy` of `cache-first`, the cache registers the cache miss for the `breed` field and initiates a `GET_DOG_QUERY` network request.
+In this example, we write partial data to the cache for Buck to show the behavior when a query cannot be fully fulfilled from the cache. We tell `useSuspenseQuery` that we are ok rendering partial data by setting the `returnPartialData` option to `true`. When `Dog` renders for the first time, it does not suspend and uses the partial data immediately. Apollo Client will fetch the missing query data from the network in the background.
 
-The `Dog` component **does not suspend** while this request is being made. This is because we've opted to render partial data _instead_ of suspending by setting `returnPartialData: true`. Once the network request is complete, `Dog` re-renders with the `breed` now displayed.
+You will see Buck's name displayed immediately after the `Name` label, followed by the `Breed` label with no value. Once the missing fields have loaded, `useSuspenseQuery` will update and Buck's breed will be displayed.
 
 > **Note for TypeScript users**: with `returnPartialData` set to `true`, the returned type for the `data` property will mark all fields in the query type as [optional](https://www.typescriptlang.org/docs/handbook/2/objects.html#optional-properties). Apollo Client cannot accurately determine which fields are present in the cache at any given time when returning partial data.
 

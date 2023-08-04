@@ -33,6 +33,10 @@ interface Variables {
   name: string;
 }
 
+interface DogProps {
+  name: string
+}
+
 const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
   query GetDog($name: String) {
     dog(name: $name) {
@@ -50,7 +54,7 @@ function App() {
   );
 }
 
-function Dog({ name }: { name: string }) {
+function Dog({ name }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { name },
   });
@@ -112,7 +116,7 @@ function App() {
   );
 }
 
-function Dog({ name }: { name: string }) {
+function Dog({ name }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { name },
   });
@@ -200,7 +204,7 @@ function App() {
   );
 }
 
-function Dog({ name }: { name: string }) {
+function Dog({ name }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { name },
     returnPartialData: true,
@@ -251,7 +255,7 @@ function App() {
   );
 }
 
-function Dog({ name }: { name: string }) {
+function Dog({ name }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { name },
   });
@@ -337,15 +341,17 @@ function App() {
   );
 }
 
+interface DogProps {
+  name: string;
+  queryRef: QueryReference<BreedData>;
+  refetchHandler: () => void;
+}
+
 function Dog({
   name,
   queryRef,
   refetchHandler,
-}: {
-  name: string;
-  queryRef: QueryReference<BreedData>;
-  refetchHandler: () => void;
-}) {
+}: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { name },
   });
@@ -383,13 +389,7 @@ function App() {
   );
 }
 
-function Dog({
-  name,
-  queryRef,
-}: {
-  name: string;
-  queryRef: QueryReference<BreedData>;
-}) {
+function Dog({ name, queryRef }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { name },
   });
@@ -403,7 +403,11 @@ function Dog({
   );
 }
 
-function Breeds({ queryRef }: { queryRef: QueryReference<BreedData> }) {
+interface BreedsProps {
+  queryRef: QueryReference<BreedData>;
+}
+
+function Breeds({ queryRef }: BreedsProps) {
   const { data } = useReadQuery(queryRef);
   return data.breeds.map(({ characteristics }) =>
     characteristics.map((characteristic) => (

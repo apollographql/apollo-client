@@ -141,9 +141,9 @@ While we may sometimes want to suspend while we update some state that results i
 
 In these cases, we can use a pair of React APIs that allow us to update state without suspending: [`startTransition`](https://react.dev/reference/react/startTransition)/[`useTransition`](https://react.dev/reference/react/useTransition) and [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue). Please see the React documentation for a full set of usage examples and caveats.
 
-Following from our last example of fetching with a dynamic `variable` that changes on user interaction, let's modify our code so that the previously displayed dog remains on the screen while the next one is fetched in the background:
+Let's modify our code so that the previously displayed dog remains on the screen while the next one is fetched in the background:
 
-```tsx {10-12}
+```tsx {1,10-12}
 import { useState, Suspense, startTransition } from "react";
 
 function App() {
@@ -232,7 +232,7 @@ The `Dog` component **does not suspend** while this request is being made. This 
 
 ### Error handling
 
-In the concurrent React paradigm, errors thrown in React components are caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror) _on the client_. _On the server_, if you're use a streaming server rendering API or a framework built with one, [the behavior is slightly different](https://react.dev/reference/react/Suspense#providing-a-fallback-for-server-errors-and-client-only-content): the nearest `Suspense` boundary will be rendered by the server so the user initially sees a loading indicator, and the client will attempt to render the component again. If it succeeds, the user is never aware of the error thrown on the server. If it errors again on the client, the error boundary is displayed.
+By default, errors are thrown by `useSuspenseQuery`. These errors will be caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror).
 
 > **Note:** An error boundary is a **class component** that implements `static getDerivedStateFromError`. If you don't want to write an error boundary class component yourself, you can use a library like [`react-error-boundary`](https://github.com/bvaughn/react-error-boundary) instead. For more information, see the React docs for [catching rendering errors with an error boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
 
@@ -432,11 +432,19 @@ function Breeds({ queryRef }: BreedsProps) {
 }
 ```
 
-## Using Apollo Client's Suspense Hooks with Next.js's App Router
+## React Server Components (RSC)
+
+### Usage with Next.js 13 App Router
 
 In Next.js v13, Next.js's new [App Router](https://nextjs.org/docs/app) brought the React community the first framework with full support for [React Server Components (RSC)](https://react.dev/blog/2023/03/22/react-labs-what-we-have-been-working-on-march-2023#react-server-components) and Streaming SSR, integrating Suspense as a first-class concept from your application's routing layer all the way down.
 
 In order to integrate with these features, our Apollo Client team released an experimental package, [`@apollo/experimental-nextjs-app-support`](https://github.com/apollographql/apollo-client-nextjs), which allows for seamless use of Apollo Client with both RSC and Streaming SSR, one of the first of its kind for data fetching libraries. See its [README](https://github.com/apollographql/apollo-client-nextjs) and our [introductory blog post](https://www.apollographql.com/blog/apollo-client/next-js/how-to-use-apollo-client-with-next-js-13/) for more details.
+
+### Error handling
+
+In a purely client-rendered app, errors thrown in components are always caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror).
+
+Errors thrown on the server when using one of the [streaming server rendering APIs](https://react.dev/reference/react-dom/server) are treated differently. See the [React documentation](https://react.dev/reference/react/Suspense#providing-a-fallback-for-server-errors-and-client-only-content) for more information.
 
 ## Further reading
 

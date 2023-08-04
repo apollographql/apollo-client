@@ -113,7 +113,9 @@ export const GET_DOGS_QUERY: TypedDocumentNode<
 
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(data.dogs[0].name);
+  const [selectedDog, setSelectedDog] = useState(
+    data.dogs[0].id
+  );
 
   return (
     <>
@@ -162,7 +164,9 @@ import { useState, Suspense, startTransition } from "react";
 
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(data.dogs[0].id);
+  const [selectedDog, setSelectedDog] = useState(
+    data.dogs[0].id
+  );
 
   return (
     <>
@@ -255,7 +259,9 @@ In Apollo Client's new `Suspense` hooks introduced in 3.8, **both network and Gr
 ```tsx
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(data.dogs[0].name);
+  const [selectedDog, setSelectedDog] = useState(
+    data.dogs[0].id
+  );
 
   return (
     <>
@@ -296,7 +302,9 @@ import { ErrorBoundary } from "react-error-boundary";
 
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(data.dogs[0].id);
+  const [selectedDog, setSelectedDog] = useState(
+    data.dogs[0].id
+  );
 
   return (
     <>
@@ -347,7 +355,9 @@ When using `useBackgroundQuery`, both `refetch` and `fetchMore` functions can be
 
 ```tsx
 function App() {
-  const [queryRef, { refetch }] = useBackgroundQuery(GET_BREEDS_QUERY);
+  const [queryRef, { refetch }] = useBackgroundQuery(
+    GET_BREEDS_QUERY
+  );
 
   const refetchHandler = () => {
     refetch();

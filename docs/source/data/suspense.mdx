@@ -367,7 +367,7 @@ In some cases, you may want to render partial data alongside an error. To do thi
 
 ### Avoiding request waterfalls
 
-Since `useSuspenseQuery` will usually cause a component to suspend on first render while data is being fetched, a tree of components that all use `useSuspenseQuery` to query different data can cause a "waterfall" of Suspense boundaries to display since each component will suspend before rendering its children (which will then suspend while fetching, and so on). In some cases, this can be avoided by using `useBackgroundQuery` and `useReadQuery` instead.
+Since `useSuspenseQuery` suspends while data is being fetched, a tree of components that all use `useSuspenseQuery` to query different data can cause a "waterfall", where each call to `useSuspenseQuery` depends on the previous to complete before it can be fetched. This can be avoided by fetching with `useBackgroundQuery` and reading the data with `useReadQuery`.
 
 `useBackgroundQuery` initiates a request for data in a parent component and returns a `QueryReference` which is then passed to `useReadQuery` to read the data in a child component. If the child component attempts to render before data is loaded, the child component will suspend. On cache updates to watched data, the child component calling `useReadQuery` will re-render with new data **but the parent component will not re-render** (as it would, for example, if `useQuery` was making the request in the parent).
 

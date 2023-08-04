@@ -122,8 +122,8 @@ function App() {
           setSelectedDog(e.target.value);
         }}
       >
-        {data.dogs.map((dog) => (
-          <option value={dog.id}>{dog.name}</option>
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>{dog.name}</option>
         ))}
       </select>
       <Suspense fallback={<div>Loading...</div>}>
@@ -173,8 +173,8 @@ function App() {
           });
         }}
       >
-        {data.dogs.map((dog) => (
-          <option value={dog.id}>{dog.name}</option>
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>{name}</option>
         ))}
       </select>
       <Suspense fallback={<div>Loading...</div>}>
@@ -262,9 +262,9 @@ function App() {
       <select
         onChange={(e) => setSelectedDog(e.target.value)}
       >
-        {data.dogs.map((dog) => (
-          <option key={dog.name} value={dog.name}>
-            {dog.name}
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>
+            {name}
           </option>
         ))}
       </select>
@@ -303,13 +303,15 @@ function App() {
       <select
         onChange={(e) => setSelectedDog(e.target.value)}
       >
-        {data.dogs.map((dog) => (
-          <option key={dog.id} value={dog.id}>
-            {dog.name}
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>
+            {name}
           </option>
         ))}
       </select>
-      <ErrorBoundary FallbackComponent={() => <div>Something went wrong</div>}>
+      <ErrorBoundary
+        FallbackComponent={() => <div>Something went wrong</div>}
+      >
         <Suspense fallback={<div>Loading...</div>}>
           <Dog id={selectedDog} />
         </Suspense>
@@ -396,7 +398,7 @@ Since `useSuspenseQuery` will usually cause a component to suspend on first rend
 
 `useBackgroundQuery` initiates a request for data in a parent component and returns a `QueryReference` which is then passed to `useReadQuery` to read the data in a child component. If the child component attempts to render before data is loaded, the child component will suspend. On cache updates to watched data, the child component calling `useReadQuery` will re-render with new data **but the parent component will not re-render** (as it would, for example, if `useQuery` was making the request in the parent).
 
-> **Note:** in a client-rendered application, `useBackgroundQuery` can be used to avoid request waterfalls, but its impact can be even more noticeable in an application using streaming SSR ([when using Apollo Client's Suspense hooks with Next.js's App Router](./#using-apollo-clients-suspense-hooks-with-nextjss-app-router), for example). This is because the server can begin streaming content to the client, bringing even greater performance benefits.
+> **Note:** in a client-rendered application, `useBackgroundQuery` can be used to avoid request waterfalls, but its impact can be even more noticeable in an application using streaming SSR ([when using Apollo Client's Suspense hooks with Next.js's App Router](./#usage-with-nextjs-13-app-router), for example). This is because the server can begin streaming content to the client, bringing even greater performance benefits.
 
 More details on `useBackgroundQuery` and `useReadQuery`'s API can be found in [their API docs](../api/react/hooks/#usebackgroundquery-and-usereadquery).
 
@@ -455,7 +457,7 @@ function Breeds({ queryRef }: BreedsProps) {
 
 In Next.js v13, Next.js's new [App Router](https://nextjs.org/docs/app) brought the React community the first framework with full support for [React Server Components (RSC)](https://react.dev/blog/2023/03/22/react-labs-what-we-have-been-working-on-march-2023#react-server-components) and Streaming SSR, integrating Suspense as a first-class concept from your application's routing layer all the way down.
 
-In order to integrate with these features, our Apollo Client team released an experimental package, [`@apollo/experimental-nextjs-app-support`](https://github.com/apollographql/apollo-client-nextjs), which allows for seamless use of Apollo Client with both RSC and Streaming SSR, one of the first of its kind for data fetching libraries. See its [README](https://github.com/apollographql/apollo-client-nextjs) and our [introductory blog post](https://www.apollographql.com/blog/apollo-client/next-js/how-to-use-apollo-client-with-next-js-13/) for more details.
+In order to integrate with these features, our Apollo Client team released an experimental package, [`@apollo/experimental-nextjs-app-support`](https://github.com/apollographql/apollo-client-nextjs), which allows for seamless use of Apollo Client with both RSC and Streaming SSR, one of the first of its kind for data fetching libraries. See its [README](https://github.com/apollographql/apollo-client-nextjs#readme) and our [introductory blog post](https://www.apollographql.com/blog/apollo-client/next-js/how-to-use-apollo-client-with-next-js-13/) for more details.
 
 ### Error handling
 

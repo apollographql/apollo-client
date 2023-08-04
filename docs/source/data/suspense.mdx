@@ -231,7 +231,7 @@ When the cache contains partial data, you may prefer to render that data immedia
 
 > **Note:** this option only works when combined with either the `cache-first` (default) or `cache-and-network` fetch policy. `cache-only` is not currently supported by `useSuspenseQuery`. For details on these fetch policies, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
 
-Consider how we can adjust our example `App` and `Dog` components to render partial data on first render:
+Let's update our example to use the partial cache data and render immediately:
 
 ```tsx {31}
 const GET_DOG_QUERY_PARTIAL: TypedDocumentNode = gql`

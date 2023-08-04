@@ -387,6 +387,12 @@ Since `useSuspenseQuery` will usually cause a component to suspend on first rend
 More details on `useBackgroundQuery` and `useReadQuery`'s API can be found in [their API docs](../api/react/hooks/#usebackgroundquery-and-usereadquery).
 
 ```tsx
+import {
+  useBackgroundQuery,
+  useReadQuery,
+  useSuspenseQuery,
+} from '@apollo/client';
+
 function App() {
   const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
 

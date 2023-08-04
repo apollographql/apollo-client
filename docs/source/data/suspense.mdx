@@ -100,6 +100,7 @@ export const GET_DOGS_QUERY: TypedDocumentNode<DogsData, Variables> = gql`
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
   const [selectedDog, setSelectedDog] = useState(data.dogs[0].name);
+
   return (
     <>
       <select
@@ -122,6 +123,7 @@ function Dog({ name }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { name },
   });
+
   return (
     <>
       <div>Name: {data.dog.name}</div>
@@ -147,6 +149,7 @@ import { useState, Suspense, startTransition } from "react";
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
   const [selectedDog, setSelectedDog] = useState(data.dogs[0].name);
+
   return (
     <>
       <select
@@ -239,6 +242,7 @@ In Apollo Client's new `Suspense` hooks introduced in 3.8, **both network and Gr
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
   const [selectedDog, setSelectedDog] = useState(data.dogs[0].name);
+
   return (
     <>
       <select
@@ -261,6 +265,7 @@ function Dog({ name }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { name },
   });
+
   return (
     <>
       <div>Name: {data.dog.name}</div>
@@ -384,6 +389,7 @@ More details on `useBackgroundQuery` and `useReadQuery`'s API can be found in [t
 ```tsx
 function App() {
   const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
+
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Dog name="Mozzarella" queryRef={queryRef} />
@@ -395,6 +401,7 @@ function Dog({ name, queryRef }: DogProps) {
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { name },
   });
+
   return (
     <>
       Name: {data.dog.name}

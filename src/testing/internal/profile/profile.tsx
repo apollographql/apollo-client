@@ -27,10 +27,7 @@ interface ProfiledComponent<Props, Snapshot> extends React.FC<Props> {
 /**
  * @internal Should not be exported by the library.
  */
-export function profile<
-  Props extends React.JSX.IntrinsicAttributes,
-  Snapshot = void,
->({
+export function profile<Props, Snapshot = void>({
   Component,
   takeSnapshot,
   snapshotDOM = false,
@@ -98,7 +95,7 @@ export function profile<
   const Profiled: ProfiledComponent<Props, Snapshot> = Object.assign(
     (props: Props) => (
       <React.Profiler id="test" onRender={onRender}>
-        <Component {...props} />
+        <Component {...(props as any)} />
       </React.Profiler>
     ),
     {

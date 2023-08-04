@@ -151,7 +151,7 @@ Changing the dog via the `select` will cause the component to suspend each time 
 
 Sometimes we may want to avoid showing a loading UI in response to a pending network request and instead prefer to continue displaying the previous render. To do this, we can use a [_transition_](https://react.dev/blog/2022/03/29/react-v18#new-feature-transitions) to mark our update as non-urgent. This tells React to keep the existing UI in place until the new data has finished loading.
 
-In these cases, we can use a pair of React APIs that allow us to update state without suspending: [`startTransition`](https://react.dev/reference/react/startTransition)/[`useTransition`](https://react.dev/reference/react/useTransition) and [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue). Please see the React documentation for a full set of usage examples and caveats.
+To mark a state update as a transition, we use the [`startTransition`](https://react.dev/reference/react/startTransition) function from React.
 
 Let's modify our code so that the previously displayed dog remains on the screen while the next one is fetched in the background:
 

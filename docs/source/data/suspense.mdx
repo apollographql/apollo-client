@@ -153,7 +153,7 @@ Sometimes we may want to avoid showing a loading UI in response to a pending net
 
 To mark a state update as a transition, we use the [`startTransition`](https://react.dev/reference/react/startTransition) function from React.
 
-Let's modify our code so that the previously displayed dog remains on the screen while the next one is fetched in the background:
+Let's modify our example so that the previously displayed dog remains on the screen while the next one is fetched in a transition:
 
 ```tsx {1,13-15}
 import { useState, Suspense, startTransition } from "react";

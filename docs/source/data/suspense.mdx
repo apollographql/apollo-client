@@ -6,13 +6,13 @@ minVersion: 3.8.0
 
 "Suspense" is both a specific React API ([`<Suspense />`](https://react.dev/reference/react/Suspense), a component which "lets you display a fallback until its children have finished loading"), and often used more generally to refer to a new way to build React apps using the [**concurrent rendering engine**](https://react.dev/blog/2022/03/29/react-v18#what-is-concurrent-react) introduced in React 18.
 
-In this guide, we'll look at Apollo Client's data fetching hooks introduced in 3.8 which leverage React's powerful concurrent features and walk through some examples of how they can be used.
+In this guide, we'll look at Apollo Client's data fetching hooks introduced in 3.8 which leverage React's powerful Suspense features and walk through some examples of how they can be used.
 
 > To follow along with the examples below, open up our [Suspense demo](https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-client/v3/suspense-hooks?file=/src/App.tsx) on CodeSandbox.
 
 ## Fetching with Suspense
 
-`useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is in flight. It can be thought of as a Suspense-ready replacement for `useQuery` that allows you to take advantage of React's concurrent features while fetching during render.
+`useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is in flight. It can be thought of as a Suspense-ready replacement for `useQuery` that allows you to take advantage of React's Suspense features while fetching during render.
 
 More details on `useSuspenseQuery`'s API can be found in [its API docs](../api/react/hooks/#usesuspensequery).
 
@@ -75,7 +75,7 @@ function Dog({ id }: DogProps) {
 
 In this example, our `App` component renders a `Dog` component which fetches the record for a single dog via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache is empty so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest Suspense boundary _above_ the suspending component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for Mozzarella the Corgi.
 
-You may have noticed that `useSuspenseQuery` does not return a `loading` boolean: this is because the component calling `useSuspenseQuery` will always suspend when fetching data. A corollary is that when it _does_ render, `data` is always defined! With React 18's concurrent features, Suspense fallbacks that exist **outside of suspending components** take the place of loading states that components were responsible for rendering themselves in the previous React paradigm.
+You may have noticed that `useSuspenseQuery` does not return a `loading` boolean: this is because the component calling `useSuspenseQuery` will always suspend when fetching data. A corollary is that when it _does_ render, `data` is always defined! Suspense fallbacks that exist **outside of suspending components** take the place of loading states that components were responsible for rendering themselves in the previous React paradigm.
 
 > **Note for TypeScript users**: since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` will have the shape `{ id: string; name: string; breed: string; }`.
 
@@ -151,7 +151,7 @@ Changing the dog via the `select` will cause the component to suspend each time 
 
 ### Updating state without suspending
 
-While we may sometimes want to suspend while we update some state that results in a pending network request, there are many cases when we would prefer to keep displaying the previous render while React prepares to update in the background (thank you, Concurrent React!).
+While we may sometimes want to suspend while we update some state that results in a pending network request, there are many cases when we would prefer to keep displaying the previous render while React prepares to update in the background.
 
 In these cases, we can use a pair of React APIs that allow us to update state without suspending: [`startTransition`](https://react.dev/reference/react/startTransition)/[`useTransition`](https://react.dev/reference/react/useTransition) and [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue). Please see the React documentation for a full set of usage examples and caveats.
 

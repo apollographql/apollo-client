@@ -187,6 +187,44 @@ function App() {
 
 By wrapping our call to `setSelectedDog` in our `App` component in React's `startTransition` method, we no longer see the Suspense fallback every time we select a new dog! Instead, the previous dog remains on the screen while the next dog's record is fetched in the background. Once the network request is complete, the new dog's record is immediately displayed.
 
+### Showing pending UI during a transition
+
+In the previous example, there is no visual indication that a fetch is happening when a new dog is selected. To provide nice visual feedback, let's update our example to use React's [`useTransition`](https://react.dev/reference/react/useTransition) hook which gives you an `isPending` boolean value to determine when a transition is happening.
+
+Let's dim the select dropdown while the transition is happening:
+
+```tsx {1,4,13}
+import { useState, Suspense, useTransition } from "react";
+
+function App() {
+  const [isPending, startTransition] = useTransition();
+  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
+  const [selectedDog, setSelectedDog] = useState(
+    data.dogs[0].id
+  );
+
+  return (
+    <>
+      <select
+        style={{ opacity: isPending ? 0.5 : 1 }}
+        onChange={(e) => {
+          startTransition(() => {
+            setSelectedDog(e.target.value);
+          });
+        }}
+      >
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>{name}</option>
+        ))}
+      </select>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Dog id={selectedDog} />
+      </Suspense>
+    </>
+  );
+}
+```
+
 ### Rendering partial data
 
 You may want to render your component immediately if partial data is available in the cache without suspending first. To do this, you can use the `returnPartialData` option **combined with one of two `fetchPolicy` settings**: `cache-first` (default) or `cache-and-network`.

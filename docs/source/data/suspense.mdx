@@ -294,11 +294,11 @@ You will see Buck's name displayed immediately after the `Name` label, followed 
 
 ### Error handling
 
-By default, errors are thrown by `useSuspenseQuery`. These errors will be caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror).
+By default, both network errors and GraphQL errors are thrown by `useSuspenseQuery`. These errors will be caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror).
 
 > **Note:** An error boundary is a **class component** that implements `static getDerivedStateFromError`. If you don't want to write an error boundary class component yourself, you can use a library like [`react-error-boundary`](https://github.com/bvaughn/react-error-boundary) instead. For more information, see the React docs for [catching rendering errors with an error boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
 
-In Apollo Client's new `Suspense` hooks introduced in 3.8, **both network and GraphQL errors are thrown by default**. Let's take a look at an example:
+Let's take a look at an example:
 
 ```tsx
 function App() {

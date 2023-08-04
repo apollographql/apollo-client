@@ -185,7 +185,7 @@ function App() {
 }
 ```
 
-By wrapping our call to `setSelectedDog` in our `App` component in React's `startTransition` method, we no longer see the Suspense fallback every time we select a new dog! Instead, the previous dog remains on the screen while the next dog's record is fetched in the background. Once the network request is complete, the new dog's record is immediately displayed.
+By wrapping our `setSelectedDog` state update in React's `startTransition` function, we no longer see the Suspense fallback when selecting a new dog! Instead, the previous dog remains on the screen until the next dog's record has finished loading.
 
 ### Showing pending UI during a transition
 

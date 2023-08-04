@@ -120,9 +120,7 @@ function App() {
   return (
     <>
       <select
-        onChange={(e) => {
-          setSelectedDog(e.target.value);
-        }}
+        onChange={(e) => setSelectedDog(e.target.value)}
       >
         {data.dogs.map(({ id, name }) => (
           <option key={id} value={id}>{dog.name}</option>
@@ -297,7 +295,7 @@ function Dog({ id }: DogProps) {
 
 If the `GET_DOG_QUERY` inside of the `Dog` component were to return with a GraphQL error or a network error, the `Dog` component would throw and the nearest error boundary would render its fallback component. But our component tree doesn't have an error boundary yet—let's add one!
 
-```tsx {1,18-20,22,24}
+```tsx {1,20-22,26}
 import { ErrorBoundary } from "react-error-boundary";
 
 function App() {
@@ -388,6 +386,7 @@ function Dog({
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { id },
   });
+
   return (
     <>
       Name: {data.dog.name}

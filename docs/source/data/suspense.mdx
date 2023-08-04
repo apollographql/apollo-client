@@ -296,54 +296,36 @@ You will see Buck's name displayed immediately after the `Name` label, followed 
 
 By default, both network errors and GraphQL errors are thrown by `useSuspenseQuery`. These errors will be caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror).
 
-> **Note:** An error boundary is a **class component** that implements `static getDerivedStateFromError`. If you don't want to write an error boundary class component yourself, consider using a library like [`react-error-boundary`](https://github.com/bvaughn/react-error-boundary). For more information, see the React docs for [catching rendering errors with an error boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+> **Note:** An error boundary is a **class component** that implements `static getDerivedStateFromError`. For more information, see the React docs for [catching rendering errors with an error boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
 
-Let's take a look at an example:
+Let's create a basic error boundary that renders an error UI when errors are thrown by our query:
 
 ```tsx
-function App() {
-  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
-  const [selectedDog, setSelectedDog] = useState(
-    data.dogs[0].id
-  );
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
-  return (
-    <>
-      <select
-        onChange={(e) => setSelectedDog(e.target.value)}
-      >
-        {data.dogs.map(({ id, name }) => (
-          <option key={id} value={id}>
-            {name}
-          </option>
-        ))}
-      </select>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Dog id={selectedDog} />
-      </Suspense>
-    </>
-  );
-}
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
 
-function Dog({ id }: DogProps) {
-  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-    variables: { id },
-  });
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
 
-  return (
-    <>
-      <div>Name: {data.dog.name}</div>
-      <div>Breed: {data.dog.breed}</div>
-    </>
-  );
+    return this.props.children;
+  }
 }
 ```
+
+> **Note:** In a real application, your error boundary might need a more robust implementation. Consider using a library like [`react-error-boundary`](https://github.com/bvaughn/react-error-boundary) when you need a high degree of flexibility and reusability.
 
 If the `GET_DOG_QUERY` inside of the `Dog` component were to return with a GraphQL error or a network error, the `Dog` component would throw and the nearest error boundary would render its fallback component. But our component tree doesn't have an error boundary yet—let's add one!
 
 ```tsx {1,20-22,26}
-import { ErrorBoundary } from "react-error-boundary";
-
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
   const [selectedDog, setSelectedDog] = useState(

@@ -363,7 +363,7 @@ Here, we're using our `ErrorBoundary` component and placing it **outside** of ou
 
 #### Rendering partial data alongside errors
 
-In some cases, you may want to ignore GraphQL errors and render partial data instead or alongside an error message. To do this, you can set the `errorPolicy` option to `ignore` (`graphQLErrors` are ignored and `error.graphQLErrors` is _not_ populated) or `all` (both `data` and `error.graphQLErrors` are populated, enabling you to render both partial results and error information).
+In some cases, you may want to render partial data alongside an error. To do this, you can set the `errorPolicy` option to `all`. `useSuspenseQuery` will avoid throwing the error and instead set an `error` property returned by the hook. To ignore errors altogether, set the `errorPolicy` to `ignore`.
 
 Note that with both error policies of `ignore` and `all`, when encountering a **network error** Apollo Client's Suspense hooks will always throw an error wherever the data is being read (i.e. in the component calling `useSuspenseQuery` or `useReadQuery`).
 

@@ -363,7 +363,7 @@ Here, we're using our `ErrorBoundary` component and placing it **outside** of ou
 
 #### Rendering partial data alongside errors
 
-In some cases, you may want to render partial data alongside an error. To do this, you can set the `errorPolicy` option to `all`. `useSuspenseQuery` will avoid throwing the error and instead set an `error` property returned by the hook. To ignore errors altogether, set the `errorPolicy` to `ignore`. See the [`errorPolicy` documentation](/react/data/error-handling#graphql-error-policies) for more information.
+In some cases, you may want to render partial data alongside an error. To do this, set the `errorPolicy` option to `all`. `useSuspenseQuery` will avoid throwing the error and instead set an `error` property returned by the hook. To ignore errors altogether, set the `errorPolicy` to `ignore`. See the [`errorPolicy` documentation](/react/data/error-handling#graphql-error-policies) for more information.
 
 Note that with both error policies of `ignore` and `all`, when encountering a **network error** Apollo Client's Suspense hooks will always throw an error wherever the data is being read (i.e. in the component calling `useSuspenseQuery` or `useReadQuery`).
 

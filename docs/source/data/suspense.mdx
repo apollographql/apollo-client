@@ -233,8 +233,18 @@ When the cache contains partial data, you may prefer to render that data immedia
 
 Let's update our example to use the partial cache data and render immediately:
 
-```tsx {31}
-const GET_DOG_QUERY_PARTIAL: TypedDocumentNode = gql`
+```tsx {41}
+interface PartialData {
+  dog: {
+    id: string;
+    name: string;
+  };
+}
+
+const PARTIAL_GET_DOG_QUERY: TypedDocumentNode<
+  PartialData,
+  Variables
+> = gql`
   query GetDog($id: String) {
     dog(id: $id) {
       id
@@ -243,16 +253,16 @@ const GET_DOG_QUERY_PARTIAL: TypedDocumentNode = gql`
   }
 `;
 
+// Write partial data for Buck to the cache
+// so it is available when Dog renders
+client.writeQuery({
+  query: GET_DOG_QUERY_PARTIAL,
+  variables: { id: "1" },
+  data: { dog: { id: "1", name: "Buck" } },
+});
+
 function App() {
   const client = useApolloClient();
-
-  // Write partial data for Buck to the cache
-  // so it is available when Dog renders...
-  client.cache.writeQuery({
-    query: GET_DOG_QUERY_PARTIAL,
-    variables: { id: "1" },
-    data: { dog: { id: "1", name: "Buck" } },
-  });
 
   return (
     <Suspense fallback={<div>Loading...</div>}>

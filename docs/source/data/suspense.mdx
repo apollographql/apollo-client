@@ -371,7 +371,7 @@ Since `useSuspenseQuery` suspends while data is being fetched, a tree of compone
 
 `useBackgroundQuery` initiates a request for data in a parent component and returns a `queryRef` which is passed to `useReadQuery` to read the data in a child component. When the child component renders before the data has finished loading, the child component will suspend. On cache updates to watched data, the child component calling `useReadQuery` will re-render with new data **but the parent component will not re-render** (as it would, for example, if `useQuery` was making the request in the parent).
 
-Let's look at an example:
+Let's update our example to utilize `useBackgroundQuery`:
 
 ```tsx {2-3,10,35,39}
 import {

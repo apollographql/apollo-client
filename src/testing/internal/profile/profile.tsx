@@ -1,94 +1,17 @@
 import * as React from "react";
-import type { Interaction } from "scheduler/tracing";
-import { within, screen } from "@testing-library/dom";
 
 import { TextEncoder, TextDecoder } from "util";
 
 global.TextEncoder ??= TextEncoder;
 // @ts-ignore
 global.TextDecoder ??= TextDecoder;
-const { JSDOM } = require("jsdom");
-
-interface BaseRender {
-  id: string;
-  phase: "mount" | "update";
-  actualDuration: number;
-  baseDuration: number;
-  startTime: number;
-  commitTime: number;
-  interactions: Set<Interaction>;
-  count: number;
-}
-
-interface Render<Snapshot> extends BaseRender {
-  snapshot: Snapshot;
-  readonly domSnapshot: HTMLElement;
-  // API design note:
-  // could also be `typeof screen` instead of a function, but then we would get
-  // `testing-library/prefer-screen-queries` warnings everywhere it is used
-  withinDOM: () => typeof screen;
-}
+import type { Render, BaseRender } from "./Render.js";
+import { RenderInstance } from "./Render.js";
+import { applyStackTrace, captureStackTrace } from "./traces.js";
 
 interface NextRenderOptions {
   timeout?: number;
   stackTrace?: string;
-}
-
-class RenderInstance<Snapshot> implements Render<Snapshot> {
-  id: string;
-  phase: "mount" | "update";
-  actualDuration: number;
-  baseDuration: number;
-  startTime: number;
-  commitTime: number;
-  interactions: Set<Interaction>;
-  count: number;
-
-  constructor(
-    baseRender: BaseRender,
-    public snapshot: Snapshot,
-    private stringifiedDOM: string | undefined
-  ) {
-    this.id = baseRender.id;
-    this.phase = baseRender.phase;
-    this.actualDuration = baseRender.actualDuration;
-    this.baseDuration = baseRender.baseDuration;
-    this.startTime = baseRender.startTime;
-    this.commitTime = baseRender.commitTime;
-    this.interactions = baseRender.interactions;
-  }
-
-  private _domSnapshot: HTMLElement | undefined;
-  get domSnapshot() {
-    if (!this._domSnapshot) {
-      if (!this.stringifiedDOM) {
-        throw new Error(
-          "DOM snapshot is not available - please set the `snapshotDOM` option"
-        );
-      }
-      const { document } = new JSDOM(this.stringifiedDOM).window;
-      return document.body;
-    }
-    return this._domSnapshot;
-  }
-
-  get withinDOM() {
-    const snapScreen = Object.assign(within(this.domSnapshot), {
-      debug: (
-        ...[dom = this.domSnapshot, ...rest]: Parameters<typeof screen.debug>
-      ) => {
-        screen.debug(dom, ...rest);
-      },
-      logTestingPlaygroundURL: (
-        ...[dom = this.domSnapshot, ...rest]: Parameters<
-          typeof screen.logTestingPlaygroundURL
-        >
-      ) => {
-        screen.logTestingPlaygroundURL(dom, ...rest);
-      },
-    });
-    return () => snapScreen;
-  }
 }
 
 interface ProfiledComponent<Props, Snapshot> extends React.FC<Props> {
@@ -241,26 +164,4 @@ export function profile<
     }
   );
   return Profiled;
-}
-
-function captureStackTrace(callingFunction?: () => {}) {
-  let { stack = "" } = new Error("");
-  if (
-    callingFunction &&
-    callingFunction.name &&
-    stack.includes(callingFunction.name)
-  ) {
-    const lines = stack.split("\n");
-
-    stack = lines
-      .slice(lines.findIndex((line) => line.includes(callingFunction.name)))
-      .join("\n");
-  }
-
-  return stack;
-}
-
-function applyStackTrace(error: Error, stackTrace: string) {
-  error.stack = error.message + "\n" + stackTrace;
-  return error;
 }

@@ -1500,8 +1500,11 @@ describe("Query component", () => {
       );
     }
 
-    const ProfiledContainer = profile(Container, function takeSnapshot() {
-      return cloneDeep(result!);
+    const ProfiledContainer = profile({
+      Component: Container,
+      takeSnapshot() {
+        return cloneDeep(result!);
+      },
     });
 
     render(

@@ -1,15 +1,104 @@
 import * as React from "react";
+import type { Interaction } from "scheduler/tracing";
+import { within, screen } from "@testing-library/dom";
 
-export interface Render<Snapshot> {
+import { TextEncoder, TextDecoder } from "util";
+
+global.TextEncoder ??= TextEncoder;
+// @ts-ignore
+global.TextDecoder ??= TextDecoder;
+const { JSDOM } = require("jsdom");
+
+interface BaseRender {
   id: string;
   phase: "mount" | "update";
   actualDuration: number;
   baseDuration: number;
   startTime: number;
   commitTime: number;
-  interactions: Set<import("scheduler/tracing").Interaction>;
+  interactions: Set<Interaction>;
   count: number;
+}
+
+interface Render<Snapshot> extends BaseRender {
   snapshot: Snapshot;
+  readonly domSnapshot: HTMLElement;
+  // API design note:
+  // could also be `typeof screen` instead of a function, but then we would get
+  // `testing-library/prefer-screen-queries` warnings everywhere it is used
+  withinDOM: () => typeof screen;
+}
+
+interface NextRenderOptions {
+  timeout?: number;
+  stackTrace?: string;
+}
+
+class RenderInstance<Snapshot> implements Render<Snapshot> {
+  id: string;
+  phase: "mount" | "update";
+  actualDuration: number;
+  baseDuration: number;
+  startTime: number;
+  commitTime: number;
+  interactions: Set<Interaction>;
+  count: number;
+
+  constructor(
+    baseRender: BaseRender,
+    public snapshot: Snapshot,
+    private stringifiedDOM: string | undefined
+  ) {
+    this.id = baseRender.id;
+    this.phase = baseRender.phase;
+    this.actualDuration = baseRender.actualDuration;
+    this.baseDuration = baseRender.baseDuration;
+    this.startTime = baseRender.startTime;
+    this.commitTime = baseRender.commitTime;
+    this.interactions = baseRender.interactions;
+  }
+
+  private _domSnapshot: HTMLElement | undefined;
+  get domSnapshot() {
+    if (!this._domSnapshot) {
+      if (!this.stringifiedDOM) {
+        throw new Error(
+          "DOM snapshot is not available - please set the `snapshotDOM` option"
+        );
+      }
+      const { document } = new JSDOM(this.stringifiedDOM).window;
+      return document.body;
+    }
+    return this._domSnapshot;
+  }
+
+  get withinDOM() {
+    const snapScreen = Object.assign(within(this.domSnapshot), {
+      debug: (
+        ...[dom = this.domSnapshot, ...rest]: Parameters<typeof screen.debug>
+      ) => {
+        screen.debug(dom, ...rest);
+      },
+      logTestingPlaygroundURL: (
+        ...[dom = this.domSnapshot, ...rest]: Parameters<
+          typeof screen.logTestingPlaygroundURL
+        >
+      ) => {
+        screen.logTestingPlaygroundURL(dom, ...rest);
+      },
+    });
+    return () => snapScreen;
+  }
+}
+
+interface ProfiledComponent<Props, Snapshot> extends React.FC<Props> {
+  renders: Array<
+    Render<Snapshot> | { phase: "snapshotError"; count: number; error: unknown }
+  >;
+  takeRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
+  getCurrentRender(): Render<Snapshot>;
+  waitForRenderCount(count: number): Promise<void>;
+  waitForNextRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
 }
 
 /**
@@ -18,10 +107,15 @@ export interface Render<Snapshot> {
 export function profile<
   Props extends React.JSX.IntrinsicAttributes,
   Snapshot = void,
->(
-  Component: React.ComponentType<Props>,
-  takeSnapshot?: (render: Render<void>) => Snapshot
-) {
+>({
+  Component,
+  takeSnapshot,
+  snapshotDOM = false,
+}: {
+  Component: React.ComponentType<Props>;
+  takeSnapshot?: (render: BaseRender) => Snapshot;
+  snapshotDOM?: boolean;
+}) {
   let currentRender: Render<Snapshot> | undefined;
   let nextRender: Promise<Render<Snapshot>> | undefined;
   let resolveNextRender: ((render: Render<Snapshot>) => void) | undefined;
@@ -55,7 +149,10 @@ export function profile<
        * Additionally, we reject the `waitForNextRender` promise.
        */
       const snapshot = takeSnapshot?.(baseRender) as Snapshot;
-      const render = { ...baseRender, snapshot };
+      const domSnapshot = snapshotDOM
+        ? window.document.body.innerHTML
+        : undefined;
+      const render = new RenderInstance(baseRender, snapshot, domSnapshot);
       // eslint-disable-next-line testing-library/render-result-naming-convention
       currentRender = render;
       Profiled.renders.push(render);
@@ -75,7 +172,7 @@ export function profile<
   };
 
   let iteratorPosition = 0;
-  const Profiled = Object.assign(
+  const Profiled: ProfiledComponent<Props, Snapshot> = Object.assign(
     (props: Props) => (
       <React.Profiler id="test" onRender={onRender}>
         <Component {...props} />
@@ -86,7 +183,7 @@ export function profile<
         | Render<Snapshot>
         | { phase: "snapshotError"; count: number; error: unknown }
       >(),
-      async takeRender() {
+      async takeRender(options: NextRenderOptions = {}) {
         try {
           if (iteratorPosition < Profiled.renders.length) {
             const render = Profiled.renders[iteratorPosition];
@@ -95,7 +192,10 @@ export function profile<
             }
             return render;
           }
-          return Profiled.waitForNextRender();
+          return Profiled.waitForNextRender({
+            stackTrace: captureStackTrace(Profiled.takeRender),
+            ...options,
+          });
         } finally {
           iteratorPosition++;
         }
@@ -111,16 +211,56 @@ export function profile<
           await Profiled.takeRender();
         }
       },
-      waitForNextRender() {
+      waitForNextRender({
+        timeout = 1000,
+        // capture the stack trace here so its stack trace is as close to the calling code as possible
+        stackTrace = captureStackTrace(Profiled.waitForNextRender),
+      }: NextRenderOptions = {}) {
         if (!nextRender) {
-          nextRender = new Promise((resolve, reject) => {
-            resolveNextRender = resolve;
-            rejectNextRender = reject;
-          });
+          nextRender = Promise.race<Render<Snapshot>>([
+            new Promise<Render<Snapshot>>((resolve, reject) => {
+              resolveNextRender = resolve;
+              rejectNextRender = reject;
+            }),
+            new Promise<Render<Snapshot>>((_, reject) =>
+              setTimeout(
+                () =>
+                  reject(
+                    applyStackTrace(
+                      new Error("Exceeded timeout waiting for next render."),
+                      stackTrace
+                    )
+                  ),
+                timeout
+              )
+            ),
+          ]);
         }
         return nextRender;
       },
     }
   );
   return Profiled;
+}
+
+function captureStackTrace(callingFunction?: () => {}) {
+  let { stack = "" } = new Error("");
+  if (
+    callingFunction &&
+    callingFunction.name &&
+    stack.includes(callingFunction.name)
+  ) {
+    const lines = stack.split("\n");
+
+    stack = lines
+      .slice(lines.findIndex((line) => line.includes(callingFunction.name)))
+      .join("\n");
+  }
+
+  return stack;
+}
+
+function applyStackTrace(error: Error, stackTrace: string) {
+  error.stack = error.message + "\n" + stackTrace;
+  return error;
 }

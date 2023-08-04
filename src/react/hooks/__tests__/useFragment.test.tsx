@@ -1481,10 +1481,15 @@ describe("has the same timing as `useQuery`", () => {
       return complete ? JSON.stringify(fragmentData) : "loading";
     }
 
-    const ProfiledComponent = profile(Component, () => ({
-      queryData,
-      fragmentData,
-    }));
+    const ProfiledComponent = profile({
+      Component,
+      takeSnapshot() {
+        return {
+          queryData,
+          fragmentData,
+        };
+      },
+    });
 
     render(<ProfiledComponent />, {
       wrapper: ({ children }) => (
@@ -1566,15 +1571,18 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify({ item: data })}</>;
     }
 
-    const ProfiledParent = profile(Parent, function validateDOMState() {
-      const parent = screen.getByTestId("parent");
-      const children = screen.getByTestId("children");
-      expect(within(parent).queryAllByText(/Item #1/).length).toBe(
-        within(children).queryAllByText(/Item #1/).length
-      );
-      expect(within(parent).queryAllByText(/Item #2/).length).toBe(
-        within(children).queryAllByText(/Item #2/).length
-      );
+    const ProfiledParent = profile({
+      Component: Parent,
+      takeSnapshot() {
+        const parent = screen.getByTestId("parent");
+        const children = screen.getByTestId("children");
+        expect(within(parent).queryAllByText(/Item #1/).length).toBe(
+          within(children).queryAllByText(/Item #1/).length
+        );
+        expect(within(parent).queryAllByText(/Item #2/).length).toBe(
+          within(children).queryAllByText(/Item #2/).length
+        );
+      },
     });
 
     render(<ProfiledParent />, {
@@ -1650,15 +1658,18 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify(data)}</>;
     }
 
-    const ProfiledParent = profile(Parent, function validateDOMState() {
-      const parent = screen.getByTestId("parent");
-      const children = screen.getByTestId("children");
-      expect(within(parent).queryAllByText(/Item #1/).length).toBe(
-        within(children).queryAllByText(/Item #1/).length
-      );
-      expect(within(parent).queryAllByText(/Item #2/).length).toBe(
-        within(children).queryAllByText(/Item #2/).length
-      );
+    const ProfiledParent = profile({
+      Component: Parent,
+      takeSnapshot() {
+        const parent = screen.getByTestId("parent");
+        const children = screen.getByTestId("children");
+        expect(within(parent).queryAllByText(/Item #1/).length).toBe(
+          within(children).queryAllByText(/Item #1/).length
+        );
+        expect(within(parent).queryAllByText(/Item #2/).length).toBe(
+          within(children).queryAllByText(/Item #2/).length
+        );
+      },
     });
 
     render(<ProfiledParent />, {

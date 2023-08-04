@@ -351,7 +351,7 @@ Since `useSuspenseQuery` will usually cause a component to suspend on first rend
 
 Let's look at an example:
 
-```tsx
+```tsx {2,8,33,37}
 import {
   useBackgroundQuery,
   useReadQuery,
@@ -398,7 +398,7 @@ function Breeds({ queryRef }: BreedsProps) {
 }
 ```
 
-Since we began fetching our `GET_BREEDS_QUERY` in the background when the parent `App` component mounted, the network request is made in the background while React attempts to render the rest of our component tree. When React reaches the `Dog` component, it immediately suspends as it makes a network request to fetch our `GET_DOG_QUERY`.
+Since we began fetching our `GET_BREEDS_QUERY` when the parent `App` component mounted, the network request is made in the background while React attempts to render the rest of our component tree. When React reaches the `Dog` component, it immediately suspends as it makes a network request to fetch our `GET_DOG_QUERY`.
 
 When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsuspends and continues rendering, reaching the `Breeds` component. Since our `GET_BREEDS_QUERY` request was initiated higher up in our component tree using `useBackgroundQuery`, the network request for `GET_BREEDS_QUERY` **has already completed**! For that reason, when the `Breeds` component attempts to read the data using the `queryRef` for the original query, it **doesn't suspend**. Instead, it can render immediately with the data from the cache.
 
@@ -408,7 +408,7 @@ Apollo's Suspense data fetching hooks return functions for re-initiating the sam
 
 When using `useBackgroundQuery`, both `refetch` and `fetchMore` functions can be destructured from the second item in the tuple returned by the hook.
 
-```tsx
+```tsx {6-8,15,30,42}
 function App() {
   const [queryRef, { refetch }] = useBackgroundQuery(
     GET_BREEDS_QUERY

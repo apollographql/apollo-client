@@ -422,9 +422,11 @@ function Breeds({ queryRef }: BreedsProps) {
 }
 ```
 
-Since we began fetching our `GET_BREEDS_QUERY` when the parent `App` component mounted, the network request is made in the background while React attempts to render the rest of our component tree. When React reaches the `Dog` component, it immediately suspends as it makes a network request to fetch our `GET_DOG_QUERY`.
+We begin fetching our `GET_BREEDS_QUERY` when the `App` component renders. The network request is made in the background while React renders the rest of our component tree. When the `Dog` component renders, it fetches our `GET_DOG_QUERY` and suspends.
 
-When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsuspends and continues rendering, reaching the `Breeds` component. Since our `GET_BREEDS_QUERY` request was initiated higher up in our component tree using `useBackgroundQuery`, the network request for `GET_BREEDS_QUERY` **has already completed**! For that reason, when the `Breeds` component attempts to read the data using the `queryRef` for the original query, it **doesn't suspend**. Instead, it can render immediately with the data from the cache.
+When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsuspends and continues rendering, reaching the `Breeds` component. Since our `GET_BREEDS_QUERY` request was initiated higher up in our component tree using `useBackgroundQuery`, the network request for `GET_BREEDS_QUERY` **has already completed**! When the `Breeds` component reads the data from the `queryRef` provided by `useBackgroundQuery`, it avoids suspending and renders immediately with the fetched data.
+
+> **Note:** when the `GET_BREEDS_QUERY` takes _longer_ to fetch than our `GET_DOG_QUERY`, `useReadQuery` will suspend and the Suspense fallback inside of the `Dog` component is rendered instead.
 
 ### `refetch`, `fetchMore` and `subscribeToMore`
 

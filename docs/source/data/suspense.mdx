@@ -438,7 +438,7 @@ Apollo's Suspense data fetching hooks return functions for re-initiating the sam
 
 When using `useBackgroundQuery`, both `refetch` and `fetchMore` functions can be destructured from the second item in the tuple returned by the hook.
 
-Let's take a look at an example:
+Let's update our example by adding the ability to refetch breeds:
 
 ```tsx {1,3-5,12-15,18-20,49,57,62}
 import { Suspense, useTransition } from "react";

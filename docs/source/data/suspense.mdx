@@ -369,7 +369,7 @@ In some cases, you may want to render partial data alongside an error. To do thi
 
 Since `useSuspenseQuery` suspends while data is being fetched, a tree of components that all use `useSuspenseQuery` can cause a "waterfall", where each call to `useSuspenseQuery` depends on the previous to complete before it can start fetching. This can be avoided by fetching with `useBackgroundQuery` and reading the data with `useReadQuery`.
 
-`useBackgroundQuery` initiates a request for data in a parent component and returns a `queryRef` which is passed to `useReadQuery` to read the data in a child component. When the child component renders before the data has finished loading, the child component will suspend. On cache updates to watched data, the child component calling `useReadQuery` will re-render with new data **but the parent component will not re-render** (as it would, for example, if `useQuery` was making the request in the parent).
+`useBackgroundQuery` initiates a request for data in a parent component and returns a `queryRef` which is passed to `useReadQuery` to read the data in a child component. When the child component renders before the data has finished loading, the child component will suspend.
 
 Let's update our example to utilize `useBackgroundQuery`:
 
@@ -427,6 +427,10 @@ We begin fetching our `GET_BREEDS_QUERY` when the `App` component renders. The n
 When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsuspends and continues rendering, reaching the `Breeds` component. Since our `GET_BREEDS_QUERY` request was initiated higher up in our component tree using `useBackgroundQuery`, the network request for `GET_BREEDS_QUERY` **has already completed**! When the `Breeds` component reads the data from the `queryRef` provided by `useBackgroundQuery`, it avoids suspending and renders immediately with the fetched data.
 
 > **Note:** when the `GET_BREEDS_QUERY` takes _longer_ to fetch than our `GET_DOG_QUERY`, `useReadQuery` will suspend and the Suspense fallback inside of the `Dog` component is rendered instead.
+
+#### A note about performance
+
+The `useBackgroundQuery` hook used in a parent component is responsible for kicking off fetches, but doesn't deal with reading or rendering data. This is delegated to the `useReadQuery` hook used in a child component. This separation of concerns provides a nice performance benefit because cache updates are observed by `useReadQuery` and will re-render only the child component. You may find this as a useful tool to optimize your component structure to avoid unnecessarily re-rendering parent components when cache data changes.
 
 ### `refetch`, `fetchMore` and `subscribeToMore`
 

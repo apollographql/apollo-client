@@ -522,6 +522,29 @@ You can prevent this with `queryKey` option to ensure each hook has a unique ide
 
 For more information, see the [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery) API docs.
 
+## Skipping suspense hooks
+
+While `useSuspenseQuery` and `useBackgroundQuery` both have a `skip` option, that option is only present to ease migration from `useQuery` with as few code changes as possible.
+It should not be used in the long term.
+
+Instead, you should use [`skipToken`](/react/api/react/hooks#skiptoken`):
+
+```js title="Recommended usage of skipToken with useSuspenseQuery"
+import { skipToken, useSuspenseQuery } from '@apollo/client';
+const { data } = useSuspenseQuery(
+  query,
+  id ? { variables: { id } } : skipToken
+);
+```
+
+```js title="Recommended usage of skipToken with useBackgroundQuery"
+import { skipToken, useBackgroundQuery } from '@apollo/client';
+const [queryRef] = useBackgroundQuery(
+  query,
+  id ? { variables: { id } } : skipToken
+);
+```
+
 ## React Server Components (RSC)
 
 ### Usage with Next.js 13 App Router

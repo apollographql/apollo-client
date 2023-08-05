@@ -510,9 +510,7 @@ function Breeds({ queryRef, isPending }: BreedsProps) {
 }
 ```
 
-In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `onRefetch` handler calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query.
-
-While each `refetch` would normally cause the `Breeds` component to re-suspend and display its nearest Suspense boundary by default, by wrapping it in `startTransition` we can avoid suspending and instead continue displaying the previous render while we fetch new data! React's `useTransition` hook also provides an `isPending` boolean we can use to determine whether our transition is pending. In this example, we use `isPending` to render our list of breed characteristics with a lower opacity while refetching the data.
+In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `onRefetch` handler calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query. We wrap this in a transition by calling the `startTransition` function provided by the `useTransition` hook to avoid rendering our Suspense boundary. This maintains the existing UI while we fetch new data. To provide visual feedback that data is being fetched, we use the `isPending` boolean to lower the opacity on the list of breeds.
 
 ## Distinguishing between queries with `queryKey`
 

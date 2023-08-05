@@ -434,9 +434,9 @@ The `useBackgroundQuery` hook used in a parent component is responsible for kick
 
 ### Refetching and pagination
 
-Apollo's Suspense data fetching hooks return functions for re-initiating the same query (with existing or new variables) or to fetch more paginated data. `useSuspenseQuery` also provides a `subscribeToMore` function to execute a subscription.
+Apollo's Suspense data fetching hooks return functions for refetching query data via the `refetch` function, and fetching additional pages of data via the `fetchMore` function. 
 
-When using `useBackgroundQuery`, both `refetch` and `fetchMore` functions can be destructured from the second item in the tuple returned by the hook.
+Let's update our example by adding the ability to refetch breeds. We destructure the `refetch` function from the second item in the tuple returned from `useBackgroundQuery`. We'll be sure to show a pending state to let the user know that data is being refetched by utilizing React's `useTransition` hook:
 
 ```tsx {1,12-15,18-20,49,57,62}
 import { Suspense, useTransition } from "react";

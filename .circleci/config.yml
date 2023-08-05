@@ -56,7 +56,7 @@ jobs:
       framework:
         type: string
     docker:
-      - image: cimg/node:18.16.1
+      - image: cimg/node:18.17.0
     steps:
       - checkout
       - attach_workspace:

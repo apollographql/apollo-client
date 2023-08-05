@@ -12,6 +12,7 @@
     "Changelog": "https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md",
     "Fetching": {
       "Queries": "/data/queries",
+      "Suspense": "/data/suspense",
       "Mutations": "/data/mutations",
       "Refetching": "/data/refetching",
       "Subscriptions": "/data/subscriptions",
@@ -78,7 +79,6 @@
       },
       "React": {
         "Hooks": "/api/react/hooks",
-        "Hooks (experimental)": "/api/react/hooks-experimental",
         "Testing": "/api/react/testing",
         "SSR": "/api/react/ssr",
         "Components (deprecated)": "/api/react/components",

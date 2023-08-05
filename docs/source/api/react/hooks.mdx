@@ -399,7 +399,7 @@ Reads the value of a [reactive variable](../../local-state/reactive-variables/) 
 
 ### Example
 
-```tsx
+```jsx
 import { makeVar, useReactiveVar } from "@apollo/client";
 export const cartItemsVar = makeVar([]);
 
@@ -463,9 +463,7 @@ function useFragment<
 
 </MinVersion>
 
-For a detailed explanation of `useSuspenseQuery`, see the [Suspense reference](../../data/suspense#usesuspensequery).
-
-See the [API reference](#usesuspensequery-api) for supported options.
+For a detailed explanation of `useSuspenseQuery`, see the [fetching with Suspense reference](../../data/suspense).
 
 ### Example
 
@@ -529,13 +527,11 @@ function useSuspenseQuery<TData, TVariables>(
 
 <MinVersion version="3.8.0">
 
-## `useBackgroundQuery` and `useReadQuery`
+## `useBackgroundQuery`
 
 </MinVersion>
 
-For a detailed explanation of `useBackgroundQuery` and `useReadQuery`, see the [Suspense reference](../../data/suspense#usebackgroundquery-and-usereadquery).
-
-See the API references for [`useBackgroundQuery`](#usebackgroundquery-api) and [`useReadQuery`](#usereadquery-api) for supported options.
+For a detailed explanation of `useBackgroundQuery`, see the [fetching with Suspense reference](../../data/suspense#avoiding-request-waterfalls).
 
 ### Example
 
@@ -588,8 +584,6 @@ function App() {
 }
 ```
 
-### `useBackgroundQuery` API
-
 ### Signature
 
 ```ts
@@ -622,9 +616,19 @@ function useBackgroundQuery<TData, TVariables>(
 
 <UseBackgroundQueryResult />
 
-### `useReadQuery` API
+<MinVersion version="3.8.0">
 
-#### Signature
+## `useReadQuery`
+
+</MinVersion>
+
+For a detailed explanation of `useReadQuery`, see the [fetching with Suspense reference](../../data/suspense#avoiding-request-waterfalls).
+
+### Example
+
+See the [example](#example-10) in the `useBackgroundQuery` section above.
+
+### Signature
 
 ```ts
 function useReadQuery<TData>(

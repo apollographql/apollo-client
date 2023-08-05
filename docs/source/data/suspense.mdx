@@ -432,7 +432,7 @@ When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsu
 
 The `useBackgroundQuery` hook used in a parent component is responsible for kicking off fetches, but doesn't deal with reading or rendering data. This is delegated to the `useReadQuery` hook used in a child component. This separation of concerns provides a nice performance benefit because cache updates are observed by `useReadQuery` and will re-render only the child component. You may find this as a useful tool to optimize your component structure to avoid unnecessarily re-rendering parent components when cache data changes.
 
-### `refetch`, `fetchMore` and `subscribeToMore`
+### Refetching and pagination
 
 Apollo's Suspense data fetching hooks return functions for re-initiating the same query (with existing or new variables) or to fetch more paginated data. `useSuspenseQuery` also provides a `subscribeToMore` function to execute a subscription.
 

@@ -359,7 +359,7 @@ function App() {
 
 Here, we're using our `ErrorBoundary` component and placing it **outside** of our `Dog` component. Now, when the `useSuspenseQuery` hook inside the `Dog` component throws an error, the `ErrorBoundary` will catch it and display the `fallback` element we've provided.
 
-> **Note:** When working with many React frameworks, you may see an error dialog overlay in development mode when errors are thrown, even **with** an error boundary. This is done to avoid the error being missed by developers.
+> **Note:** When working with many React frameworks, you may see an error dialog overlay in development mode when errors are thrown, even _with_ an error boundary. This is done to avoid the error being missed by developers.
 
 #### Rendering partial data alongside errors
 

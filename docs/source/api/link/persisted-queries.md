@@ -7,7 +7,9 @@ description: Reject unrecognized operations while minimizing request latency.
 
 Unlike REST APIs that use a fixed URL to load data, GraphQL provides a rich query language that can be used to express the shape of application data requirements. This is a marvelous advancement in technology, but it comes at a cost: GraphQL query strings are often much longer than REST URLS—in some cases by many kilobytes.
 
-In practice we've seen GraphQL query sizes ranging well above 10 KB *just for the query text*. This is significant overhead when compared with a simple URL of 50-100 characters. When paired with the fact that the uplink speed from the client is typically the most bandwidth-constrained part of the chain, large queries can become bottlenecks for client performance. Additionally, large queries can be potentially malicious requests, which may necessitate securing your graph against them.
+In practice we've seen GraphQL query sizes ranging well above 10 KB *just for the query text*. This is significant overhead when compared with a simple URL of 50-100 characters. When paired with the fact that the uplink speed from the client is typically the most bandwidth-constrained part of the chain, large queries can become bottlenecks for client performance.
+
+Malicious actors can exploit GraphQL APIs by sending large and complex requests that overwhelm servers and disrupt services. These attackers can abuse GraphQL's query flexibility to create deeply nested, resource-intensive queries that lead to excessive data fetching.
 
 ## Solutions
 
@@ -29,15 +31,17 @@ For more details on differences between persisted queries and APQ, see the [Grap
 
 Because persisted queries requires you to preregister trusted operations, it has additional implementation steps:
 
-1. **For persisted queries only**: Generate and publish operation manifests
-2. **For persisted queries only**: Publish operation manifests
-3. **For both persisted queries and APQs**: Enable persisted queries on `ApolloClient`
+| Implementation Step | Required for PQs? | Required for APQs? |
+| -----| ------------------ | ----------------- |
+| 1. Generate operation manifests| ✅ | -- |
+| 2. Publish operation manifests to a PQL |✅ | -- |
+| 3. Enable persisted queries on the client when it makes requests | ✅ | ✅ |
 
 The rest of this article details these steps.
 
-Persisted queries also requires you to create and link a PQL, and to configure your router. For more information on the other configuration aspects of persisted queries, see the [GraphOS persisted queries documentation](/graphos/operations/persisted-queries).
+Persisted queries also requires you to create and link a persisted query list (PQL) and to configure your router. For more information on the other configuration aspects of persisted queries, see the [GraphOS persisted queries documentation](/graphos/operations/persisted-queries).
 
-### 0. Requirements
+## 0. Requirements
 
 Persisted queries is currently in [preview](/resources/product-launch-stages#preview) and has the following requirements:
 - Apollo Client Web (v3.2.0+)
@@ -53,27 +57,47 @@ You can use APQ with the following versions of Apollo Client Web, Apollo Server,
 
 > **Note:** You can use _either_ Apollo Server _or_ Apollo Router for APQs. They don't need to be used together.
 
-### 1. Generate operation manifests
+## 1. Generate operation manifests
 
 > **This step is only required for persisted queries, not APQ.**
 
-If you haven't already, install the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package as a dev dependency:
+An operation manifest acts as a safelist of trusted operations the [Apollo Router](/router/) can check incoming requests against.
+You can generate the manifest using the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package:
+
+1. Install the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package as a dev dependency:
 
 ```bash
 npm install --save-dev @apollo/generate-persisted-query-manifest
 ```
 
-Then use its CLI to extract queries from your app:
+2. Then use its CLI to extract queries from your app:
 
 ```bash
 npx generate-persisted-query-manifest
 ```
 
-To automatically update the manifest for each new app release, you can include this command in your CI/CD pipeline.
+The resulting operation manifest looks something like this:
 
-You can optionally create a configuration file in the root of your project to override default options. See the [package's Readme](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) for further information.
+```json title="persisted-query-manifest.json"
+{
+  "format": "apollo-persisted-query-manifest",
+  "version": 1,
+  "operations": [
+    {
+      "id": "e0321f6b438bb42c022f633d38c19549dea9a2d55c908f64c5c6cb8403442fef",
+      "body": "query GetItem { thing { __typename } }",
+      "name": "GetItem",
+      "type": "query"
+    }
+  ]
+}
+```
 
-### 2. Publish manifests to the PQL
+You can optionally create a configuration file in the root of your project to override the default options. Refer to the package's [README](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) for details.
+
+To automatically update the manifest for each new app release, include the `generate-persisted-query-manifest` command in your CI/CD pipeline.
+
+## 2. Publish manifests to a PQL
 
 <blockquote>
 
@@ -105,23 +129,76 @@ rover persisted-queries publish my-graph@my-variant \
 
 As with manifest generation, you can execute this command in your CI/CD pipeline to publish new operations as part of your app release process.
 
-### 3. Enable persisted queries on `ApolloClient`
+## 3. Enable persisted queries on `ApolloClient`
 
-To send operations as IDs rather than full operation strings, you use the **persisted queries** Apollo Link. The implementation details depend on whether you're using persisted queries or APQs.
+You use the **persisted queries** Apollo Link to send operations as IDs rather than full operation strings. The implementation details depend on whether you're using persisted queries or APQs.
 
-Both require a SHA-256 based hashing function and neither includes one by default, to avoid forcing one as a dependency. Developers should pick the most appropriate SHA-256 function (sync or async) for their needs/environment. If you don't already have one available in your application, you need to install one separately. For example:
+### Persisted queries implementation
 
-`npm install crypto-hash`
-
-#### APQ implementation link
-
-The **persisted queries** Apollo Link for APQs is included in the `@apollo/client` package:
+The **persisted queries** Apollo Link is included in the `@apollo/client` package:
 
 ```bash
 npm install @apollo/client
 ```
 
-The link requires using ApolloClient's `HttpLink`. The easiest way to use them together is to `concat` them into a single link.
+A persisted queries implementation also requires the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package. This package contains an Apollo Link that can be used to verify your persisted queries against your [operations manifest](#1-generate-operation-manifests). It also contains helpers that work with the persisted queries link.
+
+Install the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package:
+
+```bash
+npm install @apollo/persisted-query-lists
+```
+
+One of the package's utilities, `generatePersistedQueryIdsAtRuntime`, reads operation IDs from your [operations manifest](#1-generate-operation-manifests). To do so, pass the `loadManifest` option a function that returns your manifest. We recommend using a dynamic import to avoid bundling the manifest configuration with your production build.
+
+```js
+generatePersistedQueryIdsFromManifest({
+  loadManifest: () => import("./path/to/persisted-query-manifest.json"),
+})
+```
+
+Finally, combine the link that `generatePersistedQueryIdsAtRuntime` returns with `ApolloClient`'s `HttpLink`. The easiest way to use them together is to `concat` them into a single link.
+
+```js
+import { HttpLink, InMemoryCache, ApolloClient } from "@apollo/client";
+import { generatePersistedQueryIdsFromManifest } from "@apollo/persisted-query-lists";
+import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+
+const persistedQueryLink = createPersistedQueryLink(
+  generatePersistedQueryIdsFromManifest({
+    loadManifest: () => import("./path/to/persisted-query-manifest.json"),
+  }),
+);
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: persistedQueriesLink.concat(httpLink),
+});
+```
+
+Thats it! By including the persisted queries link in your client instantiation, your client will start sending operation IDs from your manifest instead of the full operation string.
+
+The [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package includes additional helpers you can use to [verify that you've properly configured your operations manifest](https://www.npmjs.com/package/@apollo/persisted-query-lists#createPersistedQueryManifestVerificationLink) or [generate operation IDs at runtime](https://www.npmjs.com/package/@apollo/persisted-query-lists#generatePersistedQueryIdsAtRuntime). Runtime generation is slower than fetching operation IDs from the manifest, but doesn't require making the manifest available to your client.
+
+Refer to the package [README](https://www.npmjs.com/package/@apollo/persisted-query-lists) for more information.
+
+### APQ implementation
+
+The persisted queries Apollo Link used for APQs is included in the `@apollo/client` package:
+
+```bash
+npm install @apollo/client
+```
+
+This link requires but doesn't include a SHA-256 hash function. It does this to avoid forcing a particular hash function as a dependency. Developers should pick the most appropriate SHA-256 function (sync or async) for their needs and environment.
+
+If you don't already have a SHA-256 based hashing function available in your application, install one separately. For example:
+
+```bash
+npm install crypto-hash
+```
+
+The link requires using `ApolloClient`'s `HttpLink`. The easiest way to use them together is to `concat` them into a single link.
 
 ```js
 import { HttpLink, InMemoryCache, ApolloClient } from "@apollo/client";
@@ -136,7 +213,7 @@ const client = new ApolloClient({
 });
 ```
 
-Thats it! Now your client will start sending query signatures instead of the full text resulting in improved network performance.
+Thats it! By including the persisted queries link in your client instantiation, your client will start sending operation IDs instead of the full operation string. This results in improved network performance, but doesn't include the security benefits of operation safelisting that [persisted queries](#differences-between-persisted-queries-and-apq) provide.
 
 #### `createPersistedQueryLink` Options
 
@@ -158,66 +235,6 @@ The argument that the optional `disable` function is given is an object with the
 - `networkError`: Any error during the link execution or server response.
 
 *Note*: `networkError` is the value from the downlink's `error` callback. In most cases, `graphQLErrors` is the `errors` field of the result from the last `next` call. A `networkError` can contain additional fields, such as a GraphQL object in the case of a failing HTTP status code from `@apollo/link/http`. In this situation, `graphQLErrors` is an alias for `networkError.result.errors` if the property exists.
-
-#### Persisted queries
-
-A persisted queries (as opposed to APQ ) implementation also uses the persisted queries link, but requires some additional tooling.
-
-Install the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package:
-
-```bash
-npm install @apollo/persisted-query-lists
-```
-
-This package contains an Apollo Link that can be used to verify your persisted queries against a manifest as well as helpers that work with the persisted queries link.
-
-##### `generatePersistedQueryIdsAtRuntime` helper
-
-You pass the `generatePersistedQueryIdsAtRuntime` helper function to the Persisted Query Link to generate query hashes at runtime without the use of a manifest file. This differs from the default behavior of the Persisted Query Link by disabling automatic registration of persisted queries and sorting top-level definitions to mimic the behavior of the manifest file. See [`generatePersistedQueryIdsFromManifest`](#generatePersistedQueryIdsFromManifest-helper) if you are able to integrate manifest file generation into your app's build process.
-
-```js
-import { generatePersistedQueryIdsAtRuntime } from "@apollo/persisted-query-lists";
-import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
-import { sha256 } from "crypto-hash";
-
-const persistedQueryLink = createPersistedQueryLink(
-  generatePersistedQueryIdsAtRuntime({ sha256 }),
-);
-```
-
-This function won't work properly if you pass the `createOperationId` config option to @apollo/generate-persisted-query-manifest.
-
-##### `generatePersistedQueryIdsFromManifest` helper
-
-You can pass the `generatePersistedQueryIdsFromManifest` helper function passed to the Persisted Query Link to read from your manifest configuration to get the persisted query ID. Note that this function completely ignores the body in the manifest: it just looks for an operation whose name matches the operation your code is trying to execute, and uses its id.
-
-```js
-import { generatePersistedQueryIdsFromManifest } from "@apollo/persisted-query-lists";
-import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
-
-const persistedQueryLink = createPersistedQueryLink(
-  generatePersistedQueryIdsFromManifest({
-    loadManifest: () => import("./path/to/persisted-query-manifest.json"),
-  }),
-);
-```
-
-#### `createPersistedQueryManifestVerificationLink` helper
-
-An Apollo Link that verifies that queries sent to your server can be matched to your manifest configuration. See the @apollo/generate-persisted-query-manifest package to learn how to generate the manifest file.
-
-NOTE: This link is not a terminating link and will forward the operation through the link chain.
-
-```js
-import { createPersistedQueryManifestVerificationLink } from "@apollo/persisted-query-lists";
-
-const verificationLink = createPersistedQueryManifestVerificationLink({
-  loadManifest: () => import("./path/to/persisted-query-manifest.json"),
-  onVerificationFailed: (details) => {
-    console.warn(details.reason);
-  },
-});
-```
 
 ## Apollo Studio
 

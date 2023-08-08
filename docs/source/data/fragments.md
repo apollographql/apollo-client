@@ -419,7 +419,7 @@ function List() {
 }
 ```
 
-> **Note:** instead of interpolating fragments within each query document, we can use Apollo Client's `createFragmentRegistry` method to pre-register named fragments with our `InMemoryCache`. This allows Apollo Client to include the definitions for registered fragments in the document sent over the network before the request is sent. For more information, see [Registering named fragments using `createFragmentRegistry`](./#registering-named-fragments-using-createFragmentRegistry).
+> **Note:** instead of interpolating fragments within each query document, we can use Apollo Client's `createFragmentRegistry` method to pre-register named fragments with our `InMemoryCache`. This allows Apollo Client to include the definitions for registered fragments in the document sent over the network before the request is sent. For more information, see [Registering named fragments using `createFragmentRegistry`](#registering-named-fragments-using-createfragmentregistry).
 
 We can then use `useFragment` from within the `<Item>` component to create a live binding for each item by providing the `fragment` document, `fragmentName` and object reference via `from`.
 

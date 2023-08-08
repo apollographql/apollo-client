@@ -64,7 +64,7 @@ Sometimes, you may need to retain the `__typename` field from a query's response
 
 While the [GraphQL type validation spec](https://spec.graphql.org/October2021/#sec-Input-Objects.Type-Validation) disallows input fields that begin with two underscores (`__`), this restriction doesn't apply when the input field is a [JSON scalar](https://github.com/taion/graphql-type-json). (A JSON scalar type accepts raw JSON as input.) You can configure the `removeTypenameFromVariables` link to retain `__typename` for certain `JSON` scalars.
 
-Provide an `except` option to map all variable types that should maintain `__typename`. This is done using the `KEEP` sentinel. Each key in the `except` option should correspond to an input type in your GraphQL schema.
+To do so, provide an `except` option when instantiating `removeTypenameFromVariables` and use the `KEEP` sentinel to denote which variables types should keep `__typename`. Each key in the `except` option should correspond to an input type in your GraphQL schema.
 
 Here we tell the `removeTypenameFromVariables` link to keep all `__typename` fields for any variable that is declared as a `JSON` type. Variable types are inferred from the GraphQL query. Let's take the following GraphQL mutation:
 

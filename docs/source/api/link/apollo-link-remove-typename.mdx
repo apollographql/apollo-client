@@ -60,7 +60,9 @@ Without the use of the `removeTypenameFromVariables` link, the server will retur
 
 ## Keep `__typename` in JSON scalars
 
-While the [GraphQL spec](https://spec.graphql.org/October2021/#sec-Input-Objects.Type-Validation) disallows input fields that begin with the characters "\_\_" (two underscores), this restriction is not applied when the input field is a JSON scalar (i.e. a scalar type that accepts raw JSON as input). When your server relies on `__typename` within certain `JSON` scalars, you can configure the `removeTypenameFromVariables` link to retain `__typename`.
+Sometimes, you may need to retain the `__typename` field from a query's response—for example, in the case of [JSON scalar](https://github.com/taion/graphql-type-json) input fields.
+
+While the [GraphQL type validation spec](https://spec.graphql.org/October2021/#sec-Input-Objects.Type-Validation) disallows input fields that begin with two underscores (`__`), this restriction doesn't apply when the input field is a [JSON scalar](https://github.com/taion/graphql-type-json). (A JSON scalar type accepts raw JSON as input.) You can configure the `removeTypenameFromVariables` link to retain `__typename` for certain `JSON` scalars.
 
 > Note: the JSON scalar type does not need to be literally named `JSON` to be considered a JSON scalar.
 

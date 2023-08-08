@@ -23,7 +23,8 @@ import type {
 import { __use, useDeepMemo } from "./internal/index.js";
 import { getSuspenseCache } from "../cache/index.js";
 import { canonicalStringify } from "../../cache/index.js";
-import { skipToken, type SkipToken } from "./constants.js";
+import { skipToken } from "./constants.js";
+import type { SkipToken } from "./constants.js";
 import type { CacheKey } from "../cache/types.js";
 
 export interface UseSuspenseQueryResult<

@@ -426,7 +426,7 @@ We begin fetching our `GET_BREEDS_QUERY` when the `App` component renders. The n
 
 When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsuspends and continues rendering, reaching the `Breeds` component. Since our `GET_BREEDS_QUERY` request was initiated higher up in our component tree using `useBackgroundQuery`, the network request for `GET_BREEDS_QUERY` **has already completed**! When the `Breeds` component reads the data from the `queryRef` provided by `useBackgroundQuery`, it avoids suspending and renders immediately with the fetched data.
 
-> **Note:** when the `GET_BREEDS_QUERY` takes _longer_ to fetch than our `GET_DOG_QUERY`, `useReadQuery` will suspend and the Suspense fallback inside of the `Dog` component is rendered instead.
+> **Note:** When the `GET_BREEDS_QUERY` takes _longer_ to fetch than our `GET_DOG_QUERY`, `useReadQuery` will suspend and the Suspense fallback inside of the `Dog` component is rendered instead.
 
 #### A note about performance
 

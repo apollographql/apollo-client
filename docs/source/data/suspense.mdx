@@ -516,7 +516,7 @@ In this example, our `App` component renders a `Dog` component that fetches a si
 
 Apollo Client uses the combination of `query` and `variables` to uniquely identify each query when using Apollo's Suspense data fetching hooks.
 
-If your application renders multiple components that use the same `query` and `variables`, this may present a problem: the queries made by multiple hooks share the same identity causing them to **always suspend at the same time**, regardless of which component initiates or re-initiates a network request.
+If your application renders multiple components that use the same `query` and `variables`, this may present a problem: the queries made by multiple hooks share the same identity causing them to **suspend at the same time**, regardless of which component initiates or re-initiates a network request.
 
 You can prevent this with `queryKey` option to ensure each hook has a unique identity. When `queryKey` is provided, Apollo Client uses it as part of the hook's identity in addition to its `query` and `variables`.
 

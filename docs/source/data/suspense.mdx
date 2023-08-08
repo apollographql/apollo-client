@@ -510,7 +510,7 @@ function Breeds({ queryRef, isPending }: BreedsProps) {
 }
 ```
 
-In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `onRefetch` handler calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query. We wrap this in a transition by calling the `startTransition` function provided by the `useTransition` hook to avoid rendering our Suspense boundary. This maintains the existing UI while we fetch new data. To provide visual feedback that data is being fetched, we use the `isPending` boolean to lower the opacity on the list of breeds.
+In this example, our `App` component renders a `Dog` component that fetches a single dog's record via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache can't fulfill the request for the `GetDog` query, so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest `Suspense` boundary _above_ the suspended component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for the dog whose `id="3"`: Mozzarella the Corgi.
 
 ## Distinguishing between queries with `queryKey`
 

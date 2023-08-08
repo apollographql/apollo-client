@@ -36,7 +36,7 @@ const { data } = await client.query({ query, variables: { id: 1 }});
 // }
 ```
 
-Now let's update this dashboard by sending a mutation to our server. We'll use the `dashboard` as input to our mutation.
+Now let's update this dashboard by sending a mutation to our server. We'll use the `dashboard` returned from the previous query as input to our mutation.
 
 ```ts
 const mutation = gql`

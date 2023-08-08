@@ -90,7 +90,7 @@ const removeTypenameLink = removeTypenameFromVariables({
 
 > Note: the JSON scalar type does not need to be literally named `JSON` to be considered a JSON scalar.
 
-Here we've declared a `dashboardConfig` variable as type `JSON`. When the query moves through the `removeTypenameFromVariables` link, the `dashboardConfig` variable will be detected as a `JSON` scalar type and all `__typename` fields are kept intact.
+When the query moves through the `removeTypenameFromVariables` link, the `dashboardConfig` variable will be detected as a `JSON` scalar type and all `__typename` fields are kept intact.
 
 ### Nested JSON scalar fields in input variables
 

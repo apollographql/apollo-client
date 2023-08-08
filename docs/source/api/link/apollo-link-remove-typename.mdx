@@ -14,6 +14,8 @@ import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename
 const removeTypenameLink = removeTypenameFromVariables();
 ```
 
+## Remove `__typename` from all variables
+
 As an example, take the following query. Apollo Client automatically adds `__typename` fields for each field selection set.
 
 ```ts

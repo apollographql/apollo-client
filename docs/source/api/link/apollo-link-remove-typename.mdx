@@ -14,7 +14,7 @@ import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename
 const removeTypenameLink = removeTypenameFromVariables();
 ```
 
-As an example, let's take the following query. Apollo Client will automatically add `__typename` fields to the query for each field selection set.
+As an example, take the following query. Apollo Client automatically adds `__typename` fields for each field selection set.
 
 ```ts
 const query = gql`

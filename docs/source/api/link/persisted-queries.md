@@ -135,13 +135,13 @@ You use the **persisted queries** Apollo Link to send operations as IDs rather t
 
 ### Persisted queries implementation
 
-The **persisted queries** Apollo Link is included in the `@apollo/client` package:
+The persisted queries link is included in the `@apollo/client` package:
 
 ```bash
 npm install @apollo/client
 ```
 
-A persisted queries implementation also requires the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package. This package contains an Apollo Link that can be used to verify your persisted queries against your [operations manifest](#1-generate-operation-manifests). It also contains helpers that work with the persisted queries link.
+A persisted queries implementation also requires the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package. This package contains helpers that work with the persisted queries link.
 
 Install the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package:
 
@@ -149,7 +149,7 @@ Install the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apo
 npm install @apollo/persisted-query-lists
 ```
 
-One of the package's utilities, `generatePersistedQueryIdsAtRuntime`, reads operation IDs from your [operations manifest](#1-generate-operation-manifests). To do so, pass the `loadManifest` option a function that returns your manifest. We recommend using a dynamic import to avoid bundling the manifest configuration with your production build.
+One of the package's utilities, `generatePersistedQueryIdsAtRuntime`, reads operation IDs from your [operations manifest](#1-generate-operation-manifests) so the client can use them to make requests. To do so, pass the `loadManifest` option a function that returns your manifest. We recommend using a dynamic import to avoid bundling the manifest configuration with your production build.
 
 ```js
 generatePersistedQueryIdsFromManifest({
@@ -176,9 +176,9 @@ const client = new ApolloClient({
 });
 ```
 
-Thats it! By including the persisted queries link in your client instantiation, your client will start sending operation IDs from your manifest instead of the full operation string.
+By including the persisted queries link in your client instantiation, your client sends operation IDs from your manifest instead of the full operation string.
 
-The [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package includes additional helpers you can use to [verify that you've properly configured your operations manifest](https://www.npmjs.com/package/@apollo/persisted-query-lists#createPersistedQueryManifestVerificationLink) or [generate operation IDs at runtime](https://www.npmjs.com/package/@apollo/persisted-query-lists#generatePersistedQueryIdsAtRuntime). Runtime generation is slower than fetching operation IDs from the manifest, but doesn't require making the manifest available to your client.
+The [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package includes additional helpers you can use to [verify that you've properly configured your operations manifest](https://www.npmjs.com/package/@apollo/persisted-query-lists#createPersistedQueryManifestVerificationLink) and [generate operation IDs at runtime](https://www.npmjs.com/package/@apollo/persisted-query-lists#generatePersistedQueryIdsAtRuntime). Runtime generation is slower than fetching operation IDs from the manifest, but doesn't require making your manifest available to your client.
 
 Refer to the package [README](https://www.npmjs.com/package/@apollo/persisted-query-lists) for more information.
 
@@ -213,7 +213,7 @@ const client = new ApolloClient({
 });
 ```
 
-Thats it! By including the persisted queries link in your client instantiation, your client will start sending operation IDs instead of the full operation string. This results in improved network performance, but doesn't include the security benefits of operation safelisting that [persisted queries](#differences-between-persisted-queries-and-apq) provide.
+Thats it! By including the persisted queries link in your client instantiation, your client sends operation IDs instead of the full operation string. This results in improved network performance, but doesn't include the security benefits of operation safelisting that [persisted queries](#differences-between-persisted-queries-and-apq) provide.
 
 #### `createPersistedQueryLink` Options
 
@@ -325,4 +325,3 @@ In order to support Automatic Persisted Queries, the client and server must foll
 If you want to avoid hashing in the browser, you can use a build script to include the hash as part of the request, then pass a function to retrieve that hash when the operation is run. This works well with projects like [GraphQL Persisted Document Loader](https://github.com/leoasis/graphql-persisted-document-loader) which uses webpack to generate hashes at build time.
 
 If you use the above loader, you can pass `{ generateHash: ({ documentId }) => documentId }` to the `createPersistedQueryLink` call.
-

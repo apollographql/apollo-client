@@ -79,7 +79,7 @@ You may have noticed that `useSuspenseQuery` does not return a `loading` boolean
 
 ### Changing variables
 
-In the previous example, we fetched the record for a single dog by passing a hard-coded `id` variable, Mozzarella, to `useSuspenseQuery`. Now, let's say we want to fetch the record for a different dog using a dynamic value. We'll fetch the list of dogs with just their `name` and `id`, and once the user selects an individual dog we fetch more details, including their `breed`.
+In the previous example, we fetched the record for a single dog by passing a hard-coded `id` variable to `useSuspenseQuery`. Now, let's say we want to fetch the record for a different dog using a dynamic value. We'll fetch the `name` and `id` for our list of dogs, and once the user selects an individual dog, we fetch more details, including their `breed`.
 
 Let's update our example:
 

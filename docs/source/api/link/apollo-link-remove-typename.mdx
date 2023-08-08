@@ -76,6 +76,8 @@ mutation ConfigureDashboardMutation($dashboardConfig: JSON) {
 }
 ```
 
+You can tell the `removeTypenameFromVariables` link to keep all `__typename` fields for any variable declared as a `JSON` type. (Variable types are inferred from the GraphQL query.)
+
 ```ts
 import { removeTypenameFromVariables, KEEP } from '@apollo/client/link/remove-typename';
 

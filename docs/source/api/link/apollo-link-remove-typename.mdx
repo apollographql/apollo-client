@@ -94,7 +94,7 @@ When the query moves through the `removeTypenameFromVariables` link, the `dashbo
 
 ### Nested JSON scalar fields in input variables
 
-Not all top-level variables may map to a JSON scalar type. For more complex input object types, the JSON scalar may be found on a nested field. The `except` option allows you to configured nested fields within these types to keep `__typename` intact for these fields.
+Not all top-level variables may map to a JSON scalar type. For more complex input object types, the JSON scalar may be found on a nested field. The `except` option lets you configure nested fields within these types to keep `__typename` intact.
 
 ```ts
 import { removeTypenameFromVariables, KEEP } from '@apollo/client/link/remove-typename';

@@ -6,7 +6,7 @@ minVersion: 3.8.0
 
 ## Overview
 
-The `removeTypenameFromVariables` link automatically removes `__typename` fields from variables in operations. This is useful when reusing data from a query as an argument to another GraphQL operation.
+When reusing data from a query as an argument to another GraphQL operation, `__typename` fields can cause errors. To avoid this, you can use the `removeTypenameFromVariables` link to automatically remove `__typename` fields from variables in operations. You can import and instantiate it like so:
 
 ```ts
 import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename';
@@ -48,10 +48,10 @@ const mutation = gql`
   }
 `;
 
-await client.mutate({ 
+await client.mutate({
   mutation,
-  variables: { 
-    dashboard: { ...data.dashboard, name: 'My Updated Dashboard' } 
+  variables: {
+    dashboard: { ...data.dashboard, name: 'My Updated Dashboard' }
   }
 });
 ```
@@ -113,14 +113,14 @@ import { removeTypenameFromVariables, KEEP } from '@apollo/client/link/remove-ty
 
 const removeTypenameLink = removeTypenameFromVariables({
   except: {
-    // Keep __typename for `bar` and `baz` fields on any variable 
+    // Keep __typename for `bar` and `baz` fields on any variable
     // declared as a `FooInput` type
     FooInput: {
       bar: KEEP,
       baz: KEEP,
     },
 
-    // Keep __typename for the `baz.qux` field on any variable 
+    // Keep __typename for the `baz.qux` field on any variable
     // declared as a `BarInput` type
     BarInput: {
       baz: {
@@ -128,11 +128,11 @@ const removeTypenameLink = removeTypenameFromVariables({
       }
     },
 
-    // Keep __typename on `bar.baz` and `bar.qux.foo` fields for any 
+    // Keep __typename on `bar.baz` and `bar.qux.foo` fields for any
     // variable declared as a `BazInput` type
     BazInput: {
       bar: {
-        baz: KEEP, 
+        baz: KEEP,
         qux: {
           foo: KEEP
         }
@@ -149,8 +149,8 @@ import { removeTypenameFromVariables, KEEP } from '@apollo/client/link/remove-ty
 
 const removeTypenameLink = removeTypenameFromVariables({
   except: {
-    // Keep __typename on the `config` field for each widget 
-    // in the `widgets` array for variables declared as 
+    // Keep __typename on the `config` field for each widget
+    // in the `widgets` array for variables declared as
     // a `DashboardInput` type
     DashboardInput: {
       widgets: {

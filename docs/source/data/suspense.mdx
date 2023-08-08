@@ -4,7 +4,7 @@ description: Using React 18 Suspense features with Apollo Client
 minVersion: 3.8.0
 ---
 
-"Suspense" is both a specific React API ([`<Suspense />`](https://react.dev/reference/react/Suspense), a component which "lets you display a fallback until its children have finished loading"), and often used more generally to refer to a new way to build React apps using the [**concurrent rendering engine**](https://react.dev/blog/2022/03/29/react-v18#what-is-concurrent-react) introduced in React 18.
+"Suspense" is generally used to refer to a new way of building React apps using the [**concurrent rendering engine**](https://react.dev/blog/2022/03/29/react-v18#what-is-concurrent-react) introduced in React 18. It's also a specific React API, [`<Suspense />`](https://react.dev/reference/react/Suspense), a component that lets you display a fallback until its children have finished loading.
 
 In this guide, we'll look at Apollo Client's data fetching hooks introduced in 3.8 which leverage React's powerful Suspense features and walk through some examples of how they can be used.
 
@@ -381,7 +381,7 @@ import {
 } from '@apollo/client';
 
 function App() {
-  // We can start the request here, even though `Dog` 
+  // We can start the request here, even though `Dog`
   // suspends and the data is read by a grandchild component.
   const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
 
@@ -434,7 +434,7 @@ The `useBackgroundQuery` hook used in a parent component is responsible for kick
 
 ### Refetching and pagination
 
-Apollo's Suspense data fetching hooks return functions for refetching query data via the `refetch` function, and fetching additional pages of data via the `fetchMore` function. 
+Apollo's Suspense data fetching hooks return functions for refetching query data via the `refetch` function, and fetching additional pages of data via the `fetchMore` function.
 
 Let's update our example by adding the ability to refetch breeds. We destructure the `refetch` function from the second item in the tuple returned from `useBackgroundQuery`. We'll be sure to show a pending state to let the user know that data is being refetched by utilizing React's `useTransition` hook:
 
@@ -518,7 +518,7 @@ In rare cases, you might need to render multiple components that use the same `q
 
 This presents a problem, however, because it means multiple hooks may end up with the same identity. These hooks will suspend together, regardless of which component initiates or re-initiates a network request.
 
-You can prevent this with `queryKey` option to ensure each hook has a unique identity. When `queryKey` is provided, Apollo Client will use as part of the hook's identity in combination with its `query` and `variables`. 
+You can prevent this with `queryKey` option to ensure each hook has a unique identity. When `queryKey` is provided, Apollo Client will use as part of the hook's identity in combination with its `query` and `variables`.
 
 For more information, see the [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery) API docs.
 

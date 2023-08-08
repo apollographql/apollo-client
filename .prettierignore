@@ -9,7 +9,12 @@
 # ONLY ADD NEWLY CREATED FILES/PATHS TO THE LIST BELOW. DO NOT ADD EXISTING
 # PROJECT FILES.
 
+
+# Do not format anything automatically except files listed below
+/*
+
 # ignores all files in /docs directory
+!/docs
 /docs/**
 
 # Ignore all mdx & md files:
@@ -17,6 +22,12 @@
 *.md
 *.har
 *.snap
+
+!/docs/source
+/docs/source/**
+!/docs/source/development-testing
+/docs/source/development-testing/**
+!/docs/source/development-testing/reducing-bundle-size.mdx
 
 node_modules/
 .yalc/

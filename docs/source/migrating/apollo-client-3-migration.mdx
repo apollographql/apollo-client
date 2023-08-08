@@ -57,7 +57,7 @@ As part of migrating, we recommend removing all `@apollo/react-hooks` dependenci
 **Breaking Changes:**
 
 * `useQuery` [no longer maintains the previously fetched results](https://github.com/apollographql/apollo-client/pull/6566) in its `data` result when loading new data. Instead, when new data is being loaded (i.e. `loading` === `true`) the `data` result of `useQuery` is set to `undefined`. Use the `previousData` result as a bridge to the old v2 behavior.
-* `refetch` functionality of `useQuery` [was broken in v3.5.x until it was fixed in v3.5.8](https://github.com/apollographql/apollo-client/issues/9101). Previous to this version, if the `skip: true` option was used, `refetch` would always be `undefined`.
+* `refetch` functionality of `useQuery` [was broken in 3.5.x until it was fixed in 3.5.8](https://github.com/apollographql/apollo-client/issues/9101). Previous to this version, if the `skip: true` option was used, `refetch` would always be `undefined`.
 
 
 ### @apollo/react-ssr
@@ -225,7 +225,7 @@ The following cache changes are **not** backward compatible. Take them into cons
   ```
 
   For more details around why `writeData` has been removed, see [PR #5923](https://github.com/apollographql/apollo-client/pull/5923).
-* `cache-and-network` fetch policy now initiates a network request whenever there are cache updates that affect the query, and is no longer limited to the first time the query is run. In order to recreate the default behavior from `v2.x.x`, please configure a `nextFetchPolicy` (available in versions `>=3.1.0`). For example:
+* `cache-and-network` fetch policy now initiates a network request whenever there are cache updates that affect the query, and is no longer limited to the first time the query is run. In order to recreate the default behavior from `2.x.x`, please configure a `nextFetchPolicy` (available in versions `>=3.1.0`). For example:
 
 ```js
 const { loading, error, data } = useQuery(GET_ALL_TODOS, {

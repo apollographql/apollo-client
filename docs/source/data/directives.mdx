@@ -97,9 +97,11 @@ You can do this even if `postCount` is also a local-only field (i.e., if it's al
 
 For more information and other considerations when using the `@export` directive, check out the [local-only fields docs](/react/local-state/managing-state-with-field-policies/#using-local-only-fields-as-graphql-variables).
 
+<MinVersion version="3.8.0">
+
 ## `@nonreactive`
 
-> ⚠️ **The `@nonreactive` directive is currently at the [preview stage](/resources/product-launch-stages/#general-availability) in Apollo Client, and is available by installing `@apollo/client@alpha`.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
+</MinVersion>
 
 The `@nonreactive` directive can be used to mark query fields or fragment spreads and is used to indicate that changes to the data contained within the subtrees marked `@nonreactive` should _not_ trigger rerendering. This allows parent components to fetch data to be rendered by their children without rerendering themselves when the data corresponding with fields marked as `@nonreactive` change.
 

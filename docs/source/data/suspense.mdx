@@ -75,7 +75,7 @@ In this example, our `App` component renders a `Dog` component which fetches the
 
 You may have noticed that `useSuspenseQuery` does not return a `loading` boolean. That's because the component calling `useSuspenseQuery` will always suspend when fetching data. A corollary is that when it _does_ render, `data` is always defined! In the Suspense paradigm, fallbacks that exist **outside of suspended components** replace the loading states components were previously responsible for rendering themselves.
 
-> **Note for TypeScript users**: since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic type argument, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` will have the shape `{ id: string; name: string; breed: string; }`.
+> **Note for TypeScript users**: Since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic type argument, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` will have the shape `{ id: string; name: string; breed: string; }`.
 
 ### Changing variables
 

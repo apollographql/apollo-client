@@ -13,23 +13,6 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ---
 
-## [3.8.0](https://github.com/apollographql/apollo-client/milestone/30)
-
-_Approximate Date: August 7th, 2023_
-
-Currently in active development and in the beta stage.  React 18 users will get a lot out of this release since it introduces support for Suspense.  There are also new features added to the core as well.  Here's a brief overview:
-
-- Add a new hook `useSuspenseQuery` which will provide the core functionality for React 18 `Suspense` capabilities
-- Ability to use `Suspense` with `@defer`
-- Introduce new hooks `useBackgroundQuery` and `useReadQuery` with `Suspense` support
-- Support custom GraphQL document transforms
-- Improved error messaging and bundling
-- Stable `useFragment` implementation
-- New client-side `@nonreactive` directive
-- A new optional `removeTypenameFromVariables` Apollo Link that will automatically strip `__typename` from your variables for each request
-
-Try it today: `npm i @apollo/client@rc` and let us know what you think!
-
 ## [3.9.0](https://github.com/apollographql/apollo-client/milestone/32)
 
 _Currently in planning phase_

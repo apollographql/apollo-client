@@ -1,9 +1,8 @@
-import '../../utilities/globals';
+import "../../utilities/globals/index.js";
 
-export { ApolloConsumer, ApolloConsumerProps } from './ApolloConsumer';
-export {
-  ApolloContextValue,
-  getApolloContext,
-  getApolloContext as resetApolloContext
-} from './ApolloContext';
-export { ApolloProvider, ApolloProviderProps } from './ApolloProvider';
+export type { ApolloConsumerProps } from "./ApolloConsumer.js";
+export { ApolloConsumer } from "./ApolloConsumer.js";
+export type { ApolloContextValue } from "./ApolloContext.js";
+export { getApolloContext, resetApolloContext } from "./ApolloContext.js";
+export type { ApolloProviderProps } from "./ApolloProvider.js";
+export { ApolloProvider } from "./ApolloProvider.js";

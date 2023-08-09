@@ -1,6 +1,6 @@
-import { invariant, InvariantError } from '../globals';
+import { invariant, newInvariantError } from '../globals/index.js';
 
-import {
+import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
@@ -46,11 +46,11 @@ export function getFragmentQueryDocument(
     // Throw an error if we encounter an operation definition because we will
     // define our own operation definition later on.
     if (definition.kind === 'OperationDefinition') {
-      throw new InvariantError(
-        `Found a ${definition.operation} operation${
-          definition.name ? ` named '${definition.name.value}'` : ''
-        }. ` +
+      throw newInvariantError(
+        `Found a %s operation%s. ` +
           'No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+        definition.operation,
+        definition.name ? ` named '${definition.name.value}'` : ''
       );
     }
     // Add our definition to the fragments array if it is a fragment
@@ -65,9 +65,8 @@ export function getFragmentQueryDocument(
   if (typeof actualFragmentName === 'undefined') {
     invariant(
       fragments.length === 1,
-      `Found ${
-        fragments.length
-      } fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
+      `Found %s fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
+      fragments.length
     );
     actualFragmentName = fragments[0].name.value;
   }
@@ -136,7 +135,7 @@ export function getFragmentFromSelection(
         return fragmentMap(fragmentName);
       }
       const fragment = fragmentMap && fragmentMap[fragmentName];
-      invariant(fragment, `No fragment named ${fragmentName}`);
+      invariant(fragment, `No fragment named %s`, fragmentName);
       return fragment || null;
     }
     default:

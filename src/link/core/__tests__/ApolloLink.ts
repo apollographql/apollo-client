@@ -921,9 +921,9 @@ describe('ApolloClient', () => {
 
   describe('Terminating links', () => {
     const _warn = console.warn;
-    const warningStub = jest.fn(warning => {
-      expect(warning.message).toBe(
-        `You are calling concat on a terminating link, which will have no effect`,
+    const warningStub = jest.fn((warning, link) => {
+      expect(warning).toBe(
+        `You are calling concat on a terminating link, which will have no effect %o`,
       );
     });
     const data = {
@@ -1017,7 +1017,7 @@ describe('ApolloClient', () => {
           link,
         );
         expect(warningStub).toHaveBeenCalledTimes(1);
-        expect(warningStub.mock.calls[0][0].link).toEqual(link);
+        expect(warningStub.mock.calls[0][1]).toEqual(link);
       });
 
       it('should warn if attempting to concat to a terminating Link', () => {
@@ -1026,7 +1026,7 @@ describe('ApolloClient', () => {
           link,
         );
         expect(warningStub).toHaveBeenCalledTimes(1);
-        expect(warningStub.mock.calls[0][0].link).toEqual(link);
+        expect(warningStub.mock.calls[0][1]).toEqual(link);
       });
 
       it('should not warn if attempting concat a terminating Link at end', () => {

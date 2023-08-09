@@ -1,30 +1,36 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from '../../utilities/globals/index.js';
 
 // Make builtins like Map and Set safe to use with non-extensible objects.
-import './fixPolyfills';
+import './fixPolyfills.js';
 
-import { DocumentNode } from 'graphql';
-import { OptimisticWrapperFunction, wrap } from 'optimism';
+import type { DocumentNode } from 'graphql';
+import type { OptimisticWrapperFunction} from 'optimism';
+import { wrap } from 'optimism';
 import { equal } from '@wry/equality';
 
-import { ApolloCache } from '../core/cache';
-import { Cache } from '../core/types/Cache';
-import { MissingFieldError } from '../core/types/common';
+import { ApolloCache } from '../core/cache.js';
+import type { Cache } from '../core/types/Cache.js';
+import { MissingFieldError } from '../core/types/common.js';
+import type {
+  StoreObject,
+  Reference} from '../../utilities/index.js';
 import {
   addTypenameToDocument,
-  StoreObject,
-  Reference,
   isReference,
-} from '../../utilities';
-import { InMemoryCacheConfig, NormalizedCacheObject } from './types';
-import { StoreReader } from './readFromStore';
-import { StoreWriter } from './writeToStore';
-import { EntityStore, supportsResultCaching } from './entityStore';
-import { makeVar, forgetCache, recallCache } from './reactiveVars';
-import { Policies } from './policies';
-import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers';
-import { canonicalStringify } from './object-canon';
-import { OperationVariables } from '../../core';
+  DocumentTransform,
+} from '../../utilities/index.js';
+import type {
+  InMemoryCacheConfig,
+  NormalizedCacheObject,
+} from './types.js';
+import { StoreReader } from './readFromStore.js';
+import { StoreWriter } from './writeToStore.js';
+import { EntityStore, supportsResultCaching } from './entityStore.js';
+import { makeVar, forgetCache, recallCache } from './reactiveVars.js';
+import { Policies } from './policies.js';
+import { hasOwn, normalizeConfig, shouldCanonizeResults } from './helpers.js';
+import { canonicalStringify } from './object-canon.js';
+import type { OperationVariables } from '../../core/index.js';
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -40,14 +46,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
 
-  private typenameDocumentCache = new Map<DocumentNode, DocumentNode>();
   private storeReader: StoreReader;
   private storeWriter: StoreWriter;
+  private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
   private maybeBroadcastWatch: OptimisticWrapperFunction<
     [Cache.WatchOptions, BroadcastOptions?],
     any,
     [Cache.WatchOptions]>;
+
+  // Override the default value, since InMemoryCache result objects are frozen
+  // in development and expected to remain logically immutable in production.
+  public readonly assumeImmutableResults = true;
 
   // Dynamically imported code can augment existing typePolicies or
   // possibleTypes by calling cache.policies.addTypePolicies or
@@ -204,7 +214,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  public modify(options: Cache.ModifyOptions): boolean {
+  public modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache.ModifyOptions<Entity>): boolean {
     if (hasOwn.call(options, "id") && !options.id) {
       // To my knowledge, TypeScript does not currently provide a way to
       // enforce that an optional property?:type must *not* be undefined
@@ -503,32 +513,27 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    if (this.addTypename) {
-      let result = this.typenameDocumentCache.get(document);
-      if (!result) {
-        result = addTypenameToDocument(document);
-        this.typenameDocumentCache.set(document, result);
-        // If someone calls transformDocument and then mistakenly passes the
-        // result back into an API that also calls transformDocument, make sure
-        // we don't keep creating new query documents.
-        this.typenameDocumentCache.set(result, result);
-      }
-      return result;
-    }
-    return document;
-  }
-
-  public transformForLink(document: DocumentNode): DocumentNode {
-    const { fragments } = this.config;
-    return fragments
-      ? fragments.transform(document)
-      : document;
+    return this.addTypenameToDocument(this.addFragmentsToDocument(document));
   }
 
   protected broadcastWatches(options?: BroadcastOptions) {
     if (!this.txCount) {
       this.watches.forEach(c => this.maybeBroadcastWatch(c, options));
     }
+  }
+
+  private addFragmentsToDocument(document: DocumentNode) {
+    const { fragments } = this.config;
+    return fragments
+      ? fragments.transform(document)
+      : document;
+  }
+
+  private addTypenameToDocument(document: DocumentNode) {
+    if (this.addTypename) {
+      return this.addTypenameTransform.transformDocument(document);
+    }
+    return document;
   }
 
   // This method is wrapped by maybeBroadcastWatch, which is called by

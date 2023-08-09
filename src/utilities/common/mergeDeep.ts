@@ -1,4 +1,4 @@
-import { isNonNullObject } from "./objects";
+import { isNonNullObject } from "./objects.js";
 
 const { hasOwnProperty } = Object.prototype;
 

@@ -2,11 +2,16 @@ import gql from "graphql-tag";
 import { GraphQLError } from "graphql";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import { ApolloClient, ApolloQueryResult, NetworkStatus, WatchQueryFetchPolicy } from "../../core";
+import { 
+  ApolloClient,
+  ApolloQueryResult,
+  NetworkStatus,
+  WatchQueryFetchPolicy
+} from "../../core";
 import { ObservableQuery } from "../ObservableQuery";
 import { QueryManager } from "../QueryManager";
 
-import { Observable } from "../../utilities";
+import { DocumentTransform, Observable, removeDirectivesFromDocument } from "../../utilities";
 import { ApolloLink, FetchResult } from "../../link/core";
 import { InMemoryCache, NormalizedCacheObject } from "../../cache";
 import { ApolloError } from "../../errors";
@@ -21,18 +26,16 @@ import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
-  const fetchQueryObservable = queryManager.fetchQueryObservable;
   const fetchConcastWithInfo = queryManager['fetchConcastWithInfo'];
   const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (queryManager as any)
     .fetchQueryByPolicy;
 
-  const mock = <T extends typeof fetchQueryObservable | typeof fetchConcastWithInfo | typeof fetchQueryByPolicy>(original: T) =>
+  const mock = <T extends typeof fetchConcastWithInfo | typeof fetchQueryByPolicy>(original: T) =>
     jest.fn<ReturnType<T>, Parameters<T>>(function () {
       return original.apply(queryManager, arguments);
     });
 
   const mocks = {
-    fetchQueryObservable: mock(fetchQueryObservable),
     fetchConcastWithInfo: mock(fetchConcastWithInfo),
     fetchQueryByPolicy: mock(fetchQueryByPolicy),
   };
@@ -1471,9 +1474,11 @@ describe("ObservableQuery", () => {
               expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
               expect(consoleWarnSpy).toHaveBeenCalledWith(
                 [
-                  'Called refetch({"variables":["d","e"]}) for query QueryWithoutVariables, which does not declare a $variables variable.',
+                  'Called refetch(%o) for query %o, which does not declare a $variables variable.',
                   "Did you mean to call refetch(variables) instead of refetch({ variables })?",
-                ].join("\n")
+                ].join("\n"),
+                {"variables": ["d", "e"]}, 
+                "QueryWithoutVariables"
               );
               consoleWarnSpy.mockRestore();
 
@@ -1578,9 +1583,11 @@ describe("ObservableQuery", () => {
                       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
                       expect(consoleWarnSpy).toHaveBeenCalledWith(
                         [
-                          'Called refetch({"variables":{"vars":["d","e"]}}) for query QueryWithVarsVar, which does not declare a $variables variable.',
+                          'Called refetch(%o) for query %o, which does not declare a $variables variable.',
                           "Did you mean to call refetch(variables) instead of refetch({ variables })?",
-                        ].join("\n")
+                        ].join("\n"),
+                        {"variables":{"vars":["d","e"]}},
+                        "QueryWithVarsVar"
                       );
                       consoleWarnSpy.mockRestore();
 
@@ -2682,6 +2689,132 @@ describe("ObservableQuery", () => {
           resolve();
         },
       });
+    });
+  });
+
+  describe('.query computed property', () => {
+    it('is equal to transformed query when instantiating via `watchQuery`', () => {
+      const query = gql`
+        query {
+          currentUser {
+            id
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      const observable = client.watchQuery({ query });
+
+      expect(observable.query).toMatchDocument(gql`
+        query {
+          currentUser {
+            id
+            __typename
+          }
+        }
+      `);
+    });
+
+    it('is referentially stable', () => {
+      const query = gql`
+        query {
+          currentUser {
+            id
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      const observable = client.watchQuery({ query });
+      const result = observable.query;
+
+      expect(observable.query).toBe(result);
+    });
+
+    it('is updated with transformed query when `setOptions` changes the query', () => {
+      const query = gql`
+        query {
+          currentUser {
+            id
+          }
+        }
+      `;
+
+      const updatedQuery = gql`
+        query {
+          product {
+            id
+          }
+        }
+      `
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      const observable = client.watchQuery({ query });
+
+      expect(observable.query).toMatchDocument(gql`
+        query {
+          currentUser {
+            id
+            __typename
+          }
+        }
+      `);
+
+      observable.setOptions({ query: updatedQuery });
+
+      expect(observable.query).toMatchDocument(gql`
+        query {
+          product {
+            id
+            __typename
+          }
+        }
+      `);
+    });
+
+    it('reflects query run through custom transforms', () => {
+      const query = gql`
+        query {
+          currentUser {
+            id
+            name @client
+          }
+        }
+      `;
+
+      const documentTransform = new DocumentTransform((document) => {
+        return removeDirectivesFromDocument([{ name: 'client' }], document)!
+      });
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+        documentTransform,
+      });
+
+      const observable = client.watchQuery({ query });
+
+      expect(observable.query).toMatchDocument(gql`
+        query {
+          currentUser {
+            id
+            name
+            __typename
+          }
+        }
+      `);
     });
   });
 

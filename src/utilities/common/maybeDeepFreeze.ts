@@ -1,5 +1,4 @@
-import '../globals'; // For __DEV__
-import { isNonNullObject } from './objects';
+import { isNonNullObject } from './objects.js';
 
 function deepFreeze(value: any) {
   const workSet = new Set([value]);

@@ -1,4 +1,4 @@
-import { Operation } from '../core';
+import type { Operation } from '../core/index.js';
 
 /**
  * Advanced mode: a function that determines both whether a particular

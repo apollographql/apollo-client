@@ -9,7 +9,7 @@ The examples below use [Jest](https://facebook.github.io/jest/docs/en/tutorial-r
 
 ## The `MockedProvider` component
 
-Every test for a React component that uses Apollo Client must make Apollo Client available on [React's context](https://reactjs.org/docs/context.html). In application code, you achieve this by wrapping your component tree with the `ApolloProvider` component. In your tests, you use the `MockedProvider` component instead.
+Every test for a React component that uses Apollo Client must make Apollo Client available on [React's context](https://react.dev/reference/react/useContext). In application code, you achieve this by wrapping your component tree with the `ApolloProvider` component. In your tests, you use the `MockedProvider` component instead.
 
 The `MockedProvider` component enables you to define mock responses for individual queries that are executed in your test. This means your test _doesn't_ need to communicate with a GraphQL server, which removes an external dependency and therefore improves the test's reliability.
 
@@ -394,7 +394,7 @@ In order to properly test local state using `MockedProvider`, you'll need to pas
 `MockedProvider` creates its own ApolloClient instance behind the scenes like this:
 
 ```jsx
-const { 
+const {
   mocks,
   addTypename,
   defaultOptions,
@@ -440,4 +440,4 @@ This is necessary because otherwise, the `MockedProvider` component doesn't know
 
 For a working example that demonstrates how to test components, check out this project on CodeSandbox:
 
-[![Edit React-Apollo Testing](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/react-apollo-testing-rwwrx6)
+[![Edit Testing React Components](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-client/v3/testing-react-components?file=/src/dog.test.js)

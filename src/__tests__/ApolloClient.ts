@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 
 import {
   ApolloClient,
+  ApolloError,
   DefaultOptions,
   FetchPolicy,
   QueryOptions,
@@ -15,7 +16,7 @@ import { HttpLink } from '../link/http';
 import { InMemoryCache } from '../cache';
 import { itAsync, withErrorSpy } from '../testing';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { invariant } from 'ts-invariant';
+import { invariant } from '../utilities/globals';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -2370,7 +2371,7 @@ describe('ApolloClient', () => {
             setTimeout(() => {
               try {
                 expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
-                expect(invariantDebugSpy).toHaveBeenCalledWith('In client.refetchQueries, Promise.all promise rejected with error ApolloError: refetch failed');
+                expect(invariantDebugSpy).toHaveBeenCalledWith('In client.refetchQueries, Promise.all promise rejected with error %o', new ApolloError({errorMessage:"refetch failed"}));
                 resolve();
               } catch (err) {
                 reject(err);

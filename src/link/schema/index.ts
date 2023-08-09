@@ -1,7 +1,9 @@
-import { validate, execute, GraphQLSchema } from 'graphql';
+import type { GraphQLSchema } from 'graphql';
+import { validate, execute } from 'graphql';
 
-import { ApolloLink, Operation, FetchResult } from '../core';
-import { Observable } from '../../utilities';
+import type { Operation, FetchResult } from '../core/index.js';
+import { ApolloLink } from '../core/index.js';
+import { Observable } from '../../utilities/index.js';
 
 export namespace SchemaLink {
   export type ResolverContext = Record<string, any>;

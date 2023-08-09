@@ -1,35 +1,40 @@
-import { invariant } from '../../utilities/globals';
-import { dep, OptimisticDependencyFunction } from 'optimism';
+import { invariant } from '../../utilities/globals/index.js';
+import type { OptimisticDependencyFunction } from 'optimism';
+import { dep } from 'optimism';
 import { equal } from '@wry/equality';
 import { Trie } from '@wry/trie';
 
-import {
-  isReference,
+import type {
   StoreValue,
   StoreObject,
-  Reference,
+  Reference} from '../../utilities/index.js';
+import {
+  isReference,
   makeReference,
   DeepMerger,
   maybeDeepFreeze,
   canUseWeakMap,
   isNonNullObject,
-} from '../../utilities';
-import { NormalizedCache, NormalizedCacheObject } from './types';
-import { hasOwn, fieldNameFromStoreName } from './helpers';
-import { Policies, StorageType } from './policies';
-import { Cache } from '../core/types/Cache';
-import {
+} from '../../utilities/index.js';
+import type { NormalizedCache, NormalizedCacheObject } from './types.js';
+import { hasOwn, fieldNameFromStoreName } from './helpers.js';
+import type { Policies, StorageType } from './policies.js';
+import type { Cache } from '../core/types/Cache.js';
+import type {
   SafeReadonly,
   Modifier,
   Modifiers,
   ReadFieldOptions,
   ToReferenceFunction,
   CanReadFunction,
-} from '../core/types/common';
+  InvalidateModifier,
+  DeleteModifier,
+  ModifierDetails,
+} from '../core/types/common.js';
 
-const DELETE: any = Object.create(null);
+const DELETE: DeleteModifier = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;
-const INVALIDATE: any = Object.create(null);
+const INVALIDATE: InvalidateModifier = Object.create(null);
 
 export abstract class EntityStore implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);
@@ -190,7 +195,7 @@ export abstract class EntityStore implements NormalizedCache {
 
   public modify(
     dataId: string,
-    fields: Modifier<any> | Modifiers,
+    fields: Modifier<any> | Modifiers<Record<string, any>>,
   ): boolean {
     const storeObject = this.lookup(dataId);
 
@@ -215,13 +220,13 @@ export abstract class EntityStore implements NormalizedCache {
           } : fieldNameOrOptions,
           { store: this },
         ),
-      };
+      } satisfies Partial<ModifierDetails>;
 
       Object.keys(storeObject).forEach(storeFieldName => {
         const fieldName = fieldNameFromStoreName(storeFieldName);
         let fieldValue = storeObject[storeFieldName];
         if (fieldValue === void 0) return;
-        const modify: Modifier<StoreValue> = typeof fields === "function"
+        const modify: Modifier<StoreValue> | undefined = typeof fields === "function"
           ? fields
           : fields[storeFieldName] || fields[fieldName];
         if (modify) {

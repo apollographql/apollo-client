@@ -1,4 +1,5 @@
-import { Observable, Observer } from "./Observable";
+import type { Observer } from "./Observable.js";
+import { Observable } from "./Observable.js";
 
 // Like Observable.prototype.map, except that the mapping function can
 // optionally return a Promise (or be async).

@@ -1,6 +1,6 @@
 {
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "import"],
   "env": {
     "browser": true,
     "node": true,
@@ -9,13 +9,61 @@
   "parserOptions": {
     "ecmaVersion": "latest"
   },
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true
+      }
+    }
+  },
   "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "excludedFiles": ["**/__tests__/**/*.*", "*.d.ts"],
+      "parserOptions": {
+        "project": "./tsconfig.json"
+      },
+      "rules": {
+        "@typescript-eslint/consistent-type-imports": [
+          "error",
+          {
+            "prefer": "type-imports",
+            "disallowTypeAnnotations": false,
+            "fixStyle": "separate-type-imports"
+          }
+        ],
+        "@typescript-eslint/consistent-type-exports": ["error"],
+        "@typescript-eslint/no-import-type-side-effects": "error",
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "ImportDeclaration[source.value='react'][importKind!='type'] :matches(ImportSpecifier, ImportDefaultSpecifier)",
+            "message": "Please only use the namespace import syntax (`import * as React from 'react'`) for React imports!"
+          }
+        ],
+        "import/extensions": [
+          "error",
+          "always",
+          {
+            "ignorePackages": true,
+            "checkTypeImports": true
+          }
+        ]
+      }
+    },
     {
       "files": ["**/__tests__/**/*.[jt]sx", "**/?(*.)+(test).[jt]sx"],
       "extends": ["plugin:testing-library/react"],
       "rules": {
-        "testing-library/prefer-user-event": "error"
+        "testing-library/prefer-user-event": "error",
+        "testing-library/no-wait-for-multiple-assertions": "off"
       }
     }
-  ]
+  ],
+  "rules": {
+    "import/no-unresolved": "error"
+  }
 }

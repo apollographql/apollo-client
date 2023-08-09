@@ -1,6 +1,6 @@
-import { DataProxy } from './DataProxy';
-import { Modifier, Modifiers } from './common';
-import { ApolloCache } from '../cache';
+import { DataProxy } from './DataProxy.js';
+import type { AllFieldsModifier, Modifiers } from './common.js';;
+import type { ApolloCache } from '../cache.js';
 
 export namespace Cache {
   export type WatchCallback<TData = any> = (
@@ -57,9 +57,9 @@ export namespace Cache {
     discardWatches?: boolean;
   }
 
-  export interface ModifyOptions {
+  export interface ModifyOptions<Entity extends Record<string, any> = Record<string, any>> {
     id?: string;
-    fields: Modifiers | Modifier<any>;
+    fields: Modifiers<Entity> | AllFieldsModifier<Entity>;
     optimistic?: boolean;
     broadcast?: boolean;
   }

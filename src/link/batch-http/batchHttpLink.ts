@@ -1,6 +1,13 @@
-import { ApolloLink, Operation, FetchResult } from '../core';
-import { Observable } from '../../utilities';
-import { fromError } from '../utils';
+import type { Operation, FetchResult } from '../core/index.js';
+import { ApolloLink } from '../core/index.js';
+import {
+  Observable,
+  hasDirectives,
+  removeClientSetsFromDocument
+} from '../../utilities/index.js';
+import { fromError } from '../utils/index.js';
+import type {
+  HttpOptions} from '../http/index.js';
 import {
   serializeFetchParameter,
   selectURI,
@@ -9,10 +16,9 @@ import {
   selectHttpOptionsAndBodyInternal,
   defaultPrinter,
   fallbackHttpConfig,
-  HttpOptions,
-  createSignalIfSupported,
-} from '../http';
-import { BatchLink } from '../batch';
+} from '../http/index.js';
+import { BatchLink } from '../batch/index.js';
+import { filterOperationVariables } from "../utils/filterOperationVariables.js";
 
 export namespace BatchHttpLink {
   export type Options = Pick<
@@ -45,6 +51,7 @@ export class BatchHttpLink extends ApolloLink {
       batchDebounce,
       batchMax,
       batchKey,
+      includeUnusedVariables = false,
       ...requestOptions
     } = fetchParams || ({} as BatchHttpLink.Options);
 
@@ -95,16 +102,43 @@ export class BatchHttpLink extends ApolloLink {
         headers: { ...clientAwarenessHeaders, ...context.headers },
       };
 
+      const queries = operations.map(({ query }) => {
+        if (hasDirectives(['client'], query)) {
+          return removeClientSetsFromDocument(query);
+        }
+
+        return query;
+      });
+
+      // If we have a query that returned `null` after removing client-only
+      // fields, it indicates a query that is using all client-only fields.
+      if (queries.some(query => !query)) {
+        return fromError<FetchResult[]>(
+          new Error(
+            'BatchHttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or enable the `transformOptions.removeClientFields` option.'
+          )
+        );
+      }
+
       //uses fallback, link, and then context to build options
-      const optsAndBody = operations.map(operation =>
-        selectHttpOptionsAndBodyInternal(
-          operation,
+      const optsAndBody = operations.map((operation, index) => {
+        const result = selectHttpOptionsAndBodyInternal(
+          { ...operation, query: queries[index]! },
           print,
           fallbackHttpConfig,
           linkConfig,
-          contextConfig,
-        ),
-      );
+          contextConfig
+        );
+
+        if (result.body.variables && !includeUnusedVariables) {
+          result.body.variables = filterOperationVariables(
+            result.body.variables,
+            operation.query
+          );
+        }
+
+        return result;
+      });
 
       const loadedBody = optsAndBody.map(({ body }) => body);
       const options = optsAndBody[0].options;
@@ -122,11 +156,10 @@ export class BatchHttpLink extends ApolloLink {
         return fromError<FetchResult[]>(parseError);
       }
 
-      let controller: any;
-      if (!(options as any).signal) {
-        const { controller: _controller, signal } = createSignalIfSupported();
-        controller = _controller;
-        if (controller) (options as any).signal = signal;
+      let controller: AbortController | undefined;
+      if (!options.signal && typeof AbortController !== 'undefined') {
+        controller = new AbortController();
+        options.signal = controller.signal;
       }
 
       return new Observable<FetchResult[]>(observer => {
@@ -138,14 +171,14 @@ export class BatchHttpLink extends ApolloLink {
           })
           .then(parseAndCheckHttpResponse(operations))
           .then(result => {
+            controller = undefined;
             // we have data and can send it to back up the link chain
             observer.next(result);
             observer.complete();
             return result;
           })
           .catch(err => {
-            // fetch was cancelled so its already been cleaned up in the unsubscribe
-            if (err.name === 'AbortError') return;
+            controller = undefined;
             // if it is a network error, BUT there is graphql result info
             // fire the next observer before calling error
             // this gives apollo-client (and react-apollo) the `graphqlErrors` and `networkErrors`

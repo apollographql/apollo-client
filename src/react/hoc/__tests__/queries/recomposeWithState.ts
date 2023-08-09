@@ -2,7 +2,6 @@
 // to avoid incurring an indirect dependency on ua-parser-js via fbjs.
 
 import React, { createFactory, Component } from "react";
-import '../../../../utilities/globals'; // For __DEV__
 
 const setStatic =
   (key: string, value: string) => (BaseComponent: React.ComponentClass) => {
@@ -35,7 +34,10 @@ export const withState =
   (stateName: string, stateUpdaterName: string, initialState: unknown) =>
   (BaseComponent: React.ComponentClass) => {
     const factory = createFactory(BaseComponent);
-    class WithState extends Component<Record<string, unknown>, { stateValue: unknown }> {
+    class WithState extends Component<
+      Record<string, unknown>,
+      { stateValue: unknown }
+    > {
       state = {
         stateValue:
           typeof initialState === "function"

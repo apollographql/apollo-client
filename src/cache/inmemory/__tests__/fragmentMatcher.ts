@@ -234,8 +234,8 @@ describe("policies.fragmentMatches", () => {
 
   beforeEach(() => {
     warnings.length = 0;
-    console.warn = function (message: any) {
-      warnings.push(message);
+    console.warn = function (...args: any) {
+      warnings.push(args);
     };
   });
 
@@ -384,9 +384,9 @@ describe("policies.fragmentMatches", () => {
     });
 
     expect(warnings).toEqual([
-      "Inferring subtype E of supertype C",
-      "Inferring subtype F of supertype C",
-      "Inferring subtype G of supertype C",
+      ["Inferring subtype %s of supertype %s", "E", "C"],
+      ["Inferring subtype %s of supertype %s", "F", "C"],
+      ["Inferring subtype %s of supertype %s", "G", "C"],
       // Note that TooLong is not inferred here.
     ]);
 

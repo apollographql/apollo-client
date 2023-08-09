@@ -1,30 +1,31 @@
-import { DocumentNode, FragmentDefinitionNode, SelectionSetNode } from 'graphql';
+import type { DocumentNode, FragmentDefinitionNode, SelectionSetNode } from 'graphql';
 
-import {
+import type {
   NormalizedCache,
   InMemoryCacheConfig,
-} from './types';
+} from './types.js';
 
-import { KeyFieldsContext } from './policies';
-import { FragmentRegistryAPI } from './fragmentRegistry';
+import type { KeyFieldsContext } from './policies.js';
+import type { FragmentRegistryAPI } from './fragmentRegistry.js';
 
-import {
+import type {
   Reference,
-  isReference,
   StoreValue,
   StoreObject,
+  FragmentMap,
+  FragmentMapFunction} from '../../utilities/index.js';
+import {
+  isReference,
   isField,
   DeepMerger,
   resultKeyNameFromField,
   shouldInclude,
   isNonNullObject,
   compact,
-  FragmentMap,
-  FragmentMapFunction,
   createFragmentMap,
   getFragmentDefinitions,
   isArray,
-} from '../../utilities';
+} from '../../utilities/index.js';
 
 export const {
   hasOwnProperty: hasOwn,

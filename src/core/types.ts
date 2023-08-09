@@ -1,17 +1,21 @@
-import { DocumentNode, GraphQLError } from 'graphql';
+import type { DocumentNode, GraphQLError } from 'graphql';
 
-import { ApolloCache } from '../cache';
-import { FetchResult } from '../link/core';
-import { ApolloError } from '../errors';
-import { QueryInfo } from './QueryInfo';
-import { NetworkStatus } from './networkStatus';
-import { Resolver } from './LocalState';
-import { ObservableQuery } from './ObservableQuery';
-import { QueryOptions } from './watchQueryOptions';
-import { Cache } from '../cache';
-import { IsStrictlyAny } from '../utilities';
+import type { ApolloCache } from '../cache/index.js';
+import type { FetchResult } from '../link/core/index.js';
+import type { ApolloError } from '../errors/index.js';
+import type { QueryInfo } from './QueryInfo.js';
+import type { NetworkStatus } from './networkStatus.js';
+import type { Resolver } from './LocalState.js';
+import type { ObservableQuery } from './ObservableQuery.js';
+import type { QueryOptions } from './watchQueryOptions.js';
+import type { Cache } from '../cache/index.js';
+import type { IsStrictlyAny } from '../utilities/index.js';
 
-export { TypedDocumentNode } from '@graphql-typed-document-node/core';
+export type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
+export type MethodKeys<T> = {
+  [P in keyof T]: T[P] extends Function ? P : never
+}[keyof T];
 
 export interface DefaultContext extends Record<string, any> {};
 

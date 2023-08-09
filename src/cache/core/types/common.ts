@@ -1,13 +1,13 @@
-import { DocumentNode, FieldNode } from 'graphql';
+import type { DocumentNode, FieldNode } from 'graphql';
 
-import {
+import type {
   Reference,
   StoreObject,
   StoreValue,
   isReference,
-} from '../../../utilities';
+} from '../../../utilities/index.js';
 
-import { StorageType } from '../../inmemory/policies';
+import type { StorageType } from '../../inmemory/policies.js';
 
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when
@@ -76,9 +76,14 @@ export type ToReferenceFunction = (
 
 export type CanReadFunction = (value: StoreValue) => boolean;
 
+declare const _deleteModifier: unique symbol;
+export interface DeleteModifier { [_deleteModifier]: true }
+declare const _invalidateModifier: unique symbol;
+export interface InvalidateModifier { [_invalidateModifier]: true}
+
 export type ModifierDetails = {
-  DELETE: any;
-  INVALIDATE: any;
+  DELETE: DeleteModifier;
+  INVALIDATE: InvalidateModifier;
   fieldName: string;
   storeFieldName: string;
   readField: ReadFieldFunction;
@@ -88,8 +93,28 @@ export type ModifierDetails = {
   storage: StorageType;
 }
 
-export type Modifier<T> = (value: T, details: ModifierDetails) => T;
+export type Modifier<T> = (
+  value: T,
+  details: ModifierDetails
+) => T | DeleteModifier | InvalidateModifier;
 
-export type Modifiers = {
-  [fieldName: string]: Modifier<any>;
-};
+type StoreObjectValueMaybeReference<StoreVal> =
+  StoreVal extends Record<string, any>[]
+  ? Readonly<StoreVal> | readonly Reference[]
+  : StoreVal extends Record<string, any>
+  ? StoreVal | Reference
+  : StoreVal;
+
+export type AllFieldsModifier<
+  Entity extends Record<string, any>
+> = Modifier<Entity[keyof Entity] extends infer Value ?
+  StoreObjectValueMaybeReference<Exclude<Value, undefined>>
+  : never>;
+
+export type Modifiers<
+  T extends Record<string, any> = Record<string, unknown>
+> = Partial<{
+  [FieldName in keyof T]: Modifier<
+    StoreObjectValueMaybeReference<Exclude<T[FieldName], undefined>>
+  >;
+}>;

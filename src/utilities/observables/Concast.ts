@@ -1,6 +1,7 @@
-import { Observable, Observer, ObservableSubscription, Subscriber } from "./Observable";
-import { iterateObserversSafely } from "./iteration";
-import { fixObservableSubclass } from "./subclassing";
+import type { Observer, ObservableSubscription, Subscriber } from "./Observable.js";
+import { Observable } from "./Observable.js";
+import { iterateObserversSafely } from "./iteration.js";
+import { fixObservableSubclass } from "./subclassing.js";
 
 type MaybeAsync<T> = T | PromiseLike<T>;
 

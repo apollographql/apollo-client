@@ -18,36 +18,21 @@ import {
   TypedDocumentNode,
 } from '../../../core';
 
-jest.mock('optimism');
-import { wrap } from 'optimism';
-
 describe('resultCacheMaxSize', () => {
   const cache = new InMemoryCache();
-  let wrapSpy: jest.Mock = wrap as jest.Mock;
-  beforeEach(() => {
-    wrapSpy.mockClear();
-  });
+  const defaultMaxSize = Math.pow(2, 16);
 
-  it("does not set max size on caches if resultCacheMaxSize is not configured", () => {
-    new StoreReader({ cache });
-    expect(wrapSpy).toHaveBeenCalled();
-
-    wrapSpy.mock.calls.forEach(([, { max }]) => {
-      expect(max).toBeUndefined();
-    })
+  it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
+    const reader = new StoreReader({ cache });
+    expect(reader["executeSelectionSet"].options.max).toBe(defaultMaxSize);
   });
 
   it("configures max size on caches when resultCacheMaxSize is set", () => {
     const resultCacheMaxSize = 12345;
-    new StoreReader({ cache, resultCacheMaxSize });
-    expect(wrapSpy).toHaveBeenCalled();
-
-    wrapSpy.mock.calls.forEach(([, { max }]) => {
-      expect(max).toBe(resultCacheMaxSize);
-    })
+    const reader = new StoreReader({ cache, resultCacheMaxSize });
+    expect(reader["executeSelectionSet"].options.max).toBe(resultCacheMaxSize);
   });
 });
-
 
 describe('reading from the store', () => {
   const reader = new StoreReader({

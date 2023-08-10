@@ -1,6 +1,6 @@
 ---
 title: Persisted Queries Link
-description: Reject unrecognized operations while minimizing request latency.
+description: Secure your graph while minimizing request latency.
 ---
 
 ## Problems to solve
@@ -13,19 +13,11 @@ Malicious actors can exploit GraphQL APIs by sending large and complex requests 
 
 ## Solutions
 
-Apollo supports two separate but related features called **persisted queries** and **automatic persisted queries** (APQs).
-With both features, clients can execute a GraphQL operation by sending an operation's ID instead of the entire operation string. An operation's ID is the SHA256 hash of the full string. Querying by ID can significantly reduce latency and bandwidth usage for very large operation strings.
+<ClientPQIntro />
 
 ### Differences between persisted queries and APQ
 
-The persisted queries feature requires operations to be preregistered in a **persisted query list** (**PQL**). 
-This allows the PQL to act as a safelist of trusted operations made by your first-party apps. As such, persisted queries is a security feature as much as a performance one.
-
-With APQs, if the server can't find the operation ID the client provides, it asks the client to send the ID and the operation string so it can store them mapped together for future lookups. During this request, the backend also fulfills the data request.
-
-If you _only_ want to improve request latency and bandwidth usage, APQ addresses your use case. If you _also_ want to secure your supergraph with operation safelisting, you should preregister trusted operations in a PQL.
-
-For more details on differences between persisted queries and APQ, see the [GraphOS persisted queries documentation](/graphos/operations/persisted-queries#differences-from-automatic-persisted).
+<ClientPQDifferences />
 
 ## Implementation steps
 
@@ -44,7 +36,7 @@ Persisted queries also requires you to create and link a persisted query list (P
 ## 0. Requirements
 
 Persisted queries is currently in [preview](/resources/product-launch-stages#preview) and has the following requirements:
-- Apollo Client Web (v3.2.0+)
+- Apollo Client Web (v3.7.0+)
 - The [`@apollo/generate-persisted-query-manifest` package](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest)
 - The [`@apollo/persisted-query-lists` package](https://www.npmjs.com/package/@apollo/persisted-query-lists)
 - [Apollo Router](/router) (v1.25.0+)
@@ -99,35 +91,7 @@ To automatically update the manifest for each new app release, include the `gene
 
 ## 2. Publish manifests to a PQL
 
-<blockquote>
-
-**This step is only required for persisted queries, not APQ.**
-
-Ensure your Rover CLI version is `0.17.2` or later. Previous versions of Rover don't support publishing operations to a PQL.
-[Download the latest version.](/rover/getting-started/)
-
-</blockquote>
-
-If you want to preregister your manifest as a safelist of trusted operations, you need to publish it to a PQL using the [Rover CLI](/rover/):
-
-```bash title="Example command"
-rover persisted-queries publish my-graph@my-variant \
-  --manifest ./persisted-query-manifest.json
-```
-
-- Replace `my-graph@my-variant` with the **graph ref** of _any_ variant your PQL is [linked to](/graphos/operations/persisted-queries#12-link-the-pql-to-variants). Your platform team can provide this for you.
-    - Graph refs have the format `graph-id@variant-name`.
-- For the `--manifest` option, provide the path to the manifest you want to publish.
-
-**The above command does the following:**
-
-1. It publishes all operations in the provided manifest file to the PQL linked to the specified variant.
-    - Publishing a manifest to a PQL is additive. Any _existing_ entries in the PQL remain.
-    - If you publish an operation with the same `id` but different details from an existing entry in the PQL, the entire publish command fails with an error.
-
-2. It updates any _other_ variants that the PQL is applied to so that routers associated with those variants can fetch their updated PQL.
-
-As with manifest generation, you can execute this command in your CI/CD pipeline to publish new operations as part of your app release process.
+<PublishPQMs />
 
 ## 3. Enable persisted queries on `ApolloClient`
 
@@ -246,7 +210,7 @@ APQs are made up of three parts: the query signature, error responses, and the n
 
 **Query Signature**
 
-The query signature for Automatic Persisted Queries is sent through the `extensions` field of a request from the client. This is a transport independent way to send extra information along with the operation.
+The query signature for APQs is sent through the `extensions` field of a request from the client. This is a transport independent way to send extra information along with the operation.
 
 ```js
 {
@@ -293,7 +257,7 @@ When the initial query signature is received by a backend, if it is unable to fi
 }
 ```
 
-If the backend doesn't support Automatic Persisted Queries, or does not want to support it for that particular client, it can send back the following which will tell the client to stop trying to send hashes:
+If the backend doesn't support APQs, or does not want to support it for that particular client, it can send back the following which will tell the client to stop trying to send hashes:
 
 ```
 {
@@ -305,7 +269,7 @@ If the backend doesn't support Automatic Persisted Queries, or does not want to 
 
 **Negotiation Protocol**
 
-In order to support Automatic Persisted Queries, the client and server must follow the negotiation steps as outlined here:
+In order to support APQs, the client and server must follow the negotiation steps as outlined here:
 
 *Happy Path*
 1. Client sends query signature with no `query` field

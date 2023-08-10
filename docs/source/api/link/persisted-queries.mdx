@@ -21,17 +21,9 @@ Malicious actors can exploit GraphQL APIs by sending large and complex requests 
 
 ## Implementation steps
 
-Because persisted queries requires you to preregister trusted operations, it has additional implementation steps:
+Because persisted queries requires you to preregister trusted operations, it has additional implementation steps. 
 
-| Implementation Step | Required for PQs? | Required for APQs? |
-| -----| ------------------ | ----------------- |
-| 1. Generate operation manifests| ✅ | -- |
-| 2. Publish operation manifests to a PQL |✅ | -- |
-| 3. Enable persisted queries on the client when it makes requests | ✅ | ✅ |
-
-The rest of this article details these steps.
-
-Persisted queries also requires you to create and link a persisted query list (PQL) and to configure your router. For more information on the other configuration aspects of persisted queries, see the [GraphOS persisted queries documentation](/graphos/operations/persisted-queries).
+<ClientPQImplementation />
 
 ## 0. Requirements
 

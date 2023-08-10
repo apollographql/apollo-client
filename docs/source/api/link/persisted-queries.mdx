@@ -105,7 +105,7 @@ Install the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apo
 npm install @apollo/persisted-query-lists
 ```
 
-One of the package's utilities, `generatePersistedQueryIdsAtRuntime`, reads operation IDs from your [operations manifest](#1-generate-operation-manifests) so the client can use them to make requests. To do so, pass the `loadManifest` option a function that returns your manifest. We recommend using a dynamic import to avoid bundling the manifest configuration with your production build.
+One of the package's utilities, `generatePersistedQueryIdsAtRuntime`, reads operation IDs from your [operation manifest](#1-generate-operation-manifests) so the client can use them to make requests. To do so, pass the `loadManifest` option a function that returns your manifest. We recommend using a dynamic import to avoid bundling the manifest configuration with your production build.
 
 ```js
 generatePersistedQueryIdsFromManifest({
@@ -134,7 +134,7 @@ const client = new ApolloClient({
 
 By including the persisted queries link in your client instantiation, your client sends operation IDs from your manifest instead of the full operation string.
 
-The [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package includes additional helpers you can use to [verify that you've properly configured your operations manifest](https://www.npmjs.com/package/@apollo/persisted-query-lists#createPersistedQueryManifestVerificationLink) and [generate operation IDs at runtime](https://www.npmjs.com/package/@apollo/persisted-query-lists#generatePersistedQueryIdsAtRuntime). Runtime generation is slower than fetching operation IDs from the manifest, but doesn't require making your manifest available to your client.
+The [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package includes additional helpers you can use to [verify that you've properly configured your operation manifest](https://www.npmjs.com/package/@apollo/persisted-query-lists#createPersistedQueryManifestVerificationLink) and [generate operation IDs at runtime](https://www.npmjs.com/package/@apollo/persisted-query-lists#generatePersistedQueryIdsAtRuntime). Runtime generation is slower than fetching operation IDs from the manifest, but doesn't require making your manifest available to your client.
 
 Refer to the package [README](https://www.npmjs.com/package/@apollo/persisted-query-lists) for more information.
 

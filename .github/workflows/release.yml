@@ -91,7 +91,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Tag:*\n`next`"
+                      "text": "*Tag:*\n`latest`"
                     },
                     {
                       "type": "mrkdwn",

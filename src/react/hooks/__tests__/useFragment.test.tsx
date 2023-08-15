@@ -1689,7 +1689,7 @@ describe.skip("Type Tests", () => {
   });
 
   test("UseFragmentOptions interface shape", <TData, TVars>() => {
-    expectTypeOf<UseFragmentOptions<TData, TVars>>().toEqualTypeOf<{
+    expectTypeOf<UseFragmentOptions<TData, TVars>>().branded.toEqualTypeOf<{
       from: string | StoreObject | Reference;
       fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
       fragmentName?: string;

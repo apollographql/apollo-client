@@ -1,27 +1,35 @@
-export { Transaction, ApolloCache } from './core/cache';
-export { Cache } from './core/types/Cache';
-export { DataProxy } from './core/types/DataProxy';
-export { MissingFieldError } from './core/types/common';
+import '../utilities/globals/index.js';
 
+export type { Transaction } from './core/cache.js';
+export { ApolloCache } from './core/cache.js';
+export { Cache } from './core/types/Cache.js';
+export type { DataProxy } from './core/types/DataProxy.js';
+export type {
+  MissingTree,
+  Modifier,
+  Modifiers,
+  ModifierDetails,
+  ReadFieldOptions
+} from './core/types/common.js';
+export { MissingFieldError } from './core/types/common.js';
+
+export type { Reference } from '../utilities/index.js';
+export { isReference, makeReference } from '../utilities/index.js';
+
+export { EntityStore } from './inmemory/entityStore.js';
 export {
-  Reference,
-  isReference,
-  makeReference,
-} from '../utilities';
+  fieldNameFromStoreName,
+  defaultDataIdFromObject,
+} from './inmemory/helpers.js'
 
 export {
   InMemoryCache,
-  InMemoryCacheConfig,
-} from './inmemory/inMemoryCache';
+} from './inmemory/inMemoryCache.js';
 
-export {
-  ReactiveVar,
-  makeVar,
-  cacheSlot,
-} from './inmemory/reactiveVars';
+export type { ReactiveVar } from './inmemory/reactiveVars.js';
+export { makeVar, cacheSlot } from './inmemory/reactiveVars.js';
 
-export {
-  defaultDataIdFromObject,
+export type {
   TypePolicies,
   TypePolicy,
   FieldPolicy,
@@ -29,6 +37,14 @@ export {
   FieldMergeFunction,
   FieldFunctionOptions,
   PossibleTypesMap,
-} from './inmemory/policies';
+} from './inmemory/policies.js';
+export { Policies } from './inmemory/policies.js';
 
-export * from './inmemory/types';
+export {
+  canonicalStringify,
+} from './inmemory/object-canon.js';
+
+export type { FragmentRegistryAPI } from './inmemory/fragmentRegistry.js';
+export { createFragmentRegistry } from './inmemory/fragmentRegistry.js';
+
+export * from './inmemory/types.js';

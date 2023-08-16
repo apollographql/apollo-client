@@ -1,7 +1,13 @@
-import { NormalizedCache, NormalizedCacheObject } from "../types";
+import {
+  NormalizedCache,
+  NormalizedCacheObject,
+  DiffQueryAgainstStoreOptions,
+} from "../types";
 import { EntityStore } from "../entityStore";
 import { InMemoryCache } from "../inMemoryCache";
-import { StoreWriter, WriteToStoreOptions } from "../writeToStore";
+import { StoreReader } from "../readFromStore";
+import { StoreWriter } from "../writeToStore";
+import { Cache } from "../../../core";
 
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject,
@@ -14,10 +20,19 @@ export function defaultNormalizedCacheFactory(
   });
 }
 
-interface WriteQueryToStoreOptions
-extends Omit<WriteToStoreOptions, "store"> {
+interface WriteQueryToStoreOptions extends Cache.WriteOptions {
   writer: StoreWriter;
   store?: NormalizedCache;
+};
+
+export function readQueryFromStore<T = any>(
+  reader: StoreReader,
+  options: DiffQueryAgainstStoreOptions,
+) {
+  return reader.diffQueryAgainstStore<T>({
+    ...options,
+    returnPartialData: false,
+  }).result;
 }
 
 export function writeQueryToStore(
@@ -28,9 +43,31 @@ export function writeQueryToStore(
     store = new EntityStore.Root({
       policies: options.writer.cache.policies,
     }),
+    ...writeOptions
   } = options;
-  options.writer.writeToStore({ ...options, dataId, store });
+  options.writer.writeToStore(store, {
+    ...writeOptions,
+    dataId,
+  });
   return store;
+}
+
+export function withError(func: Function, regex?: RegExp) {
+  let message: string = null as never;
+  const { error } = console;
+  console.error = (m: any) => {
+    message = m;
+  };
+
+  try {
+    const result = func();
+    if (regex) {
+      expect(message).toMatch(regex);
+    }
+    return result;
+  } finally {
+    console.error = error;
+  }
 }
 
 describe("defaultNormalizedCacheFactory", function () {

@@ -1,6 +1,20 @@
 [build]
-  base    = "docs/"
-  publish = "docs/public/"
-  command = "npm run types && gatsby build --prefix-paths && mkdir -p docs/react && mv public/* docs/react && mv docs public/ && mv public/docs/react/_redirects public"
+  publish = "docs/public"
+  command = "npm run typedoc"
+
 [build.environment]
-  NPM_VERSION = "6"
+  NODE_VERSION = "18"
+
+[context.deploy-preview.build]
+  base = "docs"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
+  command = """\
+  cd ../
+  rm -rf monodocs
+  git clone https://github.com/apollographql/docs --branch main --single-branch monodocs
+  cd monodocs
+  npm i
+  cp -r ../docs local
+  DOCS_LOCAL=true npm run build \
+  """
+  publish = "monodocs/public"

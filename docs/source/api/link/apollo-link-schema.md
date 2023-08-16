@@ -34,7 +34,7 @@ const graphqlClient = new ApolloClient({
 
 ### Mocking
 
-For more detailed information about mocking, refer to the [graphql-tools documentation](https://www.apollographql.com/docs/graphql-tools/mocking.html).
+For more detailed information about mocking, refer to the [graphql-tools documentation](https://www.graphql-tools.com/docs/graphql-tools/mocking).
 
 ```js
 import { ApolloClient, InMemoryCache } from '@apollo/client';
@@ -53,7 +53,7 @@ const mocks = {
 };
 
 const schema = makeExecutableSchema({ typeDefs });
-addMockFunctionsToSchema({
+const schemaWithMocks = addMockFunctionsToSchema({
   schema,
   mocks
 });
@@ -62,7 +62,7 @@ const apolloCache = new InMemoryCache(window.__APOLLO_STATE__);
 
 const graphqlClient = new ApolloClient({
   cache: apolloCache,
-  link: new SchemaLink({ schema })
+  link: new SchemaLink({ schema: schemaWithMocks })
 });
 ```
 
@@ -75,3 +75,4 @@ The `SchemaLink` constructor can be called with an object with the following pro
 | `schema` | An executable graphql schema |
 | `rootValue` | The root value that is passed to the resolvers (i.e. the first parameter for the [rootQuery](http://graphql.org/learn/execution/#root-fields-resolvers)) |
 | `context` | An object passed to the resolvers, following the [graphql specification](http://graphql.org/learn/execution/#root-fields-resolvers) or a function that accepts the operation and returns the resolver context. The resolver context may contain all the data-fetching connectors for an operation. |
+| `validate` | Enable validation of incoming queries against the local schema before execution, returning validation errors in `result.errors`, just like a non-local GraphQL endpoint typically would. |

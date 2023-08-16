@@ -19,7 +19,7 @@ describe('fromPromise', () => {
   it('return Promise rejection as error call', () => {
     const observable = fromPromise(Promise.reject(error));
     return toPromise(observable)
-      .then(fail)
+      .then(() => { throw "should not have thrown" })
       .catch(actualError => expect(error).toEqual(actualError));
   });
 });

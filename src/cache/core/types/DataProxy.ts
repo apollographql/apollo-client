@@ -1,15 +1,17 @@
-import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+import type { DocumentNode } from 'graphql'; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { MissingFieldError } from './common';
+import type { MissingFieldError } from './common.js';
+import type { Reference } from '../../../utilities/index.js';
 
 export namespace DataProxy {
-  export interface Query<TVariables> {
+  export interface Query<TVariables, TData> {
     /**
      * The GraphQL query shape to be used constructed using the `gql` template
      * string tag from `graphql-tag`. The query will be used to determine the
      * shape of the data to be read.
      */
-    query: DocumentNode;
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
     /**
      * Any variables that the GraphQL query may depend on.
@@ -19,12 +21,12 @@ export namespace DataProxy {
     /**
      * The root id to be used. Defaults to "ROOT_QUERY", which is the ID of the
      * root query object. This property makes writeQuery capable of writing data
-     * to any object in the cache, which renders writeFragment mostly useless.
+     * to any object in the cache.
      */
     id?: string;
   }
 
-  export interface Fragment<TVariables> {
+  export interface Fragment<TVariables, TData> {
     /**
      * The root id to be used. This id should take the same form as the
      * value returned by your `dataIdFromObject` function. If a value with your
@@ -38,7 +40,7 @@ export namespace DataProxy {
      * the shape of data to read. If you provide more than one fragment in this
      * document then you must also specify `fragmentName` to select a single.
      */
-    fragment: DocumentNode;
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
     /**
      * The name of the fragment in your GraphQL document to be used. If you do
@@ -53,20 +55,49 @@ export namespace DataProxy {
     variables?: TVariables;
   }
 
-  export interface WriteQueryOptions<TData, TVariables>
-    extends Query<TVariables> {
+  export interface ReadQueryOptions<TData, TVariables>
+    extends Query<TVariables, TData> {
     /**
-     * The data you will be writing to the store.
+     * Whether to return incomplete data rather than null.
+     * Defaults to false.
      */
-    data: TData;
+    returnPartialData?: boolean;
     /**
-     * Whether to notify query watchers (default: true).
+     * Whether to read from optimistic or non-optimistic cache data. If
+     * this named option is provided, the optimistic parameter of the
+     * readQuery method can be omitted. Defaults to false.
      */
-    broadcast?: boolean;
+    optimistic?: boolean;
+    /**
+     * Whether to canonize cache results before returning them. Canonization
+     * takes some extra time, but it speeds up future deep equality comparisons.
+     * Defaults to false.
+     */
+    canonizeResults?: boolean;
   }
 
-  export interface WriteFragmentOptions<TData, TVariables>
-    extends Fragment<TVariables> {
+  export interface ReadFragmentOptions<TData, TVariables>
+    extends Fragment<TVariables, TData> {
+    /**
+     * Whether to return incomplete data rather than null.
+     * Defaults to false.
+     */
+    returnPartialData?: boolean;
+    /**
+     * Whether to read from optimistic or non-optimistic cache data. If
+     * this named option is provided, the optimistic parameter of the
+     * readQuery method can be omitted. Defaults to false.
+     */
+    optimistic?: boolean;
+    /**
+     * Whether to canonize cache results before returning them. Canonization
+     * takes some extra time, but it speeds up future deep equality comparisons.
+     * Defaults to false.
+     */
+    canonizeResults?: boolean;
+  }
+
+  export interface WriteOptions<TData> {
     /**
      * The data you will be writing to the store.
      */
@@ -75,12 +106,36 @@ export namespace DataProxy {
      * Whether to notify query watchers (default: true).
      */
     broadcast?: boolean;
+    /**
+     * When true, ignore existing field data rather than merging it with
+     * incoming data (default: false).
+     */
+    overwrite?: boolean;
   }
+
+  export interface WriteQueryOptions<TData, TVariables>
+    extends Query<TVariables, TData>, WriteOptions<TData> {}
+
+  export interface WriteFragmentOptions<TData, TVariables>
+    extends Fragment<TVariables, TData>, WriteOptions<TData> {}
+
+  export interface UpdateQueryOptions<TData, TVariables>
+    extends Omit<(
+      ReadQueryOptions<TData, TVariables> &
+      WriteQueryOptions<TData, TVariables>
+    ), 'data'> {}
+
+  export interface UpdateFragmentOptions<TData, TVariables>
+    extends Omit<(
+      ReadFragmentOptions<TData, TVariables> &
+      WriteFragmentOptions<TData, TVariables>
+    ), 'data'> {}
 
   export type DiffResult<T> = {
     result?: T;
     complete?: boolean;
     missing?: MissingFieldError[];
+    fromOptimisticTransaction?: boolean;
   }
 }
 
@@ -95,7 +150,7 @@ export interface DataProxy {
    * Reads a GraphQL query from the root query id.
    */
   readQuery<QueryType, TVariables = any>(
-    options: DataProxy.Query<TVariables>,
+    options: DataProxy.ReadQueryOptions<QueryType, TVariables>,
     optimistic?: boolean,
   ): QueryType | null;
 
@@ -105,7 +160,7 @@ export interface DataProxy {
    * provided to select the correct fragment.
    */
   readFragment<FragmentType, TVariables = any>(
-    options: DataProxy.Fragment<TVariables>,
+    options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic?: boolean,
   ): FragmentType | null;
 
@@ -114,7 +169,7 @@ export interface DataProxy {
    */
   writeQuery<TData = any, TVariables = any>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>,
-  ): void;
+  ): Reference | undefined;
 
   /**
    * Writes a GraphQL fragment to any arbitrary id. If there is more than
@@ -123,5 +178,5 @@ export interface DataProxy {
    */
   writeFragment<TData = any, TVariables = any>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>,
-  ): void;
+  ): Reference | undefined;
 }

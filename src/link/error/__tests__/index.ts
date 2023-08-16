@@ -5,9 +5,10 @@ import { execute } from '../../core/execute';
 import { ServerError, throwServerError } from '../../utils/throwServerError';
 import { Observable } from '../../../utilities/observables/Observable';
 import { onError, ErrorLink } from '../';
+import { itAsync } from '../../../testing';
 
 describe('error handling', () => {
-  it('has an easy way to handle GraphQL errors', done => {
+  itAsync('has an easy way to handle GraphQL errors', (resolve, reject) => {
     const query = gql`
       {
         foo {
@@ -37,10 +38,10 @@ describe('error handling', () => {
     execute(link, { query }).subscribe(result => {
       expect(result.errors![0].message).toBe('resolver blew up');
       expect(called).toBe(true);
-      done();
+      resolve();
     });
   });
-  it('has an easy way to log client side (network) errors', done => {
+  itAsync('has an easy way to log client side (network) errors', (resolve, reject) => {
     const query = gql`
       query Foo {
         foo {
@@ -66,11 +67,11 @@ describe('error handling', () => {
       error: e => {
         expect(e.message).toBe('app is crashing');
         expect(called).toBe(true);
-        done();
+        resolve();
       },
     });
   });
-  it('captures errors within links', done => {
+  itAsync('captures errors within links', (resolve, reject) => {
     const query = gql`
       query Foo {
         foo {
@@ -98,11 +99,11 @@ describe('error handling', () => {
       error: e => {
         expect(e.message).toBe('app is crashing');
         expect(called).toBe(true);
-        done();
+        resolve();
       },
     });
   });
-  it('captures networkError.statusCode within links', done => {
+  itAsync('captures networkError.statusCode within links', (resolve, reject) => {
     const query = gql`
       query Foo {
         foo {
@@ -134,11 +135,11 @@ describe('error handling', () => {
       error: e => {
         expect(e.message).toBe('app is crashing');
         expect(called).toBe(true);
-        done();
+        resolve();
       },
     });
   });
-  it('completes if no errors', done => {
+  itAsync('completes if no errors', (resolve, reject) => {
     const query = gql`
       {
         foo {
@@ -158,10 +159,10 @@ describe('error handling', () => {
     const link = errorLink.concat(mockLink);
 
     execute(link, { query }).subscribe({
-      complete: done,
+      complete: resolve,
     });
   });
-  it('allows an error to be ignored', done => {
+  itAsync('allows an error to be ignored', (resolve, reject) => {
     const query = gql`
       {
         foo {
@@ -190,11 +191,11 @@ describe('error handling', () => {
         expect(errors).toBe(null);
         expect(data).toEqual({ foo: { id: 1 } });
       },
-      complete: done,
+      complete: resolve,
     });
   });
 
-  it('can be unsubcribed', done => {
+  itAsync('can be unsubcribed', (resolve, reject) => {
     const query = gql`
       {
         foo {
@@ -220,16 +221,16 @@ describe('error handling', () => {
 
     const sub = execute(link, { query }).subscribe({
       complete: () => {
-        done.fail('completed');
+        reject('completed');
       },
     });
 
     sub.unsubscribe();
 
-    setTimeout(done, 10);
+    setTimeout(resolve, 10);
   });
 
-  it('includes the operation and any data along with a graphql error', done => {
+  itAsync('includes the operation and any data along with a graphql error', (resolve, reject) => {
     const query = gql`
       query Foo {
         foo {
@@ -263,13 +264,13 @@ describe('error handling', () => {
     execute(link, { query, context: { bar: true } }).subscribe(result => {
       expect(result.errors![0].message).toBe('resolver blew up');
       expect(called).toBe(true);
-      done();
+      resolve();
     });
   });
 });
 
 describe('error handling with class', () => {
-  it('has an easy way to handle GraphQL errors', done => {
+  itAsync('has an easy way to handle GraphQL errors', (resolve, reject) => {
     const query = gql`
       {
         foo {
@@ -299,10 +300,10 @@ describe('error handling with class', () => {
     execute(link, { query }).subscribe(result => {
       expect(result!.errors![0].message).toBe('resolver blew up');
       expect(called).toBe(true);
-      done();
+      resolve();
     });
   });
-  it('has an easy way to log client side (network) errors', done => {
+  itAsync('has an easy way to log client side (network) errors', (resolve, reject) => {
     const query = gql`
       {
         foo {
@@ -327,11 +328,11 @@ describe('error handling with class', () => {
       error: e => {
         expect(e.message).toBe('app is crashing');
         expect(called).toBe(true);
-        done();
+        resolve();
       },
     });
   });
-  it('captures errors within links', done => {
+  itAsync('captures errors within links', (resolve, reject) => {
     const query = gql`
       {
         foo {
@@ -358,11 +359,11 @@ describe('error handling with class', () => {
       error: e => {
         expect(e.message).toBe('app is crashing');
         expect(called).toBe(true);
-        done();
+        resolve();
       },
     });
   });
-  it('completes if no errors', done => {
+  itAsync('completes if no errors', (resolve, reject) => {
     const query = gql`
       {
         foo {
@@ -382,10 +383,10 @@ describe('error handling with class', () => {
     const link = errorLink.concat(mockLink);
 
     execute(link, { query }).subscribe({
-      complete: done,
+      complete: resolve,
     });
   });
-  it('can be unsubcribed', done => {
+  itAsync('can be unsubcribed', (resolve, reject) => {
     const query = gql`
       {
         foo {
@@ -411,13 +412,13 @@ describe('error handling with class', () => {
 
     const sub = execute(link, { query }).subscribe({
       complete: () => {
-        done.fail('completed');
+        reject('completed');
       },
     });
 
     sub.unsubscribe();
 
-    setTimeout(done, 10);
+    setTimeout(resolve, 10);
   });
 });
 
@@ -444,7 +445,7 @@ describe('support for request retrying', () => {
     message: 'some other error',
   };
 
-  it('returns the retried request when forward(operation) is called', done => {
+  itAsync('returns the retried request when forward(operation) is called', (resolve, reject) => {
     let errorHandlerCalled = false;
 
     let timesCalled = 0;
@@ -477,7 +478,7 @@ describe('support for request retrying', () => {
             return forward(operation);
           }
         } catch (error) {
-          done.fail(error);
+          reject(error);
         }
       },
     );
@@ -490,16 +491,16 @@ describe('support for request retrying', () => {
           expect(errorHandlerCalled).toBe(true);
           expect(result).toEqual(GOOD_RESPONSE);
         } catch (error) {
-          return done.fail(error);
+          return reject(error);
         }
       },
       complete() {
-        done();
+        resolve();
       },
     });
   });
 
-  it('supports retrying when the initial request had networkError', done => {
+  itAsync('supports retrying when the initial request had networkError', (resolve, reject) => {
     let errorHandlerCalled = false;
 
     let timesCalled = 0;
@@ -527,7 +528,7 @@ describe('support for request retrying', () => {
             return forward(operation);
           }
         } catch (error) {
-          done.fail(error);
+          reject(error);
         }
       },
     );
@@ -540,16 +541,16 @@ describe('support for request retrying', () => {
           expect(errorHandlerCalled).toBe(true);
           expect(result).toEqual(GOOD_RESPONSE);
         } catch (error) {
-          return done.fail(error);
+          return reject(error);
         }
       },
       complete() {
-        done();
+        resolve();
       },
     });
   });
 
-  it('returns errors from retried requests', done => {
+  itAsync('returns errors from retried requests', (resolve, reject) => {
     let errorHandlerCalled = false;
 
     let timesCalled = 0;
@@ -581,7 +582,7 @@ describe('support for request retrying', () => {
             return forward(operation);
           }
         } catch (error) {
-          done.fail(error);
+          reject(error);
         }
       },
     );
@@ -596,11 +597,11 @@ describe('support for request retrying', () => {
       },
       error(error) {
         // note that complete will not be after an error
-        // therefore we should end the test here with done()
+        // therefore we should end the test here with resolve()
         expect(errorHandlerCalled).toBe(true);
         expect(observerNextCalled).toBe(false);
         expect(error).toEqual(NETWORK_ERROR);
-        done();
+        resolve();
       },
     });
   });

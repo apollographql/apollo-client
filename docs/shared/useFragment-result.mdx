@@ -1,0 +1,69 @@
+<table class="field-table api-ref">
+
+<thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td colspan="2">
+
+**Operation result**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `data`
+
+`TData`
+</td>
+
+<td>
+
+An object containing the data for a given GraphQL fragment.
+
+This value might be `undefined` if a query results in one or more errors (depending on the query's `errorPolicy`).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `complete`
+
+`boolean`
+</td>
+
+<td>
+
+A boolean indicating whether the data returned for the fragment is complete. When `false`, the `missing` field should explain which fields were responsible for the incompleteness.
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `missing`
+
+`MissingTree`
+</td>
+
+<td>
+
+A tree of all `MissingFieldError` messages reported during fragment reading, where the branches of the tree indicate the paths of the errors within the query result.
+
+</td>
+</tr>
+
+</tbody>
+</table>

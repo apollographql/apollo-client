@@ -1,17 +1,17 @@
-import React from 'react';
-import { render, wait } from '@testing-library/react';
-import gql from 'graphql-tag';
-import { DocumentNode } from 'graphql';
+import React from "react";
+import { render, waitFor } from "@testing-library/react";
+import gql from "graphql-tag";
+import { DocumentNode } from "graphql";
 
-import { ApolloClient } from '../../../core';
-import { ApolloProvider } from '../../context';
-import { InMemoryCache as Cache } from '../../../cache';
-import { itAsync, stripSymbols, mockSingleLink } from '../../../testing';
-import { graphql } from '../graphql';
-import { ChildProps } from '../types';
+import { ApolloClient } from "../../../core";
+import { ApolloProvider } from "../../context";
+import { InMemoryCache as Cache } from "../../../cache";
+import { itAsync, mockSingleLink } from "../../../testing";
+import { graphql } from "../graphql";
+import { ChildProps } from "../types";
 
-describe('client option', () => {
-  it('renders with client from options', () => {
+describe("client option", () => {
+  it("renders with client from options", () => {
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -21,39 +21,40 @@ describe('client option', () => {
         }
       }
     `;
-    const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
 
     type Data = typeof data;
 
     const link = mockSingleLink({
       request: { query },
-      result: { data }
+      result: { data },
     });
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
     const config = {
       options: {
-        client
-      }
+        client,
+      },
     };
     const ContainerWithData = graphql<{}, Data>(query, config)(() => null);
-    render(
+    const { unmount } = render(
       <ApolloProvider
         client={
           new ApolloClient({
             link,
-            cache: new Cache({ addTypename: false })
+            cache: new Cache({ addTypename: false }),
           })
         }
       >
         <ContainerWithData />
       </ApolloProvider>
     );
+    unmount();
   });
 
-  itAsync('doesnt require a recycler', (resolve, reject) => {
+  itAsync("doesnt require a recycler", (resolve, reject) => {
     const query = gql`
       query people {
         allPeople(first: 1) {
@@ -63,90 +64,109 @@ describe('client option', () => {
         }
       }
     `;
-    const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
     type Data = typeof data;
 
     const link = mockSingleLink({
       request: { query },
-      result: { data }
+      result: { data },
     });
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
     const config = {
       options: {
-        client
-      }
+        client,
+      },
     };
-    const ContainerWithData = graphql<{}, Data>(query, config)(() => null);
+    let renderCount = 0;
+    const ContainerWithData = graphql<{}, Data>(
+      query,
+      config
+    )(() => {
+      renderCount += 1;
+      return null;
+    });
     render(<ContainerWithData />);
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(renderCount).toBe(2);
+    }).then(resolve, reject);
   });
 
-  itAsync('ignores client from context if client from options is present', (resolve, reject) => {
-    const query: DocumentNode = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
+  itAsync(
+    "ignores client from context if client from options is present",
+    (resolve, reject) => {
+      let done = false;
+      const query: DocumentNode = gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
           }
         }
-      }
-    `;
-    const dataProvider = {
-      allPeople: { people: [{ name: 'Leia Organa Solo' }] }
-    };
+      `;
+      const dataProvider = {
+        allPeople: { people: [{ name: "Leia Organa Solo" }] },
+      };
 
-    type Data = typeof dataProvider;
-    const linkProvider = mockSingleLink({
-      request: { query },
-      result: { data: dataProvider }
-    });
-    const clientProvider = new ApolloClient({
-      link: linkProvider,
-      cache: new Cache({ addTypename: false })
-    });
-    const dataOptions = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-    const linkOptions = mockSingleLink({
-      request: { query },
-      result: { data: dataOptions }
-    });
-    const clientOptions = new ApolloClient({
-      link: linkOptions,
-      cache: new Cache({ addTypename: false })
-    });
+      type Data = typeof dataProvider;
+      const linkProvider = mockSingleLink({
+        request: { query },
+        result: { data: dataProvider },
+      });
+      const clientProvider = new ApolloClient({
+        link: linkProvider,
+        cache: new Cache({ addTypename: false }),
+      });
+      const dataOptions = {
+        allPeople: { people: [{ name: "Luke Skywalker" }] },
+      };
+      const linkOptions = mockSingleLink({
+        request: { query },
+        result: { data: dataOptions },
+      });
+      const clientOptions = new ApolloClient({
+        link: linkOptions,
+        cache: new Cache({ addTypename: false }),
+      });
 
-    const config = {
-      options: {
-        client: clientOptions
-      }
-    };
+      const config = {
+        options: {
+          client: clientOptions,
+        },
+      };
 
-    class Container extends React.Component<ChildProps<{}, Data>> {
-      componentDidUpdate() {
-        const { data } = this.props;
-        expect(data!.loading).toBeFalsy(); // first data
-        expect(stripSymbols(data!.allPeople)).toEqual({
-          people: [{ name: 'Luke Skywalker' }]
-        });
+      class Container extends React.Component<ChildProps<{}, Data>> {
+        componentDidUpdate() {
+          const { data } = this.props;
+          expect(data!.loading).toBeFalsy(); // first data
+          expect(data!.allPeople).toEqual({
+            people: [{ name: "Luke Skywalker" }],
+          });
+          done = true;
+        }
+        render() {
+          return null;
+        }
       }
-      render() {
-        return null;
-      }
+      const ContainerWithData = graphql<{}, Data>(query, config)(Container);
+      render(
+        <ApolloProvider client={clientProvider}>
+          <ContainerWithData />
+        </ApolloProvider>
+      );
+
+      waitFor(() => {
+        expect(done).toBe(true);
+      }).then(resolve, reject);
     }
-    const ContainerWithData = graphql<{}, Data>(query, config)(Container);
-    render(
-      <ApolloProvider client={clientProvider}>
-        <ContainerWithData />
-      </ApolloProvider>
-    );
+  );
 
-    return wait().then(resolve, reject);
-  });
-
-  itAsync('exposes refetch as part of the props api', (resolve, reject) => {
+  itAsync("exposes refetch as part of the props api", (resolve, reject) => {
+    let done = false;
     const query: DocumentNode = gql`
       query people($first: Int) {
         allPeople(first: $first) {
@@ -159,16 +179,16 @@ describe('client option', () => {
     const variables = { first: 1 };
     type Variables = typeof variables;
 
-    const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
     type Data = typeof data1;
 
     const link = mockSingleLink({
       request: { query, variables },
-      result: { data: data1 }
+      result: { data: data1 },
     });
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     const Container = graphql<Variables, Data, Variables>(query)(
@@ -176,6 +196,7 @@ describe('client option', () => {
         componentDidUpdate() {
           const { data } = this.props;
           expect(data!.loading).toBeFalsy(); // first data
+          done = true;
         }
         render() {
           return null;
@@ -189,6 +210,8 @@ describe('client option', () => {
       </ApolloProvider>
     );
 
-    return wait().then(resolve, reject);
+    waitFor(() => {
+      expect(done).toBe(true);
+    }).then(resolve, reject);
   });
 });

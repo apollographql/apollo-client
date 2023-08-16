@@ -1,0 +1,7 @@
+{
+  "name": "shared",
+  "license": "UNLICENSED",
+  "peerDependencies": {
+    "@playwright/test": "*"
+  }
+}

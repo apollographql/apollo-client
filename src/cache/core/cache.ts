@@ -1,28 +1,36 @@
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
 import { wrap } from 'optimism';
 
-import {
+import type {
   StoreObject,
-  Reference,
+  Reference} from '../../utilities/index.js';
+import {
   getFragmentQueryDocument,
-} from '../../utilities';
-import { DataProxy } from './types/DataProxy';
-import { Cache } from './types/Cache';
+} from '../../utilities/index.js';
+import type { DataProxy } from './types/DataProxy.js';
+import type { Cache } from './types/Cache.js';
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
 export abstract class ApolloCache<TSerialized> implements DataProxy {
+  public readonly assumeImmutableResults: boolean = false;
+
   // required to implement
   // core API
-  public abstract read<T, TVariables = any>(
-    query: Cache.ReadOptions<TVariables>,
-  ): T | null;
-  public abstract write<TResult = any, TVariables = any>(
-    write: Cache.WriteOptions<TResult, TVariables>,
+  public abstract read<TData = any, TVariables = any>(
+    query: Cache.ReadOptions<TVariables, TData>,
+  ): TData | null;
+  public abstract write<TData = any, TVariables = any>(
+    write: Cache.WriteOptions<TData, TVariables>,
   ): Reference | undefined;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
-  public abstract watch(watch: Cache.WatchOptions): () => void;
-  public abstract reset(): Promise<void>;
+  public abstract watch<TData = any, TVariables = any>(
+    watch: Cache.WatchOptions<TData, TVariables>,
+  ): () => void;
+
+  // Empty the cache and restart all current watches (unless
+  // options.discardWatches is true).
+  public abstract reset(options?: Cache.ResetOptions): Promise<void>;
 
   // Remove whole objects from the cache by passing just options.id, or
   // specific fields by passing options.field and/or options.args. If no
@@ -31,7 +39,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // removed from the cache.
   public abstract evict(options: Cache.EvictOptions): boolean;
 
-  // intializer / offline / ssr API
+  // initializer / offline / ssr API
   /**
    * Replaces existing state in the cache (if any) with the values expressed by
    * `serializedState`.
@@ -54,6 +62,23 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   // Transactional API
 
+  // The batch method is intended to replace/subsume both performTransaction
+  // and recordOptimisticTransaction, but performTransaction came first, so we
+  // provide a default batch implementation that's just another way of calling
+  // performTransaction. Subclasses of ApolloCache (such as InMemoryCache) can
+  // override the batch method to do more interesting things with its options.
+  public batch<U>(options: Cache.BatchOptions<this, U>): U {
+    const optimisticId =
+      typeof options.optimistic === "string" ? options.optimistic :
+      options.optimistic === false ? null : void 0;
+    let updateResult: U;
+    this.performTransaction(
+      () => updateResult = options.update(this),
+      optimisticId,
+    );
+    return updateResult!;
+  }
+
   public abstract performTransaction(
     transaction: Transaction<TSerialized>,
     // Although subclasses may implement recordOptimisticTransaction
@@ -75,7 +100,15 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   // Optional API
 
+  // Called once per input document, allowing the cache to make static changes
+  // to the query, such as adding __typename fields.
   public transformDocument(document: DocumentNode): DocumentNode {
+    return document;
+  }
+
+  // Called before each ApolloLink request, allowing the cache to make dynamic
+  // changes to the query, such as filling in missing fragment definitions.
+  public transformForLink(document: DocumentNode): DocumentNode {
     return document;
   }
 
@@ -87,14 +120,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     return [];
   }
 
-  public modify(options: Cache.ModifyOptions): boolean {
+  public modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache.ModifyOptions<Entity>): boolean {
     return false;
-  }
-
-  // Experimental API
-
-  public transformForLink(document: DocumentNode): DocumentNode {
-    return document;
   }
 
   // DataProxy API
@@ -104,13 +131,12 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    * @param optimistic
    */
   public readQuery<QueryType, TVariables = any>(
-    options: DataProxy.Query<TVariables>,
-    optimistic: boolean = false,
+    options: Cache.ReadQueryOptions<QueryType, TVariables>,
+    optimistic = !!options.optimistic,
   ): QueryType | null {
     return this.read({
+      ...options,
       rootId: options.id || 'ROOT_QUERY',
-      query: options.query,
-      variables: options.variables,
       optimistic,
     });
   }
@@ -120,38 +146,69 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   private getFragmentDoc = wrap(getFragmentQueryDocument);
 
   public readFragment<FragmentType, TVariables = any>(
-    options: DataProxy.Fragment<TVariables>,
-    optimistic: boolean = false,
+    options: Cache.ReadFragmentOptions<FragmentType, TVariables>,
+    optimistic = !!options.optimistic,
   ): FragmentType | null {
     return this.read({
+      ...options,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
-      variables: options.variables,
       rootId: options.id,
       optimistic,
     });
   }
 
-  public writeQuery<TData = any, TVariables = any>(
-    options: Cache.WriteQueryOptions<TData, TVariables>,
-  ): Reference | undefined {
-    return this.write({
-      dataId: options.id || 'ROOT_QUERY',
-      result: options.data,
-      query: options.query,
-      variables: options.variables,
-      broadcast: options.broadcast,
+  public writeQuery<TData = any, TVariables = any>({
+    id,
+    data,
+    ...options
+  }: Cache.WriteQueryOptions<TData, TVariables>): Reference | undefined {
+    return this.write(Object.assign(options, {
+      dataId: id || 'ROOT_QUERY',
+      result: data,
+    }));
+  }
+
+  public writeFragment<TData = any, TVariables = any>({
+    id,
+    data,
+    fragment,
+    fragmentName,
+    ...options
+  }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined {
+    return this.write(Object.assign(options, {
+      query: this.getFragmentDoc(fragment, fragmentName),
+      dataId: id,
+      result: data,
+    }));
+  }
+
+  public updateQuery<TData = any, TVariables = any>(
+    options: Cache.UpdateQueryOptions<TData, TVariables>,
+    update: (data: TData | null) => TData | null | void,
+  ): TData | null {
+    return this.batch({
+      update(cache) {
+        const value = cache.readQuery<TData, TVariables>(options);
+        const data = update(value);
+        if (data === void 0 || data === null) return value;
+        cache.writeQuery<TData, TVariables>({ ...options, data });
+        return data;
+      },
     });
   }
 
-  public writeFragment<TData = any, TVariables = any>(
-    options: Cache.WriteFragmentOptions<TData, TVariables>,
-  ): Reference | undefined {
-    return this.write({
-      dataId: options.id,
-      result: options.data,
-      variables: options.variables,
-      query: this.getFragmentDoc(options.fragment, options.fragmentName),
-      broadcast: options.broadcast,
+  public updateFragment<TData = any, TVariables = any>(
+    options: Cache.UpdateFragmentOptions<TData, TVariables>,
+    update: (data: TData | null) => TData | null | void,
+  ): TData | null {
+    return this.batch({
+      update(cache) {
+        const value = cache.readFragment<TData, TVariables>(options);
+        const data = update(value);
+        if (data === void 0 || data === null) return value;
+        cache.writeFragment<TData, TVariables>({ ...options, data });
+        return data;
+      },
     });
   }
 }

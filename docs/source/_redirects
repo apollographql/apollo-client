@@ -1,0 +1,108 @@
+# Redirect all 3.0 beta docs to root
+/v3.0-beta/* /docs/react/:splat
+
+# Redirect 2.x docs to v2
+/v2.4/* /docs/react/v2/
+/v2.5/* /docs/react/v2/
+/v2.6/* /docs/react/v2/:splat
+
+# Split out pagination article
+/data/pagination/ /docs/react/pagination/overview/
+
+# Remove 'Recompose patterns' article
+/development-testing/recompose/ /docs/react/
+
+# Client 3.0 changes
+/api/apollo-client/ /docs/react/api/core/ApolloClient/
+/api/react-hooks/ /docs/react/api/react/hooks/
+/api/react-testing/ /docs/react/api/react/testing/
+/api/react-components/ /docs/react/api/react/components/
+/api/react-hoc/ /docs/react/api/react/hoc/
+/api/react-ssr/ /docs/react/api/react/ssr/
+/api/react-common/ /docs/react/api/react/hooks/
+
+# Apollo Client Information Architecture refresh
+# https://github.com/apollographql/apollo-client/pull/5321
+/features/error-handling/ /docs/react/data/error-handling/
+/advanced/fragments/ /docs/react/data/fragments/
+/essentials/mutations/ /docs/react/data/mutations/
+/features/pagination/ /docs/react/data/pagination/
+/essentials/queries/ /docs/react/data/queries/
+/advanced/subscriptions/ /docs/react/data/subscriptions/
+/recipes/client-schema-mocking/ /docs/react/development-testing/client-schema-mocking/
+/features/developer-tooling/ /docs/react/development-testing/developer-tooling/
+/recipes/recompose/ /docs/react/
+/recipes/static-typing/ /docs/react/development-testing/static-typing/
+/recipes/testing/ /docs/react/development-testing/testing/
+/essentials/get-started/ /docs/react/get-started/
+/integrations/ /docs/react/integrations/integrations/
+/recipes/meteor/ /docs/react/integrations/meteor/
+/recipes/react-native/ /docs/react/integrations/react-native/
+/recipes/webpack/ /docs/react/integrations/webpack/
+/advanced/caching/ /docs/react/caching/cache-configuration/
+/essentials/local-state/ /docs/react/data/local-state/
+/advanced/boost-migration/ /docs/react/migrating/boost-migration/
+/hooks-migration/ /docs/react/migrating/hooks-migration/
+/recipes/authentication/ /docs/react/networking/authentication/
+/advanced/network-layer/ /docs/react/networking/network-layer/
+/recipes/babel/ /docs/react/performance/babel/
+/features/optimistic-ui/ /docs/react/performance/optimistic-ui/
+/recipes/performance/ /docs/react/performance/performance/
+/features/server-side-rendering/ /docs/react/performance/server-side-rendering/
+
+# React Apollo 2.0 - Basics
+# https://github.com/apollographql/apollo-client/pull/3097
+/basics/setup.html /docs/react/get-started/
+/essentials/get-started.html /docs/react/get-started/
+/basics/queries.html /docs/react/data/queries/
+/essentials/queries.html /docs/react/data/queries/
+/basics/mutations.html /docs/react/data/mutations/
+/essentials/mutations.html /docs/react/data/mutations/
+/basics/network-layer.html /docs/react/networking/network-layer/
+/advanced/network-layer.html /docs/react/networking/network-layer/
+/basics/caching.html /docs/react/caching/cache-configuration/
+/advanced/caching.html /docs/react/caching/cache-configuration/
+
+# React Apollo 2.0 - Features
+# https://github.com/apollographql/apollo-client/pull/3097
+/features/caching.html /docs/react/caching/cache-configuration/
+/advanced/caching.html /docs/react/caching/cache-configuration/
+/features/cache-updates.html /docs/react/caching/cache-configuration/
+/advanced/caching.html /docs/react/caching/cache-configuration/
+/features/fragments.html /docs/react/data/fragments/
+/advanced/fragments.html /docs/react/data/fragments/
+/features/subscriptions.html /docs/react/data/subscriptions/
+/advanced/subscriptions.html /docs/react/data/subscriptions/
+/features/react-native.html /docs/react/integrations/react-native/
+/recipes/react-native.html /docs/react/integrations/react-native/
+/features/static-typing.html /docs/react/development-testing/static-typing/
+/recipes/static-typing.html /docs/react/development-testing/static-typing/
+/features/error-handling.html /docs/react/data/error-handling/
+
+# React Apollo 2.0 - Recipes
+# https://github.com/apollographql/apollo-client/pull/3097
+/recipes/query-splitting.html /docs/react/performance/performance/
+/features/performance.html#query-splitting /docs/react/performance/performance/
+/recipes/pagination.html /docs/react/data/pagination/
+/features/pagination.html /docs/react/data/pagination/
+/recipes/prefetching.html /docs/react/performance/performance/
+/features/performance.html#prefetching /docs/react/performance/performance/
+/recipes/server-side-rendering.html /docs/react/performance/server-side-rendering/
+/features/server-side-rendering.html /docs/react/performance/server-side-rendering/
+/recipes/fragment-matching.html /docs/react/data/fragments/
+/advanced/fragments.html /docs/react/data/fragments/
+
+# Ported from old _config.yml file
+/essentials/get-started.html#api /docs/react/get-started/
+/api/react-apollo.html /docs/react/get-started/
+/essentials/queries.html#api /docs/react/data/queries/#options
+docs/react/api/react-apollo.html#graphql-query-options /docs/react/data/queries/#options
+/basics/mutations.html#api /docs/react/basics/mutations.html
+/recipes/simple-example.html /docs/react/get-started/
+docs/react/essentials/get-started.html /docs/react/get-started/
+/api/apollo-client.html#FetchPolicy /docs/react/api/core/ApolloClient/#example-defaultoptions-object
+docs/react/api/react-apollo.html#graphql-config-options-fetchPolicy /docs/react/api/core/ApolloClient/#example-defaultoptions-object
+/api/apollo-client.html#ErrorPolicy /docs/react/api/core/ApolloClient/#example-defaultoptions-object
+docs/react/api/react-apollo.html#graphql-config-options-errorPolicy /docs/react/api/core/ApolloClient/#example-defaultoptions-object
+/features/performance.html /docs/react/performance/performance/
+/recipes/performance.html /docs/react/performance/performance/

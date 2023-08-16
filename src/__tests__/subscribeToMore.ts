@@ -6,7 +6,6 @@ import { InMemoryCache } from '../cache';
 import { ApolloLink, Operation } from '../link/core';
 import {
   itAsync,
-  stripSymbols,
   mockSingleLink,
   mockObservableLink,
 } from '../testing';
@@ -154,7 +153,7 @@ describe('subscribeToMore', () => {
 
     setTimeout(() => {
       sub.unsubscribe();
-      expect(stripSymbols(latestResult)).toEqual({
+      expect(latestResult).toEqual({
         data: { entry: { value: 'Amanda Liu' } },
         loading: false,
         networkStatus: 7,
@@ -213,7 +212,7 @@ describe('subscribeToMore', () => {
 
     setTimeout(() => {
       sub.unsubscribe();
-      expect(stripSymbols(latestResult)).toEqual({
+      expect(latestResult).toEqual({
         data: { entry: { value: '1' } },
         loading: false,
         networkStatus: 7,
@@ -303,7 +302,7 @@ describe('subscribeToMore', () => {
     }
     sub.unsubscribe();
     expect(counter).toBe(3);
-    expect(stripSymbols(latestResult)).toEqual({
+    expect(latestResult).toEqual({
       data: {
         entry: [
           {

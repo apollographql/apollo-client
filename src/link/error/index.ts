@@ -1,14 +1,13 @@
-import { GraphQLError, ExecutionResult } from 'graphql';
+import type { ExecutionResult } from 'graphql';
 
-import { ApolloLink, Operation, FetchResult, NextLink } from '../core';
-import { Observable } from '../../utilities';
-
-import { ServerError } from '../utils';
-import { ServerParseError } from '../http';
+import type { NetworkError, GraphQLErrors } from '../../errors/index.js';
+import { Observable } from '../../utilities/index.js';
+import type { Operation, FetchResult, NextLink } from '../core/index.js';
+import { ApolloLink } from '../core/index.js';
 
 export interface ErrorResponse {
-  graphQLErrors?: ReadonlyArray<GraphQLError>;
-  networkError?: Error | ServerError | ServerParseError;
+  graphQLErrors?: GraphQLErrors;
+  networkError?: NetworkError;
   response?: ExecutionResult;
   operation: Operation;
   forward: NextLink;

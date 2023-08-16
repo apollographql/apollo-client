@@ -1,11 +1,15 @@
-import {
+import { invariant, newInvariantError } from '../globals/index.js';
+
+import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
-  SelectionNode
+  SelectionNode,
 } from 'graphql';
-import { invariant, InvariantError } from 'ts-invariant';
 
+// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
+type Kind = any;
+type OperationTypeNode = any;
 /**
  * Returns a query document which adds a single query operation that only
  * spreads the target fragment inside of it.
@@ -42,11 +46,11 @@ export function getFragmentQueryDocument(
     // Throw an error if we encounter an operation definition because we will
     // define our own operation definition later on.
     if (definition.kind === 'OperationDefinition') {
-      throw new InvariantError(
-        `Found a ${definition.operation} operation${
-          definition.name ? ` named '${definition.name.value}'` : ''
-        }. ` +
+      throw newInvariantError(
+        `Found a %s operation%s. ` +
           'No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+        definition.operation,
+        definition.name ? ` named '${definition.name.value}'` : ''
       );
     }
     // Add our definition to the fragments array if it is a fragment
@@ -61,9 +65,8 @@ export function getFragmentQueryDocument(
   if (typeof actualFragmentName === 'undefined') {
     invariant(
       fragments.length === 1,
-      `Found ${
-        fragments.length
-      } fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
+      `Found %s fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
+      fragments.length
     );
     actualFragmentName = fragments[0].name.value;
   }
@@ -74,15 +77,16 @@ export function getFragmentQueryDocument(
     ...document,
     definitions: [
       {
-        kind: 'OperationDefinition',
-        operation: 'query',
+        kind: 'OperationDefinition' as Kind,
+        // OperationTypeNode is an enum
+        operation: 'query' as OperationTypeNode,
         selectionSet: {
-          kind: 'SelectionSet',
+          kind: 'SelectionSet' as Kind,
           selections: [
             {
-              kind: 'FragmentSpread',
+              kind: 'FragmentSpread' as Kind,
               name: {
-                kind: 'Name',
+                kind: 'Name' as Kind,
                 value: actualFragmentName,
               },
             },
@@ -103,6 +107,9 @@ export interface FragmentMap {
   [fragmentName: string]: FragmentDefinitionNode;
 }
 
+export type FragmentMapFunction =
+  (fragmentName: string) => FragmentDefinitionNode | null;
+
 // Utility function that takes a list of fragment definitions and makes a hash out of them
 // that maps the name of the fragment to the fragment definition.
 export function createFragmentMap(
@@ -117,15 +124,19 @@ export function createFragmentMap(
 
 export function getFragmentFromSelection(
   selection: SelectionNode,
-  fragmentMap?: FragmentMap,
+  fragmentMap?: FragmentMap | FragmentMapFunction,
 ): InlineFragmentNode | FragmentDefinitionNode | null {
   switch (selection.kind) {
     case 'InlineFragment':
       return selection;
     case 'FragmentSpread': {
-      const fragment = fragmentMap && fragmentMap[selection.name.value];
-      invariant(fragment, `No fragment named ${selection.name.value}.`);
-      return fragment!;
+      const fragmentName = selection.name.value;
+      if (typeof fragmentMap === "function") {
+        return fragmentMap(fragmentName);
+      }
+      const fragment = fragmentMap && fragmentMap[fragmentName];
+      invariant(fragment, `No fragment named %s`, fragmentName);
+      return fragment || null;
     }
     default:
       return null;

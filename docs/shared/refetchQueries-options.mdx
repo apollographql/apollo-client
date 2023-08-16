@@ -1,0 +1,108 @@
+The `client.refetchQueries` method take an `options` object that conforms to the
+following TypeScript interface:
+
+```ts
+interface RefetchQueriesOptions<
+  TCache extends ApolloCache<any>,
+  TResult = Promise<ApolloQueryResult<any>>,
+> {
+  updateCache?: (cache: TCache) => void;
+  include?: Array<string | DocumentNode> | "all" | "active";
+  onQueryUpdated?: (
+    observableQuery: ObservableQuery<any>,
+    diff: Cache.DiffResult<any>,
+    lastDiff: Cache.DiffResult<any> | undefined,
+  ) => boolean | TResult;
+  optimistic?: boolean;
+}
+```
+
+These fields are described below:
+
+<table class="field-table api-ref">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+
+<tr>
+<td>
+
+###### `updateCache`
+
+`(cache: TCache) => void`
+</td>
+
+<td>
+
+Optional function that updates cached fields to trigger refetches of queries that include those fields.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `include`
+
+`Array<string | DocumentNode> | "all" | "active"`
+</td>
+
+<td>
+
+Optional array specifying queries to refetch. Each element can be either a query's string name or a `DocumentNode` object.
+
+Analogous to the [`options.refetchQueries`](/react/data/mutations/#options) array for mutations.
+
+Pass `"active"` (or `"all"`) as a shorthand to refetch all (active) queries.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `onQueryUpdated`
+
+`(observableQuery: ObservableQuery<any>, diff: Cache.DiffResult<any>, lastDiff: Cache.DiffResult<any> | undefined) => boolean | TResult`
+
+</td>
+
+<td>
+
+Optional callback function that's called once for each `ObservableQuery` that's either affected by `options.updateCache` or listed in `options.include` (or both).
+
+If `onQueryUpdated` is not provided, the default implementation returns the
+result of calling `observableQuery.refetch()`. When `onQueryUpdated` is
+provided, it can dynamically decide whether (and how) each query should be
+refetched.
+
+Returning `false` from `onQueryUpdated` prevents the associated query
+from being refetched.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `optimistic`
+
+`boolean`
+</td>
+
+<td>
+
+If `true`, the `options.updateCache` function is executed on a temporary optimistic layer of `InMemoryCache`, so its modifications can be discarded from the cache after observing which fields it invalidated.
+
+Defaults to `false`, meaning `options.updateCache` updates the cache in a
+lasting way.
+
+</td>
+</tr>
+
+</tbody>
+</table>

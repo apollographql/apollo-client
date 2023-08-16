@@ -1,11 +1,11 @@
 ---
-title: Local resolvers (deprecated)
+title: Local resolvers
 description: Manage local data with GraphQL like resolvers
 ---
 
-> ⚠️ **DEPRECATION WARNING:** Local resolvers are still available in Apollo Client 3, but they are deprecated. We recommend using field policies instead, as described in [Local-only fields](./managing-state-with-field-policies/).
+> 📄 **NOTE:** We recommend using field policies instead of local resolvers as described in [Local-only fields](./managing-state-with-field-policies/).
 >
-> Local resolver support will be removed in a future major Apollo Client release. See the [deprecation notice](#deprecation-notice) for details.
+> Local resolver support will be moved out of the core of Apollo Client in a future major release. The same or similar functionality will be available via `ApolloLink`, as described in [this issue](https://github.com/apollographql/apollo-client/issues/10060).
 
 We've learned how to manage remote data from our GraphQL server with Apollo Client, but what should we do with our local data? We want to be able to access boolean flags and device API results from multiple components in our app, but don't want to maintain a separate Redux or MobX store. Ideally, we would like the Apollo cache to be the single source of truth for all data in our client application.
 
@@ -13,7 +13,7 @@ Apollo Client (>= 2.5) has built-in local state handling capabilities that allow
 
 In this section, you'll learn how Apollo Client can help simplify local state management in your app. We'll cover how client-side resolvers can help us execute local queries and mutations. You'll also learn how to query and update the cache with the `@client` directive.
 
-Please note that this documentation is intended to be used to familiarize yourself with Apollo Client's local state management capabilities, and serve as a reference guide. If you're looking for a step by step tutorial outlining how to handle local state with Apollo Client (and leverage other Apollo components to build a fullstack application), please refer to the [Apollo tutorial](https://www.apollographql.com/docs/tutorial/introduction).
+Please note that this documentation is intended to be used to familiarize yourself with Apollo Client's local state management capabilities, and serve as a reference guide. If you're looking for a step by step tutorial outlining how to handle local state with Apollo Client (and leverage other Apollo components to build a fullstack application), please refer to the [full-stack quickstart course](https://www.apollographql.com/tutorials/fullstack-quickstart/introduction).
 
 ## Updating local state
 
@@ -44,7 +44,7 @@ function FilterLink({ filter, children }) {
 }
 ```
 
-The `ApolloConsumer` render prop function is called with a single value, the Apollo Client instance. You can think of the `ApolloConsumer` component as being similar to the `Consumer` component from the [React context API](https://reactjs.org/docs/context.html). From the client instance, you can directly call `client.writeQuery` and pass in the data you'd like to write to the cache.
+The `ApolloConsumer` render prop function is called with a single value, the Apollo Client instance. You can think of the `ApolloConsumer` component as being similar to the `Consumer` component from the [React context API](https://react.dev/reference/react/useContext). From the client instance, you can directly call `client.writeQuery` and pass in the data you'd like to write to the cache.
 
 What if we want to immediately subscribe to the data we just wrote to the cache? Let's create an `active` property on the link that marks the link's filter as active if it's the same as the current `visibilityFilter` in the cache. To immediately subscribe to a client-side mutation, we can use `useQuery`. The `useQuery` hook also makes the client instance available in its result object.
 
@@ -82,7 +82,7 @@ You'll notice in our query that we have a `@client` directive next to our `visib
 
 If you'd like to implement your local state update as a GraphQL mutation, then you'll need to specify a function in your local resolver map. The resolver map is an object with resolver functions for each GraphQL object type. To visualize how this all lines up, it's useful to think of a GraphQL query or mutation as a tree of function calls for each field. These function calls resolve to data or another function call. So when a GraphQL query is run through Apollo Client, it looks for a way to essentially run functions for each field in the query. When it finds an `@client` directive on a field, it turns to its internal resolver map looking for a function it can run for that field.
 
-To help make local resolvers more flexible, the signature of a resolver function is the exact same as resolver functions on the server built with [Apollo Server](https://www.apollographql.com/docs/apollo-server/essentials/data). Let's recap the four parameters of a resolver function:
+To help make local resolvers more flexible, the signature of a resolver function is the exact same as resolver functions on the server built with [Apollo Server](/apollo-server/data/resolvers/). Let's recap the four parameters of a resolver function:
 
 ```js
 fieldName: (obj, args, context, info) => result;
@@ -562,7 +562,7 @@ Pulling `@client` field values directly out of the cache isn't quite as flexible
 
 ### Working with fetch policies
 
-Before Apollo Client executes a query, one of the first things it does is check to see which [`fetchPolicy`](../api/core/ApolloClient/#apolloclient-functions) it has been configured to use. It does this so it knows where it should attempt to resolve the query from first, either the cache or the network. When running a query, Apollo Client treats `@client` based local resolvers just like it does remote resolvers, in that it will adhere to its defined `fetchPolicy` to know where to attempt to pull data from first. When working with local resolvers, it's important to understand how fetch policies impact the running of resolver functions, since by default local resolver functions are not run on every request. This is because the result of running a local resolver is cached with the rest of the query result, and pulled from the cache on the next request. Let's look at an example:
+Before Apollo Client executes a query, one of the first things it does is check to see which [`fetchPolicy`](../data/queries/#setting-a-fetch-policy) it has been configured to use. It does this so it knows where it should attempt to resolve the query from first, either the cache or the network. When running a query, Apollo Client treats `@client` based local resolvers just like it does remote resolvers, in that it will adhere to its defined `fetchPolicy` to know where to attempt to pull data from first. When working with local resolvers, it's important to understand how fetch policies impact the running of resolver functions, since by default local resolver functions are not run on every request. This is because the result of running a local resolver is cached with the rest of the query result, and pulled from the cache on the next request. Let's look at an example:
 
 ```jsx
 import React, { Fragment } from "react";
@@ -1009,7 +1009,7 @@ const client = new ApolloClient({
 | Option | Type | Description |
 | - | - | - |
 | `resolvers?` | Resolvers \| Resolvers[] | A map of resolver functions that your GraphQL queries and mutations call in order to read and write to the cache. |
-| `typeDefs?` | string \| string[] \| DocumentNode \| DocumentNode[];&lt;string&gt; | A string representing your client-side schema written in the [Schema Definition Language](https://www.apollographql.com/docs/graphql-tools/generate-schema#schema-language). This schema is not used for validation, but is used for introspection by the [Apollo Client Devtools](https://github.com/apollographql/apollo-client-devtools). |
+| `typeDefs?` | string \| string[] \| DocumentNode \| DocumentNode[];&lt;string&gt; | A string representing your client-side schema written in the [Schema Definition Language](https://www.graphql-tools.com/docs/graphql-tools/generate-schema#schema-language). This schema is not used for validation, but is used for introspection by the [Apollo Client Devtools](https://github.com/apollographql/apollo-client-devtools). |
 
 None of these options are required. If you don't specify anything, you will still be able to use the `@client` directive to query the Apollo Client cache.
 
@@ -1086,4 +1086,4 @@ The idea of using client side resolvers to manage local state was first introduc
 
 To help address limitations in the local resolver API, we have designed and implemented a new approach for managing local state in Apollo Client 3.0, that works as a direct extension of the cache. Field policies and reactive variables not only help provide a better developer experience from an API use and functionality point of view, but they also improve performance and provide a more reliable foundation for local state management. Re-thinking local state handling with the Apollo Client cache in mind has helped reduce a large number of local state bugs caused by local resolvers being a few too many layers removed from the cache internals.
 
-The [managing state with field policies](./managing-state-with-field-policies) section goes into more detail around what Apollo Client 3's new local state management capabilities look like. We highly recommend reviewing and considering the use of these new API's as a replacement for local resolvers. Local resolvers are still supported in Apollo Client 3, but should be considered deprecated. Local resolver functionality will be removed in a future major version of Apollo Client.
+The [managing state with field policies](./managing-state-with-field-policies) section goes into more detail around what Apollo Client 3's new local state management capabilities look like. We highly recommend reviewing and considering the use of these new API's as a replacement for local resolvers. Local resolvers are still supported in Apollo Client 3 but will be moved out of the core module in a future major release.

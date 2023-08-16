@@ -20,5 +20,6 @@
 
 ### Checklist:
 
+- [ ] If this PR contains changes to the library itself (not necessary for e.g. docs updates), please include a changeset (see [CONTRIBUTING.md](https://github.com/apollographql/apollo-client/blob/main/CONTRIBUTING.md#changesets))
 - [ ] If this PR is a new feature, please reference an issue where a consensus about the design was reached (not necessary for small changes)
 - [ ] Make sure all of the significant new logic is covered by tests

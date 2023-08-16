@@ -1,0 +1,173 @@
+---
+title: Offset-based pagination
+---
+
+> We recommend reading [Core pagination API](./core-api) before learning about considerations specific to offset-based pagination.
+
+With offset-based pagination, a list field accepts an `offset` argument that indicates _where in the list_ the server should start when returning items for a particular query. The field usually also accepts a `limit` argument that indicates the _maximum_ number of items to return:
+
+```graphql {2}
+type Query {
+  feed(offset: Int, limit: Int): [FeedItem!]
+}
+
+type FeedItem {
+  id: ID!
+  message: String!
+}
+```
+
+This pagination strategy works well for immutable lists, or for lists where each item's index never changes. In other cases, you should avoid it in favor of [cursor-based pagination](./cursor-based/), because moving or removing items can shift offsets. This causes items to be skipped or duplicated if changes occur between paginated queries.
+
+Although it has limitations, offset-based pagination is a common pattern in many applications, in part because it's relatively straightforward to implement.
+
+## The `offsetLimitPagination` helper
+
+Apollo Client provides an `offsetLimitPagination` helper function that you can use to generate a [field policy](../caching/cache-field-behavior/) for every relevant list field.
+
+This example uses `offsetLimitPagination` to generate a field policy for `Query.feed`:
+
+```js {2,8} title="index.js"
+import { InMemoryCache } from "@apollo/client";
+import { offsetLimitPagination } from "@apollo/client/utilities";
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: offsetLimitPagination()
+      },
+    },
+  },
+});
+```
+
+This defines a [`merge` function](../caching/cache-field-behavior/#the-merge-function) for the field that handles merging paginated results in the cache for you ([see the source](https://github.com/apollographql/apollo-client/blob/main/src/utilities/policies/pagination.ts#L33-L49)).
+
+
+
+### Using with `fetchMore`
+
+If you use `offsetLimitPagination` to set your feed policy as shown above, then you can use `fetchMore` with `useQuery` like so:
+
+```jsx {17-21} title="FeedData.jsx"
+const FeedData() {
+  const { loading, data, fetchMore } = useQuery(FEED_QUERY, {
+    variables: {
+      offset: 0,
+      limit: 10
+    },
+  });
+
+  // If you want your component to rerender with loading:true whenever
+  // fetchMore is called, add notifyOnNetworkStatusChange:true to the
+  // options you pass to useQuery above.
+  if (loading) return <Loading/>;
+
+  return (
+    <Feed
+      entries={data.feed || []}
+      onLoadMore={() => fetchMore({
+        variables: {
+          offset: data.feed.length
+        },
+      })}
+    />
+  );
+}
+```
+
+By default, `fetchMore` uses the original query and `variables`, so we only need to pass the variable that's changing: `offset`. When new data is returned from the server, it's automatically merged with any existing `Query.feed` data in the cache. This causes `useQuery` to rerender with the expanded list of data.
+
+In this example, the `Feed` component receives the _entire cached list_ (`data.feed`) every time it renders, which includes data from all pages received so far. This is a [non-paginated `read` function](./core-api/#non-paginated-read-functions).
+
+### Using with a paginated `read` function
+
+In [the example above](#using-with-fetchmore), the GraphQL server returns individual pages of results, but each query then returns _all_ cached results received so far. To limit each query's result to _only_ the items you requested, you can include a [paginated `read` function](./core-api/#paginated-read-functions) in your field policy.
+
+Because the `offsetLimitPagination` helper is currently defining your field policy, you combine your `read` function with the helper's result, like so:
+
+```js {8-13} title="index.js"
+import { InMemoryCache } from "@apollo/client";
+import { offsetLimitPagination } from "@apollo/client/utilities";
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          ...offsetLimitPagination(),
+          read(existing, { args }) {
+            // Implement here
+          }
+        }
+      },
+    },
+  },
+});
+```
+
+> For example implementations, see [Paginated `read` functions](./core-api/#paginated-read-functions).
+
+If you use a paginated `read` function, you probably need to  update your `offset` and `limit` variables as required by your use case after you call `fetchMore`. Otherwise, you'll continue rendering only the first page of results.
+
+For example, to display all the data received so far, you could modify the previous example as follows:
+
+```jsx
+const FeedData = () => {
+  const [limit, setLimit] = useState(10);
+  const { loading, data, fetchMore } = useQuery(FEED_QUERY, {
+    variables: {
+      offset: 0,
+      limit,
+    },
+  });
+
+  if (loading) return <Loading/>;
+
+  return (
+    <Feed
+      entries={data.feed || []}
+      onLoadMore={() => {
+        const currentLength = data.feed.length;
+        fetchMore({
+          variables: {
+            offset: currentLength,
+            limit: 10,
+          },
+        }).then(fetchMoreResult => {
+          // Update variables.limit for the original query to include
+          // the newly added feed items.
+          setLimit(currentLength + fetchMoreResult.data.feed.length);
+        });
+      }}
+    />
+  );
+}
+```
+
+This code uses a React `useState` Hook to store the current `limit` value, which it updates by calling `setLimit` in a callback attached to the `Promise` returned by `fetchMore`.
+
+You could store `offset` in a React `useState` Hook as well, if you need the `offset` to change. Exactly when and how these `variables` change is up to your component, and may not always be the result of calling `fetchMore`, so it makes sense to use React component state to store these variable values.
+
+> If you are not using React and `useQuery`, the `ObservableQuery` object returned by `client.watchQuery` has a method called `setVariables` that you can call to update the original variables.
+
+Because `fetchMore` requires some extra work to update the original variables if you're using a `read` function that is sensitive to those variables (the second kind of `read` function), it's fair to say `fetchMore` encourages the first kind of `read` function, which simply returns all available data.
+
+However, now that you understand your options, there's nothing wrong with moving read-time pagination logic out of your application code and into your field `read` functions. Both kinds of `read` functions have their uses, and both can be made to work with `fetchMore`.
+
+### Setting `keyArgs` with `offsetLimitPagination`
+
+If a paginated field accepts arguments _besides_ `offset` and `limit`, you might need to [specify the **key arguments**](./key-args/) that indicate whether two result sets belong to the _same_ list or _different_ lists.
+
+To set `keyArgs` for the field policy generated by `offsetLimitPagination`, provide an array of argument names to the function as a parameter:
+
+```js
+fields {
+  // Results belong to the same list only if both the type
+  // and userId arguments match exactly
+  feed: offsetLimitPagination(["type", "userId"])
+}
+```
+
+By default, `offsetLimitPagination` uses `keyArgs: false` (no key arguments).

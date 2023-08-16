@@ -1,6 +1,8 @@
+import { invariant } from '../globals/index.js';
+
 // Provides the methods that allow QueryManager to handle the `skip` and
 // `include` directives within GraphQL.
-import {
+import type {
   SelectionNode,
   VariableNode,
   BooleanValueNode,
@@ -8,12 +10,11 @@ import {
   DocumentNode,
   ArgumentNode,
   ValueNode,
-  ASTNode,
+  ASTNode} from 'graphql';
+import {
+  visit,
+  BREAK,
 } from 'graphql';
-
-import { visit } from 'graphql/language/visitor';
-
-import { invariant } from 'ts-invariant';
 
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };
@@ -34,7 +35,8 @@ export function shouldInclude(
       evaledValue = variables && variables[(ifArgument.value as VariableNode).name.value];
       invariant(
         evaledValue !== void 0,
-        `Invalid variable referenced in @${directive.name.value} directive.`,
+        `Invalid variable referenced in @%s directive.`,
+        directive.name.value
       );
     } else {
       evaledValue = (ifArgument.value as BooleanValueNode).value;
@@ -55,18 +57,42 @@ export function getDirectiveNames(root: ASTNode) {
   return names;
 }
 
-export function hasDirectives(names: string[], root: ASTNode) {
-  return getDirectiveNames(root).some(
-    (name: string) => names.indexOf(name) > -1,
-  );
+export const hasAnyDirectives = (
+  names: string[],
+  root: ASTNode,
+) => hasDirectives(names, root, false);
+
+export const hasAllDirectives = (
+  names: string[],
+  root: ASTNode,
+) => hasDirectives(names, root, true);
+
+export function hasDirectives(
+  names: string[],
+  root: ASTNode,
+  all?: boolean,
+) {
+  const nameSet = new Set(names);
+  const uniqueCount = nameSet.size;
+
+  visit(root, {
+    Directive(node) {
+      if (
+        nameSet.delete(node.name.value) &&
+        (!all || !nameSet.size)
+      ) {
+        return BREAK;
+      }
+    },
+  });
+
+  // If we found all the names, nameSet will be empty. If we only care about
+  // finding some of them, the < condition is sufficient.
+  return all ? !nameSet.size : nameSet.size < uniqueCount;
 }
 
 export function hasClientExports(document: DocumentNode) {
-  return (
-    document &&
-    hasDirectives(['client'], document) &&
-    hasDirectives(['export'], document)
-  );
+  return document && hasDirectives(['client', 'export'], document, true);
 }
 
 export type InclusionDirectives = Array<{
@@ -92,13 +118,15 @@ export function getInclusionDirectives(
 
       invariant(
         directiveArguments && directiveArguments.length === 1,
-        `Incorrect number of arguments for the @${directiveName} directive.`,
+        `Incorrect number of arguments for the @%s directive.`,
+        directiveName
       );
 
       const ifArgument = directiveArguments![0];
       invariant(
         ifArgument.name && ifArgument.name.value === 'if',
-        `Invalid argument for the @${directiveName} directive.`,
+        `Invalid argument for the @%s directive.`,
+        directiveName
       );
 
       const ifValue: ValueNode = ifArgument.value;
@@ -107,7 +135,8 @@ export function getInclusionDirectives(
       invariant(
         ifValue &&
           (ifValue.kind === 'Variable' || ifValue.kind === 'BooleanValue'),
-        `Argument for the @${directiveName} directive must be a variable or a boolean value.`,
+        `Argument for the @%s directive must be a variable or a boolean value.`,
+        directiveName
       );
 
       result.push({ directive, ifArgument });

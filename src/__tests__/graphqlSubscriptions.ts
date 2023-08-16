@@ -2,8 +2,9 @@ import gql from 'graphql-tag';
 
 import { ApolloClient } from '../core';
 import { InMemoryCache } from '../cache';
+import { PROTOCOL_ERRORS_SYMBOL } from '../errors';
 import { QueryManager } from '../core/QueryManager';
-import { mockObservableLink } from '../testing';
+import { itAsync, mockObservableLink } from '../testing';
 
 describe('GraphQL Subscriptions', () => {
   const results = [
@@ -43,7 +44,7 @@ describe('GraphQL Subscriptions', () => {
     };
   });
 
-  it('should start a subscription on network interface and unsubscribe', done => {
+  itAsync('should start a subscription on network interface and unsubscribe', (resolve, reject) => {
     const link = mockObservableLink();
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
@@ -62,14 +63,14 @@ describe('GraphQL Subscriptions', () => {
           throw new Error('next fired after unsubscribing');
         }
         sub.unsubscribe();
-        done();
+        resolve();
       },
     });
 
     link.simulateResult(results[0]);
   });
 
-  it('should subscribe with default values', done => {
+  itAsync('should subscribe with default values', (resolve, reject) => {
     const link = mockObservableLink();
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
@@ -88,14 +89,14 @@ describe('GraphQL Subscriptions', () => {
         }
         sub.unsubscribe();
 
-        done();
+        resolve();
       },
     });
 
     link.simulateResult(results[0]);
   });
 
-  it('should multiplex subscriptions', done => {
+  itAsync('should multiplex subscriptions', (resolve, reject) => {
     const link = mockObservableLink();
     const queryManager = new QueryManager({
       link,
@@ -112,7 +113,7 @@ describe('GraphQL Subscriptions', () => {
         expect(result).toEqual(results[0].result);
         counter++;
         if (counter === 2) {
-          done();
+          resolve();
         }
       },
     }) as any;
@@ -124,7 +125,7 @@ describe('GraphQL Subscriptions', () => {
         expect(result).toEqual(results[0].result);
         counter++;
         if (counter === 2) {
-          done();
+          resolve();
         }
       },
     }) as any;
@@ -132,7 +133,7 @@ describe('GraphQL Subscriptions', () => {
     link.simulateResult(results[0]);
   });
 
-  it('should receive multiple results for a subscription', done => {
+  itAsync('should receive multiple results for a subscription', (resolve, reject) => {
     const link = mockObservableLink();
     let numResults = 0;
     const queryManager = new QueryManager({
@@ -146,7 +147,7 @@ describe('GraphQL Subscriptions', () => {
         expect(result).toEqual(results[numResults].result);
         numResults++;
         if (numResults === 4) {
-          done();
+          resolve();
         }
       },
     }) as any;
@@ -156,7 +157,7 @@ describe('GraphQL Subscriptions', () => {
     }
   });
 
-  it('should not cache subscription data if a `no-cache` fetch policy is used', done => {
+  itAsync('should not cache subscription data if a `no-cache` fetch policy is used', (resolve, reject) => {
     const link = mockObservableLink();
     const cache = new InMemoryCache({ addTypename: false });
     const client = new ApolloClient({
@@ -171,7 +172,7 @@ describe('GraphQL Subscriptions', () => {
       next() {
         expect(cache.extract()).toEqual({});
         sub.unsubscribe();
-        done();
+        resolve();
       },
     });
 
@@ -187,23 +188,17 @@ describe('GraphQL Subscriptions', () => {
 
     const obs = queryManager.startGraphQLSubscription(options);
 
-    const promises = [];
-    for (let i = 0; i < 2; i += 1) {
-      promises.push(
-        new Promise((resolve, reject) => {
-          obs.subscribe({
-            next(result) {
-              fail('Should have hit the error block');
-              reject();
-            },
-            error(error) {
-              expect(error).toMatchSnapshot();
-              resolve();
-            },
-          });
-        }),
-      );
-    }
+    const promise = new Promise<void>((resolve, reject) => {
+      obs.subscribe({
+        next(result) {
+          reject('Should have hit the error block');
+        },
+        error(error) {
+          expect(error).toMatchSnapshot();
+          resolve();
+        },
+      });
+    });
 
     const errorResult = {
       result: {
@@ -224,7 +219,7 @@ describe('GraphQL Subscriptions', () => {
     };
 
     link.simulateResult(errorResult);
-    return Promise.all(promises);
+    return Promise.resolve(promise);
   });
 
   it('should call complete handler when the subscription completes', () => {
@@ -234,7 +229,7 @@ describe('GraphQL Subscriptions', () => {
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return new Promise(resolve => {
+    return new Promise<void>(resolve => {
       client.subscribe(defaultOptions).subscribe({
         complete() {
           resolve();
@@ -244,7 +239,7 @@ describe('GraphQL Subscriptions', () => {
     });
   });
 
-  it('should pass a context object through the link execution chain', done => {
+  itAsync('should pass a context object through the link execution chain', (resolve, reject) => {
     const link = mockObservableLink();
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -256,10 +251,53 @@ describe('GraphQL Subscriptions', () => {
         expect(link.operation.getContext().someVar).toEqual(
           options.context.someVar
         );
-        done();
+        resolve();
       },
     });
 
     link.simulateResult(results[0]);
+  });
+
+  it('should throw an error if the result has protocolErrors on it', () => {
+    const link = mockObservableLink();
+    const queryManager = new QueryManager({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    const obs = queryManager.startGraphQLSubscription(options);
+
+    const promise = new Promise<void>((resolve, reject) => {
+      obs.subscribe({
+        next(result) {
+          reject("Should have hit the error block");
+        },
+        error(error) {
+          expect(error).toMatchSnapshot();
+          resolve();
+        },
+      });
+    });
+
+    const errorResult = {
+      result: {
+        data: null,
+        extensions: {
+          [PROTOCOL_ERRORS_SYMBOL]: [
+            {
+              message: 'cannot read message from websocket',
+              extensions: [
+                {
+                  code: "WEBSOCKET_MESSAGE_ERROR"
+                }
+              ],
+            } as any,
+          ],
+        }
+      },
+    };
+
+    link.simulateResult(errorResult);
+    return Promise.resolve(promise);
   });
 });

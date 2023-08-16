@@ -5,7 +5,9 @@ description: Attempt an operation multiple times if it fails due to network or s
 
 ## Overview
 
-`@apollo/client/link/retry` can be used to retry an operation a certain amount of times. This comes in handy when dealing with unreliable communication situations, where you would rather wait longer than explicitly fail an operation. `@apollo/client/link/retry` provides exponential backoff, and jitters delays between attempts by default. It does not (currently) handle retries for GraphQL errors in the response, only for network errors.
+`@apollo/client/link/retry` can be used to retry an operation a certain amount of times. This comes in handy when dealing with unreliable communication situations, where you would rather wait longer than explicitly fail an operation. `@apollo/client/link/retry` provides exponential backoff, and jitters delays between attempts by default.
+
+> **Note:** It does not currently handle retries for GraphQL errors in the response, only for network errors; the `onError` link can be used to retry an operation after a GraphQL error. For more information, see the [Error handling documentation](/react/data/error-handling/#on-graphql-errors).
 
 An example use case is to hold on to a request while a network connection is offline, and retry until it comes back online.
 
@@ -64,7 +66,7 @@ These two features are combined to help alleviate [the thundering herd problem](
 
 Instead of the options object, you may pass a function for `delay` and/or `attempts`, which implement custom strategies for each. In both cases the function is given the same arguments (`count`, `operation`, `error`).
 
-The `attempts` function should return a boolean indicating whether the response should be retried. If yes, the `delay` function is then called, and should return the number of milliseconds to delay by.
+The `attempts` function should return a `boolean` (or a `Promise` which resolves to a `boolean`) indicating whether the response should be retried. If yes, the `delay` function is then called, and should return the number of milliseconds to delay by.
 
 ```js
 import { RetryLink } from "@apollo/client/link/retry";

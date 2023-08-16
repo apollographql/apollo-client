@@ -1,13 +1,17 @@
-import {
+import { invariant, newInvariantError } from '../globals/index.js';
+
+import type {
   DocumentNode,
   OperationDefinitionNode,
   FragmentDefinitionNode,
   ValueNode,
 } from 'graphql';
 
-import { invariant, InvariantError } from 'ts-invariant';
+import { valueToObjectRepresentation } from './storeUtils.js';
 
-import { valueToObjectRepresentation } from './storeUtils';
+type OperationDefinitionWithName = OperationDefinitionNode & {
+  name: NonNullable<OperationDefinitionNode['name']>;
+};
 
 // Checks the document for errors and throws an exception if there is an error.
 export function checkDocument(doc: DocumentNode) {
@@ -21,10 +25,9 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
     .filter(d => d.kind !== 'FragmentDefinition')
     .map(definition => {
       if (definition.kind !== 'OperationDefinition') {
-        throw new InvariantError(
-          `Schema type definitions not allowed in queries. Found: "${
-            definition.kind
-          }"`,
+        throw newInvariantError(
+          `Schema type definitions not allowed in queries. Found: "%s"`,
+          definition.kind
         );
       }
       return definition;
@@ -32,7 +35,8 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
 
   invariant(
     operations.length <= 1,
-    `Ambiguous GraphQL document: contains ${operations.length} operations`,
+    `Ambiguous GraphQL document: contains %s operations`,
+    operations.length
   );
 
   return doc;
@@ -43,18 +47,19 @@ export function getOperationDefinition(
 ): OperationDefinitionNode | undefined {
   checkDocument(doc);
   return doc.definitions.filter(
-    definition => definition.kind === 'OperationDefinition',
-  )[0] as OperationDefinitionNode;
+    (definition): definition is OperationDefinitionNode =>
+      definition.kind === 'OperationDefinition',
+  )[0];
 }
 
 export function getOperationName(doc: DocumentNode): string | null {
   return (
     doc.definitions
       .filter(
-        definition =>
-          definition.kind === 'OperationDefinition' && definition.name,
+        (definition): definition is OperationDefinitionWithName =>
+          definition.kind === 'OperationDefinition' && !!definition.name,
       )
-      .map((x: OperationDefinitionNode) => x!.name!.value)[0] || null
+      .map((x) => x.name.value)[0] || null
   );
 }
 
@@ -63,12 +68,13 @@ export function getFragmentDefinitions(
   doc: DocumentNode,
 ): FragmentDefinitionNode[] {
   return doc.definitions.filter(
-    definition => definition.kind === 'FragmentDefinition',
-  ) as FragmentDefinitionNode[];
+    (definition): definition is FragmentDefinitionNode =>
+      definition.kind === 'FragmentDefinition',
+  );
 }
 
 export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
-  const queryDef = getOperationDefinition(doc) as OperationDefinitionNode;
+  const queryDef = getOperationDefinition(doc)!;
 
   invariant(
     queryDef && queryDef.operation === 'query',
@@ -136,7 +142,7 @@ export function getMainDefinition(
     return fragmentDefinition;
   }
 
-  throw new InvariantError(
+  throw newInvariantError(
     'Expected a parsed GraphQL query with a query, mutation, subscription, or a fragment.',
   );
 }

@@ -1,5 +1,5 @@
 import { cloneDeep, assign } from 'lodash';
-import { GraphQLError, ExecutionResult, DocumentNode } from 'graphql';
+import { GraphQLError, ExecutionResult, DocumentNode, Kind, print, visit } from 'graphql';
 import gql from 'graphql-tag';
 
 import {
@@ -8,19 +8,25 @@ import {
   WatchQueryFetchPolicy,
   QueryOptions,
   ObservableQuery,
+  Operation,
+  TypedDocumentNode,
+  NetworkStatus,
 } from '../core';
 
-import { Observable, ObservableSubscription } from '../utilities';
+import { DocumentTransform, Observable, ObservableSubscription, offsetLimitPagination, removeDirectivesFromDocument } from '../utilities';
 import { ApolloLink } from '../link/core';
-import { InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
+import { createFragmentRegistry, InMemoryCache, makeVar, PossibleTypesMap } from '../cache';
 import { ApolloError } from '../errors';
 
 import {
   itAsync,
-  stripSymbols,
   subscribeAndCount,
   mockSingleLink,
+  withErrorSpy,
+  MockLink,
+  wait,
 } from '../testing';
+import { waitFor } from '@testing-library/react';
 
 describe('client', () => {
   it('can be loaded via require', () => {
@@ -149,7 +155,7 @@ describe('client', () => {
     });
 
     client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(data);
+      expect(actualResult.data).toEqual(data);
       resolve();
     });
   });
@@ -195,11 +201,11 @@ describe('client', () => {
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     });
 
     const withDefault = client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     });
 
     return Promise.all([
@@ -259,17 +265,17 @@ describe('client', () => {
     });
 
     const basic = client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     });
 
     const withDefault = client.query({ query }).then(actualResult => {
-      return expect(stripSymbols(actualResult.data)).toEqual(result);
+      return expect(actualResult.data).toEqual(result);
     });
 
     const withOverride = client
       .query({ query, variables: override })
       .then(actualResult => {
-        return expect(stripSymbols(actualResult.data)).toEqual(
+        return expect(actualResult.data).toEqual(
           overriddenResult,
         );
       });
@@ -423,7 +429,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(result => {
-      expect(stripSymbols(result.data)).toEqual(data);
+      expect(result.data).toEqual(data);
       expect(finalState.data).toEqual(
         (client.cache as InMemoryCache).extract(),
       );
@@ -481,7 +487,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(result => {
-      expect(stripSymbols(result.data)).toEqual(data);
+      expect(result.data).toEqual(data);
       expect(finalState.data).toEqual(client.extract());
     }).then(resolve, reject);
   });
@@ -687,7 +693,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then((result: ExecutionResult) => {
-      expect(stripSymbols(result.data)).toEqual(data);
+      expect(result.data).toEqual(data);
     });
   });
 
@@ -830,7 +836,7 @@ describe('client', () => {
 
     handle.subscribe({
       next(result) {
-        expect(stripSymbols(result.data)).toEqual(data);
+        expect(result.data).toEqual(data);
         resolve();
       },
     });
@@ -883,7 +889,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(transformedResult);
+      expect(actualResult.data).toEqual(transformedResult);
     }).then(resolve, reject);
   });
 
@@ -934,9 +940,57 @@ describe('client', () => {
     return client
       .query({ fetchPolicy: 'network-only', query })
       .then(actualResult => {
-        expect(stripSymbols(actualResult.data)).toEqual(transformedResult);
+        expect(actualResult.data).toEqual(transformedResult);
       })
       .then(resolve, reject);
+  });
+
+  it('removes @client fields from the query before it reaches the link', async () => {
+    const result: { current: Operation | undefined } = {
+      current: undefined
+    }
+
+    const query = gql`
+      query {
+        author {
+          firstName
+          lastName
+          isInCollection @client
+        }
+      }
+    `;
+
+    const transformedQuery = gql`
+      query {
+        author {
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    const link = new ApolloLink((operation) => {
+      result.current = operation;
+
+      return Observable.of({
+        data: {
+          author: {
+            firstName: 'John',
+            lastName: 'Smith',
+            __typename: 'Author',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    await client.query({ query });
+
+    expect(print(result.current!.query)).toEqual(print(transformedQuery));
   });
 
   itAsync('should handle named fragments on mutations', (resolve, reject) => {
@@ -974,7 +1028,7 @@ describe('client', () => {
     });
 
     return client.mutate({ mutation }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1013,7 +1067,7 @@ describe('client', () => {
     return client
       .query({ fetchPolicy: 'network-only', query })
       .then(actualResult => {
-        expect(stripSymbols(actualResult.data)).toEqual(result);
+        expect(actualResult.data).toEqual(result);
       })
       .then(resolve, reject);
   });
@@ -1056,7 +1110,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1092,7 +1146,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1141,7 +1195,7 @@ describe('client', () => {
       }),
     });
     return client.query({ query }).then((actualResult: any) => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1192,7 +1246,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -1308,7 +1362,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(data);
+      expect(actualResult.data).toEqual(data);
     });
   });
 
@@ -1333,7 +1387,7 @@ describe('client', () => {
     });
 
     return client.mutate({ mutation }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(data);
+      expect(actualResult.data).toEqual(data);
     });
   });
 
@@ -1381,8 +1435,8 @@ describe('client', () => {
 
     // if deduplication happened, result2.data will equal data.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      expect(stripSymbols(result1.data)).toEqual(data);
-      expect(stripSymbols(result2.data)).toEqual(data2);
+      expect(result1.data).toEqual(data);
+      expect(result2.data).toEqual(data2);
     }).then(resolve, reject);
   });
 
@@ -1473,8 +1527,8 @@ describe('client', () => {
 
     // if deduplication happened, result2.data will equal data.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      expect(stripSymbols(result1.data)).toEqual(data);
-      expect(stripSymbols(result2.data)).toEqual(data);
+      expect(result1.data).toEqual(data);
+      expect(result2.data).toEqual(data);
     });
   });
 
@@ -1521,8 +1575,8 @@ describe('client', () => {
 
     // if deduplication happened, result2.data will equal data.
     return Promise.all([q1, q2]).then(([result1, result2]) => {
-      expect(stripSymbols(result1.data)).toEqual(data);
-      expect(stripSymbols(result2.data)).toEqual(data2);
+      expect(result1.data).toEqual(data);
+      expect(result2.data).toEqual(data2);
     });
   });
 
@@ -1638,7 +1692,7 @@ describe('client', () => {
       });
 
       return client.query({ query }).then(result => {
-        expect(stripSymbols(result.data)).toEqual(data);
+        expect(result.data).toEqual(data);
         expect((client.cache as InMemoryCache).extract()['1']).toEqual({
           id: '1',
           name: 'Luke Skywalker',
@@ -1736,9 +1790,9 @@ describe('client', () => {
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(initialData);
+          expect(result.data).toEqual(initialData);
         } else if (handleCount === 2) {
-          expect(stripSymbols(result.data)).toEqual(networkFetch);
+          expect(result.data).toEqual(networkFetch);
           resolve();
         }
       });
@@ -1761,14 +1815,14 @@ describe('client', () => {
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         expect(handleCount).toBe(1);
-        expect(stripSymbols(result.data)).toEqual(networkFetch);
+        expect(result.data).toEqual(networkFetch);
         expect(result.loading).toBe(false);
         resolve();
       });
     });
 
     itAsync('fails if network request fails', (resolve, reject) => {
-      const link = mockSingleLink().setOnError(error => { throw error }); // no queries = no replies.
+      const link = mockSingleLink(); // no queries = no replies.
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({ addTypename: false }),
@@ -1814,7 +1868,7 @@ describe('client', () => {
       let count = 0;
       obs.subscribe({
         next: result => {
-          expect(stripSymbols(result.data)).toEqual(initialData);
+          expect(result.data).toEqual(initialData);
           expect(result.loading).toBe(true);
           count++;
         },
@@ -1852,7 +1906,7 @@ describe('client', () => {
       let handleCalled = false;
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.data).toEqual(data);
           obs.setOptions({ query, fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
@@ -1892,7 +1946,7 @@ describe('client', () => {
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
         if (handleCount === 1) {
-          expect(stripSymbols(result.data)).toEqual(data);
+          expect(result.data).toEqual(data);
           obs.setOptions({ query, fetchPolicy: 'standby' }).then(() => {
             client.writeQuery({ query, data: data2 });
             // this write should be completely ignored by the standby query
@@ -1902,7 +1956,7 @@ describe('client', () => {
           });
         }
         if (handleCount === 2) {
-          expect(stripSymbols(result.data)).toEqual(data2);
+          expect(result.data).toEqual(data2);
           resolve();
         }
       });
@@ -1951,7 +2005,7 @@ describe('client', () => {
         // then query for real
         .then(() => client.query({ query, fetchPolicy: 'network-only' }))
         .then(result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
+          expect(result.data).toEqual({ myNumber: { n: 2 } });
         })
         .then(resolve, reject);
     });
@@ -1971,7 +2025,7 @@ describe('client', () => {
         // then query for real
         .then(() => client.query(options))
         .then(result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 1 } });
+          expect(result.data).toEqual({ myNumber: { n: 1 } });
           // Test that options weren't mutated, issue #339
           expect(options).toEqual({
             query,
@@ -1996,12 +2050,12 @@ describe('client', () => {
           return client.query({ query, fetchPolicy: 'network-only' });
         })
         .then(async result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 1 } });
+          expect(result.data).toEqual({ myNumber: { n: 1 } });
           await new Promise(resolve => setTimeout(resolve, 100));
           return client.query({ query, fetchPolicy: 'network-only' });
         })
         .then(result => {
-          expect(stripSymbols(result.data)).toEqual({ myNumber: { n: 2 } });
+          expect(result.data).toEqual({ myNumber: { n: 2 } });
         })
         .then(resolve, reject);
     });
@@ -2028,7 +2082,7 @@ describe('client', () => {
         request: { query: mutation },
         result: { data },
         error: networkError,
-      }).setOnError(reject),
+      }),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
@@ -2081,6 +2135,7 @@ describe('client', () => {
         resolve();
       });
   });
+
   itAsync('should allow errors to be returned from a mutation', (resolve, reject) => {
     const mutation = gql`
       mutation {
@@ -2102,7 +2157,12 @@ describe('client', () => {
     const client = new ApolloClient({
       link: mockSingleLink({
         request: { query: mutation },
-        result: { data, errors },
+        result: {
+          errors,
+          data: {
+            newPerson: data,
+          },
+        },
       }).setOnError(reject),
       cache: new InMemoryCache({ addTypename: false }),
     });
@@ -2112,7 +2172,9 @@ describe('client', () => {
         expect(result.errors).toBeDefined();
         expect(result.errors!.length).toBe(1);
         expect(result.errors![0].message).toBe(errors[0].message);
-        expect(result.data).toEqual(data);
+        expect(result.data).toEqual({
+          newPerson: data,
+        });
         resolve();
       })
       .catch((error: ApolloError) => {
@@ -2132,9 +2194,11 @@ describe('client', () => {
       }
     `;
     const data = {
-      person: {
-        firstName: 'John',
-        lastName: 'Smith',
+      newPerson: {
+        person: {
+          firstName: 'John',
+          lastName: 'Smith',
+        },
       },
     };
     const errors = [new Error('Some kind of GraphQL error.')];
@@ -2149,7 +2213,7 @@ describe('client', () => {
       .mutate({ mutation, errorPolicy: 'ignore' })
       .then(result => {
         expect(result.errors).toBeUndefined();
-        expect(stripSymbols(result.data)).toEqual(data);
+        expect(result.data).toEqual(data);
         resolve();
       })
       .catch((error: ApolloError) => {
@@ -2199,7 +2263,8 @@ describe('client', () => {
     {
       const { data, optimisticData } = client.cache as any;
       expect(optimisticData).not.toBe(data);
-      expect(optimisticData.parent).toBe(data);
+      expect(optimisticData.parent).toBe(data.stump);
+      expect(optimisticData.parent.parent).toBe(data);
     }
 
     mutatePromise
@@ -2208,7 +2273,7 @@ describe('client', () => {
       })
       .catch((_: ApolloError) => {
         const { data, optimisticData } = client.cache as any;
-        expect(optimisticData).toBe(data);
+        expect(optimisticData).toBe(data.stump);
         resolve();
       });
   });
@@ -2324,7 +2389,7 @@ describe('client', () => {
     expect(count).toEqual(2);
   });
 
-  it('invokes onResetStore callbacks before notifying queries during resetStore call', async () => {
+  itAsync('invokes onResetStore callbacks before notifying queries during resetStore call', async (resolve, reject) => {
     const delay = (time: number) => new Promise(r => setTimeout(r, time));
 
     const query = gql`
@@ -2391,7 +2456,7 @@ describe('client', () => {
       if (called) {
         expect(onResetStoreOne).toHaveBeenCalled();
       } else {
-        expect(stripSymbols(d.data)).toEqual(data);
+        expect(d.data).toEqual(data);
         called = true;
       }
     });
@@ -2403,8 +2468,8 @@ describe('client', () => {
       })
       .subscribe({
         next,
-        error: fail,
-        complete: fail,
+        error: reject,
+        complete: reject,
       });
 
     expect(count).toEqual(0);
@@ -2412,6 +2477,8 @@ describe('client', () => {
     expect(count).toEqual(2);
     //watchQuery should only receive data twice
     expect(next).toHaveBeenCalledTimes(2);
+
+    resolve();
   });
 
   it('has a reFetchObservableQueries method which calls QueryManager', async () => {
@@ -2423,6 +2490,34 @@ describe('client', () => {
     // @ts-ignore
     const spy = jest.spyOn(client.queryManager, 'reFetchObservableQueries');
     await client.reFetchObservableQueries();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('has a refetchQueries method which calls QueryManager', async () => {
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    const spy = jest.spyOn(client['queryManager'], 'refetchQueries');
+    spy.mockImplementation(() => new Map);
+
+    const options = { include: ['Author1'] };
+    await client.refetchQueries(options);
+
+    expect(spy).toHaveBeenCalledWith(options);
+    spy.mockRestore();
+  });
+
+  it('has a getObservableQueries method which calls QueryManager', async () => {
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    // @ts-ignore
+    const spy = jest.spyOn(client.queryManager, 'getObservableQueries');
+    await client.getObservableQueries();
     expect(spy).toHaveBeenCalled();
   });
 
@@ -2475,7 +2570,7 @@ describe('client', () => {
       { request: { query }, result: { data } },
       { request: { query }, error: new Error('This is an error!') },
       { request: { query }, result: { data: dataTwo } }
-    ).setOnError(reject);
+    );
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
@@ -2504,7 +2599,7 @@ describe('client', () => {
               // which is an error.
               expect(result.loading).toBeFalsy();
               expect(result.networkStatus).toBe(7);
-              expect(stripSymbols(result.data!.allPeople)).toEqual(
+              expect(result.data!.allPeople).toEqual(
                 data.allPeople,
               );
               setTimeout(() => {
@@ -2533,7 +2628,7 @@ describe('client', () => {
                 reject('Should have data by this point');
                 break;
               }
-              expect(stripSymbols(result.data.allPeople)).toEqual(
+              expect(result.data.allPeople).toEqual(
                 dataTwo.allPeople,
               );
               resolve();
@@ -2552,14 +2647,16 @@ describe('client', () => {
         subscription.unsubscribe();
 
         const lastError = observable.getLastError();
-        const lastResult = observable.getLastResult();
+        expect(lastError).toBeInstanceOf(ApolloError);
+        expect(lastError!.networkError).toEqual(error);
 
-        expect(lastResult.loading).toBeFalsy();
-        expect(lastResult.networkStatus).toBe(8);
+        const lastResult = observable.getLastResult();
+        expect(lastResult).toBeTruthy();
+        expect(lastResult!.loading).toBe(false);
+        expect(lastResult!.networkStatus).toBe(8);
 
         observable.resetLastResults();
         subscription = observable.subscribe(observerOptions);
-        Object.assign(observable, { lastError, lastResult });
 
         // The error arrived, run a refetch to get the third result
         // which should now contain valid data.
@@ -2602,7 +2699,7 @@ describe('client', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('should warn if server returns wrong data', (resolve, reject) => {
+  withErrorSpy(itAsync, 'should warn if server returns wrong data', (resolve, reject) => {
     const query = gql`
       query {
         todos {
@@ -2625,6 +2722,7 @@ describe('client', () => {
         ],
       },
     };
+
     const link = mockSingleLink({
       request: { query },
       result,
@@ -2637,14 +2735,9 @@ describe('client', () => {
       }),
     });
 
-    return client.query({ query }).then(
-      result => {
-        fail("should have errored");
-      },
-      error => {
-        expect(error.message).toMatch(/Missing field 'description' /);
-      },
-    ).then(resolve, reject);
+    return client.query({ query }).then(({ data }) => {
+      expect(data).toEqual(result.data);
+    }).then(resolve, reject);
   });
 
   itAsync('runs a query with the connection directive and writes it to the store key defined in the directive', (resolve, reject) => {
@@ -2685,7 +2778,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -2737,7 +2830,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 
@@ -2779,7 +2872,7 @@ describe('client', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
     }).then(resolve, reject);
   });
 });
@@ -2823,7 +2916,7 @@ describe('@connection', () => {
     });
 
     return client.query({ query }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
   });
@@ -2868,7 +2961,7 @@ describe('@connection', () => {
     });
 
     return client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
   });
@@ -2922,7 +3015,7 @@ describe('@connection', () => {
     });
 
     return client.query({ query, variables }).then(actualResult => {
-      expect(stripSymbols(actualResult.data)).toEqual(result);
+      expect(actualResult.data).toEqual(result);
       expect((client.cache as InMemoryCache).extract()).toMatchSnapshot();
     }).then(resolve, reject);
   });
@@ -2970,10 +3063,6 @@ describe('@connection', () => {
     const aResults = watch(gql`{ a }`);
     const bResults = watch(gql`{ b }`);
     const abResults = watch(gql`{ a b }`);
-
-    function wait(time = 10) {
-      return new Promise(resolve => setTimeout(resolve, 10));
-    }
 
     await wait();
 
@@ -3028,11 +3117,9 @@ describe('@connection', () => {
     client.cache.evict({ fieldName: "a" });
     await wait();
 
-    // The results are structurally the same, but the result objects have
-    // been recomputed for queries that involved the ROOT_QUERY.a field.
-    expect(checkLastResult(aResults, a456)).not.toBe(a456);
+    expect(checkLastResult(aResults, a456)).toBe(a456);
     expect(checkLastResult(bResults, bOyez)).toBe(bOyez);
-    expect(checkLastResult(abResults, a456bOyez)).not.toBe(a456bOyez);
+    expect(checkLastResult(abResults, a456bOyez)).toBe(a456bOyez);
 
     const cQuery = gql`{ c }`;
     // Passing cache-only as the fetchPolicy allows the { c: "see" }
@@ -3081,15 +3168,11 @@ describe('@connection', () => {
       { a: 123 },
       { a: 234 },
       { a: 456 },
-      // Delivered again because we explicitly called resetLastResults.
-      { a: 456 },
     ]);
 
     expect(bResults).toEqual([
       { b: "asdf" },
       { b: "ASDF" },
-      { b: "oyez" },
-      // Delivered again because we explicitly called resetLastResults.
       { b: "oyez" },
     ]);
 
@@ -3097,8 +3180,6 @@ describe('@connection', () => {
       { a: 123, b: "asdf" },
       { a: 234, b: "asdf" },
       { a: 234, b: "ASDF" },
-      { a: 456, b: "oyez" },
-      // Delivered again because we explicitly called resetLastResults.
       { a: 456, b: "oyez" },
     ]);
 
@@ -3110,6 +3191,102 @@ describe('@connection', () => {
     ]);
 
     subs.forEach(sub => sub.unsubscribe());
+
+    resolve();
+  });
+
+  function wait(time = 10) {
+    return new Promise(resolve => setTimeout(resolve, time));
+  }
+
+  itAsync('should call forgetCache for reactive vars when stopped', async (resolve, reject) => {
+    const aVar = makeVar(123);
+    const bVar = makeVar("asdf");
+    const aSpy = jest.spyOn(aVar, "forgetCache");
+    const bSpy = jest.spyOn(bVar, "forgetCache");
+    const cache: InMemoryCache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            a() {
+              return aVar();
+            },
+            b() {
+              return bVar();
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({ cache });
+
+    const obsQueries = new Set<ObservableQuery<any>>();
+    const subs = new Set<ObservableSubscription>();
+    function watch(
+      query: DocumentNode,
+      fetchPolicy: WatchQueryFetchPolicy = "cache-first",
+    ): any[] {
+      const results: any[] = [];
+      const obsQuery = client.watchQuery({
+        query,
+        fetchPolicy,
+      });
+      obsQueries.add(obsQuery);
+      subs.add(obsQuery.subscribe({
+        next(result) {
+          results.push(result.data);
+        },
+      }));
+      return results;
+    }
+
+    const aQuery = gql`{ a }`;
+    const bQuery = gql`{ b }`;
+    const abQuery = gql`{ a b }`;
+
+    const aResults = watch(aQuery);
+    const bResults = watch(bQuery);
+
+    expect(cache["watches"].size).toBe(2);
+
+    expect(aResults).toEqual([]);
+    expect(bResults).toEqual([]);
+
+    expect(aSpy).not.toBeCalled();
+    expect(bSpy).not.toBeCalled();
+
+    subs.forEach(sub => sub.unsubscribe());
+
+    expect(aSpy).toBeCalledTimes(1);
+    expect(aSpy).toBeCalledWith(cache);
+    expect(bSpy).toBeCalledTimes(1);
+    expect(bSpy).toBeCalledWith(cache);
+
+    expect(aResults).toEqual([]);
+    expect(bResults).toEqual([]);
+
+    expect(cache["watches"].size).toBe(0);
+    const abResults = watch(abQuery);
+    expect(abResults).toEqual([]);
+    expect(cache["watches"].size).toBe(1);
+
+    await wait();
+
+    expect(aResults).toEqual([]);
+    expect(bResults).toEqual([]);
+    expect(abResults).toEqual([
+      { a: 123, b: "asdf" }
+    ]);
+
+    client.stop();
+
+    await wait();
+
+    expect(aSpy).toBeCalledTimes(2);
+    expect(aSpy).toBeCalledWith(cache);
+    expect(bSpy).toBeCalledTimes(2);
+    expect(bSpy).toBeCalledWith(cache);
 
     resolve();
   });
@@ -3162,12 +3339,204 @@ describe('@connection', () => {
       });
 
       subscribeAndCount(reject, obs, (handleCount, result) => {
-        const resultData = stripSymbols(result.data);
+        const resultData = result.data;
         if (handleCount === 1) {
           expect(resultData).toEqual(initialData);
         } else if (handleCount === 2) {
           expect(resultData).toEqual(networkFetch);
           resolve();
+        }
+      });
+    });
+
+    itAsync('allows setting nextFetchPolicy in defaultOptions', (resolve, reject) => {
+      let networkCounter = 0;
+      let nextFetchPolicyCallCount = 0;
+
+      const client = new ApolloClient({
+        link: new ApolloLink(operation => new Observable(observer => {
+          observer.next({
+            data: {
+              count: networkCounter++,
+            },
+          });
+          observer.complete();
+        })),
+
+        cache: new InMemoryCache,
+
+        defaultOptions: {
+          watchQuery: {
+            nextFetchPolicy(fetchPolicy, context) {
+              expect(++nextFetchPolicyCallCount).toBe(1);
+              expect(this.query).toBe(query);
+              expect(fetchPolicy).toBe("cache-first");
+
+              expect(context.reason).toBe("after-fetch");
+              expect(context.observable).toBe(obs);
+              expect(context.options).toBe(obs.options);
+              expect(context.initialFetchPolicy).toBe("cache-first");
+
+              // Usually options.nextFetchPolicy applies only once, but a
+              // nextFetchPolicy function can set this.nextFetchPolicy
+              // again to perform an additional transition.
+              this.nextFetchPolicy = fetchPolicy => {
+                ++nextFetchPolicyCallCount;
+                return "cache-first";
+              };
+
+              return "cache-and-network";
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query {
+          count
+        }
+      `;
+
+      client.writeQuery({
+        query,
+        data: {
+          count: "initial",
+        },
+      });
+
+      const obs = client.watchQuery({ query });
+
+      subscribeAndCount(reject, obs, (handleCount, result) => {
+        if (handleCount === 1) {
+          expect(nextFetchPolicyCallCount).toBe(1);
+          expect(result.data).toEqual({ count: "initial" });
+          // Refetching makes a copy of the current options, which
+          // includes options.nextFetchPolicy, so the inner
+          // nextFetchPolicy function ends up getting called twice.
+          obs.refetch();
+        } else if (handleCount === 2) {
+          expect(result.data).toEqual({ count: "initial" });
+          expect(nextFetchPolicyCallCount).toBe(2);
+        } else if (handleCount === 3) {
+          expect(result.data).toEqual({ count: 0 });
+          expect(nextFetchPolicyCallCount).toBe(2);
+          client.writeQuery({
+            query,
+            data: {
+              count: "secondary",
+            },
+          });
+        } else if (handleCount === 4) {
+          expect(result.data).toEqual({ count: "secondary" });
+          expect(nextFetchPolicyCallCount).toBe(3);
+          client.cache.evict({ fieldName: "count" });
+        } else if (handleCount === 5) {
+          expect(result.data).toEqual({ count: 1 });
+          expect(nextFetchPolicyCallCount).toBe(4);
+          expect(obs.options.fetchPolicy).toBe("cache-first");
+          setTimeout(resolve, 50);
+        } else {
+          reject("too many results");
+        }
+      });
+    });
+
+    itAsync('can override global defaultOptions.watchQuery.nextFetchPolicy', (resolve, reject) => {
+      let linkCount = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(request => new Observable(observer => {
+          observer.next({
+            data: {
+              linkCount: ++linkCount,
+            },
+          });
+          observer.complete();
+        })),
+        defaultOptions: {
+          watchQuery: {
+            nextFetchPolicy(currentFetchPolicy) {
+              reject(new Error("should not have called global nextFetchPolicy"));
+              return currentFetchPolicy;
+            },
+          }
+        }
+      });
+
+      const query: TypedDocumentNode<{
+        linkCount: number;
+      }> = gql`query CountQuery { linkCount }`;
+
+      let fetchPolicyRecord: WatchQueryFetchPolicy[] = [];
+      const observable = client.watchQuery({
+        query,
+        nextFetchPolicy(currentFetchPolicy) {
+          fetchPolicyRecord.push(currentFetchPolicy);
+          return "cache-first";
+        }
+      });
+
+      subscribeAndCount(reject, observable, (resultCount, result) => {
+        if (resultCount === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 1 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+          ]);
+
+          return client.refetchQueries({
+            include: ["CountQuery"],
+          }).then(results => {
+            expect(results.length).toBe(1);
+            results.forEach(result => {
+              expect(result.loading).toBe(false);
+              expect(result.data).toEqual({ linkCount: 2 });
+            });
+            expect(fetchPolicyRecord).toEqual([
+              "cache-first",
+              "network-only",
+            ]);
+          });
+
+        } else if (resultCount === 2) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 2 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+            "network-only",
+          ]);
+
+          return observable.reobserve({
+            // Allow delivery of loading:true result.
+            notifyOnNetworkStatusChange: true,
+            // Force a network request in addition to loading:true cache result.
+            fetchPolicy: "cache-and-network",
+          }).then(finalResult => {
+            expect(finalResult.loading).toBe(false);
+            expect(finalResult.data).toEqual({ linkCount: 3 });
+            expect(fetchPolicyRecord).toEqual([
+              "cache-first",
+              "network-only",
+              "cache-and-network",
+            ]);
+          });
+
+        } else if (resultCount === 3) {
+          expect(result.loading).toBe(true);
+          expect(result.data).toEqual({ linkCount: 2 });
+
+        } else if (resultCount === 4) {
+          expect(result.loading).toBe(false);
+          expect(result.data).toEqual({ linkCount: 3 });
+          expect(fetchPolicyRecord).toEqual([
+            "cache-first",
+            "network-only",
+            "cache-and-network",
+          ]);
+
+          setTimeout(resolve, 10);
+        } else {
+          reject(new Error(`Too many results (${resultCount})`));
         }
       });
     });
@@ -3229,6 +3598,2507 @@ describe('@connection', () => {
   });
 });
 
+describe('custom document transforms', () => {
+  it('runs custom document transform when calling `query`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        dogs {
+          id
+          name
+          breed @custom
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          dogs: [
+            {
+              id: 1,
+              name: 'Buddy',
+              breed: 'German Shepard',
+              __typename: 'Dog'
+            }
+          ],
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        dogs {
+          id
+          name
+          breed
+          __typename
+        }
+      }
+    `);
+
+    expect(data).toEqual({
+      dogs: [
+        {
+          id: 1,
+          name: 'Buddy',
+          breed: 'German Shepard',
+          __typename: 'Dog',
+        }
+      ]
+    });
+  });
+
+  it('requests and caches fields added from custom document transforms when calling `query`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        dogs {
+          name
+          breed
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'dogs' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  {
+                    kind: Kind.FIELD,
+                    name: { kind: Kind.NAME, value: 'id' },
+                  },
+                  ...node.selectionSet.selections,
+                ]
+              }
+            }
+          }
+        }
+      })
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          dogs: [
+            {
+              id: 1,
+              name: 'Buddy',
+              breed: 'German Shepard',
+              __typename: 'Dog'
+            }
+          ],
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        dogs {
+          id
+          name
+          breed
+          __typename
+        }
+      }
+    `);
+
+    expect(data).toEqual({
+      dogs: [
+        {
+          id: 1,
+          name: 'Buddy',
+          breed: 'German Shepard',
+          __typename: 'Dog'
+        }
+      ]
+    });
+
+    const cache = client.cache.extract();
+
+    expect(cache['Dog:1']).toEqual({
+      id: 1,
+      name: 'Buddy',
+      breed: 'German Shepard',
+      __typename: 'Dog',
+    });
+  });
+
+  it('runs document transforms before reading from the cache when calling `query`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          name
+        }
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'product' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  ...node.selectionSet.selections,
+                  {
+                    kind: Kind.FRAGMENT_SPREAD,
+                    name: { kind: Kind.NAME, value: 'ProductFields' }
+                  }
+                ]
+              }
+            }
+          }
+        } 
+      });
+    });
+
+    const link = new ApolloLink(() => {
+      return Observable.of({
+        data: {
+          product: {
+            __typename: 'Product',
+            id: 2,
+            name: 'unused',
+            description: 'unused',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(gql`
+          fragment ProductFields on Product {
+            description
+          }
+        `)
+      }),
+      documentTransform,
+    });
+
+    // Use the transformed document to write to the cache to ensure it contains
+    // the fragment spread
+    client.writeQuery({
+      query: documentTransform.transformDocument(query),
+      data: {
+        product: {
+          __typename: 'Product',
+          id: 1,
+          name: 'Cached product',
+          description: 'Cached product description'
+        }
+      }
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(data).toEqual({
+      product: {
+        __typename: 'Product',
+        id: 1,
+        name: 'Cached product',
+        description: 'Cached product description',
+      }
+    });
+  });
+
+  it('runs @client directives added from custom transforms through local state', async ()  => {
+    const query = gql`
+      query TestQuery {
+        currentUser {
+          id
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'currentUser' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  ...node.selectionSet.selections,
+                  {
+                    kind: Kind.FIELD,
+                    name: { kind: Kind.NAME, value: 'isLoggedIn' },
+                    directives: [
+                      {
+                        kind: Kind.DIRECTIVE,
+                        name: { kind: Kind.NAME, value: 'client' }
+                      }
+                    ]
+                  },
+                ]
+              }
+            }
+          }
+        }
+      })
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          currentUser: {
+            id: 1,
+            __typename: 'User' ,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache({
+        typePolicies: {
+          User: {
+            fields: {
+              isLoggedIn: {
+                read() {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }),
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        currentUser {
+          id
+          __typename
+        }
+      }
+    `);
+
+    expect(data).toEqual({
+      currentUser: {
+        id: 1,
+        isLoggedIn: true,
+        __typename: 'User'
+      }
+    });
+  });
+
+  it('runs custom transform only once when calling `query`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        currentUser {
+          id
+        }
+      }
+    `;
+
+    const transform = jest.fn((document: DocumentNode) => document);
+    const documentTransform = new DocumentTransform(transform, { cache: false });
+
+    const link = new ApolloLink(() => {
+      return Observable.of({
+        data: {
+          currentUser: {
+            id: 1,
+            __typename: 'User' ,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    await client.query({ query });
+
+    expect(transform).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs default transforms with no custom document transform when calling `query`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        currentUser @nonreactive {
+          id
+          isLoggedIn @client
+          favoriteFlavors @connection {
+            flavor
+          }
+        }
+      }
+    `;
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of();
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        currentUser {
+          id
+          favoriteFlavors {
+            flavor
+            __typename
+          }
+          __typename
+        }
+      }
+    `);
+  });
+
+  it('runs custom transform when calling `mutate`', async ()  => {
+    const mutation = gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username @custom
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          changeUsername: {
+            id: 1,
+            username: operation.variables.username,
+            __typename: 'User' ,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const { data } = await client.mutate({
+      mutation,
+      variables: { username: 'foo' }
+    });
+
+    expect(document!).toMatchDocument(gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+
+    expect(data).toEqual({
+      changeUsername: {
+        id: 1,
+        username: 'foo',
+        __typename: 'User' ,
+      },
+    })
+  });
+
+  it('runs custom transform on queries defined in refetchQueries using legacy option when calling `mutate`', async ()  => {
+    const mutation = gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username @custom
+        }
+      }
+    `;
+
+    const query = gql`
+      query TestQuery {
+        currentUser {
+          id
+          username @custom
+        }
+      }
+    `;
+
+    const requests: Operation[] = [];
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const mocks = [
+      {
+        request: { 
+          query: documentTransform.transformDocument(mutation),
+          variables: { username: 'foo' }
+        },
+        result: {
+          data: {
+            changeUsername: { __typename: 'User', id: 1, username: 'foo' }
+          }
+        }
+      },
+      {
+        request: { query: documentTransform.transformDocument(query) },
+        result: {
+          data: {
+            currentUser: { __typename: 'User', id: 1, username: 'foo' }
+          }
+        }
+      }
+    ];
+
+    const link = new ApolloLink((operation, forward) => {
+      requests.push(operation);
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const { data } = await client.mutate({
+      mutation,
+      variables: { username: 'foo' },
+      refetchQueries: [{ query }],
+      awaitRefetchQueries: true,
+    });
+
+    expect(data).toEqual({
+      changeUsername: {
+        id: 1,
+        username: 'foo',
+        __typename: 'User' ,
+      },
+    })
+
+    expect(requests[0].query).toMatchDocument(gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+
+    expect(requests[1].query).toMatchDocument(gql`
+      query TestQuery {
+        currentUser {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+  });
+
+  it('requests and caches fields added from custom document transforms when calling `mutate`', async ()  => {
+    const mutation = gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          username
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'changeUsername' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  {
+                    kind: Kind.FIELD,
+                    name: { kind: Kind.NAME, value: 'id' }
+                  },
+                  ...node.selectionSet.selections,
+                ]
+              }
+            }
+          }
+        }
+      })
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          changeUsername: {
+            id: 1,
+            username: operation.variables.username,
+            __typename: 'User' ,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const { data } = await client.mutate({
+      mutation,
+      variables: { username: 'foo' }
+    });
+
+    expect(document!).toMatchDocument(gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+
+    expect(data).toEqual({
+      changeUsername: {
+        id: 1,
+        username: 'foo',
+        __typename: 'User' ,
+      },
+    });
+
+    const cache = client.cache.extract();
+
+    expect(cache['User:1']).toEqual({
+      __typename: 'User',
+      id: 1,
+      username: 'foo'
+    });
+  });
+
+  it('runs custom transforms only once when running `mutation`', async ()  => {
+    const mutation = gql`
+      mutation TestMutation($username: String) {
+        changeUsername(username: $username) {
+          id
+          username
+        }
+      }
+    `;
+
+    const transform = jest.fn((document: DocumentNode) => document);
+    const documentTransform = new DocumentTransform(transform, { cache: false });
+
+    const link = new ApolloLink((operation) => {
+      return Observable.of({
+        data: {
+          changeUsername: {
+            id: 1,
+            username: operation.variables.username,
+            __typename: 'User' ,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    await client.mutate({ mutation, variables: { username: 'foo' } });
+
+    expect(transform).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs default transforms with no custom document transform when calling `mutate`', async ()  => {
+    const mutation = gql`
+      mutation TestMutation {
+        updateProfile @nonreactive {
+          id
+          isLoggedIn @client
+          favoriteFlavors @connection {
+            flavor
+          }
+        }
+      }
+    `;
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          updateProfile: {
+            __typename: 'Profile',
+            id: 1,
+            favoriteFlavors: [{ __typename: 'Flavor', flavor: 'Strawberry '}]
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await client.mutate({ mutation });
+
+    expect(document!).toMatchDocument(gql`
+      mutation TestMutation {
+        updateProfile {
+          id
+          favoriteFlavors {
+            flavor
+            __typename
+          }
+          __typename
+        }
+      }
+    `);
+  });
+
+  it('runs custom document transforms when calling `subscribe`', async () => {
+    const query = gql`
+      subscription TestSubscription {
+        profileUpdated {
+          id
+          username @custom
+        }
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          profileUpdated: {
+            id: 1,
+            username: 'foo',
+            __typename: 'Profile'
+          }
+        }
+      })
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const onNext = jest.fn()
+
+    const subscription = client
+      .subscribe({ query })
+      .subscribe(onNext);
+
+    await waitFor(() => subscription.closed);
+
+    expect(document!).toMatchDocument(gql`
+      subscription TestSubscription {
+        profileUpdated {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+
+    expect(onNext).toHaveBeenLastCalledWith({
+      data: {
+        profileUpdated: { id: 1, username: 'foo', __typename: 'Profile', }
+      }
+    });
+  });
+
+  it('requests and caches fields added from custom document transforms when calling `subscribe`', async ()  => {
+    const query = gql`
+      subscription TestSubscription {
+        profileUpdated {
+          username
+        }
+      }
+    `;
+
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'profileUpdated' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  {
+                    kind: Kind.FIELD,
+                    name: { kind: Kind.NAME, value: 'id' }
+                  },
+                  ...node.selectionSet.selections,
+                ]
+              }
+            }
+          }
+        }
+      })
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          profileUpdated: {
+            id: 1,
+            username: 'foo',
+            __typename: 'Profile',
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const onNext = jest.fn();
+
+    const subscription = client
+      .subscribe({ query })
+      .subscribe(onNext);
+
+    await waitFor(() => subscription.closed);
+
+    expect(document!).toMatchDocument(gql`
+      subscription TestSubscription {
+        profileUpdated {
+          id
+          username
+          __typename
+        }
+      }
+    `);
+
+    expect(onNext).toHaveBeenLastCalledWith({
+      data: {
+        profileUpdated: { id: 1, username: 'foo', __typename: 'Profile', }
+      }
+    });
+
+    const cache = client.cache.extract();
+
+    expect(cache['Profile:1']).toEqual({
+      __typename: 'Profile',
+      id: 1,
+      username: 'foo'
+    });
+  });
+
+  it('runs custom transforms only once when calling `subscribe`', async ()  => {
+    const query = gql`
+      subscription TestSubscription {
+        profileUpdated {
+          username
+        }
+      }
+    `;
+
+    const transform = jest.fn((document: DocumentNode) => document);
+    const documentTransform = new DocumentTransform(transform, { cache: false });
+
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      documentTransform,
+      cache: new InMemoryCache(),
+    });
+
+    const subscription = client
+      .subscribe({ query })
+      .subscribe(jest.fn());
+
+    await waitFor(() => subscription.closed);
+
+    expect(transform).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs default transforms with no custom document transform when calling `subscribe`', async ()  => {
+    const query = gql`
+      subscription TestSubscription {
+        profileUpdated @nonreactive {
+          id
+          isLoggedIn @client
+          favoriteFlavors @connection {
+            flavor
+          }
+        }
+      }
+    `;
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          profileUpdated: {
+            __typename: 'Profile',
+            id: 1,
+            favoriteFlavors: [{ __typename: 'Flavor', flavor: 'Strawberry '}]
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const subscription = client
+      .subscribe({ query })
+      .subscribe(jest.fn());
+
+    await waitFor(() => subscription.closed);
+
+    expect(document!).toMatchDocument(gql`
+      subscription TestSubscription {
+        profileUpdated {
+          id
+          favoriteFlavors {
+            flavor
+            __typename
+          }
+          __typename
+        }
+      }
+    `);
+  });
+
+  it('runs custom document transforms when subscribing to observable after calling `watchQuery`', async () => {
+    const query = gql`
+      query TestQuery {
+        currentUser {
+          id
+          name @custom
+        }
+      }
+    `;
+
+    const transformedQuery = gql`
+      query TestQuery {
+        currentUser {
+          id
+          name
+          __typename
+        }
+      }
+    `;
+
+    const transform = jest.fn((document: DocumentNode) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const documentTransform = new DocumentTransform(
+      transform,
+      { cache: false }
+    );
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: { currentUser: { __typename: 'User', id: 1, name: 'John Doe' }}
+      })
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query });
+
+    expect(transform).toHaveBeenCalledTimes(1);
+    // `options.query` should always reflect the raw, untransformed query 
+    expect(observable.options.query).toMatchDocument(query);
+    // The computed `query` property should always reflect the last requested 
+    // transformed document.
+    expect(observable.query).toMatchDocument(transformedQuery);
+
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          currentUser: { __typename: 'User', id: 1, name: 'John Doe' }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      expect(document).toMatchDocument(transformedQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(transformedQuery);
+      expect(transform).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('runs default transforms with no custom document transform when calling `watchQuery`', async ()  => {
+    const query = gql`
+      query TestQuery @nonreactive {
+        currentUser {
+          id
+          isLoggedIn @client
+          favorites @connection {
+            id
+          }
+        }
+      }
+    `;
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          currentUser: {
+            __typename: 'User',
+            id: 1,
+            favorites: [{ __typename: 'Favorite', id: 1 }]
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const observable = client.watchQuery({ query })
+
+    observable.subscribe(jest.fn());
+
+    await waitFor(() => {
+      expect(document!).toMatchDocument(gql`
+        query TestQuery {
+          currentUser {
+            id
+            favorites {
+              id
+              __typename
+            }
+            __typename
+          }
+        }
+      `);
+    });
+  });
+
+  it('runs document transforms before reading from the cache when calling `watchQuery`', async ()  => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          name
+        }
+      }
+    `;
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'product' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  ...node.selectionSet.selections,
+                  {
+                    kind: Kind.FRAGMENT_SPREAD,
+                    name: { kind: Kind.NAME, value: 'ProductFields' }
+                  }
+                ]
+              }
+            }
+          }
+        } 
+      });
+    });
+
+    const link = new ApolloLink(() => {
+      return Observable.of({
+        data: {
+          product: {
+            __typename: 'Product',
+            id: 2,
+            name: 'unused',
+            description: 'unused',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(gql`
+          fragment ProductFields on Product {
+            description
+          }
+        `)
+      }),
+      documentTransform,
+    });
+
+    // Use the transformed document to write to the cache to ensure it contains
+    // the fragment spread
+    client.writeQuery({
+      query: documentTransform.transformDocument(query),
+      data: {
+        product: {
+          __typename: 'Product',
+          id: 1,
+          name: 'Cached product',
+          description: 'Cached product description'
+        }
+      }
+    });
+
+    const observable = client.watchQuery({ query });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          product: {
+            __typename: 'Product',
+            id: 1,
+            name: 'Cached product',
+            description: 'Cached product description'
+          }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      })
+    });
+  });
+
+  it('re-runs custom document transforms when calling `refetch`', async () => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const enabledQuery = gql`
+      query TestQuery {
+        product {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const disabledQuery = gql`
+      query TestQuery {
+        product {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: enabledQuery },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          }
+        }
+      },
+      {
+        request: { query: disabledQuery },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 1 }
+          }
+        }
+      }
+    ];
+
+    let enabled = true;
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument(
+        [{ name: 'whenEnabled', remove: !enabled }],
+        document
+      )!;
+    }, { cache: false });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      expect(document).toMatchDocument(enabledQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(enabledQuery);
+    });
+
+    enabled = false;
+
+    const { data } = await observable.refetch();
+
+    expect(document!).toMatchDocument(disabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(disabledQuery);
+
+    expect(data).toEqual({
+      product: { __typename: 'Product', id: 1 }
+    })
+
+    expect(handleNext).toHaveBeenLastCalledWith({
+      data: {
+        product: { __typename: 'Product', id: 1 }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+  });
+
+  it('re-runs custom document transforms when calling `fetchMore`', async () => {
+    const query = gql`
+      query TestQuery($offset: Int) {
+        products(offset: $offset) {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const enabledQuery = gql`
+      query TestQuery($offset: Int) {
+        products(offset: $offset) {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const disabledQuery = gql`
+      query TestQuery($offset: Int) {
+        products(offset: $offset) {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: enabledQuery, variables: { offset: 0 } },
+        result: {
+          data: {
+            products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
+          }
+        }
+      },
+      {
+        request: { query: disabledQuery, variables: { offset: 1 } },
+        result: {
+          data: {
+            products: [{ __typename: 'Product', id: 2 }]
+          }
+        }
+      }
+    ];
+
+    let enabled = true;
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument(
+        [{ name: 'whenEnabled', remove: !enabled }],
+        document
+      )!;
+    }, { cache: false });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              products: offsetLimitPagination()
+            }
+          }
+        }
+      }),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query, variables: { offset: 0 } });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      expect(document).toMatchDocument(enabledQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(enabledQuery);
+    });
+
+    enabled = false;
+
+    const { data } = await observable.fetchMore({ variables: { offset: 1 }});
+
+    expect(document!).toMatchDocument(disabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(disabledQuery);
+
+    expect(data).toEqual({
+      products: [{ __typename: 'Product', id: 2 }]
+    })
+
+    expect(handleNext).toHaveBeenLastCalledWith({
+      data: {
+        products: [
+          { __typename: 'Product', id: 1 },
+          { __typename: 'Product', id: 2 }
+        ]
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+  });
+
+  it('runs custom document transforms on the passed query and original query when calling `fetchMore` with a different query', async () => {
+    const initialQuery = gql`
+      query TestQuery($offset: Int) {
+        currentUser {
+          id
+        }
+        products(offset: $offset) {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const enabledInitialQuery = gql`
+      query TestQuery($offset: Int) {
+        currentUser {
+          id
+          __typename
+        }
+        products(offset: $offset) {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const disabledInitialQuery = gql`
+      query TestQuery($offset: Int) {
+        currentUser {
+          id
+          __typename
+        }
+        products(offset: $offset) {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const productsQuery = gql`
+      query TestQuery($offset: Int) {
+        products(offset: $offset) {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const transformedProductsQuery = gql`
+      query TestQuery($offset: Int) {
+        products(offset: $offset) {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: enabledInitialQuery, variables: { offset: 0 } },
+        result: {
+          data: {
+            currentUser: { id: 1 },
+            products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
+          }
+        }
+      },
+      {
+        request: { query: transformedProductsQuery, variables: { offset: 1 } },
+        result: {
+          data: {
+            products: [{ __typename: 'Product', id: 2 }]
+          }
+        }
+      }
+    ];
+
+    let enabled = true;
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument(
+        [{ name: 'whenEnabled', remove: !enabled }],
+        document
+      )!;
+    }, { cache: false });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              products: {
+                keyArgs: false,
+                merge(existing = [], incoming) {
+                  return [...existing, ...incoming] 
+                }
+              }
+            }
+          }
+        }
+      }),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({
+      query: initialQuery,
+      variables: { offset: 0 },
+    });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          currentUser: { id: 1 },
+          products: [{ __typename: 'Product', id: 1, metrics: '1000/vpm' }]
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      expect(handleNext).toHaveBeenCalledTimes(1);
+      expect(document).toMatchDocument(enabledInitialQuery);
+      expect(observable.options.query).toMatchDocument(initialQuery);
+      expect(observable.query).toMatchDocument(enabledInitialQuery);
+    });
+
+    enabled = false;
+
+    const { data } = await observable.fetchMore({
+      query: productsQuery,
+      variables: { offset: 1 },
+    });
+
+    expect(data).toEqual({
+      products: [{ __typename: 'Product', id: 2 }]
+    });
+
+    expect(document!).toMatchDocument(transformedProductsQuery);
+    expect(observable.options.query).toMatchDocument(initialQuery);
+      // Even though we pass a different query to `fetchMore`, we don't want to
+      // override the original query. We do however run transforms on the 
+      // initial query to ensure the broadcasted result and the cache match
+      // the expected query document in case the transforms contain a runtime
+      // condition that impacts the query in a significant way (such as removing 
+      // a field).
+    expect(observable.query).toMatchDocument(disabledInitialQuery);
+
+    // QueryInfo.notify is run in a setTimeout, so give time for it to run 
+    // before we make assertions on it.
+    await wait(0);
+
+    expect(handleNext).toHaveBeenCalledTimes(2);
+    expect(handleNext).toHaveBeenLastCalledWith({
+      data: {
+        currentUser: { id: 1 },
+        products: [
+          { __typename: 'Product', id: 1 },
+          { __typename: 'Product', id: 2 }
+        ]
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+  });
+
+  it('re-runs custom document transforms when calling `setVariables`', async () => {
+    const query = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const enabledQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const disabledQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: enabledQuery, variables: { id: 1 } },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          }
+        }
+      },
+      {
+        request: { query: disabledQuery, variables: { id: 2 } },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 2 }
+          }
+        }
+      }
+    ];
+
+    let enabled = true;
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument(
+        [{ name: 'whenEnabled', remove: !enabled }],
+        document
+      )!;
+    }, { cache: false });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      expect(document).toMatchDocument(enabledQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(enabledQuery);
+    });
+
+    enabled = false;
+
+    const result = await observable.setVariables({ id: 2 });
+
+    expect(document!).toMatchDocument(disabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(disabledQuery);
+
+    expect(result!.data).toEqual({
+      product: { __typename: 'Product', id: 2 }
+    })
+
+    expect(handleNext).toHaveBeenLastCalledWith({
+      data: {
+        product: { __typename: 'Product', id: 2 }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+  });
+
+  it('re-runs custom document transforms when calling `setOptions`', async () => {
+    const query = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics @whenEnabled
+        }
+      }
+    `;
+
+    const enabledQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const disabledQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: enabledQuery, variables: { id: 1 } },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          }
+        }
+      },
+      {
+        request: { query: disabledQuery, variables: { id: 2 } },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 2 }
+          }
+        }
+      }
+    ];
+
+    let enabled = true;
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument(
+        [{ name: 'whenEnabled', remove: !enabled }],
+        document
+      )!;
+    }, { cache: false });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      expect(document).toMatchDocument(enabledQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(enabledQuery);
+    });
+
+    enabled = false;
+
+    const { data } = await observable.setOptions({ variables: { id: 2 }});
+
+    expect(document!).toMatchDocument(disabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(disabledQuery);
+
+    expect(data).toEqual({
+      product: { __typename: 'Product', id: 2 }
+    })
+
+    expect(handleNext).toHaveBeenLastCalledWith({
+      data: {
+        product: { __typename: 'Product', id: 2 }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+  });
+
+  it('runs custom document transforms when passing a new query to `setOptions`', async () => {
+    const query = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics @custom
+        }
+      }
+    `;
+
+    const transformedQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const updatedQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          name
+          metrics @custom
+        }
+      }
+    `;
+
+    const transformedUpdatedQuery = gql`
+      query TestQuery($id: ID!) {
+        product(id: $id) {
+          id
+          name
+          metrics
+          __typename
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: transformedQuery, variables: { id: 1 } },
+        result: {
+          data: {
+            product: { __typename: 'Product', id: 1, metrics: '1000/vpm' }
+          }
+        }
+      },
+      {
+        request: { query: transformedUpdatedQuery, variables: { id: 1 } },
+        result: {
+          data: {
+            product: { 
+              __typename: 'Product',
+              id: 1,
+              name: 'Acme Inc Product',
+              metrics: '1000/vpm'
+            }
+          }
+        }
+      }
+    ];
+
+    const documentTransform = new DocumentTransform((document: DocumentNode) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!;
+    });
+
+    let document: DocumentNode;
+
+    const link = new ApolloLink((operation, forward) => {
+      document = operation.query;
+
+      return forward(operation);
+    });
+
+    const client = new ApolloClient({
+      link: ApolloLink.from([link, new MockLink(mocks)]),
+      cache: new InMemoryCache(),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const handleNext = jest.fn();
+
+    observable.subscribe(handleNext);
+
+    await waitFor(() => {
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: mocks[0].result.data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      expect(document).toMatchDocument(transformedQuery);
+      expect(observable.options.query).toMatchDocument(query);
+      expect(observable.query).toMatchDocument(transformedQuery);
+    });
+
+    const { data } = await observable.setOptions({ query: updatedQuery });
+
+    expect(document!).toMatchDocument(transformedUpdatedQuery);
+    expect(observable.options.query).toMatchDocument(updatedQuery);
+    expect(observable.query).toMatchDocument(transformedUpdatedQuery);
+
+    expect(data).toEqual(mocks[1].result.data);
+
+    expect(handleNext).toHaveBeenLastCalledWith({
+      data: mocks[1].result.data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+  });
+
+  it('runs custom document transforms with fragments defined in the fragment registery', async ()  => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          name @custom
+          ...ProductFields
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          product: {
+            __typename: 'Product',
+            id: 1,
+            name: 'Product',
+            description: 'Product description',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(gql`
+          fragment ProductFields on Product {
+            description @custom 
+          }
+        `)
+      }),
+      documentTransform,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        product {
+          id
+          name
+          ...ProductFields
+          __typename
+        }
+      }
+
+      fragment ProductFields on Product {
+        description
+        __typename
+      }
+    `);
+
+    expect(data).toEqual({
+      product: {
+        __typename: 'Product',
+        id: 1,
+        name: 'Product',
+        description: 'Product description',
+      }
+    });
+  });
+
+  it('runs custom document transforms on fragments that override registered fragments in the fragment registery', async ()  => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          name @custom
+          ...ProductFields
+        }
+      }
+
+      fragment ProductFields on Product {
+        description @custom
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          product: {
+            __typename: 'Product',
+            id: 1,
+            name: 'Product',
+            description: 'Product description',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(gql`
+          fragment ProductFields on Product {
+            unused @custom
+          }
+        `)
+      }),
+      documentTransform,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        product {
+          id
+          name
+          ...ProductFields
+          __typename
+        }
+      }
+
+      fragment ProductFields on Product {
+        description
+        __typename
+      }
+    `);
+
+    expect(data).toEqual({
+      product: {
+        __typename: 'Product',
+        id: 1,
+        name: 'Product',
+        description: 'Product description',
+      }
+    });
+  });
+
+  it('adds fragment definitions to the query for fragment spreads added from custom document transforms', async ()  => {
+    const query = gql`
+      query TestQuery {
+        product {
+          id
+          name
+        }
+      }
+    `;
+
+    let document: DocumentNode
+
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        Field(node) {
+          if (node.name.value === 'product' && node.selectionSet) {
+            return {
+              ...node,
+              selectionSet: {
+                ...node.selectionSet,
+                selections: [
+                  ...node.selectionSet.selections,
+                  {
+                    kind: Kind.FRAGMENT_SPREAD,
+                    name: { kind: Kind.NAME, value: 'ProductFields' }
+                  }
+                ]
+              }
+            }
+          }
+        } 
+      });
+    });
+
+    const link = new ApolloLink((operation) => {
+      document = operation.query;
+
+      return Observable.of({
+        data: {
+          product: {
+            __typename: 'Product',
+            id: 1,
+            name: 'Product',
+            description: 'Product description',
+          }
+        }
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        fragments: createFragmentRegistry(gql`
+          fragment ProductFields on Product {
+            description
+          }
+        `)
+      }),
+      documentTransform,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(document!).toMatchDocument(gql`
+      query TestQuery {
+        product {
+          id
+          name
+          __typename
+          ...ProductFields
+        }
+      }
+
+      fragment ProductFields on Product {
+        description
+        __typename
+      }
+    `);
+
+    expect(data).toEqual({
+      product: {
+        __typename: 'Product',
+        id: 1,
+        name: 'Product',
+        description: 'Product description',
+      }
+    });
+  });
+
+  it('runs custom transforms on active queries when calling `refetchQueries` with "include"', async () => {
+    const aQuery = gql`
+      query A { 
+        a @custom
+      }
+    `;
+    const bQuery = gql`
+      query B { 
+        b @custom
+      }
+    `;
+    const abQuery = gql`
+      query AB { 
+        a @custom
+        b
+      }
+    `;
+
+    const requests: Operation[] = []
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const client = new ApolloClient({
+      documentTransform,
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        requests.push(operation);
+
+        return Observable.of({
+          data: operation.operationName
+            .split('')
+            .reduce<Record<string, string>>(
+              (memo, letter) => ({ 
+                ...memo, 
+                [letter.toLowerCase()]: letter.toUpperCase()
+              }), 
+              {}
+            )
+        });
+      })
+    });
+
+    client.watchQuery({ query: aQuery }).subscribe(jest.fn());
+    client.watchQuery({ query: bQuery }).subscribe(jest.fn());
+    // purposely avoid subscribing to prevent it from being an "active" query
+    client.watchQuery({ query: abQuery });
+
+    await waitFor(() => {
+      return (
+        client.readQuery({ query: aQuery }) && 
+        client.readQuery({ query: bQuery })
+      );
+    });
+
+    expect(requests.length).toBe(2);
+    expect(requests[0].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[1].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+
+    const results = await client.refetchQueries({ include: 'active' });
+
+    expect(results.map(r => r.data)).toEqual([
+      { a: 'A' },
+      { b: 'B' }
+    ]);
+
+    expect(requests.length).toBe(4);
+    expect(requests[2].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[3].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+  });
+
+  it('runs custom transforms on all queries when calling `refetchQueries` with "all"', async () => {
+    const aQuery = gql`
+      query A { 
+        a @custom
+      }
+    `;
+    const bQuery = gql`
+      query B { 
+        b @custom
+      }
+    `;
+    const abQuery = gql`
+      query AB { 
+        a @custom
+        b
+      }
+    `;
+
+    const requests: Operation[] = []
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const client = new ApolloClient({
+      documentTransform,
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        requests.push(operation);
+
+        return Observable.of({
+          data: operation.operationName
+            .split('')
+            .reduce<Record<string, string>>(
+              (memo, letter) => ({ 
+                ...memo, 
+                [letter.toLowerCase()]: letter.toUpperCase()
+              }), 
+              {}
+            )
+        });
+      })
+    });
+
+    client.watchQuery({ query: aQuery }).subscribe(jest.fn());
+    client.watchQuery({ query: bQuery }).subscribe(jest.fn());
+    // purposely avoid subscribing to prevent it from being an "active" query
+    client.watchQuery({ query: abQuery });
+
+    await waitFor(() => {
+      return (
+        client.readQuery({ query: aQuery }) && 
+        client.readQuery({ query: bQuery })
+      );
+    });
+
+    expect(requests.length).toBe(2);
+    expect(requests[0].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[1].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+
+    const results = await client.refetchQueries({ include: 'all' });
+
+    expect(results.map(r => r.data)).toEqual([
+      { a: 'A' },
+      { b: 'B' },
+      { a: 'A', b: 'B' }
+    ]);
+
+    expect(requests.length).toBe(5);
+    expect(requests[2].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[3].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+    expect(requests[4].query).toMatchDocument(gql`
+      query AB {
+        a
+        b
+      }      
+    `);
+  });
+
+  it('runs custom transforms on matched queries when calling `refetchQueries` with string array', async () => {
+    const aQuery = gql`
+      query A { 
+        a @custom
+      }
+    `;
+    const bQuery = gql`
+      query B { 
+        b @custom
+      }
+    `;
+
+    const requests: Operation[] = []
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const client = new ApolloClient({
+      documentTransform,
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        requests.push(operation);
+
+        return Observable.of({
+          data: operation.operationName
+            .split('')
+            .reduce<Record<string, string>>(
+              (memo, letter) => ({ 
+                ...memo, 
+                [letter.toLowerCase()]: letter.toUpperCase()
+              }), 
+              {}
+            )
+        });
+      })
+    });
+
+    client.watchQuery({ query: aQuery }).subscribe(jest.fn());
+    client.watchQuery({ query: bQuery }).subscribe(jest.fn());
+
+    await waitFor(() => {
+      return (
+        client.readQuery({ query: aQuery }) && 
+        client.readQuery({ query: bQuery })
+      );
+    });
+
+    expect(requests.length).toBe(2);
+    expect(requests[0].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[1].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+
+    const results = await client.refetchQueries({ 
+      include: ['B']
+    });
+
+    expect(results.map(r => r.data)).toEqual([
+      { b: 'B' },
+    ]);
+
+    expect(requests.length).toBe(3);
+    expect(requests[2].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+  });
+
+  it('runs custom transforms on matched queries when calling `refetchQueries` with document nodes', async () => {
+    const aQuery = gql`
+      query A { 
+        a @custom
+      }
+    `;
+    const bQuery = gql`
+      query B { 
+        b @custom
+      }
+    `;
+
+    const requests: Operation[] = []
+
+    const documentTransform = new DocumentTransform((document) => {
+      return removeDirectivesFromDocument([{ name: 'custom' }], document)!
+    });
+
+    const client = new ApolloClient({
+      documentTransform,
+      cache: new InMemoryCache(),
+      link: new ApolloLink((operation) => {
+        requests.push(operation);
+
+        return Observable.of({
+          data: operation.operationName
+            .split('')
+            .reduce<Record<string, string>>(
+              (memo, letter) => ({ 
+                ...memo, 
+                [letter.toLowerCase()]: letter.toUpperCase()
+              }), 
+              {}
+            )
+        });
+      })
+    });
+
+    client.watchQuery({ query: aQuery }).subscribe(jest.fn());
+    client.watchQuery({ query: bQuery }).subscribe(jest.fn());
+
+    await waitFor(() => {
+      return (
+        client.readQuery({ query: aQuery }) && 
+        client.readQuery({ query: bQuery })
+      );
+    });
+
+    expect(requests.length).toBe(2);
+    expect(requests[0].query).toMatchDocument(gql`
+      query A {
+        a
+      }      
+    `);
+    expect(requests[1].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+
+    const results = await client.refetchQueries({ 
+      include: [bQuery]
+    });
+
+    expect(results.map(r => r.data)).toEqual([
+      { b: 'B' },
+    ]);
+
+    expect(requests.length).toBe(3);
+    expect(requests[2].query).toMatchDocument(gql`
+      query B {
+        b
+      }      
+    `);
+  });
+});
+
 function clientRoundtrip(
   resolve: (result: any) => any,
   reject: (reason: any) => any,
@@ -3250,6 +6120,6 @@ function clientRoundtrip(
   });
 
   return client.query({ query, variables }).then(result => {
-    expect(stripSymbols(result.data)).toEqual(data.data);
+    expect(result.data).toEqual(data.data);
   }).then(resolve, reject);
 }

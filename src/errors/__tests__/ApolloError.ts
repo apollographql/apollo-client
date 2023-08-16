@@ -7,14 +7,26 @@ describe('ApolloError', () => {
       new GraphQLError('Something went wrong with GraphQL'),
       new GraphQLError('Something else went wrong with GraphQL'),
     ];
+    const protocolErrors = [
+      {
+        message: "cannot read message from websocket",
+        extensions: [
+          {
+            code: "WEBSOCKET_MESSAGE_ERROR",
+          },
+        ],
+      }
+    ];
     const networkError = new Error('Network error');
     const errorMessage = 'this is an error message';
     const apolloError = new ApolloError({
       graphQLErrors: graphQLErrors,
+      protocolErrors: protocolErrors,
       networkError: networkError,
       errorMessage: errorMessage,
     });
     expect(apolloError.graphQLErrors).toEqual(graphQLErrors);
+    expect(apolloError.protocolErrors).toEqual(protocolErrors);
     expect(apolloError.networkError).toEqual(networkError);
     expect(apolloError.message).toBe(errorMessage);
   });
@@ -59,6 +71,28 @@ describe('ApolloError', () => {
     expect(messages.length).toBe(2);
     expect(messages[0]).toMatch('graphql error message');
     expect(messages[1]).toMatch('network error message');
+  });
+
+  it('should add both protocol and graphql errors to the message', () => {
+    const graphQLErrors = [new GraphQLError('graphql error message')];
+    const protocolErrors = [
+      {
+        message: "cannot read message from websocket",
+        extensions: [
+          {
+            code: "WEBSOCKET_MESSAGE_ERROR",
+          },
+        ],
+      }
+    ];
+    const apolloError = new ApolloError({
+      graphQLErrors,
+      protocolErrors,
+    });
+    const messages = apolloError.message.split('\n');
+    expect(messages.length).toBe(2);
+    expect(messages[0]).toMatch('graphql error message');
+    expect(messages[1]).toMatch('cannot read message from websocket');
   });
 
   it('should contain a stack trace', () => {

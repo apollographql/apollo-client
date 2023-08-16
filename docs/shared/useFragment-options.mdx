@@ -1,0 +1,137 @@
+<table class="field-table api-ref">
+
+<thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td colspan="2">
+
+**Operation options**
+
+</td>
+</tr>
+
+<tr class="required">
+<td>
+
+###### `from`
+
+`string | StoreObject | Reference`
+</td>
+
+<td>
+
+**Required.** An object containing a `__typename` and primary key fields (such as `id`) identifying the entity object from which the fragment will be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
+
+</td>
+</tr>
+
+<tr class="required">
+<td>
+
+###### `fragment`
+
+`DocumentNode`
+</td>
+
+<td>
+
+**Required.** A GraphQL fragment document parsed into an AST with the `gql` template literal.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `fragmentName`
+
+`string`
+</td>
+
+<td>
+
+The name of the fragment defined in the [`fragment`](#fragment) document to use in the call.
+
+**Required** if the `fragment` document includes more than one fragment, optional otherwise.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `optimistic`
+
+`boolean`
+</td>
+
+<td>
+
+If `true`, `readFragment` returns optimistic results.
+
+The default value is `true`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `variables`
+
+`{ [key: string]: any }`
+</td>
+
+<td>
+
+An object containing all of the GraphQL variables your fragment requires.
+
+Each key in the object corresponds to a variable name, and that key's value corresponds to the variable value.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `returnPartialData`
+
+`boolean`
+</td>
+
+<td>
+
+If `true`, the query can return _partial_ results from the cache if the cache doesn't contain results for _all_ queried fields.
+
+The default value is `true`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `canonizeResults`
+
+`boolean`
+</td>
+
+<td>
+
+If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
+
+The default value is `false`.
+
+</td>
+</tr>
+
+</tbody>
+
+</table>

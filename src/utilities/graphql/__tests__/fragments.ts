@@ -1,4 +1,4 @@
-import { print } from 'graphql/language/printer';
+import { print } from 'graphql';
 import gql from 'graphql-tag';
 import { disableFragmentWarnings } from 'graphql-tag';
 

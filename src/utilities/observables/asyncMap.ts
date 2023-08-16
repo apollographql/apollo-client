@@ -1,4 +1,5 @@
-import { Observable, Observer } from "./Observable";
+import type { Observer } from "./Observable.js";
+import { Observable } from "./Observable.js";
 
 // Like Observable.prototype.map, except that the mapping function can
 // optionally return a Promise (or be async).
@@ -11,6 +12,14 @@ export function asyncMap<V, R>(
     const { next, error, complete } = observer;
     let activeCallbackCount = 0;
     let completed = false;
+    let promiseQueue = {
+      // Normally we would initialize promiseQueue to Promise.resolve(), but
+      // in this case, for backwards compatibility, we need to be careful to
+      // invoke the first callback synchronously.
+      then(callback: () => any) {
+        return new Promise(resolve => resolve(callback()));
+      },
+    } as Promise<void>;
 
     function makeCallback(
       examiner: typeof mapFn | typeof catchFn,
@@ -19,7 +28,8 @@ export function asyncMap<V, R>(
       if (examiner) {
         return arg => {
           ++activeCallbackCount;
-          new Promise(resolve => resolve(examiner(arg))).then(
+          const both = () => examiner(arg);
+          promiseQueue = promiseQueue.then(both, both).then(
             result => {
               --activeCallbackCount;
               next && next.call(observer, result);
@@ -27,11 +37,13 @@ export function asyncMap<V, R>(
                 handler.complete!();
               }
             },
-            e => {
+            error => {
               --activeCallbackCount;
-              error && error.call(observer, e);
+              throw error;
             },
-          );
+          ).catch(caught => {
+            error && error.call(observer, caught);
+          });
         };
       } else {
         return arg => delegate && delegate.call(observer, arg);

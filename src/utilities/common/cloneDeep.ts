@@ -27,7 +27,7 @@ function cloneDeepHelper<T>(val: T, seen?: Map<any, any>): T {
     // possible in all JS environments, so we will assume they exist/work.
     const copy = Object.create(Object.getPrototypeOf(val));
     seen.set(val, copy);
-    Object.keys(val).forEach(key => {
+    Object.keys(val as T & Record<string, any>).forEach(key => {
       copy[key] = cloneDeepHelper((val as any)[key], seen);
     });
     return copy;

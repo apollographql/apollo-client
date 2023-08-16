@@ -1,4 +1,6 @@
-import {
+import { newInvariantError } from '../globals/index.js';
+
+import type {
   DirectiveNode,
   FieldNode,
   IntValueNode,
@@ -15,11 +17,13 @@ import {
   SelectionNode,
   NameNode,
   SelectionSetNode,
+  DocumentNode,
+  FragmentSpreadNode,
 } from 'graphql';
 
-import stringify from 'fast-json-stable-stringify';
-import { InvariantError } from 'ts-invariant';
-import { FragmentMap, getFragmentFromSelection } from './fragments';
+import { isNonNullObject } from '../common/objects.js';
+import type { FragmentMap} from './fragments.js';
+import { getFragmentFromSelection } from './fragments.js';
 
 export interface Reference {
   readonly __ref: string;
@@ -47,6 +51,14 @@ export type StoreValue =
 export interface StoreObject {
   __typename?: string;
   [storeFieldName: string]: StoreValue;
+}
+
+export function isDocumentNode(value: any): value is DocumentNode {
+  return (
+    isNonNullObject(value) &&
+    (value as DocumentNode).kind === "Document" &&
+    Array.isArray((value as DocumentNode).definitions)
+  );
 }
 
 function isStringValue(value: ValueNode): value is StringValueNode {
@@ -120,10 +132,11 @@ export function valueToObjectRepresentation(
   } else if (isNullValue(value)) {
     argObj[name.value] = null;
   } else {
-    throw new InvariantError(
-      `The inline argument "${name.value}" of kind "${(value as any).kind}"` +
+    throw newInvariantError(
+      `The inline argument "%s" of kind "%s"` +
         'is not supported. Use variables instead of inline arguments to ' +
         'overcome this limitation.',
+        name.value, (value as any).kind
     );
   }
 }
@@ -175,9 +188,10 @@ const KNOWN_DIRECTIVES: string[] = [
   'client',
   'rest',
   'export',
+  'nonreactive',
 ];
 
-export function getStoreKeyName(
+export const getStoreKeyName = Object.assign(function (
   fieldName: string,
   args?: Record<string, any> | null,
   directives?: Directives,
@@ -202,7 +216,7 @@ export function getStoreKeyName(
         filteredArgs[key] = args[key];
       });
 
-      return `${directives['connection']['key']}(${JSON.stringify(
+      return `${directives['connection']['key']}(${stringify(
         filteredArgs,
       )})`;
     } else {
@@ -224,7 +238,7 @@ export function getStoreKeyName(
     Object.keys(directives).forEach(key => {
       if (KNOWN_DIRECTIVES.indexOf(key) !== -1) return;
       if (directives[key] && Object.keys(directives[key]).length) {
-        completeFieldName += `@${key}(${JSON.stringify(directives[key])})`;
+        completeFieldName += `@${key}(${stringify(directives[key])})`;
       } else {
         completeFieldName += `@${key}`;
       }
@@ -232,6 +246,28 @@ export function getStoreKeyName(
   }
 
   return completeFieldName;
+}, {
+  setStringify(s: typeof stringify) {
+    const previous = stringify;
+    stringify = s;
+    return previous;
+  },
+});
+
+// Default stable JSON.stringify implementation. Can be updated/replaced with
+// something better by calling getStoreKeyName.setStringify.
+let stringify = function defaultStringify(value: any): string {
+  return JSON.stringify(value, stringifyReplacer);
+};
+
+function stringifyReplacer(_key: string, value: any): any {
+  if (isNonNullObject(value) && !Array.isArray(value)) {
+    value = Object.keys(value).sort().reduce((copy, key) => {
+      copy[key] = value[key];
+      return copy;
+    }, {} as Record<string, any>);
+  }
+  return value;
 }
 
 export function argumentsObjectFromField(
@@ -257,16 +293,23 @@ export function getTypenameFromResult(
   selectionSet: SelectionSetNode,
   fragmentMap?: FragmentMap,
 ): string | undefined {
-  if (typeof result.__typename === 'string') {
-    return result.__typename;
-  }
-
+  let fragments: undefined | Array<InlineFragmentNode | FragmentSpreadNode>;
   for (const selection of selectionSet.selections) {
     if (isField(selection)) {
       if (selection.name.value === '__typename') {
         return result[resultKeyNameFromField(selection)];
       }
+    } else if (fragments) {
+      fragments.push(selection);
     } else {
+      fragments = [selection];
+    }
+  }
+  if (typeof result.__typename === 'string') {
+    return result.__typename;
+  }
+  if (fragments) {
+    for (const selection of fragments) {
       const typename = getTypenameFromResult(
         result,
         getFragmentFromSelection(selection, fragmentMap)!.selectionSet,

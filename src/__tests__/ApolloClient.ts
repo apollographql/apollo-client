@@ -2,17 +2,21 @@ import gql from 'graphql-tag';
 
 import {
   ApolloClient,
+  ApolloError,
   DefaultOptions,
   FetchPolicy,
   QueryOptions,
   makeReference,
 } from '../core';
+import { Kind } from "graphql";
 
 import { Observable } from '../utilities';
 import { ApolloLink } from '../link/core';
 import { HttpLink } from '../link/http';
 import { InMemoryCache } from '../cache';
-import { stripSymbols } from '../testing';
+import { itAsync, withErrorSpy } from '../testing';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { invariant } from '../utilities/globals';
 
 describe('ApolloClient', () => {
   describe('constructor', () => {
@@ -78,40 +82,34 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        stripSymbols(
-          client.readQuery({
-            query: gql`
-              {
-                a
-              }
-            `,
-          }),
-        ),
+        client.readQuery({
+          query: gql`
+            {
+              a
+            }
+          `,
+        }),
       ).toEqual({ a: 1 });
       expect(
-        stripSymbols(
-          client.readQuery({
-            query: gql`
-              {
-                b
-                c
-              }
-            `,
-          }),
-        ),
+        client.readQuery({
+          query: gql`
+            {
+              b
+              c
+            }
+          `,
+        }),
       ).toEqual({ b: 2, c: 3 });
       expect(
-        stripSymbols(
-          client.readQuery({
-            query: gql`
-              {
-                a
-                b
-                c
-              }
-            `,
-          }),
-        ),
+        client.readQuery({
+          query: gql`
+            {
+              a
+              b
+              c
+            }
+          `,
+        }),
       ).toEqual({ a: 1, b: 2, c: 3 });
     });
 
@@ -142,61 +140,55 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        stripSymbols(
-          client.readQuery({
-            query: gql`
-              {
-                a
-                d {
-                  e
-                }
+        client.readQuery({
+          query: gql`
+            {
+              a
+              d {
+                e
               }
-            `,
-          }),
-        ),
+            }
+          `,
+        }),
       ).toEqual({ a: 1, d: { e: 4, __typename: 'Foo' } });
       expect(
-        stripSymbols(
-          client.readQuery({
-            query: gql`
-              {
-                a
-                d {
-                  e
-                  h {
-                    i
-                  }
+        client.readQuery({
+          query: gql`
+            {
+              a
+              d {
+                e
+                h {
+                  i
                 }
               }
-            `,
-          }),
-        ),
+            }
+          `,
+        }),
       ).toEqual({
         a: 1,
         d: { __typename: 'Foo', e: 4, h: { i: 7, __typename: 'Bar' } },
       });
       expect(
-        stripSymbols(
-          client.readQuery({
-            query: gql`
-              {
-                a
-                b
-                c
-                d {
-                  e
-                  f
-                  g
-                  h {
-                    i
-                    j
-                    k
-                  }
+        client.readQuery({
+          query: gql`
+            {
+              a
+              b
+              c
+              d {
+                e
+                f
+                g
+                h {
+                  i
+                  j
+                  k
                 }
               }
-            `,
-          }),
-        ),
+            }
+          `,
+        }),
       ).toEqual({
         a: 1,
         b: 2,
@@ -223,20 +215,18 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        stripSymbols(
-          client.readQuery({
-            query: gql`
-              query($literal: Boolean, $value: Int) {
-                a: field(literal: true, value: 42)
-                b: field(literal: $literal, value: $value)
-              }
-            `,
-            variables: {
-              literal: false,
-              value: 42,
-            },
-          }),
-        ),
+        client.readQuery({
+          query: gql`
+            query($literal: Boolean, $value: Int) {
+              a: field(literal: true, value: 42)
+              b: field(literal: $literal, value: $value)
+            }
+          `,
+          variables: {
+            literal: false,
+            value: 42,
+          },
+        }),
       ).toEqual({ a: 1, b: 2 });
     });
   });
@@ -253,34 +243,30 @@ describe('ApolloClient', () => {
     });
 
     expect(
-      stripSymbols(
-        client.readQuery({
-          query: gql`
-            query($literal: Boolean, $value: Int = -1) {
-              a: field(literal: $literal, value: $value)
-            }
-          `,
-          variables: {
-            literal: false,
-            value: 42,
-          },
-        }),
-      ),
+      client.readQuery({
+        query: gql`
+          query($literal: Boolean, $value: Int = -1) {
+            a: field(literal: $literal, value: $value)
+          }
+        `,
+        variables: {
+          literal: false,
+          value: 42,
+        },
+      }),
     ).toEqual({ a: 2 });
 
     expect(
-      stripSymbols(
-        client.readQuery({
-          query: gql`
-            query($literal: Boolean, $value: Int = -1) {
-              a: field(literal: $literal, value: $value)
-            }
-          `,
-          variables: {
-            literal: true,
-          },
-        }),
-      ),
+      client.readQuery({
+        query: gql`
+          query($literal: Boolean, $value: Int = -1) {
+            a: field(literal: $literal, value: $value)
+          }
+        `,
+        variables: {
+          literal: true,
+        },
+      }),
     ).toEqual({ a: 1 });
   });
 
@@ -391,38 +377,34 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'foo',
-            fragment: gql`
-              fragment fragmentFoo on Foo {
-                e
-                h {
-                  i
-                }
+        client.readFragment({
+          id: 'foo',
+          fragment: gql`
+            fragment fragmentFoo on Foo {
+              e
+              h {
+                i
               }
-            `,
-          }),
-        ),
+            }
+          `,
+        }),
       ).toEqual({ __typename: 'Foo', e: 4, h: { __typename: 'Bar', i: 7 } });
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'foo',
-            fragment: gql`
-              fragment fragmentFoo on Foo {
-                e
-                f
-                g
-                h {
-                  i
-                  j
-                  k
-                }
+        client.readFragment({
+          id: 'foo',
+          fragment: gql`
+            fragment fragmentFoo on Foo {
+              e
+              f
+              g
+              h {
+                i
+                j
+                k
               }
-            `,
-          }),
-        ),
+            }
+          `,
+        }),
       ).toEqual({
         __typename: 'Foo',
         e: 4,
@@ -431,56 +413,50 @@ describe('ApolloClient', () => {
         h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
       });
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'bar',
-            fragment: gql`
-              fragment fragmentBar on Bar {
-                i
-              }
-            `,
-          }),
-        ),
+        client.readFragment({
+          id: 'bar',
+          fragment: gql`
+            fragment fragmentBar on Bar {
+              i
+            }
+          `,
+        }),
       ).toEqual({ __typename: 'Bar', i: 7 });
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'bar',
-            fragment: gql`
-              fragment fragmentBar on Bar {
-                i
-                j
-                k
-              }
-            `,
-          }),
-        ),
+        client.readFragment({
+          id: 'bar',
+          fragment: gql`
+            fragment fragmentBar on Bar {
+              i
+              j
+              k
+            }
+          `,
+        }),
       ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'foo',
-            fragment: gql`
-              fragment fragmentFoo on Foo {
-                e
-                f
-                g
-                h {
-                  i
-                  j
-                  k
-                }
-              }
-
-              fragment fragmentBar on Bar {
+        client.readFragment({
+          id: 'foo',
+          fragment: gql`
+            fragment fragmentFoo on Foo {
+              e
+              f
+              g
+              h {
                 i
                 j
                 k
               }
-            `,
-            fragmentName: 'fragmentFoo',
-          }),
-        ),
+            }
+
+            fragment fragmentBar on Bar {
+              i
+              j
+              k
+            }
+          `,
+          fragmentName: 'fragmentFoo',
+        }),
       ).toEqual({
         __typename: 'Foo',
         e: 4,
@@ -489,30 +465,28 @@ describe('ApolloClient', () => {
         h: { __typename: 'Bar', i: 7, j: 8, k: 9 },
       });
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'bar',
-            fragment: gql`
-              fragment fragmentFoo on Foo {
-                e
-                f
-                g
-                h {
-                  i
-                  j
-                  k
-                }
-              }
-
-              fragment fragmentBar on Bar {
+        client.readFragment({
+          id: 'bar',
+          fragment: gql`
+            fragment fragmentFoo on Foo {
+              e
+              f
+              g
+              h {
                 i
                 j
                 k
               }
-            `,
-            fragmentName: 'fragmentBar',
-          }),
-        ),
+            }
+
+            fragment fragmentBar on Bar {
+              i
+              j
+              k
+            }
+          `,
+          fragmentName: 'fragmentBar',
+        }),
       ).toEqual({ __typename: 'Bar', i: 7, j: 8, k: 9 });
     });
 
@@ -529,21 +503,19 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'foo',
-            fragment: gql`
-              fragment foo on Foo {
-                a: field(literal: true, value: 42)
-                b: field(literal: $literal, value: $value)
-              }
-            `,
-            variables: {
-              literal: false,
-              value: 42,
-            },
-          }),
-        ),
+        client.readFragment({
+          id: 'foo',
+          fragment: gql`
+            fragment foo on Foo {
+              a: field(literal: true, value: 42)
+              b: field(literal: $literal, value: $value)
+            }
+          `,
+          variables: {
+            literal: false,
+            value: 42,
+          },
+        }),
       ).toEqual({ __typename: 'Foo', a: 1, b: 2 });
     });
 
@@ -590,18 +562,16 @@ describe('ApolloClient', () => {
         }),
       ).toBe(null);
       expect(
-        stripSymbols(
-          client3.readFragment({
-            id: 'foo',
-            fragment: gql`
-              fragment fooFragment on Foo {
-                a
-                b
-                c
-              }
-            `,
-          }),
-        ),
+        client3.readFragment({
+          id: 'foo',
+          fragment: gql`
+            fragment fooFragment on Foo {
+              a
+              b
+              c
+            }
+          `,
+        }),
       ).toEqual({ __typename: 'Foo', a: 1, b: 2, c: 3 });
     });
   });
@@ -833,7 +803,7 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('should warn when the data provided does not match the query shape', () => {
+    withErrorSpy(it, 'should warn when the data provided does not match the query shape', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
@@ -842,28 +812,26 @@ describe('ApolloClient', () => {
         }),
       });
 
-      expect(() => {
-        client.writeQuery({
-          data: {
-            todos: [
-              {
-                id: '1',
-                name: 'Todo 1',
-                __typename: 'Todo',
-              },
-            ],
-          },
-          query: gql`
-            query {
-              todos {
-                id
-                name
-                description
-              }
+      client.writeQuery({
+        data: {
+          todos: [
+            {
+              id: '1',
+              name: 'Todo 1',
+              __typename: 'Todo',
+            },
+          ],
+        },
+        query: gql`
+          query {
+            todos {
+              id
+              name
+              description
             }
-          `,
-        });
-      }).toThrowError(/Missing field 'description' /);
+          }
+        `,
+      });
     });
   });
 
@@ -1107,6 +1075,9 @@ describe('ApolloClient', () => {
       });
 
       expect((client.cache as InMemoryCache).extract()).toEqual({
+        __META: {
+          extraRootIds: ['foo'],
+        },
         foo: {
           __typename: 'Foo',
           'field({"literal":true,"value":42})': 1,
@@ -1115,7 +1086,7 @@ describe('ApolloClient', () => {
       });
     });
 
-    it('should warn when the data provided does not match the fragment shape', () => {
+    withErrorSpy(it, 'should warn when the data provided does not match the fragment shape', () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
@@ -1124,18 +1095,16 @@ describe('ApolloClient', () => {
         }),
       });
 
-      expect(() => {
-        client.writeFragment({
-          data: { __typename: 'Bar', i: 10 },
-          id: 'bar',
-          fragment: gql`
-            fragment fragmentBar on Bar {
-              i
-              e
-            }
-          `,
-        });
-      }).toThrowError(/Missing field 'e' /);
+      client.writeFragment({
+        data: { __typename: 'Bar', i: 10 },
+        id: 'bar',
+        fragment: gql`
+          fragment fragmentBar on Bar {
+            i
+            e
+          }
+        `,
+      });
     });
 
     describe('change will call observable next', () => {
@@ -1210,7 +1179,23 @@ describe('ApolloClient', () => {
       }
 
       describe('using writeQuery', () => {
-        it('with a replacement of nested array (wq)', done => {
+        it('with TypedDocumentNode', async () => {
+          const client = newClient();
+
+          // This is defined manually for the purpose of the test, but
+          // eventually this could be generated with graphql-code-generator
+          const typedQuery: TypedDocumentNode<Data, { testVar: string }> = query;
+
+          // The result and variables are being typed automatically, based on the query object we pass,
+          // and type inference is done based on the TypeDocumentNode object.
+          const result = await client.query({ query: typedQuery, variables: { testVar: 'foo' } });
+
+          // Just try to access it, if something will break, TS will throw an error
+          // during the test
+          result.data?.people.friends[0].id;
+        });
+
+        itAsync('with a replacement of nested array (wq)', (resolve, reject) => {
           let count = 0;
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
@@ -1218,15 +1203,13 @@ describe('ApolloClient', () => {
             next(nextResult) {
               ++count;
               if (count === 1) {
-                expect(stripSymbols(nextResult.data)).toEqual(data);
-                expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+                expect(nextResult.data).toEqual(data);
+                expect(observable.getCurrentResult().data).toEqual(
                   data,
                 );
 
-                const readData = stripSymbols(
-                  client.readQuery<Data>({ query }),
-                );
-                expect(stripSymbols(readData)).toEqual(data);
+                const readData = client.readQuery<Data>({ query });
+                expect(readData).toEqual(data);
 
                 // modify readData and writeQuery
                 const bestFriends = readData!.people.friends.filter(
@@ -1251,18 +1234,18 @@ describe('ApolloClient', () => {
                     __typename: 'Person',
                   },
                 };
-                expect(stripSymbols(nextResult.data)).toEqual(expectation);
-                expect(stripSymbols(client.readQuery<Data>({ query }))).toEqual(
+                expect(nextResult.data).toEqual(expectation);
+                expect(client.readQuery<Data>({ query })).toEqual(
                   expectation,
                 );
                 subscription.unsubscribe();
-                done();
+                resolve();
               }
             },
           });
         });
 
-        it('with a value change inside a nested array (wq)', done => {
+        itAsync('with a value change inside a nested array (wq)', (resolve, reject) => {
           let count = 0;
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
@@ -1270,20 +1253,18 @@ describe('ApolloClient', () => {
             next: nextResult => {
               count++;
               if (count === 1) {
-                expect(stripSymbols(nextResult.data)).toEqual(data);
-                expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+                expect(nextResult.data).toEqual(data);
+                expect(observable.getCurrentResult().data).toEqual(
                   data,
                 );
 
-                const readData = stripSymbols(
-                  client.readQuery<Data>({ query }),
-                );
-                expect(stripSymbols(readData)).toEqual(data);
+                const readData = client.readQuery<Data>({ query });
+                expect(readData).toEqual(data);
 
                 // modify readData and writeQuery
-                const friends = readData!.people.friends;
-                friends[0].type = 'okayest';
-                friends[1].type = 'okayest';
+                const friends = readData!.people.friends.slice();
+                friends[0] = { ...friends[0], type: 'okayest' };
+                friends[1] = { ...friends[1], type: 'okayest' };
 
                 // this should re call next
                 client.writeQuery<Data>({
@@ -1299,7 +1280,7 @@ describe('ApolloClient', () => {
 
                 setTimeout(() => {
                   if (count === 1)
-                    done.fail(
+                    reject(
                       new Error(
                         'writeFragment did not re-call observable with next value',
                       ),
@@ -1316,25 +1297,21 @@ describe('ApolloClient', () => {
                   ...badFriend,
                   type: 'okayest',
                 };
-                const nextFriends = stripSymbols(
-                  nextResult.data!.people.friends,
-                );
+                const nextFriends = nextResult.data!.people.friends;
                 expect(nextFriends[0]).toEqual(expectation0);
                 expect(nextFriends[1]).toEqual(expectation1);
 
-                const readFriends = stripSymbols(
-                  client.readQuery<Data>({ query })!.people.friends,
-                );
+                const readFriends = client.readQuery<Data>({ query })!.people.friends;
                 expect(readFriends[0]).toEqual(expectation0);
                 expect(readFriends[1]).toEqual(expectation1);
-                done();
+                resolve();
               }
             },
           });
         });
       });
       describe('using writeFragment', () => {
-        it('with a replacement of nested array (wf)', done => {
+        itAsync('with a replacement of nested array (wf)', (resolve, reject) => {
           let count = 0;
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
@@ -1342,8 +1319,8 @@ describe('ApolloClient', () => {
             next: result => {
               count++;
               if (count === 1) {
-                expect(stripSymbols(result.data)).toEqual(data);
-                expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+                expect(result.data).toEqual(data);
+                expect(observable.getCurrentResult().data).toEqual(
                   data,
                 );
                 const bestFriends = result.data!.people.friends.filter(
@@ -1367,7 +1344,7 @@ describe('ApolloClient', () => {
 
                 setTimeout(() => {
                   if (count === 1)
-                    done.fail(
+                    reject(
                       new Error(
                         'writeFragment did not re-call observable with next value',
                       ),
@@ -1376,16 +1353,16 @@ describe('ApolloClient', () => {
               }
 
               if (count === 2) {
-                expect(stripSymbols(result.data!.people.friends)).toEqual([
+                expect(result.data!.people.friends).toEqual([
                   bestFriend,
                 ]);
-                done();
+                resolve();
               }
             },
           });
         });
 
-        it('with a value change inside a nested array (wf)', done => {
+        itAsync('with a value change inside a nested array (wf)', (resolve, reject) => {
           let count = 0;
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
@@ -1393,8 +1370,8 @@ describe('ApolloClient', () => {
             next: result => {
               count++;
               if (count === 1) {
-                expect(stripSymbols(result.data)).toEqual(data);
-                expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+                expect(result.data).toEqual(data);
+                expect(observable.getCurrentResult().data).toEqual(
                   data,
                 );
                 const friends = result.data!.people.friends;
@@ -1421,7 +1398,7 @@ describe('ApolloClient', () => {
 
                 setTimeout(() => {
                   if (count === 1)
-                    done.fail(
+                    reject(
                       new Error(
                         'writeFragment did not re-call observable with next value',
                       ),
@@ -1430,7 +1407,7 @@ describe('ApolloClient', () => {
               }
 
               if (count === 2) {
-                const nextFriends = stripSymbols(result.data!.people.friends);
+                const nextFriends = result.data!.people.friends;
                 expect(nextFriends[0]).toEqual({
                   ...bestFriend,
                   type: 'okayest',
@@ -1439,7 +1416,7 @@ describe('ApolloClient', () => {
                   ...badFriend,
                   type: 'okayest',
                 });
-                done();
+                resolve();
               }
             },
           });
@@ -1476,23 +1453,21 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'foo',
-            fragment: gql`
-              fragment x on Foo {
-                a
-                b
-                c
-                bar {
-                  d
-                  e
-                  f
-                }
+        client.readFragment({
+          id: 'foo',
+          fragment: gql`
+            fragment x on Foo {
+              a
+              b
+              c
+              bar {
+                d
+                e
+                f
               }
-            `,
-          }),
-        ),
+            }
+          `,
+        }),
       ).toEqual({
         __typename: 'Foo',
         a: 1,
@@ -1512,23 +1487,21 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'foo',
-            fragment: gql`
-              fragment x on Foo {
-                a
-                b
-                c
-                bar {
-                  d
-                  e
-                  f
-                }
+        client.readFragment({
+          id: 'foo',
+          fragment: gql`
+            fragment x on Foo {
+              a
+              b
+              c
+              bar {
+                d
+                e
+                f
               }
-            `,
-          }),
-        ),
+            }
+          `,
+        }),
       ).toEqual({
         __typename: 'Foo',
         a: 7,
@@ -1550,23 +1523,21 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'foo',
-            fragment: gql`
-              fragment x on Foo {
-                a
-                b
-                c
-                bar {
-                  d
-                  e
-                  f
-                }
+        client.readFragment({
+          id: 'foo',
+          fragment: gql`
+            fragment x on Foo {
+              a
+              b
+              c
+              bar {
+                d
+                e
+                f
               }
-            `,
-          }),
-        ),
+            }
+          `,
+        }),
       ).toEqual({
         __typename: 'Foo',
         a: 7,
@@ -1586,23 +1557,21 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        stripSymbols(
-          client.readFragment({
-            id: 'foo',
-            fragment: gql`
-              fragment x on Foo {
-                a
-                b
-                c
-                bar {
-                  d
-                  e
-                  f
-                }
+        client.readFragment({
+          id: 'foo',
+          fragment: gql`
+            fragment x on Foo {
+              a
+              b
+              c
+              bar {
+                d
+                e
+                f
               }
-            `,
-          }),
-        ),
+            }
+          `,
+        }),
       ).toEqual({
         __typename: 'Foo',
         a: 7,
@@ -1651,25 +1620,23 @@ describe('ApolloClient', () => {
       });
 
       expect(
-        stripSymbols(
-          client.readQuery({
-            query: gql`
-              {
-                a
-                b
-                foo {
-                  c
-                  d
-                  bar {
-                    key
-                    e
-                    f
-                  }
+        client.readQuery({
+          query: gql`
+            {
+              a
+              b
+              foo {
+                c
+                d
+                bar {
+                  key
+                  e
+                  f
                 }
               }
-            `,
-          }),
-        ),
+            }
+          `,
+        }),
       ).toEqual({
         a: 1,
         b: 2,
@@ -2270,6 +2237,26 @@ describe('ApolloClient', () => {
 
       client.stop();
     });
+
+    it('should be able to set all default query options', () => {
+      new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+        defaultOptions: {
+          query: {
+            query: {kind: Kind.DOCUMENT, definitions: []},
+            variables: {foo: 'bar'},
+            errorPolicy: 'none',
+            context: undefined,
+            fetchPolicy: 'cache-first',
+            pollInterval: 100,
+            notifyOnNetworkStatusChange: true,
+            returnPartialData: true,
+            partialRefetch: true,
+          },
+        },
+      });
+    });
   });
 
   describe('clearStore', () => {
@@ -2328,6 +2315,71 @@ describe('ApolloClient', () => {
       const { data } = await client.query({ query: gql`{ widgets }` });
       expect(data.widgets).toBeDefined();
       expect(data.widgets.length).toBe(2);
+    });
+  });
+
+  describe('refetchQueries', () => {
+    let invariantDebugSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      invariantDebugSpy = jest.spyOn(invariant, 'debug');
+    })
+
+    afterEach(() => {
+      invariantDebugSpy.mockRestore();
+    })
+
+    itAsync('should catch refetchQueries error when not caught explicitly', (resolve, reject) => {
+      const linkFn = jest.fn(() => 
+        new Observable<any>(observer => {
+          setTimeout(() => {
+            observer.error(new Error('refetch failed'));
+          });
+        })
+      ).mockImplementationOnce(() => {
+        setTimeout(refetchQueries);
+        return Observable.of();
+      })
+
+      const client = new ApolloClient({
+        link: new ApolloLink(linkFn),
+        cache: new InMemoryCache()
+      });
+
+      const query = gql`
+        query someData {
+          foo {
+            bar
+          }
+        }
+      `;
+
+      const observable = client.watchQuery({
+        query,
+        fetchPolicy: 'network-only'
+      });
+
+      observable.subscribe({});
+
+      function refetchQueries() {
+        const result = client.refetchQueries({
+          include: 'all'
+        });
+
+        result.queries[0].subscribe({
+          error() {
+            setTimeout(() => {
+              try {
+                expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
+                expect(invariantDebugSpy).toHaveBeenCalledWith('In client.refetchQueries, Promise.all promise rejected with error %o', new ApolloError({errorMessage:"refetch failed"}));
+                resolve();
+              } catch (err) {
+                reject(err);
+              }
+            });
+          }
+        });
+      }
     });
   });
 });

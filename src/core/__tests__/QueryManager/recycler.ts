@@ -6,18 +6,19 @@
 
 // externals
 import gql from 'graphql-tag';
-import { InMemoryCache } from '../../../cache/inmemory/inMemoryCache';
-import { stripSymbols } from '../../../utilities/testing/stripSymbols';
-import {
-  MockSubscriptionLink
-} from '../../../utilities/testing/mocking/mockSubscriptionLink';
 
 // core
 import { QueryManager } from '../../QueryManager';
 import { ObservableQuery } from '../../ObservableQuery';
+import { ObservableSubscription } from '../../../utilities';
+import { itAsync } from '../../../testing';
+import { InMemoryCache } from '../../../cache';
+
+// mocks
+import { MockSubscriptionLink } from '../../../testing/core';
 
 describe('Subscription lifecycles', () => {
-  it('cleans up and reuses data like QueryRecycler wants', done => {
+  itAsync('cleans up and reuses data like QueryRecycler wants', (resolve, reject) => {
     const query = gql`
       query Luke {
         people_one(id: 1) {
@@ -49,7 +50,10 @@ describe('Subscription lifecycles', () => {
       fetchPolicy: 'cache-and-network',
     });
 
-    const observableQueries: { observableQuery: ObservableQuery, subscription: ZenObservable.Subscription; }[] = [];
+    const observableQueries: Array<{
+      observableQuery: ObservableQuery;
+      subscription: ObservableSubscription;
+    }> = [];
 
     const resubscribe = () => {
       const { observableQuery, subscription } = observableQueries.pop()!;
@@ -66,8 +70,8 @@ describe('Subscription lifecycles', () => {
     const sub = observable.subscribe({
       next(result: any) {
         expect(result.loading).toBe(false);
-        expect(stripSymbols(result.data)).toEqual(initialData);
-        expect(stripSymbols(observable.getCurrentResult().data)).toEqual(
+        expect(result.data).toEqual(initialData);
+        expect(observable.getCurrentResult().data).toEqual(
           initialData,
         );
 
@@ -89,8 +93,8 @@ describe('Subscription lifecycles', () => {
           // step 4, start new Subscription;
           const recycled = resubscribe();
           const currentResult = recycled.getCurrentResult();
-          expect(stripSymbols(currentResult.data)).toEqual(initialData);
-          done();
+          expect(currentResult.data).toEqual(initialData);
+          resolve();
         }, 10);
       },
     });

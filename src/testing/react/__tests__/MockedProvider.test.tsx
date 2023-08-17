@@ -147,6 +147,37 @@ describe('General use', () => {
     }).then(resolve, reject);
   });
 
+  itAsync('should use a mock if the variableMatcher returns true', async (resolve, reject) => {
+    let finished = false;
+
+    function Component({ username }: Variables) {
+      const { loading, data } = useQuery<Data, Variables>(query, { variables });
+      if (!loading) {
+        expect(data!.user).toMatchSnapshot();
+        finished = true;
+      }
+      return null;
+    }
+
+    const mock2: MockedResponse<Data, Variables> = {
+      request: {
+        query
+      },
+      variableMatcher: (v: Variables) => v.username === variables.username,
+      result: { data: { user } }
+    };
+
+    render(
+      <MockedProvider mocks={[mock2]}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }).then(resolve, reject);
+  });
+
   itAsync('should allow querying with the typename', (resolve, reject) => {
     let finished = false;
     function Component({ username }: Variables) {
@@ -176,39 +207,6 @@ describe('General use', () => {
 
     waitFor(() => {
       expect(finished).toBe(true);
-    }).then(resolve, reject);
-  });
-
-  itAsync('should use a mock if the variableMatcher returns true', async (resolve, reject) => {
-    let userData = null;
-
-    function Component({ username }: Variables) {
-      const { loading, data } = useQuery<Data, Variables>(query, { variables });
-      if (!loading) {
-        userData = data!.user;
-      }
-      return null;
-    }
-
-    const mock2: MockedResponse<Data, Variables> = {
-      request: {
-        query
-      },
-      variableMatcher: (v: Variables) => v.username === variables.username,
-      result: { data: { user } }
-    };
-
-    render(
-      <MockedProvider mocks={[mock2]}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
-
-    waitFor(() => {
-      expect(userData).toStrictEqual({
-        __typename: "User",
-        id: "user_id",
-      });
     }).then(resolve, reject);
   });
 
@@ -266,6 +264,36 @@ describe('General use', () => {
     waitFor(() => {
       expect(finished).toBe(true);
     }).then(resolve, reject);
+  });
+
+  itAsync('should error if the variableMatcher returns false', async (resolve, reject) => {
+    let finished = false;
+    function Component({ ...variables }: Variables) {
+      const { loading, error } = useQuery<Data, Variables>(query, { variables });
+      if (!loading) {
+        expect(error).toMatchSnapshot();
+        finished = true;
+      }
+      return null;
+    }
+
+    const mock2: MockedResponse<Data, Variables> = {
+      request: {
+        query
+      },
+      variableMatcher: () => false,
+      result: { data: { user } }
+    };
+
+    render(
+      <MockedProvider showWarnings={false} mocks={[mock2]}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    waitFor(() => {
+      expect(finished).toBe(true);
+    }, ).then(resolve, reject);
   });
 
   itAsync('should error if the variables do not deep equal', (resolve, reject) => {

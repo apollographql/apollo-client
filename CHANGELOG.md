@@ -1,5 +1,22 @@
 # @apollo/client
 
+## 3.8.1
+
+### Patch Changes
+
+- [#11141](https://github.com/apollographql/apollo-client/pull/11141) [`c469b1616`](https://github.com/apollographql/apollo-client/commit/c469b1616517aac124a3357066cd83439463033c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove newly exported response iterator helpers that caused problems on some installs where `@types/node` was not available.
+
+  **IMPORTANT**
+
+  The following exports were added in version 3.8.0 that are removed with this patch.
+
+  - `isAsyncIterableIterator`
+  - `isBlob`
+  - `isNodeReadableStream`
+  - `isNodeResponse`
+  - `isReadableStream`
+  - `isStreamableBlob`
+
 ## 3.8.0
 
 ### Minor Changes
@@ -15,46 +32,46 @@
   <details>
     <summary>View code 🐶</summary>
 
-    ```tsx
-    import { Suspense } from 'react';
-    import { gql, TypedDocumentNode, useSuspenseQuery } from '@apollo/client';
+  ```tsx
+  import { Suspense } from "react";
+  import { gql, TypedDocumentNode, useSuspenseQuery } from "@apollo/client";
 
-    interface Data {
-      dog: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface Variables {
+  interface Data {
+    dog: {
+      id: string;
       name: string;
-    }
+    };
+  }
 
-    const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
-      query GetDog($name: String) {
-        dog(name: $name) {
-          id
-          name
-        }
+  interface Variables {
+    name: string;
+  }
+
+  const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
+    query GetDog($name: String) {
+      dog(name: $name) {
+        id
+        name
       }
-    `;
-
-    function App() {
-      return (
-        <Suspense fallback={<div>Loading...</div>}>
-          <Dog name="Mozzarella" />
-        </Suspense>
-      );
     }
+  `;
 
-    function Dog({ name }: { name: string }) {
-      const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-        variables: { name },
-      });
+  function App() {
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <Dog name="Mozzarella" />
+      </Suspense>
+    );
+  }
 
-      return <>Name: {data.dog.name}</>;
-    }
-    ```
+  function Dog({ name }: { name: string }) {
+    const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+      variables: { name },
+    });
+
+    return <>Name: {data.dog.name}</>;
+  }
+  ```
 
   </details>
 
@@ -69,45 +86,45 @@
   <details>
     <summary>View code 🐶</summary>
 
-    ```tsx
-    function App() {
-      const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
-      return (
-        <Suspense fallback={<div>Loading...</div>}>
-          <Dog name="Mozzarella" queryRef={queryRef} />
+  ```tsx
+  function App() {
+    const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <Dog name="Mozzarella" queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  function Dog({
+    name,
+    queryRef,
+  }: {
+    name: string;
+    queryRef: QueryReference<BreedData>;
+  }) {
+    const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+      variables: { name },
+    });
+    return (
+      <>
+        Name: {data.dog.name}
+        <Suspense fallback={<div>Loading breeds...</div>}>
+          <Breeds queryRef={queryRef} />
         </Suspense>
-      );
-    }
+      </>
+    );
+  }
 
-    function Dog({
-      name,
-      queryRef,
-    }: {
-      name: string;
-      queryRef: QueryReference<BreedData>;
-    }) {
-      const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-        variables: { name },
-      });
-      return (
-        <>
-          Name: {data.dog.name}
-          <Suspense fallback={<div>Loading breeds...</div>}>
-            <Breeds queryRef={queryRef} />
-          </Suspense>
-        </>
-      );
-    }
-
-    function Breeds({ queryRef }: { queryRef: QueryReference<BreedData> }) {
-      const { data } = useReadQuery(queryRef);
-      return data.breeds.map(({ characteristics }) =>
-        characteristics.map((characteristic) => (
-          <div key={characteristic}>{characteristic}</div>
-        ))
-      );
-    }
-    ```
+  function Breeds({ queryRef }: { queryRef: QueryReference<BreedData> }) {
+    const { data } = useReadQuery(queryRef);
+    return data.breeds.map(({ characteristics }) =>
+      characteristics.map((characteristic) => (
+        <div key={characteristic}>{characteristic}</div>
+      ))
+    );
+  }
+  ```
 
   </details>
 
@@ -162,7 +179,7 @@
   **`useBackgroundQuery`**
 
   ```ts
-  import { skipToken, useBackgroundQuery } from '@apollo/client';
+  import { skipToken, useBackgroundQuery } from "@apollo/client";
 
   function Parent() {
     const [queryRef] = useBackgroundQuery(
@@ -211,38 +228,38 @@
   <details>
     <summary>View code 🎿</summary>
 
-    ```jsx
-    const TrailFragment = gql`
-      fragment TrailFragment on Trail {
-        name
-        status
-      }
-    `;
-
-    const ALL_TRAILS = gql`
-      query allTrails {
-        allTrails {
-          id
-          ...TrailFragment @nonreactive
-        }
-      }
-      ${TrailFragment}
-    `;
-
-    function App() {
-      const { data, loading } = useQuery(ALL_TRAILS);
-      return (
-        <main>
-          <h2>Ski Trails</h2>
-          <ul>
-            {data?.trails.map((trail) => (
-              <Trail key={trail.id} id={trail.id} />
-            ))}
-          </ul>
-        </main>
-      );
+  ```jsx
+  const TrailFragment = gql`
+    fragment TrailFragment on Trail {
+      name
+      status
     }
-    ```
+  `;
+
+  const ALL_TRAILS = gql`
+    query allTrails {
+      allTrails {
+        id
+        ...TrailFragment @nonreactive
+      }
+    }
+    ${TrailFragment}
+  `;
+
+  function App() {
+    const { data, loading } = useQuery(ALL_TRAILS);
+    return (
+      <main>
+        <h2>Ski Trails</h2>
+        <ul>
+          {data?.trails.map((trail) => (
+            <Trail key={trail.id} id={trail.id} />
+          ))}
+        </ul>
+      </main>
+    );
+  }
+  ```
 
   </details>
 
@@ -251,35 +268,35 @@
   <details>
     <summary>View code 🎿</summary>
 
-    ```jsx
-    const Trail = ({ id }) => {
-      const [updateTrail] = useMutation(UPDATE_TRAIL);
-      const { data } = useFragment({
-        fragment: TrailFragment,
-        from: {
-          __typename: "Trail",
-          id,
-        },
-      });
-      return (
-        <li key={id}>
-          {data.name} - {data.status}
-          <input
-            checked={data.status === "OPEN" ? true : false}
-            type="checkbox"
-            onChange={(e) => {
-              updateTrail({
-                variables: {
-                  trailId: id,
-                  status: e.target.checked ? "OPEN" : "CLOSED",
-                },
-              });
-            }}
-          />
-        </li>
-      );
-    };
-    ```
+  ```jsx
+  const Trail = ({ id }) => {
+    const [updateTrail] = useMutation(UPDATE_TRAIL);
+    const { data } = useFragment({
+      fragment: TrailFragment,
+      from: {
+        __typename: "Trail",
+        id,
+      },
+    });
+    return (
+      <li key={id}>
+        {data.name} - {data.status}
+        <input
+          checked={data.status === "OPEN" ? true : false}
+          type="checkbox"
+          onChange={(e) => {
+            updateTrail({
+              variables: {
+                trailId: id,
+                status: e.target.checked ? "OPEN" : "CLOSED",
+              },
+            });
+          }}
+        />
+      </li>
+    );
+  };
+  ```
 
   </details>
 
@@ -306,11 +323,11 @@
   <details>
   <summary><h5><code>useFragment</code> improvements</h5></summary>
 
-    - [#10765](https://github.com/apollographql/apollo-client/pull/10765) [`35f36c5aa`](https://github.com/apollographql/apollo-client/commit/35f36c5aaefe1f215044e09fdf9386042bc59dd2) Thanks [@phryneas](https://github.com/phryneas)! - More robust types for the `data` property on `UseFragmentResult`. When a partial result is given, the type is now correctly set to `Partial<TData>`.
+  - [#10765](https://github.com/apollographql/apollo-client/pull/10765) [`35f36c5aa`](https://github.com/apollographql/apollo-client/commit/35f36c5aaefe1f215044e09fdf9386042bc59dd2) Thanks [@phryneas](https://github.com/phryneas)! - More robust types for the `data` property on `UseFragmentResult`. When a partial result is given, the type is now correctly set to `Partial<TData>`.
 
-    - [#11083](https://github.com/apollographql/apollo-client/pull/11083) [`f766e8305`](https://github.com/apollographql/apollo-client/commit/f766e8305d9f2dbde59a61b8e70c99c4b2b67d55) Thanks [@phryneas](https://github.com/phryneas)! - Adjust the rerender timing of `useQuery` to more closely align with `useFragment`. This means that cache updates delivered to both hooks should trigger renders at relatively the same time. Previously, the `useFragment` might rerender much faster leading to some confusion.
+  - [#11083](https://github.com/apollographql/apollo-client/pull/11083) [`f766e8305`](https://github.com/apollographql/apollo-client/commit/f766e8305d9f2dbde59a61b8e70c99c4b2b67d55) Thanks [@phryneas](https://github.com/phryneas)! - Adjust the rerender timing of `useQuery` to more closely align with `useFragment`. This means that cache updates delivered to both hooks should trigger renders at relatively the same time. Previously, the `useFragment` might rerender much faster leading to some confusion.
 
-    - [#10836](https://github.com/apollographql/apollo-client/pull/10836) [`6794893c2`](https://github.com/apollographql/apollo-client/commit/6794893c29cc945aa99f6fe54a9e4e70ec3e57fd) Thanks [@phryneas](https://github.com/phryneas)! - Remove the deprecated `returnPartialData` option from `useFragment` hook.
+  - [#10836](https://github.com/apollographql/apollo-client/pull/10836) [`6794893c2`](https://github.com/apollographql/apollo-client/commit/6794893c29cc945aa99f6fe54a9e4e70ec3e57fd) Thanks [@phryneas](https://github.com/phryneas)! - Remove the deprecated `returnPartialData` option from `useFragment` hook.
 
   </details>
 

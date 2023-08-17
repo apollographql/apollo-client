@@ -1,0 +1,283 @@
+---
+title: Persisted Queries Link
+description: Secure your graph while minimizing request latency.
+---
+
+## Problems to solve
+
+Unlike REST APIs that use a fixed URL to load data, GraphQL provides a rich query language that can be used to express the shape of application data requirements. This is a marvelous advancement in technology, but it comes at a cost: GraphQL query strings are often much longer than REST URLS—in some cases by many kilobytes.
+
+In practice we've seen GraphQL query sizes ranging well above 10 KB *just for the query text*. This is significant overhead when compared with a simple URL of 50-100 characters. When paired with the fact that the uplink speed from the client is typically the most bandwidth-constrained part of the chain, large queries can become bottlenecks for client performance.
+
+Malicious actors can exploit GraphQL APIs by sending large and complex requests that overwhelm servers and disrupt services. These attackers can abuse GraphQL's query flexibility to create deeply nested, resource-intensive queries that lead to excessive data fetching.
+
+## Solutions
+
+<ClientPQIntro />
+
+### Differences between persisted queries and APQ
+
+<ClientPQDifferences />
+
+## Implementation steps
+
+Because persisted queries requires you to preregister trusted operations, it has additional implementation steps. 
+
+<ClientPQImplementation />
+
+## 0. Requirements
+
+Persisted queries is currently in [preview](/resources/product-launch-stages#preview) and has the following requirements:
+- Apollo Client Web (v3.7.0+)
+- The [`@apollo/generate-persisted-query-manifest` package](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest)
+- The [`@apollo/persisted-query-lists` package](https://www.npmjs.com/package/@apollo/persisted-query-lists)
+- [Apollo Router](/router) (v1.25.0+)
+- [GraphOS Enterprise plan](/graphos/enterprise/)
+
+You can use APQ with the following versions of Apollo Client Web, Apollo Server, and Apollo Router:
+- Apollo Client Web (v3.2.0+)
+- [Apollo Server](/apollo-server/) (v1.0.0+)
+- [Apollo Router](/router) (v0.1.0+)
+
+> **Note:** You can use _either_ Apollo Server _or_ Apollo Router for APQs. They don't need to be used together.
+
+## 1. Generate operation manifests
+
+> **This step is only required for persisted queries, not APQ.**
+
+An operation manifest acts as a safelist of trusted operations the [Apollo Router](/router/) can check incoming requests against.
+You can generate the manifest using the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package:
+
+1. Install the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package as a dev dependency:
+
+```bash
+npm install --save-dev @apollo/generate-persisted-query-manifest
+```
+
+2. Then use its CLI to extract queries from your app:
+
+```bash
+npx generate-persisted-query-manifest
+```
+
+The resulting operation manifest looks something like this:
+
+```json title="persisted-query-manifest.json"
+{
+  "format": "apollo-persisted-query-manifest",
+  "version": 1,
+  "operations": [
+    {
+      "id": "e0321f6b438bb42c022f633d38c19549dea9a2d55c908f64c5c6cb8403442fef",
+      "body": "query GetItem { thing { __typename } }",
+      "name": "GetItem",
+      "type": "query"
+    }
+  ]
+}
+```
+
+You can optionally create a configuration file in the root of your project to override the default options. Refer to the package's [README](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) for details.
+
+To automatically update the manifest for each new app release, include the `generate-persisted-query-manifest` command in your CI/CD pipeline.
+
+## 2. Publish manifests to a PQL
+
+<PublishPQMs />
+
+## 3. Enable persisted queries on `ApolloClient`
+
+You use the **persisted queries** Apollo Link to send operations as IDs rather than full operation strings. The implementation details depend on whether you're using persisted queries or APQs.
+
+### Persisted queries implementation
+
+The persisted queries link is included in the `@apollo/client` package:
+
+```bash
+npm install @apollo/client
+```
+
+A persisted queries implementation also requires the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package. This package contains helpers that work with the persisted queries link.
+
+Install the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package:
+
+```bash
+npm install @apollo/persisted-query-lists
+```
+
+One of the package's utilities, `generatePersistedQueryIdsAtRuntime`, reads operation IDs from your [operation manifest](#1-generate-operation-manifests) so the client can use them to make requests. To do so, pass the `loadManifest` option a function that returns your manifest. We recommend using a dynamic import to avoid bundling the manifest configuration with your production build.
+
+```js
+generatePersistedQueryIdsFromManifest({
+  loadManifest: () => import("./path/to/persisted-query-manifest.json"),
+})
+```
+
+Finally, combine the link that `generatePersistedQueryIdsAtRuntime` returns with `ApolloClient`'s `HttpLink`. The easiest way to use them together is to `concat` them into a single link.
+
+```js
+import { HttpLink, InMemoryCache, ApolloClient } from "@apollo/client";
+import { generatePersistedQueryIdsFromManifest } from "@apollo/persisted-query-lists";
+import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+
+const persistedQueryLink = createPersistedQueryLink(
+  generatePersistedQueryIdsFromManifest({
+    loadManifest: () => import("./path/to/persisted-query-manifest.json"),
+  }),
+);
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: persistedQueriesLink.concat(httpLink),
+});
+```
+
+By including the persisted queries link in your client instantiation, your client sends operation IDs from your manifest instead of the full operation string.
+
+The [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apollo/persisted-query-lists) package includes additional helpers you can use to [verify that you've properly configured your operation manifest](https://www.npmjs.com/package/@apollo/persisted-query-lists#createPersistedQueryManifestVerificationLink) and [generate operation IDs at runtime](https://www.npmjs.com/package/@apollo/persisted-query-lists#generatePersistedQueryIdsAtRuntime). Runtime generation is slower than fetching operation IDs from the manifest, but doesn't require making your manifest available to your client.
+
+Refer to the package [README](https://www.npmjs.com/package/@apollo/persisted-query-lists) for more information.
+
+### APQ implementation
+
+The persisted queries Apollo Link used for APQs is included in the `@apollo/client` package:
+
+```bash
+npm install @apollo/client
+```
+
+This link requires but doesn't include a SHA-256 hash function. It does this to avoid forcing a particular hash function as a dependency. Developers should pick the most appropriate SHA-256 function (sync or async) for their needs and environment.
+
+If you don't already have a SHA-256 based hashing function available in your application, install one separately. For example:
+
+```bash
+npm install crypto-hash
+```
+
+The link requires using `ApolloClient`'s `HttpLink`. The easiest way to use them together is to `concat` them into a single link.
+
+```js
+import { HttpLink, InMemoryCache, ApolloClient } from "@apollo/client";
+import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+import { sha256 } from 'crypto-hash';
+
+const httpLink = new HttpLink({ uri: "/graphql" });
+const persistedQueriesLink = createPersistedQueryLink({ sha256 });
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: persistedQueriesLink.concat(httpLink),
+});
+```
+
+Thats it! By including the persisted queries link in your client instantiation, your client sends operation IDs instead of the full operation string. This results in improved network performance, but doesn't include the security benefits of operation safelisting that [persisted queries](#differences-between-persisted-queries-and-apq) provide.
+
+#### `createPersistedQueryLink` Options
+
+The `createPersistedQueryLink` function takes a configuration object:
+
+- `sha256`: a SHA-256 hashing function. Can be sync or async. Providing a SHA-256 hashing function is required, unless you're defining a fully custom hashing approach via `generateHash`.
+- `generateHash`: an optional function that takes the query document and returns the hash. If provided this custom function will override the default hashing approach that uses the supplied `sha256` function. If not provided, the persisted queries link will use a fallback hashing approach leveraging the `sha256` function.
+- `useGETForHashedQueries`: set to `true` to use the HTTP `GET` method when sending the hashed version of queries (but not for mutations). `GET` requests are not compatible with `@apollo/client/link/batch-http`.
+> If you want to use `GET` for non-mutation queries whether or not they are hashed, pass `useGETForQueries: true` option to `HttpLink` instead. If you want to use `GET` for all requests, pass `fetchOptions: {method: 'GET'}` to `HttpLink`.
+- `disable`: a function which takes an `ErrorResponse` (see below) and returns a boolean to disable any future persisted queries for that session. This defaults to disabling on `PersistedQueryNotSupported` or a 400 or 500 http error.
+
+**ErrorResponse**
+
+The argument that the optional `disable` function is given is an object with the following keys:
+
+- `operation`: The Operation that encountered an error (contains `query`, `variables`, `operationName`, and `context`).
+- `response`: The Execution of the response (contains `data` and `errors` as well `extensions` if sent from the server).
+- `graphQLErrors`: An array of errors from the GraphQL endpoint.
+- `networkError`: Any error during the link execution or server response.
+
+*Note*: `networkError` is the value from the downlink's `error` callback. In most cases, `graphQLErrors` is the `errors` field of the result from the last `next` call. A `networkError` can contain additional fields, such as a GraphQL object in the case of a failing HTTP status code from `@apollo/link/http`. In this situation, `graphQLErrors` is an alias for `networkError.result.errors` if the property exists.
+
+## Apollo Studio
+
+Apollo Studio supports receiving and fulfilling APQs. Simply adding this link into your client app will improve your network response times when using Apollo Studio.
+
+### Protocol
+
+APQs are made up of three parts: the query signature, error responses, and the negotiation protocol.
+
+**Query Signature**
+
+The query signature for APQs is sent through the `extensions` field of a request from the client. This is a transport independent way to send extra information along with the operation.
+
+```js
+{
+  operationName: 'MyQuery',
+  variables: null,
+  extensions: {
+    persistedQuery: {
+      version: 1,
+      sha256Hash: hashOfQuery
+    }
+  }
+}
+```
+
+When sending an Automatic Persisted Query, the client omits the `query` field normally present, and instead sends an extension field with a `persistedQuery` object as shown above. The hash algorithm defaults to a `sha256` hash of the query string.
+
+If the client needs to register the hash, the query signature will be the same but include the full query text like so:
+
+```js
+{
+  operationName: 'MyQuery',
+  variables: null,
+  query: `query MyQuery { id }`,
+  extensions: {
+    persistedQuery: {
+      version: 1,
+      sha256Hash: hashOfQuery
+    }
+  }
+}
+```
+
+This should only happen once across all clients when a new query is introduced into your application.
+
+**Error Responses**
+
+When the initial query signature is received by a backend, if it is unable to find the hash previously stored, it will send back the following response signature:
+
+```js
+{
+  errors: [
+    { message: 'PersistedQueryNotFound' }
+  ]
+}
+```
+
+If the backend doesn't support APQs, or does not want to support it for that particular client, it can send back the following which will tell the client to stop trying to send hashes:
+
+```
+{
+  errors: [
+    { message: 'PersistedQueryNotSupported' }
+  ]
+}
+```
+
+**Negotiation Protocol**
+
+In order to support APQs, the client and server must follow the negotiation steps as outlined here:
+
+*Happy Path*
+1. Client sends query signature with no `query` field
+2. Server looks up query based on hash, if found, it resolves the data
+3. Client receives data and completes request
+
+*Missing hash path*
+1. Client sends query signature with no `query` field
+2. Server looks up query based on hash, none is found
+3. Server responds with NotFound error response
+4. Client sends both hash and query string to Server
+5. Server fulfills response and saves query string + hash for future lookup
+6. Client receives data and completes request
+
+### Build time generation
+
+If you want to avoid hashing in the browser, you can use a build script to include the hash as part of the request, then pass a function to retrieve that hash when the operation is run. This works well with projects like [GraphQL Persisted Document Loader](https://github.com/leoasis/graphql-persisted-document-loader) which uses webpack to generate hashes at build time.
+
+If you use the above loader, you can pass `{ generateHash: ({ documentId }) => documentId }` to the `createPersistedQueryLink` call.

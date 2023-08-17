@@ -15,10 +15,10 @@ import { Readable } from "stream";
 // which do not execute when isAsyncIterableIterator is true
 // See: https://github.com/facebook/jest/issues/2582#issuecomment-655110424
 
-jest.mock("../../../utilities/common/responseIterator", () => ({
+jest.mock("../../../utilities/index.js", () => ({
   __esModule: true,
-  ...jest.requireActual("../../../utilities/common/responseIterator"),
-  isAsyncIterableIterator: jest.fn(() => false),
+  ...jest.requireActual("../../../utilities/index.js"),
+  canUseAsyncIteratorSymbol: false,
 }));
 
 const sampleDeferredQuery = gql`

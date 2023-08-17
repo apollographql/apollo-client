@@ -375,9 +375,9 @@ const cache = new InMemoryCache({
 
 </MinVersion>
 
-`useFragment` represents a lightweight live binding into the Apollo Client Cache and enables Apollo Client to broadcast very specific fragment results to individual components. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
+The `useFragment` hook represents a lightweight live binding into the Apollo Client Cache. It enables Apollo Client to broadcast specific fragment results to individual components. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
 
-Note that the `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
+**The `useQuery` hook remains the primary hook responsible for querying and populating data in the cache** ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
 
 > **Note**: this hook was introduced in `3.7.0` as experimental but stabilized in `3.8.0`. In `3.7.x` and `3.8.0-alpha.x` releases, this hook is exported as `useFragment_experimental`. Starting with `3.8.0-beta.0` and greater the `_experimental` suffix was removed in its named export.
 
@@ -419,7 +419,7 @@ function List() {
 }
 ```
 
-> **Note:** instead of interpolating fragments within each query document, we can use Apollo Client's `createFragmentRegistry` method to pre-register named fragments with our `InMemoryCache`. This allows Apollo Client to include the definitions for registered fragments in the document sent over the network before the request is sent. For more information, see [Registering named fragments using `createFragmentRegistry`](#registering-named-fragments-using-createfragmentregistry).
+> **Note:** Instead of interpolating fragments within each query document, we can use Apollo Client's `createFragmentRegistry` method to pre-register named fragments with our `InMemoryCache`. This allows Apollo Client to include the definitions for registered fragments in the document sent over the network before the request is sent. For more information, see [Registering named fragments using `createFragmentRegistry`](#registering-named-fragments-using-createfragmentregistry).
 
 We can then use `useFragment` from within the `<Item>` component to create a live binding for each item by providing the `fragment` document, `fragmentName` and object reference via `from`.
 

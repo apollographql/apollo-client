@@ -21,7 +21,7 @@ Malicious actors can exploit GraphQL APIs by sending large and complex requests 
 
 ## Implementation steps
 
-Because persisted queries requires you to preregister trusted operations, it has additional implementation steps. 
+Because persisted queries requires you to preregister operations, it has additional implementation steps. 
 
 <ClientPQImplementation />
 
@@ -45,7 +45,7 @@ You can use APQ with the following versions of Apollo Client Web, Apollo Server,
 
 > **This step is only required for persisted queries, not APQ.**
 
-An operation manifest acts as a safelist of trusted operations the [Apollo Router](/router/) can check incoming requests against.
+An operation manifest acts as a safelist the [Apollo Router](/router/) can check incoming requests against.
 You can generate the manifest using the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package:
 
 1. Install the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package as a dev dependency:
@@ -105,7 +105,7 @@ Install the [`@apollo/persisted-query-lists`](https://www.npmjs.com/package/@apo
 npm install @apollo/persisted-query-lists
 ```
 
-One of the package's utilities, `generatePersistedQueryIdsAtRuntime`, reads operation IDs from your [operation manifest](#1-generate-operation-manifests) so the client can use them to make requests. To do so, pass the `loadManifest` option a function that returns your manifest. We recommend using a dynamic import to avoid bundling the manifest configuration with your production build.
+One of the package's utilities, `generatePersistedQueryIdsFromManifest`, reads operation IDs from your [operation manifest](#1-generate-operation-manifests) so the client can use them to make requests. To do so, pass the `loadManifest` option a function that returns your manifest. We recommend using a dynamic import to avoid bundling the manifest configuration with your production build.
 
 ```js
 generatePersistedQueryIdsFromManifest({
@@ -113,7 +113,7 @@ generatePersistedQueryIdsFromManifest({
 })
 ```
 
-Finally, combine the link that `generatePersistedQueryIdsAtRuntime` returns with `ApolloClient`'s `HttpLink`. The easiest way to use them together is to `concat` them into a single link.
+Finally, combine the link that `generatePersistedQueryIdsFromManifest` returns with `ApolloClient`'s `HttpLink`. The easiest way to use them together is to `concat` them into a single link.
 
 ```js
 import { HttpLink, InMemoryCache, ApolloClient } from "@apollo/client";

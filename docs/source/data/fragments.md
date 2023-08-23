@@ -377,7 +377,7 @@ const cache = new InMemoryCache({
 
 The `useFragment` hook represents a lightweight live binding into the Apollo Client Cache. It enables Apollo Client to broadcast specific fragment results to individual components. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
 
-**The `useQuery` hook remains the primary hook responsible for querying and populating data in the cache** ([see the API reference](./hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
+**The `useQuery` hook remains the primary hook responsible for querying and populating data in the cache** ([see the API reference](../api/react/hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change.
 
 > **Note**: this hook was introduced in `3.7.0` as experimental but stabilized in `3.8.0`. In `3.7.x` and `3.8.0-alpha.x` releases, this hook is exported as `useFragment_experimental`. Starting with `3.8.0-beta.0` and greater the `_experimental` suffix was removed in its named export.
 

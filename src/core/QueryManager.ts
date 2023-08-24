@@ -972,15 +972,9 @@ export class QueryManager<TStore> {
             errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
           }
 
-          // Because we hide protocol errors in `extensions` under a symbol not
-          // exported by this package (nor do we want it to be), there is no 
-          // sensible way to return protocol errors given that the `next` 
-          // function is handed a `FetchResult` type. Changes to the 
-          // `FetchResult` type make little sense since it represents a more 
-          // "raw" response from the server. Changing the return type of 
-          // `result` would be considered a breaking change. To try to be 
-          // reasonable to ensure these can be accessed, we always throw 
-          // protocol errors.
+          // `errorPolicy` is a mechanism for handling GraphQL errors, according
+          // to our documentation, so we throw protocol errors regardless of the
+          // set error policy.
           if (errorPolicy === 'none' || hasProtocolErrors) {
             throw new ApolloError(errors);
           }

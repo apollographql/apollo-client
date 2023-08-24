@@ -71,6 +71,64 @@ Object {
 }
 `;
 
+exports[`writing to the store root type policy merge is called before cache deep merge 1`] = `
+Array [
+  Array [
+    Object {
+      "existing": Object {
+        "__ref": "Person:123",
+      },
+      "incoming": Object {
+        "__typename": "Person",
+        "age": 28,
+        "id": 123,
+        "name": "Gaston",
+        "status": "ACTIVE",
+        "updatedAt": 100000,
+      },
+      "times": 1,
+    },
+  ],
+  Array [
+    Object {
+      "existing": undefined,
+      "incoming": Object {
+        "__ref": "Person:123",
+      },
+      "times": 2,
+    },
+  ],
+  Array [
+    Object {
+      "existing": Object {
+        "__ref": "Person:123",
+      },
+      "incoming": Object {
+        "__typename": "Person",
+        "id": 123,
+        "status": "DISABLED",
+        "updatedAt": 50,
+      },
+      "times": 3,
+    },
+  ],
+  Array [
+    Object {
+      "existing": Object {
+        "__ref": "Person:123",
+      },
+      "incoming": Object {
+        "__typename": "Person",
+        "id": 123,
+        "status": "PENDING",
+        "updatedAt": 100001,
+      },
+      "times": 4,
+    },
+  ],
+]
+`;
+
 exports[`writing to the store should not keep reference when type of mixed inlined field changes to non-inlined field 1`] = `
 [MockFunction] {
   "calls": Array [

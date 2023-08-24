@@ -182,6 +182,7 @@ describe('relayStylePagination', () => {
       readField: () => undefined,
       canRead: () => false,
       mergeObjects: (existing, _incoming) => existing,
+      context: undefined,
     };
 
     it('should maintain endCursor and startCursor with empty edges', () => {

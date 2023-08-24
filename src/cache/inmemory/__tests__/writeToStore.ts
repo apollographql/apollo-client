@@ -2672,6 +2672,20 @@ describe('writing to the store', () => {
       },
 
       {
+        existing:  {
+          __ref: "Account:12345",
+        },
+        incoming:  {
+          __typename: "Account",
+          contact: "support@example.com",
+          id: 12345,
+        },
+        merged:  {
+          __ref: "Account:12345",
+        },
+      },
+
+      {
         existing: {
           __typename: "Account",
           contact: "billing@example.com",
@@ -3095,6 +3109,157 @@ describe('writing to the store', () => {
           name: "piebaldism",
         },
       ],
+    });
+  });
+
+  it("root type policy merge is called before cache deep merge", () => {
+    const personMergeMock = jest.fn();
+
+    let times = 0;
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Person: {
+          merge(existing, incoming, tools) {
+            times++;
+
+            personMergeMock({
+              times,
+              existing,
+              incoming,
+            });
+
+            if (tools.isReference(existing) && !tools.isReference(incoming)) {
+              const cachedData = tools.cache.data.lookup(existing.__ref);
+              const existingUpdatedAt = cachedData?.["updatedAt"];
+              const incomingUpdatedAt = incoming?.["updatedAt"];
+              if (
+                typeof existingUpdatedAt === "number" &&
+                typeof incomingUpdatedAt === "number" &&
+                existingUpdatedAt > incomingUpdatedAt
+              ) {
+                return existing;
+              }
+            }
+
+            return tools.mergeObjects(existing, incoming);
+          },
+        },
+      },
+    });
+
+    expect(times).toEqual(0);
+
+    const query = gql`
+      query Person($offset: Int, $limit: Int) {
+        person {
+          id
+          name
+          age
+          status
+          updatedAt
+        }
+      }
+    `
+
+    expect(times).toEqual(0);
+
+    cache.writeQuery({
+      query,
+      data: {
+        person: {
+          __typename: "Person",
+          id: 123,
+          name: "Gaston",
+          age: 28,
+          status: "ACTIVE",
+          updatedAt: 100000,
+        },
+      },
+      variables: {},
+    });
+
+    expect(times).toEqual(2); // TODO: ideally this should only be called once
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        person: {
+          __ref: "Person:123",
+        },
+      },
+      "Person:123": {
+        __typename: "Person",
+        id: 123,
+        name: "Gaston",
+        age: 28,
+        status: "ACTIVE",
+        updatedAt: 100000,
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        person: {
+          __typename: "Person",
+          id: 123,
+          status: "DISABLED",
+          updatedAt: 50,
+        },
+      },
+      variables: {},
+    });
+
+    expect(times).toEqual(3);
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        person: {
+          __ref: "Person:123",
+        },
+      },
+      "Person:123": {
+        __typename: "Person",
+        id: 123,
+        name: "Gaston",
+        age: 28,
+        status: "ACTIVE",
+        updatedAt: 100000,
+      },
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        person: {
+          __typename: "Person",
+          id: 123,
+          status: "PENDING",
+          updatedAt: 100001,
+        },
+      },
+      variables: {},
+    });
+
+    expect(personMergeMock.mock.calls).toMatchSnapshot();
+    expect(times).toEqual(4);
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        person: {
+          __ref: "Person:123",
+        },
+      },
+      "Person:123": {
+        __typename: "Person",
+        id: 123,
+        name: "Gaston",
+        age: 28,
+        status: "PENDING",
+        updatedAt: 100001,
+      },
     });
   });
 

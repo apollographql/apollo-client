@@ -110,7 +110,7 @@ function getErrorMsg(message?: string | number, messageArgs: unknown[] = []) {
   return (
     (global[ApolloErrorMessageHandler] &&
       global[ApolloErrorMessageHandler](message, args)) ||
-    `An error occured! For more details, see the full error text at https://go.apollo.dev/c/err#${encodeURIComponent(
+    `An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err#${encodeURIComponent(
       JSON.stringify({
         version,
         message,

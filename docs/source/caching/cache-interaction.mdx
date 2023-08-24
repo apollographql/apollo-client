@@ -14,7 +14,7 @@ Apollo Client supports multiple strategies for interacting with cached data:
 
 You can use whichever combination of strategies and methods are most helpful for your use case.
 
-Changing cache fields with these methods will only affect the objects at the very place you specify by the query, the fragment or the location of the `modify` call. So, if you're changing an object at a nested place from `{__ref: '5'}` to `{__ref: '5', completed: true}`, this will override the `completed` value for cache reads at the specific place, but nowhere else.
+Bear in mind the difference between fields that contain references to other objects in the cache and fields that contain literal values.  References are objects that contain a `__ref` field (read more [here](https://www.apollographql.com/docs/react/caching/overview/#example)).  Modifying a reference will not change the values contained in the object to which the reference points.  So avoid updating an object from something like `{__ref: '5'}` to `{__ref: '5', completed: true}`.
 
 > All code samples below assume that you have initialized an instance of `ApolloClient` and that you have imported the `gql` function from `@apollo/client`. If you haven't, [get started](../get-started).
 >

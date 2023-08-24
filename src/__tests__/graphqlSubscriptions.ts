@@ -350,7 +350,7 @@ describe('GraphQL Subscriptions', () => {
     link.simulateResult(results[0]);
   });
 
-  it('should throw an error if the result has protocolErrors on it', () => {
+  it('should throw an error if the result has protocolErrors on it', async () => {
     const link = mockObservableLink();
     const queryManager = new QueryManager({
       link,
@@ -389,7 +389,13 @@ describe('GraphQL Subscriptions', () => {
       },
     };
 
+    // Silence expected warning about missing field for cache write
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
     link.simulateResult(errorResult);
-    return Promise.resolve(promise);
+
+    await promise;
+
+    consoleSpy.mockRestore();
   });
 });

@@ -1,10 +1,11 @@
 import gql from 'graphql-tag';
 
-import { ApolloClient } from '../core';
+import { ApolloClient, FetchResult } from '../core';
 import { InMemoryCache } from '../cache';
 import { PROTOCOL_ERRORS_SYMBOL } from '../errors';
 import { QueryManager } from '../core/QueryManager';
 import { itAsync, mockObservableLink } from '../testing';
+import { GraphQLError } from 'graphql';
 
 describe('GraphQL Subscriptions', () => {
   const results = [
@@ -220,6 +221,97 @@ describe('GraphQL Subscriptions', () => {
 
     link.simulateResult(errorResult);
     return Promise.resolve(promise);
+  });
+
+  it('returns errors in next result when `errorPolicy` is "all"', async () => {
+    const query = gql`
+      subscription UserInfo($name: String) {
+        user(name: $name) {
+          name
+        }
+      }
+    `;
+    const link = mockObservableLink();
+    const queryManager = new QueryManager({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const obs = queryManager.startGraphQLSubscription({
+      query,
+      variables: { name: 'Iron Man' },
+      errorPolicy: 'all'
+    });
+
+    const promise = new Promise<FetchResult[]>((resolve, reject) => {
+      const results: FetchResult[] = []
+
+      obs.subscribe({
+        next: (result) => results.push(result),
+        complete: () => resolve(results),
+        error: reject,
+      });
+    });
+
+    const errorResult = {
+      result: {
+        data: null,
+        errors: [new GraphQLError('This is an error')],
+      },
+    };
+
+    link.simulateResult(errorResult, true);
+
+    await expect(promise).resolves.toEqual([
+      {
+        data: null,
+        errors: [new GraphQLError('This is an error')],
+      }
+    ]);
+  });
+
+  it('strips errors in next result when `errorPolicy` is "ignore"', async () => {
+    const query = gql`
+      subscription UserInfo($name: String) {
+        user(name: $name) {
+          name
+        }
+      }
+    `;
+    const link = mockObservableLink();
+    const queryManager = new QueryManager({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const obs = queryManager.startGraphQLSubscription({
+      query,
+      variables: { name: 'Iron Man' },
+      errorPolicy: 'ignore'
+    });
+
+    const promise = new Promise<FetchResult[]>((resolve, reject) => {
+      const results: FetchResult[] = []
+
+      obs.subscribe({
+        next: (result) => results.push(result),
+        complete: () => resolve(results),
+        error: reject,
+      });
+    });
+
+    const errorResult = {
+      result: {
+        data: null,
+        errors: [new GraphQLError('This is an error')],
+      },
+    };
+
+    link.simulateResult(errorResult, true);
+
+    await expect(promise).resolves.toEqual([
+      { data: null }
+    ]);
   });
 
   it('should call complete handler when the subscription completes', () => {

@@ -933,7 +933,7 @@ export class QueryManager<TStore> {
   public startGraphQLSubscription<T = any>({
     query,
     fetchPolicy,
-    errorPolicy,
+    errorPolicy = 'none',
     variables,
     context = {},
   }: SubscriptionOptions): Observable<FetchResult<T>> {
@@ -971,7 +971,23 @@ export class QueryManager<TStore> {
           if (hasProtocolErrors) {
             errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
           }
-          throw new ApolloError(errors);
+
+          // Because we hide protocol errors in `extensions` under a symbol not
+          // exported by this package (nor do we want it to be), there is no 
+          // sensible way to return protocol errors given that the `next` 
+          // function is handed a `FetchResult` type. Changes to the 
+          // `FetchResult` type make little sense since it represents a more 
+          // "raw" response from the server. Changing the return type of 
+          // `result` would be considered a breaking change. To try to be 
+          // reasonable to ensure these can be accessed, we always throw 
+          // protocol errors.
+          if (errorPolicy === 'none' || hasProtocolErrors) {
+            throw new ApolloError(errors);
+          }
+        }
+
+        if (errorPolicy === 'ignore') {
+          delete result.errors
         }
 
         return result;

@@ -188,6 +188,27 @@ export interface BackgroundQueryHookOptions<
   skip?: boolean;
 }
 
+export type InteractiveQueryHookFetchPolicy = Extract<
+  WatchQueryFetchPolicy,
+  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
+>;
+
+export interface InteractiveQueryHookOptions<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> extends Pick<
+    QueryHookOptions<TData, TVariables>,
+    | "client"
+    | "errorPolicy"
+    | "context"
+    | "canonizeResults"
+    | "returnPartialData"
+    | "refetchWritePolicy"
+  > {
+  fetchPolicy?: InteractiveQueryHookFetchPolicy;
+  queryKey?: string | number | any[];
+}
+
 /**
  * @deprecated TODO Delete this unused interface.
  */

@@ -50,6 +50,8 @@ const { todo } = client.readQuery({
 
 If your cache contains data for _all_ of the query's fields, `readQuery` returns an object that matches the shape of the query:
 
+> **Note:** for this to work, the `todo` field with the `id:5` argument needs to be present in the `ROOT_QUERY` object otherwise the data is treated as missing and `null` is returned.
+
 ```js
 {
   todo: {

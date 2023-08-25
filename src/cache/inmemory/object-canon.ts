@@ -9,7 +9,7 @@ import { isArray } from "./helpers.js";
 function shallowCopy<T>(value: T): T {
   if (isObjectOrArray(value)) {
     return isArray(value)
-      ? value.slice(0) as any as T
+      ? (value.slice(0) as any as T)
       : { __proto__: Object.getPrototypeOf(value), ...value };
   }
   return value;
@@ -116,7 +116,7 @@ export class ObjectCanon {
           // preserved as node.array.
           const node = this.pool.lookupArray(array);
           if (!node.array) {
-            this.known.add(node.array = array);
+            this.known.add((node.array = array));
             // Since canonical arrays may be shared widely between
             // unrelated consumers, it's important to regard them as
             // immutable, even if they are not frozen in production.
@@ -135,7 +135,7 @@ export class ObjectCanon {
           const keys = this.sortedKeys(value);
           array.push(keys.json);
           const firstValueIndex = array.length;
-          keys.sorted.forEach(key => {
+          keys.sorted.forEach((key) => {
             array.push(this.admit((value as any)[key]));
           });
           // Objects are looked up in the Trie by their prototype (which
@@ -148,7 +148,7 @@ export class ObjectCanon {
           // object is stored as node.object.
           const node = this.pool.lookupArray(array);
           if (!node.object) {
-            const obj = node.object = Object.create(proto);
+            const obj = (node.object = Object.create(proto));
             this.known.add(obj);
             keys.sorted.forEach((key, i) => {
               obj[key] = array[firstValueIndex + i];
@@ -178,7 +178,7 @@ export class ObjectCanon {
       keys.sort();
       const json = JSON.stringify(keys);
       if (!(node.keys = this.keysByJSON.get(json))) {
-        this.keysByJSON.set(json, node.keys = { sorted: keys, json });
+        this.keysByJSON.set(json, (node.keys = { sorted: keys, json }));
       }
     }
     return node.keys;
@@ -199,31 +199,31 @@ type SortedKeysInfo = {
 // Since the keys of canonical objects are always created in lexicographically
 // sorted order, we can use the ObjectCanon to implement a fast and stable
 // version of JSON.stringify, which automatically sorts object keys.
-export const canonicalStringify = Object.assign(function (value: any): string {
-  if (isObjectOrArray(value)) {
-    if (stringifyCanon === void 0) {
-      resetCanonicalStringify();
+export const canonicalStringify = Object.assign(
+  function (value: any): string {
+    if (isObjectOrArray(value)) {
+      if (stringifyCanon === void 0) {
+        resetCanonicalStringify();
+      }
+      const canonical = stringifyCanon.admit(value);
+      let json = stringifyCache.get(canonical);
+      if (json === void 0) {
+        stringifyCache.set(canonical, (json = JSON.stringify(canonical)));
+      }
+      return json;
     }
-    const canonical = stringifyCanon.admit(value);
-    let json = stringifyCache.get(canonical);
-    if (json === void 0) {
-      stringifyCache.set(
-        canonical,
-        json = JSON.stringify(canonical),
-      );
-    }
-    return json;
+    return JSON.stringify(value);
+  },
+  {
+    reset: resetCanonicalStringify,
   }
-  return JSON.stringify(value);
-}, {
-  reset: resetCanonicalStringify,
-});
+);
 
 // Can be reset by calling canonicalStringify.reset().
 let stringifyCanon: ObjectCanon;
 let stringifyCache: WeakMap<object, string>;
 
 function resetCanonicalStringify() {
-  stringifyCanon = new ObjectCanon;
+  stringifyCanon = new ObjectCanon();
   stringifyCache = new (canUseWeakMap ? WeakMap : Map)();
 }

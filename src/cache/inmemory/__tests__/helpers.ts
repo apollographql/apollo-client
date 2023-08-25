@@ -10,7 +10,7 @@ import { StoreWriter } from "../writeToStore";
 import { Cache } from "../../../core";
 
 export function defaultNormalizedCacheFactory(
-  seed?: NormalizedCacheObject,
+  seed?: NormalizedCacheObject
 ): NormalizedCache {
   const cache = new InMemoryCache();
   return new EntityStore.Root({
@@ -23,11 +23,11 @@ export function defaultNormalizedCacheFactory(
 interface WriteQueryToStoreOptions extends Cache.WriteOptions {
   writer: StoreWriter;
   store?: NormalizedCache;
-};
+}
 
 export function readQueryFromStore<T = any>(
   reader: StoreReader,
-  options: DiffQueryAgainstStoreOptions,
+  options: DiffQueryAgainstStoreOptions
 ) {
   return reader.diffQueryAgainstStore<T>({
     ...options,
@@ -36,7 +36,7 @@ export function readQueryFromStore<T = any>(
 }
 
 export function writeQueryToStore(
-  options: WriteQueryToStoreOptions,
+  options: WriteQueryToStoreOptions
 ): NormalizedCache {
   const {
     dataId = "ROOT_QUERY",

@@ -1,34 +1,36 @@
-import type { DocumentNode, GraphQLError } from 'graphql';
+import type { DocumentNode, GraphQLError } from "graphql";
 
-import type { ApolloCache } from '../cache/index.js';
-import type { FetchResult } from '../link/core/index.js';
-import type { ApolloError } from '../errors/index.js';
-import type { QueryInfo } from './QueryInfo.js';
-import type { NetworkStatus } from './networkStatus.js';
-import type { Resolver } from './LocalState.js';
-import type { ObservableQuery } from './ObservableQuery.js';
-import type { QueryOptions } from './watchQueryOptions.js';
-import type { Cache } from '../cache/index.js';
-import type { IsStrictlyAny } from '../utilities/index.js';
+import type { ApolloCache } from "../cache/index.js";
+import type { FetchResult } from "../link/core/index.js";
+import type { ApolloError } from "../errors/index.js";
+import type { QueryInfo } from "./QueryInfo.js";
+import type { NetworkStatus } from "./networkStatus.js";
+import type { Resolver } from "./LocalState.js";
+import type { ObservableQuery } from "./ObservableQuery.js";
+import type { QueryOptions } from "./watchQueryOptions.js";
+import type { Cache } from "../cache/index.js";
+import type { IsStrictlyAny } from "../utilities/index.js";
 
-export type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 export type MethodKeys<T> = {
-  [P in keyof T]: T[P] extends Function ? P : never
+  [P in keyof T]: T[P] extends Function ? P : never;
 }[keyof T];
 
-export interface DefaultContext extends Record<string, any> {};
+export interface DefaultContext extends Record<string, any> {}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
 export type OnQueryUpdated<TResult> = (
   observableQuery: ObservableQuery<any>,
   diff: Cache.DiffResult<any>,
-  lastDiff: Cache.DiffResult<any> | undefined,
+  lastDiff: Cache.DiffResult<any> | undefined
 ) => boolean | TResult;
 
 export type RefetchQueryDescriptor = string | DocumentNode;
-export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | QueryOptions;
+export type InternalRefetchQueryDescriptor =
+  | RefetchQueryDescriptor
+  | QueryOptions;
 
 type RefetchQueriesIncludeShorthand = "all" | "active";
 
@@ -72,28 +74,31 @@ export type RefetchQueriesPromiseResults<TResult> =
   // we get if we don't check for any. I hoped `any extends TResult` would do
   // the trick here, instead of IsStrictlyAny, but you can see for yourself what
   // fails in the refetchQueries tests if you try making that simplification.
-  IsStrictlyAny<TResult> extends true ? any[] :
-  // If the onQueryUpdated function passed to client.refetchQueries returns true
-  // or false, that means either to refetch the query (true) or to skip the
-  // query (false). Since refetching produces an ApolloQueryResult<any>, and
-  // skipping produces nothing, the fully-resolved array of all results produced
-  // will be an ApolloQueryResult<any>[], when TResult extends boolean.
-  TResult extends boolean ? ApolloQueryResult<any>[] :
-  // If onQueryUpdated returns a PromiseLike<U>, that thenable will be passed as
-  // an array element to Promise.all, so we infer/unwrap the array type U here.
-  TResult extends PromiseLike<infer U> ? U[] :
-  // All other onQueryUpdated results end up in the final Promise.all array as
-  // themselves, with their original TResult type. Note that TResult will
-  // default to ApolloQueryResult<any> if no onQueryUpdated function is passed
-  // to client.refetchQueries.
-  TResult[];
+  IsStrictlyAny<TResult> extends true
+    ? any[]
+    : // If the onQueryUpdated function passed to client.refetchQueries returns true
+    // or false, that means either to refetch the query (true) or to skip the
+    // query (false). Since refetching produces an ApolloQueryResult<any>, and
+    // skipping produces nothing, the fully-resolved array of all results produced
+    // will be an ApolloQueryResult<any>[], when TResult extends boolean.
+    TResult extends boolean
+    ? ApolloQueryResult<any>[]
+    : // If onQueryUpdated returns a PromiseLike<U>, that thenable will be passed as
+    // an array element to Promise.all, so we infer/unwrap the array type U here.
+    TResult extends PromiseLike<infer U>
+    ? U[]
+    : // All other onQueryUpdated results end up in the final Promise.all array as
+      // themselves, with their original TResult type. Note that TResult will
+      // default to ApolloQueryResult<any> if no onQueryUpdated function is passed
+      // to client.refetchQueries.
+      TResult[];
 
 // The result of client.refetchQueries is thenable/awaitable, if you just want
 // an array of fully resolved results, but you can also access the raw results
 // immediately by examining the additional { queries, results } properties of
 // the RefetchQueriesResult<TResult> object.
 export interface RefetchQueriesResult<TResult>
-extends Promise<RefetchQueriesPromiseResults<TResult>> {
+  extends Promise<RefetchQueriesPromiseResults<TResult>> {
   // An array of ObservableQuery objects corresponding 1:1 to TResult values
   // in the results arrays (both the TResult[] array below, and the results
   // array resolved by the Promise above).
@@ -121,15 +126,17 @@ export type InternalRefetchQueriesResult<TResult> =
   // If onQueryUpdated returns a boolean, that's equivalent to refetching the
   // query when the boolean is true and skipping the query when false, so the
   // internal type of refetched results is Promise<ApolloQueryResult<any>>.
-  TResult extends boolean ? Promise<ApolloQueryResult<any>> :
-  // Otherwise, onQueryUpdated returns whatever it returns. If onQueryUpdated is
-  // not provided, TResult defaults to Promise<ApolloQueryResult<any>> (see the
-  // generic type parameters of client.refetchQueries).
-  TResult;
+  TResult extends boolean
+    ? Promise<ApolloQueryResult<any>>
+    : // Otherwise, onQueryUpdated returns whatever it returns. If onQueryUpdated is
+      // not provided, TResult defaults to Promise<ApolloQueryResult<any>> (see the
+      // generic type parameters of client.refetchQueries).
+      TResult;
 
-export type InternalRefetchQueriesMap<TResult> =
-  Map<ObservableQuery<any>,
-      InternalRefetchQueriesResult<TResult>>;
+export type InternalRefetchQueriesMap<TResult> = Map<
+  ObservableQuery<any>,
+  InternalRefetchQueriesResult<TResult>
+>;
 
 // TODO Remove this unnecessary type in Apollo Client 4.
 export type { QueryOptions as PureQueryOptions };
@@ -139,15 +146,15 @@ export type OperationVariables = Record<string, any>;
 export type ApolloQueryResult<T> = {
   data: T;
   /**
-  * A list of any errors that occurred during server-side execution of a GraphQL operation.
-  * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
-  */
+   * A list of any errors that occurred during server-side execution of a GraphQL operation.
+   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
+   */
   errors?: ReadonlyArray<GraphQLError>;
   /**
-  * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
-  * This will contain both a NetworkError field and any GraphQLErrors.
-  * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
-  */
+   * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
+   * This will contain both a NetworkError field and any GraphQLErrors.
+   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
+   */
   error?: ApolloError;
   loading: boolean;
   networkStatus: NetworkStatus;
@@ -164,7 +171,7 @@ export type MutationQueryReducer<T> = (
     mutationResult: FetchResult<T>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
-  },
+  }
 ) => Record<string, any>;
 
 export type MutationQueryReducersMap<T = { [key: string]: any }> = {
@@ -177,24 +184,24 @@ export type MutationUpdaterFn<T = { [key: string]: any }> = (
   // type parameter T for both the cache and the mutationResult. Do not use this
   // type unless you absolutely need it for backwards compatibility.
   cache: ApolloCache<T>,
-  mutationResult: FetchResult<T>,
+  mutationResult: FetchResult<T>
 ) => void;
 
 export type MutationUpdaterFunction<
   TData,
   TVariables,
   TContext,
-  TCache extends ApolloCache<any>
+  TCache extends ApolloCache<any>,
 > = (
   cache: TCache,
-  result: Omit<FetchResult<TData>, 'context'>,
+  result: Omit<FetchResult<TData>, "context">,
   options: {
-    context?: TContext,
-    variables?: TVariables,
-  },
+    context?: TContext;
+    variables?: TVariables;
+  }
 ) => void;
 export interface Resolvers {
   [key: string]: {
-    [ field: string ]: Resolver;
+    [field: string]: Resolver;
   };
 }

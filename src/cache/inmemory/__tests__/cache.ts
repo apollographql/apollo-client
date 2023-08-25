@@ -1,49 +1,56 @@
-import gql, { disableFragmentWarnings } from 'graphql-tag';
-import { expectTypeOf } from 'expect-type'
+import gql, { disableFragmentWarnings } from "graphql-tag";
+import { expectTypeOf } from "expect-type";
 
-import { cloneDeep } from '../../../utilities/common/cloneDeep';
-import { makeReference, Reference, makeVar, TypedDocumentNode, isReference, DocumentNode } from '../../../core';
-import { Cache } from '../../../cache';
-import { InMemoryCache } from '../inMemoryCache';
-import { InMemoryCacheConfig } from '../types';
+import { cloneDeep } from "../../../utilities/common/cloneDeep";
+import {
+  makeReference,
+  Reference,
+  makeVar,
+  TypedDocumentNode,
+  isReference,
+  DocumentNode,
+} from "../../../core";
+import { Cache } from "../../../cache";
+import { InMemoryCache } from "../inMemoryCache";
+import { InMemoryCacheConfig } from "../types";
 
-import { StoreReader } from '../readFromStore';
-import { StoreWriter } from '../writeToStore';
-import { ObjectCanon } from '../object-canon';
-import { TypePolicies } from '../policies';
+import { StoreReader } from "../readFromStore";
+import { StoreWriter } from "../writeToStore";
+import { ObjectCanon } from "../object-canon";
+import { TypePolicies } from "../policies";
 
 disableFragmentWarnings();
 
-describe('Cache', () => {
+describe("Cache", () => {
   function itWithInitialData(
     message: string,
-    initialDataForCaches: ({ [key: string]: any })[],
-    callback: (...caches: InMemoryCache[]) => any,
+    initialDataForCaches: { [key: string]: any }[],
+    callback: (...caches: InMemoryCache[]) => any
   ) {
     const cachesList: InMemoryCache[][] = [
-      initialDataForCaches.map(data =>
+      initialDataForCaches.map((data) =>
         new InMemoryCache({
           addTypename: false,
-        }).restore(cloneDeep(data)),
+        }).restore(cloneDeep(data))
       ),
-      initialDataForCaches.map(data =>
+      initialDataForCaches.map((data) =>
         new InMemoryCache({
           addTypename: false,
           resultCaching: false,
-        }).restore(cloneDeep(data)),
+        }).restore(cloneDeep(data))
       ),
     ];
 
     cachesList.forEach((caches, i) => {
-      it(`${message} (${i + 1}/${cachesList.length})`,
-         () => callback(...caches));
+      it(`${message} (${i + 1}/${cachesList.length})`, () =>
+        callback(...caches));
     });
   }
 
   function itWithCacheConfig(
     message: string,
     config: InMemoryCacheConfig,
-    callback: (cache: InMemoryCache) => any,
+    callback: (cache: InMemoryCache) => any
   ) {
     const caches = [
       new InMemoryCache({
@@ -63,9 +70,9 @@ describe('Cache', () => {
     });
   }
 
-  describe('readQuery', () => {
+  describe("readQuery", () => {
     itWithInitialData(
-      'will read some data from the store',
+      "will read some data from the store",
       [
         {
           ROOT_QUERY: {
@@ -75,7 +82,7 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      (proxy) => {
         expect(
           proxy.readQuery({
             query: gql`
@@ -83,7 +90,7 @@ describe('Cache', () => {
                 a
               }
             `,
-          }),
+          })
         ).toEqual({ a: 1 });
         expect(
           proxy.readQuery({
@@ -93,7 +100,7 @@ describe('Cache', () => {
                 c
               }
             `,
-          }),
+          })
         ).toEqual({ b: 2, c: 3 });
         expect(
           proxy.readQuery({
@@ -104,26 +111,26 @@ describe('Cache', () => {
                 c
               }
             `,
-          }),
+          })
         ).toEqual({ a: 1, b: 2, c: 3 });
-      },
+      }
     );
 
     itWithInitialData(
-      'will read some deeply nested data from the store',
+      "will read some deeply nested data from the store",
       [
         {
           ROOT_QUERY: {
             a: 1,
             b: 2,
             c: 3,
-            d: makeReference('foo'),
+            d: makeReference("foo"),
           },
           foo: {
             e: 4,
             f: 5,
             g: 6,
-            h: makeReference('bar'),
+            h: makeReference("bar"),
           },
           bar: {
             i: 7,
@@ -132,7 +139,7 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      (proxy) => {
         expect(
           proxy.readQuery({
             query: gql`
@@ -143,7 +150,7 @@ describe('Cache', () => {
                 }
               }
             `,
-          }),
+          })
         ).toEqual({ a: 1, d: { e: 4 } });
         expect(
           proxy.readQuery({
@@ -158,7 +165,7 @@ describe('Cache', () => {
                 }
               }
             `,
-          }),
+          })
         ).toEqual({ a: 1, d: { e: 4, h: { i: 7 } } });
         expect(
           proxy.readQuery({
@@ -179,18 +186,18 @@ describe('Cache', () => {
                 }
               }
             `,
-          }),
+          })
         ).toEqual({
           a: 1,
           b: 2,
           c: 3,
           d: { e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } },
         });
-      },
+      }
     );
 
     itWithInitialData(
-      'will read some data from the store with variables',
+      "will read some data from the store with variables",
       [
         {
           ROOT_QUERY: {
@@ -199,11 +206,11 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      (proxy) => {
         expect(
           proxy.readQuery({
             query: gql`
-              query($literal: Boolean, $value: Int) {
+              query ($literal: Boolean, $value: Int) {
                 a: field(literal: true, value: 42)
                 b: field(literal: $literal, value: $value)
               }
@@ -212,13 +219,13 @@ describe('Cache', () => {
               literal: false,
               value: 42,
             },
-          }),
+          })
         ).toEqual({ a: 1, b: 2 });
-      },
+      }
     );
 
     itWithInitialData(
-      'will read some data from the store with null variables',
+      "will read some data from the store with null variables",
       [
         {
           ROOT_QUERY: {
@@ -226,11 +233,11 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      (proxy) => {
         expect(
           proxy.readQuery({
             query: gql`
-              query($literal: Boolean, $value: Int) {
+              query ($literal: Boolean, $value: Int) {
                 a: field(literal: $literal, value: $value)
               }
             `,
@@ -238,13 +245,13 @@ describe('Cache', () => {
               literal: false,
               value: null,
             },
-          }),
+          })
         ).toEqual({ a: 1 });
-      },
+      }
     );
 
     itWithInitialData(
-      'should not mutate arguments passed in',
+      "should not mutate arguments passed in",
       [
         {
           ROOT_QUERY: {
@@ -253,10 +260,10 @@ describe('Cache', () => {
           },
         },
       ],
-      proxy => {
+      (proxy) => {
         const options = {
           query: gql`
-            query($literal: Boolean, $value: Int) {
+            query ($literal: Boolean, $value: Int) {
               a: field(literal: true, value: 42)
               b: field(literal: $literal, value: $value)
             }
@@ -270,21 +277,21 @@ describe('Cache', () => {
         const preQueryCopy = cloneDeep(options);
         expect(proxy.readQuery(options)).toEqual({ a: 1, b: 2 });
         expect(preQueryCopy).toEqual(options);
-      },
+      }
     );
   });
 
-  describe('readFragment', () => {
+  describe("readFragment", () => {
     itWithInitialData(
-      'will throw an error when there is no fragment',
+      "will throw an error when there is no fragment",
       [
         // Empty data, but still want to test with/without result caching.
         {},
       ],
-      proxy => {
+      (proxy) => {
         expect(() => {
           proxy.readFragment({
-            id: 'x',
+            id: "x",
             fragment: gql`
               query {
                 a
@@ -294,11 +301,11 @@ describe('Cache', () => {
             `,
           });
         }).toThrowError(
-          'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+          "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
         );
         expect(() => {
           proxy.readFragment({
-            id: 'x',
+            id: "x",
             fragment: gql`
               schema {
                 query: Query
@@ -306,18 +313,18 @@ describe('Cache', () => {
             `,
           });
         }).toThrowError(
-          'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
-      },
+      }
     );
 
     itWithInitialData(
-      'will throw an error when there is more than one fragment but no fragment name',
+      "will throw an error when there is more than one fragment but no fragment name",
       [{}],
-      proxy => {
+      (proxy) => {
         expect(() => {
           proxy.readFragment({
-            id: 'x',
+            id: "x",
             fragment: gql`
               fragment a on A {
                 a
@@ -329,11 +336,11 @@ describe('Cache', () => {
             `,
           });
         }).toThrowError(
-          'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
         expect(() => {
           proxy.readFragment({
-            id: 'x',
+            id: "x",
             fragment: gql`
               fragment a on A {
                 a
@@ -349,41 +356,41 @@ describe('Cache', () => {
             `,
           });
         }).toThrowError(
-          'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
-      },
+      }
     );
 
     itWithInitialData(
-      'will read some deeply nested data from the store at any id',
+      "will read some deeply nested data from the store at any id",
       [
         {
           ROOT_QUERY: {
-            __typename: 'Type1',
+            __typename: "Type1",
             a: 1,
             b: 2,
             c: 3,
-            d: makeReference('foo'),
+            d: makeReference("foo"),
           },
           foo: {
-            __typename: 'Foo',
+            __typename: "Foo",
             e: 4,
             f: 5,
             g: 6,
-            h: makeReference('bar'),
+            h: makeReference("bar"),
           },
           bar: {
-            __typename: 'Bar',
+            __typename: "Bar",
             i: 7,
             j: 8,
             k: 9,
           },
         },
       ],
-      proxy => {
+      (proxy) => {
         expect(
           proxy.readFragment({
-            id: 'foo',
+            id: "foo",
             fragment: gql`
               fragment fragmentFoo on Foo {
                 e
@@ -392,11 +399,11 @@ describe('Cache', () => {
                 }
               }
             `,
-          }),
+          })
         ).toEqual({ e: 4, h: { i: 7 } });
         expect(
           proxy.readFragment({
-            id: 'foo',
+            id: "foo",
             fragment: gql`
               fragment fragmentFoo on Foo {
                 e
@@ -409,21 +416,21 @@ describe('Cache', () => {
                 }
               }
             `,
-          }),
+          })
         ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
         expect(
           proxy.readFragment({
-            id: 'bar',
+            id: "bar",
             fragment: gql`
               fragment fragmentBar on Bar {
                 i
               }
             `,
-          }),
+          })
         ).toEqual({ i: 7 });
         expect(
           proxy.readFragment({
-            id: 'bar',
+            id: "bar",
             fragment: gql`
               fragment fragmentBar on Bar {
                 i
@@ -431,11 +438,11 @@ describe('Cache', () => {
                 k
               }
             `,
-          }),
+          })
         ).toEqual({ i: 7, j: 8, k: 9 });
         expect(
           proxy.readFragment({
-            id: 'foo',
+            id: "foo",
             fragment: gql`
               fragment fragmentFoo on Foo {
                 e
@@ -454,12 +461,12 @@ describe('Cache', () => {
                 k
               }
             `,
-            fragmentName: 'fragmentFoo',
-          }),
+            fragmentName: "fragmentFoo",
+          })
         ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
         expect(
           proxy.readFragment({
-            id: 'bar',
+            id: "bar",
             fragment: gql`
               fragment fragmentFoo on Foo {
                 e
@@ -478,27 +485,27 @@ describe('Cache', () => {
                 k
               }
             `,
-            fragmentName: 'fragmentBar',
-          }),
+            fragmentName: "fragmentBar",
+          })
         ).toEqual({ i: 7, j: 8, k: 9 });
-      },
+      }
     );
 
     itWithInitialData(
-      'will read some data from the store with variables',
+      "will read some data from the store with variables",
       [
         {
           foo: {
-            __typename: 'Foo',
+            __typename: "Foo",
             'field({"literal":true,"value":42})': 1,
             'field({"literal":false,"value":42})': 2,
           },
         },
       ],
-      proxy => {
+      (proxy) => {
         expect(
           proxy.readFragment({
-            id: 'foo',
+            id: "foo",
             fragment: gql`
               fragment foo on Foo {
                 a: field(literal: true, value: 42)
@@ -509,29 +516,29 @@ describe('Cache', () => {
               literal: false,
               value: 42,
             },
-          }),
+          })
         ).toEqual({ a: 1, b: 2 });
-      },
+      }
     );
 
     itWithInitialData(
-      'will return null when an id that can’t be found is provided',
+      "will return null when an id that can’t be found is provided",
       [
         // client1
         {},
         // client2
         {
-          bar: { __typename: 'Bar', a: 1, b: 2, c: 3 },
+          bar: { __typename: "Bar", a: 1, b: 2, c: 3 },
         },
         // client3
         {
-          foo: { __typename: 'Foo', a: 1, b: 2, c: 3 },
+          foo: { __typename: "Foo", a: 1, b: 2, c: 3 },
         },
       ],
       (client1, client2, client3) => {
         expect(
           client1.readFragment({
-            id: 'foo',
+            id: "foo",
             fragment: gql`
               fragment fooFragment on Foo {
                 a
@@ -539,11 +546,11 @@ describe('Cache', () => {
                 c
               }
             `,
-          }),
+          })
         ).toEqual(null);
         expect(
           client2.readFragment({
-            id: 'foo',
+            id: "foo",
             fragment: gql`
               fragment fooFragment on Foo {
                 a
@@ -551,11 +558,11 @@ describe('Cache', () => {
                 c
               }
             `,
-          }),
+          })
         ).toEqual(null);
         expect(
           client3.readFragment({
-            id: 'foo',
+            id: "foo",
             fragment: gql`
               fragment fooFragment on Foo {
                 a
@@ -563,9 +570,9 @@ describe('Cache', () => {
                 c
               }
             `,
-          }),
+          })
         ).toEqual({ a: 1, b: 2, c: 3 });
-      },
+      }
     );
 
     it("should not accidentally depend on unrelated entity fields", () => {
@@ -580,8 +587,16 @@ describe('Cache', () => {
         lastName: "Newman",
       };
 
-      const firstNameQuery = gql`{ firstName }`;
-      const lastNameQuery = gql`{ lastName }`;
+      const firstNameQuery = gql`
+        {
+          firstName
+        }
+      `;
+      const lastNameQuery = gql`
+        {
+          lastName
+        }
+      `;
 
       const id = cache.identify(bothNamesData);
 
@@ -632,10 +647,12 @@ describe('Cache', () => {
 
       // This is the crucial test: modifying the lastName field should not
       // invalidate results that did not depend on the lastName field.
-      expect(cache.readQuery({
-        id,
-        query: firstNameQuery,
-      })).toBe(firstNameResult);
+      expect(
+        cache.readQuery({
+          id,
+          query: firstNameQuery,
+        })
+      ).toBe(firstNameResult);
 
       const lastNameResult = cache.readQuery({
         id,
@@ -684,10 +701,12 @@ describe('Cache', () => {
 
       // Updating the firstName should not have invalidated the
       // previously-read lastNameResult.
-      expect(cache.readQuery({
-        id,
-        query: lastNameQuery,
-      })).toBe(lastNameResult);
+      expect(
+        cache.readQuery({
+          id,
+          query: lastNameQuery,
+        })
+      ).toBe(lastNameResult);
     });
 
     it("should not return null when ID found in optimistic layer", () => {
@@ -709,7 +728,7 @@ describe('Cache', () => {
 
       const id = cache.identify(data)!;
 
-      cache.recordOptimisticTransaction(proxy => {
+      cache.recordOptimisticTransaction((proxy) => {
         proxy.writeFragment({ id, fragment, data });
       }, "optimistic Hugh");
 
@@ -729,15 +748,15 @@ describe('Cache', () => {
       expect(
         cache.readFragment(
           { id, fragment },
-          false, // not optimistic
-        ),
+          false // not optimistic
+        )
       ).toBe(null);
 
       expect(
         cache.readFragment(
           { id, fragment },
-          true, // optimistic
-        ),
+          true // optimistic
+        )
       ).toEqual({
         __typename: "Person",
         firstName: "Hugh",
@@ -757,8 +776,8 @@ describe('Cache', () => {
       expect(
         cache.readFragment(
           { id, fragment },
-          false, // not optimistic
-        ),
+          false // not optimistic
+        )
       ).toEqual({
         __typename: "Person",
         firstName: "HUGH",
@@ -768,8 +787,8 @@ describe('Cache', () => {
       expect(
         cache.readFragment(
           { id, fragment },
-          true, // optimistic
-        ),
+          true // optimistic
+        )
       ).toEqual({
         __typename: "Person",
         firstName: "Hugh",
@@ -781,8 +800,8 @@ describe('Cache', () => {
       expect(
         cache.readFragment(
           { id, fragment },
-          true, // optimistic
-        ),
+          true // optimistic
+        )
       ).toEqual({
         __typename: "Person",
         firstName: "HUGH",
@@ -791,8 +810,8 @@ describe('Cache', () => {
     });
   });
 
-  describe('writeQuery', () => {
-    itWithInitialData('will write some data to the store', [{}], proxy => {
+  describe("writeQuery", () => {
+    itWithInitialData("will write some data to the store", [{}], (proxy) => {
       proxy.writeQuery({
         data: { a: 1 },
         query: gql`
@@ -849,7 +868,7 @@ describe('Cache', () => {
       });
     });
 
-    it('will write some deeply nested data to the store', () => {
+    it("will write some deeply nested data to the store", () => {
       const cache = new InMemoryCache({
         typePolicies: {
           Query: {
@@ -961,16 +980,16 @@ describe('Cache', () => {
     });
 
     itWithInitialData(
-      'will write some data to the store with variables',
+      "will write some data to the store with variables",
       [{}],
-      proxy => {
+      (proxy) => {
         proxy.writeQuery({
           data: {
             a: 1,
             b: 2,
           },
           query: gql`
-            query($literal: Boolean, $value: Int) {
+            query ($literal: Boolean, $value: Int) {
               a: field(literal: true, value: 42)
               b: field(literal: $literal, value: $value)
             }
@@ -988,20 +1007,20 @@ describe('Cache', () => {
             'field({"literal":false,"value":42})': 2,
           },
         });
-      },
+      }
     );
 
     itWithInitialData(
-      'will write some data to the store with variables where some are null',
+      "will write some data to the store with variables where some are null",
       [{}],
-      proxy => {
+      (proxy) => {
         proxy.writeQuery({
           data: {
             a: 1,
             b: 2,
           },
           query: gql`
-            query($literal: Boolean, $value: Int) {
+            query ($literal: Boolean, $value: Int) {
               a: field(literal: true, value: 42)
               b: field(literal: $literal, value: $value)
             }
@@ -1019,19 +1038,19 @@ describe('Cache', () => {
             'field({"literal":false,"value":null})': 2,
           },
         });
-      },
+      }
     );
   });
 
-  describe('writeFragment', () => {
+  describe("writeFragment", () => {
     itWithInitialData(
-      'will throw an error when there is no fragment',
+      "will throw an error when there is no fragment",
       [{}],
-      proxy => {
+      (proxy) => {
         expect(() => {
           proxy.writeFragment({
             data: {},
-            id: 'x',
+            id: "x",
             fragment: gql`
               query {
                 a
@@ -1041,12 +1060,12 @@ describe('Cache', () => {
             `,
           });
         }).toThrowError(
-          'Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed.',
+          "Found a query operation. No operations are allowed when using a fragment as a query. Only fragments are allowed."
         );
         expect(() => {
           proxy.writeFragment({
             data: {},
-            id: 'x',
+            id: "x",
             fragment: gql`
               schema {
                 query: Query
@@ -1054,19 +1073,19 @@ describe('Cache', () => {
             `,
           });
         }).toThrowError(
-          'Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          "Found 0 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
-      },
+      }
     );
 
     itWithInitialData(
-      'will throw an error when there is more than one fragment but no fragment name',
+      "will throw an error when there is more than one fragment but no fragment name",
       [{}],
-      proxy => {
+      (proxy) => {
         expect(() => {
           proxy.writeFragment({
             data: {},
-            id: 'x',
+            id: "x",
             fragment: gql`
               fragment a on A {
                 a
@@ -1078,12 +1097,12 @@ describe('Cache', () => {
             `,
           });
         }).toThrowError(
-          'Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
         expect(() => {
           proxy.writeFragment({
             data: {},
-            id: 'x',
+            id: "x",
             fragment: gql`
               fragment a on A {
                 a
@@ -1099,21 +1118,21 @@ describe('Cache', () => {
             `,
           });
         }).toThrowError(
-          'Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment.',
+          "Found 3 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
         );
-      },
+      }
     );
 
     itWithCacheConfig(
-      'will write some deeply nested data into the store at any id',
+      "will write some deeply nested data into the store at any id",
       {
         dataIdFromObject: (o: any) => o.id,
         addTypename: false,
       },
-      proxy => {
+      (proxy) => {
         proxy.writeFragment({
-          data: { __typename: 'Foo', e: 4, h: { id: 'bar', i: 7 } },
-          id: 'foo',
+          data: { __typename: "Foo", e: 4, h: { id: "bar", i: 7 } },
+          id: "foo",
           fragment: gql`
             fragment fragmentFoo on Foo {
               e
@@ -1126,8 +1145,8 @@ describe('Cache', () => {
 
         expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
         proxy.writeFragment({
-          data: { __typename: 'Foo', f: 5, g: 6, h: { id: 'bar', j: 8, k: 9 } },
-          id: 'foo',
+          data: { __typename: "Foo", f: 5, g: 6, h: { id: "bar", j: 8, k: 9 } },
+          id: "foo",
           fragment: gql`
             fragment fragmentFoo on Foo {
               f
@@ -1143,8 +1162,8 @@ describe('Cache', () => {
         expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
         proxy.writeFragment({
-          data: { i: 10, __typename: 'Bar' },
-          id: 'bar',
+          data: { i: 10, __typename: "Bar" },
+          id: "bar",
           fragment: gql`
             fragment fragmentBar on Bar {
               i
@@ -1155,8 +1174,8 @@ describe('Cache', () => {
         expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
         proxy.writeFragment({
-          data: { j: 11, k: 12, __typename: 'Bar' },
-          id: 'bar',
+          data: { j: 11, k: 12, __typename: "Bar" },
+          id: "bar",
           fragment: gql`
             fragment fragmentBar on Bar {
               j
@@ -1169,13 +1188,13 @@ describe('Cache', () => {
 
         proxy.writeFragment({
           data: {
-            __typename: 'Foo',
+            __typename: "Foo",
             e: 4,
             f: 5,
             g: 6,
-            h: { __typename: 'Bar', id: 'bar', i: 7, j: 8, k: 9 },
+            h: { __typename: "Bar", id: "bar", i: 7, j: 8, k: 9 },
           },
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment fooFragment on Foo {
               e
@@ -1194,14 +1213,14 @@ describe('Cache', () => {
               k
             }
           `,
-          fragmentName: 'fooFragment',
+          fragmentName: "fooFragment",
         });
 
         expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
 
         proxy.writeFragment({
-          data: { __typename: 'Bar', i: 10, j: 11, k: 12 },
-          id: 'bar',
+          data: { __typename: "Bar", i: 10, j: 11, k: 12 },
+          id: "bar",
           fragment: gql`
             fragment fooFragment on Foo {
               e
@@ -1220,19 +1239,19 @@ describe('Cache', () => {
               k
             }
           `,
-          fragmentName: 'barFragment',
+          fragmentName: "barFragment",
         });
 
         expect((proxy as InMemoryCache).extract()).toMatchSnapshot();
-      },
+      }
     );
 
     itWithCacheConfig(
-      'writes data that can be read back',
+      "writes data that can be read back",
       {
         addTypename: true,
       },
-      proxy => {
+      (proxy) => {
         const readWriteFragment = gql`
           fragment aFragment on query {
             getSomething {
@@ -1241,36 +1260,36 @@ describe('Cache', () => {
           }
         `;
         const data = {
-          __typename: 'query',
-          getSomething: { id: '123', __typename: 'Something' },
+          __typename: "query",
+          getSomething: { id: "123", __typename: "Something" },
         };
         proxy.writeFragment({
           data,
-          id: 'query',
+          id: "query",
           fragment: readWriteFragment,
         });
 
         const result = proxy.readFragment({
           fragment: readWriteFragment,
-          id: 'query',
+          id: "query",
         });
         expect(result).toEqual(data);
-      },
+      }
     );
 
     itWithCacheConfig(
-      'will write some data to the store with variables',
+      "will write some data to the store with variables",
       {
         addTypename: true,
       },
-      proxy => {
+      (proxy) => {
         proxy.writeFragment({
           data: {
             a: 1,
             b: 2,
-            __typename: 'Foo',
+            __typename: "Foo",
           },
-          id: 'foo',
+          id: "foo",
           fragment: gql`
             fragment foo on Foo {
               a: field(literal: true, value: 42)
@@ -1288,17 +1307,17 @@ describe('Cache', () => {
             extraRootIds: ["foo"],
           },
           foo: {
-            __typename: 'Foo',
+            __typename: "Foo",
             'field({"literal":true,"value":42})': 1,
             'field({"literal":false,"value":42})': 2,
           },
         });
-      },
+      }
     );
   });
 
   describe("cache.updateQuery and cache.updateFragment", () => {
-    it('should be batched', () => {
+    it("should be batched", () => {
       const cache = new InMemoryCache({
         typePolicies: {
           Person: {
@@ -1311,10 +1330,16 @@ describe('Cache', () => {
         me: {
           __typename: string;
           name: string;
-        },
+        };
       };
 
-      const query: TypedDocumentNode<QueryData> = gql`query { me { name } }`;
+      const query: TypedDocumentNode<QueryData> = gql`
+        query {
+          me {
+            name
+          }
+        }
+      `;
       const results: QueryData[] = [];
 
       const cancel = cache.watch({
@@ -1325,7 +1350,7 @@ describe('Cache', () => {
         },
       });
 
-      cache.updateQuery({ query }, data => {
+      cache.updateQuery({ query }, (data) => {
         expect(data).toBe(null);
 
         cache.writeQuery({
@@ -1347,7 +1372,7 @@ describe('Cache', () => {
       });
 
       expect(results).toEqual([
-        { me: { __typename: "Person", name: "Ben Newman" }},
+        { me: { __typename: "Person", name: "Ben Newman" } },
       ]);
 
       expect(cache.extract()).toEqual({
@@ -1378,50 +1403,53 @@ describe('Cache', () => {
         name: "Ben Newman",
       });
 
-      cache.updateFragment({
-        id: bnId,
-        fragment: usernameFragment,
-        returnPartialData: true,
-      }, data => {
-        expect(data).toEqual({
-          __typename: "Person",
-        });
+      cache.updateFragment(
+        {
+          id: bnId,
+          fragment: usernameFragment,
+          returnPartialData: true,
+        },
+        (data) => {
+          expect(data).toEqual({
+            __typename: "Person",
+          });
 
-        cache.writeQuery({
-          query,
-          data: {
-            me: {
+          cache.writeQuery({
+            query,
+            data: {
+              me: {
+                __typename: "Person",
+                name: "Brian Kim",
+              },
+            },
+          });
+
+          cache.writeFragment({
+            id: cache.identify({
               __typename: "Person",
               name: "Brian Kim",
+            }),
+            fragment: usernameFragment,
+            data: {
+              username: "brainkim",
             },
-          },
-        });
+          });
 
-        cache.writeFragment({
-          id: cache.identify({
-            __typename: "Person",
-            name: "Brian Kim",
-          }),
-          fragment: usernameFragment,
-          data: {
-            username: "brainkim",
-          },
-        });
+          expect(results.length).toBe(1);
 
-        expect(results.length).toBe(1);
-
-        return {
-          ...data,
-          name: "Ben Newman",
-          username: "benjamn",
-        };
-      });
+          return {
+            ...data,
+            name: "Ben Newman",
+            username: "benjamn",
+          };
+        }
+      );
 
       // Still just two results, thanks to cache.update{Query,Fragment} using
       // cache.batch behind the scenes.
       expect(results).toEqual([
-        { me: { __typename: "Person", name: "Ben Newman" }},
-        { me: { __typename: "Person", name: "Brian Kim" }},
+        { me: { __typename: "Person", name: "Ben Newman" } },
+        { me: { __typename: "Person", name: "Brian Kim" } },
       ]);
 
       expect(cache.extract()).toEqual({
@@ -1457,10 +1485,16 @@ describe('Cache', () => {
     });
   });
 
-  describe('cache.restore', () => {
-    it('replaces cache.{store{Reader,Writer},maybeBroadcastWatch}', () => {
-      const cache = new InMemoryCache;
-      const query = gql`query { a b c }`;
+  describe("cache.restore", () => {
+    it("replaces cache.{store{Reader,Writer},maybeBroadcastWatch}", () => {
+      const cache = new InMemoryCache();
+      const query = gql`
+        query {
+          a
+          b
+          c
+        }
+      `;
 
       const originalReader = cache["storeReader"];
       expect(originalReader).toBeInstanceOf(StoreReader);
@@ -1507,7 +1541,7 @@ describe('Cache', () => {
     });
   });
 
-  describe('cache.batch', () => {
+  describe("cache.batch", () => {
     const last = <E>(array: E[]) => array[array.length - 1];
 
     function watch(cache: InMemoryCache, query: DocumentNode) {
@@ -1525,12 +1559,25 @@ describe('Cache', () => {
       return { diffs, watch: options, cancel };
     }
 
-    it('calls onWatchUpdated for each invalidated watch', () => {
-      const cache = new InMemoryCache;
+    it("calls onWatchUpdated for each invalidated watch", () => {
+      const cache = new InMemoryCache();
 
-      const aQuery = gql`query { a }`;
-      const abQuery = gql`query { a b }`;
-      const bQuery = gql`query { b }`;
+      const aQuery = gql`
+        query {
+          a
+        }
+      `;
+      const abQuery = gql`
+        query {
+          a
+          b
+        }
+      `;
+      const bQuery = gql`
+        query {
+          b
+        }
+      `;
 
       const aInfo = watch(cache, aQuery);
       const abInfo = watch(cache, abQuery);
@@ -1633,12 +1680,25 @@ describe('Cache', () => {
       bInfo.cancel();
     });
 
-    it('works with cache.modify and INVALIDATE', () => {
-      const cache = new InMemoryCache;
+    it("works with cache.modify and INVALIDATE", () => {
+      const cache = new InMemoryCache();
 
-      const aQuery = gql`query { a }`;
-      const abQuery = gql`query { a b }`;
-      const bQuery = gql`query { b }`;
+      const aQuery = gql`
+        query {
+          a
+        }
+      `;
+      const abQuery = gql`
+        query {
+          a
+          b
+        }
+      `;
+      const bQuery = gql`
+        query {
+          b
+        }
+      `;
 
       cache.writeQuery({
         query: abQuery,
@@ -1687,12 +1747,25 @@ describe('Cache', () => {
       bInfo.cancel();
     });
 
-    it('does not pass previously invalidated queries to onWatchUpdated', () => {
-      const cache = new InMemoryCache;
+    it("does not pass previously invalidated queries to onWatchUpdated", () => {
+      const cache = new InMemoryCache();
 
-      const aQuery = gql`query { a }`;
-      const abQuery = gql`query { a b }`;
-      const bQuery = gql`query { b }`;
+      const aQuery = gql`
+        query {
+          a
+        }
+      `;
+      const abQuery = gql`
+        query {
+          a
+          b
+        }
+      `;
+      const bQuery = gql`
+        query {
+          b
+        }
+      `;
 
       cache.writeQuery({
         query: abQuery,
@@ -1758,7 +1831,7 @@ describe('Cache', () => {
           result: {
             a: "ayyyy",
           },
-        }
+        },
       ]);
 
       expect(abInfo.diffs).toEqual([
@@ -1787,7 +1860,7 @@ describe('Cache', () => {
           result: {
             a: "ayyyy",
           },
-        }
+        },
       ]);
 
       expect(abInfo.diffs).toEqual([
@@ -1821,100 +1894,138 @@ describe('Cache', () => {
     });
 
     it("returns options.update result for optimistic and non-optimistic batches", () => {
-      const cache = new InMemoryCache;
+      const cache = new InMemoryCache();
       const expected = Symbol.for("expected");
 
-      expect(cache.batch({
-        optimistic: false,
-        update(c) {
-          c.writeQuery({
-            query: gql`query { value }`,
-            data: { value: 12345 },
-          });
-          return expected;
-        },
-      })).toBe(expected);
+      expect(
+        cache.batch({
+          optimistic: false,
+          update(c) {
+            c.writeQuery({
+              query: gql`
+                query {
+                  value
+                }
+              `,
+              data: { value: 12345 },
+            });
+            return expected;
+          },
+        })
+      ).toBe(expected);
 
-      expect(cache.batch({
-        optimistic: false,
-        update(c) {
-          c.reset();
-          return expected;
-        },
-      })).toBe(expected);
+      expect(
+        cache.batch({
+          optimistic: false,
+          update(c) {
+            c.reset();
+            return expected;
+          },
+        })
+      ).toBe(expected);
 
-      expect(cache.batch({
-        optimistic: false,
-        update(c) {
-          c.writeQuery({
-            query: gql`query { optimistic }`,
-            data: { optimistic: false },
-          });
-          return expected;
-        },
-        onWatchUpdated() {
-          throw new Error("onWatchUpdated should not have been called");
-        },
-      })).toBe(expected);
+      expect(
+        cache.batch({
+          optimistic: false,
+          update(c) {
+            c.writeQuery({
+              query: gql`
+                query {
+                  optimistic
+                }
+              `,
+              data: { optimistic: false },
+            });
+            return expected;
+          },
+          onWatchUpdated() {
+            throw new Error("onWatchUpdated should not have been called");
+          },
+        })
+      ).toBe(expected);
 
-      expect(cache.batch({
-        optimistic: true,
-        update(c) {
-          return expected;
-        },
-      })).toBe(expected);
+      expect(
+        cache.batch({
+          optimistic: true,
+          update(c) {
+            return expected;
+          },
+        })
+      ).toBe(expected);
 
-      expect(cache.batch({
-        optimistic: true,
-        update(c) {
-          c.writeQuery({
-            query: gql`query { optimistic }`,
-            data: { optimistic: true },
-          });
-          return expected;
-        },
-        onWatchUpdated() {
-          throw new Error("onWatchUpdated should not have been called");
-        },
-      })).toBe(expected);
+      expect(
+        cache.batch({
+          optimistic: true,
+          update(c) {
+            c.writeQuery({
+              query: gql`
+                query {
+                  optimistic
+                }
+              `,
+              data: { optimistic: true },
+            });
+            return expected;
+          },
+          onWatchUpdated() {
+            throw new Error("onWatchUpdated should not have been called");
+          },
+        })
+      ).toBe(expected);
 
-      expect(cache.batch({
-        // The optimistic option defaults to true.
-        // optimistic: true,
-        update(c) {
-          return expected;
-        },
-      })).toBe(expected);
+      expect(
+        cache.batch({
+          // The optimistic option defaults to true.
+          // optimistic: true,
+          update(c) {
+            return expected;
+          },
+        })
+      ).toBe(expected);
 
-      expect(cache.batch({
-        optimistic: "some optimistic ID",
-        update(c) {
-          expect(c.readQuery({
-            query: gql`query { __typename }`,
-          })).toEqual({ __typename: "Query" });
-          return expected;
-        },
-      })).toBe(expected);
+      expect(
+        cache.batch({
+          optimistic: "some optimistic ID",
+          update(c) {
+            expect(
+              c.readQuery({
+                query: gql`
+                  query {
+                    __typename
+                  }
+                `,
+              })
+            ).toEqual({ __typename: "Query" });
+            return expected;
+          },
+        })
+      ).toBe(expected);
 
       const optimisticId = "some optimistic ID";
-      expect(cache.batch({
-        optimistic: optimisticId,
-        update(c) {
-          c.writeQuery({
-            query: gql`query { optimistic }`,
-            data: { optimistic: optimisticId },
-          });
-          return expected;
-        },
-        onWatchUpdated() {
-          throw new Error("onWatchUpdated should not have been called");
-        },
-      })).toBe(expected);
+      expect(
+        cache.batch({
+          optimistic: optimisticId,
+          update(c) {
+            c.writeQuery({
+              query: gql`
+                query {
+                  optimistic
+                }
+              `,
+              data: { optimistic: optimisticId },
+            });
+            return expected;
+          },
+          onWatchUpdated() {
+            throw new Error("onWatchUpdated should not have been called");
+          },
+        })
+      ).toBe(expected);
     });
   });
 
-  describe('performTransaction', () => {
-    itWithInitialData('will not broadcast mid-transaction', [{}], cache => {
+  describe("performTransaction", () => {
+    itWithInitialData("will not broadcast mid-transaction", [{}], (cache) => {
       let numBroadcasts = 0;
 
       const query = gql`
@@ -1933,7 +2044,7 @@ describe('Cache', () => {
 
       expect(numBroadcasts).toEqual(0);
 
-      cache.performTransaction(proxy => {
+      cache.performTransaction((proxy) => {
         proxy.writeQuery({
           data: { a: 1 },
           query,
@@ -1959,8 +2070,8 @@ describe('Cache', () => {
     });
   });
 
-  describe('recordOptimisticTransaction', () => {
-    itWithInitialData('will only broadcast once', [{}], cache => {
+  describe("recordOptimisticTransaction", () => {
+    itWithInitialData("will only broadcast once", [{}], (cache) => {
       let numBroadcasts = 0;
 
       const query = gql`
@@ -1979,43 +2090,42 @@ describe('Cache', () => {
 
       expect(numBroadcasts).toEqual(0);
 
-      cache.recordOptimisticTransaction(
-        proxy => {
-          proxy.writeQuery({
-            data: { a: 1 },
-            query,
-          });
+      cache.recordOptimisticTransaction((proxy) => {
+        proxy.writeQuery({
+          data: { a: 1 },
+          query,
+        });
 
-          expect(numBroadcasts).toEqual(0);
+        expect(numBroadcasts).toEqual(0);
 
-          proxy.writeQuery({
-            data: { a: 4, b: 5, c: 6 },
-            query: gql`
-              {
-                a
-                b
-                c
-              }
-            `,
-          });
+        proxy.writeQuery({
+          data: { a: 4, b: 5, c: 6 },
+          query: gql`
+            {
+              a
+              b
+              c
+            }
+          `,
+        });
 
-          expect(numBroadcasts).toEqual(0);
-        },
-        1 as any,
-      );
+        expect(numBroadcasts).toEqual(0);
+      }, 1 as any);
 
       expect(numBroadcasts).toEqual(1);
     });
   });
 });
 
-describe('resultCacheMaxSize', () => {
+describe("resultCacheMaxSize", () => {
   const defaultMaxSize = Math.pow(2, 16);
 
   it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
     const cache = new InMemoryCache();
     expect(cache["maybeBroadcastWatch"].options.max).toBe(defaultMaxSize);
-    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(defaultMaxSize);
+    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
+      defaultMaxSize
+    );
     expect(cache["getFragmentDoc"].options.max).toBe(defaultMaxSize);
   });
 
@@ -2023,7 +2133,9 @@ describe('resultCacheMaxSize', () => {
     const resultCacheMaxSize = 12345;
     const cache = new InMemoryCache({ resultCacheMaxSize });
     expect(cache["maybeBroadcastWatch"].options.max).toBe(resultCacheMaxSize);
-    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(resultCacheMaxSize);
+    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
+      resultCacheMaxSize
+    );
     expect(cache["getFragmentDoc"].options.max).toBe(defaultMaxSize);
   });
 });
@@ -2070,35 +2182,39 @@ describe("InMemoryCache#broadcastWatches", function () {
 
     write(1, "one");
 
-    const received1 = [id1, 1, {
-      result: {
-        value: {
-          name: "one",
+    const received1 = [
+      id1,
+      1,
+      {
+        result: {
+          value: {
+            name: "one",
+          },
         },
+        complete: true,
       },
-      complete: true,
-    }];
+    ];
 
-    expect(receivedCallbackResults).toEqual([
-      received1,
-    ]);
+    expect(receivedCallbackResults).toEqual([received1]);
 
     const id2 = watch(2);
 
-    expect(receivedCallbackResults).toEqual([
-      received1,
-    ]);
+    expect(receivedCallbackResults).toEqual([received1]);
 
     write(2, "two");
 
-    const received2 = [id2, 2, {
-      result: {
-        value: {
-          name: "two",
+    const received2 = [
+      id2,
+      2,
+      {
+        result: {
+          value: {
+            name: "two",
+          },
         },
+        complete: true,
       },
-      complete: true,
-    }];
+    ];
 
     expect(receivedCallbackResults).toEqual([
       received1,
@@ -2111,23 +2227,31 @@ describe("InMemoryCache#broadcastWatches", function () {
 
     write(1, "one");
 
-    const received3 = [id3, 1, {
-      result: {
-        value: {
-          name: "one",
+    const received3 = [
+      id3,
+      1,
+      {
+        result: {
+          value: {
+            name: "one",
+          },
         },
+        complete: true,
       },
-      complete: true,
-    }];
+    ];
 
-    const received4 = [id4, 1, {
-      result: {
-        value: {
-          name: "one",
+    const received4 = [
+      id4,
+      1,
+      {
+        result: {
+          value: {
+            name: "one",
+          },
         },
+        complete: true,
       },
-      complete: true,
-    }];
+    ];
 
     expect(receivedCallbackResults).toEqual([
       received1,
@@ -2139,14 +2263,18 @@ describe("InMemoryCache#broadcastWatches", function () {
 
     write(2, "TWO");
 
-    const received2AllCaps = [id2, 2, {
-      result: {
-        value: {
-          name: "TWO",
+    const received2AllCaps = [
+      id2,
+      2,
+      {
+        result: {
+          value: {
+            name: "TWO",
+          },
         },
+        complete: true,
       },
-      complete: true,
-    }];
+    ];
 
     expect(receivedCallbackResults).toEqual([
       received1,
@@ -2208,31 +2336,39 @@ describe("InMemoryCache#broadcastWatches", function () {
       },
     };
 
-    unwatchers.add(canonicalCache.watch({
-      ...commonWatchOptions,
-      variables: { name: "canonicalByDefault" },
-      // Pass nothing for canonizeResults to let the default for canonicalCache
-      // (true) prevail.
-    }));
+    unwatchers.add(
+      canonicalCache.watch({
+        ...commonWatchOptions,
+        variables: { name: "canonicalByDefault" },
+        // Pass nothing for canonizeResults to let the default for canonicalCache
+        // (true) prevail.
+      })
+    );
 
-    unwatchers.add(nonCanonicalCache.watch({
-      ...commonWatchOptions,
-      variables: { name: "nonCanonicalByDefault" },
-      // Pass nothing for canonizeResults to let the default for
-      // nonCanonicalCache (false) prevail.
-    }));
+    unwatchers.add(
+      nonCanonicalCache.watch({
+        ...commonWatchOptions,
+        variables: { name: "nonCanonicalByDefault" },
+        // Pass nothing for canonizeResults to let the default for
+        // nonCanonicalCache (false) prevail.
+      })
+    );
 
-    unwatchers.add(nonCanonicalCache.watch({
-      ...commonWatchOptions,
-      variables: { name: "canonicalByChoice" },
-      canonizeResults: true, // Override the default.
-    }));
+    unwatchers.add(
+      nonCanonicalCache.watch({
+        ...commonWatchOptions,
+        variables: { name: "canonicalByChoice" },
+        canonizeResults: true, // Override the default.
+      })
+    );
 
-    unwatchers.add(canonicalCache.watch({
-      ...commonWatchOptions,
-      variables: { name: "nonCanonicalByChoice" },
-      canonizeResults: false, // Override the default.
-    }));
+    unwatchers.add(
+      canonicalCache.watch({
+        ...commonWatchOptions,
+        variables: { name: "nonCanonicalByChoice" },
+        canonizeResults: false, // Override the default.
+      })
+    );
 
     function makeDiff(name: string): Diff {
       return {
@@ -2255,12 +2391,10 @@ describe("InMemoryCache#broadcastWatches", function () {
       nonCanonicalByChoice: [nonCanonicalByChoiceDiff],
     });
 
-    [ canonicalCache,
-      nonCanonicalCache,
-    ].forEach(cache => {
+    [canonicalCache, nonCanonicalCache].forEach((cache) => {
       // Hack: delete every watch.lastDiff, so subsequent results will be
       // broadcast, even though they are deeply equal to the previous results.
-      cache["watches"].forEach(watch => {
+      cache["watches"].forEach((watch) => {
         delete watch.lastDiff;
       });
     });
@@ -2275,18 +2409,12 @@ describe("InMemoryCache#broadcastWatches", function () {
 
     // Every watcher receives the same (deeply equal) Diff a second time.
     expect(diffs).toEqual({
-      canonicalByDefault: [
-        canonicalByDefaultDiff,
-        canonicalByDefaultDiff,
-      ],
+      canonicalByDefault: [canonicalByDefaultDiff, canonicalByDefaultDiff],
       nonCanonicalByDefault: [
         nonCanonicalByDefaultDiff,
         nonCanonicalByDefaultDiff,
       ],
-      canonicalByChoice: [
-        canonicalByChoiceDiff,
-        canonicalByChoiceDiff,
-      ],
+      canonicalByChoice: [canonicalByChoiceDiff, canonicalByChoiceDiff],
       nonCanonicalByChoice: [
         nonCanonicalByChoiceDiff,
         nonCanonicalByChoiceDiff,
@@ -2318,13 +2446,13 @@ describe("InMemoryCache#broadcastWatches", function () {
     expectNonCanonical("nonCanonicalByDefault");
     expectNonCanonical("nonCanonicalByChoice");
 
-    unwatchers.forEach(unwatch => unwatch());
+    unwatchers.forEach((unwatch) => unwatch());
   });
 });
 
 describe("InMemoryCache#modify", () => {
   it("should work with single modifier function", () => {
-    const cache = new InMemoryCache;
+    const cache = new InMemoryCache();
     const query = gql`
       query {
         a
@@ -2350,9 +2478,12 @@ describe("InMemoryCache#modify", () => {
       // that function for all fields within the object.
       fields(value, { fieldName }) {
         switch (fieldName) {
-          case "a": return value + 1;
-          case "b": return value - 1;
-          default: return value;
+          case "a":
+            return value + 1;
+          case "b":
+            return value - 1;
+          default:
+            return value;
         }
       },
     });
@@ -2371,7 +2502,7 @@ describe("InMemoryCache#modify", () => {
   });
 
   it("should work with multiple modifier functions", () => {
-    const cache = new InMemoryCache;
+    const cache = new InMemoryCache();
     const query = gql`
       query {
         a
@@ -2395,8 +2526,12 @@ describe("InMemoryCache#modify", () => {
     let checkedTypename = false;
     cache.modify({
       fields: {
-        a(value) { return value + 1 },
-        b(value) { return value - 1 },
+        a(value) {
+          return value + 1;
+        },
+        b(value) {
+          return value - 1;
+        },
         __typename(t: string, { readField }) {
           expect(t).toBe("Query");
           expect(readField("c")).toBe(0);
@@ -2439,8 +2574,8 @@ describe("InMemoryCache#modify", () => {
         isbn: string;
         author: {
           name: string;
-        },
-      },
+        };
+      };
     }> = gql`
       query {
         currentlyReading {
@@ -2467,7 +2602,7 @@ describe("InMemoryCache#modify", () => {
       query,
       data: {
         currentlyReading,
-      }
+      },
     });
 
     function read() {
@@ -2478,32 +2613,36 @@ describe("InMemoryCache#modify", () => {
 
     expect(cache.extract()).toMatchSnapshot();
 
-    expect(cache.modify({
-      id: cache.identify({
-        __typename: "Author",
-        name: "Maria Dahvana Headley",
-      }),
-      fields: {
-        name(_, { INVALIDATE }) {
-          return INVALIDATE;
+    expect(
+      cache.modify({
+        id: cache.identify({
+          __typename: "Author",
+          name: "Maria Dahvana Headley",
+        }),
+        fields: {
+          name(_, { INVALIDATE }) {
+            return INVALIDATE;
+          },
         },
-      },
-    })).toBe(false); // Nothing actually modified.
+      })
+    ).toBe(false); // Nothing actually modified.
 
     const resultAfterAuthorInvalidation = read();
     expect(resultAfterAuthorInvalidation).toEqual(initialResult);
     expect(resultAfterAuthorInvalidation).toBe(initialResult);
 
-    expect(cache.modify({
-      id: cache.identify({
-        __typename: "Book",
-        isbn: "0374110034",
-      }),
-      // Invalidate all fields of the Book entity.
-      fields(_, { INVALIDATE }) {
-        return INVALIDATE;
-      },
-    })).toBe(false); // Nothing actually modified.
+    expect(
+      cache.modify({
+        id: cache.identify({
+          __typename: "Book",
+          isbn: "0374110034",
+        }),
+        // Invalidate all fields of the Book entity.
+        fields(_, { INVALIDATE }) {
+          return INVALIDATE;
+        },
+      })
+    ).toBe(false); // Nothing actually modified.
 
     const resultAfterBookInvalidation = read();
     expect(resultAfterBookInvalidation).toEqual(resultAfterAuthorInvalidation);
@@ -2512,9 +2651,7 @@ describe("InMemoryCache#modify", () => {
       __typename: "Author",
       name: "Maria Dahvana Headley",
     });
-    expect(
-      resultAfterBookInvalidation.currentlyReading.author
-    ).toBe(
+    expect(resultAfterBookInvalidation.currentlyReading.author).toBe(
       resultAfterAuthorInvalidation.currentlyReading.author
     );
   });
@@ -2559,7 +2696,7 @@ describe("InMemoryCache#modify", () => {
       query,
       data: {
         currentlyReading,
-      }
+      },
     });
 
     expect(cache.extract()).toEqual({
@@ -2598,7 +2735,11 @@ describe("InMemoryCache#modify", () => {
 
     const yobResult = cache.readFragment({
       id: authorId,
-      fragment: gql`fragment YOB on Author { yearOfBirth }`,
+      fragment: gql`
+        fragment YOB on Author {
+          yearOfBirth
+        }
+      `,
     });
 
     expect(yobResult).toEqual({
@@ -2684,8 +2825,12 @@ describe("InMemoryCache#modify", () => {
     cache.modify({
       id: authorId,
       fields: {
-        __typename(_, { DELETE }) { return DELETE },
-        name(_, { DELETE }) { return DELETE },
+        __typename(_, { DELETE }) {
+          return DELETE;
+        },
+        name(_, { DELETE }) {
+          return DELETE;
+        },
       },
     });
 
@@ -2716,20 +2861,27 @@ describe("InMemoryCache#modify", () => {
 
           fields: {
             comments: {
-              merge(existing: Reference[], incoming: Reference[], { args, mergeObjects }) {
+              merge(
+                existing: Reference[],
+                incoming: Reference[],
+                { args, mergeObjects }
+              ) {
                 const merged = existing ? existing.slice(0) : [];
-                const end = args!.offset + Math.min(args!.limit, incoming.length);
+                const end =
+                  args!.offset + Math.min(args!.limit, incoming.length);
                 for (let i = args!.offset; i < end; ++i) {
-                  merged[i] = mergeObjects(merged[i], incoming[i - args!.offset]) as Reference;
+                  merged[i] = mergeObjects(
+                    merged[i],
+                    incoming[i - args!.offset]
+                  ) as Reference;
                 }
                 return merged;
               },
 
               read(existing: Reference[], { args }) {
-                const page = existing && existing.slice(
-                  args!.offset,
-                  args!.offset + args!.limit,
-                );
+                const page =
+                  existing &&
+                  existing.slice(args!.offset, args!.offset + args!.limit);
                 if (page && page.length > 0) {
                   return page;
                 }
@@ -2762,20 +2914,24 @@ describe("InMemoryCache#modify", () => {
         thread: {
           __typename: "Thread",
           tid: 123,
-          comments: [{
-            __typename: "Comment",
-            id: "c1",
-            text: "first post",
-          }, {
-            __typename: "Comment",
-            id: "c2",
-            text: "I have thoughts",
-          }, {
-            __typename: "Comment",
-            id: "c3",
-            text: "friendly ping",
-          }]
-        }
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              text: "first post",
+            },
+            {
+              __typename: "Comment",
+              id: "c2",
+              text: "I have thoughts",
+            },
+            {
+              __typename: "Comment",
+              id: "c3",
+              text: "friendly ping",
+            },
+          ],
+        },
       },
       variables: {
         offset: 0,
@@ -2821,7 +2977,7 @@ describe("InMemoryCache#modify", () => {
         comments(comments: readonly Reference[], { readField }) {
           expect(Object.isFrozen(comments)).toBe(true);
           expect(comments.length).toBe(3);
-          const filtered = comments.filter(comment => {
+          const filtered = comments.filter((comment) => {
             return readField("id", comment) !== "c1";
           });
           expect(filtered.length).toBe(2);
@@ -2866,10 +3022,16 @@ describe("InMemoryCache#modify", () => {
   });
 
   it("should not revisit deleted fields", () => {
-    const cache = new InMemoryCache;
-    const query = gql`query { a b c }`;
+    const cache = new InMemoryCache();
+    const query = gql`
+      query {
+        a
+        b
+        c
+      }
+    `;
 
-    cache.recordOptimisticTransaction(cache => {
+    cache.recordOptimisticTransaction((cache) => {
       cache.writeQuery({
         query,
         data: {
@@ -2877,7 +3039,7 @@ describe("InMemoryCache#modify", () => {
           b: 2,
           c: 3,
         },
-      })
+      });
     }, "transaction");
 
     cache.modify({
@@ -2914,9 +3076,21 @@ describe("InMemoryCache#modify", () => {
   });
 
   it("should broadcast watches for queries with changed fields", () => {
-    const cache = new InMemoryCache;
-    const queryA = gql`{ a { value } }`;
-    const queryB = gql`{ b { value } }`;
+    const cache = new InMemoryCache();
+    const queryA = gql`
+      {
+        a {
+          value
+        }
+      }
+    `;
+    const queryB = gql`
+      {
+        b {
+          value
+        }
+      }
+    `;
 
     cache.writeQuery({
       query: queryA,
@@ -2926,7 +3100,7 @@ describe("InMemoryCache#modify", () => {
           id: 1,
           value: 123,
         },
-      }
+      },
     });
 
     cache.writeQuery({
@@ -2937,7 +3111,7 @@ describe("InMemoryCache#modify", () => {
           id: 1,
           value: 321,
         },
-      }
+      },
     });
 
     expect(cache.extract()).toEqual({
@@ -2981,7 +3155,7 @@ describe("InMemoryCache#modify", () => {
     function makeResult(
       __typename: string,
       value: number,
-      complete: boolean = true,
+      complete: boolean = true
     ) {
       return {
         complete,
@@ -3033,9 +3207,11 @@ describe("InMemoryCache#modify", () => {
 
     // Check that resetting the result cache does not trigger additional watch
     // notifications.
-    expect(cache.gc({
-      resetResultCache: true,
-    })).toEqual([]);
+    expect(
+      cache.gc({
+        resetResultCache: true,
+      })
+    ).toEqual([]);
     expect(aResults).toEqual([a123, a124]);
     expect(bResults).toEqual([b321, b322]);
     cache["broadcastWatches"]();
@@ -3123,21 +3299,20 @@ describe("InMemoryCache#modify", () => {
 
       cache.modify({
         fields: {
-          book(book: Reference, {
-            fieldName,
-            storeFieldName,
-            isReference,
-            readField,
-            DELETE,
-          }) {
+          book(
+            book: Reference,
+            { fieldName, storeFieldName, isReference, readField, DELETE }
+          ) {
             expect(fieldName).toBe("book");
             expect(isReference(book)).toBe(true);
             expect(typeof readField("title", book)).toBe("string");
             expect(readField("__typename", book)).toBe("Book");
-            expect(readField({
-              fieldName: "__typename",
-              from: book,
-            })).toBe("Book");
+            expect(
+              readField({
+                fieldName: "__typename",
+                from: book,
+              })
+            ).toBe("Book");
 
             const parts = storeFieldName.split(":");
             expect(parts.shift()).toBe("book");
@@ -3228,9 +3403,7 @@ describe("InMemoryCache#modify", () => {
       },
     });
 
-    expect(cache.gc()).toEqual([
-      'Book:{"isbn":"1760641790"}',
-    ]);
+    expect(cache.gc()).toEqual(['Book:{"isbn":"1760641790"}']);
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
@@ -3243,7 +3416,11 @@ describe("InMemoryCache#modify", () => {
     const cache = new InMemoryCache();
 
     cache.writeQuery({
-      query: gql`query { field }`,
+      query: gql`
+        query {
+          field
+        }
+      `,
       data: {
         field: "oyez",
       },
@@ -3259,12 +3436,14 @@ describe("InMemoryCache#modify", () => {
     expect(cache.extract()).toEqual(snapshot);
 
     function check(id: any) {
-      expect(cache.modify({
-        id,
-        fields(value) {
-          throw new Error(`unexpected value: ${value}`);
-        },
-      })).toBe(false);
+      expect(
+        cache.modify({
+          id,
+          fields(value) {
+            throw new Error(`unexpected value: ${value}`);
+          },
+        })
+      ).toBe(false);
     }
 
     check(void 0);
@@ -3395,22 +3574,17 @@ describe("ReactiveVar and makeVar", () => {
     const spy = jest.spyOn(nameVar, "forgetCache");
 
     const diffs: Cache.DiffResult<any>[] = [];
-    const watch = () => cache.watch({
-      query,
-      optimistic: true,
-      immediate: true,
-      callback(diff) {
-        diffs.push(diff);
-      },
-    });
+    const watch = () =>
+      cache.watch({
+        query,
+        optimistic: true,
+        immediate: true,
+        callback(diff) {
+          diffs.push(diff);
+        },
+      });
 
-    const unwatchers = [
-      watch(),
-      watch(),
-      watch(),
-      watch(),
-      watch(),
-    ];
+    const unwatchers = [watch(), watch(), watch(), watch(), watch()];
 
     expect(diffs.length).toBe(5);
 
@@ -3434,7 +3608,7 @@ describe("ReactiveVar and makeVar", () => {
     expect(diffs.length).toBe(6);
 
     expect(unwatchers.length).toBe(3);
-    unwatchers.forEach(unwatch => unwatch());
+    unwatchers.forEach((unwatch) => unwatch());
 
     expect(cache["watches"].size).toBe(0);
     expect(spy).toBeCalledTimes(1);
@@ -3448,14 +3622,16 @@ describe("ReactiveVar and makeVar", () => {
 
     function watch(id: string) {
       const fns = unwatchers[id] || (unwatchers[id] = []);
-      fns.push(cache.watch({
-        query,
-        optimistic: true,
-        immediate: true,
-        callback() {
-          diffCounts[id] = (diffCounts[id] || 0) + 1;
-        },
-      }));
+      fns.push(
+        cache.watch({
+          query,
+          optimistic: true,
+          immediate: true,
+          callback() {
+            diffCounts[id] = (diffCounts[id] || 0) + 1;
+          },
+        })
+      );
     }
 
     watch("a");
@@ -3472,7 +3648,7 @@ describe("ReactiveVar and makeVar", () => {
       d: 1,
     });
 
-    unwatchers.a.forEach(unwatch => unwatch());
+    unwatchers.a.forEach((unwatch) => unwatch());
     unwatchers.a.length = 0;
     expect(cache["watches"].size).toBe(3);
 
@@ -3556,29 +3732,22 @@ describe("ReactiveVar and makeVar", () => {
     const spy = jest.spyOn(nameVar, "forgetCache");
 
     const diffs: Cache.DiffResult<any>[] = [];
-    const watch = (immediate = true) => cache.watch({
-      query,
-      optimistic: true,
-      immediate,
-      callback(diff) {
-        diffs.push(diff);
-      },
-    });
+    const watch = (immediate = true) =>
+      cache.watch({
+        query,
+        optimistic: true,
+        immediate,
+        callback(diff) {
+          diffs.push(diff);
+        },
+      });
 
-    const unwatchers = [
-      watch(),
-      watch(),
-      watch(),
-    ];
+    const unwatchers = [watch(), watch(), watch()];
 
-    const names = () => diffs.map(diff => diff.result.onCall.name);
+    const names = () => diffs.map((diff) => diff.result.onCall.name);
 
     expect(diffs.length).toBe(3);
-    expect(names()).toEqual([
-      "Ben",
-      "Ben",
-      "Ben",
-    ]);
+    expect(names()).toEqual(["Ben", "Ben", "Ben"]);
 
     expect(cache["watches"].size).toBe(3);
     expect(spy).not.toBeCalled();
@@ -3592,12 +3761,7 @@ describe("ReactiveVar and makeVar", () => {
     expect(spy).not.toBeCalled();
 
     nameVar("Hugh");
-    expect(names()).toEqual([
-      "Ben",
-      "Ben",
-      "Ben",
-      "Hugh",
-    ]);
+    expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh"]);
 
     unwatchers.pop()!();
     expect(cache["watches"].size).toBe(0);
@@ -3606,47 +3770,25 @@ describe("ReactiveVar and makeVar", () => {
 
     // This update is ignored because the cache no longer has any watchers.
     nameVar("ignored");
-    expect(names()).toEqual([
-      "Ben",
-      "Ben",
-      "Ben",
-      "Hugh",
-    ]);
+    expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh"]);
 
     // Call watch(false) to avoid immediate delivery of the "ignored" name.
     unwatchers.push(watch(false));
     expect(cache["watches"].size).toBe(1);
-    expect(names()).toEqual([
-      "Ben",
-      "Ben",
-      "Ben",
-      "Hugh",
-    ]);
+    expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh"]);
 
     // This is the test that would fail if cache.watch did not call
     // recallCache(cache) upon re-adding the first watcher.
     nameVar("Jenn");
-    expect(names()).toEqual([
-      "Ben",
-      "Ben",
-      "Ben",
-      "Hugh",
-      "Jenn",
-    ]);
+    expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh", "Jenn"]);
 
-    unwatchers.forEach(cancel => cancel());
+    unwatchers.forEach((cancel) => cancel());
     expect(spy).toBeCalledTimes(2);
     expect(spy).toBeCalledWith(cache);
 
     // Ignored again because all watchers have been cancelled.
     nameVar("also ignored");
-    expect(names()).toEqual([
-      "Ben",
-      "Ben",
-      "Ben",
-      "Hugh",
-      "Jenn",
-    ]);
+    expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh", "Jenn"]);
   });
 
   it("should broadcast only once for multiple reads of same variable", () => {
@@ -3666,7 +3808,7 @@ describe("ReactiveVar and makeVar", () => {
     // TODO This should not be necessary, but cache.readQuery currently
     // returns null if we read a query before writing any queries.
     cache.restore({
-      ROOT_QUERY: {}
+      ROOT_QUERY: {},
     });
 
     const broadcast = cache["broadcastWatches"];
@@ -3748,10 +3890,14 @@ describe("ReactiveVar and makeVar", () => {
     ]);
   });
 
-  it('should broadcast to manually added caches', () => {
+  it("should broadcast to manually added caches", () => {
     const rv = makeVar(0);
-    const cache = new InMemoryCache;
-    const query = gql`query { value }`;
+    const cache = new InMemoryCache();
+    const query = gql`
+      query {
+        value
+      }
+    `;
     const diffs: Cache.DiffResult<any>[] = [];
     const watch: Cache.WatchOptions = {
       query,
@@ -3876,7 +4022,7 @@ describe("ReactiveVar and makeVar", () => {
   });
 });
 
-describe('TypedDocumentNode<Data, Variables>', () => {
+describe("TypedDocumentNode<Data, Variables>", () => {
   type Book = {
     isbn?: string;
     title: string;
@@ -3885,17 +4031,16 @@ describe('TypedDocumentNode<Data, Variables>', () => {
     };
   };
 
-  const query: TypedDocumentNode<
-    { book: Book },
-    { isbn: string }
-  > = gql`query GetBook($isbn: String!) {
-    book(isbn: $isbn) {
-      title
-      author {
-        name
+  const query: TypedDocumentNode<{ book: Book }, { isbn: string }> = gql`
+    query GetBook($isbn: String!) {
+      book(isbn: $isbn) {
+        title
+        author {
+          name
+        }
       }
     }
-  }`;
+  `;
 
   const fragment: TypedDocumentNode<Book> = gql`
     fragment TitleAndAuthor on Book {

@@ -1,5 +1,5 @@
-import type { ObservableQuery, ApolloQueryResult } from '../../core/index.js';
-import type { ObservableSubscription } from '../../utilities/index.js';
+import type { ObservableQuery, ApolloQueryResult } from "../../core/index.js";
+import type { ObservableSubscription } from "../../utilities/index.js";
 
 /**
  *
@@ -17,7 +17,7 @@ export type Options = {
   errorCallbacks?: ((error: Error) => any)[];
 };
 
-export type ResultCallback = ((result: ApolloQueryResult<any>) => any);
+export type ResultCallback = (result: ApolloQueryResult<any>) => any;
 
 // Take an observable and N callbacks, and observe the observable,
 // ensuring it is called exactly N times, resolving once it has done so.
@@ -57,27 +57,29 @@ export function observableToPromiseAndSubscription(
 
     subscription = observable.subscribe({
       next(result: ApolloQueryResult<any>) {
-        queue = queue.then(() => {
-          const cb = cbs[cbIndex++];
-          if (cb) return cb(result);
-          reject(new Error(`Observable 'next' method called more than ${cbs.length} times`));
-        }).then(
-          res => {
+        queue = queue
+          .then(() => {
+            const cb = cbs[cbIndex++];
+            if (cb) return cb(result);
+            reject(
+              new Error(
+                `Observable 'next' method called more than ${cbs.length} times`
+              )
+            );
+          })
+          .then((res) => {
             results.push(res);
             tryToResolve();
-          },
-          reject,
-        );
+          }, reject);
       },
       error(error: Error) {
-        queue = queue.then(() => {
-          const errorCb = errorCallbacks[errorIndex++];
-          if (errorCb) return errorCb(error);
-          reject(error);
-        }).then(
-          tryToResolve,
-          reject,
-        );
+        queue = queue
+          .then(() => {
+            const errorCb = errorCallbacks[errorIndex++];
+            if (errorCb) return errorCb(error);
+            reject(error);
+          })
+          .then(tryToResolve, reject);
       },
     });
   });
@@ -88,7 +90,7 @@ export function observableToPromiseAndSubscription(
   };
 }
 
-export default function(
+export default function (
   options: Options,
   ...cbs: ResultCallback[]
 ): Promise<any[]> {

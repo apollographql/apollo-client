@@ -1,18 +1,18 @@
-import gql from 'graphql-tag';
+import gql from "graphql-tag";
 
-import { InMemoryCache } from '../inMemoryCache';
+import { InMemoryCache } from "../inMemoryCache";
 
-describe('optimistic cache layers', () => {
-  it('return === results for repeated reads', () => {
+describe("optimistic cache layers", () => {
+  it("return === results for repeated reads", () => {
     const cache = new InMemoryCache({
       resultCaching: true,
       canonizeResults: true,
       dataIdFromObject(value: any) {
         switch (value && value.__typename) {
-          case 'Book':
-            return 'Book:' + value.isbn;
-          case 'Author':
-            return 'Author:' + value.name;
+          case "Book":
+            return "Book:" + value.isbn;
+          case "Author":
+            return "Author:" + value.name;
         }
       },
     });
@@ -40,12 +40,12 @@ describe('optimistic cache layers', () => {
       query,
       data: {
         book: {
-          __typename: 'Book',
-          isbn: '1980719802',
-          title: '1984',
+          __typename: "Book",
+          isbn: "1980719802",
+          title: "1984",
           author: {
-            __typename: 'Author',
-            name: 'George Orwell',
+            __typename: "Author",
+            name: "George Orwell",
           },
         },
       },
@@ -54,11 +54,11 @@ describe('optimistic cache layers', () => {
     const result1984 = readOptimistic(cache);
     expect(result1984).toEqual({
       book: {
-        __typename: 'Book',
-        title: '1984',
+        __typename: "Book",
+        title: "1984",
         author: {
-          __typename: 'Author',
-          name: 'George Orwell',
+          __typename: "Author",
+          name: "George Orwell",
         },
       },
     });
@@ -66,20 +66,21 @@ describe('optimistic cache layers', () => {
     expect(result1984).toBe(readOptimistic(cache));
     expect(result1984).toBe(readRealistic(cache));
 
-    let result2666InTransaction: ReturnType<typeof readOptimistic> | null = null;
-    cache.performTransaction(proxy => {
+    let result2666InTransaction: ReturnType<typeof readOptimistic> | null =
+      null;
+    cache.performTransaction((proxy) => {
       expect(readOptimistic(cache)).toEqual(result1984);
 
       proxy.writeQuery({
         query,
         data: {
           book: {
-            __typename: 'Book',
-            isbn: '0312429215',
-            title: '2666',
+            __typename: "Book",
+            isbn: "0312429215",
+            title: "2666",
             author: {
-              __typename: 'Author',
-              name: 'Roberto Bolaño',
+              __typename: "Author",
+              name: "Roberto Bolaño",
             },
           },
         },
@@ -88,32 +89,32 @@ describe('optimistic cache layers', () => {
       result2666InTransaction = readOptimistic(proxy);
       expect(result2666InTransaction).toEqual({
         book: {
-          __typename: 'Book',
-          title: '2666',
+          __typename: "Book",
+          title: "2666",
           author: {
-            __typename: 'Author',
-            name: 'Roberto Bolaño',
+            __typename: "Author",
+            name: "Roberto Bolaño",
           },
         },
       });
-    }, 'first');
+    }, "first");
 
     expect(readOptimistic(cache)).toBe(result2666InTransaction);
 
     expect(result1984).toBe(readRealistic(cache));
 
     let resultCatch22: ReturnType<typeof readOptimistic> | null = null;
-    cache.performTransaction(proxy => {
+    cache.performTransaction((proxy) => {
       proxy.writeQuery({
         query,
         data: {
           book: {
-            __typename: 'Book',
-            isbn: '1451626657',
-            title: 'Catch-22',
+            __typename: "Book",
+            isbn: "1451626657",
+            title: "Catch-22",
             author: {
-              __typename: 'Author',
-              name: 'Joseph Heller',
+              __typename: "Author",
+              name: "Joseph Heller",
             },
           },
         },
@@ -122,21 +123,21 @@ describe('optimistic cache layers', () => {
       resultCatch22 = readOptimistic(proxy);
       expect(resultCatch22).toEqual({
         book: {
-          __typename: 'Book',
-          title: 'Catch-22',
+          __typename: "Book",
+          title: "Catch-22",
           author: {
-            __typename: 'Author',
-            name: 'Joseph Heller',
+            __typename: "Author",
+            name: "Joseph Heller",
           },
         },
       });
-    }, 'second');
+    }, "second");
 
     expect(readOptimistic(cache)).toBe(resultCatch22);
 
     expect(result1984).toBe(readRealistic(cache));
 
-    cache.removeOptimistic('first');
+    cache.removeOptimistic("first");
 
     expect(readOptimistic(cache)).toBe(resultCatch22);
 
@@ -146,12 +147,12 @@ describe('optimistic cache layers', () => {
       query,
       data: {
         book: {
-          __typename: 'Book',
-          isbn: '9781451673319',
-          title: 'Fahrenheit 451',
+          __typename: "Book",
+          isbn: "9781451673319",
+          title: "Fahrenheit 451",
           author: {
-            __typename: 'Author',
-            name: 'Ray Bradbury',
+            __typename: "Author",
+            name: "Ray Bradbury",
           },
         },
       },
@@ -162,16 +163,16 @@ describe('optimistic cache layers', () => {
     const resultF451 = readRealistic(cache);
     expect(resultF451).toEqual({
       book: {
-        __typename: 'Book',
-        title: 'Fahrenheit 451',
+        __typename: "Book",
+        title: "Fahrenheit 451",
         author: {
-          __typename: 'Author',
-          name: 'Ray Bradbury',
+          __typename: "Author",
+          name: "Ray Bradbury",
         },
       },
     });
 
-    cache.removeOptimistic('second');
+    cache.removeOptimistic("second");
 
     expect(resultF451).toBe(readRealistic(cache));
     expect(resultF451).toBe(readOptimistic(cache));
@@ -179,39 +180,39 @@ describe('optimistic cache layers', () => {
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        book: { __ref: 'Book:9781451673319' },
+        book: { __ref: "Book:9781451673319" },
       },
-      'Book:1980719802': {
-        title: '1984',
-        author: { __ref: 'Author:George Orwell' },
-        __typename: 'Book',
+      "Book:1980719802": {
+        title: "1984",
+        author: { __ref: "Author:George Orwell" },
+        __typename: "Book",
       },
-      'Book:9781451673319': {
-        title: 'Fahrenheit 451',
-        author: { __ref: 'Author:Ray Bradbury' },
-        __typename: 'Book',
+      "Book:9781451673319": {
+        title: "Fahrenheit 451",
+        author: { __ref: "Author:Ray Bradbury" },
+        __typename: "Book",
       },
-      'Author:George Orwell': {
-        __typename: 'Author',
-        name: 'George Orwell',
+      "Author:George Orwell": {
+        __typename: "Author",
+        name: "George Orwell",
       },
-      'Author:Ray Bradbury': {
-        __typename: 'Author',
-        name: 'Ray Bradbury',
+      "Author:Ray Bradbury": {
+        __typename: "Author",
+        name: "Ray Bradbury",
       },
     });
   });
 
-  it('dirties appropriate IDs when optimistic layers are removed', () => {
+  it("dirties appropriate IDs when optimistic layers are removed", () => {
     const cache = new InMemoryCache({
       resultCaching: true,
       canonizeResults: true,
       dataIdFromObject(value: any) {
         switch (value && value.__typename) {
-          case 'Book':
-            return 'Book:' + value.isbn;
-          case 'Author':
-            return 'Author:' + value.name;
+          case "Book":
+            return "Book:" + value.isbn;
+          case "Author":
+            return "Author:" + value.name;
         }
       },
     });
@@ -230,24 +231,24 @@ describe('optimistic cache layers', () => {
     `;
 
     const eagerBookData = {
-      __typename: 'Book',
-      isbn: '1603589082',
-      title: 'Eager',
-      subtitle: 'The Surprising, Secret Life of Beavers and Why They Matter',
+      __typename: "Book",
+      isbn: "1603589082",
+      title: "Eager",
+      subtitle: "The Surprising, Secret Life of Beavers and Why They Matter",
       author: {
-        __typename: 'Author',
-        name: 'Ben Goldfarb',
+        __typename: "Author",
+        name: "Ben Goldfarb",
       },
     };
 
     const spinelessBookData = {
-      __typename: 'Book',
-      isbn: '0735211280',
-      title: 'Spineless',
-      subtitle: 'The Science of Jellyfish and the Art of Growing a Backbone',
+      __typename: "Book",
+      isbn: "0735211280",
+      title: "Spineless",
+      subtitle: "The Science of Jellyfish and the Art of Growing a Backbone",
       author: {
-        __typename: 'Author',
-        name: 'Juli Berwald',
+        __typename: "Author",
+        name: "Juli Berwald",
       },
     };
 
@@ -261,17 +262,17 @@ describe('optimistic cache layers', () => {
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        books: [{ __ref: 'Book:1603589082' }, { __ref: 'Book:0735211280' }],
+        books: [{ __ref: "Book:1603589082" }, { __ref: "Book:0735211280" }],
       },
-      'Book:1603589082': {
-        title: 'Eager',
+      "Book:1603589082": {
+        title: "Eager",
         subtitle: eagerBookData.subtitle,
-        __typename: 'Book',
+        __typename: "Book",
       },
-      'Book:0735211280': {
-        title: 'Spineless',
+      "Book:0735211280": {
+        title: "Spineless",
         subtitle: spinelessBookData.subtitle,
-        __typename: 'Book',
+        __typename: "Book",
       },
     });
 
@@ -283,14 +284,16 @@ describe('optimistic cache layers', () => {
     expect(result).toEqual({
       books: [
         {
-          __typename: 'Book',
-          title: 'Eager',
-          subtitle: 'The Surprising, Secret Life of Beavers and Why They Matter',
+          __typename: "Book",
+          title: "Eager",
+          subtitle:
+            "The Surprising, Secret Life of Beavers and Why They Matter",
         },
         {
-          __typename: 'Book',
-          title: 'Spineless',
-          subtitle: 'The Science of Jellyfish and the Art of Growing a Backbone',
+          __typename: "Book",
+          title: "Spineless",
+          subtitle:
+            "The Science of Jellyfish and the Art of Growing a Backbone",
         },
       ],
     });
@@ -305,7 +308,7 @@ describe('optimistic cache layers', () => {
     `;
 
     cache.writeFragment({
-      id: 'Book:0735211280',
+      id: "Book:0735211280",
       fragment: bookAuthorNameFragment,
       data: {
         author: spinelessBookData.author,
@@ -320,15 +323,15 @@ describe('optimistic cache layers', () => {
     expect(resultWithSpinlessAuthor.books[0]).toBe(result.books[0]);
     expect(resultWithSpinlessAuthor.books[1]).toBe(result.books[1]);
 
-    cache.recordOptimisticTransaction(proxy => {
+    cache.recordOptimisticTransaction((proxy) => {
       proxy.writeFragment({
-        id: 'Book:1603589082',
+        id: "Book:1603589082",
         fragment: bookAuthorNameFragment,
         data: {
           author: eagerBookData.author,
         },
       });
-    }, 'eager author');
+    }, "eager author");
 
     expect(read()).toEqual(result);
 
@@ -345,52 +348,47 @@ describe('optimistic cache layers', () => {
     `;
 
     function readWithAuthors(optimistic = true) {
-      return cache.readQuery<Q>({
-        query: queryWithAuthors,
-      }, optimistic)!;
+      return cache.readQuery<Q>(
+        {
+          query: queryWithAuthors,
+        },
+        optimistic
+      )!;
     }
 
     function withoutISBN(data: any) {
-      return JSON.parse(JSON.stringify(
-        data,
-        (key, value) => {
-          if (key === 'isbn') return;
+      return JSON.parse(
+        JSON.stringify(data, (key, value) => {
+          if (key === "isbn") return;
           return value;
-        },
-      ));
+        })
+      );
     }
 
     const resultWithTwoAuthors = readWithAuthors();
     expect(resultWithTwoAuthors).toEqual({
-      books: [
-        withoutISBN(eagerBookData),
-        withoutISBN(spinelessBookData),
-      ],
+      books: [withoutISBN(eagerBookData), withoutISBN(spinelessBookData)],
     });
 
     const buzzBookData = {
-      __typename: 'Book',
-      isbn: '0465052614',
-      title: 'Buzz',
-      subtitle: 'The Nature and Necessity of Bees',
+      __typename: "Book",
+      isbn: "0465052614",
+      title: "Buzz",
+      subtitle: "The Nature and Necessity of Bees",
       author: {
-        __typename: 'Author',
-        name: 'Thor Hanson',
+        __typename: "Author",
+        name: "Thor Hanson",
       },
     };
 
-    cache.recordOptimisticTransaction(proxy => {
+    cache.recordOptimisticTransaction((proxy) => {
       proxy.writeQuery({
         query: queryWithAuthors,
         data: {
-          books: [
-            eagerBookData,
-            spinelessBookData,
-            buzzBookData,
-          ],
+          books: [eagerBookData, spinelessBookData, buzzBookData],
         },
       });
-    }, 'buzz book');
+    }, "buzz book");
 
     const resultWithBuzz = readWithAuthors();
 
@@ -418,15 +416,15 @@ describe('optimistic cache layers', () => {
     function readSpinelessFragment() {
       return cache.readFragment<{ author: any }>(
         {
-          id: 'Book:' + spinelessBookData.isbn,
+          id: "Book:" + spinelessBookData.isbn,
           fragment: bookAuthorNameFragment,
         },
-        true,
+        true
       );
     }
 
     const spinelessBeforeRemovingBuzz = readSpinelessFragment();
-    cache.removeOptimistic('buzz book');
+    cache.removeOptimistic("buzz book");
     const spinelessAfterRemovingBuzz = readSpinelessFragment();
     expect(spinelessBeforeRemovingBuzz).toEqual(spinelessAfterRemovingBuzz);
     expect(spinelessBeforeRemovingBuzz).toBe(spinelessAfterRemovingBuzz);
@@ -441,7 +439,7 @@ describe('optimistic cache layers', () => {
 
     const nonOptimisticResult = readWithAuthors(false);
     expect(nonOptimisticResult).toEqual(resultWithBuzz);
-    cache.removeOptimistic('eager author');
+    cache.removeOptimistic("eager author");
     const resultWithoutOptimisticLayers = readWithAuthors();
     expect(resultWithoutOptimisticLayers).toBe(nonOptimisticResult);
   });
@@ -470,10 +468,12 @@ describe('optimistic cache layers', () => {
       }
 
       function expectOptimisticCount(value: number) {
-        expect(cache.readQuery({
-          query,
-          optimistic: true,
-        })).toEqual({
+        expect(
+          cache.readQuery({
+            query,
+            optimistic: true,
+          })
+        ).toEqual({
           counter: {
             value,
           },
@@ -491,10 +491,12 @@ describe('optimistic cache layers', () => {
 
       function expectNonOptimisticCount(value: number) {
         // Reading non-optimistically returns the original non-optimistic data.
-        expect(cache.readQuery({
-          query,
-          optimistic: false,
-        })).toEqual({
+        expect(
+          cache.readQuery({
+            query,
+            optimistic: false,
+          })
+        ).toEqual({
           counter: {
             value,
           },
@@ -545,9 +547,11 @@ describe('optimistic cache layers', () => {
           write(3);
           expectOptimisticCount(3);
 
-          expect(cache.evict({
-            fieldName: "counter",
-          })).toBe(true);
+          expect(
+            cache.evict({
+              fieldName: "counter",
+            })
+          ).toBe(true);
 
           expectOptimisticEviction();
         },
@@ -556,10 +560,12 @@ describe('optimistic cache layers', () => {
       function expectOptimisticEviction() {
         // Reading optimistically fails because the data have been evicted,
         // though only optimistically.
-        expect(cache.readQuery({
-          query,
-          optimistic: true,
-        })).toBe(null);
+        expect(
+          cache.readQuery({
+            query,
+            optimistic: true,
+          })
+        ).toBe(null);
 
         // Extracting optimistically shows Query.counter undefined.
         expect(cache.extract(true)).toEqual({
@@ -589,9 +595,11 @@ describe('optimistic cache layers', () => {
       // Since this eviction is not happening inside an optimistic update
       // function, it evicts the Query.counter field from both the optimistic
       // layer (1) and the root layer.
-      expect(cache.evict({
-        fieldName: "counter",
-      })).toBe(true);
+      expect(
+        cache.evict({
+          fieldName: "counter",
+        })
+      ).toBe(true);
 
       expectOptimisticEviction();
 

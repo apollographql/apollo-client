@@ -1,17 +1,17 @@
-import type { Operation } from '../core/index.js';
+import type { Operation } from "../core/index.js";
 
 export const selectURI = (
   operation: Operation,
-  fallbackURI?: string | ((operation: Operation) => string),
+  fallbackURI?: string | ((operation: Operation) => string)
 ) => {
   const context = operation.getContext();
   const contextURI = context.uri;
 
   if (contextURI) {
     return contextURI;
-  } else if (typeof fallbackURI === 'function') {
+  } else if (typeof fallbackURI === "function") {
     return fallbackURI(operation);
   } else {
-    return (fallbackURI as string) || '/graphql';
+    return (fallbackURI as string) || "/graphql";
   }
 };

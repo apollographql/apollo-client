@@ -2,15 +2,18 @@ import { ObjectCanon } from "../object-canon";
 
 describe("ObjectCanon", () => {
   it("can canonicalize objects and arrays", () => {
-    const canon = new ObjectCanon;
+    const canon = new ObjectCanon();
 
     const obj1 = {
       a: [1, 2],
       b: {
-        c: [{
-          d: "dee",
-          e: "ee",
-        }, "f"],
+        c: [
+          {
+            d: "dee",
+            e: "ee",
+          },
+          "f",
+        ],
         g: "gee",
       },
     };
@@ -18,10 +21,13 @@ describe("ObjectCanon", () => {
     const obj2 = {
       b: {
         g: "gee",
-        c: [{
-          e: "ee",
-          d: "dee",
-        }, "f"],
+        c: [
+          {
+            e: "ee",
+            d: "dee",
+          },
+          "f",
+        ],
       },
       a: [1, 2],
     };
@@ -49,18 +55,16 @@ describe("ObjectCanon", () => {
   // TODO Reenable this when ObjectCanon allows enabling canonization for
   // arbitrary prototypes (not just {Array,Object}.prototype and null).
   it.skip("preserves custom prototypes", () => {
-    const canon = new ObjectCanon;
+    const canon = new ObjectCanon();
 
     class Custom {
       constructor(public value: any) {}
-      getValue() { return this.value }
+      getValue() {
+        return this.value;
+      }
     }
 
-    const customs = [
-      new Custom("oyez"),
-      new Custom(1234),
-      new Custom(true),
-    ];
+    const customs = [new Custom("oyez"), new Custom(1234), new Custom(true)];
 
     const admitted = canon.admit(customs);
     expect(admitted).not.toBe(customs);
@@ -108,12 +112,12 @@ describe("ObjectCanon", () => {
     }
     checkProto(null);
     checkProto({});
-    checkProto([1,2,3]);
+    checkProto([1, 2, 3]);
     checkProto(() => "fun");
   });
 
   it("unwraps Pass wrappers as-is", () => {
-    const canon = new ObjectCanon;
+    const canon = new ObjectCanon();
 
     const cd = {
       c: "see",

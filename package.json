@@ -100,7 +100,7 @@
     "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.7.1",
+    "@arethetypeswrong/cli": "0.8.0",
     "@babel/parser": "7.22.10",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.2",
@@ -129,7 +129,7 @@
     "blob-polyfill": "7.0.20220408",
     "bytes": "3.1.2",
     "cross-fetch": "3.1.8",
-    "eslint": "8.47.0",
+    "eslint": "8.48.0",
     "eslint-import-resolver-typescript": "3.6.0",
     "eslint-plugin-import": "npm:@phryneas/eslint-plugin-import@2.27.5-pr.2813.2817.199971c",
     "eslint-plugin-testing-library": "5.11.1",
@@ -162,7 +162,7 @@
     "ts-jest-resolver": "2.0.1",
     "ts-node": "10.9.1",
     "typedoc": "0.24.7",
-    "typescript": "5.1.6",
+    "typescript": "5.2.2",
     "wait-for-observables": "1.0.3",
     "web-streams-polyfill": "3.2.1",
     "whatwg-fetch": "3.6.17"

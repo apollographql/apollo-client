@@ -5,7 +5,8 @@ import type {
   TypedDocumentNode,
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { wrapQueryRef, type QueryReference } from "../cache/QueryReference.js";
+import { wrapQueryRef } from "../cache/QueryReference.js";
+import type { QueryReference } from "../cache/QueryReference.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { __use } from "./internal/index.js";
 import { getSuspenseCache } from "../cache/index.js";

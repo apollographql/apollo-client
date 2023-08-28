@@ -6392,7 +6392,7 @@ describe("useSuspenseQuery", () => {
     });
 
     // Because we switched to a `no-cache` fetch policy, we should not see the
-    // newly fetched data in the cache after the fetch occured.
+    // newly fetched data in the cache after the fetch occurred.
     expect(cache.extract()[cacheKey]).toEqual({
       __typename: "Character",
       id: "1",

@@ -4,15 +4,15 @@ description: Using React 18 Suspense features with Apollo Client
 minVersion: 3.8.0
 ---
 
-"Suspense" is both a specific React API ([`<Suspense />`](https://react.dev/reference/react/Suspense), a component which "lets you display a fallback until its children have finished loading"), and often used more generally to refer to a new way to build React apps using the [**concurrent rendering engine**](https://react.dev/blog/2022/03/29/react-v18#what-is-concurrent-react) introduced in React 18.
+"Suspense" is generally used to refer to a new way of building React apps using the [**concurrent rendering engine**](https://react.dev/blog/2022/03/29/react-v18#what-is-concurrent-react) introduced in React 18. It's also a specific React API, [`<Suspense />`](https://react.dev/reference/react/Suspense), a component that lets you display a fallback until its children have finished loading.
 
-In this guide, we'll look at Apollo Client's data fetching hooks introduced in 3.8 which leverage React's powerful Suspense features and walk through some examples of how they can be used.
+This guide explores Apollo Client's data fetching hooks introduced in 3.8, which leverage React's powerful Suspense features.
 
 > To follow along with the examples below, open up our [Suspense demo](https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-client/v3/suspense-hooks?file=/src/App.tsx) on CodeSandbox.
 
 ## Fetching with Suspense
 
-`useSuspenseQuery` initiates a network request and causes the component calling it to suspend while the request is made. It can be thought of as a Suspense-ready replacement for `useQuery` that allows you to take advantage of React's Suspense features while fetching during render.
+The `useSuspenseQuery` hook initiates a network request and causes the component calling it to suspend while the request is made. You can think of it as a Suspense-ready replacement for `useQuery` that lets you take advantage of React's Suspense features while fetching during render.
 
 Let's take a look at an example:
 
@@ -69,17 +69,17 @@ function Dog({ id }: DogProps) {
 }
 ```
 
-> **Note:** this example manually defines TypeScript interfaces for `Data` and `Variables` as well as the type for `GET_DOG_QUERY` using `TypedDocumentNode`. [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) is a popular tool that will create these type definitions automatically for you. See the reference on [Using TypeScript](../development-testing/static-typing) for more information on integrating GraphQL Code Generator with Apollo Client.
+> **Note:** This example manually defines TypeScript interfaces for `Data` and `Variables` as well as the type for `GET_DOG_QUERY` using `TypedDocumentNode`. [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) is a popular tool that creates these type definitions automatically for you. See the reference on [Using TypeScript](../development-testing/static-typing) for more information on integrating GraphQL Code Generator with Apollo Client.
 
 In this example, our `App` component renders a `Dog` component which fetches the record for a single dog via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache is unable to fulfill the request for the `GetDog` query, so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest `Suspense` boundary _above_ the suspended component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for Mozzarella the Corgi.
 
-You may have noticed that `useSuspenseQuery` does not return a `loading` boolean: this is because the component calling `useSuspenseQuery` will always suspend when fetching data. A corollary is that when it _does_ render, `data` is always defined! Suspense fallbacks that exist **outside of suspended components** take the place of loading states that components were responsible for rendering themselves in the previous React paradigm.
+You may have noticed that `useSuspenseQuery` does not return a `loading` boolean. That's because the component calling `useSuspenseQuery` always suspends when fetching data. A corollary is that when it _does_ render, `data` is always defined! In the Suspense paradigm, fallbacks that exist **outside of suspended components** replace the loading states components were previously responsible for rendering themselves.
 
-> **Note for TypeScript users**: since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic type argument, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` will have the shape `{ id: string; name: string; breed: string; }`.
+> **Note for TypeScript users**: Since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic type argument, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` has the shape `{ id: string; name: string; breed: string; }`.
 
 ### Changing variables
 
-In the previous example, we fetched the record for a single dog by passing a hard-coded `id` variable, Mozzarella, to `useSuspenseQuery`. Now, let's say we want to fetch the record for a different dog using a dynamic value. We'll fetch the list of dogs with just their `name` and `id`, and once the user selects an individual dog we fetch more details, including their `breed`.
+In the previous example, we fetched the record for a single dog by passing a hard-coded `id` variable to `useSuspenseQuery`. Now, let's say we want to fetch the record for a different dog using a dynamic value. We'll fetch the `name` and `id` for our list of dogs, and once the user selects an individual dog, we fetch more details, including their `breed`.
 
 Let's update our example:
 
@@ -145,7 +145,7 @@ function Dog({ id }: DogProps) {
 }
 ```
 
-Changing the dog via the `select` will cause the component to suspend each time we select a dog whose record **does not yet exist in the cache**. Once we've loaded a given dog's record in the cache, however, selecting that dog again from our dropdown will not cause the component to re-suspend, since under our default `cache-first` fetch policy Apollo Client will not make a network request after a cache hit.
+Changing the dog via the `select` causes the component to suspend each time we select a dog whose record **does not yet exist in the cache**. Once we've loaded a given dog's record in the cache, selecting that dog again from our dropdown does not cause the component to re-suspend, since under our default `cache-first` fetch policy Apollo Client does not make a network request after a cache hit.
 
 ### Updating state without suspending
 
@@ -229,7 +229,7 @@ function App() {
 
 When the cache contains partial data, you may prefer to render that data immediately without suspending. To do this, use the `returnPartialData` option.
 
-> **Note:** this option only works when combined with either the `cache-first` (default) or `cache-and-network` fetch policy. `cache-only` is not currently supported by `useSuspenseQuery`. For details on these fetch policies, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
+> **Note:** This option only works when combined with either the `cache-first` (default) or `cache-and-network` fetch policy. `cache-only` is not currently supported by `useSuspenseQuery`. For details on these fetch policies, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
 
 Let's update our example to use the partial cache data and render immediately:
 
@@ -286,15 +286,15 @@ function Dog({ id }: DogProps) {
 }
 ```
 
-In this example, we write partial data to the cache for Buck to show the behavior when a query cannot be fully fulfilled from the cache. We tell `useSuspenseQuery` that we are ok rendering partial data by setting the `returnPartialData` option to `true`. When `Dog` renders for the first time, it does not suspend and uses the partial data immediately. Apollo Client will fetch the missing query data from the network in the background.
+In this example, we write partial data to the cache for Buck in order to show the behavior when a query cannot be entirely fulfilled from the cache. We tell `useSuspenseQuery` that we are ok rendering partial data by setting the `returnPartialData` option to `true`. When `Dog` renders for the first time, it does not suspend and uses the partial data immediately. Apollo Client then fetches the missing query data from the network in the background.
 
-You will see Buck's name displayed immediately after the `Name` label, followed by the `Breed` label with no value. Once the missing fields have loaded, `useSuspenseQuery` will update and Buck's breed will be displayed.
+On first render, Buck's name is displayed after the `Name` label, followed by the `Breed` label with no value. Once the missing fields have loaded, `useSuspenseQuery` triggers a re-render and Buck's breed is displayed.
 
-> **Note for TypeScript users**: with `returnPartialData` set to `true`, the returned type for the `data` property will mark all fields in the query type as [optional](https://www.typescriptlang.org/docs/handbook/2/objects.html#optional-properties). Apollo Client cannot accurately determine which fields are present in the cache at any given time when returning partial data.
+> **Note for TypeScript users**: With `returnPartialData` set to `true`, the returned type for the `data` property marks all fields in the query type as [optional](https://www.typescriptlang.org/docs/handbook/2/objects.html#optional-properties). Apollo Client cannot accurately determine which fields are present in the cache at any given time when returning partial data.
 
 ### Error handling
 
-By default, both network errors and GraphQL errors are thrown by `useSuspenseQuery`. These errors will be caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror).
+By default, both network errors and GraphQL errors are thrown by `useSuspenseQuery`. These errors are caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror).
 
 > **Note:** An error boundary is a **class component** that implements `static getDerivedStateFromError`. For more information, see the React docs for [catching rendering errors with an error boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
 
@@ -357,19 +357,19 @@ function App() {
 }
 ```
 
-Here, we're using our `ErrorBoundary` component and placing it **outside** of our `Dog` component. Now, when the `useSuspenseQuery` hook inside the `Dog` component throws an error, the `ErrorBoundary` will catch it and display the `fallback` element we've provided.
+Here, we're using our `ErrorBoundary` component and placing it **outside** of our `Dog` component. Now, when the `useSuspenseQuery` hook inside the `Dog` component throws an error, the `ErrorBoundary` catches it and displays the `fallback` element we've provided.
 
-> **Note:** when working with many React frameworks, you may see an error dialog overlay in development mode when errors are thrown, even **with** an error boundary. This is done to avoid the error being missed by developers.
+> **Note:** When working with many React frameworks, you may see an error dialog overlay in development mode when errors are thrown, even _with_ an error boundary. This is done to avoid the error being missed by developers.
 
 #### Rendering partial data alongside errors
 
-In some cases, you may want to render partial data alongside an error. To do this, set the `errorPolicy` option to `all`. `useSuspenseQuery` will avoid throwing the error and instead set an `error` property returned by the hook. To ignore errors altogether, set the `errorPolicy` to `ignore`. See the [`errorPolicy` documentation](/react/data/error-handling#graphql-error-policies) for more information.
+In some cases, you may want to render partial data alongside an error. To do this, set the `errorPolicy` option to `all`. By setting this option, `useSuspenseQuery` avoids throwing the error and instead sets an `error` property returned by the hook. To ignore errors altogether, set the `errorPolicy` to `ignore`. See the [`errorPolicy` documentation](/react/data/error-handling#graphql-error-policies) for more information.
 
 ### Avoiding request waterfalls
 
 Since `useSuspenseQuery` suspends while data is being fetched, a tree of components that all use `useSuspenseQuery` can cause a "waterfall", where each call to `useSuspenseQuery` depends on the previous to complete before it can start fetching. This can be avoided by fetching with `useBackgroundQuery` and reading the data with `useReadQuery`.
 
-`useBackgroundQuery` initiates a request for data in a parent component and returns a `queryRef` which is passed to `useReadQuery` to read the data in a child component. When the child component renders before the data has finished loading, the child component will suspend.
+`useBackgroundQuery` initiates a request for data in a parent component and returns a `queryRef` which is passed to `useReadQuery` to read the data in a child component. When the child component renders before the data has finished loading, the child component suspends.
 
 Let's update our example to utilize `useBackgroundQuery`:
 
@@ -381,7 +381,7 @@ import {
 } from '@apollo/client';
 
 function App() {
-  // We can start the request here, even though `Dog` 
+  // We can start the request here, even though `Dog`
   // suspends and the data is read by a grandchild component.
   const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
 
@@ -426,15 +426,15 @@ We begin fetching our `GET_BREEDS_QUERY` when the `App` component renders. The n
 
 When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsuspends and continues rendering, reaching the `Breeds` component. Since our `GET_BREEDS_QUERY` request was initiated higher up in our component tree using `useBackgroundQuery`, the network request for `GET_BREEDS_QUERY` **has already completed**! When the `Breeds` component reads the data from the `queryRef` provided by `useBackgroundQuery`, it avoids suspending and renders immediately with the fetched data.
 
-> **Note:** when the `GET_BREEDS_QUERY` takes _longer_ to fetch than our `GET_DOG_QUERY`, `useReadQuery` will suspend and the Suspense fallback inside of the `Dog` component is rendered instead.
+> **Note:** When the `GET_BREEDS_QUERY` takes _longer_ to fetch than our `GET_DOG_QUERY`, `useReadQuery` suspends and the Suspense fallback inside of the `Dog` component is rendered instead.
 
 #### A note about performance
 
-The `useBackgroundQuery` hook used in a parent component is responsible for kicking off fetches, but doesn't deal with reading or rendering data. This is delegated to the `useReadQuery` hook used in a child component. This separation of concerns provides a nice performance benefit because cache updates are observed by `useReadQuery` and will re-render only the child component. You may find this as a useful tool to optimize your component structure to avoid unnecessarily re-rendering parent components when cache data changes.
+The `useBackgroundQuery` hook used in a parent component is responsible for kicking off fetches, but doesn't deal with reading or rendering data. This is delegated to the `useReadQuery` hook used in a child component. This separation of concerns provides a nice performance benefit because cache updates are observed by `useReadQuery` and re-render only the child component. You may find this as a useful tool to optimize your component structure to avoid unnecessarily re-rendering parent components when cache data changes.
 
 ### Refetching and pagination
 
-Apollo's Suspense data fetching hooks return functions for refetching query data via the `refetch` function, and fetching additional pages of data via the `fetchMore` function. 
+Apollo's Suspense data fetching hooks return functions for refetching query data via the `refetch` function, and fetching additional pages of data via the `fetchMore` function.
 
 Let's update our example by adding the ability to refetch breeds. We destructure the `refetch` function from the second item in the tuple returned from `useBackgroundQuery`. We'll be sure to show a pending state to let the user know that data is being refetched by utilizing React's `useTransition` hook:
 
@@ -510,15 +510,15 @@ function Breeds({ queryRef, isPending }: BreedsProps) {
 }
 ```
 
-In this example, every time the user clicks the "Refetch!" button rendered by the `Dog` component, our `onRefetch` handler calls the `refetch` function returned by `useBackgroundQuery` which initiates a new network request for the `GET_BREEDS_QUERY` query. We wrap this in a transition by calling the `startTransition` function provided by the `useTransition` hook to avoid rendering our Suspense boundary. This maintains the existing UI while we fetch new data. To provide visual feedback that data is being fetched, we use the `isPending` boolean to lower the opacity on the list of breeds.
+In this example, our `App` component renders a `Dog` component that fetches a single dog's record via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache can't fulfill the request for the `GetDog` query, so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest `Suspense` boundary _above_ the suspended component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for the dog whose `id="3"`: Mozzarella the Corgi.
 
 ## Distinguishing between queries with `queryKey`
 
-In rare cases, you might need to render multiple components that use the same `query` and `variables` combination. Due to the mechanics of Suspense, Apollo Client uses the combination of `query` and `variables` to uniquely identify the query when using Apollo's `Suspense` data fetching hooks.
+Apollo Client uses the combination of `query` and `variables` to uniquely identify each query when using Apollo's Suspense data fetching hooks.
 
-This presents a problem, however, because it means multiple hooks may end up with the same identity. These hooks will suspend together, regardless of which component initiates or re-initiates a network request.
+If your application renders multiple components that use the same `query` and `variables`, this may present a problem: the queries made by multiple hooks share the same identity causing them to **suspend at the same time**, regardless of which component initiates or re-initiates a network request.
 
-You can prevent this with `queryKey` option to ensure each hook has a unique identity. When `queryKey` is provided, Apollo Client will use as part of the hook's identity in combination with its `query` and `variables`. 
+You can prevent this with `queryKey` option to ensure each hook has a unique identity. When `queryKey` is provided, Apollo Client uses it as part of the hook's identity in addition to its `query` and `variables`.
 
 For more information, see the [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery) API docs.
 

@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import type { ApolloClient } from "../../core/index.js";
 import { canUseSymbol } from "../../utilities/index.js";
 import type { RenderPromises } from "../ssr/index.js";

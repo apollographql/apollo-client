@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import { getApolloContext } from "../context/index.js";
 import { RenderPromises } from "./RenderPromises.js";
 import { renderToStaticMarkup } from "react-dom/server";

@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import type { ReactiveVar } from "../../core/index.js";
 
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T {

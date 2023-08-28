@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { ReactElement } from "rehackt";
 import { getMarkupFromTree } from "./getDataFromTree.js";
 import { renderToString } from "react-dom/server";
 

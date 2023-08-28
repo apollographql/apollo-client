@@ -1,5 +1,5 @@
 import { invariant } from "../../utilities/globals/index.js";
-import * as React from "react";
+import * as React from "rehackt";
 import hoistNonReactStatics from "hoist-non-react-statics";
 
 import { ApolloConsumer } from "../context/index.js";

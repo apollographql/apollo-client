@@ -933,7 +933,7 @@ export class QueryManager<TStore> {
   public startGraphQLSubscription<T = any>({
     query,
     fetchPolicy,
-    errorPolicy,
+    errorPolicy = 'none',
     variables,
     context = {},
   }: SubscriptionOptions): Observable<FetchResult<T>> {
@@ -971,7 +971,17 @@ export class QueryManager<TStore> {
           if (hasProtocolErrors) {
             errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
           }
-          throw new ApolloError(errors);
+
+          // `errorPolicy` is a mechanism for handling GraphQL errors, according
+          // to our documentation, so we throw protocol errors regardless of the
+          // set error policy.
+          if (errorPolicy === 'none' || hasProtocolErrors) {
+            throw new ApolloError(errors);
+          }
+        }
+
+        if (errorPolicy === 'ignore') {
+          delete result.errors
         }
 
         return result;

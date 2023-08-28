@@ -84,7 +84,7 @@ jobs:
         uses: changesets/action@v1
         with:
           version: echo "This step should never version"
-          publish: npm run changeset-publish # by default, this will publish to npm and GitHub
+          publish: npm run changeset-publish -- --tag next # by default, this will publish to npm and GitHub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

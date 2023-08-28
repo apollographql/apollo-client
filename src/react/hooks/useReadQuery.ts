@@ -1,8 +1,6 @@
 import * as React from "react";
-import {
-  unwrapQueryRef,
-  type QueryReference,
-} from "../cache/QueryReference.js";
+import { unwrapQueryRef } from "../cache/QueryReference.js";
+import type { QueryReference } from "../cache/QueryReference.js";
 import { __use } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { invariant } from "../../utilities/globals/index.js";

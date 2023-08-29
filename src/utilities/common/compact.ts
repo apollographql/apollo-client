@@ -1,4 +1,4 @@
-import type { TupleToIntersection } from './mergeDeep.js';
+import type { TupleToIntersection } from "./mergeDeep.js";
 
 /**
  * Merges the provided objects shallowly and removes
@@ -9,9 +9,9 @@ export function compact<TArgs extends any[]>(
 ): TupleToIntersection<TArgs> {
   const result = Object.create(null);
 
-  objects.forEach(obj => {
+  objects.forEach((obj) => {
     if (!obj) return;
-    Object.keys(obj).forEach(key => {
+    Object.keys(obj).forEach((key) => {
       const value = (obj as any)[key];
       if (value !== void 0) {
         result[key] = value;

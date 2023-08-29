@@ -1,10 +1,10 @@
-import { isNonNullObject } from './objects.js';
+import { isNonNullObject } from "./objects.js";
 
 function deepFreeze(value: any) {
   const workSet = new Set([value]);
-  workSet.forEach(obj => {
+  workSet.forEach((obj) => {
     if (isNonNullObject(obj) && shallowFreeze(obj) === obj) {
-      Object.getOwnPropertyNames(obj).forEach(name => {
+      Object.getOwnPropertyNames(obj).forEach((name) => {
         if (isNonNullObject(obj[name])) workSet.add(obj[name]);
       });
     }

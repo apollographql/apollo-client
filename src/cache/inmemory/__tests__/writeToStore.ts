@@ -1,4 +1,4 @@
-import { assign, omit } from 'lodash';
+import { assign, omit } from "lodash";
 import {
   SelectionNode,
   FieldNode,
@@ -6,8 +6,8 @@ import {
   OperationDefinitionNode,
   ASTNode,
   DocumentNode,
-} from 'graphql';
-import gql from 'graphql-tag';
+} from "graphql";
+import gql from "graphql-tag";
 
 import {
   storeKeyNameFromField,
@@ -18,29 +18,29 @@ import {
   addTypenameToDocument,
   cloneDeep,
   getMainDefinition,
-} from '../../../utilities';
-import { itAsync } from '../../../testing/core';
-import { StoreWriter } from '../writeToStore';
-import { defaultNormalizedCacheFactory, writeQueryToStore } from './helpers';
-import { InMemoryCache } from '../inMemoryCache';
-import { withErrorSpy, withWarningSpy } from '../../../testing';
-import { TypedDocumentNode } from '../../../core'
-import { extractFragmentContext } from '../helpers';
+} from "../../../utilities";
+import { itAsync } from "../../../testing/core";
+import { StoreWriter } from "../writeToStore";
+import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers";
+import { InMemoryCache } from "../inMemoryCache";
+import { withErrorSpy, withWarningSpy } from "../../../testing";
+import { TypedDocumentNode } from "../../../core";
+import { extractFragmentContext } from "../helpers";
 
 const getIdField = ({ id }: { id: string }) => id;
 
-describe('writing to the store', () => {
+describe("writing to the store", () => {
   const cache = new InMemoryCache({
     dataIdFromObject(object: any) {
       if (object.__typename && object.id) {
-        return object.__typename + '__' + object.id;
+        return object.__typename + "__" + object.id;
       }
     },
   });
 
   const writer = new StoreWriter(cache);
 
-  it('properly normalizes a trivial item', () => {
+  it("properly normalizes a trivial item", () => {
     const query = gql`
       {
         id
@@ -51,8 +51,8 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
     };
@@ -62,16 +62,16 @@ describe('writing to the store', () => {
         writer,
         query,
         result: cloneDeep(result),
-      }).toObject(),
+      }).toObject()
     ).toEqual({
       ROOT_QUERY: {
-        __typename: 'Query',
+        __typename: "Query",
         ...result,
       },
     });
   });
 
-  it('properly normalizes an aliased field', () => {
+  it("properly normalizes an aliased field", () => {
     const query = gql`
       {
         id
@@ -82,8 +82,8 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      aliasedField: 'This is a string!',
+      id: "abcd",
+      aliasedField: "This is a string!",
       numberField: 5,
       nullField: null,
     };
@@ -97,15 +97,15 @@ describe('writing to the store', () => {
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        id: 'abcd',
-        stringField: 'This is a string!',
+        id: "abcd",
+        stringField: "This is a string!",
         numberField: 5,
         nullField: null,
       },
     });
   });
 
-  it('properly normalizes a aliased fields with arguments', () => {
+  it("properly normalizes a aliased fields with arguments", () => {
     const query = gql`
       {
         id
@@ -117,9 +117,9 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      aliasedField1: 'The arg was 1!',
-      aliasedField2: 'The arg was 2!',
+      id: "abcd",
+      aliasedField1: "The arg was 1!",
+      aliasedField2: "The arg was 2!",
       numberField: 5,
       nullField: null,
     };
@@ -133,16 +133,16 @@ describe('writing to the store', () => {
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        id: 'abcd',
-        'stringField({"arg":1})': 'The arg was 1!',
-        'stringField({"arg":2})': 'The arg was 2!',
+        id: "abcd",
+        'stringField({"arg":1})': "The arg was 1!",
+        'stringField({"arg":2})': "The arg was 2!",
         numberField: 5,
         nullField: null,
       },
     });
   });
 
-  it('properly normalizes a query with variables', () => {
+  it("properly normalizes a query with variables", () => {
     const query = gql`
       {
         id
@@ -155,12 +155,12 @@ describe('writing to the store', () => {
     const variables = {
       intArg: 5,
       floatArg: 3.14,
-      stringArg: 'This is a string!',
+      stringArg: "This is a string!",
     };
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'Heyo',
+      id: "abcd",
+      stringField: "Heyo",
       numberField: 5,
       nullField: null,
     };
@@ -175,15 +175,15 @@ describe('writing to the store', () => {
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        id: 'abcd',
+        id: "abcd",
         nullField: null,
         'numberField({"floatArg":3.14,"intArg":5})': 5,
-        'stringField({"arg":"This is a string!"})': 'Heyo',
+        'stringField({"arg":"This is a string!"})': "Heyo",
       },
     });
   });
 
-  it('properly normalizes a query with default values', () => {
+  it("properly normalizes a query with default values", () => {
     const query = gql`
       query someBigQuery(
         $stringArg: String = "This is a default string!"
@@ -203,8 +203,8 @@ describe('writing to the store', () => {
     };
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'Heyo',
+      id: "abcd",
+      stringField: "Heyo",
       numberField: 5,
       nullField: null,
     };
@@ -219,15 +219,15 @@ describe('writing to the store', () => {
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        id: 'abcd',
+        id: "abcd",
         nullField: null,
         'numberField({"floatArg":3.14,"intArg":5})': 5,
-        'stringField({"arg":"This is a default string!"})': 'Heyo',
+        'stringField({"arg":"This is a default string!"})': "Heyo",
       },
     });
   });
 
-  it('properly normalizes a query with custom directives', () => {
+  it("properly normalizes a query with custom directives", () => {
     const query = gql`
       query {
         id
@@ -238,10 +238,10 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      firstName: 'James',
-      lastName: 'BOND',
-      birthDate: '20-05-1940',
+      id: "abcd",
+      firstName: "James",
+      lastName: "BOND",
+      birthDate: "20-05-1940",
     };
 
     const normalized = writeQueryToStore({
@@ -253,15 +253,15 @@ describe('writing to the store', () => {
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        id: 'abcd',
-        firstName: 'James',
-        'lastName@upperCase': 'BOND',
-        'birthDate@dateFormat({"format":"DD-MM-YYYY"})': '20-05-1940',
+        id: "abcd",
+        firstName: "James",
+        "lastName@upperCase": "BOND",
+        'birthDate@dateFormat({"format":"DD-MM-YYYY"})': "20-05-1940",
       },
     });
   });
 
-  it('properly normalizes a nested object with an ID', () => {
+  it("properly normalizes a nested object with an ID", () => {
     const query = gql`
       {
         id
@@ -278,13 +278,13 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedObj: {
-        id: 'abcde',
-        stringField: 'This is a string too!',
+        id: "abcde",
+        stringField: "This is a string too!",
         numberField: 6,
         nullField: null,
       },
@@ -293,7 +293,7 @@ describe('writing to the store', () => {
     const writer = new StoreWriter(
       new InMemoryCache({
         dataIdFromObject: getIdField,
-      }),
+      })
     );
 
     expect(
@@ -301,10 +301,10 @@ describe('writing to the store', () => {
         writer,
         query,
         result: cloneDeep(result),
-      }).toObject(),
+      }).toObject()
     ).toEqual({
       ROOT_QUERY: {
-        __typename: 'Query',
+        __typename: "Query",
         ...result,
         nestedObj: makeReference(result.nestedObj.id),
       },
@@ -312,7 +312,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('properly normalizes a nested object without an ID', () => {
+  it("properly normalizes a nested object without an ID", () => {
     const query = gql`
       {
         id
@@ -328,12 +328,12 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedObj: {
-        stringField: 'This is a string too!',
+        stringField: "This is a string too!",
         numberField: 6,
         nullField: null,
       },
@@ -344,16 +344,16 @@ describe('writing to the store', () => {
         writer,
         query,
         result: cloneDeep(result),
-      }).toObject(),
+      }).toObject()
     ).toEqual({
       ROOT_QUERY: {
-        __typename: 'Query',
+        __typename: "Query",
         ...result,
       },
     });
   });
 
-  it('properly normalizes a nested object with arguments but without an ID', () => {
+  it("properly normalizes a nested object with arguments but without an ID", () => {
     const query = gql`
       {
         id
@@ -369,12 +369,12 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedObj: {
-        stringField: 'This is a string too!',
+        stringField: "This is a string too!",
         numberField: 6,
         nullField: null,
       },
@@ -385,16 +385,16 @@ describe('writing to the store', () => {
         writer,
         query,
         result: cloneDeep(result),
-      }).toObject(),
+      }).toObject()
     ).toEqual({
-      ROOT_QUERY: assign(omit(result, 'nestedObj'), {
+      ROOT_QUERY: assign(omit(result, "nestedObj"), {
         __typename: "Query",
         'nestedObj({"arg":"val"})': result.nestedObj,
       }),
     });
   });
 
-  it('properly normalizes a nested array with IDs', () => {
+  it("properly normalizes a nested array with IDs", () => {
     const query = gql`
       {
         id
@@ -411,20 +411,20 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedArray: [
         {
-          id: 'abcde',
-          stringField: 'This is a string too!',
+          id: "abcde",
+          stringField: "This is a string too!",
           numberField: 6,
           nullField: null,
         },
         {
-          id: 'abcdef',
-          stringField: 'This is a string also!',
+          id: "abcdef",
+          stringField: "This is a string also!",
           numberField: 7,
           nullField: null,
         },
@@ -434,7 +434,7 @@ describe('writing to the store', () => {
     const writer = new StoreWriter(
       new InMemoryCache({
         dataIdFromObject: getIdField,
-      }),
+      })
     );
 
     expect(
@@ -442,12 +442,12 @@ describe('writing to the store', () => {
         writer,
         query,
         result: cloneDeep(result),
-      }).toObject(),
+      }).toObject()
     ).toEqual({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, "nestedArray")), {
         __typename: "Query",
-        nestedArray: result.nestedArray.map(
-          (obj: any) => makeReference(obj.id),
+        nestedArray: result.nestedArray.map((obj: any) =>
+          makeReference(obj.id)
         ),
       }),
       [result.nestedArray[0].id]: result.nestedArray[0],
@@ -455,7 +455,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('properly normalizes a nested array with IDs and a null', () => {
+  it("properly normalizes a nested array with IDs and a null", () => {
     const query = gql`
       {
         id
@@ -472,14 +472,14 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedArray: [
         {
-          id: 'abcde',
-          stringField: 'This is a string too!',
+          id: "abcde",
+          stringField: "This is a string too!",
           numberField: 6,
           nullField: null,
         },
@@ -490,7 +490,7 @@ describe('writing to the store', () => {
     const writer = new StoreWriter(
       new InMemoryCache({
         dataIdFromObject: getIdField,
-      }),
+      })
     );
 
     expect(
@@ -498,9 +498,9 @@ describe('writing to the store', () => {
         writer,
         query,
         result: cloneDeep(result),
-      }).toObject(),
+      }).toObject()
     ).toEqual({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, "nestedArray")), {
         __typename: "Query",
         nestedArray: [makeReference(result.nestedArray[0].id), null],
       }),
@@ -508,7 +508,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('properly normalizes a nested array without IDs', () => {
+  it("properly normalizes a nested array without IDs", () => {
     const query = gql`
       {
         id
@@ -524,18 +524,18 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedArray: [
         {
-          stringField: 'This is a string too!',
+          stringField: "This is a string too!",
           numberField: 6,
           nullField: null,
         },
         {
-          stringField: 'This is a string also!',
+          stringField: "This is a string also!",
           numberField: 7,
           nullField: null,
         },
@@ -550,13 +550,13 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
-        __typename: 'Query',
+        __typename: "Query",
         ...result,
       },
     });
   });
 
-  it('properly normalizes a nested array without IDs and a null item', () => {
+  it("properly normalizes a nested array without IDs and a null item", () => {
     const query = gql`
       {
         id
@@ -572,14 +572,14 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedArray: [
         null,
         {
-          stringField: 'This is a string also!',
+          stringField: "This is a string also!",
           numberField: 7,
           nullField: null,
         },
@@ -594,13 +594,13 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
-        __typename: 'Query',
+        __typename: "Query",
         ...result,
       },
     });
   });
 
-  it('properly normalizes an array of non-objects', () => {
+  it("properly normalizes an array of non-objects", () => {
     const query = gql`
       {
         id
@@ -612,17 +612,17 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
-      simpleArray: ['one', 'two', 'three'],
+      simpleArray: ["one", "two", "three"],
     };
 
     const writer = new StoreWriter(
       new InMemoryCache({
         dataIdFromObject: getIdField,
-      }),
+      })
     );
 
     const normalized = writeQueryToStore({
@@ -633,13 +633,13 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
-        __typename: 'Query',
+        __typename: "Query",
         ...result,
       },
     });
   });
 
-  it('properly normalizes an array of non-objects with null', () => {
+  it("properly normalizes an array of non-objects with null", () => {
     const query = gql`
       {
         id
@@ -651,11 +651,11 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
-      simpleArray: [null, 'two', 'three'],
+      simpleArray: [null, "two", "three"],
     };
 
     const normalized = writeQueryToStore({
@@ -666,13 +666,13 @@ describe('writing to the store', () => {
 
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
-        __typename: 'Query',
+        __typename: "Query",
         ...result,
       },
     });
   });
 
-  it('refuses to normalize objects with nullish id fields', () => {
+  it("refuses to normalize objects with nullish id fields", () => {
     const query: TypedDocumentNode<{
       objects: Array<{
         __typename: string;
@@ -704,52 +704,60 @@ describe('writing to the store', () => {
           { __typename: "Object", text: "e", id: "" },
           { __typename: "Object", text: "f", id: false },
           { __typename: "Object", text: "g" },
-        ]
+        ],
       },
     });
 
     expect(cache.extract()).toEqual({
-     "Object:123": {
-       __typename: "Object",
-       id: 123,
-       text: "a",
-     },
-     "Object:0": {
-      __typename: "Object",
-      id: 0,
-      text: "d",
-    },
-    "Object:": {
-      __typename: "Object",
-      id: "",
-      text: "e",
-    },
-    "Object:false": {
-      __typename: "Object",
-      id: false,
-      text: "f",
-    },
-     "ROOT_QUERY": {
-       __typename: "Query",
-       objects: [
-         { __ref: "Object:123" },
-         {
-           __typename: "Object",
-           id: null,
-           text: "b",
-         },
-         { __typename: "Object", text: "c" },
-         { __ref: "Object:0" },
-         { __ref: "Object:" },
-         { __ref: "Object:false" },
-         { __typename: "Object", text: "g" },
-       ],
-     },
+      "Object:123": {
+        __typename: "Object",
+        id: 123,
+        text: "a",
+      },
+      "Object:0": {
+        __typename: "Object",
+        id: 0,
+        text: "d",
+      },
+      "Object:": {
+        __typename: "Object",
+        id: "",
+        text: "e",
+      },
+      "Object:false": {
+        __typename: "Object",
+        id: false,
+        text: "f",
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        objects: [
+          { __ref: "Object:123" },
+          {
+            __typename: "Object",
+            id: null,
+            text: "b",
+          },
+          { __typename: "Object", text: "c" },
+          { __ref: "Object:0" },
+          { __ref: "Object:" },
+          { __ref: "Object:false" },
+          { __typename: "Object", text: "g" },
+        ],
+      },
     });
 
-    expect(cache.readQuery({
-      query: gql`query { objects { text }}`,
-    })).toEqual({
+    expect(
+      cache.readQuery({
+        query: gql`
+          query {
+            objects {
+              text
+            }
+          }
+        `,
+      })
+    ).toEqual({
       objects: [
         { __typename: "Object", text: "a" },
         { __typename: "Object", text: "b" },
@@ -762,7 +770,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('refuses to normalize objects with nullish id fields', () => {
+  it("refuses to normalize objects with nullish id fields", () => {
     const query: TypedDocumentNode<{
       objects: Array<{
         __typename: string;
@@ -794,52 +802,60 @@ describe('writing to the store', () => {
           { __typename: "Object", text: "e", _id: "" },
           { __typename: "Object", text: "f", _id: false },
           { __typename: "Object", text: "g" },
-        ]
+        ],
       },
     });
 
     expect(cache.extract()).toEqual({
-     "Object:123": {
-       __typename: "Object",
-       _id: 123,
-       text: "a",
-     },
-     "Object:0": {
-      __typename: "Object",
-      _id: 0,
-      text: "d",
-    },
-    "Object:": {
-      __typename: "Object",
-      _id: "",
-      text: "e",
-    },
-    "Object:false": {
-      __typename: "Object",
-      _id: false,
-      text: "f",
-    },
-     "ROOT_QUERY": {
-       __typename: "Query",
-       objects: [
-         { __ref: "Object:123" },
-         {
-           __typename: "Object",
-           _id: null,
-           text: "b",
-         },
-         { __typename: "Object", text: "c" },
-         { __ref: "Object:0" },
-         { __ref: "Object:" },
-         { __ref: "Object:false" },
-         { __typename: "Object", text: "g" },
-       ],
-     },
+      "Object:123": {
+        __typename: "Object",
+        _id: 123,
+        text: "a",
+      },
+      "Object:0": {
+        __typename: "Object",
+        _id: 0,
+        text: "d",
+      },
+      "Object:": {
+        __typename: "Object",
+        _id: "",
+        text: "e",
+      },
+      "Object:false": {
+        __typename: "Object",
+        _id: false,
+        text: "f",
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        objects: [
+          { __ref: "Object:123" },
+          {
+            __typename: "Object",
+            _id: null,
+            text: "b",
+          },
+          { __typename: "Object", text: "c" },
+          { __ref: "Object:0" },
+          { __ref: "Object:" },
+          { __ref: "Object:false" },
+          { __typename: "Object", text: "g" },
+        ],
+      },
     });
 
-    expect(cache.readQuery({
-      query: gql`query { objects { text }}`,
-    })).toEqual({
+    expect(
+      cache.readQuery({
+        query: gql`
+          query {
+            objects {
+              text
+            }
+          }
+        `,
+      })
+    ).toEqual({
       objects: [
         { __typename: "Object", text: "a" },
         { __typename: "Object", text: "b" },
@@ -852,7 +868,7 @@ describe('writing to the store', () => {
     });
   });
 
-  it('properly normalizes an object occurring in different graphql paths twice', () => {
+  it("properly normalizes an object occurring in different graphql paths twice", () => {
     const query = gql`
       {
         id
@@ -868,13 +884,13 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'a',
+      id: "a",
       object1: {
-        id: 'aa',
-        stringField: 'string',
+        id: "aa",
+        stringField: "string",
       },
       object2: {
-        id: 'aa',
+        id: "aa",
         numberField: 1,
       },
     };
@@ -882,7 +898,7 @@ describe('writing to the store', () => {
     const writer = new StoreWriter(
       new InMemoryCache({
         dataIdFromObject: getIdField,
-      }),
+      })
     );
 
     const normalized = writeQueryToStore({
@@ -894,19 +910,19 @@ describe('writing to the store', () => {
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        id: 'a',
-        object1: makeReference('aa'),
-        object2: makeReference('aa'),
+        id: "a",
+        object1: makeReference("aa"),
+        object2: makeReference("aa"),
       },
       aa: {
-        id: 'aa',
-        stringField: 'string',
+        id: "aa",
+        stringField: "string",
         numberField: 1,
       },
     });
   });
 
-  it('properly normalizes an object occurring in different graphql array paths twice', () => {
+  it("properly normalizes an object occurring in different graphql array paths twice", () => {
     const query = gql`
       {
         id
@@ -930,23 +946,23 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'a',
+      id: "a",
       array1: [
         {
-          id: 'aa',
-          stringField: 'string',
+          id: "aa",
+          stringField: "string",
           obj: {
-            id: 'aaa',
-            stringField: 'string',
+            id: "aaa",
+            stringField: "string",
           },
         },
       ],
       array2: [
         {
-          id: 'ab',
-          stringField: 'string2',
+          id: "ab",
+          stringField: "string2",
           obj: {
-            id: 'aaa',
+            id: "aaa",
             numberField: 1,
           },
         },
@@ -956,7 +972,7 @@ describe('writing to the store', () => {
     const writer = new StoreWriter(
       new InMemoryCache({
         dataIdFromObject: getIdField,
-      }),
+      })
     );
 
     const normalized = writeQueryToStore({
@@ -968,29 +984,29 @@ describe('writing to the store', () => {
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        id: 'a',
-        array1: [makeReference('aa')],
-        array2: [makeReference('ab')],
+        id: "a",
+        array1: [makeReference("aa")],
+        array2: [makeReference("ab")],
       },
       aa: {
-        id: 'aa',
-        stringField: 'string',
-        obj: makeReference('aaa'),
+        id: "aa",
+        stringField: "string",
+        obj: makeReference("aaa"),
       },
       ab: {
-        id: 'ab',
-        stringField: 'string2',
-        obj: makeReference('aaa'),
+        id: "ab",
+        stringField: "string2",
+        obj: makeReference("aaa"),
       },
       aaa: {
-        id: 'aaa',
-        stringField: 'string',
+        id: "aaa",
+        stringField: "string",
         numberField: 1,
       },
     });
   });
 
-  it('properly normalizes an object occurring in the same graphql array path twice', () => {
+  it("properly normalizes an object occurring in the same graphql array path twice", () => {
     const query = gql`
       {
         id
@@ -1007,23 +1023,23 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'a',
+      id: "a",
       array1: [
         {
-          id: 'aa',
-          stringField: 'string',
+          id: "aa",
+          stringField: "string",
           obj: {
-            id: 'aaa',
-            stringField: 'string',
+            id: "aaa",
+            stringField: "string",
             numberField: 1,
           },
         },
         {
-          id: 'ab',
-          stringField: 'string2',
+          id: "ab",
+          stringField: "string2",
           obj: {
-            id: 'aaa',
-            stringField: 'should not be written',
+            id: "aaa",
+            stringField: "should not be written",
             numberField: 2,
           },
         },
@@ -1033,7 +1049,7 @@ describe('writing to the store', () => {
     const writer = new StoreWriter(
       new InMemoryCache({
         dataIdFromObject: getIdField,
-      }),
+      })
     );
 
     const normalized = writeQueryToStore({
@@ -1045,28 +1061,28 @@ describe('writing to the store', () => {
     expect(normalized.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        id: 'a',
-        array1: [makeReference('aa'), makeReference('ab')],
+        id: "a",
+        array1: [makeReference("aa"), makeReference("ab")],
       },
       aa: {
-        id: 'aa',
-        stringField: 'string',
-        obj: makeReference('aaa'),
+        id: "aa",
+        stringField: "string",
+        obj: makeReference("aaa"),
       },
       ab: {
-        id: 'ab',
-        stringField: 'string2',
-        obj: makeReference('aaa'),
+        id: "ab",
+        stringField: "string2",
+        obj: makeReference("aaa"),
       },
       aaa: {
-        id: 'aaa',
-        stringField: 'string',
+        id: "aaa",
+        stringField: "string",
         numberField: 1,
       },
     });
   });
 
-  it('merges nodes', () => {
+  it("merges nodes", () => {
     const query = gql`
       {
         id
@@ -1076,7 +1092,7 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
+      id: "abcd",
       numberField: 5,
       nullField: null,
     };
@@ -1084,7 +1100,7 @@ describe('writing to the store', () => {
     const writer = new StoreWriter(
       new InMemoryCache({
         dataIdFromObject: getIdField,
-      }),
+      })
     );
 
     const store = writeQueryToStore({
@@ -1102,8 +1118,8 @@ describe('writing to the store', () => {
     `;
 
     const result2: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       nullField: null,
     };
 
@@ -1116,14 +1132,14 @@ describe('writing to the store', () => {
 
     expect(store2.toObject()).toEqual({
       ROOT_QUERY: {
-        __typename: 'Query',
+        __typename: "Query",
         ...result,
         ...result2,
       },
     });
   });
 
-  it('properly normalizes a nested object that returns null', () => {
+  it("properly normalizes a nested object that returns null", () => {
     const query = gql`
       {
         id
@@ -1140,8 +1156,8 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedObj: null,
@@ -1152,17 +1168,17 @@ describe('writing to the store', () => {
         writer,
         query,
         result: cloneDeep(result),
-      }).toObject(),
+      }).toObject()
     ).toEqual({
       ROOT_QUERY: {
-        __typename: 'Query',
+        __typename: "Query",
         ...result,
         nestedObj: null,
       },
     });
   });
 
-  it('properly normalizes an object with an ID when no extension is passed', () => {
+  it("properly normalizes an object with an ID when no extension is passed", () => {
     const query = gql`
       {
         people_one(id: "5") {
@@ -1174,8 +1190,8 @@ describe('writing to the store', () => {
 
     const result: any = {
       people_one: {
-        id: 'abcd',
-        stringField: 'This is a string!',
+        id: "abcd",
+        stringField: "This is a string!",
       },
     };
 
@@ -1184,19 +1200,19 @@ describe('writing to the store', () => {
         writer,
         query,
         result: cloneDeep(result),
-      }).toObject(),
+      }).toObject()
     ).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
         'people_one({"id":"5"})': {
-          id: 'abcd',
-          stringField: 'This is a string!',
+          id: "abcd",
+          stringField: "This is a string!",
         },
       },
     });
   });
 
-  it('consistently serialize different types of input when passed inlined or as variable', () => {
+  it("consistently serialize different types of input when passed inlined or as variable", () => {
     const testData = [
       {
         mutation: gql`
@@ -1228,7 +1244,7 @@ describe('writing to the store', () => {
             }
           }
         `,
-        variables: { in: 'abc' },
+        variables: { in: "abc" },
         expected: 'mut({"inline":"abc","variable":"abc"})',
       },
       {
@@ -1267,33 +1283,33 @@ describe('writing to the store', () => {
     ];
 
     function isOperationDefinition(
-      definition: DefinitionNode,
+      definition: DefinitionNode
     ): definition is OperationDefinitionNode {
-      return definition.kind === 'OperationDefinition';
+      return definition.kind === "OperationDefinition";
     }
 
     function isField(selection: SelectionNode): selection is FieldNode {
-      return selection.kind === 'Field';
+      return selection.kind === "Field";
     }
 
-    testData.forEach(data => {
+    testData.forEach((data) => {
       data.mutation.definitions.forEach(
         (definition: OperationDefinitionNode) => {
           if (isOperationDefinition(definition)) {
-            definition.selectionSet.selections.forEach(selection => {
+            definition.selectionSet.selections.forEach((selection) => {
               if (isField(selection)) {
                 expect(
-                  storeKeyNameFromField(selection, data.variables),
+                  storeKeyNameFromField(selection, data.variables)
                 ).toEqual(data.expected);
               }
             });
           }
-        },
+        }
       );
     });
   });
 
-  it('properly normalizes a mutation with object or array parameters and variables', () => {
+  it("properly normalizes a mutation with object or array parameters and variables", () => {
     const mutation = gql`
       mutation some_mutation($nil: ID, $in: Object) {
         some_mutation(
@@ -1316,19 +1332,19 @@ describe('writing to the store', () => {
 
     const result: any = {
       some_mutation: {
-        id: 'id',
+        id: "id",
       },
       some_mutation_with_variables: {
-        id: 'id',
+        id: "id",
       },
     };
 
     const variables: any = {
       nil: null,
       in: {
-        id: '5',
-        arr: [1, { a: 'b' }],
-        obj: { a: 'b' },
+        id: "5",
+        arr: [1, { a: "b" }],
+        obj: { a: "b" },
         num: 5.5,
         nil: null,
         bo: true,
@@ -1336,9 +1352,9 @@ describe('writing to the store', () => {
     };
 
     function isOperationDefinition(
-      value: ASTNode,
+      value: ASTNode
     ): value is OperationDefinitionNode {
-      return value.kind === 'OperationDefinition';
+      return value.kind === "OperationDefinition";
     }
 
     mutation.definitions.map((def: OperationDefinitionNode) => {
@@ -1346,37 +1362,39 @@ describe('writing to the store', () => {
         const writer = new StoreWriter(
           new InMemoryCache({
             dataIdFromObject() {
-              return '5';
+              return "5";
             },
-          }),
+          })
         );
 
         expect(
           writeQueryToStore({
             writer,
             query: {
-              kind: 'Document',
+              kind: "Document",
               definitions: [def],
             } as DocumentNode,
-            dataId: '5',
+            dataId: "5",
             result,
             variables,
-          }).toObject(),
+          }).toObject()
         ).toEqual({
-          '5': {
-            id: 'id',
-            'some_mutation({"input":{"arr":[1,{"a":"b"}],"bo":true,"id":"5","nil":null,"num":5.5,"obj":{"a":"b"}}})': makeReference('5'),
-            'some_mutation_with_variables({"input":{"arr":[1,{"a":"b"}],"bo":true,"id":"5","nil":null,"num":5.5,"obj":{"a":"b"}}})': makeReference('5'),
+          "5": {
+            id: "id",
+            'some_mutation({"input":{"arr":[1,{"a":"b"}],"bo":true,"id":"5","nil":null,"num":5.5,"obj":{"a":"b"}}})':
+              makeReference("5"),
+            'some_mutation_with_variables({"input":{"arr":[1,{"a":"b"}],"bo":true,"id":"5","nil":null,"num":5.5,"obj":{"a":"b"}}})':
+              makeReference("5"),
           },
         });
       } else {
-        throw 'No operation definition found';
+        throw "No operation definition found";
       }
     });
   });
 
-  describe('type escaping', () => {
-    it('should correctly escape generated ids', () => {
+  describe("type escaping", () => {
+    it("should correctly escape generated ids", () => {
       const query = gql`
         query {
           author {
@@ -1387,13 +1405,13 @@ describe('writing to the store', () => {
       `;
       const data = {
         author: {
-          firstName: 'John',
-          lastName: 'Smith',
+          firstName: "John",
+          lastName: "Smith",
         },
       };
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
-          __typename: 'Query',
+          __typename: "Query",
           ...data,
         },
       });
@@ -1402,11 +1420,11 @@ describe('writing to the store', () => {
           writer,
           result: data,
           query,
-        }).toObject(),
+        }).toObject()
       ).toEqual(expStore.toObject());
     });
 
-    it('should correctly escape real ids', () => {
+    it("should correctly escape real ids", () => {
       const query = gql`
         query {
           author {
@@ -1418,14 +1436,14 @@ describe('writing to the store', () => {
       `;
       const data = {
         author: {
-          firstName: 'John',
-          id: '129',
-          __typename: 'Author',
+          firstName: "John",
+          id: "129",
+          __typename: "Author",
         },
       };
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
-          __typename: 'Query',
+          __typename: "Query",
           author: makeReference(cache.identify(data.author)!),
         },
         [cache.identify(data.author)!]: {
@@ -1439,11 +1457,11 @@ describe('writing to the store', () => {
           writer,
           result: data,
           query,
-        }).toObject(),
+        }).toObject()
       ).toEqual(expStore.toObject());
     });
 
-    it('should not need to escape json blobs', () => {
+    it("should not need to escape json blobs", () => {
       const query = gql`
         query {
           author {
@@ -1456,15 +1474,15 @@ describe('writing to the store', () => {
       const data = {
         author: {
           info: {
-            name: 'John',
+            name: "John",
           },
-          id: '129',
-          __typename: 'Author',
+          id: "129",
+          __typename: "Author",
         },
       };
       const expStore = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
-          __typename: 'Query',
+          __typename: "Query",
           author: makeReference(cache.identify(data.author)!),
         },
         [cache.identify(data.author)!]: {
@@ -1478,25 +1496,25 @@ describe('writing to the store', () => {
           writer,
           result: data,
           query,
-        }).toObject(),
+        }).toObject()
       ).toEqual(expStore.toObject());
     });
   });
 
-  it('should not merge unidentified data when replacing with ID reference', () => {
+  it("should not merge unidentified data when replacing with ID reference", () => {
     const dataWithoutId = {
       author: {
-        firstName: 'John',
-        lastName: 'Smith',
-        __typename: 'Author',
+        firstName: "John",
+        lastName: "Smith",
+        __typename: "Author",
       },
     };
 
     const dataWithId = {
       author: {
-        firstName: 'John',
-        id: '129',
-        __typename: 'Author',
+        firstName: "John",
+        id: "129",
+        __typename: "Author",
       },
     };
 
@@ -1529,16 +1547,20 @@ describe('writing to the store', () => {
               merge(existing, incoming, { readField, isReference }) {
                 if (existing) {
                   expect(isReference(existing)).toBe(false);
-                  expect(readField({
-                    fieldName: "__typename",
-                    from: existing,
-                  })).toBe("Author");
+                  expect(
+                    readField({
+                      fieldName: "__typename",
+                      from: existing,
+                    })
+                  ).toBe("Author");
 
                   expect(isReference(incoming)).toBe(true);
-                  expect(readField({
-                    fieldName: "__typename",
-                    from: incoming,
-                  })).toBe("Author");
+                  expect(
+                    readField({
+                      fieldName: "__typename",
+                      from: incoming,
+                    })
+                  ).toBe("Author");
                 }
 
                 return incoming;
@@ -1549,7 +1571,7 @@ describe('writing to the store', () => {
       },
       dataIdFromObject(object: any) {
         if (object.__typename && object.id) {
-          return object.__typename + '__' + object.id;
+          return object.__typename + "__" + object.id;
         }
       },
     });
@@ -1561,11 +1583,11 @@ describe('writing to the store', () => {
 
     expect(cache.extract()).toEqual({
       ROOT_QUERY: {
-        __typename: 'Query',
+        __typename: "Query",
         author: {
-          firstName: 'John',
-          lastName: 'Smith',
-          __typename: 'Author',
+          firstName: "John",
+          lastName: "Smith",
+          __typename: "Author",
         },
       },
     });
@@ -1577,18 +1599,18 @@ describe('writing to the store', () => {
 
     expect(cache.extract()).toEqual({
       Author__129: {
-        firstName: 'John',
-        id: '129',
-        __typename: 'Author',
+        firstName: "John",
+        id: "129",
+        __typename: "Author",
       },
       ROOT_QUERY: {
-        __typename: 'Query',
-        author: makeReference('Author__129'),
+        __typename: "Query",
+        author: makeReference("Author__129"),
       },
     });
   });
 
-  it('correctly merges fragment fields along multiple paths', () => {
+  it("correctly merges fragment fields along multiple paths", () => {
     const cache = new InMemoryCache({
       typePolicies: {
         Container: {
@@ -1652,7 +1674,7 @@ describe('writing to the store', () => {
                 __typename: "Container",
                 text: "Hello World",
                 value: {
-                  __typename: "Value"
+                  __typename: "Value",
                 },
               },
             },
@@ -1670,13 +1692,13 @@ describe('writing to the store', () => {
     expect(cache.extract()).toMatchSnapshot();
   });
 
-  it('regression test for issue #8600', () => {
+  it("regression test for issue #8600", () => {
     const cache = new InMemoryCache({
       typePolicies: {
         Country: {
           fields: {
             cities: {
-              keyArgs: ['size'],
+              keyArgs: ["size"],
               merge(existing, incoming, { args }) {
                 if (!args) return incoming;
                 const items = existing ? existing.slice(0) : [];
@@ -1725,19 +1747,17 @@ describe('writing to the store', () => {
 
     const countries = [
       {
-        __typename: 'Country',
+        __typename: "Country",
         id: 123,
         biggestCity: {
-          __typename: 'City',
+          __typename: "City",
           id: 234,
           info: {
-            __typename: 'CityInfo',
+            __typename: "CityInfo",
             airQuality: 0,
           },
         },
-        smallCities: [
-          { __typename: 'City', id: 345 },
-        ],
+        smallCities: [{ __typename: "City", id: 345 }],
       },
     ];
 
@@ -1763,24 +1783,22 @@ describe('writing to the store', () => {
         __typename: "Country",
         id: 123,
         biggestCity: { __ref: "City:234" },
-        'cities:{"size":"SMALL"}': [
-          { __ref: "City:345" },
-        ],
+        'cities:{"size":"SMALL"}': [{ __ref: "City:345" }],
       },
-      "ROOT_QUERY": {
+      ROOT_QUERY: {
         __typename: "Query",
-        countries: [
-          { __ref: "Country:123" },
-        ],
+        countries: [{ __ref: "Country:123" }],
       },
     });
 
-    expect(cache.readQuery({
-      query: GET_COUNTRIES
-    })).toEqual({ countries });
+    expect(
+      cache.readQuery({
+        query: GET_COUNTRIES,
+      })
+    ).toEqual({ countries });
   });
 
-  it('should respect id fields added by fragments', () => {
+  it("should respect id fields added by fragments", () => {
     const query = gql`
       query ABCQuery {
         __typename
@@ -1815,20 +1833,22 @@ describe('writing to the store', () => {
       a: {
         __typename: "AType",
         id: "a-id",
-        b: [{
-          __typename: "BType",
-          id: "b-id",
-          c: {
-            __typename: "CType",
-            title: "Your experience",
-            titleSize: null
+        b: [
+          {
+            __typename: "BType",
+            id: "b-id",
+            c: {
+              __typename: "CType",
+              title: "Your experience",
+              titleSize: null,
+            },
           },
-        }],
+        ],
       },
     };
 
     const cache = new InMemoryCache({
-      possibleTypes: { AShared: ["AType"] }
+      possibleTypes: { AShared: ["AType"] },
     });
 
     cache.writeQuery({ query, data });
@@ -1837,136 +1857,139 @@ describe('writing to the store', () => {
     expect(cache.extract()).toMatchSnapshot();
   });
 
-  itAsync('should allow a union of objects of a different type, when overwriting a generated id with a real id', (resolve, reject) => {
-    const dataWithPlaceholder = {
-      author: {
-        hello: 'Foo',
-        __typename: 'Placeholder',
-      },
-    };
-    const dataWithAuthor = {
-      author: {
-        firstName: 'John',
-        lastName: 'Smith',
-        id: '129',
-        __typename: 'Author',
-      },
-    };
-    const query = gql`
-      query {
-        author {
-          ... on Author {
-            firstName
-            lastName
-            id
-            __typename
-          }
-          ... on Placeholder {
-            hello
-            __typename
+  itAsync(
+    "should allow a union of objects of a different type, when overwriting a generated id with a real id",
+    (resolve, reject) => {
+      const dataWithPlaceholder = {
+        author: {
+          hello: "Foo",
+          __typename: "Placeholder",
+        },
+      };
+      const dataWithAuthor = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+          id: "129",
+          __typename: "Author",
+        },
+      };
+      const query = gql`
+        query {
+          author {
+            ... on Author {
+              firstName
+              lastName
+              id
+              __typename
+            }
+            ... on Placeholder {
+              hello
+              __typename
+            }
           }
         }
-      }
-    `;
+      `;
 
-    let mergeCount = 0;
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            author: {
-              merge(existing, incoming, { isReference, readField }) {
-                switch (++mergeCount) {
-                  case 1:
-                    expect(existing).toBeUndefined();
-                    expect(isReference(incoming)).toBe(false);
-                    expect(incoming).toEqual(dataWithPlaceholder.author);
-                    break;
-                  case 2:
-                    expect(existing).toEqual(dataWithPlaceholder.author);
-                    expect(isReference(incoming)).toBe(true);
-                    expect(readField("__typename", incoming)).toBe("Author");
-                    break;
-                  case 3:
-                    expect(isReference(existing)).toBe(true);
-                    expect(readField("__typename", existing)).toBe("Author");
-                    expect(incoming).toEqual(dataWithPlaceholder.author);
-                    break;
-                  default:
-                    reject("unreached");
-                }
-                return incoming;
+      let mergeCount = 0;
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              author: {
+                merge(existing, incoming, { isReference, readField }) {
+                  switch (++mergeCount) {
+                    case 1:
+                      expect(existing).toBeUndefined();
+                      expect(isReference(incoming)).toBe(false);
+                      expect(incoming).toEqual(dataWithPlaceholder.author);
+                      break;
+                    case 2:
+                      expect(existing).toEqual(dataWithPlaceholder.author);
+                      expect(isReference(incoming)).toBe(true);
+                      expect(readField("__typename", incoming)).toBe("Author");
+                      break;
+                    case 3:
+                      expect(isReference(existing)).toBe(true);
+                      expect(readField("__typename", existing)).toBe("Author");
+                      expect(incoming).toEqual(dataWithPlaceholder.author);
+                      break;
+                    default:
+                      reject("unreached");
+                  }
+                  return incoming;
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    // write the first object, without an ID, placeholder
-    cache.writeQuery({
-      query,
-      data: dataWithPlaceholder,
-    });
+      // write the first object, without an ID, placeholder
+      cache.writeQuery({
+        query,
+        data: dataWithPlaceholder,
+      });
 
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: 'Query',
-        author: {
-          hello: 'Foo',
-          __typename: 'Placeholder',
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          author: {
+            hello: "Foo",
+            __typename: "Placeholder",
+          },
         },
-      },
-    });
+      });
 
-    // replace with another one of different type with ID
-    cache.writeQuery({
-      query,
-      data: dataWithAuthor,
-    });
+      // replace with another one of different type with ID
+      cache.writeQuery({
+        query,
+        data: dataWithAuthor,
+      });
 
-    expect(cache.extract()).toEqual({
-      "Author:129": {
-        firstName: 'John',
-        lastName: 'Smith',
-        id: '129',
-        __typename: 'Author',
-      },
-      ROOT_QUERY: {
-        __typename: 'Query',
-        author: makeReference('Author:129'),
-      },
-    });
-
-    // and go back to the original:
-    cache.writeQuery({
-      query,
-      data: dataWithPlaceholder,
-    });
-
-    // Author__129 will remain in the store,
-    // but will not be referenced by any of the fields,
-    // hence we combine, and in that very order
-    expect(cache.extract()).toEqual({
-      "Author:129": {
-        firstName: 'John',
-        lastName: 'Smith',
-        id: '129',
-        __typename: 'Author',
-      },
-      ROOT_QUERY: {
-        __typename: 'Query',
-        author: {
-          hello: 'Foo',
-          __typename: 'Placeholder',
+      expect(cache.extract()).toEqual({
+        "Author:129": {
+          firstName: "John",
+          lastName: "Smith",
+          id: "129",
+          __typename: "Author",
         },
-      },
-    });
+        ROOT_QUERY: {
+          __typename: "Query",
+          author: makeReference("Author:129"),
+        },
+      });
 
-    resolve();
-  });
+      // and go back to the original:
+      cache.writeQuery({
+        query,
+        data: dataWithPlaceholder,
+      });
 
-  it('does not swallow errors other than field errors', () => {
+      // Author__129 will remain in the store,
+      // but will not be referenced by any of the fields,
+      // hence we combine, and in that very order
+      expect(cache.extract()).toEqual({
+        "Author:129": {
+          firstName: "John",
+          lastName: "Smith",
+          id: "129",
+          __typename: "Author",
+        },
+        ROOT_QUERY: {
+          __typename: "Query",
+          author: {
+            hello: "Foo",
+            __typename: "Placeholder",
+          },
+        },
+      });
+
+      resolve();
+    }
+  );
+
+  it("does not swallow errors other than field errors", () => {
     const query = gql`
       query {
         ...notARealFragment
@@ -1974,7 +1997,7 @@ describe('writing to the store', () => {
       }
     `;
     const result: any = {
-      fortuneCookie: 'Star Wars unit tests are boring',
+      fortuneCookie: "Star Wars unit tests are boring",
     };
     expect(() => {
       writeQueryToStore({
@@ -1985,7 +2008,7 @@ describe('writing to the store', () => {
     }).toThrowError(/No fragment/);
   });
 
-  it('does not change object references if the value is the same', () => {
+  it("does not change object references if the value is the same", () => {
     const query = gql`
       {
         id
@@ -1996,8 +2019,8 @@ describe('writing to the store', () => {
     `;
 
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
     };
@@ -2014,14 +2037,16 @@ describe('writing to the store', () => {
       store: defaultNormalizedCacheFactory(store.toObject()),
     });
 
-    Object.keys(store.toObject()).forEach(field => {
-      expect((store as any).lookup(field)).toEqual((newStore as any).lookup(field));
+    Object.keys(store.toObject()).forEach((field) => {
+      expect((store as any).lookup(field)).toEqual(
+        (newStore as any).lookup(field)
+      );
     });
   });
 
   describe('"Cache data maybe lost..." warnings', () => {
     withWarningSpy(it, "should not warn when scalar fields are updated", () => {
-      const cache = new InMemoryCache;
+      const cache = new InMemoryCache();
 
       const query = gql`
         query {
@@ -2038,7 +2063,7 @@ describe('writing to the store', () => {
             foos: ["bar", "baz"],
           },
           currentTime: {
-            localeString: '9/25/2020, 1:08:33 PM'
+            localeString: "9/25/2020, 1:08:33 PM",
           },
         },
       });
@@ -2063,7 +2088,7 @@ describe('writing to the store', () => {
     });
   });
 
-  describe('writeResultToStore shape checking', () => {
+  describe("writeResultToStore shape checking", () => {
     const query = gql`
       query {
         todos {
@@ -2074,113 +2099,125 @@ describe('writing to the store', () => {
       }
     `;
 
-    withErrorSpy(it, 'should write the result data without validating its shape when a fragment matcher is not provided', () => {
-      const result = {
-        todos: [
-          {
-            id: '1',
-            name: 'Todo 1',
-          },
-        ],
-      };
+    withErrorSpy(
+      it,
+      "should write the result data without validating its shape when a fragment matcher is not provided",
+      () => {
+        const result = {
+          todos: [
+            {
+              id: "1",
+              name: "Todo 1",
+            },
+          ],
+        };
 
-      const writer = new StoreWriter(
-        new InMemoryCache({
-          dataIdFromObject: getIdField,
-        }),
-      );
+        const writer = new StoreWriter(
+          new InMemoryCache({
+            dataIdFromObject: getIdField,
+          })
+        );
 
-      const newStore = writeQueryToStore({
-        writer,
-        query,
-        result,
-      });
+        const newStore = writeQueryToStore({
+          writer,
+          query,
+          result,
+        });
 
-      expect((newStore as any).lookup('1')).toEqual(result.todos[0]);
-    });
+        expect((newStore as any).lookup("1")).toEqual(result.todos[0]);
+      }
+    );
 
-    withErrorSpy(it, 'should warn when it receives the wrong data with non-union fragments', () => {
-      const result = {
-        todos: [
-          {
-            id: '1',
-            name: 'Todo 1',
-          },
-        ],
-      };
+    withErrorSpy(
+      it,
+      "should warn when it receives the wrong data with non-union fragments",
+      () => {
+        const result = {
+          todos: [
+            {
+              id: "1",
+              name: "Todo 1",
+            },
+          ],
+        };
 
-      const writer = new StoreWriter(
-        new InMemoryCache({
-          dataIdFromObject: getIdField,
-          possibleTypes: {},
-        }),
-      );
+        const writer = new StoreWriter(
+          new InMemoryCache({
+            dataIdFromObject: getIdField,
+            possibleTypes: {},
+          })
+        );
 
-      writeQueryToStore({
-        writer,
-        query,
-        result,
-      });
-    });
+        writeQueryToStore({
+          writer,
+          query,
+          result,
+        });
+      }
+    );
 
-    withErrorSpy(it, 'should warn when it receives the wrong data inside a fragment', () => {
-      const queryWithInterface = gql`
-        query {
-          todos {
-            id
-            name
-            description
-            ...TodoFragment
+    withErrorSpy(
+      it,
+      "should warn when it receives the wrong data inside a fragment",
+      () => {
+        const queryWithInterface = gql`
+          query {
+            todos {
+              id
+              name
+              description
+              ...TodoFragment
+            }
           }
-        }
 
-        fragment TodoFragment on Todo {
-          ... on ShoppingCartItem {
-            price
+          fragment TodoFragment on Todo {
+            ... on ShoppingCartItem {
+              price
+              __typename
+            }
+            ... on TaskItem {
+              date
+              __typename
+            }
             __typename
           }
-          ... on TaskItem {
-            date
-            __typename
-          }
-          __typename
-        }
-      `;
+        `;
 
-      const result = {
-        todos: [
-          {
-            id: '1',
-            name: 'Todo 1',
-            description: 'Description 1',
-            __typename: 'ShoppingCartItem',
-          },
-        ],
-      };
+        const result = {
+          todos: [
+            {
+              id: "1",
+              name: "Todo 1",
+              description: "Description 1",
+              __typename: "ShoppingCartItem",
+            },
+          ],
+        };
 
-      const writer = new StoreWriter(
-        new InMemoryCache({
-          dataIdFromObject: getIdField,
-          possibleTypes: {
-            Todo: ["ShoppingCartItem", "TaskItem"],
-          },
-        }),
-      );
+        const writer = new StoreWriter(
+          new InMemoryCache({
+            dataIdFromObject: getIdField,
+            possibleTypes: {
+              Todo: ["ShoppingCartItem", "TaskItem"],
+            },
+          })
+        );
 
-      writeQueryToStore({
-        writer,
-        query: queryWithInterface,
-        result,
-      });
-    });
+        writeQueryToStore({
+          writer,
+          query: queryWithInterface,
+          result,
+        });
+      }
+    );
 
-    it('should warn if a result is missing __typename when required', () => {
+    it("should warn if a result is missing __typename when required", () => {
       const result: any = {
         todos: [
           {
-            id: '1',
-            name: 'Todo 1',
-            description: 'Description 1',
+            id: "1",
+            name: "Todo 1",
+            description: "Description 1",
           },
         ],
       };
@@ -2189,7 +2226,7 @@ describe('writing to the store', () => {
         new InMemoryCache({
           dataIdFromObject: getIdField,
           possibleTypes: {},
-        }),
+        })
       );
 
       writeQueryToStore({
@@ -2199,7 +2236,7 @@ describe('writing to the store', () => {
       });
     });
 
-    it('should not warn if a field is null', () => {
+    it("should not warn if a field is null", () => {
       const result: any = {
         todos: null,
       };
@@ -2207,7 +2244,7 @@ describe('writing to the store', () => {
       const writer = new StoreWriter(
         new InMemoryCache({
           dataIdFromObject: getIdField,
-        }),
+        })
       );
 
       const newStore = writeQueryToStore({
@@ -2216,13 +2253,13 @@ describe('writing to the store', () => {
         result,
       });
 
-      expect((newStore as any).lookup('ROOT_QUERY')).toEqual({
-        __typename: 'Query',
+      expect((newStore as any).lookup("ROOT_QUERY")).toEqual({
+        __typename: "Query",
         todos: null,
       });
     });
 
-    withErrorSpy(it, 'should not warn if a field is defered', () => {
+    withErrorSpy(it, "should not warn if a field is defered", () => {
       const defered = gql`
         query LazyLoad {
           id
@@ -2236,7 +2273,7 @@ describe('writing to the store', () => {
       const writer = new StoreWriter(
         new InMemoryCache({
           dataIdFromObject: getIdField,
-        }),
+        })
       );
 
       const newStore = writeQueryToStore({
@@ -2245,11 +2282,14 @@ describe('writing to the store', () => {
         result,
       });
 
-      expect((newStore as any).lookup('ROOT_QUERY')).toEqual({ __typename: 'Query', id: 1 });
+      expect((newStore as any).lookup("ROOT_QUERY")).toEqual({
+        __typename: "Query",
+        id: 1,
+      });
     });
   });
 
-  it('properly handles the @connection directive', () => {
+  it("properly handles the @connection directive", () => {
     const store = defaultNormalizedCacheFactory();
 
     writeQueryToStore({
@@ -2264,7 +2304,7 @@ describe('writing to the store', () => {
       result: {
         books: [
           {
-            name: 'abcd',
+            name: "abcd",
           },
         ],
       },
@@ -2283,7 +2323,7 @@ describe('writing to the store', () => {
       result: {
         books: [
           {
-            name: 'efgh',
+            name: "efgh",
           },
         ],
       },
@@ -2293,16 +2333,16 @@ describe('writing to the store', () => {
     expect(store.toObject()).toEqual({
       ROOT_QUERY: {
         __typename: "Query",
-        'books:abc': [
+        "books:abc": [
           {
-            name: 'efgh',
+            name: "efgh",
           },
         ],
       },
     });
   });
 
-  it('can use keyArgs function instead of @connection directive', () => {
+  it("can use keyArgs function instead of @connection directive", () => {
     const store = defaultNormalizedCacheFactory();
     const writer = new StoreWriter(
       new InMemoryCache({
@@ -2315,7 +2355,7 @@ describe('writing to the store', () => {
             },
           },
         },
-      }),
+      })
     );
 
     writeQueryToStore({
@@ -2330,7 +2370,7 @@ describe('writing to the store', () => {
       result: {
         books: [
           {
-            name: 'abcd',
+            name: "abcd",
           },
         ],
       },
@@ -2342,7 +2382,7 @@ describe('writing to the store', () => {
         __typename: "Query",
         "books:abc": [
           {
-            name: 'abcd',
+            name: "abcd",
           },
         ],
       },
@@ -2360,7 +2400,7 @@ describe('writing to the store', () => {
       result: {
         books: [
           {
-            name: 'efgh',
+            name: "efgh",
           },
         ],
       },
@@ -2372,14 +2412,14 @@ describe('writing to the store', () => {
         __typename: "Query",
         "books:abc": [
           {
-            name: 'efgh',
+            name: "efgh",
           },
         ],
       },
     });
   });
 
-  it('should keep reference when type of mixed inlined field changes', () => {
+  it("should keep reference when type of mixed inlined field changes", () => {
     const store = defaultNormalizedCacheFactory();
 
     const query = gql`
@@ -2398,10 +2438,10 @@ describe('writing to the store', () => {
       result: {
         animals: [
           {
-            __typename: 'Animal',
+            __typename: "Animal",
             species: {
-              __typename: 'Cat',
-              name: 'cat',
+              __typename: "Cat",
+              name: "cat",
             },
           },
         ],
@@ -2414,10 +2454,10 @@ describe('writing to the store', () => {
         __typename: "Query",
         animals: [
           {
-            __typename: 'Animal',
+            __typename: "Animal",
             species: {
-              __typename: 'Cat',
-              name: 'cat',
+              __typename: "Cat",
+              name: "cat",
             },
           },
         ],
@@ -2430,10 +2470,10 @@ describe('writing to the store', () => {
       result: {
         animals: [
           {
-            __typename: 'Animal',
+            __typename: "Animal",
             species: {
-              __typename: 'Dog',
-              name: 'dog',
+              __typename: "Dog",
+              name: "dog",
             },
           },
         ],
@@ -2446,10 +2486,10 @@ describe('writing to the store', () => {
         __typename: "Query",
         animals: [
           {
-            __typename: 'Animal',
+            __typename: "Animal",
             species: {
-              __typename: 'Dog',
-              name: 'dog',
+              __typename: "Dog",
+              name: "dog",
             },
           },
         ],
@@ -2457,87 +2497,91 @@ describe('writing to the store', () => {
     });
   });
 
-  withErrorSpy(it, 'should not keep reference when type of mixed inlined field changes to non-inlined field', () => {
-    const store = defaultNormalizedCacheFactory();
+  withErrorSpy(
+    it,
+    "should not keep reference when type of mixed inlined field changes to non-inlined field",
+    () => {
+      const store = defaultNormalizedCacheFactory();
 
-    const query = gql`
-      query {
-        animals {
-          species {
-            id
-            name
+      const query = gql`
+        query {
+          animals {
+            species {
+              id
+              name
+            }
           }
         }
-      }
-    `;
+      `;
 
-    writeQueryToStore({
-      writer,
-      query,
-      result: {
-        animals: [
-          {
-            __typename: 'Animal',
-            species: {
-              __typename: 'Cat',
-              name: 'cat',
+      writeQueryToStore({
+        writer,
+        query,
+        result: {
+          animals: [
+            {
+              __typename: "Animal",
+              species: {
+                __typename: "Cat",
+                name: "cat",
+              },
             },
-          },
-        ],
-      },
-      store,
-    });
+          ],
+        },
+        store,
+      });
 
-    expect(store.toObject()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        animals: [
-          {
-            __typename: 'Animal',
-            species: {
-              __typename: 'Cat',
-              name: 'cat',
+      expect(store.toObject()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          animals: [
+            {
+              __typename: "Animal",
+              species: {
+                __typename: "Cat",
+                name: "cat",
+              },
             },
-          },
-        ],
-      },
-    });
+          ],
+        },
+      });
 
-    writeQueryToStore({
-      writer,
-      query,
-      result: {
-        animals: [
-          {
-            __typename: 'Animal',
-            species: {
-              id: 'dog-species',
-              __typename: 'Dog',
-              name: 'dog',
+      writeQueryToStore({
+        writer,
+        query,
+        result: {
+          animals: [
+            {
+              __typename: "Animal",
+              species: {
+                id: "dog-species",
+                __typename: "Dog",
+                name: "dog",
+              },
             },
-          },
-        ],
-      },
-      store,
-    });
+          ],
+        },
+        store,
+      });
 
-    expect(store.toObject()).toEqual({
-      'Dog__dog-species': {
-        id: 'dog-species',
-        __typename: 'Dog',
-        name: 'dog',
-      },
-      ROOT_QUERY: {
-        __typename: "Query",
-        animals: [
-          {
-            __typename: 'Animal',
-            species: makeReference('Dog__dog-species'),
-          },
-        ],
-      },
-    });
-  });
+      expect(store.toObject()).toEqual({
+        "Dog__dog-species": {
+          id: "dog-species",
+          __typename: "Dog",
+          name: "dog",
+        },
+        ROOT_QUERY: {
+          __typename: "Query",
+          animals: [
+            {
+              __typename: "Animal",
+              species: makeReference("Dog__dog-species"),
+            },
+          ],
+        },
+      });
+    }
+  );
 
   it("should not merge { __ref } as StoreObject when mergeObjects used", () => {
     const merges: Array<{
@@ -2657,7 +2701,7 @@ describe('writing to the store', () => {
     });
 
     expect(merges).toEqual([
-     {
+      {
         existing: void 0,
         incoming: {
           __typename: "Account",
@@ -2692,11 +2736,11 @@ describe('writing to the store', () => {
           location: "Nowhere, New Mexico",
         },
         merged: { __ref: "Account:12345" },
-      }
+      },
     ]);
   });
 
-  it('should not deep-freeze scalar objects', () => {
+  it("should not deep-freeze scalar objects", () => {
     const query = gql`
       query {
         scalarFieldWithObjectValue
@@ -2815,137 +2859,148 @@ describe('writing to the store', () => {
     expect(mergeCounts).toEqual({ first: 1, second: 1, third: 1, fourth: 1 });
   });
 
-  itAsync("should allow silencing broadcast of cache updates", function (resolve, reject) {
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Counter: {
-          // Counter is a singleton, but we want to be able to test
-          // writing to it with writeFragment, so it needs to have an ID.
-          keyFields: [],
+  itAsync(
+    "should allow silencing broadcast of cache updates",
+    function (resolve, reject) {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Counter: {
+            // Counter is a singleton, but we want to be able to test
+            // writing to it with writeFragment, so it needs to have an ID.
+            keyFields: [],
+          },
         },
-      },
-    });
+      });
 
-    const query = gql`
-      query {
-        counter {
-          count
+      const query = gql`
+        query {
+          counter {
+            count
+          }
         }
-      }
-    `;
+      `;
 
-    const results: number[] = [];
+      const results: number[] = [];
 
-    cache.watch({
-      query,
-      optimistic: true,
-      callback(diff) {
-        results.push(diff.result);
-        expect(diff.result).toEqual({
+      cache.watch({
+        query,
+        optimistic: true,
+        callback(diff) {
+          results.push(diff.result);
+          expect(diff.result).toEqual({
+            counter: {
+              __typename: "Counter",
+              count: 3,
+            },
+          });
+          resolve();
+        },
+      });
+
+      let count = 0;
+
+      cache.writeQuery({
+        query,
+        data: {
+          counter: {
+            __typename: "Counter",
+            count: ++count,
+          },
+        },
+        broadcast: false,
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          counter: { __ref: "Counter:{}" },
+        },
+        "Counter:{}": {
+          __typename: "Counter",
+          count: 1,
+        },
+      });
+
+      expect(results).toEqual([]);
+
+      const counterId = cache.identify({
+        __typename: "Counter",
+      })!;
+
+      cache.writeFragment({
+        id: counterId,
+        fragment: gql`
+          fragment Count on Counter {
+            count
+          }
+        `,
+        data: {
+          count: ++count,
+        },
+        broadcast: false,
+      });
+
+      const counterMeta = {
+        extraRootIds: ["Counter:{}"],
+      };
+
+      expect(cache.extract()).toEqual({
+        __META: counterMeta,
+        ROOT_QUERY: {
+          __typename: "Query",
+          counter: { __ref: "Counter:{}" },
+        },
+        "Counter:{}": {
+          __typename: "Counter",
+          count: 2,
+        },
+      });
+
+      expect(results).toEqual([]);
+
+      expect(
+        cache.evict({
+          id: counterId,
+          fieldName: "count",
+          broadcast: false,
+        })
+      ).toBe(true);
+
+      expect(cache.extract()).toEqual({
+        __META: counterMeta,
+        ROOT_QUERY: {
+          __typename: "Query",
+          counter: { __ref: "Counter:{}" },
+        },
+        "Counter:{}": {
+          __typename: "Counter",
+        },
+      });
+
+      expect(results).toEqual([]);
+
+      // Only this write should trigger a broadcast.
+      cache.writeQuery({
+        query,
+        data: {
           counter: {
             __typename: "Counter",
             count: 3,
           },
-        });
-        resolve();
-      },
-    });
-
-    let count = 0;
-
-    cache.writeQuery({
-      query,
-      data: {
-        counter: {
-          __typename: "Counter",
-          count: ++count,
         },
-      },
-      broadcast: false,
-    });
-
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        counter: { __ref: "Counter:{}" },
-      },
-      "Counter:{}": {
-        __typename: "Counter",
-        count: 1,
-      },
-    });
-
-    expect(results).toEqual([]);
-
-    const counterId = cache.identify({
-      __typename: "Counter",
-    })!;
-
-    cache.writeFragment({
-      id: counterId,
-      fragment: gql`fragment Count on Counter { count }`,
-      data: {
-        count: ++count,
-      },
-      broadcast: false,
-    });
-
-    const counterMeta = {
-      extraRootIds: [
-        "Counter:{}",
-      ],
-    };
-
-    expect(cache.extract()).toEqual({
-      __META: counterMeta,
-      ROOT_QUERY: {
-        __typename: "Query",
-        counter: { __ref: "Counter:{}" },
-      },
-      "Counter:{}": {
-        __typename: "Counter",
-        count: 2,
-      },
-    });
-
-    expect(results).toEqual([]);
-
-    expect(cache.evict({
-      id: counterId,
-      fieldName: "count",
-      broadcast: false,
-    })).toBe(true);
-
-    expect(cache.extract()).toEqual({
-      __META: counterMeta,
-      ROOT_QUERY: {
-        __typename: "Query",
-        counter: { __ref: "Counter:{}" },
-      },
-      "Counter:{}": {
-        __typename: "Counter",
-      },
-    });
-
-    expect(results).toEqual([]);
-
-    // Only this write should trigger a broadcast.
-    cache.writeQuery({
-      query,
-      data: {
-        counter: {
-          __typename: "Counter",
-          count: 3,
-        },
-      },
-    });
-  });
+      });
+    }
+  );
 
   it("writeFragment should be able to infer ROOT_QUERY", () => {
-    const cache = new InMemoryCache;
+    const cache = new InMemoryCache();
 
     const ref = cache.writeFragment({
-      fragment: gql`fragment RootField on Query { field }`,
+      fragment: gql`
+        fragment RootField on Query {
+          field
+        }
+      `,
       data: {
         __typename: "Query",
         field: "value",
@@ -2964,11 +3019,15 @@ describe('writing to the store', () => {
   });
 
   it("should warn if it cannot identify the result object", () => {
-    const cache = new InMemoryCache;
+    const cache = new InMemoryCache();
 
     expect(() => {
       cache.writeFragment({
-        fragment: gql`fragment Count on Counter { count }`,
+        fragment: gql`
+          fragment Count on Counter {
+            count
+          }
+        `,
         data: {
           count: 1,
         },
@@ -3028,9 +3087,9 @@ describe('writing to the store', () => {
     expect(cache.extract()).toMatchSnapshot();
     expect(cache.readQuery({ query })).toEqual({
       subscriptions: [
-        { __typename: "Subscription", subscriber: { name: "Alice" }},
-        { __typename: "Subscription", subscriber: { name: "Bob" }},
-        { __typename: "Subscription", subscriber: { name: "Clytemnestra" }},
+        { __typename: "Subscription", subscriber: { name: "Alice" } },
+        { __typename: "Subscription", subscriber: { name: "Bob" } },
+        { __typename: "Subscription", subscriber: { name: "Clytemnestra" } },
       ],
     });
   });
@@ -3051,7 +3110,9 @@ describe('writing to the store', () => {
       query {
         mutations {
           __typename
-          gene { id }
+          gene {
+            id
+          }
           name
         }
       }
@@ -3110,25 +3171,29 @@ describe('writing to the store', () => {
       expectedContextValues: {
         clientOnly: Record<string, boolean> | boolean;
         deferred: Record<string, boolean> | boolean;
-      },
+      }
     ) {
       const { selectionSet } = getMainDefinition(query);
 
-      const flat = writer["flattenFields"](selectionSet, {
-        __typename: "Query",
-        aField: "a",
-        bField: "b",
-        rootField: "root",
-      }, {
-        ...extractFragmentContext(query),
-        clientOnly: false,
-        deferred: false,
-        flavors: new Map,
-        variables: {
-          true: true,
-          false: false,
+      const flat = writer["flattenFields"](
+        selectionSet,
+        {
+          __typename: "Query",
+          aField: "a",
+          bField: "b",
+          rootField: "root",
         },
-      });
+        {
+          ...extractFragmentContext(query),
+          clientOnly: false,
+          deferred: false,
+          flavors: new Map(),
+          variables: {
+            true: true,
+            false: false,
+          },
+        }
+      );
 
       expect(flat.size).toBe(3);
 
@@ -3156,632 +3221,707 @@ describe('writing to the store', () => {
     }
 
     it("flattenFields flattens fields with appropriate @client context", () => {
-      check(gql`
-        query Q {
-          ...FragAB @client
-          ...FragB
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB @client
+            ...FragB
+            rootField
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: {
+            aField: true,
+            bField: false,
+            rootField: false,
+          },
+          deferred: false,
         }
-      `, {
-        clientOnly: {
-          aField: true,
-          bField: false,
-          rootField: false,
-        },
-        deferred: false,
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragB
-          ...FragAB @client
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragB
+            ...FragAB @client
+            rootField
+          }
 
-        fragment FragAB on Query {
-          ...FragB
-          aField
-        }
+          fragment FragAB on Query {
+            ...FragB
+            aField
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: {
+            aField: true,
+            bField: false,
+            rootField: false,
+          },
+          deferred: false,
         }
-      `, {
-        clientOnly: {
-          aField: true,
-          bField: false,
-          rootField: false,
-        },
-        deferred: false,
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragB
-          ...FragAB @client
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragB
+            ...FragAB @client
+            rootField
+          }
 
-        fragment FragAB on Query {
-          ...FragB
-          aField
-        }
+          fragment FragAB on Query {
+            ...FragB
+            aField
+          }
 
-        fragment FragB on Query {
-          bField @client
+          fragment FragB on Query {
+            bField @client
+          }
+        `,
+        {
+          clientOnly: {
+            aField: true,
+            bField: true,
+            rootField: false,
+          },
+          deferred: false,
         }
-      `, {
-        clientOnly: {
-          aField: true,
-          bField: true,
-          rootField: false,
-        },
-        deferred: false,
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragB
-          rootField
-          ...FragAB
-        }
+      check(
+        gql`
+          query Q {
+            ...FragB
+            rootField
+            ...FragAB
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB
+          }
 
-        fragment FragB on Query {
-          bField @client
+          fragment FragB on Query {
+            bField @client
+          }
+        `,
+        {
+          clientOnly: {
+            aField: false,
+            bField: true,
+            rootField: false,
+          },
+          deferred: false,
         }
-      `, {
-        clientOnly: {
-          aField: false,
-          bField: true,
-          rootField: false,
-        },
-        deferred: false,
-      });
+      );
 
-      check(gql`
-        query Q {
-          rootField @client
-          ...FragB
-          ...FragAB
-        }
+      check(
+        gql`
+          query Q {
+            rootField @client
+            ...FragB
+            ...FragAB
+          }
 
-        fragment FragAB on Query {
-          ...FragB @client
-          aField
-        }
+          fragment FragAB on Query {
+            ...FragB @client
+            aField
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: {
+            aField: false,
+            bField: false,
+            rootField: true,
+          },
+          deferred: false,
         }
-      `, {
-        clientOnly: {
-          aField: false,
-          bField: false,
-          rootField: true,
-        },
-        deferred: false,
-      });
+      );
 
-      check(gql`
-        query Q {
-          rootField @client
-          ...FragB @client
-          ...FragAB
-        }
+      check(
+        gql`
+          query Q {
+            rootField @client
+            ...FragB @client
+            ...FragAB
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB @client
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB @client
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: {
+            aField: false,
+            bField: true,
+            rootField: true,
+          },
+          deferred: false,
         }
-      `, {
-        clientOnly: {
-          aField: false,
-          bField: true,
-          rootField: true,
-        },
-        deferred: false,
-      });
+      );
 
-      check(gql`
-        query Q {
-          rootField @client
-          ...FragB
-          ...FragAB
-        }
+      check(
+        gql`
+          query Q {
+            rootField @client
+            ...FragB
+            ...FragAB
+          }
 
-        fragment FragAB on Query {
-          ...FragB @client
-          aField
-        }
+          fragment FragAB on Query {
+            ...FragB @client
+            aField
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: {
+            aField: false,
+            bField: false,
+            rootField: true,
+          },
+          deferred: false,
         }
-      `, {
-        clientOnly: {
-          aField: false,
-          bField: false,
-          rootField: true,
-        },
-        deferred: false,
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragAB @client
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB @client
+            rootField
+          }
 
-        fragment FragAB on Query {
-          ...FragB
-          aField
-        }
+          fragment FragAB on Query {
+            ...FragB
+            aField
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: {
+            aField: true,
+            bField: true,
+            rootField: false,
+          },
+          deferred: false,
         }
-      `, {
-        clientOnly: {
-          aField: true,
-          bField: true,
-          rootField: false,
-        },
-        deferred: false,
-      });
+      );
     });
 
     it("flattenFields flattens fields with appropriate @defer context", () => {
-      check(gql`
-        query Q {
-          ...FragAB @defer
-          ...FragB
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB @defer
+            ...FragB
+            rootField
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: true,
+            bField: false,
+            rootField: false,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: true,
-          bField: false,
-          rootField: false,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragB
-          ...FragAB @defer
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragB
+            ...FragAB @defer
+            rootField
+          }
 
-        fragment FragAB on Query {
-          ...FragB
-          aField
-        }
+          fragment FragAB on Query {
+            ...FragB
+            aField
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: true,
+            bField: false,
+            rootField: false,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: true,
-          bField: false,
-          rootField: false,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragB
-          ...FragAB @defer
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragB
+            ...FragAB @defer
+            rootField
+          }
 
-        fragment FragAB on Query {
-          ...FragB
-          aField
-        }
+          fragment FragAB on Query {
+            ...FragB
+            aField
+          }
 
-        fragment FragB on Query {
-          bField @defer
+          fragment FragB on Query {
+            bField @defer
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: true,
+            bField: true,
+            rootField: false,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: true,
-          bField: true,
-          rootField: false,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragB
-          rootField
-          ...FragAB
-        }
+      check(
+        gql`
+          query Q {
+            ...FragB
+            rootField
+            ...FragAB
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB
+          }
 
-        fragment FragB on Query {
-          bField @defer
+          fragment FragB on Query {
+            bField @defer
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: false,
+            bField: true,
+            rootField: false,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: false,
-          bField: true,
-          rootField: false,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          rootField @defer
-          ...FragB
-          ...FragAB
-        }
+      check(
+        gql`
+          query Q {
+            rootField @defer
+            ...FragB
+            ...FragAB
+          }
 
-        fragment FragAB on Query {
-          ...FragB @defer
-          aField
-        }
+          fragment FragAB on Query {
+            ...FragB @defer
+            aField
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: false,
+            bField: false,
+            rootField: true,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: false,
-          bField: false,
-          rootField: true,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          rootField @defer
-          ...FragB @defer
-          ...FragAB
-        }
+      check(
+        gql`
+          query Q {
+            rootField @defer
+            ...FragB @defer
+            ...FragAB
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB @defer
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB @defer
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: false,
+            bField: true,
+            rootField: true,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: false,
-          bField: true,
-          rootField: true,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          rootField @defer
-          ...FragB
-          ...FragAB
-        }
+      check(
+        gql`
+          query Q {
+            rootField @defer
+            ...FragB
+            ...FragAB
+          }
 
-        fragment FragAB on Query {
-          ...FragB @defer
-          aField
-        }
+          fragment FragAB on Query {
+            ...FragB @defer
+            aField
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: false,
+            bField: false,
+            rootField: true,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: false,
-          bField: false,
-          rootField: true,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragAB @defer
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB @defer
+            rootField
+          }
 
-        fragment FragAB on Query {
-          ...FragB
-          aField
-        }
+          fragment FragAB on Query {
+            ...FragB
+            aField
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: true,
+            bField: true,
+            rootField: false,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: true,
-          bField: true,
-          rootField: false,
-        },
-      });
+      );
     });
 
     it("flattenFields flattens fields mixing @client and @defer", () => {
-      check(gql`
-        query Q {
-          ...FragAB @defer
-          ...FragB @client
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB @defer
+            ...FragB @client
+            rootField
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB @client
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB @client
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: {
+            aField: false,
+            bField: true,
+            rootField: false,
+          },
+          deferred: {
+            aField: true,
+            bField: false,
+            rootField: false,
+          },
         }
-      `, {
-        clientOnly: {
-          aField: false,
-          bField: true,
-          rootField: false,
-        },
-        deferred: {
-          aField: true,
-          bField: false,
-          rootField: false,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragAB @defer @client
-          ...FragB @client
-          rootField @client @defer
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB @defer @client
+            ...FragB @client
+            rootField @client @defer
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB @defer
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB @defer
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: {
+            aField: true,
+            bField: true,
+            rootField: true,
+          },
+          deferred: {
+            aField: true,
+            bField: false,
+            rootField: true,
+          },
         }
-      `, {
-        clientOnly: {
-          aField: true,
-          bField: true,
-          rootField: true,
-        },
-        deferred: {
-          aField: true,
-          bField: false,
-          rootField: true,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragAB
-          ...FragB @client
-          rootField @defer
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB
+            ...FragB @client
+            rootField @defer
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB @client
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB @client
+          }
 
-        fragment FragB on Query {
-          bField @defer
+          fragment FragB on Query {
+            bField @defer
+          }
+        `,
+        {
+          clientOnly: {
+            aField: false,
+            bField: true,
+            rootField: false,
+          },
+          deferred: {
+            aField: false,
+            bField: true,
+            rootField: true,
+          },
         }
-      `, {
-        clientOnly: {
-          aField: false,
-          bField: true,
-          rootField: false,
-        },
-        deferred: {
-          aField: false,
-          bField: true,
-          rootField: true,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragAB @defer
-          ...FragB @skip(if: true)
-          rootField @client
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB @defer
+            ...FragB @skip(if: true)
+            rootField @client
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB @client
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB @client
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: {
+            aField: false,
+            bField: true,
+            rootField: true,
+          },
+          deferred: {
+            aField: true,
+            bField: true,
+            rootField: false,
+          },
         }
-      `, {
-        clientOnly: {
-          aField: false,
-          bField: true,
-          rootField: true,
-        },
-        deferred: {
-          aField: true,
-          bField: true,
-          rootField: false,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          aField @defer
-          ...FragAB @include(if: false)
-          ...FragB @client
-          rootField @defer
-        }
+      check(
+        gql`
+          query Q {
+            aField @defer
+            ...FragAB @include(if: false)
+            ...FragB @client
+            rootField @defer
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: {
+            aField: false,
+            bField: true,
+            rootField: false,
+          },
+          deferred: {
+            aField: true,
+            bField: false,
+            rootField: true,
+          },
         }
-      `, {
-        clientOnly: {
-          aField: false,
-          bField: true,
-          rootField: false,
-        },
-        deferred: {
-          aField: true,
-          bField: false,
-          rootField: true,
-        },
-      });
+      );
     });
 
     it("flattenFields understands conditional @defer(if: boolean)", () => {
-      check(gql`
-        query Q {
-          ...FragAB @defer
-          ...FragB @defer(if: false)
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB @defer
+            ...FragB @defer(if: false)
+            rootField
+          }
 
-        fragment FragAB on Query {
-          aField @defer(if: true)
-          ...FragB
-        }
+          fragment FragAB on Query {
+            aField @defer(if: true)
+            ...FragB
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: true,
+            bField: false,
+            rootField: false,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: true,
-          bField: false,
-          rootField: false,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragAB @defer
-          ...FragB @defer(if: $true)
-          rootField @defer(if: $true)
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB @defer
+            ...FragB @defer(if: $true)
+            rootField @defer(if: $true)
+          }
 
-        fragment FragAB on Query {
-          aField @defer(if: $false)
-          ...FragB
-        }
+          fragment FragAB on Query {
+            aField @defer(if: $false)
+            ...FragB
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: true,
+            bField: true,
+            rootField: true,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: true,
-          bField: true,
-          rootField: true,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragAB @defer(if: $false)
-          ...FragB @defer
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB @defer(if: $false)
+            ...FragB @defer
+            rootField
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB @defer(if: true)
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB @defer(if: true)
+          }
 
-        fragment FragB on Query {
-          bField
+          fragment FragB on Query {
+            bField
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: false,
+            bField: true,
+            rootField: false,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: false,
-          bField: true,
-          rootField: false,
-        },
-      });
+      );
 
-      check(gql`
-        query Q {
-          ...FragAB
-          ...FragB @defer
-          rootField
-        }
+      check(
+        gql`
+          query Q {
+            ...FragAB
+            ...FragB @defer
+            rootField
+          }
 
-        fragment FragAB on Query {
-          aField
-          ...FragB @defer
-        }
+          fragment FragAB on Query {
+            aField
+            ...FragB @defer
+          }
 
-        fragment FragB on Query {
-          bField @defer(if: false)
+          fragment FragB on Query {
+            bField @defer(if: false)
+          }
+        `,
+        {
+          clientOnly: false,
+          deferred: {
+            aField: false,
+            // The bField is deferred despite having @defer(if: false), because it
+            // inherits the @defer directives from above.
+            bField: true,
+            rootField: false,
+          },
         }
-      `, {
-        clientOnly: false,
-        deferred: {
-          aField: false,
-          // The bField is deferred despite having @defer(if: false), because it
-          // inherits the @defer directives from above.
-          bField: true,
-          rootField: false,
-        },
-      });
+      );
     });
   });
 
@@ -3792,7 +3932,7 @@ describe('writing to the store', () => {
         title
       }
     `;
-  
+
     const cache = new InMemoryCache();
     cache.writeFragment({
       fragment: postFragment,
@@ -3802,7 +3942,7 @@ describe('writing to the store', () => {
         title: "Hello",
       },
     });
-  
+
     expect(cache.extract()["Post:1"]).toMatchInlineSnapshot(`
       Object {
         "__typename": "Post",
@@ -3810,7 +3950,7 @@ describe('writing to the store', () => {
         "title": "Hello",
       }
     `);
-  
+
     const injectingQuery = gql`
       query ($id: String) {
         user(id: $id) {
@@ -3836,7 +3976,7 @@ describe('writing to the store', () => {
         },
       },
     });
-  
+
     expect(cache.extract()["Post:1"]).toMatchInlineSnapshot(`
       Object {
         "__typename": "Post",
@@ -3844,8 +3984,7 @@ describe('writing to the store', () => {
         "title": "Hello",
       }
     `);
-  
-  
+
     expect(cache.extract()["User:5"]).toMatchInlineSnapshot(`
       Object {
         "__typename": "User",
@@ -3856,5 +3995,4 @@ describe('writing to the store', () => {
       }
     `);
   });
-  
 });

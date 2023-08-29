@@ -1,3 +1,3 @@
-import { ApolloLink } from './ApolloLink.js';
+import { ApolloLink } from "./ApolloLink.js";
 
 export const empty = ApolloLink.empty;

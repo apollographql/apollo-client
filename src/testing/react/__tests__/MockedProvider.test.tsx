@@ -1,25 +1,25 @@
-import React from 'react';
-import { DocumentNode } from 'graphql';
-import { render, waitFor } from '@testing-library/react';
-import gql from 'graphql-tag';
+import React from "react";
+import { DocumentNode } from "graphql";
+import { render, waitFor } from "@testing-library/react";
+import gql from "graphql-tag";
 
-import { itAsync, MockedResponse, MockLink } from '../../core';
-import { MockedProvider } from '../MockedProvider';
-import { useQuery } from '../../../react/hooks';
-import { InMemoryCache } from '../../../cache';
-import { ApolloLink } from '../../../link/core';
+import { itAsync, MockedResponse, MockLink } from "../../core";
+import { MockedProvider } from "../MockedProvider";
+import { useQuery } from "../../../react/hooks";
+import { InMemoryCache } from "../../../cache";
+import { ApolloLink } from "../../../link/core";
 
 const variables = {
-  username: 'mock_username'
+  username: "mock_username",
 };
 
 const userWithoutTypeName = {
-  id: 'user_id'
+  id: "user_id",
 };
 
 const user = {
-  __typename: 'User',
-  ...userWithoutTypeName
+  __typename: "User",
+  ...userWithoutTypeName,
 };
 
 const query: DocumentNode = gql`
@@ -43,10 +43,10 @@ const mocks: ReadonlyArray<MockedResponse> = [
   {
     request: {
       query,
-      variables
+      variables,
     },
-    result: { data: { user } }
-  }
+    result: { data: { user } },
+  },
 ];
 
 interface Data {
@@ -70,12 +70,12 @@ const errorLink = new ApolloLink((operation, forward) => {
   return observer;
 });
 
-describe('General use', () => {
+describe("General use", () => {
   beforeEach(() => {
     errorThrown = false;
   });
 
-  itAsync('should mock the data', (resolve, reject) => {
+  itAsync("should mock the data", (resolve, reject) => {
     let finished = false;
     function Component({ username }: Variables) {
       const { loading, data } = useQuery<Data, Variables>(query, { variables });
@@ -97,7 +97,7 @@ describe('General use', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('should allow querying with the typename', (resolve, reject) => {
+  itAsync("should allow querying with the typename", (resolve, reject) => {
     let finished = false;
     function Component({ username }: Variables) {
       const { loading, data } = useQuery<Data, Variables>(query, { variables });
@@ -112,10 +112,10 @@ describe('General use', () => {
       {
         request: {
           query: queryWithTypename,
-          variables
+          variables,
         },
-        result: { data: { user } }
-      }
+        result: { data: { user } },
+      },
     ];
 
     render(
@@ -129,13 +129,13 @@ describe('General use', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('should allow using a custom cache', (resolve, reject) => {
+  itAsync("should allow using a custom cache", (resolve, reject) => {
     let finished = false;
     const cache = new InMemoryCache();
     cache.writeQuery({
       query,
       variables,
-      data: { user }
+      data: { user },
     });
 
     function Component({ username }: Variables) {
@@ -158,119 +158,136 @@ describe('General use', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('should error if the variables in the mock and component do not match', (resolve, reject) => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      const { loading, error } = useQuery<Data, Variables>(query, { variables });
-      if (!loading) {
-        expect(error).toMatchSnapshot();
-        finished = true;
+  itAsync(
+    "should error if the variables in the mock and component do not match",
+    (resolve, reject) => {
+      let finished = false;
+      function Component({ ...variables }: Variables) {
+        const { loading, error } = useQuery<Data, Variables>(query, {
+          variables,
+        });
+        if (!loading) {
+          expect(error).toMatchSnapshot();
+          finished = true;
+        }
+        return null;
       }
-      return null;
+
+      const variables2 = {
+        username: "other_user",
+        age: undefined,
+      };
+
+      render(
+        <MockedProvider showWarnings={false} mocks={mocks}>
+          <Component {...variables2} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
     }
+  );
 
-    const variables2 = {
-      username: 'other_user',
-      age: undefined
-    };
-
-    render(
-      <MockedProvider showWarnings={false} mocks={mocks}>
-        <Component {...variables2} />
-      </MockedProvider>
-    );
-
-    waitFor(() => {
-      expect(finished).toBe(true);
-    }).then(resolve, reject);
-  });
-
-  itAsync('should error if the variables do not deep equal', (resolve, reject) => {
-    let finished = false
-    function Component({ ...variables }: Variables) {
-      const { loading, error } = useQuery<Data, Variables>(query, { variables });
-      if (!loading) {
-        expect(error).toMatchSnapshot();
-        finished = true;
+  itAsync(
+    "should error if the variables do not deep equal",
+    (resolve, reject) => {
+      let finished = false;
+      function Component({ ...variables }: Variables) {
+        const { loading, error } = useQuery<Data, Variables>(query, {
+          variables,
+        });
+        if (!loading) {
+          expect(error).toMatchSnapshot();
+          finished = true;
+        }
+        return null;
       }
-      return null;
-    }
 
-    const mocks2 = [
-      {
-        request: {
-          query,
-          variables: {
-            age: 13,
-            username: 'some_user'
-          }
+      const mocks2 = [
+        {
+          request: {
+            query,
+            variables: {
+              age: 13,
+              username: "some_user",
+            },
+          },
+          result: { data: { user } },
         },
-        result: { data: { user } }
-      }
-    ];
+      ];
 
-    const variables2 = {
-      username: 'some_user',
-      age: 42
-    };
+      const variables2 = {
+        username: "some_user",
+        age: 42,
+      };
 
-    render(
-      <MockedProvider showWarnings={false} mocks={mocks2}>
-        <Component {...variables2} />
-      </MockedProvider>
-    );
+      render(
+        <MockedProvider showWarnings={false} mocks={mocks2}>
+          <Component {...variables2} />
+        </MockedProvider>
+      );
 
-    waitFor(() => {
-      expect(finished).toBe(true);
-    }).then(resolve, reject);
-  });
-
-  itAsync('should not error if the variables match but have different order', (resolve, reject) => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      const { loading, data } = useQuery<Data, Variables>(query, { variables });
-      if (!loading) {
-        expect(data).toMatchSnapshot();
-        finished = true;
-      }
-      return null;
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
     }
+  );
 
-    const mocks2 = [
-      {
-        request: {
-          query,
-          variables: {
-            age: 13,
-            username: 'some_user'
-          }
-        },
-        result: { data: { user } }
+  itAsync(
+    "should not error if the variables match but have different order",
+    (resolve, reject) => {
+      let finished = false;
+      function Component({ ...variables }: Variables) {
+        const { loading, data } = useQuery<Data, Variables>(query, {
+          variables,
+        });
+        if (!loading) {
+          expect(data).toMatchSnapshot();
+          finished = true;
+        }
+        return null;
       }
-    ];
 
-    const variables2 = {
-      username: 'some_user',
-      age: 13
-    };
+      const mocks2 = [
+        {
+          request: {
+            query,
+            variables: {
+              age: 13,
+              username: "some_user",
+            },
+          },
+          result: { data: { user } },
+        },
+      ];
 
-    render(
-      <MockedProvider mocks={mocks2}>
-        <Component {...variables2} />
-      </MockedProvider>
-    );
+      const variables2 = {
+        username: "some_user",
+        age: 13,
+      };
 
-    waitFor(() => {
-      expect(finished).toBe(true);
-    }).then(resolve, reject);
-  });
+      render(
+        <MockedProvider mocks={mocks2}>
+          <Component {...variables2} />
+        </MockedProvider>
+      );
 
-  itAsync('should support mocking a network error', (resolve, reject) => {
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
+    }
+  );
+
+  itAsync("should support mocking a network error", (resolve, reject) => {
     let finished = false;
     function Component({ ...variables }: Variables) {
-      const { loading, error } = useQuery<Data, Variables>(query, { variables });
+      const { loading, error } = useQuery<Data, Variables>(query, {
+        variables,
+      });
       if (!loading) {
-        expect(error).toEqual(new Error('something went wrong'));
+        expect(error).toEqual(new Error("something went wrong"));
         finished = true;
       }
       return null;
@@ -280,10 +297,10 @@ describe('General use', () => {
       {
         request: {
           query,
-          variables
+          variables,
         },
-        error: new Error('something went wrong')
-      }
+        error: new Error("something went wrong"),
+      },
     ];
 
     render(
@@ -297,59 +314,64 @@ describe('General use', () => {
     }).then(resolve, reject);
   });
 
-  itAsync('should error if the query in the mock and component do not match', (resolve, reject) => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      const { loading, error } = useQuery<Data, Variables>(query, { variables });
-      if (!loading) {
-        expect(error).toMatchSnapshot();
-        finished = true;
+  itAsync(
+    "should error if the query in the mock and component do not match",
+    (resolve, reject) => {
+      let finished = false;
+      function Component({ ...variables }: Variables) {
+        const { loading, error } = useQuery<Data, Variables>(query, {
+          variables,
+        });
+        if (!loading) {
+          expect(error).toMatchSnapshot();
+          finished = true;
+        }
+        return null;
       }
-      return null;
-    }
 
-    const mocksDifferentQuery = [
-      {
-        request: {
-          query: gql`
-            query OtherQuery {
-              otherQuery {
-                id
+      const mocksDifferentQuery = [
+        {
+          request: {
+            query: gql`
+              query OtherQuery {
+                otherQuery {
+                  id
+                }
               }
-            }
-          `,
-          variables
+            `,
+            variables,
+          },
+          result: { data: { user } },
         },
-        result: { data: { user } }
-      }
-    ];
+      ];
 
-    render(
-      <MockedProvider showWarnings={false} mocks={mocksDifferentQuery}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
+      render(
+        <MockedProvider showWarnings={false} mocks={mocksDifferentQuery}>
+          <Component {...variables} />
+        </MockedProvider>
+      );
 
-    waitFor(() => {
-      expect(finished).toBe(true);
-    }).then(resolve, reject);
-  });
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
+    }
+  );
 
-  it('should pass down props prop in mock as props for the component', () => {
+  it("should pass down props prop in mock as props for the component", () => {
     function Component({ ...variables }) {
-      expect(variables.foo).toBe('bar');
-      expect(variables.baz).toBe('qux');
+      expect(variables.foo).toBe("bar");
+      expect(variables.baz).toBe("qux");
       return null;
     }
 
     render(
-      <MockedProvider mocks={mocks} childProps={{ foo: 'bar', baz: 'qux' }}>
+      <MockedProvider mocks={mocks} childProps={{ foo: "bar", baz: "qux" }}>
         <Component {...variables} />
       </MockedProvider>
     );
   });
 
-  it('should not crash on unmount if there is no query manager', () => {
+  it("should not crash on unmount if there is no query manager", () => {
     function Component() {
       return null;
     }
@@ -363,66 +385,71 @@ describe('General use', () => {
     unmount();
   });
 
-  itAsync('should support returning mocked results from a function', (resolve, reject) => {
-    let finished = false;
-    let resultReturned = false;
+  itAsync(
+    "should support returning mocked results from a function",
+    (resolve, reject) => {
+      let finished = false;
+      let resultReturned = false;
 
-    const testUser = {
-      __typename: 'User',
-      id: 12345
-    };
+      const testUser = {
+        __typename: "User",
+        id: 12345,
+      };
 
-    function Component({ ...variables }: Variables) {
-      const { loading, data } = useQuery<Data, Variables>(query, { variables });
-      if (!loading) {
-        expect(data!.user).toEqual(testUser);
-        expect(resultReturned).toBe(true);
-        finished = true;
-      }
-      return null;
-    }
-
-    const testQuery: DocumentNode = gql`
-      query GetUser($username: String!) {
-        user(username: $username) {
-          id
+      function Component({ ...variables }: Variables) {
+        const { loading, data } = useQuery<Data, Variables>(query, {
+          variables,
+        });
+        if (!loading) {
+          expect(data!.user).toEqual(testUser);
+          expect(resultReturned).toBe(true);
+          finished = true;
         }
+        return null;
       }
-    `;
 
-    const testVariables = {
-      username: 'jsmith'
-    };
-    const testMocks = [
-      {
-        request: {
-          query: testQuery,
-          variables: testVariables
+      const testQuery: DocumentNode = gql`
+        query GetUser($username: String!) {
+          user(username: $username) {
+            id
+          }
+        }
+      `;
+
+      const testVariables = {
+        username: "jsmith",
+      };
+      const testMocks = [
+        {
+          request: {
+            query: testQuery,
+            variables: testVariables,
+          },
+          result() {
+            resultReturned = true;
+            return {
+              data: {
+                user: {
+                  __typename: "User",
+                  id: 12345,
+                },
+              },
+            };
+          },
         },
-        result() {
-          resultReturned = true;
-          return {
-            data: {
-              user: {
-                __typename: 'User',
-                id: 12345
-              }
-            }
-          };
-        }
-      }
-    ];
+      ];
 
-    render(
-      <MockedProvider mocks={testMocks}>
-        <Component {...testVariables} />
-      </MockedProvider>
-    );
+      render(
+        <MockedProvider mocks={testMocks}>
+          <Component {...testVariables} />
+        </MockedProvider>
+      );
 
-    waitFor(() => {
-      expect(finished).toBe(true)
-    }).then(resolve, reject);
-  });
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
+    }
+  );
 
   it('should return "No more mocked responses" errors in response', async () => {
     let finished = false;
@@ -437,7 +464,7 @@ describe('General use', () => {
 
     const link = ApolloLink.from([
       errorLink,
-      new MockLink([], true, { showWarnings: false })
+      new MockLink([], true, { showWarnings: false }),
     ]);
 
     render(
@@ -457,7 +484,9 @@ describe('General use', () => {
   it('should return "Mocked response should contain" errors in response', async () => {
     let finished = false;
     function Component({ ...variables }: Variables) {
-      const { loading, error } = useQuery<Data, Variables>(query, { variables });
+      const { loading, error } = useQuery<Data, Variables>(query, {
+        variables,
+      });
       if (!loading) {
         expect(error).toMatchSnapshot();
         finished = true;
@@ -465,14 +494,17 @@ describe('General use', () => {
       return null;
     }
 
-    const link = ApolloLink.from([errorLink, new MockLink([
-      {
-        request: {
-          query,
-          variables
-        }
-      }
-    ])]);
+    const link = ApolloLink.from([
+      errorLink,
+      new MockLink([
+        {
+          request: {
+            query,
+            variables,
+          },
+        },
+      ]),
+    ]);
 
     render(
       <MockedProvider link={link}>
@@ -488,8 +520,8 @@ describe('General use', () => {
     expect(errorThrown).toBeFalsy();
   });
 
-  it('shows a warning in the console when there is no matched mock', async () => {
-    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  it("shows a warning in the console when there is no matched mock", async () => {
+    const consoleSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -509,10 +541,10 @@ describe('General use', () => {
               }
             }
           `,
-          variables
+          variables,
         },
-        result: { data: { user } }
-      }
+        result: { data: { user } },
+      },
     ];
 
     render(
@@ -527,14 +559,14 @@ describe('General use', () => {
 
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('No more mocked responses for the query')
+      expect.stringContaining("No more mocked responses for the query")
     );
 
     consoleSpy.mockRestore();
   });
 
-  it('silences console warning for unmatched mocks when `showWarnings` is `false`', async () => {
-    const consoleSpy = jest.spyOn(console, 'warn');
+  it("silences console warning for unmatched mocks when `showWarnings` is `false`", async () => {
+    const consoleSpy = jest.spyOn(console, "warn");
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -554,10 +586,10 @@ describe('General use', () => {
               }
             }
           `,
-          variables
+          variables,
         },
-        result: { data: { user } }
-      }
+        result: { data: { user } },
+      },
     ];
 
     render(
@@ -575,8 +607,8 @@ describe('General use', () => {
     consoleSpy.mockRestore();
   });
 
-  it('silences console warning for unmatched mocks when passing `showWarnings` to `MockLink` directly', async () => {
-    const consoleSpy = jest.spyOn(console, 'warn');
+  it("silences console warning for unmatched mocks when passing `showWarnings` to `MockLink` directly", async () => {
+    const consoleSpy = jest.spyOn(console, "warn");
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -596,17 +628,15 @@ describe('General use', () => {
               }
             }
           `,
-         variables
+          variables,
         },
-        result: { data: { user } }
-      }
+        result: { data: { user } },
+      },
     ];
 
-    const link = new MockLink(
-      mocksDifferentQuery,
-      false,
-      { showWarnings: false }
-    );
+    const link = new MockLink(mocksDifferentQuery, false, {
+      showWarnings: false,
+    });
 
     render(
       <MockedProvider link={link}>
@@ -623,143 +653,163 @@ describe('General use', () => {
     consoleSpy.mockRestore();
   });
 
-  itAsync('should support custom error handling using setOnError', (resolve, reject) => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      useQuery<Data, Variables>(query, { variables });
-      return null;
-    }
+  itAsync(
+    "should support custom error handling using setOnError",
+    (resolve, reject) => {
+      let finished = false;
+      function Component({ ...variables }: Variables) {
+        useQuery<Data, Variables>(query, { variables });
+        return null;
+      }
 
-    const mockLink = new MockLink([], true, { showWarnings: false });
-    mockLink.setOnError(error => {
-      expect(error).toMatchSnapshot();
-      finished = true;
-    });
-    const link = ApolloLink.from([errorLink, mockLink]);
-
-    render(
-      <MockedProvider link={link}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
-
-    waitFor(() => {
-      expect(finished).toBe(true);
-    }).then(resolve, reject);
-  });
-
-  itAsync('should pipe exceptions thrown in custom onError functions through the link chain', (resolve, reject) => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      const { loading, error } = useQuery<Data, Variables>(query, { variables });
-      if (!loading) {
+      const mockLink = new MockLink([], true, { showWarnings: false });
+      mockLink.setOnError((error) => {
         expect(error).toMatchSnapshot();
         finished = true;
-      }
-      return null;
+      });
+      const link = ApolloLink.from([errorLink, mockLink]);
+
+      render(
+        <MockedProvider link={link}>
+          <Component {...variables} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
     }
+  );
 
-    const mockLink = new MockLink([], true, { showWarnings: false });
-    mockLink.setOnError(() => {
-      throw new Error('oh no!');
-    });
-    const link = ApolloLink.from([errorLink, mockLink]);
+  itAsync(
+    "should pipe exceptions thrown in custom onError functions through the link chain",
+    (resolve, reject) => {
+      let finished = false;
+      function Component({ ...variables }: Variables) {
+        const { loading, error } = useQuery<Data, Variables>(query, {
+          variables,
+        });
+        if (!loading) {
+          expect(error).toMatchSnapshot();
+          finished = true;
+        }
+        return null;
+      }
 
-    render(
-      <MockedProvider link={link}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
+      const mockLink = new MockLink([], true, { showWarnings: false });
+      mockLink.setOnError(() => {
+        throw new Error("oh no!");
+      });
+      const link = ApolloLink.from([errorLink, mockLink]);
 
-    waitFor(() => {
-      expect(finished).toBe(true);
-    }).then(resolve, reject);
-  });
+      render(
+        <MockedProvider link={link}>
+          <Component {...variables} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
+    }
+  );
 });
 
-describe('@client testing', () => {
-  itAsync('should support @client fields with a custom cache', (resolve, reject) => {
-    let finished = false;
-    const cache = new InMemoryCache();
+describe("@client testing", () => {
+  itAsync(
+    "should support @client fields with a custom cache",
+    (resolve, reject) => {
+      let finished = false;
+      const cache = new InMemoryCache();
 
-    cache.writeQuery({
-      query: gql`{
-        networkStatus {
-          isOnline
-        }
-      }`,
-      data: {
-        networkStatus: {
-          __typename: 'NetworkStatus',
-          isOnline: true
-        }
-      },
-    });
-
-    function Component() {
-      const { loading, data } = useQuery(gql`{
-        networkStatus @client {
-          isOnline
-        }
-      }`);
-      if (!loading) {
-        expect(data!.networkStatus.__typename).toEqual('NetworkStatus');
-        expect(data!.networkStatus.isOnline).toEqual(true);
-        finished = true;
-      }
-      return null;
-    }
-
-    render(
-      <MockedProvider cache={cache}>
-        <Component />
-      </MockedProvider>
-    );
-
-    waitFor(() => {
-      expect(finished).toBe(true);
-    }).then(resolve, reject);
-  });
-
-  itAsync('should support @client fields with field policies', (resolve, reject) => {
-    let finished = false;
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            networkStatus() {
-              return {
-                __typename: 'NetworkStatus',
-                isOnline: true
-              };
+      cache.writeQuery({
+        query: gql`
+          {
+            networkStatus {
+              isOnline
             }
           }
-        }
-      }
-    });
+        `,
+        data: {
+          networkStatus: {
+            __typename: "NetworkStatus",
+            isOnline: true,
+          },
+        },
+      });
 
-    function Component() {
-      const { loading, data } = useQuery(gql`{
-        networkStatus @client {
-          isOnline
+      function Component() {
+        const { loading, data } = useQuery(gql`
+          {
+            networkStatus @client {
+              isOnline
+            }
+          }
+        `);
+        if (!loading) {
+          expect(data!.networkStatus.__typename).toEqual("NetworkStatus");
+          expect(data!.networkStatus.isOnline).toEqual(true);
+          finished = true;
         }
-      }`);
-      if (!loading) {
-        expect(data!.networkStatus.__typename).toEqual('NetworkStatus');
-        expect(data!.networkStatus.isOnline).toEqual(true);
-        finished = true;
+        return null;
       }
-      return null;
+
+      render(
+        <MockedProvider cache={cache}>
+          <Component />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
     }
+  );
 
-    render(
-      <MockedProvider cache={cache}>
-        <Component />
-      </MockedProvider>
-    );
+  itAsync(
+    "should support @client fields with field policies",
+    (resolve, reject) => {
+      let finished = false;
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              networkStatus() {
+                return {
+                  __typename: "NetworkStatus",
+                  isOnline: true,
+                };
+              },
+            },
+          },
+        },
+      });
 
-    waitFor(() => {
-      expect(finished).toBe(true);
-    }).then(resolve, reject);
-  });
+      function Component() {
+        const { loading, data } = useQuery(gql`
+          {
+            networkStatus @client {
+              isOnline
+            }
+          }
+        `);
+        if (!loading) {
+          expect(data!.networkStatus.__typename).toEqual("NetworkStatus");
+          expect(data!.networkStatus.isOnline).toEqual(true);
+          finished = true;
+        }
+        return null;
+      }
+
+      render(
+        <MockedProvider cache={cache}>
+          <Component />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
+    }
+  );
 });

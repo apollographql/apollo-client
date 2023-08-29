@@ -6,9 +6,9 @@ import { Observable } from "./Observable.js";
 export function asyncMap<V, R>(
   observable: Observable<V>,
   mapFn: (value: V) => R | PromiseLike<R>,
-  catchFn?: (error: any) => R | PromiseLike<R>,
+  catchFn?: (error: any) => R | PromiseLike<R>
 ): Observable<R> {
-  return new Observable<R>(observer => {
+  return new Observable<R>((observer) => {
     const { next, error, complete } = observer;
     let activeCallbackCount = 0;
     let completed = false;
@@ -17,36 +17,39 @@ export function asyncMap<V, R>(
       // in this case, for backwards compatibility, we need to be careful to
       // invoke the first callback synchronously.
       then(callback: () => any) {
-        return new Promise(resolve => resolve(callback()));
+        return new Promise((resolve) => resolve(callback()));
       },
     } as Promise<void>;
 
     function makeCallback(
       examiner: typeof mapFn | typeof catchFn,
-      delegate: typeof next | typeof error,
+      delegate: typeof next | typeof error
     ): (arg: any) => void {
       if (examiner) {
-        return arg => {
+        return (arg) => {
           ++activeCallbackCount;
           const both = () => examiner(arg);
-          promiseQueue = promiseQueue.then(both, both).then(
-            result => {
-              --activeCallbackCount;
-              next && next.call(observer, result);
-              if (completed) {
-                handler.complete!();
+          promiseQueue = promiseQueue
+            .then(both, both)
+            .then(
+              (result) => {
+                --activeCallbackCount;
+                next && next.call(observer, result);
+                if (completed) {
+                  handler.complete!();
+                }
+              },
+              (error) => {
+                --activeCallbackCount;
+                throw error;
               }
-            },
-            error => {
-              --activeCallbackCount;
-              throw error;
-            },
-          ).catch(caught => {
-            error && error.call(observer, caught);
-          });
+            )
+            .catch((caught) => {
+              error && error.call(observer, caught);
+            });
         };
       } else {
-        return arg => delegate && delegate.call(observer, arg);
+        return (arg) => delegate && delegate.call(observer, arg);
       }
     }
 

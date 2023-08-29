@@ -1,10 +1,10 @@
-import gql from 'graphql-tag';
+import gql from "graphql-tag";
 
-import { createOperation } from '../../utils/createOperation';
+import { createOperation } from "../../utils/createOperation";
 import {
   selectHttpOptionsAndBody,
   fallbackHttpConfig,
-} from '../selectHttpOptionsAndBody';
+} from "../selectHttpOptionsAndBody";
 
 const query = gql`
   query SampleQuery {
@@ -14,136 +14,136 @@ const query = gql`
   }
 `;
 
-describe('headerNormalization', () => {
-  it('normalizes HTTP header names to lower case by default', () => {
-    const config = { 
+describe("headerNormalization", () => {
+  it("normalizes HTTP header names to lower case by default", () => {
+    const config = {
       headers: {
-        accept: 'text/html',
-        ACCEPT: 'text/html',
-        'content-type': 'application/graphql',
-        'CONTENT-TYPE': 'application/graphql',
-      }
+        accept: "text/html",
+        ACCEPT: "text/html",
+        "content-type": "application/graphql",
+        "CONTENT-TYPE": "application/graphql",
+      },
     };
 
     const { options, body } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
       fallbackHttpConfig,
-      config,
+      config
     );
 
-    expect(body).toHaveProperty('query');
-    expect(body).not.toHaveProperty('extensions');
+    expect(body).toHaveProperty("query");
+    expect(body).not.toHaveProperty("extensions");
 
     expect(options.headers).toEqual({
-      accept: 'text/html',
-      'content-type': 'application/graphql',
+      accept: "text/html",
+      "content-type": "application/graphql",
     });
   });
 
-  it('preserves HTTP header name capitalization when enabled', () => {
+  it("preserves HTTP header name capitalization when enabled", () => {
     const config = {
       headers: {
-        accept: 'text/html',
-        ACCEPT: 'text/html',
-        'content-type': 'application/graphql',
-        'CONTENT-TYPE': 'application/graphql',
+        accept: "text/html",
+        ACCEPT: "text/html",
+        "content-type": "application/graphql",
+        "CONTENT-TYPE": "application/graphql",
       },
-      http: { preserveHeaderCase:true } 
+      http: { preserveHeaderCase: true },
     };
 
     const { options } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
       fallbackHttpConfig,
-      config,
+      config
     );
 
     expect(options.headers).toEqual({
-      ACCEPT: 'text/html',
-      'CONTENT-TYPE': 'application/graphql',
+      ACCEPT: "text/html",
+      "CONTENT-TYPE": "application/graphql",
     });
   });
 
-  it('ensures context preserveHeaderCase overrides link config (true->false)', () => {
+  it("ensures context preserveHeaderCase overrides link config (true->false)", () => {
     const linkConfig = {
       headers: {
-        accept: 'text/html',
-        ACCEPT: 'text/html',
+        accept: "text/html",
+        ACCEPT: "text/html",
       },
-      http: { preserveHeaderCase:true } 
+      http: { preserveHeaderCase: true },
     };
     const contextConfig = {
       headers: {
-        'content-type': 'application/graphql',
-        'CONTENT-TYPE': 'application/graphql',
+        "content-type": "application/graphql",
+        "CONTENT-TYPE": "application/graphql",
       },
-      http: { preserveHeaderCase:false } 
+      http: { preserveHeaderCase: false },
     };
     const { options } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
       fallbackHttpConfig,
       linkConfig,
-      contextConfig,
+      contextConfig
     );
 
     expect(options.headers).toEqual({
-      accept: 'text/html',
-      'content-type': 'application/graphql',
+      accept: "text/html",
+      "content-type": "application/graphql",
     });
   });
 
-  it('ensures context preserveHeaderCase overrides link config (false->true)', () => {
+  it("ensures context preserveHeaderCase overrides link config (false->true)", () => {
     const linkConfig = {
       headers: {
-        accept: 'text/html',
-        ACCEPT: 'text/html',
+        accept: "text/html",
+        ACCEPT: "text/html",
       },
-      http: { preserveHeaderCase:false } 
+      http: { preserveHeaderCase: false },
     };
     const contextConfig = {
       headers: {
-        'content-type': 'application/graphql',
-        'CONTENT-TYPE': 'application/graphql',
+        "content-type": "application/graphql",
+        "CONTENT-TYPE": "application/graphql",
       },
-      http: { preserveHeaderCase:true } 
+      http: { preserveHeaderCase: true },
     };
     const { options } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
       fallbackHttpConfig,
       linkConfig,
-      contextConfig,
+      contextConfig
     );
 
     expect(options.headers).toEqual({
-      ACCEPT: 'text/html',
-      'CONTENT-TYPE': 'application/graphql',
+      ACCEPT: "text/html",
+      "CONTENT-TYPE": "application/graphql",
     });
   });
-  
-  it('ensures link headerNormalization affects context headers', () => {
+
+  it("ensures link headerNormalization affects context headers", () => {
     const linkConfig = {
       headers: {
-        accept: 'text/html',
-        ACCEPT: 'text/html',
+        accept: "text/html",
+        ACCEPT: "text/html",
       },
-      http: { preserveHeaderCase:true } 
+      http: { preserveHeaderCase: true },
     };
-    const contextConfig = { 
+    const contextConfig = {
       headers: {
-        'content-type': 'application/graphql',
-        'CONTENT-TYPE': 'application/graphql',
-      }
+        "content-type": "application/graphql",
+        "CONTENT-TYPE": "application/graphql",
+      },
     };
-  
+
     const { options } = selectHttpOptionsAndBody(
       createOperation({}, { query }),
       fallbackHttpConfig,
       linkConfig,
-      contextConfig,
+      contextConfig
     );
 
     expect(options.headers).toEqual({
-      ACCEPT: 'text/html',
-      'CONTENT-TYPE': 'application/graphql',
+      ACCEPT: "text/html",
+      "CONTENT-TYPE": "application/graphql",
     });
   });
 });

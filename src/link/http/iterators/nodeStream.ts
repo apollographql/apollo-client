@@ -25,7 +25,7 @@ export default function nodeStreamIterator<T>(
         | IteratorResult<T, boolean | undefined>
         | PromiseLike<IteratorResult<T, boolean | undefined>>
     ) => void,
-    (reason?: any) => void
+    (reason?: any) => void,
   ][] = [];
 
   function onData(chunk: any) {
@@ -72,7 +72,8 @@ export default function nodeStreamIterator<T>(
   function getNext(): Promise<IteratorResult<T, boolean | undefined>> {
     return new Promise(function (resolve, reject) {
       if (error) return reject(error);
-      if (data.length) return resolve({ value: data.shift() as T, done: false });
+      if (data.length)
+        return resolve({ value: data.shift() as T, done: false });
       if (done) return resolve({ value: undefined, done: true });
       waiting.push([resolve, reject]);
     });

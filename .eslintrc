@@ -44,6 +44,10 @@
             "message": "Please only use the namespace import syntax (`import * as React from 'react'`) for React imports!"
           }
         ],
+        "import/consistent-type-specifier-style": [
+          "error",
+          "prefer-top-level"
+        ],
         "import/extensions": [
           "error",
           "always",

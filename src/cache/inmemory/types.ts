@@ -1,29 +1,29 @@
-import type { DocumentNode, FieldNode } from 'graphql';
+import type { DocumentNode, FieldNode } from "graphql";
 
-import type { Transaction } from '../core/cache.js';
+import type { Transaction } from "../core/cache.js";
 import type {
   StoreObject,
   StoreValue,
   Reference,
-} from '../../utilities/index.js';
-import type { FieldValueGetter } from './entityStore.js';
+} from "../../utilities/index.js";
+import type { FieldValueGetter } from "./entityStore.js";
 import type {
   TypePolicies,
   PossibleTypesMap,
   KeyFieldsFunction,
   StorageType,
   FieldMergeFunction,
-} from './policies.js';
+} from "./policies.js";
 import type {
   Modifiers,
   ToReferenceFunction,
   CanReadFunction,
   AllFieldsModifier,
-} from '../core/types/common.js';
+} from "../core/types/common.js";
 
-import type { FragmentRegistryAPI } from './fragmentRegistry.js';
+import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
 
-export type { StoreObject, StoreValue, Reference }
+export type { StoreObject, StoreValue, Reference };
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -31,9 +31,7 @@ export interface IdGetterObj extends Object {
   _id?: string;
 }
 
-export declare type IdGetter = (
-  value: IdGetterObj,
-) => string | undefined;
+export declare type IdGetter = (value: IdGetterObj) => string | undefined;
 
 /**
  * This is an interface used to access, set and remove
@@ -49,7 +47,10 @@ export interface NormalizedCache {
   merge(olderId: string, newerObject: StoreObject): void;
   merge(olderObject: StoreObject, newerId: string): void;
 
-  modify<Entity extends Record<string, any>>(dataId: string, fields: Modifiers<Entity> | AllFieldsModifier<Entity>): boolean;
+  modify<Entity extends Record<string, any>>(
+    dataId: string,
+    fields: Modifiers<Entity> | AllFieldsModifier<Entity>
+  ): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 
@@ -139,12 +140,12 @@ export interface MergeInfo {
   field: FieldNode;
   typename: string | undefined;
   merge: FieldMergeFunction;
-};
+}
 
 export interface MergeTree {
   info?: MergeInfo;
   map: Map<string | number, MergeTree>;
-};
+}
 
 export interface ReadMergeModifyContext {
   store: NormalizedCache;

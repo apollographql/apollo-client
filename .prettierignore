@@ -36,6 +36,7 @@ node_modules/
 # Ignore all files in /scripts directory
 /scripts
 
+!/src
 /src/__tests__/ApolloClient.ts
 /src/__tests__/client.ts
 /src/__tests__/exports.ts

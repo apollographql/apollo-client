@@ -454,6 +454,105 @@ describe('General use', () => {
     expect(errorThrown).toBeFalsy();
   });
 
+  it('should reuse mocks when instructed to', async () => {
+    let isLoaded = false;
+    let isError = false;
+    function Component({ username }: Variables) {
+      const { loading, error } = useQuery<Data, Variables>(query, { variables: { username }, fetchPolicy: 'network-only' });
+      if (!loading) {
+        if (error) {
+          isError = true;
+        }
+        isLoaded = true;
+      }
+      return null;
+    }
+
+    const mocks: ReadonlyArray<MockedResponse> = [
+      {
+        request: {
+          query,
+          variables: {
+            username: 'mock_username'
+          }
+        },
+        reuse: 1,
+        result: { data: { user } }
+      },
+      {
+        request: {
+          query,
+          variables: {
+            username: 'mock_username2'
+          }
+        },
+        reuse: Number.POSITIVE_INFINITY,
+        result: { data: { user } }
+      },
+      {
+        request: {
+          query,
+          variables: {
+            username: 'mock_username3'
+          }
+        },
+        result: { data: { user } }
+      }
+    ];
+
+    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+
+    const Wrapper = ({ children }: { children: React.ReactNode }) => <MockedProvider link={mockLink}>{children}</MockedProvider>
+    const reset = () => {
+      isLoaded = false;
+      isError = false;
+    }
+    const waitForLoaded = async () => {
+      await waitFor(() => {
+        expect(isLoaded).toBe(true);
+        expect(isError).toBe(false);
+      });
+    }
+    const waitForError = async () => {
+      await waitFor(() => {
+        expect(isLoaded).toBe(true);
+        expect(isError).toBe(true);
+      });
+    }
+
+    const { rerender } = render(<Component username="mock_username" />, { wrapper: Wrapper });
+    await waitForLoaded();
+    reset();
+
+    rerender(<Component username="mock_username2" />);
+    await waitForLoaded();
+    reset();
+
+    rerender(<Component username="mock_username3" />);
+    await waitForLoaded();
+    reset();
+
+    rerender(<Component username="mock_username" />);
+    await waitForLoaded();
+    reset();
+
+    rerender(<Component username="mock_username2" />);
+    await waitForLoaded();
+    reset();
+
+    rerender(<Component username="mock_username3" />);
+    await waitForError();
+    reset();
+
+    rerender(<Component username="mock_username" />);
+    await waitForError();
+    reset();
+
+    rerender(<Component username="mock_username2" />);
+    await waitForLoaded();
+    reset();
+  });
+
   it('should return "Mocked response should contain" errors in response', async () => {
     let finished = false;
     function Component({ ...variables }: Variables) {

@@ -150,6 +150,37 @@ it("renders without error", async () => {
 
 </ExpansionPanel>
 
+#### Reusing mocks
+
+By default, a mock is only used once. If you want to reuse a mock for multiple operations, you can set the `reuse` field to a number indicating how many times the mock should be reused:
+
+<ExpansionPanel title="Click to expand 🐶">
+
+```jsx title="dog.test.js"
+import { GET_DOG_QUERY } from "./dog";
+
+const mocks = [
+  {
+    request: {
+      query: GET_DOG_QUERY,
+      variables: {
+        name: "Buck"
+      }
+    },
+    result: {
+      data: {
+        dog: { id: "1", name: "Buck", breed: "bulldog" }
+      }
+    },
+    reuse: 2, // The mock can be reused twice before it's removed, default is 0
+  }
+];
+```
+
+</ExpansionPanel>
+
+Passing Number.POSITIVE_INFINITY as reuse will cause the mock to be reused indefinitely.
+
 ### Setting `addTypename`
 
 In the example above, we set the `addTypename` prop of `MockedProvider` to `false`. This prevents Apollo Client from automatically adding the special `__typename` field to every object it queries for (it does this by default to support data normalization in the cache).

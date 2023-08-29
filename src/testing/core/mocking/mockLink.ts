@@ -28,6 +28,7 @@ export interface MockedResponse<
 > {
   request: GraphQLRequest<TVariables>;
   result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
+  reuse?: number;
   error?: Error;
   delay?: number;
   newData?: ResultFunction<FetchResult>;
@@ -123,7 +124,12 @@ ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
         );
       }
     } else {
-      mockedResponses.splice(responseIndex, 1);
+      if (!response.reuse) {
+        mockedResponses.splice(responseIndex, 1);
+      } else if (response.reuse !== Number.POSITIVE_INFINITY) {
+        response.reuse--;
+      }
+
 
       const { newData } = response;
       if (newData) {

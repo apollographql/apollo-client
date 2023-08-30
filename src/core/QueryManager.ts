@@ -957,7 +957,7 @@ export class QueryManager<TStore> {
   public startGraphQLSubscription<T = any>({
     query,
     fetchPolicy,
-    errorPolicy = 'none',
+    errorPolicy = "none",
     variables,
     context = {},
   }: SubscriptionOptions): Observable<FetchResult<T>> {
@@ -995,13 +995,13 @@ export class QueryManager<TStore> {
           // `errorPolicy` is a mechanism for handling GraphQL errors, according
           // to our documentation, so we throw protocol errors regardless of the
           // set error policy.
-          if (errorPolicy === 'none' || hasProtocolErrors) {
+          if (errorPolicy === "none" || hasProtocolErrors) {
             throw new ApolloError(errors);
           }
         }
 
-        if (errorPolicy === 'ignore') {
-          delete result.errors
+        if (errorPolicy === "ignore") {
+          delete result.errors;
         }
 
         return result;
@@ -1567,8 +1567,8 @@ export class QueryManager<TStore> {
       fetchPolicy === "no-cache"
         ? CacheWriteBehavior.FORBID
         : // Watched queries must opt into overwriting existing data on refetch,
-          // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
-          networkStatus === NetworkStatus.refetch &&
+        // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
+        networkStatus === NetworkStatus.refetch &&
           refetchWritePolicy !== "merge"
         ? CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;

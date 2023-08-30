@@ -248,25 +248,11 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private handleError(error: ApolloError) {
-    const last = this.observable["last"];
     this.subscription.unsubscribe();
-
-    // Unfortunately, if `lastError` is set in the current
-    // `observableQuery` when the subscription is re-created,
-    // the subscription will immediately receive the error, which will
-    // cause it to terminate again. To avoid this, we first clear
-    // the last error/result from the `observableQuery` before re-starting
-    // the subscription, and restore it afterwards (so the subscription
-    // has a chance to stay open).
-    try {
-      this.observable.resetLastResults();
-      this.subscription = this.observable.subscribe(
-        this.handleNext,
-        this.handleError
-      );
-    } finally {
-      this.observable["last"] = last;
-    }
+    this.subscription = this.observable.resubscribeAfterError(
+      this.handleNext,
+      this.handleError
+    );
 
     switch (this.status) {
       case "loading": {

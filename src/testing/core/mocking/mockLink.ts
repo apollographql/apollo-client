@@ -130,7 +130,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
     } else {
       if (!response.reuse) {
         mockedResponses.splice(responseIndex, 1);
-      } else if (response.reuse !== Number.POSITIVE_INFINITY) {
+      } else {
         response.reuse--;
       }
 

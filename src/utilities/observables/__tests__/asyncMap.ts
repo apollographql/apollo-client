@@ -3,10 +3,10 @@ import { asyncMap } from "../asyncMap";
 import { itAsync } from "../../../testing";
 
 const wait = (delayMs: number) =>
-  new Promise<void>(resolve => setTimeout(resolve, delayMs));
+  new Promise<void>((resolve) => setTimeout(resolve, delayMs));
 
 function make1234Observable() {
-  return new Observable<number>(observer => {
+  return new Observable<number>((observer) => {
     observer.next(1);
     observer.next(2);
     setTimeout(() => {
@@ -21,7 +21,7 @@ function make1234Observable() {
 
 function rejectExceptions<Args extends any[], Ret>(
   reject: (reason: any) => any,
-  fn: (...args: Args) => Ret,
+  fn: (...args: Args) => Ret
 ) {
   return function () {
     try {
@@ -37,7 +37,7 @@ describe("asyncMap", () => {
     const values: number[] = [];
     const mapped: number[] = [];
 
-    asyncMap(make1234Observable(), value => {
+    asyncMap(make1234Observable(), (value) => {
       values.push(value);
       // Make earlier results take longer than later results.
       const delay = 100 - value * 10;
@@ -57,15 +57,15 @@ describe("asyncMap", () => {
 
   itAsync("handles exceptions from mapping functions", (resolve, reject) => {
     const triples: number[] = [];
-    asyncMap(make1234Observable(), num => {
+    asyncMap(make1234Observable(), (num) => {
       if (num === 3) throw new Error("expected");
       return num * 3;
     }).subscribe({
-      next: rejectExceptions(reject, triple => {
+      next: rejectExceptions(reject, (triple) => {
         expect(triple).toBeLessThan(9);
         triples.push(triple);
       }),
-      error: rejectExceptions(reject, error => {
+      error: rejectExceptions(reject, (error) => {
         expect(error.message).toBe("expected");
         expect(triples).toEqual([3, 6]);
         resolve();
@@ -73,45 +73,53 @@ describe("asyncMap", () => {
     });
   });
 
-  itAsync("handles rejected promises from mapping functions", (resolve, reject) => {
-    const triples: number[] = [];
-    asyncMap(make1234Observable(), num => {
-      if (num === 3) return Promise.reject(new Error("expected"));
-      return num * 3;
-    }).subscribe({
-      next: rejectExceptions(reject, triple => {
-        expect(triple).toBeLessThan(9);
-        triples.push(triple);
-      }),
-      error: rejectExceptions(reject, error => {
-        expect(error.message).toBe("expected");
-        expect(triples).toEqual([3, 6]);
-        resolve();
-      }),
-    });
-  });
+  itAsync(
+    "handles rejected promises from mapping functions",
+    (resolve, reject) => {
+      const triples: number[] = [];
+      asyncMap(make1234Observable(), (num) => {
+        if (num === 3) return Promise.reject(new Error("expected"));
+        return num * 3;
+      }).subscribe({
+        next: rejectExceptions(reject, (triple) => {
+          expect(triple).toBeLessThan(9);
+          triples.push(triple);
+        }),
+        error: rejectExceptions(reject, (error) => {
+          expect(error.message).toBe("expected");
+          expect(triples).toEqual([3, 6]);
+          resolve();
+        }),
+      });
+    }
+  );
 
-  itAsync("handles async exceptions from mapping functions", (resolve, reject) => {
-    const triples: number[] = [];
-    asyncMap(make1234Observable(), num => wait(10).then(() => {
-      if (num === 3) throw new Error("expected");
-      return num * 3;
-    })).subscribe({
-      next: rejectExceptions(reject, triple => {
-        expect(triple).toBeLessThan(9);
-        triples.push(triple);
-      }),
-      error: rejectExceptions(reject, error => {
-        expect(error.message).toBe("expected");
-        expect(triples).toEqual([3, 6]);
-        resolve();
-      }),
-    });
-  });
+  itAsync(
+    "handles async exceptions from mapping functions",
+    (resolve, reject) => {
+      const triples: number[] = [];
+      asyncMap(make1234Observable(), (num) =>
+        wait(10).then(() => {
+          if (num === 3) throw new Error("expected");
+          return num * 3;
+        })
+      ).subscribe({
+        next: rejectExceptions(reject, (triple) => {
+          expect(triple).toBeLessThan(9);
+          triples.push(triple);
+        }),
+        error: rejectExceptions(reject, (error) => {
+          expect(error.message).toBe("expected");
+          expect(triples).toEqual([3, 6]);
+          resolve();
+        }),
+      });
+    }
+  );
 
   itAsync("handles exceptions from next functions", (resolve, reject) => {
     const triples: number[] = [];
-    asyncMap(make1234Observable(), num => {
+    asyncMap(make1234Observable(), (num) => {
       return num * 3;
     }).subscribe({
       next(triple) {

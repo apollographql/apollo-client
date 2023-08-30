@@ -60,7 +60,7 @@ const OBSERVED_CHANGED_OPTIONS = [
 
 type ObservedOptions = Pick<
   WatchQueryOptions,
-  typeof OBSERVED_CHANGED_OPTIONS[number]
+  (typeof OBSERVED_CHANGED_OPTIONS)[number]
 >;
 
 export class InternalQueryReference<TData = unknown> {

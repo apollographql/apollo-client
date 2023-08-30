@@ -1,12 +1,12 @@
 function wrapTestFunction(
   fn: (...args: any[]) => any,
-  consoleMethodName: "log" | "warn" | "error",
+  consoleMethodName: "log" | "warn" | "error"
 ) {
   return function () {
     const args = arguments;
     const spy = jest.spyOn(console, consoleMethodName);
     spy.mockImplementation(() => {});
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       resolve(fn?.apply(this, args));
     }).finally(() => {
       expect(spy).toMatchSnapshot();
@@ -15,10 +15,7 @@ function wrapTestFunction(
   };
 }
 
-export function withErrorSpy<
-  TArgs extends any[],
-  TResult,
->(
+export function withErrorSpy<TArgs extends any[], TResult>(
   it: (...args: TArgs) => TResult,
   ...args: TArgs
 ) {
@@ -26,10 +23,7 @@ export function withErrorSpy<
   return it(...args);
 }
 
-export function withWarningSpy<
-  TArgs extends any[],
-  TResult,
->(
+export function withWarningSpy<TArgs extends any[], TResult>(
   it: (...args: TArgs) => TResult,
   ...args: TArgs
 ) {
@@ -37,10 +31,7 @@ export function withWarningSpy<
   return it(...args);
 }
 
-export function withLogSpy<
-  TArgs extends any[],
-  TResult,
->(
+export function withLogSpy<TArgs extends any[], TResult>(
   it: (...args: TArgs) => TResult,
   ...args: TArgs
 ) {

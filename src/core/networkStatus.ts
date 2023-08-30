@@ -50,7 +50,7 @@ export enum NetworkStatus {
  * status.
  */
 export function isNetworkRequestInFlight(
-  networkStatus?: NetworkStatus,
+  networkStatus?: NetworkStatus
 ): boolean {
   return networkStatus ? networkStatus < 7 : false;
 }
@@ -60,7 +60,7 @@ export function isNetworkRequestInFlight(
  * status.
  */
 export function isNetworkRequestSettled(
-  networkStatus?: NetworkStatus,
+  networkStatus?: NetworkStatus
 ): boolean {
   return networkStatus === 7 || networkStatus === 8;
 }

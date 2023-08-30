@@ -49,23 +49,28 @@ describe("FragmentRegistry", () => {
 
     const client = new ApolloClient({
       cache,
-      link: new ApolloLink(operation => new Observable(observer => {
-        expect(
-          getFragmentDefinitions(operation.query).map(def => def.name.value).sort()
-        ).toEqual([
-          // Proof that the missing SourceFragment definition was appended to
-          // operation.query before it was passed into the link.
-          "SourceFragment",
-        ]);
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            expect(
+              getFragmentDefinitions(operation.query)
+                .map((def) => def.name.value)
+                .sort()
+            ).toEqual([
+              // Proof that the missing SourceFragment definition was appended to
+              // operation.query before it was passed into the link.
+              "SourceFragment",
+            ]);
 
-        observer.next({
-          data: {
-            source: "link",
-          },
-        });
+            observer.next({
+              data: {
+                source: "link",
+              },
+            });
 
-        observer.complete();
-      })),
+            observer.complete();
+          })
+      ),
     });
 
     const query = gql`
@@ -81,39 +86,42 @@ describe("FragmentRegistry", () => {
       },
     });
 
-    subscribeAndCount(reject, client.watchQuery({
-      query,
-      fetchPolicy: "cache-and-network",
-    }), (count, result) => {
-      if (count === 1) {
-        expect(result).toEqual({
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          data: {
-            __typename: 'Query',
-            source: "local",
-          },
-        });
+    subscribeAndCount(
+      reject,
+      client.watchQuery({
+        query,
+        fetchPolicy: "cache-and-network",
+      }),
+      (count, result) => {
+        if (count === 1) {
+          expect(result).toEqual({
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            data: {
+              __typename: "Query",
+              source: "local",
+            },
+          });
+        } else if (count === 2) {
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              __typename: "Query",
+              source: "link",
+            },
+          });
 
-      } else if (count === 2) {
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            __typename: 'Query',
+          expect(cache.readQuery({ query })).toEqual({
             source: "link",
-          },
-        });
+          });
 
-        expect(cache.readQuery({ query })).toEqual({
-          source: "link",
-        });
-
-        setTimeout(resolve, 10);
-      } else {
-        reject(`Unexpectedly many results (${count})`);
+          setTimeout(resolve, 10);
+        } else {
+          reject(`Unexpectedly many results (${count})`);
+        }
       }
-    });
+    );
   });
 
   it("throws an error when not all used fragments are defined", () => {
@@ -158,9 +166,7 @@ describe("FragmentRegistry", () => {
           },
         },
       });
-    }).toThrow(
-      /No fragment named MustBeDefinedByQuery/
-    );
+    }).toThrow(/No fragment named MustBeDefinedByQuery/);
 
     expect(cache.extract()).toEqual({
       // Nothing written because the cache.writeQuery failed above.
@@ -195,22 +201,18 @@ describe("FragmentRegistry", () => {
         returnPartialData: true,
         optimistic: true,
       });
-    }).toThrow(
-      /No fragment named MustBeDefinedByQuery/
-    );
+    }).toThrow(/No fragment named MustBeDefinedByQuery/);
 
     expect(() => {
       cache.readQuery({
-        query: queryWithoutFragment
+        query: queryWithoutFragment,
       });
-    }).toThrow(
-      /No fragment named MustBeDefinedByQuery/
-    );
+    }).toThrow(/No fragment named MustBeDefinedByQuery/);
 
     expect(
       cache.readQuery({
         query: queryWithFragment,
-      }),
+      })
     ).toEqual({
       me: {
         __typename: "Person",

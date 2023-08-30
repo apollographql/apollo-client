@@ -18,24 +18,28 @@ describe("keyFields and keyArgs extraction", () => {
     check([], []);
     check(["a"], [["a"]]);
 
+    // prettier-ignore
     check(["a", "b", "c"], [
       ["a"],
       ["b"],
       ["c"]
     ]);
 
+    // prettier-ignore
     check(["a", ["b", "c"], "d"], [
       ["a", "b"],
       ["a", "c"],
       ["d"],
     ]);
 
+    // prettier-ignore
     check(["a", "b", ["c"], "d"], [
       ["a"],
       ["b", "c"],
       ["d"],
     ]);
 
+    // prettier-ignore
     check(["a", "b", ["c", ["d", ["e", "f"], "g"]]], [
       ["a"],
       ["b", "c", "d", "e"],
@@ -59,16 +63,12 @@ describe("keyFields and keyArgs extraction", () => {
     };
 
     function collect(specifier: KeySpecifier) {
-      return collectSpecifierPaths(
-        specifier,
-        path => extractKeyPath(object, path)
+      return collectSpecifierPaths(specifier, (path) =>
+        extractKeyPath(object, path)
       );
     }
 
-    function check(
-      specifier: KeySpecifier,
-      expected: Record<string, any>,
-    ) {
+    function check(specifier: KeySpecifier, expected: Record<string, any>) {
       const actual = collect(specifier);
       expect(actual).toEqual(expected);
       // Not only must actual and expected be equal, but their key orderings
@@ -83,18 +83,17 @@ describe("keyFields and keyArgs extraction", () => {
       h: 789,
     });
 
-
     check(["h", "a", "bogus"], {
       h: 789,
       a: 123,
     });
 
     check(["b", ["d", ["e"]]], {
-      b: { d: { e: 456 }}
+      b: { d: { e: 456 } },
     });
 
     check(["b", ["d", ["e"]], "a"], {
-      b: { d: { e: 456 }},
+      b: { d: { e: 456 } },
       a: 123,
     });
 
@@ -137,21 +136,18 @@ describe("keyFields and keyArgs extraction", () => {
       more: "another word for extra",
     };
 
-    expect(
-      extractKeyPath(object, ["array", "value"]),
-    ).toEqual([1, 2, 3]);
+    expect(extractKeyPath(object, ["array", "value"])).toEqual([1, 2, 3]);
 
-    expect(collectSpecifierPaths(
-      ["array", ["value", "a", "x", "z"]],
-      path => {
+    expect(
+      collectSpecifierPaths(["array", ["value", "a", "x", "z"]], (path) => {
         expect(path.length).toBe(2);
         expect(path[0]).toBe("array");
         expect(["value", "a", "x", "z"]).toContain(path[1]);
         return extractKeyPath(object, path);
-      },
-    )).toEqual({
+      })
+    ).toEqual({
       array: {
-        value: object.array.map(item => item.value),
+        value: object.array.map((item) => item.value),
         a: ["should be first", void 0, void 0],
         x: [void 0, "should come after value", void 0],
         z: [void 0, void 0, "should come last"],
@@ -160,20 +156,22 @@ describe("keyFields and keyArgs extraction", () => {
 
     // This test case is "underspecified" because the specifier array ["array"]
     // does not name any nested fields to pull from each array element.
-    const underspecified = extractKeyPath(object, ["array"])
+    const underspecified = extractKeyPath(object, ["array"]);
     expect(underspecified).toEqual(object.array);
     const understringified = JSON.stringify(underspecified);
     // Although the objects are structurally equal, they do not stringify the
     // same, since the underspecified keys have been stably sorted.
     expect(understringified).not.toEqual(JSON.stringify(object.array));
 
-    expect(understringified).toBe(JSON.stringify([
-      // Note that a: object.array[0].a has become the first key, because "a"
-      // precedes "value" alphabetically.
-      { a: object.array[0].a, value: 1 },
-      { value: 2, x: object.array[1].x },
-      { value: 3, z: object.array[2].z },
-    ]));
+    expect(understringified).toBe(
+      JSON.stringify([
+        // Note that a: object.array[0].a has become the first key, because "a"
+        // precedes "value" alphabetically.
+        { a: object.array[0].a, value: 1 },
+        { value: 2, x: object.array[1].x },
+        { value: 3, z: object.array[2].z },
+      ])
+    );
 
     // This new ordering also happens to be the canonical/stable ordering,
     // according to canonicalStringify.

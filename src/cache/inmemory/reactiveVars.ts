@@ -2,7 +2,7 @@ import type { OptimisticDependencyFunction } from "optimism";
 import { dep } from "optimism";
 import { Slot } from "@wry/context";
 import type { InMemoryCache } from "./inMemoryCache.js";
-import type { ApolloCache } from '../../core/index.js';
+import type { ApolloCache } from "../../core/index.js";
 
 export interface ReactiveVar<T> {
   (newValue?: T): T;
@@ -17,24 +17,30 @@ export type ReactiveListener<T> = (value: T) => any;
 // called in Policies#readField.
 export const cacheSlot = new Slot<ApolloCache<any>>();
 
-const cacheInfoMap = new WeakMap<ApolloCache<any>, {
-  vars: Set<ReactiveVar<any>>;
-  dep: OptimisticDependencyFunction<ReactiveVar<any>>;
-}>();
+const cacheInfoMap = new WeakMap<
+  ApolloCache<any>,
+  {
+    vars: Set<ReactiveVar<any>>;
+    dep: OptimisticDependencyFunction<ReactiveVar<any>>;
+  }
+>();
 
 function getCacheInfo(cache: ApolloCache<any>) {
   let info = cacheInfoMap.get(cache)!;
   if (!info) {
-    cacheInfoMap.set(cache, info = {
-      vars: new Set,
-      dep: dep(),
-    });
+    cacheInfoMap.set(
+      cache,
+      (info = {
+        vars: new Set(),
+        dep: dep(),
+      })
+    );
   }
   return info;
 }
 
 export function forgetCache(cache: ApolloCache<any>) {
-  getCacheInfo(cache).vars.forEach(rv => rv.forgetCache(cache));
+  getCacheInfo(cache).vars.forEach((rv) => rv.forgetCache(cache));
 }
 
 // Calling forgetCache(cache) serves to silence broadcasts and allows the
@@ -46,7 +52,7 @@ export function forgetCache(cache: ApolloCache<any>) {
 // you won't be able to call recallCache(cache), and the cache will
 // automatically disappear from the varsByCache WeakMap.
 export function recallCache(cache: ApolloCache<any>) {
-  getCacheInfo(cache).vars.forEach(rv => rv.attachCache(cache));
+  getCacheInfo(cache).vars.forEach((rv) => rv.attachCache(cache));
 }
 
 export function makeVar<T>(value: T): ReactiveVar<T> {
@@ -57,7 +63,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
     if (arguments.length > 0) {
       if (value !== newValue) {
         value = newValue!;
-        caches.forEach(cache => {
+        caches.forEach((cache) => {
           // Invalidate any fields with custom read functions that
           // consumed this variable, so query results involving those
           // fields will be recomputed the next time we read them.
@@ -69,7 +75,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
         // Finally, notify any listeners added via rv.onNextChange.
         const oldListeners = Array.from(listeners);
         listeners.clear();
-        oldListeners.forEach(listener => listener(value));
+        oldListeners.forEach((listener) => listener(value));
       }
     } else {
       // When reading from the variable, obtain the current cache from
@@ -85,20 +91,20 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
     return value;
   };
 
-  rv.onNextChange = listener => {
+  rv.onNextChange = (listener) => {
     listeners.add(listener);
     return () => {
       listeners.delete(listener);
     };
   };
 
-  const attach = rv.attachCache = cache => {
+  const attach = (rv.attachCache = (cache) => {
     caches.add(cache);
     getCacheInfo(cache).vars.add(rv);
     return rv;
-  };
+  });
 
-  rv.forgetCache = cache => caches.delete(cache);
+  rv.forgetCache = (cache) => caches.delete(cache);
 
   return rv;
 }

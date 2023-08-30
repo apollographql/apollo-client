@@ -636,6 +636,70 @@ describe("General use", () => {
     await waitForError();
   });
 
+  it('can still use other mocks after a mock has been fully consumed', async () => {
+    const result: Result = { current: null };
+    function Component({ username }: Variables) {
+      result.current = useQuery<Data, Variables>(query, { variables: { username } });
+      return null;
+    }
+
+    const waitForLoaded = async () => {
+      await waitFor(() => {
+        expect(result.current?.loading).toBe(false);
+        expect(result.current?.error).toBeUndefined();
+      });
+    }
+
+    const refetch = () => {
+      return act(async () => {
+        try {
+          await result.current?.refetch();
+        } catch { }
+      });
+    }
+
+    const mocks: ReadonlyArray<MockedResponse> = [
+      {
+        request: {
+          query,
+          variables: {
+            username: 'mock_username'
+          }
+        },
+        reuse: 1,
+        result: { data: { user } }
+      },
+      {
+        request: {
+          query,
+          variables: {
+            username: 'mock_username'
+          }
+        },
+        result: {
+          data: {
+            user: {
+              __typename: 'User',
+              id: 'new_id'
+            }
+          }
+        }
+      },
+    ];
+
+    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const link = ApolloLink.from([errorLink, mockLink]);
+    const Wrapper = ({ children }: { children: React.ReactNode }) => <MockedProvider link={link}>{children}</MockedProvider>
+
+    render(<Component username="mock_username" />, { wrapper: Wrapper });
+    await waitForLoaded();
+    await refetch();
+    await waitForLoaded();
+    await refetch();
+    await waitForLoaded();
+    expect(result.current?.data?.user).toEqual({ __typename: 'User', id: 'new_id' });
+  });
+
   it('should return "Mocked response should contain" errors in response', async () => {
     let finished = false;
     function Component({ ...variables }: Variables) {

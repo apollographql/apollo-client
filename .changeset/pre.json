@@ -1,0 +1,12 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@apollo/client": "3.8.1"
+  },
+  "changesets": [
+    "fast-candles-trade",
+    "fifty-suits-drum",
+    "orange-balloons-prove"
+  ]
+}

@@ -6,6 +6,7 @@ import {
   renderHook,
   RenderHookOptions,
   waitFor,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundary, ErrorBoundaryProps } from "react-error-boundary";
@@ -3133,6 +3134,101 @@ describe("useBackgroundQuery", () => {
     // Ensure we render the inline error instead of the error boundary, which
     // tells us the error policy was properly applied.
     expect(await screen.findByTestId("error")).toHaveTextContent("oops");
+  });
+
+  it("exposes a `networkStatus` property, but only triggers additional rerenders if that property is actually accessed", async () => {
+    const query = gql`
+      query {
+        someValue
+      }
+    `;
+
+    function RenderCounter({ testId = "renderCount" }: { testId?: string }) {
+      const renders = React.useRef(0);
+      renders.current++;
+      return <div data-testid={testId}>{renders.current}</div>;
+    }
+
+    function Consumer1() {
+      const [queryRef, { networkStatus, refetch }] = useBackgroundQuery(query);
+      return (
+        <div data-testid="Consumer1">
+          <RenderCounter />
+          <div data-testid="networkStatus">{networkStatus}</div>
+          <Suspense>
+            <Child queryRef={queryRef} refetch={refetch} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    function Consumer2() {
+      const [queryRef, { refetch }] = useBackgroundQuery(query);
+      return (
+        <div data-testid="Consumer2">
+          <RenderCounter />
+          <Suspense>
+            <Child queryRef={queryRef} refetch={refetch} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    function Child({
+      queryRef,
+    }: {
+      queryRef: QueryReference;
+      refetch: () => {};
+    }) {
+      const value = useReadQuery(queryRef);
+      return (
+        <>
+          <RenderCounter testId="childRenderCount" />
+          <div data-testid="childNetworkStatus">{value.networkStatus}</div>
+        </>
+      );
+    }
+
+    const client = new ApolloClient({
+      link: new MockLink([
+        { request: { query }, result: { data: { someValue: 5 } } },
+      ]),
+      cache: new InMemoryCache(),
+    });
+
+    render(
+      <>
+        <Consumer1 /> <Consumer2 />
+      </>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const c1 = screen.getByTestId("Consumer1");
+    const c1rc = within(c1).getByTestId("renderCount");
+    const c1ns = within(c1).getByTestId("networkStatus");
+    const c2 = screen.getByTestId("Consumer2");
+    const c2rc = within(c2).getByTestId("renderCount");
+
+    expect(c1rc).toHaveTextContent("1");
+    expect(c1ns).toHaveTextContent(String(NetworkStatus.loading));
+    expect(c2rc).toHaveTextContent("1");
+
+    const c1childRc = await within(c1).findByTestId("childRenderCount");
+    const c1childNs = within(c1).getByTestId("childNetworkStatus");
+    const c2childRc = within(c2).getByTestId("childRenderCount");
+    const c2childNs = within(c2).getByTestId("childNetworkStatus");
+
+    expect(c1rc).toHaveTextContent("2"); // !!!
+    expect(c1ns).toHaveTextContent(String(NetworkStatus.ready));
+    expect(c1childRc).toHaveTextContent("1");
+    expect(c1childNs).toHaveTextContent(String(NetworkStatus.ready));
+    expect(c2rc).toHaveTextContent("1"); // !!!
+    expect(c2childRc).toHaveTextContent("1");
+    expect(c2childNs).toHaveTextContent(String(NetworkStatus.ready));
   });
 
   describe("refetch", () => {

@@ -1,6 +1,6 @@
 import React from "react";
 import { DocumentNode } from "graphql";
-import { render, waitFor } from "@testing-library/react";
+import { act, render, waitFor } from "@testing-library/react";
 import gql from "graphql-tag";
 
 import { itAsync, MockedResponse, MockLink } from "../../core";
@@ -8,6 +8,7 @@ import { MockedProvider } from "../MockedProvider";
 import { useQuery } from "../../../react/hooks";
 import { InMemoryCache } from "../../../cache";
 import { ApolloLink } from "../../../link/core";
+import { QueryResult } from "../../../react/types/types";
 
 const variables = {
   username: "mock_username",
@@ -53,6 +54,10 @@ interface Data {
   user: {
     id: string;
   };
+}
+
+interface Result {
+  current: QueryResult<any, any> | null
 }
 
 interface Variables {
@@ -481,18 +486,32 @@ describe("General use", () => {
     expect(errorThrown).toBeFalsy();
   });
 
-  it('should reuse mocks when instructed to', async () => {
-    let isLoaded = false;
-    let isError = false;
+  it('reuses a mock a configured number of times when `reuse` is configured', async () => {
+    const result: Result = { current: null };
     function Component({ username }: Variables) {
-      const { loading, error } = useQuery<Data, Variables>(query, { variables: { username }, fetchPolicy: 'network-only' });
-      if (!loading) {
-        if (error) {
-          isError = true;
-        }
-        isLoaded = true;
-      }
+      result.current = useQuery<Data, Variables>(query, { variables: { username } });
       return null;
+    }
+
+    const waitForLoaded = async () => {
+      await waitFor(() => {
+        expect(result.current?.loading).toBe(false);
+        expect(result.current?.error).toBeUndefined();
+      });
+    }
+
+    const waitForError = async () => {
+      await waitFor(() => {
+        expect(result.current?.error?.message).toMatch(/No more mocked responses/);
+      });
+    }
+
+    const refetch = () => {
+      return act(async () => {
+        try {
+          await result.current?.refetch();
+        } catch { }
+      });
     }
 
     const mocks: ReadonlyArray<MockedResponse> = [
@@ -506,78 +525,115 @@ describe("General use", () => {
         reuse: 1,
         result: { data: { user } }
       },
+    ];
+
+    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const link = ApolloLink.from([errorLink, mockLink]);
+    const Wrapper = ({ children }: { children: React.ReactNode }) => <MockedProvider link={link}>{children}</MockedProvider>
+
+    render(<Component username="mock_username" />, { wrapper: Wrapper });
+    await waitForLoaded();
+    await refetch();
+    await waitForLoaded();
+    await refetch();
+    await waitForError();
+  });
+
+  it('reuses a mock infinite number of times when `reuse` is configured with Number.POSITIVE_INFINITY', async () => {
+    const result: Result = { current: null };
+    function Component({ username }: Variables) {
+      result.current = useQuery<Data, Variables>(query, { variables: { username } });
+      return null;
+    }
+
+    const waitForLoaded = async () => {
+      await waitFor(() => {
+        expect(result.current?.loading).toBe(false);
+        expect(result.current?.error).toBeUndefined();
+      });
+    }
+
+    const refetch = () => {
+      return act(async () => {
+        try {
+          await result.current?.refetch();
+        } catch { }
+      });
+    }
+
+    const mocks: ReadonlyArray<MockedResponse> = [
       {
         request: {
           query,
           variables: {
-            username: 'mock_username2'
+            username: 'mock_username'
           }
         },
         reuse: Number.POSITIVE_INFINITY,
         result: { data: { user } }
       },
+    ];
+
+    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const link = ApolloLink.from([errorLink, mockLink]);
+    const Wrapper = ({ children }: { children: React.ReactNode }) => <MockedProvider link={link}>{children}</MockedProvider>
+
+    render(<Component username="mock_username" />, { wrapper: Wrapper });
+    await waitForLoaded();
+    await refetch();
+    await waitForLoaded();
+    await refetch();
+    await waitForLoaded();
+  });
+
+  it('uses a mock once when `reuse` is not configured', async () => {
+    const result: Result = { current: null };
+    function Component({ username }: Variables) {
+      result.current = useQuery<Data, Variables>(query, { variables: { username } });
+      return null;
+    }
+
+    const waitForLoaded = async () => {
+      await waitFor(() => {
+        expect(result.current?.loading).toBe(false);
+        expect(result.current?.error).toBeUndefined();
+      });
+    }
+
+    const waitForError = async () => {
+      await waitFor(() => {
+        expect(result.current?.error?.message).toMatch(/No more mocked responses/);
+      });
+    }
+
+    const refetch = () => {
+      return act(async () => {
+        try {
+          await result.current?.refetch();
+        } catch { }
+      });
+    }
+
+    const mocks: ReadonlyArray<MockedResponse> = [
       {
         request: {
           query,
           variables: {
-            username: 'mock_username3'
+            username: 'mock_username'
           }
         },
         result: { data: { user } }
-      }
+      },
     ];
 
     const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const link = ApolloLink.from([errorLink, mockLink]);
+    const Wrapper = ({ children }: { children: React.ReactNode }) => <MockedProvider link={link}>{children}</MockedProvider>
 
-    const Wrapper = ({ children }: { children: React.ReactNode }) => <MockedProvider link={mockLink}>{children}</MockedProvider>
-    const reset = () => {
-      isLoaded = false;
-      isError = false;
-    }
-    const waitForLoaded = async () => {
-      await waitFor(() => {
-        expect(isLoaded).toBe(true);
-        expect(isError).toBe(false);
-      });
-    }
-    const waitForError = async () => {
-      await waitFor(() => {
-        expect(isLoaded).toBe(true);
-        expect(isError).toBe(true);
-      });
-    }
-
-    const { rerender } = render(<Component username="mock_username" />, { wrapper: Wrapper });
+    render(<Component username="mock_username" />, { wrapper: Wrapper });
     await waitForLoaded();
-    reset();
-
-    rerender(<Component username="mock_username2" />);
-    await waitForLoaded();
-    reset();
-
-    rerender(<Component username="mock_username3" />);
-    await waitForLoaded();
-    reset();
-
-    rerender(<Component username="mock_username" />);
-    await waitForLoaded();
-    reset();
-
-    rerender(<Component username="mock_username2" />);
-    await waitForLoaded();
-    reset();
-
-    rerender(<Component username="mock_username3" />);
+    await refetch();
     await waitForError();
-    reset();
-
-    rerender(<Component username="mock_username" />);
-    await waitForError();
-    reset();
-
-    rerender(<Component username="mock_username2" />);
-    await waitForLoaded();
-    reset();
   });
 
   it('should return "Mocked response should contain" errors in response', async () => {

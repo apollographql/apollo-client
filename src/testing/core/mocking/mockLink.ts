@@ -133,8 +133,6 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
       } else {
         response.reuse--;
       }
-
-
       const { newData } = response;
       if (newData) {
         response.result = newData();

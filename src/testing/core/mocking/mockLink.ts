@@ -27,7 +27,7 @@ export interface MockedResponse<
 > {
   request: GraphQLRequest<TVariables>;
   result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
-  reuse?: number;
+  maxUsageCount?: number;
   error?: Error;
   delay?: number;
   newData?: ResultFunction<FetchResult>;
@@ -128,10 +128,10 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
         );
       }
     } else {
-      if (!response.reuse) {
-        mockedResponses.splice(responseIndex, 1);
+      if (response.maxUsageCount! > 1) {
+        response.maxUsageCount!--;
       } else {
-        response.reuse--;
+        mockedResponses.splice(responseIndex, 1);
       }
       const { newData } = response;
       if (newData) {
@@ -199,6 +199,14 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
     if (query) {
       newMockedResponse.request.query = query;
     }
+
+    mockedResponse.maxUsageCount = mockedResponse.maxUsageCount ?? 1;
+    invariant(
+      mockedResponse.maxUsageCount > 0,
+      `Mock response maxUsageCount must be greater than 0, %s given`,
+      mockedResponse.maxUsageCount
+    );
+
     return newMockedResponse;
   }
 }

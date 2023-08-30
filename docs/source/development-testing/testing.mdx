@@ -152,7 +152,7 @@ it("renders without error", async () => {
 
 #### Reusing mocks
 
-By default, a mock is only used once. If you want to reuse a mock for multiple operations, you can set the `reuse` field to a number indicating how many times the mock should be reused:
+By default, a mock is only used once. If you want to reuse a mock for multiple operations, you can set the `maxUsageCount` field to a number indicating how many times the mock should be used:
 
 <ExpansionPanel title="Click to expand 🐶">
 
@@ -172,7 +172,7 @@ const mocks = [
         dog: { id: "1", name: "Buck", breed: "bulldog" }
       }
     },
-    reuse: 2, // The mock can be reused twice before it's removed, default is 0
+    maxUsageCount: 2, // The mock can be used twice before it's removed, default is 1
   }
 ];
 ```

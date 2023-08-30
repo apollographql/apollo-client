@@ -486,7 +486,7 @@ describe("General use", () => {
     expect(errorThrown).toBeFalsy();
   });
 
-  it('reuses a mock a configured number of times when `reuse` is configured', async () => {
+  it('Uses a mock a configured number of times when `maxUsageCount` is configured', async () => {
     const result: Result = { current: null };
     function Component({ username }: Variables) {
       result.current = useQuery<Data, Variables>(query, { variables: { username } });
@@ -522,7 +522,7 @@ describe("General use", () => {
             username: 'mock_username'
           }
         },
-        reuse: 1,
+        maxUsageCount: 2,
         result: { data: { user } }
       },
     ];
@@ -539,7 +539,7 @@ describe("General use", () => {
     await waitForError();
   });
 
-  it('reuses a mock infinite number of times when `reuse` is configured with Number.POSITIVE_INFINITY', async () => {
+  it('Uses a mock infinite number of times when `maxUsageCount` is configured with Number.POSITIVE_INFINITY', async () => {
     const result: Result = { current: null };
     function Component({ username }: Variables) {
       result.current = useQuery<Data, Variables>(query, { variables: { username } });
@@ -569,7 +569,7 @@ describe("General use", () => {
             username: 'mock_username'
           }
         },
-        reuse: Number.POSITIVE_INFINITY,
+        maxUsageCount: Number.POSITIVE_INFINITY,
         result: { data: { user } }
       },
     ];
@@ -586,7 +586,7 @@ describe("General use", () => {
     await waitForLoaded();
   });
 
-  it('uses a mock once when `reuse` is not configured', async () => {
+  it('uses a mock once when `maxUsageCount` is not configured', async () => {
     const result: Result = { current: null };
     function Component({ username }: Variables) {
       result.current = useQuery<Data, Variables>(query, { variables: { username } });
@@ -666,7 +666,7 @@ describe("General use", () => {
             username: 'mock_username'
           }
         },
-        reuse: 1,
+        maxUsageCount: 2,
         result: { data: { user } }
       },
       {

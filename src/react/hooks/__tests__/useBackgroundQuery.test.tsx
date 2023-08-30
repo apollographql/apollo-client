@@ -3665,7 +3665,7 @@ describe("useBackgroundQuery", () => {
           request: { query, variables: { id: "1" } },
           result: {
             data: null,
-            errors: [new GraphQLError("Oops couldn't fetch")],
+            errors: [new GraphQLError("Oops couldn't fetch again")],
           },
           delay: 10,
         },
@@ -3745,10 +3745,12 @@ describe("useBackgroundQuery", () => {
       expect(screen.getByText("Loading")).toBeInTheDocument();
 
       await waitFor(() => {
-        expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+        expect(
+          screen.getByText("Oops couldn't fetch again")
+        ).toBeInTheDocument();
       });
 
-      expect(screen.getByText("Oops couldn't fetch")).toBeInTheDocument();
+      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
 
       consoleSpy.mockRestore();
     });

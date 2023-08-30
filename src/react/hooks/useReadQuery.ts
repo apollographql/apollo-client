@@ -1,16 +1,15 @@
 import * as React from "react";
-import invariant from "ts-invariant";
-import { NetworkStatus } from "../../core/index.js";
 import {
-  QUERY_REFERENCE_SYMBOL,
+  unwrapQueryRef,
   type QueryReference,
 } from "../cache/QueryReference.js";
 import { __use } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
+import { invariant } from "../../utilities/globals/index.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
-  const [, forceUpdate] = React.useState(0);
-  const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
+  const internalQueryRef = unwrapQueryRef(queryRef);
   invariant(
     internalQueryRef.promiseCache,
     "It appears that `useReadQuery` was used outside of `useBackgroundQuery`. " +
@@ -18,35 +17,27 @@ export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
       "Please ensure you are passing the `queryRef` returned from `useBackgroundQuery`."
   );
 
-  const skipResult = React.useMemo(() => {
-    const error = toApolloError(internalQueryRef.result);
+  const { promiseCache, key } = internalQueryRef;
 
-    return {
-      loading: false,
-      data: internalQueryRef.result.data,
-      networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
-      error,
-    };
-  }, [internalQueryRef.result]);
-
-  let promise = internalQueryRef.promiseCache.get(internalQueryRef.key);
-
-  if (!promise) {
-    promise = internalQueryRef.promise;
-    internalQueryRef.promiseCache.set(internalQueryRef.key, promise);
+  if (!promiseCache.has(key)) {
+    promiseCache.set(key, internalQueryRef.promise);
   }
 
-  React.useEffect(() => {
-    return internalQueryRef.listen((promise) => {
-      internalQueryRef.promiseCache!.set(internalQueryRef.key, promise);
-      forceUpdate((prevState) => prevState + 1);
-    });
-  }, [queryRef]);
+  const promise = useSyncExternalStore(
+    React.useCallback(
+      (forceUpdate) => {
+        return internalQueryRef.listen((promise) => {
+          internalQueryRef.promiseCache!.set(internalQueryRef.key, promise);
+          forceUpdate();
+        });
+      },
+      [internalQueryRef]
+    ),
+    () => promiseCache.get(key)!,
+    () => promiseCache.get(key)!
+  );
 
-  const result =
-    internalQueryRef.watchQueryOptions.fetchPolicy === "standby"
-      ? skipResult
-      : __use(promise);
+  const result = __use(promise);
 
   return React.useMemo(() => {
     return {

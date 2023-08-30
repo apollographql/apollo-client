@@ -21,7 +21,7 @@ type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>["fetchMore"]
 >[0];
 
-export const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
+const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 /**
  * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
  * A child component reading the `QueryReference` via {@link useReadQuery} will
@@ -37,14 +37,31 @@ interface InternalQueryReferenceOptions {
   autoDisposeTimeoutMs?: number;
 }
 
-const OBSERVED_CHANGED_OPTIONS: Array<keyof WatchQueryOptions> = [
+export function wrapQueryRef<TData>(
+  internalQueryRef: InternalQueryReference<TData>
+): QueryReference<TData> {
+  return { [QUERY_REFERENCE_SYMBOL]: internalQueryRef };
+}
+
+export function unwrapQueryRef<TData>(
+  queryRef: QueryReference<TData>
+): InternalQueryReference<TData> {
+  return queryRef[QUERY_REFERENCE_SYMBOL];
+}
+
+const OBSERVED_CHANGED_OPTIONS = [
   "canonizeResults",
   "context",
   "errorPolicy",
   "fetchPolicy",
   "refetchWritePolicy",
   "returnPartialData",
-];
+] as const;
+
+type ObservedOptions = Pick<
+  WatchQueryOptions,
+  typeof OBSERVED_CHANGED_OPTIONS[number]
+>;
 
 export class InternalQueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
@@ -68,12 +85,12 @@ export class InternalQueryReference<TData = unknown> {
     observable: ObservableQuery<TData>,
     options: InternalQueryReferenceOptions
   ) {
-    this.listen = this.listen.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
-    this.initiateFetch = this.initiateFetch.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
+    // Don't save this result as last result to prevent delivery of last result
+    // when first subscribing
     this.result = observable.getCurrentResult(false);
     this.key = options.key;
 
@@ -138,14 +155,14 @@ export class InternalQueryReference<TData = unknown> {
     };
   }
 
-  didChangeOptions(watchQueryOptions: WatchQueryOptions) {
+  didChangeOptions(watchQueryOptions: ObservedOptions) {
     return OBSERVED_CHANGED_OPTIONS.some(
       (option) =>
         !equal(this.watchQueryOptions[option], watchQueryOptions[option])
     );
   }
 
-  applyOptions(watchQueryOptions: WatchQueryOptions) {
+  applyOptions(watchQueryOptions: ObservedOptions) {
     const {
       fetchPolicy: currentFetchPolicy,
       canonizeResults: currentCanonizeResults,
@@ -209,6 +226,9 @@ export class InternalQueryReference<TData = unknown> {
         break;
       }
       case "idle": {
+        // This occurs when switching to a result that is fully cached when this
+        // class is instantiated. ObservableQuery will run reobserve when
+        // subscribing, which delivers a result from the cache.
         if (result.data === this.result.data) {
           return;
         }

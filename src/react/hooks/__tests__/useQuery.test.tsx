@@ -1683,7 +1683,6 @@ describe("useQuery Hook", () => {
       ).rejects.toThrow();
     });
 
-    //TODO flaky test
     it("should start polling when skip goes from true to false", async () => {
       const query = gql`
         {

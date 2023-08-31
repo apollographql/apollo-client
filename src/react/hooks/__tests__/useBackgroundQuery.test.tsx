@@ -3,6 +3,7 @@ import {
   act,
   render,
   screen,
+  screen as _screen,
   renderHook,
   RenderHookOptions,
   waitFor,
@@ -51,6 +52,7 @@ import {
 import equal from "@wry/equality";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
+import { profile, SyncScreen } from "../../../testing/internal";
 
 function renderIntegrationTest({
   client,
@@ -501,8 +503,9 @@ function renderPaginatedIntegrationTest({
     );
   }
 
-  const { ...rest } = render(<App />);
-  return { ...rest, data, query, client, renders };
+  const ProfiledApp = profile({ Component: App, snapshotDOM: true });
+  const { ...rest } = render(<ProfiledApp />);
+  return { ...ProfiledApp, ...rest, data, query, client, renders };
 }
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
@@ -3648,7 +3651,7 @@ describe("useBackgroundQuery", () => {
   });
 
   describe("fetchMore", () => {
-    function getItemTexts() {
+    function getItemTexts(screen: SyncScreen | typeof _screen = _screen) {
       return screen.getAllByTestId(/letter/).map(
         // eslint-disable-next-line testing-library/no-node-access
         (li) => li.firstChild!.textContent
@@ -3704,30 +3707,40 @@ describe("useBackgroundQuery", () => {
       expect(getItemTexts()).toStrictEqual(["A", "B", "C", "D"]);
     });
     it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
-      const { renders } = renderPaginatedIntegrationTest({
+      const { renders, takeRender } = renderPaginatedIntegrationTest({
         fieldPolicies: true,
       });
-      expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText("loading")).toBeInTheDocument();
 
-      const items = await screen.findAllByTestId(/letter/i);
+      {
+        const { withinDOM } = await takeRender();
+        expect(renders.suspenseCount).toBe(1);
+        expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      }
 
-      expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(["A", "B"]);
+      {
+        const { withinDOM } = await takeRender();
+        const items = withinDOM().getAllByTestId(/letter/i);
+        expect(items).toHaveLength(2);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B"]);
+      }
 
       const button = screen.getByText("Fetch more");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
-      await waitFor(() => {
-        expect(renders.count).toBe(2);
-      });
+      {
+        await takeRender();
+        // parent component re-suspends
+        expect(renders.suspenseCount).toBe(2);
+      }
 
-      const moreItems = await screen.findAllByTestId(/letter/i);
-      expect(moreItems).toHaveLength(4);
-      expect(getItemTexts()).toStrictEqual(["A", "B", "C", "D"]);
+      {
+        const { withinDOM } = await takeRender();
+        expect(renders.count).toBe(2);
+        const moreItems = await screen.findAllByTestId(/letter/i);
+        expect(moreItems).toHaveLength(4);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B", "C", "D"]);
+      }
     });
     it("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {
       type Variables = {

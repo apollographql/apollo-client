@@ -26,7 +26,7 @@ export interface BaseRender {
 }
 
 type Screen = typeof screen;
-type SyncScreen = {
+export type SyncScreen = {
   [K in keyof Screen]: K extends `find${string}`
     ? {
         /** @deprecated A snapshot is static, so avoid async queries! */

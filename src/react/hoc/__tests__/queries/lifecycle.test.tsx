@@ -44,8 +44,7 @@ describe("[queries] lifecycle", () => {
       cache: new Cache({ addTypename: false }),
     });
 
-    let prevProps: ChildProps<Vars, Data, Vars>,
-      props: ChildProps<Vars, Data, Vars>;
+    let props: ChildProps<Vars, Data, Vars>;
 
     const Container = graphql<Vars, Data, Vars>(query, {
       options: (props) => ({

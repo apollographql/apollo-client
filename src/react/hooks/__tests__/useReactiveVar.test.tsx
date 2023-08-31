@@ -353,7 +353,8 @@ describe("useReactiveVar Hook", () => {
             } else {
               stopped = true;
               expect(rv()).toBe(goalCount);
-              findByText(String(goalCount))
+              screen
+                .findByText(String(goalCount))
                 .then((element) => {
                   expect(element.nodeName.toLowerCase()).toBe("h1");
                 })
@@ -369,7 +370,7 @@ describe("useReactiveVar Hook", () => {
         spam();
         spam();
 
-        const { findByText } = render(
+        render(
           <StrictMode>
             <App />
           </StrictMode>

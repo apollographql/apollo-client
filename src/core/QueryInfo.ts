@@ -157,14 +157,14 @@ export class QueryInfo {
     this.dirty = false;
   }
 
-  getDiff(variables = this.variables): Cache.DiffResult<any> {
-    const options = this.getDiffOptions(variables);
+  getDiff(): Cache.DiffResult<any> {
+    const options = this.getDiffOptions();
 
     if (this.lastDiff && equal(options, this.lastDiff.options)) {
       return this.lastDiff.diff;
     }
 
-    this.updateWatch((this.variables = variables));
+    this.updateWatch(this.variables);
 
     const oq = this.observableQuery;
     if (oq && oq.options.fetchPolicy === "no-cache") {

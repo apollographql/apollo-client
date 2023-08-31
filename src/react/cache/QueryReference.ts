@@ -248,6 +248,12 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private handleError(error: ApolloError) {
+    this.subscription.unsubscribe();
+    this.subscription = this.observable.resubscribeAfterError(
+      this.handleNext,
+      this.handleError
+    );
+
     switch (this.status) {
       case "loading": {
         this.status = "idle";

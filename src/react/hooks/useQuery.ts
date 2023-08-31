@@ -209,21 +209,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
           };
 
           const onError = (error: Error) => {
-            const last = obsQuery["last"];
             subscription.unsubscribe();
-            // Unfortunately, if `lastError` is set in the current
-            // `observableQuery` when the subscription is re-created,
-            // the subscription will immediately receive the error, which will
-            // cause it to terminate again. To avoid this, we first clear
-            // the last error/result from the `observableQuery` before re-starting
-            // the subscription, and restore it afterwards (so the subscription
-            // has a chance to stay open).
-            try {
-              obsQuery.resetLastResults();
-              subscription = obsQuery.subscribe(onNext, onError);
-            } finally {
-              obsQuery["last"] = last;
-            }
+            subscription = obsQuery.resubscribeAfterError(onNext, onError);
 
             if (!hasOwnProperty.call(error, "graphQLErrors")) {
               // The error is not a GraphQL error

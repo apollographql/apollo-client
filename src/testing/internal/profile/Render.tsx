@@ -66,6 +66,7 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
     this.startTime = baseRender.startTime;
     this.commitTime = baseRender.commitTime;
     this.interactions = baseRender.interactions;
+    this.count = baseRender.count;
   }
 
   private _domSnapshot: HTMLElement | undefined;

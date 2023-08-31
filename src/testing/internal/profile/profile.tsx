@@ -18,6 +18,7 @@ interface ProfiledComponent<Props, Snapshot> extends React.FC<Props> {
   renders: Array<
     Render<Snapshot> | { phase: "snapshotError"; count: number; error: unknown }
   >;
+  peekRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
   takeRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
   getCurrentRender(): Render<Snapshot>;
   waitForRenderCount(count: number): Promise<void>;
@@ -103,22 +104,36 @@ export function profile<Props, Snapshot = void>({
         | Render<Snapshot>
         | { phase: "snapshotError"; count: number; error: unknown }
       >(),
-      async takeRender(options: NextRenderOptions = {}) {
-        try {
-          if (iteratorPosition < Profiled.renders.length) {
-            const render = Profiled.renders[iteratorPosition];
-            if (render.phase === "snapshotError") {
-              throw render.error;
-            }
-            return render;
+      async peekRender(options: NextRenderOptions = {}) {
+        if (iteratorPosition < Profiled.renders.length) {
+          const render = Profiled.renders[iteratorPosition];
+          if (render.phase === "snapshotError") {
+            throw render.error;
           }
-          const render = Profiled.waitForNextRender({
-            stackTrace: captureStackTrace(Profiled.takeRender),
-            ...options,
-          });
           return render;
+        }
+        const render = Profiled.waitForNextRender({
+          stackTrace: captureStackTrace(Profiled.takeRender),
+          ...options,
+        });
+        return render;
+      },
+      async takeRender(options: NextRenderOptions = {}) {
+        let error: { message?: string } | undefined = undefined;
+        try {
+          return await Profiled.peekRender(options);
+        } catch (e) {
+          error = e;
+          throw e;
         } finally {
-          iteratorPosition++;
+          if (
+            !(
+              error &&
+              error.message == "Exceeded timeout waiting for next render."
+            )
+          ) {
+            iteratorPosition++;
+          }
         }
       },
       getCurrentRender() {
@@ -162,4 +177,15 @@ export function profile<Props, Snapshot = void>({
     }
   );
   return Profiled;
+}
+
+export function profileHook<Props, ReturnValue>(
+  hook: (props: Props) => ReturnValue
+) {
+  let returnValue: ReturnValue;
+  const Component = (props: Props) => {
+    returnValue = hook(props);
+    return <></>;
+  };
+  return profile({ Component, takeSnapshot: () => returnValue });
 }

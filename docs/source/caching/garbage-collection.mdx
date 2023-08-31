@@ -113,7 +113,7 @@ new InMemoryCache({
 })
 ```
 
-* The `read` function for `Query.ruler` returns a default ruler (Apollo) if the `existingRuler` has been deposed.
+* The `read` function for `Query.ruler` returns a default ruler (`Apollo`) if the `existingRuler` has been deposed.
 * The `read` function for `Deity.offspring` filters its array to return only offspring that are alive and well in the cache.
 
 Filtering dangling references out of a cached list field (like the `Deity.offspring` example above) is so common that the default `read` function for a list field performs this filtering _automatically_. You can define a custom `read` function to override this behavior.

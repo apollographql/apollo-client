@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import React from 'react';
+import React from "react";
 import {
   print,
   graphql as execute,
@@ -8,134 +8,136 @@ import {
   GraphQLList,
   GraphQLString,
   GraphQLID,
-  DocumentNode
-} from 'graphql';
-import gql from 'graphql-tag';
+  DocumentNode,
+} from "graphql";
+import gql from "graphql-tag";
 
-import { ApolloClient } from '../../../../core';
-import { ApolloProvider } from '../../../context';
-import { InMemoryCache as Cache } from '../../../../cache';
-import { ApolloLink } from '../../../../link/core';
-import { Observable } from '../../../../utilities';
-import { renderToStringWithData } from '../../../ssr';
-import { graphql } from '../../graphql';
-import { ChildProps } from '../../types';
+import { ApolloClient } from "../../../../core";
+import { ApolloProvider } from "../../../context";
+import { InMemoryCache as Cache } from "../../../../cache";
+import { ApolloLink } from "../../../../link/core";
+import { Observable } from "../../../../utilities";
+import { renderToStringWithData } from "../../../ssr";
+import { graphql } from "../../graphql";
+import { ChildProps } from "../../types";
 
-const planetMap = new Map([['Planet:1', { id: 'Planet:1', name: 'Tatooine' }]]);
+const planetMap = new Map([["Planet:1", { id: "Planet:1", name: "Tatooine" }]]);
 
 const shipMap = new Map([
   [
-    'Ship:2',
+    "Ship:2",
     {
-      id: 'Ship:2',
-      name: 'CR90 corvette',
-      films: ['Film:4', 'Film:6', 'Film:3']
-    }
+      id: "Ship:2",
+      name: "CR90 corvette",
+      films: ["Film:4", "Film:6", "Film:3"],
+    },
   ],
   [
-    'Ship:3',
+    "Ship:3",
     {
-      id: 'Ship:3',
-      name: 'Star Destroyer',
-      films: ['Film:4', 'Film:5', 'Film:6']
-    }
-  ]
+      id: "Ship:3",
+      name: "Star Destroyer",
+      films: ["Film:4", "Film:5", "Film:6"],
+    },
+  ],
 ]);
 
 const filmMap = new Map([
-  ['Film:3', { id: 'Film:3', title: 'Revenge of the Sith' }],
-  ['Film:4', { id: 'Film:4', title: 'A New Hope' }],
-  ['Film:5', { id: 'Film:5', title: 'the Empire Strikes Back' }],
-  ['Film:6', { id: 'Film:6', title: 'Return of the Jedi' }]
+  ["Film:3", { id: "Film:3", title: "Revenge of the Sith" }],
+  ["Film:4", { id: "Film:4", title: "A New Hope" }],
+  ["Film:5", { id: "Film:5", title: "the Empire Strikes Back" }],
+  ["Film:6", { id: "Film:6", title: "Return of the Jedi" }],
 ]);
 
 const PlanetType = new GraphQLObjectType({
-  name: 'Planet',
+  name: "Planet",
   fields: {
     id: { type: GraphQLID },
-    name: { type: GraphQLString }
-  }
+    name: { type: GraphQLString },
+  },
 });
 
 const FilmType = new GraphQLObjectType({
-  name: 'Film',
+  name: "Film",
   fields: {
     id: { type: GraphQLID },
-    title: { type: GraphQLString }
-  }
+    title: { type: GraphQLString },
+  },
 });
 
 const ShipType = new GraphQLObjectType({
-  name: 'Ship',
+  name: "Ship",
   fields: {
     id: { type: GraphQLID },
     name: { type: GraphQLString },
     films: {
       type: new GraphQLList(FilmType),
-      resolve: ({ films }) => films.map((id: string) => filmMap.get(id))
-    }
-  }
+      resolve: ({ films }) => films.map((id: string) => filmMap.get(id)),
+    },
+  },
 });
 
 const QueryType = new GraphQLObjectType({
-  name: 'Query',
+  name: "Query",
   fields: {
     allPlanets: {
       type: new GraphQLList(PlanetType),
-      resolve: () => Array.from(planetMap.values())
+      resolve: () => Array.from(planetMap.values()),
     },
     allShips: {
       type: new GraphQLList(ShipType),
-      resolve: () => Array.from(shipMap.values())
+      resolve: () => Array.from(shipMap.values()),
     },
     ship: {
       type: ShipType,
       args: { id: { type: GraphQLID } },
-      resolve: (_, { id }) => shipMap.get(id)
+      resolve: (_, { id }) => shipMap.get(id),
     },
     film: {
       type: FilmType,
       args: { id: { type: GraphQLID } },
-      resolve: (_, { id }) => filmMap.get(id)
-    }
-  }
+      resolve: (_, { id }) => filmMap.get(id),
+    },
+  },
 });
 
 const Schema = new GraphQLSchema({ query: QueryType });
 
-describe('SSR', () => {
-  describe('`renderToStringWithData`', () => {
+describe("SSR", () => {
+  describe("`renderToStringWithData`", () => {
     // XXX break into smaller tests
     // XXX mock all queries
-    it('should work on a non trivial example', function() {
+    it("should work on a non trivial example", function () {
       const apolloClient = new ApolloClient({
-        link: new ApolloLink(config => {
-          return new Observable(observer => {
+        link: new ApolloLink((config) => {
+          return new Observable((observer) => {
             execute({
               schema: Schema,
               source: print(config.query),
               variableValues: config.variables,
-              operationName: config.operationName
+              operationName: config.operationName,
             })
-              .then(result => {
+              .then((result) => {
                 observer.next(result);
                 observer.complete();
               })
-              .catch(e => {
+              .catch((e) => {
                 observer.error(e);
               });
           });
         }),
-        cache: new Cache()
+        cache: new Cache(),
       });
 
-      @graphql(gql`
-        query data($id: ID!) {
-          film(id: $id) {
-            title
+      @graphql(
+        gql`
+          query data($id: ID!) {
+            film(id: $id) {
+              title
+            }
           }
-        }
-      ` as DocumentNode)
+        ` as DocumentNode
+      )
       class Film extends React.Component<any, any> {
         render(): React.ReactNode {
           const { data } = this.props;
@@ -156,16 +158,18 @@ describe('SSR', () => {
         id: string;
       }
 
-      @graphql<ShipVariables, ShipData, ShipVariables>(gql`
-        query data($id: ID!) {
-          ship(id: $id) {
-            name
-            films {
-              id
+      @graphql<ShipVariables, ShipData, ShipVariables>(
+        gql`
+          query data($id: ID!) {
+            ship(id: $id) {
+              name
+              films {
+                id
+              }
             }
           }
-        }
-      ` as DocumentNode)
+        ` as DocumentNode
+      )
       class Starship extends React.Component<
         ChildProps<ShipVariables, ShipData, ShipVariables>
       > {
@@ -193,13 +197,15 @@ describe('SSR', () => {
         allShips: { id: string }[];
       }
 
-      @graphql<{}, AllShipsData>(gql`
-        query data {
-          allShips {
-            id
+      @graphql<{}, AllShipsData>(
+        gql`
+          query data {
+            allShips {
+              id
+            }
           }
-        }
-      ` as DocumentNode)
+        ` as DocumentNode
+      )
       class AllShips extends React.Component<ChildProps<{}, AllShipsData>> {
         render(): React.ReactNode {
           const { data } = this.props;
@@ -222,13 +228,15 @@ describe('SSR', () => {
         allPlanets: { name: string }[];
       }
 
-      @graphql<{}, AllPlanetsData>(gql`
-        query data {
-          allPlanets {
-            name
+      @graphql<{}, AllPlanetsData>(
+        gql`
+          query data {
+            allPlanets {
+              name
+            }
           }
-        }
-      ` as DocumentNode)
+        ` as DocumentNode
+      )
       class AllPlanets extends React.Component<ChildProps<{}, AllPlanetsData>> {
         render(): React.ReactNode {
           const { data } = this.props;
@@ -267,7 +275,7 @@ describe('SSR', () => {
         </ApolloProvider>
       );
 
-      return renderToStringWithData(app).then(markup => {
+      return renderToStringWithData(app).then((markup) => {
         expect(markup).toMatch(/CR90 corvette/);
         expect(markup).toMatch(/Return of the Jedi/);
         expect(markup).toMatch(/A New Hope/);

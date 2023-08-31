@@ -304,9 +304,11 @@ writeQuery<TData = any, TVariables = any>(
 ): Reference | undefined
 ```
 
+<MinVersion version="3.5">
+
 ## `updateQuery`
 
-> This method is available in Apollo Client 3.5 and later.
+</MinVersion>
 
 Fetches data from the cache in the shape of a provided GraphQL query, then _updates_ that cached data according to a provided update function.
 
@@ -432,6 +434,8 @@ The default value is `false`.
 The update function of `updateQuery` takes a query's current cached value and returns the value that should replace it (or `undefined` if no change should be made).
 
 The returned value is automatically passed to [`writeQuery`](#writequery), which modifies the cached data.
+
+Please note the `update` function has to calculate the new value in an immutable way. You can read more about immutable updates in the [React documentation](https://beta.reactjs.org/learn/updating-objects-in-state).
 
 ### Signature
 
@@ -756,10 +760,11 @@ writeFragment<TData = any, TVariables = any>(
   options: Cache.WriteFragmentOptions<TData, TVariables>,
 ): Reference | undefined
 ```
+<MinVersion version="3.5">
 
 ## `updateFragment`
 
-> This method is available in Apollo Client 3.5 and later.
+</MinVersion>
 
 Fetches data from the cache in the shape of a provided GraphQL fragment, then _updates_ that cached data according to a provided update function.
 
@@ -891,6 +896,8 @@ The default value is `false`.
 The update function of `updateFragment` takes a fragment's current cached value and returns the value that should replace it (or `undefined` if no change should be made).
 
 The returned value is automatically passed to [`writeFragment`](#writefragment), which modifies the cached data.
+
+Please note the `update` function has to calculate the new value in an immutable way. You can read more about immutable updates in the [React documentation](https://beta.reactjs.org/learn/updating-objects-in-state).
 
 ### Signature
 

@@ -88,7 +88,7 @@ Beyond reusability, hardcoded arguments have other disadvantages relative to var
 
 If two otherwise identical queries have different hardcoded argument values, they're considered _entirely different operations_ by your GraphQL server's cache. The cache enables your server to _skip_ parsing and validating operations that it's encountered before, improving performance.
 
-The server-side cache also powers features like [automatic persisted queries](/apollo-server/performance/apq/) and query plans in a [federated gateway](/federation/gateway/). Hardcoded arguments reduce the performance gains of these features and take up useful space in the cache.
+The server-side cache also powers features like [automatic persisted queries](/apollo-server/performance/apq/) and query plans in a [federated gateway](/federation/building-supergraphs/router/). Hardcoded arguments reduce the performance gains of these features and take up useful space in the cache.
 
 #### Reduced information privacy
 
@@ -289,4 +289,4 @@ const client = new ApolloClient({
 
 If you specify these values, Apollo Client automatically adds them to each operation request as HTTP headers (`apollographql-client-name` and `apollographql-client-version`).
 
-Then if you've configured [metrics reporting in Apollo Studio](/studio/metrics/usage-reporting/), Apollo Server includes your app's `name` and `version` in the operation traces it reports to Studio. This enables you to [segment metrics by client](/studio/metrics/client-awareness/).
+Then if you've configured [metrics reporting in Apollo Studio](/graphos/metrics/usage-reporting/), Apollo Server includes your app's `name` and `version` in the operation traces it reports to Studio. This enables you to [segment metrics by client](/graphos/metrics/client-awareness/).

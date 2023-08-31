@@ -1,21 +1,21 @@
-import React from 'react';
-import gql from 'graphql-tag';
-import { render, waitFor } from '@testing-library/react';
+import React from "react";
+import gql from "graphql-tag";
+import { render, waitFor } from "@testing-library/react";
 
-import { ApolloClient } from '../../../../core';
-import { InMemoryCache as Cache } from '../../../../cache';
-import { ApolloProvider } from '../../../context';
-import { ApolloLink, Operation } from '../../../../link/core';
-import { itAsync, MockSubscriptionLink } from '../../../../testing';
-import { Subscription } from '../../Subscription';
+import { ApolloClient } from "../../../../core";
+import { InMemoryCache as Cache } from "../../../../cache";
+import { ApolloProvider } from "../../../context";
+import { ApolloLink, Operation } from "../../../../link/core";
+import { itAsync, MockSubscriptionLink } from "../../../../testing";
+import { Subscription } from "../../Subscription";
 
 const results = [
-  'Luke Skywalker',
-  'Han Solo',
-  'Darth Vader',
-  'Leia Skywalker'
-].map(name => ({
-  result: { data: { user: { name } } }
+  "Luke Skywalker",
+  "Han Solo",
+  "Darth Vader",
+  "Leia Skywalker",
+].map((name) => ({
+  result: { data: { user: { name } } },
 }));
 
 beforeEach(() => {
@@ -34,10 +34,10 @@ const cache = new Cache({ addTypename: false });
 const link = new MockSubscriptionLink();
 const client = new ApolloClient({
   link,
-  cache
+  cache,
 });
 
-itAsync('executes the subscription', (resolve, reject) => {
+itAsync("executes the subscription", (resolve, reject) => {
   let renderCount = 0;
   const Component = () => (
     <Subscription subscription={subscription}>
@@ -88,7 +88,39 @@ itAsync('executes the subscription', (resolve, reject) => {
   waitFor(() => expect(renderCount).toBe(5)).then(resolve, reject);
 });
 
-itAsync('calls onSubscriptionData if given', (resolve, reject) => {
+it("calls onData if given", async () => {
+  let count = 0;
+
+  const Component = () => (
+    <Subscription
+      subscription={subscription}
+      onData={(opts: any) => {
+        expect(opts.client).toBeInstanceOf(ApolloClient);
+        const { data } = opts.data;
+        expect(data).toEqual(results[count].result.data);
+        count++;
+      }}
+    />
+  );
+
+  render(
+    <ApolloProvider client={client}>
+      <Component />
+    </ApolloProvider>
+  );
+
+  const interval = setInterval(() => {
+    link.simulateResult(results[count]);
+    if (count >= 3) clearInterval(interval);
+  }, 10);
+
+  await waitFor(() => expect(count).toBe(4));
+});
+
+it("calls onSubscriptionData with deprecation warning if given", async () => {
+  const consoleWarnSpy = jest
+    .spyOn(console, "warn")
+    .mockImplementation(() => {});
   let count = 0;
 
   const Component = () => (
@@ -109,25 +141,32 @@ itAsync('calls onSubscriptionData if given', (resolve, reject) => {
     </ApolloProvider>
   );
 
+  expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+  expect(consoleWarnSpy).toHaveBeenCalledWith(
+    expect.stringContaining("'onSubscriptionData' is deprecated")
+  );
+
   const interval = setInterval(() => {
     link.simulateResult(results[count]);
     if (count >= 3) clearInterval(interval);
   }, 10);
 
-  waitFor(() => expect(count).toBe(4)).then(resolve, reject);
+  await waitFor(() => expect(count).toBe(4));
+
+  consoleWarnSpy.mockRestore();
 });
 
-itAsync('should call onSubscriptionComplete if specified', (resolve, reject) => {
+it("should call onComplete if specified", async () => {
   let count = 0;
 
   let done = false;
   const Component = () => (
     <Subscription
       subscription={subscription}
-      onSubscriptionData={() => {
+      onData={() => {
         count++;
       }}
-      onSubscriptionComplete={() => {
+      onComplete={() => {
         done = true;
       }}
     />
@@ -144,76 +183,119 @@ itAsync('should call onSubscriptionComplete if specified', (resolve, reject) => 
     if (count >= 3) clearInterval(interval);
   }, 10);
 
-  waitFor(() => expect(done).toBeTruthy()).then(resolve, reject);
+  await waitFor(() => expect(done).toBeTruthy());
 });
 
-itAsync('executes subscription for the variables passed in the props', (resolve, reject) => {
-  const subscriptionWithVariables = gql`
-    subscription UserInfo($name: String) {
-      user(name: $name) {
-        name
-      }
-    }
-  `;
-
-  const variables = { name: 'Luke Skywalker' };
-
-  class MockSubscriptionLinkOverride extends MockSubscriptionLink {
-    request(req: Operation) {
-      try {
-        expect(req.variables).toEqual(variables);
-      } catch (error) {
-        reject(error);
-      }
-      return super.request(req);
-    }
-  }
-
-  const mockLink = new MockSubscriptionLinkOverride();
-
-  const mockClient = new ApolloClient({
-    link: mockLink,
-    cache
-  });
-
+it("should call onSubscriptionComplete with deprecation warning if specified", async () => {
+  const consoleWarnSpy = jest
+    .spyOn(console, "warn")
+    .mockImplementation(() => {});
   let count = 0;
 
+  let done = false;
   const Component = () => (
     <Subscription
-      subscription={subscriptionWithVariables}
-      variables={variables}
-    >
-      {(result: any) => {
-        const { loading, data } = result;
-
-        try {
-          if (count === 0) {
-            expect(loading).toBe(true);
-          } else if (count === 1) {
-            expect(loading).toBe(false);
-            expect(data).toEqual(results[0].result.data);
-          }
-        } catch (error) {
-          reject(error);
-        }
+      subscription={subscription}
+      onData={() => {
         count++;
-        return null;
       }}
-    </Subscription>
+      onSubscriptionComplete={() => {
+        done = true;
+      }}
+    />
   );
 
   render(
-    <ApolloProvider client={mockClient}>
+    <ApolloProvider client={client}>
       <Component />
     </ApolloProvider>
   );
 
-  mockLink.simulateResult(results[0]);
+  expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+  expect(consoleWarnSpy).toHaveBeenCalledWith(
+    expect.stringContaining("'onSubscriptionComplete' is deprecated")
+  );
 
-  waitFor(() => expect(count).toBe(2)).then(resolve, reject);
+  const interval = setInterval(() => {
+    link.simulateResult(results[count], count === 3);
+    if (count >= 3) clearInterval(interval);
+  }, 10);
+
+  await waitFor(() => expect(done).toBeTruthy());
+
+  consoleWarnSpy.mockRestore();
 });
 
-itAsync('does not execute if variables have not changed', (resolve, reject) => {
+itAsync(
+  "executes subscription for the variables passed in the props",
+  (resolve, reject) => {
+    const subscriptionWithVariables = gql`
+      subscription UserInfo($name: String) {
+        user(name: $name) {
+          name
+        }
+      }
+    `;
+
+    const variables = { name: "Luke Skywalker" };
+
+    class MockSubscriptionLinkOverride extends MockSubscriptionLink {
+      request(req: Operation) {
+        try {
+          expect(req.variables).toEqual(variables);
+        } catch (error) {
+          reject(error);
+        }
+        return super.request(req);
+      }
+    }
+
+    const mockLink = new MockSubscriptionLinkOverride();
+
+    const mockClient = new ApolloClient({
+      link: mockLink,
+      cache,
+    });
+
+    let count = 0;
+
+    const Component = () => (
+      <Subscription
+        subscription={subscriptionWithVariables}
+        variables={variables}
+      >
+        {(result: any) => {
+          const { loading, data } = result;
+
+          try {
+            if (count === 0) {
+              expect(loading).toBe(true);
+            } else if (count === 1) {
+              expect(loading).toBe(false);
+              expect(data).toEqual(results[0].result.data);
+            }
+          } catch (error) {
+            reject(error);
+          }
+          count++;
+          return null;
+        }}
+      </Subscription>
+    );
+
+    render(
+      <ApolloProvider client={mockClient}>
+        <Component />
+      </ApolloProvider>
+    );
+
+    mockLink.simulateResult(results[0]);
+
+    waitFor(() => expect(count).toBe(2)).then(resolve, reject);
+  }
+);
+
+itAsync("does not execute if variables have not changed", (resolve, reject) => {
   const subscriptionWithVariables = gql`
     subscription UserInfo($name: String) {
       user(name: $name) {
@@ -222,7 +304,7 @@ itAsync('does not execute if variables have not changed', (resolve, reject) => {
     }
   `;
 
-  const name = 'Luke Skywalker';
+  const name = "Luke Skywalker";
 
   class MockSubscriptionLinkOverride extends MockSubscriptionLink {
     request(req: Operation) {
@@ -239,7 +321,7 @@ itAsync('does not execute if variables have not changed', (resolve, reject) => {
 
   const mockClient = new ApolloClient({
     link: mockLink,
-    cache
+    cache,
   });
 
   let count = 0;
@@ -284,7 +366,7 @@ itAsync('does not execute if variables have not changed', (resolve, reject) => {
   waitFor(() => expect(count).toBe(3)).then(resolve, reject);
 });
 
-itAsync('renders an error', (resolve, reject) => {
+itAsync("renders an error", (resolve, reject) => {
   const subscriptionWithVariables = gql`
     subscription UserInfo($name: String) {
       user(name: $name) {
@@ -294,11 +376,11 @@ itAsync('renders an error', (resolve, reject) => {
   `;
 
   const variables = {
-    name: 'Luke Skywalker'
+    name: "Luke Skywalker",
   };
 
   const subscriptionError = {
-    error: new Error('error occurred')
+    error: new Error("error occurred"),
   };
 
   let count = 0;
@@ -315,7 +397,7 @@ itAsync('renders an error', (resolve, reject) => {
             expect(error).toBeUndefined();
           } else if (count === 1) {
             expect(loading).toBe(false);
-            expect(error).toEqual(new Error('error occurred'));
+            expect(error).toEqual(new Error("error occurred"));
             expect(data).toBeUndefined();
           }
         } catch (error) {
@@ -339,19 +421,20 @@ itAsync('renders an error', (resolve, reject) => {
   waitFor(() => expect(count).toBe(2)).then(resolve, reject);
 });
 
-describe('should update', () => {
-  itAsync('if the client changes', (resolve, reject) => {
+describe("should update", () => {
+  it("if the client changes", async () => {
     const link2 = new MockSubscriptionLink();
     const client2 = new ApolloClient({
       link: link2,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     let count = 0;
+    let testFailures: any[] = [];
 
     class Component extends React.Component {
       state = {
-        client: client
+        client: client,
       };
 
       render() {
@@ -361,7 +444,7 @@ describe('should update', () => {
               {(result: any) => {
                 const { loading, data } = result;
                 try {
-                  switch (count) {
+                  switch (count++) {
                     case 0:
                       expect(loading).toBeTruthy();
                       expect(data).toBeUndefined();
@@ -370,14 +453,14 @@ describe('should update', () => {
                       setTimeout(() => {
                         this.setState(
                           {
-                            client: client2
+                            client: client2,
                           },
                           () => {
                             link2.simulateResult(results[1]);
                           }
                         );
                       });
-                      // fallthrough
+                    // fallthrough
                     case 2:
                       expect(loading).toBeFalsy();
                       expect(data).toEqual(results[0].result.data);
@@ -390,12 +473,12 @@ describe('should update', () => {
                       expect(loading).toBeFalsy();
                       expect(data).toEqual(results[1].result.data);
                       break;
+                    default:
+                      throw new Error("too many rerenders");
                   }
                 } catch (error) {
-                  reject(error);
+                  testFailures.push(error);
                 }
-
-                count++;
                 return null;
               }}
             </Subscription>
@@ -408,10 +491,15 @@ describe('should update', () => {
 
     link.simulateResult(results[0]);
 
-    waitFor(() => expect(count).toBe(5)).then(resolve, reject);
+    await waitFor(() => {
+      if (testFailures.length > 0) {
+        throw testFailures[0];
+      }
+      expect(count).toBe(5);
+    });
   });
 
-  itAsync('if the query changes', (resolve, reject) => {
+  itAsync("if the query changes", (resolve, reject) => {
     const subscriptionHero = gql`
       subscription HeroInfo {
         hero {
@@ -424,30 +512,30 @@ describe('should update', () => {
       result: {
         data: {
           hero: {
-            name: 'Chewie'
-          }
-        }
-      }
+            name: "Chewie",
+          },
+        },
+      },
     };
 
     const userLink = new MockSubscriptionLink();
     const heroLink = new MockSubscriptionLink();
     const linkCombined = new ApolloLink((o, f) => (f ? f(o) : null)).split(
-      ({ operationName }) => operationName === 'HeroInfo',
+      ({ operationName }) => operationName === "HeroInfo",
       heroLink,
       userLink
     );
 
     const mockClient = new ApolloClient({
       link: linkCombined,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     let count = 0;
 
     class Component extends React.Component {
       state = {
-        subscription
+        subscription,
       };
 
       render() {
@@ -465,14 +553,14 @@ describe('should update', () => {
                     setTimeout(() => {
                       this.setState(
                         {
-                          subscription: subscriptionHero
+                          subscription: subscriptionHero,
                         },
                         () => {
                           heroLink.simulateResult(heroResult);
                         }
                       );
                     });
-                    // fallthrough
+                  // fallthrough
                   case 2:
                     expect(loading).toBeFalsy();
                     expect(data).toEqual(results[0].result.data);
@@ -508,7 +596,7 @@ describe('should update', () => {
     waitFor(() => expect(count).toBe(5)).then(resolve, reject);
   });
 
-  itAsync('if the variables change', (resolve, reject) => {
+  itAsync("if the variables change", (resolve, reject) => {
     const subscriptionWithVariables = gql`
       subscription UserInfo($name: String) {
         user(name: $name) {
@@ -517,33 +605,33 @@ describe('should update', () => {
       }
     `;
 
-    const variablesLuke = { name: 'Luke Skywalker' };
-    const variablesHan = { name: 'Han Solo' };
+    const variablesLuke = { name: "Luke Skywalker" };
+    const variablesHan = { name: "Han Solo" };
 
     const dataLuke = {
       user: {
-        name: 'Luke Skywalker'
-      }
+        name: "Luke Skywalker",
+      },
     };
 
     const dataHan = {
       user: {
-        name: 'Han Solo'
-      }
+        name: "Han Solo",
+      },
     };
 
     const mockLink = new MockSubscriptionLink();
 
     const mockClient = new ApolloClient({
       link: mockLink,
-      cache
+      cache,
     });
 
     let count = 0;
 
     class Component extends React.Component {
       state = {
-        variables: variablesLuke
+        variables: variablesLuke,
       };
 
       render() {
@@ -564,14 +652,16 @@ describe('should update', () => {
                     setTimeout(() => {
                       this.setState(
                         {
-                          variables: variablesHan
+                          variables: variablesHan,
                         },
                         () => {
-                          mockLink.simulateResult({ result: { data: dataHan } });
+                          mockLink.simulateResult({
+                            result: { data: dataHan },
+                          });
                         }
                       );
                     });
-                    // fallthrough
+                  // fallthrough
                   case 2:
                     expect(loading).toBeFalsy();
                     expect(data).toEqual(dataLuke);
@@ -609,20 +699,20 @@ describe('should update', () => {
   });
 });
 
-describe('should not update', () => {
-  const variablesLuke = { name: 'Luke Skywalker' };
-  const variablesHan = { name: 'Han Solo' };
+describe("should not update", () => {
+  const variablesLuke = { name: "Luke Skywalker" };
+  const variablesHan = { name: "Han Solo" };
 
   const dataLuke = {
     user: {
-      name: 'Luke Skywalker'
-    }
+      name: "Luke Skywalker",
+    },
   };
 
   const dataHan = {
     user: {
-      name: 'Han Solo'
-    }
+      name: "Han Solo",
+    },
   };
 
   class MockSubscriptionLinkOverride extends MockSubscriptionLink {
@@ -633,23 +723,23 @@ describe('should not update', () => {
     }
 
     simulateResult() {
-      if (this.variables.name === 'Luke Skywalker') {
+      if (this.variables.name === "Luke Skywalker") {
         return super.simulateResult({
           result: {
-            data: dataLuke
-          }
+            data: dataLuke,
+          },
         });
-      } else if (this.variables.name === 'Han Solo') {
+      } else if (this.variables.name === "Han Solo") {
         return super.simulateResult({
           result: {
-            data: dataHan
-          }
+            data: dataHan,
+          },
         });
       }
     }
   }
 
-  itAsync('if shouldResubscribe is false', (resolve, reject) => {
+  itAsync("if shouldResubscribe is false", (resolve, reject) => {
     const subscriptionWithVariables = gql`
       subscription UserInfo($name: String) {
         user(name: $name) {
@@ -662,14 +752,14 @@ describe('should not update', () => {
 
     const mockClient = new ApolloClient({
       link: mockLink,
-      cache
+      cache,
     });
 
     let count = 0;
 
     class Component extends React.Component {
       state = {
-        variables: variablesLuke
+        variables: variablesLuke,
       };
 
       render() {
@@ -691,7 +781,7 @@ describe('should not update', () => {
                   setTimeout(() => {
                     this.setState(
                       {
-                        variables: variablesHan
+                        variables: variablesHan,
                       },
                       () => {
                         mockLink.simulateResult();
@@ -725,7 +815,7 @@ describe('should not update', () => {
     waitFor(() => expect(count).toBe(4)).then(resolve, reject);
   });
 
-  itAsync('if shouldResubscribe returns false', (resolve, reject) => {
+  itAsync("if shouldResubscribe returns false", (resolve, reject) => {
     const subscriptionWithVariables = gql`
       subscription UserInfo($name: String) {
         user(name: $name) {
@@ -738,14 +828,14 @@ describe('should not update', () => {
 
     const mockClient = new ApolloClient({
       link: mockLink,
-      cache
+      cache,
     });
 
     let count = 0;
 
     class Component extends React.Component {
       state = {
-        variables: variablesLuke
+        variables: variablesLuke,
       };
 
       render() {
@@ -767,7 +857,7 @@ describe('should not update', () => {
                   setTimeout(() => {
                     this.setState(
                       {
-                        variables: variablesHan
+                        variables: variablesHan,
                       },
                       () => {
                         mockLink.simulateResult();

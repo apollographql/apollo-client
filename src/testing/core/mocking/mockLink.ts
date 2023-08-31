@@ -1,14 +1,13 @@
-import { invariant } from '../../../utilities/globals';
+import { invariant } from "../../../utilities/globals/index.js";
 
-import { print } from 'graphql';
-import { equal } from '@wry/equality';
+import { equal } from "@wry/equality";
 
-import {
-  ApolloLink,
+import type {
   Operation,
   GraphQLRequest,
   FetchResult,
-} from '../../../link/core';
+} from "../../../link/core/index.js";
+import { ApolloLink } from "../../../link/core/index.js";
 
 import {
   Observable,
@@ -17,16 +16,24 @@ import {
   removeConnectionDirectiveFromDocument,
   cloneDeep,
   stringifyForDisplay,
-} from '../../../utilities';
+  print,
+} from "../../../utilities/index.js";
 
 export type ResultFunction<T> = () => T;
 
-export interface MockedResponse<TData = Record<string, any>> {
-  request: GraphQLRequest;
+export interface MockedResponse<
+  TData = Record<string, any>,
+  TVariables = Record<string, any>,
+> {
+  request: GraphQLRequest<TVariables>;
   result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
   error?: Error;
   delay?: number;
   newData?: ResultFunction<FetchResult>;
+}
+
+export interface MockLinkOptions {
+  showWarnings?: boolean;
 }
 
 function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
@@ -40,25 +47,28 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
 export class MockLink extends ApolloLink {
   public operation: Operation;
   public addTypename: Boolean = true;
+  public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse>,
-    addTypename: Boolean = true
+    addTypename: Boolean = true,
+    options: MockLinkOptions = Object.create(null)
   ) {
     super();
     this.addTypename = addTypename;
+    this.showWarnings = options.showWarnings ?? true;
+
     if (mockedResponses) {
-      mockedResponses.forEach(mockedResponse => {
+      mockedResponses.forEach((mockedResponse) => {
         this.addMockedResponse(mockedResponse);
       });
     }
   }
 
   public addMockedResponse(mockedResponse: MockedResponse) {
-    const normalizedMockedResponse = this.normalizeMockedResponse(
-      mockedResponse
-    );
+    const normalizedMockedResponse =
+      this.normalizeMockedResponse(mockedResponse);
     const key = requestToKey(
       normalizedMockedResponse.request,
       this.addTypename
@@ -77,31 +87,45 @@ export class MockLink extends ApolloLink {
     const unmatchedVars: Array<Record<string, any>> = [];
     const requestVariables = operation.variables || {};
     const mockedResponses = this.mockedResponsesByKey[key];
-    const responseIndex = mockedResponses ? mockedResponses.findIndex((res, index) => {
-      const mockedResponseVars = res.request.variables || {};
-      if (equal(requestVariables, mockedResponseVars)) {
-        return true;
-      }
-      unmatchedVars.push(mockedResponseVars);
-      return false;
-    }) : -1;
+    const responseIndex = mockedResponses
+      ? mockedResponses.findIndex((res, index) => {
+          const mockedResponseVars = res.request.variables || {};
+          if (equal(requestVariables, mockedResponseVars)) {
+            return true;
+          }
+          unmatchedVars.push(mockedResponseVars);
+          return false;
+        })
+      : -1;
 
-    const response = responseIndex >= 0
-      ? mockedResponses[responseIndex]
-      : void 0;
+    const response =
+      responseIndex >= 0 ? mockedResponses[responseIndex] : void 0;
 
     let configError: Error;
 
     if (!response) {
       configError = new Error(
-`No more mocked responses for the query: ${print(operation.query)}
+        `No more mocked responses for the query: ${print(operation.query)}
 Expected variables: ${stringifyForDisplay(operation.variables)}
-${unmatchedVars.length > 0 ? `
+${
+  unmatchedVars.length > 0
+    ? `
 Failed to match ${unmatchedVars.length} mock${
-  unmatchedVars.length === 1 ? "" : "s"
-} for this query. The mocked response had the following variables:
-${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
-` : ""}`);
+        unmatchedVars.length === 1 ? "" : "s"
+      } for this query. The mocked response had the following variables:
+${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
+`
+    : ""
+}`
+      );
+
+      if (this.showWarnings) {
+        console.warn(
+          configError.message +
+            "\nThis typically indicates a configuration error in your mocks " +
+            "setup, usually due to a typo or mismatched variable."
+        );
+      }
     } else {
       mockedResponses.splice(responseIndex, 1);
 
@@ -118,36 +142,39 @@ ${unmatchedVars.map(d => `  ${stringifyForDisplay(d)}`).join('\n')}
       }
     }
 
-    return new Observable(observer => {
-      const timer = setTimeout(() => {
-        if (configError) {
-          try {
-            // The onError function can return false to indicate that
-            // configError need not be passed to observer.error. For
-            // example, the default implementation of onError calls
-            // observer.error(configError) and then returns false to
-            // prevent this extra (harmless) observer.error call.
-            if (this.onError(configError, observer) !== false) {
-              throw configError;
+    return new Observable((observer) => {
+      const timer = setTimeout(
+        () => {
+          if (configError) {
+            try {
+              // The onError function can return false to indicate that
+              // configError need not be passed to observer.error. For
+              // example, the default implementation of onError calls
+              // observer.error(configError) and then returns false to
+              // prevent this extra (harmless) observer.error call.
+              if (this.onError(configError, observer) !== false) {
+                throw configError;
+              }
+            } catch (error) {
+              observer.error(error);
             }
-          } catch (error) {
-            observer.error(error);
-          }
-        } else if (response) {
-          if (response.error) {
-            observer.error(response.error);
-          } else {
-            if (response.result) {
-              observer.next(
-                typeof response.result === 'function'
-                  ? (response.result as ResultFunction<FetchResult>)()
-                  : response.result
-              );
+          } else if (response) {
+            if (response.error) {
+              observer.error(response.error);
+            } else {
+              if (response.result) {
+                observer.next(
+                  typeof response.result === "function"
+                    ? (response.result as ResultFunction<FetchResult>)()
+                    : response.result
+                );
+              }
+              observer.complete();
             }
-            observer.complete();
           }
-        }
-      }, response && response.delay || 0);
+        },
+        (response && response.delay) || 0
+      );
 
       return () => {
         clearTimeout(timer);
@@ -179,15 +206,13 @@ export interface MockApolloLink extends ApolloLink {
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server.
 // NOTE: The last arg can optionally be an `addTypename` arg.
-export function mockSingleLink(
-  ...mockedResponses: Array<any>
-): MockApolloLink {
+export function mockSingleLink(...mockedResponses: Array<any>): MockApolloLink {
   // To pull off the potential typename. If this isn't a boolean, we'll just
   // set it true later.
   let maybeTypename = mockedResponses[mockedResponses.length - 1];
   let mocks = mockedResponses.slice(0, mockedResponses.length - 1);
 
-  if (typeof maybeTypename !== 'boolean') {
+  if (typeof maybeTypename !== "boolean") {
     mocks = mockedResponses;
     maybeTypename = true;
   }

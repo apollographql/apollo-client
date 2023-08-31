@@ -213,10 +213,12 @@ exports[`ApolloClient writeFragment should warn when the data provided does not 
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'e' while writing result {
-  \\"__typename\\": \\"Bar\\",
-  \\"i\\": 10
-}",
+      "Missing field '%s' while writing result %o",
+      "e",
+      Object {
+        "__typename": "Bar",
+        "i": 10,
+      },
     ],
   ],
   "results": Array [
@@ -382,11 +384,13 @@ exports[`ApolloClient writeQuery should warn when the data provided does not mat
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'description' while writing result {
-  \\"id\\": \\"1\\",
-  \\"name\\": \\"Todo 1\\",
-  \\"__typename\\": \\"Todo\\"
-}",
+      "Missing field '%s' while writing result %o",
+      "description",
+      Object {
+        "__typename": "Todo",
+        "id": "1",
+        "name": "Todo 1",
+      },
     ],
   ],
   "results": Array [

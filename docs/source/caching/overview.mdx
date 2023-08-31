@@ -5,24 +5,24 @@ description: Overview
 
 Apollo Client stores the results of your GraphQL queries in a local, [normalized](#data-normalization), in-memory cache. This enables Apollo Client to respond almost immediately to queries for already-cached data, without even sending a network request.
 
-For example, the _first_ time your app queries for a `Book` object with id `5`, the flow looks like this:
+For example, the _first_ time your app executes a `GetBook` query for a `Book` object with id `5`, the flow looks like this:
 
 ```mermaid
 sequenceDiagram
-  Apollo Client->>InMemoryCache: Queries for Book with id 5
-  Note over InMemoryCache: Book:5 not found in cache!
+  Apollo Client->>InMemoryCache: GetBook(bookId: "5")
+  Note over InMemoryCache: Book:5 not found<br/>in cache
   InMemoryCache->>GraphQL Server: Query sent to server
-  GraphQL Server->>InMemoryCache: Server responds with Book
+  GraphQL Server->>InMemoryCache: Server responds<br/>with Book
   Note over InMemoryCache: Book:5 is cached
   InMemoryCache->>Apollo Client: Returns Book
 ```
 
-And each _later_ time your app queries for that same object, the flow looks like this instead:
+And each _later_ time your app executes `GetBook` for that same object, the flow looks like this instead:
 
 ```mermaid
 sequenceDiagram
-  Apollo Client->>InMemoryCache: Queries for Book with id 5
-  Note over InMemoryCache: Book:5 found in cache!
+  Apollo Client->>InMemoryCache: GetBook(bookId: "5")
+  Note over InMemoryCache: Book:5 found<br/>in cache!
   InMemoryCache->>Apollo Client: Returns Book
   Note over GraphQL Server: (Server is never queried)
 ```
@@ -219,6 +219,6 @@ Our cache now contains five normalized objects (in addition to the `ROOT_QUERY` 
 
 ## Next steps
 
-Now that you have a basic understanding of how Apollo Client's cache works, learn more about how to [install and configure it](./cache-configuration/).
+Now that you have a basic understanding of how Apollo Client's cache works, learn more about how to [configure it](./cache-configuration/).
 
 Then, you can learn how to [read and write data to your cache](./cache-interaction/) directly, without executing a query against your server. This is a powerful option for [local state management](../local-state/local-state-management/).

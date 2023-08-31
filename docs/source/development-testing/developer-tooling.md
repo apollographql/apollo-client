@@ -3,20 +3,18 @@ title: Developer tools
 description: Improve your developer experience with these services and extensions
 ---
 
-## Apollo Studio
+## GraphOS and Apollo Studio
 
-[Apollo Studio](/studio/) (formerly Graph Manager) is a cloud app that provides a single, consolidated place for you to collaborate on the evolution of your graph.
+[GraphOS](/graphos/) is Apollo's all-purpose platform for growing and collaborating on your graph. **Apollo Studio** is the web interface for GraphOS, which provides helpful views into your graph's usage and performance.
 
-It provides the following features to all Apollo users for free:
+Among others, these GraphOS features are available to all Apollo users for free:
 
-- A query window that connects to all your environments and provides ergonomic ways to author and manage queries.
+- The Explorer, a powerful GraphQL IDE that connects to all your environments and provides ergonomic ways to author and manage queries.
 - A GraphQL schema registry that tracks the evolution of your graph across your environments.
 - Key insights into which parts of your schema are being actively used, and by whom.
 - Team collaboration via organizations
 
-Advanced features are available with a subscription to an Apollo Team or Enterprise plan.
-
-To learn more about Apollo Studio, check out the [overview](/studio/).
+To learn more about GraphOS, check out the [overview](/graphos/).
 
 ## Apollo Client Devtools
 
@@ -42,4 +40,3 @@ You can install the extension via the webstores for [Chrome](https://chrome.goog
 While your app is in dev mode, the Apollo Client Devtools will appear as an "Apollo" tab in your web browser inspector. To enable the devtools in your app in production, pass `connectToDevTools: true` to the `ApolloClient` constructor in your app. Pass `connectToDevTools: false` if want to manually disable this functionality.
 
 Find more information about contributing and debugging on the [Apollo Client Devtools GitHub page](https://github.com/apollographql/apollo-client-devtools).
-

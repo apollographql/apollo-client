@@ -1,71 +1,60 @@
-const { compilerOptions } = require("../tsconfig.json");
-
 const defaults = {
   rootDir: "src",
-  preset: "ts-jest/presets/js-with-ts",
+  preset: "ts-jest",
   testEnvironment: "jsdom",
-  setupFiles: ["<rootDir>/config/jest/setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
+  globals: {
+    __DEV__: true,
+  },
   testEnvironmentOptions: {
     url: "http://localhost",
   },
-  globals: {
-    "ts-jest": {
-      diagnostics: true,
-      tsconfig: {
-        ...compilerOptions,
-        allowJs: true,
-      },
-    },
+  snapshotFormat: {
+    escapeString: true,
+    printBasicPrototype: true,
   },
+  transform: {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        diagnostics: {
+          warnOnly: process.env.TEST_ENV !== "ci",
+        },
+      },
+    ],
+  },
+  resolver: "ts-jest-resolver",
 };
 
-const ignoreTSFiles = '.ts$';
-const ignoreTSXFiles = '.tsx$';
+const ignoreTSFiles = ".ts$";
+const ignoreTSXFiles = ".tsx$";
 
-const react18TestFileIgnoreList = [
-  // ignore core tests (.ts files) as they are run separately
-  // to avoid running them twice with both react versions
-  // since they do not import react
+const react17TestFileIgnoreList = [
   ignoreTSFiles,
-  // failing subscriptionLink test (1)
-  'src/testing/react/__tests__/mockSubscriptionLink.test.tsx',
-  // failing hoc tests (8)
-  'src/react/hoc/__tests__/mutations/queries.test.tsx',
-  'src/react/hoc/__tests__/mutations/recycled-queries.test.tsx',
-  'src/react/hoc/__tests__/queries/errors.test.tsx',
-  'src/react/hoc/__tests__/queries/lifecycle.test.tsx',
-  'src/react/hoc/__tests__/queries/loading.test.tsx',
-  'src/react/hoc/__tests__/queries/observableQuery.test.tsx',
-  'src/react/hoc/__tests__/queries/skip.test.tsx',
-  'src/react/hoc/__tests__/subscriptions/subscriptions.test.tsx',
-  // failing hooks tests (4)
-  'src/react/hooks/__tests__/useMutation.test.tsx',
-  'src/react/hooks/__tests__/useQuery.test.tsx',
-  'src/react/hooks/__tests__/useReactiveVar.test.tsx',
-  'src/react/hooks/__tests__/useSubscription.test.tsx',
-  // failing components tests (4)
-  'src/react/components/__tests__/ssr/server.test.tsx',
-  'src/react/components/__tests__/client/Subscription.test.tsx',
-  'src/react/components/__tests__/client/Mutation.test.tsx',
-  'src/react/components/__tests__/client/Query.test.tsx',
+  // For now, we only support useSuspenseQuery with React 18, so no need to test
+  // it with React 17
+  "src/react/hooks/__tests__/useSuspenseQuery.test.tsx",
+  "src/react/hooks/__tests__/useBackgroundQuery.test.tsx",
 ];
 
 const tsStandardConfig = {
   ...defaults,
-  displayName: 'Core Tests',
+  displayName: "Core Tests",
   testPathIgnorePatterns: [ignoreTSXFiles],
-}
+};
 
+// For both React (Jest) "projects", ignore core tests (.ts files) as they
+// do not import React, to avoid running them twice.
 const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
-  testPathIgnorePatterns: react18TestFileIgnoreList
+  testPathIgnorePatterns: [ignoreTSFiles],
 };
 
 const standardReact17Config = {
   ...defaults,
   displayName: "ReactDOM 17",
-  testPathIgnorePatterns: [ignoreTSFiles],
+  testPathIgnorePatterns: react17TestFileIgnoreList,
   moduleNameMapper: {
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",
@@ -76,9 +65,5 @@ const standardReact17Config = {
 };
 
 module.exports = {
-  projects: [
-    tsStandardConfig,
-    standardReact17Config,
-    standardReact18Config,
-  ],
+  projects: [tsStandardConfig, standardReact17Config, standardReact18Config],
 };

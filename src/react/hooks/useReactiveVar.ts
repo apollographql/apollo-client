@@ -1,14 +1,17 @@
-import { useEffect, useState } from 'react';
-import { ReactiveVar } from '../../core';
+import * as React from "react";
+import type { ReactiveVar } from "../../core/index.js";
 
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T {
   const value = rv();
 
   // We don't actually care what useState thinks the value of the variable is,
   // so we take only the update function from the returned array.
-  const setValue = useState(value)[1];
+  const setValue = React.useState(value)[1];
 
-  useEffect(() => {
+  // We subscribe to variable updates on initial mount and when the value has
+  // changed. This avoids a subtle bug in React.StrictMode where multiple
+  // listeners are added, leading to inconsistent updates.
+  React.useEffect(() => {
     // Catch any potential state changes that might have happened between when
     // this useReactiveVar was called and this useEffect callback was scheduled
     // for async execution.

@@ -1,7 +1,7 @@
 export function filterInPlace<T>(
   array: T[],
   test: (elem: T) => boolean,
-  context?: any,
+  context?: any
 ): T[] {
   let target = 0;
   array.forEach(function (elem, i) {

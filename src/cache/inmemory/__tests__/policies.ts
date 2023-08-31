@@ -2,7 +2,14 @@ import gql from "graphql-tag";
 
 import { InMemoryCache } from "../inMemoryCache";
 import { ReactiveVar, makeVar } from "../reactiveVars";
-import { Reference, StoreObject, ApolloClient, NetworkStatus, TypedDocumentNode, DocumentNode } from "../../../core";
+import {
+  Reference,
+  StoreObject,
+  ApolloClient,
+  NetworkStatus,
+  TypedDocumentNode,
+  DocumentNode,
+} from "../../../core";
 import { MissingFieldError } from "../..";
 import { relayStylePagination, stringifyForDisplay } from "../../../utilities";
 import { FieldPolicy, StorageType } from "../policies";
@@ -36,22 +43,24 @@ describe("type policies", function () {
     title: "The Information",
     subtitle: "A History, a Theory, a Flood",
     author: {
-      name: "James Gleick"
+      name: "James Gleick",
     },
   };
 
   function checkAuthorName(cache: InMemoryCache) {
-    expect(cache.readQuery({
-      query: gql`
-        query {
-          book {
-            author {
-              name
+    expect(
+      cache.readQuery({
+        query: gql`
+          query {
+            book {
+              author {
+                name
+              }
             }
           }
-        }
-      `,
-    })).toEqual({
+        `,
+      })
+    ).toEqual({
       book: {
         __typename: "Book",
         author: {
@@ -89,7 +98,7 @@ describe("type policies", function () {
         isbn: "1400096235",
         title: "The Information",
         author: {
-          name: "James Gleick"
+          name: "James Gleick",
         },
       },
     });
@@ -117,14 +126,15 @@ describe("type policies", function () {
       ROOT_QUERY: {
         __typename: "Query",
         book: {
-          __ref: 'Book:{"title":"The Information","author":{"name":"James Gleick"}}',
+          __ref:
+            'Book:{"title":"The Information","author":{"name":"James Gleick"}}',
         },
       },
       'Book:{"title":"The Information","author":{"name":"James Gleick"}}': {
         __typename: "Book",
         title: "The Information",
         author: {
-          name: "James Gleick"
+          name: "James Gleick",
         },
       },
     });
@@ -171,7 +181,8 @@ describe("type policies", function () {
       ROOT_QUERY: {
         __typename: "Query",
         book: {
-          __ref: 'Book:{"title":"The Information","author":{"name":"James Gleick"}}',
+          __ref:
+            'Book:{"title":"The Information","author":{"name":"James Gleick"}}',
         },
       },
       'Book:{"title":"The Information","author":{"name":"James Gleick"}}': {
@@ -181,7 +192,7 @@ describe("type policies", function () {
         // the true names of their fields (according to the schema), despite the
         // writer:author and alias:name aliases.
         author: {
-          name: "James Gleick"
+          name: "James Gleick",
         },
       },
     });
@@ -209,14 +220,15 @@ describe("type policies", function () {
       ROOT_QUERY: {
         __typename: "Query",
         book: {
-          __ref: 'Book:{"author":{"name":"James Gleick"},"title":"The Information"}',
+          __ref:
+            'Book:{"author":{"name":"James Gleick"},"title":"The Information"}',
         },
       },
       'Book:{"author":{"name":"James Gleick"},"title":"The Information"}': {
         __typename: "Book",
         title: "The Information",
         author: {
-          name: "James Gleick"
+          name: "James Gleick",
         },
       },
     });
@@ -288,30 +300,33 @@ describe("type policies", function () {
       // The order of the author object's __typename, firstName, and lastName
       // fields has been determined by our keyFields configuration and stable
       // stringification.
-      'Book:{"title":"Brainscapes","author":{"__typename":"Person","firstName":"Rebecca","lastName":"Schwarzlose"}}': {
-        __typename: "Book",
-        title: "Brainscapes",
-        author: {
-          __typename: "Person",
-          firstName: "Rebecca",
-          lastName: "Schwarzlose",
+      'Book:{"title":"Brainscapes","author":{"__typename":"Person","firstName":"Rebecca","lastName":"Schwarzlose"}}':
+        {
+          __typename: "Book",
+          title: "Brainscapes",
+          author: {
+            __typename: "Person",
+            firstName: "Rebecca",
+            lastName: "Schwarzlose",
+          },
         },
-      },
       // Again, __typename, firstName, and then lastName, despite the different
       // order of keys in the data we wrote.
-      'Book:{"title":"The Science of Can and Can\'t","author":{"__typename":"Person","firstName":"Chiarra","lastName":"Marletto"}}': {
-        __typename: "Book",
-        title: "The Science of Can and Can't",
-        author: {
-          __typename: "Person",
-          firstName: "Chiarra",
-          lastName: "Marletto",
+      'Book:{"title":"The Science of Can and Can\'t","author":{"__typename":"Person","firstName":"Chiarra","lastName":"Marletto"}}':
+        {
+          __typename: "Book",
+          title: "The Science of Can and Can't",
+          author: {
+            __typename: "Person",
+            firstName: "Chiarra",
+            lastName: "Marletto",
+          },
         },
-      },
       ROOT_QUERY: {
         __typename: "Query",
         book: {
-          __ref: 'Book:{"title":"The Science of Can and Can\'t","author":{"__typename":"Person","firstName":"Chiarra","lastName":"Marletto"}}',
+          __ref:
+            'Book:{"title":"The Science of Can and Can\'t","author":{"__typename":"Person","firstName":"Chiarra","lastName":"Marletto"}}',
         },
       },
     });
@@ -350,7 +365,7 @@ describe("type policies", function () {
         isbn: "1400096235",
         title: "The Information",
         author: {
-          name: "James Gleick"
+          name: "James Gleick",
         },
       },
     });
@@ -399,7 +414,7 @@ describe("type policies", function () {
         ISBN: "1400096235",
         title: "The Information",
         author: {
-          name: "James Gleick"
+          name: "James Gleick",
         },
       },
     });
@@ -446,7 +461,7 @@ describe("type policies", function () {
       `Missing field 'year' while extracting keyFields from ${stringifyForDisplay(
         theInformationBookData,
         2
-      )}`,
+      )}`
     );
   });
 
@@ -471,10 +486,12 @@ describe("type policies", function () {
       },
     });
 
-    expect(cache.identify({
-      __typename: "Movie",
-      id: "3993d4118143",
-    })).toBe("MotionPicture::3993d4118143");
+    expect(
+      cache.identify({
+        __typename: "Movie",
+        id: "3993d4118143",
+      })
+    ).toBe("MotionPicture::3993d4118143");
   });
 
   it("does not remove previous typePolicies", function () {
@@ -482,8 +499,8 @@ describe("type policies", function () {
       typePolicies: {
         Query: {
           fields: {
-            foo: () => 'foo'
-          }
+            foo: () => "foo",
+          },
         },
       },
     });
@@ -491,13 +508,29 @@ describe("type policies", function () {
     cache.policies.addTypePolicies({
       Query: {
         fields: {
-          bar: () => 'bar'
-        }
+          bar: () => "bar",
+        },
       },
     });
 
-    expect(cache.readQuery({ query: gql` { foo } ` })).toEqual({foo: "foo"});
-    expect(cache.readQuery({ query: gql` { bar } ` })).toEqual({bar: "bar"});
+    expect(
+      cache.readQuery({
+        query: gql`
+          {
+            foo
+          }
+        `,
+      })
+    ).toEqual({ foo: "foo" });
+    expect(
+      cache.readQuery({
+        query: gql`
+          {
+            bar
+          }
+        `,
+      })
+    ).toEqual({ bar: "bar" });
   });
 
   it("support inheritance", function () {
@@ -583,7 +616,7 @@ describe("type policies", function () {
 
     const result1 = cache.readQuery({ query })!;
     expect(result1).toEqual({
-      reptiles: reptiles.map(reptile => ({
+      reptiles: reptiles.map((reptile) => ({
         ...reptile,
         scientificName: reptile.scientificName.toLowerCase(),
       })),
@@ -594,10 +627,12 @@ describe("type policies", function () {
       tagId: "CM420",
     });
 
-    expect(cache.evict({
-      id: cmId,
-      fieldName: "venomous",
-    })).toBe(true);
+    expect(
+      cache.evict({
+        id: cmId,
+        fieldName: "venomous",
+      })
+    ).toBe(true);
 
     const result2 = cache.readQuery({ query })!;
 
@@ -622,10 +657,12 @@ describe("type policies", function () {
       Viper: ["DeathAdder"],
     });
 
-    expect(cache.identify({
-      __typename: "DeathAdder",
-      tagId: "LethalAbacus666",
-    })).toBe('DeathAdder:{"tagId":"LethalAbacus666"}');
+    expect(
+      cache.identify({
+        __typename: "DeathAdder",
+        tagId: "LethalAbacus666",
+      })
+    ).toBe('DeathAdder:{"tagId":"LethalAbacus666"}');
   });
 
   it("typePolicies can be inherited from supertypes with fuzzy possibleTypes", () => {
@@ -657,7 +694,7 @@ describe("type policies", function () {
       __typename: "CoworkerEntity" | "ManagerEntity";
       uid: string;
       name: string;
-    }
+    };
 
     const query: TypedDocumentNode<{
       coworkers: Coworker[];
@@ -869,8 +906,8 @@ describe("type policies", function () {
             isbn
             title
             author(
-              firstName: "Douglas",
-              middleName: "Richard",
+              firstName: "Douglas"
+              middleName: "Richard"
               lastName: "Hofstadter"
             ) {
               name
@@ -1009,12 +1046,24 @@ describe("type policies", function () {
       const query = gql`
         query {
           types(from: "A", to: "F") {
-            ... on TypeA { a }
-            ... on TypeB { b(x: 1, y: 2, z: 3) }
-            ... on TypeC { c(see: "si") }
-            ... on TypeD { d }
-            ... on TypeE { e(eee: "ee") }
-            ... on TypeF { f(g: "h") }
+            ... on TypeA {
+              a
+            }
+            ... on TypeB {
+              b(x: 1, y: 2, z: 3)
+            }
+            ... on TypeC {
+              c(see: "si")
+            }
+            ... on TypeD {
+              d
+            }
+            ... on TypeE {
+              e(eee: "ee")
+            }
+            ... on TypeF {
+              f(g: "h")
+            }
           }
         }
       `;
@@ -1022,24 +1071,31 @@ describe("type policies", function () {
       cache.writeQuery({
         query,
         data: {
-          types: [{
-            __typename: "TypeA",
-          }, {
-            __typename: "TypeB",
-            b: "x1",
-          }, {
-            __typename: "TypeC",
-            c: "naive",
-          }, {
-            __typename: "TypeD",
-            d: "quiet",
-          }, {
-            __typename: "TypeE",
-            e: "asterisk",
-          }, {
-            __typename: "TypeF",
-            f: "effigy",
-          }],
+          types: [
+            {
+              __typename: "TypeA",
+            },
+            {
+              __typename: "TypeB",
+              b: "x1",
+            },
+            {
+              __typename: "TypeC",
+              c: "naive",
+            },
+            {
+              __typename: "TypeD",
+              d: "quiet",
+            },
+            {
+              __typename: "TypeE",
+              e: "asterisk",
+            },
+            {
+              __typename: "TypeF",
+              f: "effigy",
+            },
+          ],
         },
       });
 
@@ -1080,22 +1136,27 @@ describe("type policies", function () {
           {
             __typename: "TypeA",
             a: "a",
-          }, {
+          },
+          {
             __typename: "TypeB",
             b: "b",
-          }, {
+          },
+          {
             __typename: "TypeC",
             c: "evian",
-          }, {
+          },
+          {
             __typename: "TypeD",
             d: "quiet",
-          }, {
+          },
+          {
             __typename: "TypeE",
             e: "asterisk",
-          }, {
+          },
+          {
             __typename: "TypeF",
             f: "effigy",
-          }
+          },
         ],
       });
     });
@@ -1107,7 +1168,7 @@ describe("type policies", function () {
             keyFields: ["name"],
             fields: {
               writings: {
-                keyArgs: ["a", "b", "type"]
+                keyArgs: ["a", "b", "type"],
               },
             },
           },
@@ -1118,18 +1179,21 @@ describe("type policies", function () {
         author: {
           __typename: "Author",
           name: "Nadia Eghbal",
-          writings: [{
-            __typename: "Book",
-            isbn: "0578675862",
-            title: "Working in Public: The Making and Maintenance of " +
-              "Open Source Software",
-          }],
+          writings: [
+            {
+              __typename: "Book",
+              isbn: "0578675862",
+              title:
+                "Working in Public: The Making and Maintenance of " +
+                "Open Source Software",
+            },
+          ],
         },
       };
 
       function check<TData extends typeof data, TVars>(
         query: DocumentNode | TypedDocumentNode<TData, TVars>,
-        variables?: TVars,
+        variables?: TVars
       ) {
         cache.writeQuery({ query, variables, data });
         expect(cache.readQuery({ query, variables })).toEqual(data);
@@ -1225,19 +1289,22 @@ describe("type policies", function () {
       `);
       expect(cache.extract()).toMatchSnapshot();
 
-      check(gql`
-        query AuthorWritings ($type: String) {
-          author {
-            name
-            writings(b: 4, type: $type, unrelated: "oyez") {
-              ... on Book {
-                title
-                isbn
+      check(
+        gql`
+          query AuthorWritings($type: String) {
+            author {
+              name
+              writings(b: 4, type: $type, unrelated: "oyez") {
+                ... on Book {
+                  title
+                  isbn
+                }
               }
             }
           }
-        }
-      `, { type: void 0 as any });
+        `,
+        { type: void 0 as any }
+      );
       expect(cache.extract()).toMatchSnapshot();
 
       check(gql`
@@ -1270,7 +1337,7 @@ describe("type policies", function () {
             return value;
           },
         },
-      })
+      });
 
       expect(storeFieldNames.sort()).toEqual([
         "writings",
@@ -1325,10 +1392,14 @@ describe("type policies", function () {
           thread {
             tid
             offsetComments: comments(offset: 0, limit: 2) {
-              author { name }
+              author {
+                name
+              }
             }
             beforeIdComments: comments(beforeId: "asdf", limit: 2) {
-              author { name }
+              author {
+                name
+              }
             }
           }
         }
@@ -1340,20 +1411,26 @@ describe("type policies", function () {
           thread: {
             __typename: "Thread",
             tid: "12345",
-            offsetComments: [{
-              __typename: "Comment",
-              author: { name: "Alice" },
-            }, {
-              __typename: "Comment",
-              author: { name: "Bobby" },
-            }],
-            beforeIdComments: [{
-              __typename: "Comment",
-              author: { name: "Calvin" },
-            }, {
-              __typename: "Comment",
-              author: { name: "Hobbes" },
-            }],
+            offsetComments: [
+              {
+                __typename: "Comment",
+                author: { name: "Alice" },
+              },
+              {
+                __typename: "Comment",
+                author: { name: "Bobby" },
+              },
+            ],
+            beforeIdComments: [
+              {
+                __typename: "Comment",
+                author: { name: "Calvin" },
+              },
+              {
+                __typename: "Comment",
+                author: { name: "Hobbes" },
+              },
+            ],
           },
         },
         variables: {
@@ -1409,114 +1486,114 @@ describe("type policies", function () {
 
     // Use several different directives to prove we're not hard-coding support
     // for the @connection directive.
-    ["connection",
-     "directive",
-     "misdirective",
-    ].forEach(directiveName => it(`can refer to directive @${
-      directiveName
-    } in field key shorthand array`, function () {
-      const cache = new InMemoryCache({
-        typePolicies: {
-          Query: {
-            fields: {
-              feed: {
-                keyArgs: ["@" + directiveName, ["key"], "arg"],
+    ["connection", "directive", "misdirective"].forEach((directiveName) =>
+      it(`can refer to directive @${directiveName} in field key shorthand array`, function () {
+        const cache = new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                feed: {
+                  keyArgs: ["@" + directiveName, ["key"], "arg"],
+                },
               },
             },
           },
-        },
-      });
+        });
 
-      const helloTokens = [
-        { __typename: "Token", text: "Hello" },
-        { __typename: "Token", text: "World" },
-        { __typename: "Token", text: "!" },
-      ];
+        const helloTokens = [
+          { __typename: "Token", text: "Hello" },
+          { __typename: "Token", text: "World" },
+          { __typename: "Token", text: "!" },
+        ];
 
-      cache.writeQuery({
-        query: gql`
+        cache.writeQuery({
+          query: gql`
           query FeedQuery($num: Int) {
             feed(arg: $num) @${directiveName}(key: "asdf", ignored: "boo") {
               text
             }
           }
         `,
-        variables: {
-          num: 1234,
-        },
-        data: {
-          feed: helloTokens,
-        },
-      });
+          variables: {
+            num: 1234,
+          },
+          data: {
+            feed: helloTokens,
+          },
+        });
 
-      expect(cache.extract()).toEqual({
-        ROOT_QUERY: {
-          "__typename": "Query",
-          [`feed:{"@${directiveName}":{"key":"asdf"},"arg":1234}`]: helloTokens,
-        },
-      });
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            [`feed:{"@${directiveName}":{"key":"asdf"},"arg":1234}`]:
+              helloTokens,
+          },
+        });
 
-      const farewellTokens = [
-        { __typename: "Token", text: "farewell" },
-        { __typename: "Token", text: "cruel" },
-        { __typename: "Token", text: "world" },
-      ];
+        const farewellTokens = [
+          { __typename: "Token", text: "farewell" },
+          { __typename: "Token", text: "cruel" },
+          { __typename: "Token", text: "world" },
+        ];
 
-      cache.writeQuery({
-        query: gql`
-          query FeedQuery($num: Int) {
-            feed(arg: $num) {
-              text
+        cache.writeQuery({
+          query: gql`
+            query FeedQuery($num: Int) {
+              feed(arg: $num) {
+                text
+              }
             }
-          }
-        `,
-        variables: {
-          num: 2345,
-        },
-        data: {
-          feed: farewellTokens,
-        },
-      });
+          `,
+          variables: {
+            num: 2345,
+          },
+          data: {
+            feed: farewellTokens,
+          },
+        });
 
-      expect(cache.extract()).toEqual({
-        ROOT_QUERY: {
-          "__typename": "Query",
-          [`feed:{"@${directiveName}":{"key":"asdf"},"arg":1234}`]: helloTokens,
-          'feed:{"arg":2345}': farewellTokens,
-        },
-      });
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            [`feed:{"@${directiveName}":{"key":"asdf"},"arg":1234}`]:
+              helloTokens,
+            'feed:{"arg":2345}': farewellTokens,
+          },
+        });
 
-      const directivesTokens = [
-        { __typename: "Token", text: "directives" },
-        { __typename: "Token", text: "consuming" },
-        { __typename: "Token", text: "variables" },
-      ];
+        const directivesTokens = [
+          { __typename: "Token", text: "directives" },
+          { __typename: "Token", text: "consuming" },
+          { __typename: "Token", text: "variables" },
+        ];
 
-      cache.writeQuery({
-        query: gql`
+        cache.writeQuery({
+          query: gql`
           query FeedQuery($num: Int) {
             feed @${directiveName}(key: $num, ignored: "boo") {
               text
             }
           }
         `,
-        variables: {
-          num: 3456,
-        },
-        data: {
-          feed: directivesTokens,
-        },
-      });
+          variables: {
+            num: 3456,
+          },
+          data: {
+            feed: directivesTokens,
+          },
+        });
 
-      expect(cache.extract()).toEqual({
-        ROOT_QUERY: {
-          "__typename": "Query",
-          [`feed:{"@${directiveName}":{"key":"asdf"},"arg":1234}`]: helloTokens,
-          'feed:{"arg":2345}': farewellTokens,
-          [`feed:{"@${directiveName}":{"key":3456}}`]: directivesTokens,
-        },
-      });
-    }));
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            [`feed:{"@${directiveName}":{"key":"asdf"},"arg":1234}`]:
+              helloTokens,
+            'feed:{"arg":2345}': farewellTokens,
+            [`feed:{"@${directiveName}":{"key":3456}}`]: directivesTokens,
+          },
+        });
+      })
+    );
 
     it("can refer to variables in field key shorthand array", function () {
       const cache = new InMemoryCache({
@@ -1552,8 +1629,9 @@ describe("type policies", function () {
 
       expect(cache.extract()).toEqual({
         ROOT_QUERY: {
-          "__typename": "Query",
-          'defaultToNumVariable:{"input":1234,"$num":1234}': "forced with input and $num",
+          __typename: "Query",
+          'defaultToNumVariable:{"input":1234,"$num":1234}':
+            "forced with input and $num",
         },
       });
 
@@ -1575,45 +1653,54 @@ describe("type policies", function () {
 
       expect(cache.extract()).toEqual({
         ROOT_QUERY: {
-          "__typename": "Query",
-          'defaultToNumVariable:{"input":1234,"$num":1234}': "forced with input and $num",
+          __typename: "Query",
+          'defaultToNumVariable:{"input":1234,"$num":1234}':
+            "forced with input and $num",
           'defaultToNumVariable:{"$num":2345}': "forced with only $num",
         },
       });
 
-      expect(cache.readQuery({
-        query: queryWithInputArg,
-        variables: {
-          num: 1234,
-        },
-      })).toEqual({
+      expect(
+        cache.readQuery({
+          query: queryWithInputArg,
+          variables: {
+            num: 1234,
+          },
+        })
+      ).toEqual({
         defaultToNumVariable: "forced with input and $num",
       });
 
-      expect(cache.readQuery({
-        query: queryWithNoArgs,
-        variables: {
-          num: 2345,
-        },
-      })).toEqual({
+      expect(
+        cache.readQuery({
+          query: queryWithNoArgs,
+          variables: {
+            num: 2345,
+          },
+        })
+      ).toEqual({
         defaultToNumVariable: "forced with only $num",
       });
 
-      expect(cache.readQuery({
-        query: queryWithInputArg,
-        variables: {
-          num: 3456,
-        },
-      })).toEqual({
+      expect(
+        cache.readQuery({
+          query: queryWithInputArg,
+          variables: {
+            num: 3456,
+          },
+        })
+      ).toEqual({
         defaultToNumVariable: 1234,
       });
 
-      expect(cache.readQuery({
-        query: queryWithNoArgs,
-        variables: {
-          num: 4567,
-        },
-      })).toEqual({
+      expect(
+        cache.readQuery({
+          query: queryWithNoArgs,
+          variables: {
+            num: 4567,
+          },
+        })
+      ).toEqual({
         defaultToNumVariable: 4567,
       });
     });
@@ -1628,7 +1715,7 @@ describe("type policies", function () {
               result(existing, { args, storage }) {
                 storageSet.add(storage);
                 if (storage.result) return storage.result;
-                return storage.result = compute();
+                return (storage.result = compute());
               },
             },
           },
@@ -1649,23 +1736,23 @@ describe("type policies", function () {
           }
         `,
         data: {
-          tasks: [{
-            __typename: "Task",
-            id: 1,
-          }, {
-            __typename: "Task",
-            id: 2,
-          }],
+          tasks: [
+            {
+              __typename: "Task",
+              id: 1,
+            },
+            {
+              __typename: "Task",
+              id: 2,
+            },
+          ],
         },
       });
 
       expect(cache.extract()).toEqual({
         ROOT_QUERY: {
           __typename: "Query",
-          tasks: [
-            { __ref: "Task:1" },
-            { __ref: "Task:2" },
-          ],
+          tasks: [{ __ref: "Task:1" }, { __ref: "Task:2" }],
         },
         "Task:1": {
           __typename: "Task",
@@ -1688,13 +1775,16 @@ describe("type policies", function () {
       });
 
       expect(result1).toEqual({
-        tasks: [{
-          __typename: "Task",
-          result: "expensive result 1",
-        }, {
-          __typename: "Task",
-          result: "expensive result 2",
-        }],
+        tasks: [
+          {
+            __typename: "Task",
+            result: "expensive result 1",
+          },
+          {
+            __typename: "Task",
+            result: "expensive result 2",
+          },
+        ],
       });
 
       const result2 = cache.readQuery({
@@ -1709,19 +1799,22 @@ describe("type policies", function () {
       });
 
       expect(result2).toEqual({
-        tasks: [{
-          __typename: "Task",
-          id: 1,
-          result: "expensive result 1",
-        }, {
-          __typename: "Task",
-          id: 2,
-          result: "expensive result 2",
-        }],
+        tasks: [
+          {
+            __typename: "Task",
+            id: 1,
+            result: "expensive result 1",
+          },
+          {
+            __typename: "Task",
+            id: 2,
+            result: "expensive result 2",
+          },
+        ],
       });
 
       // Clear the cached results.
-      storageSet.forEach(storage => {
+      storageSet.forEach((storage) => {
         delete storage.result;
       });
 
@@ -1737,13 +1830,16 @@ describe("type policies", function () {
       });
 
       expect(result3).toEqual({
-        tasks: [{
-          __typename: "Task",
-          result: "expensive result 3",
-        }, {
-          __typename: "Task",
-          result: "expensive result 4",
-        }],
+        tasks: [
+          {
+            __typename: "Task",
+            result: "expensive result 3",
+          },
+          {
+            __typename: "Task",
+            result: "expensive result 4",
+          },
+        ],
       });
     });
 
@@ -1804,25 +1900,29 @@ describe("type policies", function () {
         },
       };
 
-      expect(cache.readQuery({
-        query: gql`
-          query {
-            me {
-              fullName
+      expect(
+        cache.readQuery({
+          query: gql`
+            query {
+              me {
+                fullName
+              }
             }
-          }
-        `,
-      })).toEqual(expectedResult);
+          `,
+        })
+      ).toEqual(expectedResult);
 
-      expect(cache.readQuery({
-        query: gql`
-          query {
-            me {
-              fullName @client
+      expect(
+        cache.readQuery({
+          query: gql`
+            query {
+              me {
+                fullName @client
+              }
             }
-          }
-        `,
-      })).toEqual(expectedResult);
+          `,
+        })
+      ).toEqual(expectedResult);
 
       expect(cache.extract(true)).toEqual(expectedExtraction);
     });
@@ -1835,16 +1935,16 @@ describe("type policies", function () {
               isCanada: {
                 read(_, { readField }) {
                   return readField("name") === "CA";
-                }
+                },
               },
               name: {
                 read(_, { variables }) {
                   return variables?.code;
-                }
-              }
-            }
-          }
-        }
+                },
+              },
+            },
+          },
+        },
       });
 
       cache.writeQuery({
@@ -1869,7 +1969,7 @@ describe("type policies", function () {
       const expectedExtraction = {
         ROOT_QUERY: {
           __typename: "Query",
-          "country({\"code\":\"CA\"})": {
+          'country({"code":"CA"})': {
             __typename: "Country",
             name: "CA",
           },
@@ -1886,19 +1986,21 @@ describe("type policies", function () {
         },
       };
 
-      expect(cache.readQuery({
-        query: gql`
-          query Countries($code: ID!) {
-            country(code: $code) {
-              name
-              isCanada @client
+      expect(
+        cache.readQuery({
+          query: gql`
+            query Countries($code: ID!) {
+              country(code: $code) {
+                name
+                isCanada @client
+              }
             }
-          }
-        `,
-        variables: {
-          code: "CA",
-        },
-      })).toEqual(expectedResult);
+          `,
+          variables: {
+            code: "CA",
+          },
+        })
+      ).toEqual(expectedResult);
     });
 
     it("read and merge can cooperate through options.storage", function () {
@@ -1949,19 +2051,23 @@ describe("type policies", function () {
       cache.writeQuery({
         query,
         data: {
-          jobs: [{
-            __typename: "Job",
-            name: "Job #1",
-            // intentionally omitting the result field
-          }, {
-            __typename: "Job",
-            name: "Job #2",
-            // intentionally omitting the result field
-          }, {
-            __typename: "Job",
-            name: "Job #3",
-            // intentionally omitting the result field
-          }],
+          jobs: [
+            {
+              __typename: "Job",
+              name: "Job #1",
+              // intentionally omitting the result field
+            },
+            {
+              __typename: "Job",
+              name: "Job #2",
+              // intentionally omitting the result field
+            },
+            {
+              __typename: "Job",
+              name: "Job #3",
+              // intentionally omitting the result field
+            },
+          ],
         },
       });
 
@@ -1990,22 +2096,28 @@ describe("type policies", function () {
 
       expect(cache.extract()).toEqual(snapshot1);
 
-      expect(cache.diff({
-        query,
-        optimistic: false,
-        returnPartialData: true,
-      })).toEqual({
+      expect(
+        cache.diff({
+          query,
+          optimistic: false,
+          returnPartialData: true,
+        })
+      ).toEqual({
         result: {
-          jobs: [{
-            __typename: "Job",
-            name: "Job #1",
-          }, {
-            __typename: "Job",
-            name: "Job #2",
-          }, {
-            __typename: "Job",
-            name: "Job #3",
-          }],
+          jobs: [
+            {
+              __typename: "Job",
+              name: "Job #1",
+            },
+            {
+              __typename: "Job",
+              name: "Job #2",
+            },
+            {
+              __typename: "Job",
+              name: "Job #3",
+            },
+          ],
         },
         complete: false,
         missing: [
@@ -2014,18 +2126,21 @@ describe("type policies", function () {
             {
               jobs: {
                 0: {
-                  result: "Can't find field 'result' on Job:{\"name\":\"Job #1\"} object",
+                  result:
+                    'Can\'t find field \'result\' on Job:{"name":"Job #1"} object',
                 },
                 1: {
-                  result: "Can't find field 'result' on Job:{\"name\":\"Job #2\"} object",
+                  result:
+                    'Can\'t find field \'result\' on Job:{"name":"Job #2"} object',
                 },
                 2: {
-                  result: "Can't find field 'result' on Job:{\"name\":\"Job #3\"} object",
+                  result:
+                    'Can\'t find field \'result\' on Job:{"name":"Job #3"} object',
                 },
               },
             },
             expect.anything(), // query
-            expect.anything(), // variables
+            expect.anything() // variables
           ),
         ],
       });
@@ -2056,29 +2171,33 @@ describe("type policies", function () {
       expect(cache.extract()).toEqual({
         ...snapshot1,
         __META: {
-          extraRootIds: [
-            'Job:{"name":"Job #2"}',
-          ],
+          extraRootIds: ['Job:{"name":"Job #2"}'],
         },
       });
 
-      expect(cache.diff({
-        query,
-        optimistic: false,
-        returnPartialData: true,
-      })).toEqual({
+      expect(
+        cache.diff({
+          query,
+          optimistic: false,
+          returnPartialData: true,
+        })
+      ).toEqual({
         result: {
-          jobs: [{
-            __typename: "Job",
-            name: "Job #1",
-          }, {
-            __typename: "Job",
-            name: "Job #2",
-            result: "result for job 2",
-          }, {
-            __typename: "Job",
-            name: "Job #3",
-          }],
+          jobs: [
+            {
+              __typename: "Job",
+              name: "Job #1",
+            },
+            {
+              __typename: "Job",
+              name: "Job #2",
+              result: "result for job 2",
+            },
+            {
+              __typename: "Job",
+              name: "Job #3",
+            },
+          ],
         },
         complete: false,
         missing: [
@@ -2087,15 +2206,17 @@ describe("type policies", function () {
             {
               jobs: {
                 0: {
-                  result: "Can't find field 'result' on Job:{\"name\":\"Job #1\"} object",
+                  result:
+                    'Can\'t find field \'result\' on Job:{"name":"Job #1"} object',
                 },
                 2: {
-                  result: "Can't find field 'result' on Job:{\"name\":\"Job #3\"} object",
+                  result:
+                    'Can\'t find field \'result\' on Job:{"name":"Job #3"} object',
                 },
               },
             },
             expect.anything(), // query
-            expect.anything(), // variables
+            expect.anything() // variables
           ),
         ],
       });
@@ -2103,11 +2224,13 @@ describe("type policies", function () {
       cache.writeQuery({
         query,
         data: {
-          jobs: [{
-            __typename: "Job",
-            name: "Job #4",
-            result: "result for job 4",
-          }],
+          jobs: [
+            {
+              __typename: "Job",
+              name: "Job #4",
+              result: "result for job 4",
+            },
+          ],
         },
       });
 
@@ -2129,33 +2252,38 @@ describe("type policies", function () {
       expect(cache.extract()).toEqual({
         ...snapshot2,
         __META: {
-          extraRootIds: [
-            'Job:{"name":"Job #2"}',
-          ],
+          extraRootIds: ['Job:{"name":"Job #2"}'],
         },
       });
 
-      expect(cache.diff({
-        query,
-        optimistic: false,
-        returnPartialData: true,
-      })).toEqual({
+      expect(
+        cache.diff({
+          query,
+          optimistic: false,
+          returnPartialData: true,
+        })
+      ).toEqual({
         result: {
-          jobs: [{
-            __typename: "Job",
-            name: "Job #1",
-          }, {
-            __typename: "Job",
-            name: "Job #2",
-            result: "result for job 2",
-          }, {
-            __typename: "Job",
-            name: "Job #3",
-          }, {
-            __typename: "Job",
-            name: "Job #4",
-            result: "result for job 4",
-          }],
+          jobs: [
+            {
+              __typename: "Job",
+              name: "Job #1",
+            },
+            {
+              __typename: "Job",
+              name: "Job #2",
+              result: "result for job 2",
+            },
+            {
+              __typename: "Job",
+              name: "Job #3",
+            },
+            {
+              __typename: "Job",
+              name: "Job #4",
+              result: "result for job 4",
+            },
+          ],
         },
         complete: false,
         missing: [
@@ -2164,15 +2292,17 @@ describe("type policies", function () {
             {
               jobs: {
                 0: {
-                  result: "Can't find field 'result' on Job:{\"name\":\"Job #1\"} object",
+                  result:
+                    'Can\'t find field \'result\' on Job:{"name":"Job #1"} object',
                 },
                 2: {
-                  result: "Can't find field 'result' on Job:{\"name\":\"Job #3\"} object",
+                  result:
+                    'Can\'t find field \'result\' on Job:{"name":"Job #3"} object',
                 },
               },
             },
             expect.anything(), // query
-            expect.anything(), // variables
+            expect.anything() // variables
           ),
         ],
       });
@@ -2180,51 +2310,63 @@ describe("type policies", function () {
       setResult(1);
       setResult(3);
 
-      expect(cache.diff({
-        query,
-        optimistic: false,
-        returnPartialData: true,
-      })).toEqual({
+      expect(
+        cache.diff({
+          query,
+          optimistic: false,
+          returnPartialData: true,
+        })
+      ).toEqual({
         result: {
-          jobs: [{
-            __typename: "Job",
-            name: "Job #1",
-            result: "result for job 1",
-          }, {
-            __typename: "Job",
-            name: "Job #2",
-            result: "result for job 2",
-          }, {
-            __typename: "Job",
-            name: "Job #3",
-            result: "result for job 3",
-          }, {
-            __typename: "Job",
-            name: "Job #4",
-            result: "result for job 4",
-          }],
+          jobs: [
+            {
+              __typename: "Job",
+              name: "Job #1",
+              result: "result for job 1",
+            },
+            {
+              __typename: "Job",
+              name: "Job #2",
+              result: "result for job 2",
+            },
+            {
+              __typename: "Job",
+              name: "Job #3",
+              result: "result for job 3",
+            },
+            {
+              __typename: "Job",
+              name: "Job #4",
+              result: "result for job 4",
+            },
+          ],
         },
         complete: true,
       });
 
       expect(cache.readQuery({ query })).toEqual({
-        jobs: [{
-          __typename: "Job",
-          name: "Job #1",
-          result: "result for job 1",
-        }, {
-          __typename: "Job",
-          name: "Job #2",
-          result: "result for job 2",
-        }, {
-          __typename: "Job",
-          name: "Job #3",
-          result: "result for job 3",
-        }, {
-          __typename: "Job",
-          name: "Job #4",
-          result: "result for job 4",
-        }],
+        jobs: [
+          {
+            __typename: "Job",
+            name: "Job #1",
+            result: "result for job 1",
+          },
+          {
+            __typename: "Job",
+            name: "Job #2",
+            result: "result for job 2",
+          },
+          {
+            __typename: "Job",
+            name: "Job #3",
+            result: "result for job 3",
+          },
+          {
+            __typename: "Job",
+            name: "Job #4",
+            result: "result for job 4",
+          },
+        ],
       });
     });
 
@@ -2242,17 +2384,17 @@ describe("type policies", function () {
       function makeFieldPolicy(): FieldPolicy<number> {
         return {
           read(existing = 0, { fieldName, storage }) {
-            storage.readCount = (storage.readCount|0) + 1;
+            storage.readCount = (storage.readCount | 0) + 1;
             recordStorageOnce(fieldName, storage);
             return existing;
           },
           merge(existing = 0, incoming, { fieldName, storage }) {
-            storage.mergeCount = (storage.mergeCount|0) + 1;
+            storage.mergeCount = (storage.mergeCount | 0) + 1;
             recordStorageOnce(fieldName, storage);
             return existing + incoming;
           },
         };
-      };
+      }
 
       const cache = new InMemoryCache({
         typePolicies: {
@@ -2299,9 +2441,16 @@ describe("type policies", function () {
         mergeCount: 1,
       });
 
-      expect(cache.readQuery({
-        query: gql`query { mergeRead mergeReadModify }`,
-      })).toEqual({
+      expect(
+        cache.readQuery({
+          query: gql`
+            query {
+              mergeRead
+              mergeReadModify
+            }
+          `,
+        })
+      ).toEqual({
         mergeRead: 1,
         mergeReadModify: 100,
       });
@@ -2320,20 +2469,22 @@ describe("type policies", function () {
         readCount: 1,
       });
 
-      expect(cache.modify({
-        fields: {
-          mergeModify(value, { fieldName, storage }) {
-            storage.modifyCount = (storage.modifyCount|0) + 1;
-            recordStorageOnce(fieldName, storage);
-            return value + 1;
+      expect(
+        cache.modify({
+          fields: {
+            mergeModify(value, { fieldName, storage }) {
+              storage.modifyCount = (storage.modifyCount | 0) + 1;
+              recordStorageOnce(fieldName, storage);
+              return value + 1;
+            },
+            mergeReadModify(value, { fieldName, storage }) {
+              storage.modifyCount = (storage.modifyCount | 0) + 1;
+              recordStorageOnce(fieldName, storage);
+              return value + 1;
+            },
           },
-          mergeReadModify(value, { fieldName, storage }) {
-            storage.modifyCount = (storage.modifyCount|0) + 1;
-            recordStorageOnce(fieldName, storage);
-            return value + 1;
-          },
-        },
-      })).toBe(true);
+        })
+      ).toBe(true);
 
       expect(cache.extract()).toMatchSnapshot();
 
@@ -2385,14 +2536,13 @@ describe("type policies", function () {
           Query: {
             fields: {
               books: {
-                merge(existing: any[] = [], incoming: any[], {
-                  readField,
-                }) {
+                merge(existing: any[] = [], incoming: any[], { readField }) {
                   if (existing) {
                     const merged = existing.slice(0);
-                    const existingIsbnSet =
-                      new Set(merged.map(book => readField("isbn", book)));
-                    incoming.forEach(book => {
+                    const existingIsbnSet = new Set(
+                      merged.map((book) => readField("isbn", book))
+                    );
+                    incoming.forEach((book) => {
                       const isbn = readField("isbn", book);
                       if (!existingIsbnSet.has(isbn)) {
                         existingIsbnSet.add(isbn);
@@ -2474,9 +2624,7 @@ describe("type policies", function () {
       expect(cache.extract()).toEqual({
         ROOT_QUERY: {
           __typename: "Query",
-          books: [
-            { __ref: 'Book:{"isbn":"1593278284"}' },
-          ],
+          books: [{ __ref: 'Book:{"isbn":"1593278284"}' }],
         },
         'Book:{"isbn":"1593278284"}': {
           __typename: "Book",
@@ -2485,10 +2633,7 @@ describe("type policies", function () {
         },
       });
 
-      addBooks(
-        programmingRustBook,
-        officialRustBook,
-      );
+      addBooks(programmingRustBook, officialRustBook);
 
       expect(cache.extract()).toEqual({
         ROOT_QUERY: {
@@ -2506,7 +2651,7 @@ describe("type policies", function () {
         wasmWithRustBook,
         wasmWithRustBook,
         programmingRustBook,
-        wasmWithRustBook,
+        wasmWithRustBook
       );
 
       expect(cache.extract()).toEqual({
@@ -2527,7 +2672,7 @@ describe("type policies", function () {
         programmingRustBook,
         officialRustBook,
         handsOnConcurrencyBook,
-        wasmWithRustBook,
+        wasmWithRustBook
       );
 
       expect(cache.extract()).toEqual({
@@ -2549,485 +2694,518 @@ describe("type policies", function () {
       expect(cache.readQuery({ query })).toEqual({
         // Note that these books have been sorted by title, thanks to the
         // custom read function we defined above.
-        "books": [
+        books: [
           {
-            "__typename": "Book",
-            "isbn": "1788399978",
-            "title": "Hands-On Concurrency with Rust",
+            __typename: "Book",
+            isbn: "1788399978",
+            title: "Hands-On Concurrency with Rust",
           },
           {
-            "__typename": "Book",
-            "isbn": "9781491927281",
-            "title": "Programming Rust: Fast, Safe Systems Development",
+            __typename: "Book",
+            isbn: "9781491927281",
+            title: "Programming Rust: Fast, Safe Systems Development",
           },
           {
-            "__typename": "Book",
-            "isbn": "1680506366",
-            "title": "Programming WebAssembly with Rust",
+            __typename: "Book",
+            isbn: "1680506366",
+            title: "Programming WebAssembly with Rust",
           },
           {
-            "__typename": "Book",
-            "isbn": "1593278284",
-            "title": "The Rust Programming Language",
+            __typename: "Book",
+            isbn: "1593278284",
+            title: "The Rust Programming Language",
           },
         ],
       });
     });
 
-    withErrorSpy(it, "readField helper function calls custom read functions", function () {
-      // Rather than writing ownTime data into the cache, we maintain it
-      // externally in this object:
-      const ownTimes: Record<string, ReactiveVar<number>> = {
-        "parent task": makeVar(2),
-        "child task 1": makeVar(3),
-        "child task 2": makeVar(4),
-        "grandchild task": makeVar(5),
-        "independent task": makeVar(11),
-      };
+    withErrorSpy(
+      it,
+      "readField helper function calls custom read functions",
+      function () {
+        // Rather than writing ownTime data into the cache, we maintain it
+        // externally in this object:
+        const ownTimes: Record<string, ReactiveVar<number>> = {
+          "parent task": makeVar(2),
+          "child task 1": makeVar(3),
+          "child task 2": makeVar(4),
+          "grandchild task": makeVar(5),
+          "independent task": makeVar(11),
+        };
 
-      const cache = new InMemoryCache({
-        typePolicies: {
-          Agenda: {
-            fields: {
-              taskCount(_, { readField }) {
-                return readField<Reference[]>("tasks")!.length;
-              },
-
-              tasks: {
-                // Thanks to this read function, the readField("tasks")
-                // call above will always return an array, so we don't
-                // have to guard against the possibility that the tasks
-                // data is undefined above.
-                read(existing = []) {
-                  return existing;
+        const cache = new InMemoryCache({
+          typePolicies: {
+            Agenda: {
+              fields: {
+                taskCount(_, { readField }) {
+                  return readField<Reference[]>("tasks")!.length;
                 },
 
-                merge(existing: Reference[], incoming: Reference[]) {
-                  const merged = existing ? existing.slice(0) : [];
-                  merged.push(...incoming);
-                  return merged;
+                tasks: {
+                  // Thanks to this read function, the readField("tasks")
+                  // call above will always return an array, so we don't
+                  // have to guard against the possibility that the tasks
+                  // data is undefined above.
+                  read(existing = []) {
+                    return existing;
+                  },
+
+                  merge(existing: Reference[], incoming: Reference[]) {
+                    const merged = existing ? existing.slice(0) : [];
+                    merged.push(...incoming);
+                    return merged;
+                  },
+                },
+              },
+            },
+
+            Task: {
+              fields: {
+                ownTime(_, { readField }) {
+                  const description = readField<string>("description");
+                  return ownTimes[description!]() || 0;
+                },
+
+                totalTime(_, { readField, toReference }) {
+                  function total(
+                    blockers: Readonly<Reference[]> = [],
+                    seen = new Set<string>()
+                  ) {
+                    let time = 0;
+                    blockers.forEach((blocker) => {
+                      if (!seen.has(blocker.__ref)) {
+                        seen.add(blocker.__ref);
+                        time += readField<number>("ownTime", blocker)!;
+                        time += total(
+                          readField<Reference[]>("blockers", blocker),
+                          seen
+                        );
+                      }
+                    });
+                    return time;
+                  }
+                  return total([
+                    toReference({
+                      __typename: "Task",
+                      id: readField("id"),
+                    }) as Reference,
+                  ]);
+                },
+
+                blockers: {
+                  merge(existing: Reference[] = [], incoming: Reference[]) {
+                    const seenIDs = new Set(existing.map((ref) => ref.__ref));
+                    const merged = existing.slice(0);
+                    incoming.forEach((ref) => {
+                      if (!seenIDs.has(ref.__ref)) {
+                        seenIDs.add(ref.__ref);
+                        merged.push(ref);
+                      }
+                    });
+                    return merged;
+                  },
                 },
               },
             },
           },
+        });
 
-          Task: {
-            fields: {
-              ownTime(_, { readField }) {
-                const description = readField<string>("description");
-                return ownTimes[description!]() || 0;
-              },
-
-              totalTime(_, { readField, toReference }) {
-                function total(
-                  blockers: Readonly<Reference[]> = [],
-                  seen = new Set<string>(),
-                ) {
-                  let time = 0;
-                  blockers.forEach(blocker => {
-                    if (!seen.has(blocker.__ref)) {
-                      seen.add(blocker.__ref);
-                      time += readField<number>("ownTime", blocker)!;
-                      time += total(
-                        readField<Reference[]>("blockers", blocker),
-                        seen,
-                      );
-                    }
-                  });
-                  return time;
-                }
-                return total([
-                  toReference({
-                    __typename: "Task",
-                    id: readField("id"),
-                  }) as Reference,
-                ]);
-              },
-
-              blockers: {
-                merge(existing: Reference[] = [], incoming: Reference[]) {
-                  const seenIDs = new Set(existing.map(ref => ref.__ref));
-                  const merged = existing.slice(0);
-                  incoming.forEach(ref => {
-                    if (!seenIDs.has(ref.__ref)) {
-                      seenIDs.add(ref.__ref);
-                      merged.push(ref);
-                    }
-                  });
-                  return merged;
-                },
-              },
-            },
-          },
-        },
-      });
-
-      cache.writeQuery({
-        query: gql`
-          query {
-            agenda {
-              id
-              tasks {
+        cache.writeQuery({
+          query: gql`
+            query {
+              agenda {
                 id
-                description
-                blockers {
+                tasks {
                   id
+                  description
+                  blockers {
+                    id
+                  }
                 }
               }
             }
-          }
-        `,
-        data: {
-          agenda: {
+          `,
+          data: {
+            agenda: {
+              __typename: "Agenda",
+              id: 1,
+              tasks: [
+                {
+                  __typename: "Task",
+                  id: 1,
+                  description: "parent task",
+                  blockers: [
+                    {
+                      __typename: "Task",
+                      id: 2,
+                    },
+                    {
+                      __typename: "Task",
+                      id: 3,
+                    },
+                  ],
+                },
+                {
+                  __typename: "Task",
+                  id: 2,
+                  description: "child task 1",
+                  blockers: [
+                    {
+                      __typename: "Task",
+                      id: 4,
+                    },
+                  ],
+                },
+                {
+                  __typename: "Task",
+                  id: 3,
+                  description: "child task 2",
+                  blockers: [
+                    {
+                      __typename: "Task",
+                      id: 4,
+                    },
+                  ],
+                },
+                {
+                  __typename: "Task",
+                  id: 4,
+                  description: "grandchild task",
+                },
+              ],
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            agenda: { __ref: "Agenda:1" },
+          },
+          "Agenda:1": {
             __typename: "Agenda",
             id: 1,
-            tasks: [{
-              __typename: "Task",
-              id: 1,
-              description: "parent task",
-              blockers: [{
-                __typename: "Task",
-                id: 2,
-              }, {
-                __typename: "Task",
-                id: 3,
-              }],
-            }, {
-              __typename: "Task",
-              id: 2,
-              description: "child task 1",
-              blockers: [{
-                __typename: "Task",
-                id: 4,
-              }],
-            }, {
-              __typename: "Task",
-              id: 3,
-              description: "child task 2",
-              blockers: [{
-                __typename: "Task",
-                id: 4,
-              }],
-            }, {
-              __typename: "Task",
-              id: 4,
-              description: "grandchild task",
-            }],
+            tasks: [
+              { __ref: "Task:1" },
+              { __ref: "Task:2" },
+              { __ref: "Task:3" },
+              { __ref: "Task:4" },
+            ],
           },
-        },
-      });
-
-      expect(cache.extract()).toEqual({
-        ROOT_QUERY: {
-          __typename: "Query",
-          agenda: { __ref: "Agenda:1" },
-        },
-        "Agenda:1": {
-          __typename: "Agenda",
-          id: 1,
-          tasks: [
-            { __ref: "Task:1" },
-            { __ref: "Task:2" },
-            { __ref: "Task:3" },
-            { __ref: "Task:4" },
-          ],
-        },
-        "Task:1": {
-          __typename: "Task",
-          blockers: [
-            { __ref: "Task:2" },
-            { __ref: "Task:3" },
-          ],
-          description: "parent task",
-          id: 1,
-        },
-        "Task:2": {
-          __typename: "Task",
-          blockers: [
-            { __ref: "Task:4" },
-          ],
-          description: "child task 1",
-          id: 2,
-        },
-        "Task:3": {
-          __typename: "Task",
-          blockers: [
-            { __ref: "Task:4" },
-          ],
-          description: "child task 2",
-          id: 3,
-        },
-        "Task:4": {
-          __typename: "Task",
-          description: "grandchild task",
-          id: 4,
-        },
-      });
-
-      const query = gql`
-        query {
-          agenda {
-            taskCount
-            tasks {
-              description
-              ownTime
-              totalTime
-            }
-          }
-        }
-      `;
-
-      function read(): { agenda: any } | null {
-        return cache.readQuery({ query });
-      }
-
-      const firstResult = read();
-
-      expect(firstResult).toEqual({
-        agenda: {
-          __typename: "Agenda",
-          taskCount: 4,
-          tasks: [{
+          "Task:1": {
             __typename: "Task",
+            blockers: [{ __ref: "Task:2" }, { __ref: "Task:3" }],
             description: "parent task",
-            ownTime: 2,
-            totalTime: 2 + 3 + 4 + 5,
-          }, {
+            id: 1,
+          },
+          "Task:2": {
             __typename: "Task",
+            blockers: [{ __ref: "Task:4" }],
             description: "child task 1",
-            ownTime: 3,
-            totalTime: 3 + 5,
-          }, {
+            id: 2,
+          },
+          "Task:3": {
             __typename: "Task",
+            blockers: [{ __ref: "Task:4" }],
             description: "child task 2",
-            ownTime: 4,
-            totalTime: 4 + 5,
-          }, {
+            id: 3,
+          },
+          "Task:4": {
             __typename: "Task",
             description: "grandchild task",
-            ownTime: 5,
-            totalTime: 5,
-          }],
-        },
-      });
+            id: 4,
+          },
+        });
 
-      expect(read()).toBe(firstResult);
-
-      ownTimes["child task 2"](6);
-
-      const secondResult = read();
-      expect(secondResult).not.toBe(firstResult);
-      expect(secondResult).toEqual({
-        agenda: {
-          __typename: "Agenda",
-          taskCount: 4,
-          tasks: [{
-            __typename: "Task",
-            description: "parent task",
-            ownTime: 2,
-            totalTime: 2 + 3 + 6 + 5,
-          }, {
-            __typename: "Task",
-            description: "child task 1",
-            ownTime: 3,
-            totalTime: 3 + 5,
-          }, {
-            __typename: "Task",
-            description: "child task 2",
-            ownTime: 6,
-            totalTime: 6 + 5,
-          }, {
-            __typename: "Task",
-            description: "grandchild task",
-            ownTime: 5,
-            totalTime: 5,
-          }],
-        },
-      });
-      expect(secondResult!.agenda.tasks[0]).not.toBe(firstResult!.agenda.tasks[0]);
-      expect(secondResult!.agenda.tasks[1]).toBe(firstResult!.agenda.tasks[1]);
-      expect(secondResult!.agenda.tasks[2]).not.toBe(firstResult!.agenda.tasks[2]);
-      expect(secondResult!.agenda.tasks[3]).toBe(firstResult!.agenda.tasks[3]);
-
-      ownTimes["grandchild task"](7);
-
-      const thirdResult = read();
-      expect(thirdResult).not.toBe(secondResult);
-      expect(thirdResult).toEqual({
-        agenda: {
-          __typename: "Agenda",
-          taskCount: 4,
-          tasks: [{
-            __typename: "Task",
-            description: "parent task",
-            ownTime: 2,
-            totalTime: 2 + 3 + 6 + 7,
-          }, {
-            __typename: "Task",
-            description: "child task 1",
-            ownTime: 3,
-            totalTime: 3 + 7,
-          }, {
-            __typename: "Task",
-            description: "child task 2",
-            ownTime: 6,
-            totalTime: 6 + 7,
-          }, {
-            __typename: "Task",
-            description: "grandchild task",
-            ownTime: 7,
-            totalTime: 7,
-          }],
-        },
-      });
-
-      cache.writeQuery({
-        query: gql`
+        const query = gql`
           query {
             agenda {
-              id
+              taskCount
               tasks {
-                id
                 description
+                ownTime
+                totalTime
               }
             }
           }
-        `,
-        data: {
+        `;
+
+        function read(): { agenda: any } | null {
+          return cache.readQuery({ query });
+        }
+
+        const firstResult = read();
+
+        expect(firstResult).toEqual({
           agenda: {
             __typename: "Agenda",
-            id: 1,
-            tasks: [{
-              __typename: "Task",
-              id: 5,
-              description: "independent task",
-            }],
+            taskCount: 4,
+            tasks: [
+              {
+                __typename: "Task",
+                description: "parent task",
+                ownTime: 2,
+                totalTime: 2 + 3 + 4 + 5,
+              },
+              {
+                __typename: "Task",
+                description: "child task 1",
+                ownTime: 3,
+                totalTime: 3 + 5,
+              },
+              {
+                __typename: "Task",
+                description: "child task 2",
+                ownTime: 4,
+                totalTime: 4 + 5,
+              },
+              {
+                __typename: "Task",
+                description: "grandchild task",
+                ownTime: 5,
+                totalTime: 5,
+              },
+            ],
           },
-        },
-      });
+        });
 
-      expect(cache.extract()).toEqual({
-        ROOT_QUERY: {
-          __typename: "Query",
-          agenda: { __ref: "Agenda:1" },
-        },
-        "Agenda:1": {
-          __typename: "Agenda",
-          id: 1,
-          tasks: [
-            { __ref: "Task:1" },
-            { __ref: "Task:2" },
-            { __ref: "Task:3" },
-            { __ref: "Task:4" },
-            { __ref: "Task:5" },
-          ],
-        },
-        "Task:1": {
-          __typename: "Task",
-          blockers: [
-            { __ref: "Task:2" },
-            { __ref: "Task:3" },
-          ],
-          description: "parent task",
-          id: 1,
-        },
-        "Task:2": {
-          __typename: "Task",
-          blockers: [
-            { __ref: "Task:4" },
-          ],
-          description: "child task 1",
-          id: 2,
-        },
-        "Task:3": {
-          __typename: "Task",
-          blockers: [
-            { __ref: "Task:4" },
-          ],
-          description: "child task 2",
-          id: 3,
-        },
-        "Task:4": {
-          __typename: "Task",
-          description: "grandchild task",
-          id: 4,
-        },
-        "Task:5": {
-          __typename: "Task",
-          description: "independent task",
-          id: 5,
-        },
-      });
+        expect(read()).toBe(firstResult);
 
-      const fourthResult = read();
-      expect(fourthResult).not.toBe(thirdResult);
-      expect(fourthResult).toEqual({
-        agenda: {
-          __typename: "Agenda",
-          taskCount: 5,
-          tasks: [{
+        ownTimes["child task 2"](6);
+
+        const secondResult = read();
+        expect(secondResult).not.toBe(firstResult);
+        expect(secondResult).toEqual({
+          agenda: {
+            __typename: "Agenda",
+            taskCount: 4,
+            tasks: [
+              {
+                __typename: "Task",
+                description: "parent task",
+                ownTime: 2,
+                totalTime: 2 + 3 + 6 + 5,
+              },
+              {
+                __typename: "Task",
+                description: "child task 1",
+                ownTime: 3,
+                totalTime: 3 + 5,
+              },
+              {
+                __typename: "Task",
+                description: "child task 2",
+                ownTime: 6,
+                totalTime: 6 + 5,
+              },
+              {
+                __typename: "Task",
+                description: "grandchild task",
+                ownTime: 5,
+                totalTime: 5,
+              },
+            ],
+          },
+        });
+        expect(secondResult!.agenda.tasks[0]).not.toBe(
+          firstResult!.agenda.tasks[0]
+        );
+        expect(secondResult!.agenda.tasks[1]).toBe(
+          firstResult!.agenda.tasks[1]
+        );
+        expect(secondResult!.agenda.tasks[2]).not.toBe(
+          firstResult!.agenda.tasks[2]
+        );
+        expect(secondResult!.agenda.tasks[3]).toBe(
+          firstResult!.agenda.tasks[3]
+        );
+
+        ownTimes["grandchild task"](7);
+
+        const thirdResult = read();
+        expect(thirdResult).not.toBe(secondResult);
+        expect(thirdResult).toEqual({
+          agenda: {
+            __typename: "Agenda",
+            taskCount: 4,
+            tasks: [
+              {
+                __typename: "Task",
+                description: "parent task",
+                ownTime: 2,
+                totalTime: 2 + 3 + 6 + 7,
+              },
+              {
+                __typename: "Task",
+                description: "child task 1",
+                ownTime: 3,
+                totalTime: 3 + 7,
+              },
+              {
+                __typename: "Task",
+                description: "child task 2",
+                ownTime: 6,
+                totalTime: 6 + 7,
+              },
+              {
+                __typename: "Task",
+                description: "grandchild task",
+                ownTime: 7,
+                totalTime: 7,
+              },
+            ],
+          },
+        });
+
+        cache.writeQuery({
+          query: gql`
+            query {
+              agenda {
+                id
+                tasks {
+                  id
+                  description
+                }
+              }
+            }
+          `,
+          data: {
+            agenda: {
+              __typename: "Agenda",
+              id: 1,
+              tasks: [
+                {
+                  __typename: "Task",
+                  id: 5,
+                  description: "independent task",
+                },
+              ],
+            },
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            agenda: { __ref: "Agenda:1" },
+          },
+          "Agenda:1": {
+            __typename: "Agenda",
+            id: 1,
+            tasks: [
+              { __ref: "Task:1" },
+              { __ref: "Task:2" },
+              { __ref: "Task:3" },
+              { __ref: "Task:4" },
+              { __ref: "Task:5" },
+            ],
+          },
+          "Task:1": {
             __typename: "Task",
+            blockers: [{ __ref: "Task:2" }, { __ref: "Task:3" }],
             description: "parent task",
-            ownTime: 2,
-            totalTime: 2 + 3 + 6 + 7,
-          }, {
+            id: 1,
+          },
+          "Task:2": {
             __typename: "Task",
+            blockers: [{ __ref: "Task:4" }],
             description: "child task 1",
-            ownTime: 3,
-            totalTime: 3 + 7,
-          }, {
+            id: 2,
+          },
+          "Task:3": {
             __typename: "Task",
+            blockers: [{ __ref: "Task:4" }],
             description: "child task 2",
-            ownTime: 6,
-            totalTime: 6 + 7,
-          }, {
+            id: 3,
+          },
+          "Task:4": {
             __typename: "Task",
             description: "grandchild task",
-            ownTime: 7,
-            totalTime: 7,
-          }, {
+            id: 4,
+          },
+          "Task:5": {
             __typename: "Task",
             description: "independent task",
-            ownTime: 11,
-            totalTime: 11,
-          }],
-        },
-      });
+            id: 5,
+          },
+        });
 
-      function checkFirstFourIdentical(result: ReturnType<typeof read>) {
-        for (let i = 0; i < 4; ++i) {
-          expect(result!.agenda.tasks[i]).toBe(thirdResult!.agenda.tasks[i]);
+        const fourthResult = read();
+        expect(fourthResult).not.toBe(thirdResult);
+        expect(fourthResult).toEqual({
+          agenda: {
+            __typename: "Agenda",
+            taskCount: 5,
+            tasks: [
+              {
+                __typename: "Task",
+                description: "parent task",
+                ownTime: 2,
+                totalTime: 2 + 3 + 6 + 7,
+              },
+              {
+                __typename: "Task",
+                description: "child task 1",
+                ownTime: 3,
+                totalTime: 3 + 7,
+              },
+              {
+                __typename: "Task",
+                description: "child task 2",
+                ownTime: 6,
+                totalTime: 6 + 7,
+              },
+              {
+                __typename: "Task",
+                description: "grandchild task",
+                ownTime: 7,
+                totalTime: 7,
+              },
+              {
+                __typename: "Task",
+                description: "independent task",
+                ownTime: 11,
+                totalTime: 11,
+              },
+            ],
+          },
+        });
+
+        function checkFirstFourIdentical(result: ReturnType<typeof read>) {
+          for (let i = 0; i < 4; ++i) {
+            expect(result!.agenda.tasks[i]).toBe(thirdResult!.agenda.tasks[i]);
+          }
         }
+        // The four original task results should not have been altered by
+        // the addition of a fifth independent task.
+        checkFirstFourIdentical(fourthResult);
+
+        const indVar = ownTimes["independent task"];
+        indVar(indVar() + 1);
+
+        const fifthResult = read();
+        expect(fifthResult).not.toBe(fourthResult);
+        expect(fifthResult).toEqual({
+          agenda: {
+            __typename: "Agenda",
+            taskCount: 5,
+            tasks: [
+              fourthResult!.agenda.tasks[0],
+              fourthResult!.agenda.tasks[1],
+              fourthResult!.agenda.tasks[2],
+              fourthResult!.agenda.tasks[3],
+              {
+                __typename: "Task",
+                description: "independent task",
+                ownTime: 12,
+                totalTime: 12,
+              },
+            ],
+          },
+        });
+        checkFirstFourIdentical(fifthResult);
       }
-      // The four original task results should not have been altered by
-      // the addition of a fifth independent task.
-      checkFirstFourIdentical(fourthResult);
-
-      const indVar = ownTimes["independent task"];
-      indVar(indVar() + 1);
-
-      const fifthResult = read();
-      expect(fifthResult).not.toBe(fourthResult);
-      expect(fifthResult).toEqual({
-        agenda: {
-          __typename: "Agenda",
-          taskCount: 5,
-          tasks: [
-            fourthResult!.agenda.tasks[0],
-            fourthResult!.agenda.tasks[1],
-            fourthResult!.agenda.tasks[2],
-            fourthResult!.agenda.tasks[3],
-            {
-              __typename: "Task",
-              description: "independent task",
-              ownTime: 12,
-              totalTime: 12,
-            },
-          ],
-        },
-      });
-      checkFirstFourIdentical(fifthResult);
-    });
+    );
 
     it("can return void to indicate missing field", function () {
       let secretReadAttempted = false;
@@ -3065,27 +3243,31 @@ describe("type policies", function () {
 
       expect(secretReadAttempted).toBe(false);
 
-      expect(cache.readQuery({
-        query: gql`
-          query {
-            me {
-              secret
+      expect(
+        cache.readQuery({
+          query: gql`
+            query {
+              me {
+                secret
+              }
             }
-          }
-        `,
-      })).toBe(null);
+          `,
+        })
+      ).toBe(null);
 
-      expect(() => cache.diff({
-        optimistic: true,
-        returnPartialData: false,
-        query: gql`
-          query {
-            me {
-              secret
+      expect(() =>
+        cache.diff({
+          optimistic: true,
+          returnPartialData: false,
+          query: gql`
+            query {
+              me {
+                secret
+              }
             }
-          }
-        `,
-      })).toThrowError("Can't find field 'secret' ");
+          `,
+        })
+      ).toThrowError("Can't find field 'secret' ");
 
       expect(secretReadAttempted).toBe(true);
     });
@@ -3105,26 +3287,22 @@ describe("type policies", function () {
               todos: {
                 keyArgs: [],
 
-                read(existing: any[], {
-                  args,
-                  toReference,
-                  isReference,
-                }) {
+                read(existing: any[], { args, toReference, isReference }) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
                   const slice = existing.slice(
                     args!.offset,
-                    args!.offset + args!.limit,
+                    args!.offset + args!.limit
                   );
-                  slice.forEach(ref => expect(isReference(ref)).toBe(true));
+                  slice.forEach((ref) => expect(isReference(ref)).toBe(true));
                   return slice;
                 },
 
-                merge(existing: any[], incoming: any[], {
-                  args,
-                  toReference,
-                  isReference,
-                }) {
+                merge(
+                  existing: any[],
+                  incoming: any[],
+                  { args, toReference, isReference }
+                ) {
                   expect(!existing || Object.isFrozen(existing)).toBe(true);
                   expect(typeof toReference).toBe("function");
                   const copy = existing ? existing.slice(0) : [];
@@ -3132,9 +3310,9 @@ describe("type policies", function () {
                   for (let i = args!.offset; i < limit; ++i) {
                     copy[i] = incoming[i - args!.offset];
                   }
-                  copy.forEach(todo => expect(isReference(todo)).toBe(true));
+                  copy.forEach((todo) => expect(isReference(todo)).toBe(true));
                   return copy;
-                }
+                },
               },
             },
           },
@@ -3338,183 +3516,188 @@ describe("type policies", function () {
       });
     });
 
-    itAsync("can handle Relay-style pagination without args", (resolve, reject) => {
-      const cache = new InMemoryCache({
-        addTypename: false,
-        typePolicies: {
-          Query: {
-            fields: {
-              todos: relayStylePagination(),
+    itAsync(
+      "can handle Relay-style pagination without args",
+      (resolve, reject) => {
+        const cache = new InMemoryCache({
+          addTypename: false,
+          typePolicies: {
+            Query: {
+              fields: {
+                todos: relayStylePagination(),
+              },
             },
           },
-        },
-      });
-
-      const firstQuery = gql`
-        query TodoQuery {
-          todos {
-            totalCount
-          }
-        }
-      `
-
-      const secondQuery = gql`
-        query TodoQuery {
-          todos(after: $after, first: $first) {
-            pageInfo {
-              __typename
-              hasNextPage
-              endCursor
-            }
-            totalCount
-            edges {
-              __typename
-              id
-              node {
-                __typename
-                id
-                title
-              }
-            }
-          }
-        }
-      `
-
-      const thirdQuery = gql`
-        query TodoQuery {
-          todos {
-            totalCount
-            extraMetaData
-          }
-        }
-      `
-
-      const secondVariables = {
-        first: 1,
-      };
-
-      const secondEdges = [
-        {
-          __typename: "TodoEdge",
-          id: "edge1",
-          node: {
-            __typename: "Todo",
-            id: '1',
-            title: 'Fix the tests'
-          }
-        },
-      ];
-
-      const secondPageInfo = {
-        __typename: "PageInfo",
-        endCursor: "YXJyYXljb25uZWN0aW9uOjI=",
-        hasNextPage: true,
-      };
-
-      const link = new MockLink([
-        {
-          request: {
-            query: firstQuery,
-          },
-          result: {
-            data: {
-              todos: {
-                totalCount: 1292
-              }
-            }
-          }
-        },
-        {
-          request: {
-            query: secondQuery,
-            variables: secondVariables,
-          },
-          result: {
-            data: {
-              todos: {
-                edges: secondEdges,
-                pageInfo: secondPageInfo,
-                totalCount: 1292,
-              }
-            }
-          },
-        },
-        {
-          request: {
-            query: thirdQuery,
-          },
-          result: {
-            data: {
-              todos: {
-                totalCount: 1293,
-                extraMetaData: 'extra',
-              }
-            }
-          },
-        }
-      ]).setOnError(reject);
-
-      const client = new ApolloClient({ link, cache });
-
-      client.query({query: firstQuery}).then(result => {
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            todos: {
-              totalCount: 1292
-            }
-          }
-        })
-
-        expect(cache.extract()).toEqual({
-          ROOT_QUERY: {
-            __typename: "Query",
-            todos: {
-              edges: [],
-              pageInfo: {
-                "endCursor": "",
-                "hasNextPage": true,
-                "hasPreviousPage": false,
-                "startCursor": "",
-               },
-               totalCount: 1292
-             },
-          }
         });
 
-        client.query({query: secondQuery, variables: secondVariables}).then(result => {
+        const firstQuery = gql`
+          query TodoQuery {
+            todos {
+              totalCount
+            }
+          }
+        `;
+
+        const secondQuery = gql`
+          query TodoQuery {
+            todos(after: $after, first: $first) {
+              pageInfo {
+                __typename
+                hasNextPage
+                endCursor
+              }
+              totalCount
+              edges {
+                __typename
+                id
+                node {
+                  __typename
+                  id
+                  title
+                }
+              }
+            }
+          }
+        `;
+
+        const thirdQuery = gql`
+          query TodoQuery {
+            todos {
+              totalCount
+              extraMetaData
+            }
+          }
+        `;
+
+        const secondVariables = {
+          first: 1,
+        };
+
+        const secondEdges = [
+          {
+            __typename: "TodoEdge",
+            id: "edge1",
+            node: {
+              __typename: "Todo",
+              id: "1",
+              title: "Fix the tests",
+            },
+          },
+        ];
+
+        const secondPageInfo = {
+          __typename: "PageInfo",
+          endCursor: "YXJyYXljb25uZWN0aW9uOjI=",
+          hasNextPage: true,
+        };
+
+        const link = new MockLink([
+          {
+            request: {
+              query: firstQuery,
+            },
+            result: {
+              data: {
+                todos: {
+                  totalCount: 1292,
+                },
+              },
+            },
+          },
+          {
+            request: {
+              query: secondQuery,
+              variables: secondVariables,
+            },
+            result: {
+              data: {
+                todos: {
+                  edges: secondEdges,
+                  pageInfo: secondPageInfo,
+                  totalCount: 1292,
+                },
+              },
+            },
+          },
+          {
+            request: {
+              query: thirdQuery,
+            },
+            result: {
+              data: {
+                todos: {
+                  totalCount: 1293,
+                  extraMetaData: "extra",
+                },
+              },
+            },
+          },
+        ]).setOnError(reject);
+
+        const client = new ApolloClient({ link, cache });
+
+        client.query({ query: firstQuery }).then((result) => {
           expect(result).toEqual({
             loading: false,
             networkStatus: NetworkStatus.ready,
             data: {
               todos: {
-                edges: secondEdges,
-                pageInfo: secondPageInfo,
                 totalCount: 1292,
-              }
-            }
-          })
+              },
+            },
+          });
 
-          expect(cache.extract()).toMatchSnapshot()
+          expect(cache.extract()).toEqual({
+            ROOT_QUERY: {
+              __typename: "Query",
+              todos: {
+                edges: [],
+                pageInfo: {
+                  endCursor: "",
+                  hasNextPage: true,
+                  hasPreviousPage: false,
+                  startCursor: "",
+                },
+                totalCount: 1292,
+              },
+            },
+          });
 
-          client.query({query: thirdQuery}).then(result => {
-            expect(result).toEqual({
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              data: {
-                todos: {
-                  totalCount: 1293,
-                  extraMetaData: 'extra',
-                }
-              }
-            })
-            expect(cache.extract()).toMatchSnapshot()
-            resolve()
-          })
-        })
-      })
-    })
+          client
+            .query({ query: secondQuery, variables: secondVariables })
+            .then((result) => {
+              expect(result).toEqual({
+                loading: false,
+                networkStatus: NetworkStatus.ready,
+                data: {
+                  todos: {
+                    edges: secondEdges,
+                    pageInfo: secondPageInfo,
+                    totalCount: 1292,
+                  },
+                },
+              });
+
+              expect(cache.extract()).toMatchSnapshot();
+
+              client.query({ query: thirdQuery }).then((result) => {
+                expect(result).toEqual({
+                  loading: false,
+                  networkStatus: NetworkStatus.ready,
+                  data: {
+                    todos: {
+                      totalCount: 1293,
+                      extraMetaData: "extra",
+                    },
+                  },
+                });
+                expect(cache.extract()).toMatchSnapshot();
+                resolve();
+              });
+            });
+        });
+      }
+    );
 
     itAsync("can handle Relay-style pagination", (resolve, reject) => {
       const cache = new InMemoryCache({
@@ -3539,22 +3722,33 @@ describe("type policies", function () {
 
       const query = gql`
         query ArtsySearch(
-          $query: String!,
-          $after: String, $first: Int,
-          $before: String, $last: Int,
+          $query: String!
+          $after: String
+          $first: Int
+          $before: String
+          $last: Int
         ) {
           search(
-            query: $query,
-            after: $after, first: $first,
-            before: $before, last: $last,
+            query: $query
+            after: $after
+            first: $first
+            before: $before
+            last: $last
           ) {
             edges {
               __typename
               node {
                 __typename
                 displayLabel
-                ... on Artist { __typename href bio }
-                ... on SearchableItem { __typename description }
+                ... on Artist {
+                  __typename
+                  href
+                  bio
+                }
+                ... on SearchableItem {
+                  __typename
+                  description
+                }
               }
             }
             pageInfo {
@@ -3581,31 +3775,33 @@ describe("type policies", function () {
             __typename: "Artist",
             href: "/artist/jean-michel-basquiat",
             displayLabel: "Jean-Michel Basquiat",
-            bio: "American, 1960-1988, New York, New York, based in New York, New York"
-          }
+            bio: "American, 1960-1988, New York, New York, based in New York, New York",
+          },
         },
         {
           __typename: "SearchableEdge",
           node: {
             displayLabel: "ephemera BASQUIAT",
             __typename: "SearchableItem",
-            description: "Past show featuring works by Damien Hirst, " +
+            description:
+              "Past show featuring works by Damien Hirst, " +
               "James Rosenquist, David Salle, Andy Warhol, Jeff Koons, " +
               "Jean-Michel Basquiat, Keith Haring, Kiki Smith, Sandro Chia, " +
               "Kenny Scharf, Mike Bidlo, Jon Schueler, William Wegman, " +
               "David Wojnarowicz, Taylor Mead, William S. Burroughs, " +
-              "Michael Halsband, Rene Ricard, and Chris DAZE Ellis"
-          }
+              "Michael Halsband, Rene Ricard, and Chris DAZE Ellis",
+          },
         },
         {
           __typename: "SearchableEdge",
           node: {
             displayLabel: "Jean-Michel Basquiat | Xerox",
             __typename: "SearchableItem",
-            description: "Past show featuring works by Jean-Michel " +
-              "Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019"
-          }
-        }
+            description:
+              "Past show featuring works by Jean-Michel " +
+              "Basquiat at Nahmad Contemporary Mar 12th – May 31st 2019",
+          },
+        },
       ];
 
       const firstPageInfo = {
@@ -3628,19 +3824,21 @@ describe("type policies", function () {
           node: {
             displayLabel: "STREET ART: From Basquiat to Banksy",
             __typename: "SearchableItem",
-            description: "Past show featuring works by Banksy, SEEN, " +
+            description:
+              "Past show featuring works by Banksy, SEEN, " +
               "JonOne and QUIK at Artrust Oct 8th – Dec 16th 2017",
-          }
+          },
         },
         {
           __typename: "SearchableEdge",
           node: {
             __typename: "SearchableItem",
             displayLabel: "STREET ART 2: From Basquiat to Banksy",
-            description: "Past show featuring works by Jean-Michel Basquiat, " +
+            description:
+              "Past show featuring works by Jean-Michel Basquiat, " +
               "Shepard Fairey, COPE2, Pure Evil, Sickboy, Blade, " +
               "Kurar, and LARS at Artrust",
-          }
+          },
         },
         {
           __typename: "SearchableEdge",
@@ -3648,9 +3846,9 @@ describe("type policies", function () {
             __typename: "Artist",
             href: "/artist/reminiscent-of-basquiat",
             displayLabel: "Reminiscent of Basquiat",
-            bio: ""
-          }
-        }
+            bio: "",
+          },
+        },
       ];
 
       const secondPageInfo = {
@@ -3708,15 +3906,18 @@ describe("type policies", function () {
         first: 1,
       };
 
-      const fifthEdges = [{
-        __typename: "SearchableEdge",
-        node: {
-          __typename: "SearchableItem",
-          displayLabel: "Basquiat: The Unknown Notebooks",
-          description: "Past show featuring works by Jean-Michel Basquiat " +
-            "at Brooklyn Museum Apr 3rd – Aug 23rd 2015",
+      const fifthEdges = [
+        {
+          __typename: "SearchableEdge",
+          node: {
+            __typename: "SearchableItem",
+            displayLabel: "Basquiat: The Unknown Notebooks",
+            description:
+              "Past show featuring works by Jean-Michel Basquiat " +
+              "at Brooklyn Museum Apr 3rd – Aug 23rd 2015",
+          },
         },
-      }];
+      ];
 
       const fifthPageInfo = {
         __typename: "PageInfo",
@@ -3781,8 +3982,8 @@ describe("type policies", function () {
                 edges: firstEdges,
                 pageInfo: firstPageInfo,
                 totalCount: 1292,
-              }
-            }
+              },
+            },
           },
         },
         {
@@ -3879,13 +4080,16 @@ describe("type policies", function () {
 
       const client = new ApolloClient({ link, cache });
 
-      const observable = client.watchQuery<any, {
-        query: string,
-        after?: string,
-        first?: number,
-        before?: string,
-        last?: number,
-      }>({
+      const observable = client.watchQuery<
+        any,
+        {
+          query: string;
+          after?: string;
+          first?: number;
+          before?: string;
+          last?: number;
+        }
+      >({
         query,
         variables: {
           query: "Basquiat",
@@ -3912,17 +4116,13 @@ describe("type policies", function () {
           observable.fetchMore({
             variables: secondVariables,
           });
-
         } else if (count === 2) {
           expect(result).toEqual({
             loading: false,
             networkStatus: NetworkStatus.ready,
             data: {
               search: {
-                edges: [
-                  ...firstEdges,
-                  ...secondEdges,
-                ],
+                edges: [...firstEdges, ...secondEdges],
                 pageInfo: {
                   __typename: "PageInfo",
                   startCursor: firstPageInfo.startCursor,
@@ -3940,7 +4140,6 @@ describe("type policies", function () {
           observable.fetchMore({
             variables: thirdVariables,
           });
-
         } else if (count === 3) {
           expect(result.data.search.edges.length).toBe(5);
 
@@ -3949,10 +4148,7 @@ describe("type policies", function () {
             networkStatus: NetworkStatus.ready,
             data: {
               search: {
-                edges: [
-                  ...thirdEdges,
-                  ...secondEdges,
-                ],
+                edges: [...thirdEdges, ...secondEdges],
                 pageInfo: {
                   __typename: "PageInfo",
                   startCursor: thirdPageInfo.startCursor,
@@ -3970,18 +4166,13 @@ describe("type policies", function () {
           observable.fetchMore({
             variables: fourthVariables,
           });
-
         } else if (count === 4) {
           expect(result).toEqual({
             loading: false,
             networkStatus: NetworkStatus.ready,
             data: {
               search: {
-                edges: [
-                  ...fourthEdges,
-                  ...thirdEdges,
-                  ...secondEdges,
-                ],
+                edges: [...fourthEdges, ...thirdEdges, ...secondEdges],
                 pageInfo: {
                   __typename: "PageInfo",
                   startCursor: firstPageInfo.startCursor,
@@ -4004,7 +4195,6 @@ describe("type policies", function () {
           observable.fetchMore({
             variables: fifthVariables,
           });
-
         } else if (count === 5) {
           expect(result.data.search.edges.length).toBe(7);
 
@@ -4013,11 +4203,7 @@ describe("type policies", function () {
             networkStatus: NetworkStatus.ready,
             data: {
               search: {
-                edges: [
-                  ...firstEdges,
-                  ...secondEdges,
-                  ...fifthEdges,
-                ],
+                edges: [...firstEdges, ...secondEdges, ...fifthEdges],
                 pageInfo: {
                   __typename: "PageInfo",
                   startCursor: firstPageInfo.startCursor,
@@ -4035,64 +4221,63 @@ describe("type policies", function () {
           // Now search for a different artist to verify that they keyArgs
           // function we passed to relayStylePagination above keeps
           // different search queries separate in the cache.
-          client.query({
-            query,
-            variables: {
-              query: "James Turrell",
-              first: 1,
-            },
-          }).then(result => {
-            expect(result).toEqual({
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              data: {
-                search: {
-                  edges: turrellEdges.slice(0, 1),
-                  pageInfo: turrellPageInfo1,
-                  totalCount: 13531,
-                },
+          client
+            .query({
+              query,
+              variables: {
+                query: "James Turrell",
+                first: 1,
               },
-            });
+            })
+            .then((result) => {
+              expect(result).toEqual({
+                loading: false,
+                networkStatus: NetworkStatus.ready,
+                data: {
+                  search: {
+                    edges: turrellEdges.slice(0, 1),
+                    pageInfo: turrellPageInfo1,
+                    totalCount: 13531,
+                  },
+                },
+              });
 
-            const snapshot = cache.extract();
-            expect(snapshot).toMatchSnapshot();
-            expect(
-              // Note that Turrell's name has been lower-cased.
-              snapshot.ROOT_QUERY!["search:james turrell"]
-            ).toEqual({
-              edges: turrellEdges.slice(0, 1).map(edge => ({
-                ...edge,
-                // The relayStylePagination merge function updates the
-                // edge.cursor field of the first and last edge, even if
-                // the query did not request the edge.cursor field, if
-                // pageInfo.{start,end}Cursor are defined.
-                cursor: turrellPageInfo1.startCursor,
-                // Artist objects are normalized by HREF:
-                node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
-              })),
-              pageInfo: turrellPageInfo1,
-              totalCount: 13531,
-            });
+              const snapshot = cache.extract();
+              expect(snapshot).toMatchSnapshot();
+              expect(
+                // Note that Turrell's name has been lower-cased.
+                snapshot.ROOT_QUERY!["search:james turrell"]
+              ).toEqual({
+                edges: turrellEdges.slice(0, 1).map((edge) => ({
+                  ...edge,
+                  // The relayStylePagination merge function updates the
+                  // edge.cursor field of the first and last edge, even if
+                  // the query did not request the edge.cursor field, if
+                  // pageInfo.{start,end}Cursor are defined.
+                  cursor: turrellPageInfo1.startCursor,
+                  // Artist objects are normalized by HREF:
+                  node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+                })),
+                pageInfo: turrellPageInfo1,
+                totalCount: 13531,
+              });
 
-            // Evict the Basquiat entity to verify that the dangling
-            // edge.node Reference gets automatically elided from the
-            // Basquiat search results, thanks to the read function
-            // generated by the relayStylePagination helper.
-            expect(cache.evict({
-              id: cache.identify({
-                __typename: "Artist",
-                href: "/artist/jean-michel-basquiat",
-              }),
-            })).toBe(true);
-          }, reject);
-
+              // Evict the Basquiat entity to verify that the dangling
+              // edge.node Reference gets automatically elided from the
+              // Basquiat search results, thanks to the read function
+              // generated by the relayStylePagination helper.
+              expect(
+                cache.evict({
+                  id: cache.identify({
+                    __typename: "Artist",
+                    href: "/artist/jean-michel-basquiat",
+                  }),
+                })
+              ).toBe(true);
+            }, reject);
         } else if (count === 6) {
           // Same full list of edges that we saw in the previous case.
-          const edges = [
-            ...firstEdges,
-            ...secondEdges,
-            ...fifthEdges,
-          ];
+          const edges = [...firstEdges, ...secondEdges, ...fifthEdges];
 
           // Remove the Basquiat edge, which we know to be first.
           expect(edges.shift()).toEqual({
@@ -4128,234 +4313,231 @@ describe("type policies", function () {
           // Now search for James Turrell again with args.first === 2
           // (turrellVariables2), but without args.after, so that the
           // new results overwrite the existing results (#6592).
-          client.query({
-            query,
-            variables: turrellVariables2,
-            // Necessary to skip the cache, like fetchMore does.
-            fetchPolicy: "network-only",
-          }).then(result => {
-            expect(result).toEqual({
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              data: {
-                search: {
-                  edges: turrellEdges,
-                  pageInfo: turrellPageInfo2,
-                  totalCount: 13531,
+          client
+            .query({
+              query,
+              variables: turrellVariables2,
+              // Necessary to skip the cache, like fetchMore does.
+              fetchPolicy: "network-only",
+            })
+            .then((result) => {
+              expect(result).toEqual({
+                loading: false,
+                networkStatus: NetworkStatus.ready,
+                data: {
+                  search: {
+                    edges: turrellEdges,
+                    pageInfo: turrellPageInfo2,
+                    totalCount: 13531,
+                  },
                 },
-              },
-            });
+              });
 
-            const snapshot = cache.extract();
-            expect(snapshot).toMatchSnapshot();
-            expect(
-              // Note that Turrell's name has been lower-cased.
-              snapshot.ROOT_QUERY!["search:james turrell"]
-            ).toEqual({
-              edges: turrellEdges.map((edge, i) => ({
-                ...edge,
-                // This time the cursors are different depending on which
-                // of the two edges we're considering.
-                cursor: [
-                  turrellPageInfo2.startCursor,
-                  turrellPageInfo2.endCursor,
-                ][i],
-                node: [
-                  // Artist objects are normalized by HREF:
-                  { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
-                  // However, SearchableItem objects are not normalized.
-                  edge.node,
-                ][i],
-              })),
-              pageInfo: turrellPageInfo2,
-              totalCount: 13531,
-            });
+              const snapshot = cache.extract();
+              expect(snapshot).toMatchSnapshot();
+              expect(
+                // Note that Turrell's name has been lower-cased.
+                snapshot.ROOT_QUERY!["search:james turrell"]
+              ).toEqual({
+                edges: turrellEdges.map((edge, i) => ({
+                  ...edge,
+                  // This time the cursors are different depending on which
+                  // of the two edges we're considering.
+                  cursor: [
+                    turrellPageInfo2.startCursor,
+                    turrellPageInfo2.endCursor,
+                  ][i],
+                  node: [
+                    // Artist objects are normalized by HREF:
+                    { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+                    // However, SearchableItem objects are not normalized.
+                    edge.node,
+                  ][i],
+                })),
+                pageInfo: turrellPageInfo2,
+                totalCount: 13531,
+              });
 
-            // Wait a bit to make sure there are no additional results for
-            // Basquiat.
-            setTimeout(resolve, 100);
-          });
+              // Wait a bit to make sure there are no additional results for
+              // Basquiat.
+              setTimeout(resolve, 100);
+            });
         } else {
           reject("should not receive another result for Basquiat");
         }
       });
     });
 
-    withErrorSpy(it, "runs nested merge functions as well as ancestors", function () {
-      let eventMergeCount = 0;
-      let attendeeMergeCount = 0;
+    withErrorSpy(
+      it,
+      "runs nested merge functions as well as ancestors",
+      function () {
+        let eventMergeCount = 0;
+        let attendeeMergeCount = 0;
 
-      const cache = new InMemoryCache({
-        typePolicies: {
-          Event: {
-            fields: {
-              attendees: {
-                merge(existing: any[], incoming: any[]) {
-                  ++eventMergeCount;
-                  expect(Array.isArray(incoming)).toBe(true);
-                  return existing ? existing.concat(incoming) : incoming;
+        const cache = new InMemoryCache({
+          typePolicies: {
+            Event: {
+              fields: {
+                attendees: {
+                  merge(existing: any[], incoming: any[]) {
+                    ++eventMergeCount;
+                    expect(Array.isArray(incoming)).toBe(true);
+                    return existing ? existing.concat(incoming) : incoming;
+                  },
+                },
+              },
+            },
+
+            Attendee: {
+              fields: {
+                events: {
+                  merge(existing: any[], incoming: any[]) {
+                    ++attendeeMergeCount;
+                    expect(Array.isArray(incoming)).toBe(true);
+                    return existing ? existing.concat(incoming) : incoming;
+                  },
                 },
               },
             },
           },
+        });
 
-          Attendee: {
-            fields: {
-              events: {
-                merge(existing: any[], incoming: any[]) {
-                  ++attendeeMergeCount;
-                  expect(Array.isArray(incoming)).toBe(true);
-                  return existing ? existing.concat(incoming) : incoming;
-                },
-              },
-            },
-          },
-        },
-      });
-
-      cache.writeQuery({
-        query: gql`
-          query {
-            eventsToday {
-              name
-              attendees {
+        cache.writeQuery({
+          query: gql`
+            query {
+              eventsToday {
                 name
-                events {
-                  time
+                attendees {
+                  name
+                  events {
+                    time
+                  }
                 }
               }
             }
-          }
-        `,
-        data: {
-          eventsToday: [{
+          `,
+          data: {
+            eventsToday: [
+              {
+                __typename: "Event",
+                id: 123,
+                name: "One-person party",
+                time: "noonish",
+                attendees: [
+                  {
+                    __typename: "Attendee",
+                    id: 234,
+                    name: "Ben Newman",
+                    events: [{ __typename: "Event", id: 123 }],
+                  },
+                ],
+              },
+            ],
+          },
+        });
+
+        expect(eventMergeCount).toBe(1);
+        expect(attendeeMergeCount).toBe(1);
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            eventsToday: [{ __ref: "Event:123" }],
+          },
+          "Event:123": {
             __typename: "Event",
             id: 123,
             name: "One-person party",
-            time: "noonish",
-            attendees: [{
-              __typename: "Attendee",
-              id: 234,
-              name: "Ben Newman",
-              events: [
-                { __typename: "Event", id: 123 },
-              ],
-            }],
-          }],
-        },
-      });
-
-      expect(eventMergeCount).toBe(1);
-      expect(attendeeMergeCount).toBe(1);
-
-      expect(cache.extract()).toEqual({
-        ROOT_QUERY: {
-          __typename: "Query",
-          eventsToday: [
-            { __ref: "Event:123" },
-          ],
-        },
-        "Event:123": {
-          __typename: "Event",
-          id: 123,
-          name: "One-person party",
-          attendees: [
-            { __ref: "Attendee:234" },
-          ],
-        },
-        "Attendee:234": {
-          __typename: "Attendee",
-          id: 234,
-          name: "Ben Newman",
-          events: [
-            { __ref: "Event:123" },
-          ],
-        },
-      });
-
-      cache.writeQuery({
-        query: gql`
-          query {
-            people {
-              name
-              events {
-                time
-                attendees {
-                  name
-                }
-              }
-            }
-          }
-        `,
-        data: {
-          people: [{
+            attendees: [{ __ref: "Attendee:234" }],
+          },
+          "Attendee:234": {
             __typename: "Attendee",
             id: 234,
             name: "Ben Newman",
-            events: [{
-              __typename: "Event",
-              id: 345,
-              name: "Rooftop dog party",
-              attendees: [{
-                __typename: "Attendee",
-                id: 456,
-                name: "Inspector Beckett",
-              }, {
+            events: [{ __ref: "Event:123" }],
+          },
+        });
+
+        cache.writeQuery({
+          query: gql`
+            query {
+              people {
+                name
+                events {
+                  time
+                  attendees {
+                    name
+                  }
+                }
+              }
+            }
+          `,
+          data: {
+            people: [
+              {
                 __typename: "Attendee",
                 id: 234,
-              }],
-            }],
-          }],
-        },
-      });
+                name: "Ben Newman",
+                events: [
+                  {
+                    __typename: "Event",
+                    id: 345,
+                    name: "Rooftop dog party",
+                    attendees: [
+                      {
+                        __typename: "Attendee",
+                        id: 456,
+                        name: "Inspector Beckett",
+                      },
+                      {
+                        __typename: "Attendee",
+                        id: 234,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        });
 
-      expect(eventMergeCount).toBe(2);
-      expect(attendeeMergeCount).toBe(2);
+        expect(eventMergeCount).toBe(2);
+        expect(attendeeMergeCount).toBe(2);
 
-      expect(cache.extract()).toEqual({
-        ROOT_QUERY: {
-          __typename: "Query",
-          eventsToday: [
-            { __ref: "Event:123" },
-          ],
-          people: [
-            { __ref: "Attendee:234" },
-          ],
-        },
-        "Event:123": {
-          __typename: "Event",
-          id: 123,
-          name: "One-person party",
-          attendees: [
-            { __ref: "Attendee:234" },
-          ],
-        },
-        "Event:345": {
-          __typename: "Event",
-          id: 345,
-          attendees: [
-            { __ref: "Attendee:456" },
-            { __ref: "Attendee:234" },
-          ],
-        },
-        "Attendee:234": {
-          __typename: "Attendee",
-          id: 234,
-          name: "Ben Newman",
-          events: [
-            { __ref: "Event:123" },
-            { __ref: "Event:345" },
-          ],
-        },
-        "Attendee:456": {
-          __typename: "Attendee",
-          id: 456,
-          name: "Inspector Beckett",
-        },
-      });
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            eventsToday: [{ __ref: "Event:123" }],
+            people: [{ __ref: "Attendee:234" }],
+          },
+          "Event:123": {
+            __typename: "Event",
+            id: 123,
+            name: "One-person party",
+            attendees: [{ __ref: "Attendee:234" }],
+          },
+          "Event:345": {
+            __typename: "Event",
+            id: 345,
+            attendees: [{ __ref: "Attendee:456" }, { __ref: "Attendee:234" }],
+          },
+          "Attendee:234": {
+            __typename: "Attendee",
+            id: 234,
+            name: "Ben Newman",
+            events: [{ __ref: "Event:123" }, { __ref: "Event:345" }],
+          },
+          "Attendee:456": {
+            __typename: "Attendee",
+            id: 456,
+            name: "Inspector Beckett",
+          },
+        });
 
-      expect(cache.gc()).toEqual([]);
-    });
+        expect(cache.gc()).toEqual([]);
+      }
+    );
 
     it("should report dangling references returned by read functions", function () {
       const cache = new InMemoryCache({
@@ -4365,10 +4547,13 @@ describe("type policies", function () {
               book: {
                 keyArgs: ["isbn"],
                 read(existing, { args, toReference }) {
-                  return existing || toReference({
-                    __typename: "Book",
-                    isbn: args!.isbn,
-                  });
+                  return (
+                    existing ||
+                    toReference({
+                      __typename: "Book",
+                      isbn: args!.isbn,
+                    })
+                  );
                 },
               },
             },
@@ -4423,7 +4608,7 @@ describe("type policies", function () {
       expect(read()).toBe(null);
 
       expect(diff).toThrow(
-        /Dangling reference to missing Book:{"isbn":"156858217X"} object/,
+        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
       );
 
       const stealThisData = {
@@ -4464,9 +4649,7 @@ describe("type policies", function () {
 
       expect(cache.extract()).toEqual({
         __META: {
-          extraRootIds: [
-            'Book:{"isbn":"156858217X"}',
-          ],
+          extraRootIds: ['Book:{"isbn":"156858217X"}'],
         },
         ROOT_QUERY: {
           __typename: "Query",
@@ -4491,9 +4674,7 @@ describe("type policies", function () {
       // Nothing removed because stealThisID was retained by writeFragment.
       expect(cache.gc()).toEqual([]);
       expect(cache.release(stealThisID)).toBe(0);
-      expect(cache.gc()).toEqual([
-        stealThisID,
-      ]);
+      expect(cache.gc()).toEqual([stealThisID]);
 
       expect(cache.extract()).toEqual({
         ROOT_QUERY: {
@@ -4544,9 +4725,11 @@ describe("type policies", function () {
 
       expect(cache.gc()).toEqual([]);
 
-      expect(cache.evict({
-        fieldName: "book",
-      })).toBe(true);
+      expect(
+        cache.evict({
+          fieldName: "book",
+        })
+      ).toBe(true);
 
       expect(cache.gc().sort()).toEqual([
         'Book:{"isbn":"0393354326"}',
@@ -4577,13 +4760,20 @@ describe("type policies", function () {
             keyFields: ["isbn"],
             fields: {
               author: {
-                merge(existing: StoreObject, incoming: StoreObject, { mergeObjects }) {
+                merge(
+                  existing: StoreObject,
+                  incoming: StoreObject,
+                  { mergeObjects }
+                ) {
                   expect(mergeObjects(void 0 as any, null)).toBe(null);
 
                   expect(() => {
                     // The type system does a pretty good job of defending
                     // against this mistake.
-                    mergeObjects([1, 2, 3] as any as StoreObject, [4] as any as StoreObject);
+                    mergeObjects(
+                      [1, 2, 3] as any as StoreObject,
+                      [4] as any as StoreObject
+                    );
                   }).toThrow(/Cannot automatically merge arrays/);
 
                   const a = { __typename: "A", a: "ay" };
@@ -4611,19 +4801,17 @@ describe("type policies", function () {
 
     function booksMergePolicy(): FieldPolicy<any[]> {
       return {
-        merge(existing, incoming, {
-          isReference,
-        }) {
+        merge(existing, incoming, { isReference }) {
           const merged = existing ? existing.slice(0) : [];
           const seen = new Set<string>();
           if (existing) {
-            existing.forEach(book => {
+            existing.forEach((book) => {
               if (isReference(book)) {
                 seen.add(book.__ref);
               }
             });
           }
-          incoming.forEach(book => {
+          incoming.forEach((book) => {
             if (isReference(book)) {
               if (!seen.has(book.__ref)) {
                 merged.push(book);
@@ -4706,11 +4894,13 @@ describe("type policies", function () {
             isbn: "1250758009",
             author: {
               __typename: "Author",
-              books: [{
-                __typename: "Book",
-                isbn: "1250758009",
-                title: "The Topeka School",
-              }],
+              books: [
+                {
+                  __typename: "Book",
+                  isbn: "1250758009",
+                  title: "The Topeka School",
+                },
+              ],
             },
           },
         },
@@ -4728,9 +4918,7 @@ describe("type policies", function () {
           author: {
             __typename: "Author",
             name: "Ben Lerner",
-            books: [
-              { __ref: 'Book:{"isbn":"1250758009"}' },
-            ],
+            books: [{ __ref: 'Book:{"isbn":"1250758009"}' }],
           },
           isbn: "1250758009",
           title: "The Topeka School",
@@ -4745,11 +4933,13 @@ describe("type policies", function () {
             isbn: "1250758009",
             author: {
               __typename: "Author",
-              books: [{
-                __typename: "Book",
-                isbn: "1566892740",
-                title: "Leaving the Atocha Station",
-              }],
+              books: [
+                {
+                  __typename: "Book",
+                  isbn: "1566892740",
+                  title: "Leaving the Atocha Station",
+                },
+              ],
             },
           },
         },
@@ -4782,30 +4972,37 @@ describe("type policies", function () {
         },
       });
 
-      expect(cache.readQuery({
-        query: queryWithAuthorBooks,
-      })).toEqual({
+      expect(
+        cache.readQuery({
+          query: queryWithAuthorBooks,
+        })
+      ).toEqual({
         currentlyReading: {
           __typename: "Book",
           isbn: "1250758009",
           author: {
             __typename: "Author",
-            books: [{
-              __typename: "Book",
-              isbn: "1250758009",
-              title: "The Topeka School",
-            }, {
-              __typename: "Book",
-              isbn: "1566892740",
-              title: "Leaving the Atocha Station",
-            }],
+            books: [
+              {
+                __typename: "Book",
+                isbn: "1250758009",
+                title: "The Topeka School",
+              },
+              {
+                __typename: "Book",
+                isbn: "1566892740",
+                title: "Leaving the Atocha Station",
+              },
+            ],
           },
         },
       });
 
-      expect(cache.readQuery({
-        query: queryWithAuthorName,
-      })).toEqual({
+      expect(
+        cache.readQuery({
+          query: queryWithAuthorName,
+        })
+      ).toEqual({
         currentlyReading: {
           __typename: "Book",
           isbn: "1250758009",
@@ -4987,25 +5184,29 @@ describe("type policies", function () {
         }
       `;
 
-      check(new InMemoryCache({
-        typePolicies: {
-          Query: {
-            fields: {
-              viewer: {
-                merge: true,
+      check(
+        new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                viewer: {
+                  merge: true,
+                },
               },
             },
           },
-        },
-      }));
+        })
+      );
 
-      check(new InMemoryCache({
-        typePolicies: {
-          User: {
-            merge: true,
+      check(
+        new InMemoryCache({
+          typePolicies: {
+            User: {
+              merge: true,
+            },
           },
-        },
-      }));
+        })
+      );
 
       function check(cache: InMemoryCache) {
         // Write nameQuery first, so the existing data will be a
@@ -5056,18 +5257,22 @@ describe("type policies", function () {
           },
         });
 
-        expect(cache.readQuery({
-          query: nameQuery,
-        })).toEqual({
+        expect(
+          cache.readQuery({
+            query: nameQuery,
+          })
+        ).toEqual({
           viewer: {
             __typename: "User",
             name: "Alice",
           },
         });
 
-        expect(cache.readQuery({
-          query: emailQuery,
-        })).toEqual({
+        expect(
+          cache.readQuery({
+            query: emailQuery,
+          })
+        ).toEqual({
           viewer: {
             __typename: "User",
             id: 12345,
@@ -5095,7 +5300,7 @@ describe("type policies", function () {
           "User:12345": {
             id: 12345,
             __typename: "User",
-            email: "alice@example.com"
+            email: "alice@example.com",
           },
           ROOT_QUERY: {
             __typename: "Query",
@@ -5130,18 +5335,22 @@ describe("type policies", function () {
           },
         });
 
-        expect(cache.readQuery({
-          query: nameQuery,
-        })).toEqual({
+        expect(
+          cache.readQuery({
+            query: nameQuery,
+          })
+        ).toEqual({
           viewer: {
             __typename: "User",
             name: "Alice",
           },
         });
 
-        expect(cache.readQuery({
-          query: emailQuery,
-        })).toEqual({
+        expect(
+          cache.readQuery({
+            query: emailQuery,
+          })
+        ).toEqual({
           viewer: {
             __typename: "User",
             id: 12345,
@@ -5172,7 +5381,6 @@ describe("type policies", function () {
               },
             },
           },
-
 
           Author: {
             fields: {
@@ -5243,26 +5451,35 @@ describe("type policies", function () {
     cache.writeQuery({
       query,
       data: {
-        currentlyReading: [{
-          __typename: "Book",
-          isbn: "0525558616",
-          title: "Human Compatible: Artificial Intelligence and the Problem of Control",
-          authors: [{
-            __typename: "Author",
-            name: "Stuart Russell",
-          }],
-        }, {
-          __typename: "Book",
-          isbn: "1541698967",
-          title: "The Book of Why: The New Science of Cause and Effect",
-          authors: [{
-            __typename: "Author",
-            name: "Judea Pearl",
-          }, {
-            __typename: "Author",
-            name: "Dana Mackenzie",
-          }],
-        }],
+        currentlyReading: [
+          {
+            __typename: "Book",
+            isbn: "0525558616",
+            title:
+              "Human Compatible: Artificial Intelligence and the Problem of Control",
+            authors: [
+              {
+                __typename: "Author",
+                name: "Stuart Russell",
+              },
+            ],
+          },
+          {
+            __typename: "Book",
+            isbn: "1541698967",
+            title: "The Book of Why: The New Science of Cause and Effect",
+            authors: [
+              {
+                __typename: "Author",
+                name: "Judea Pearl",
+              },
+              {
+                __typename: "Author",
+                name: "Dana Mackenzie",
+              },
+            ],
+          },
+        ],
       },
     });
 
@@ -5277,48 +5494,63 @@ describe("type policies", function () {
       'Book:{"isbn":"0525558616"}': {
         __typename: "Book",
         isbn: "0525558616",
-        authors: [{
-          __typename: "Author",
-          // Note the successful reversal of the Author names.
-          name: "llessuR trautS",
-        }],
-        title: "Human Compatible: Artificial Intelligence and the Problem of Control",
+        authors: [
+          {
+            __typename: "Author",
+            // Note the successful reversal of the Author names.
+            name: "llessuR trautS",
+          },
+        ],
+        title:
+          "Human Compatible: Artificial Intelligence and the Problem of Control",
       },
       'Book:{"isbn":"1541698967"}': {
         __typename: "Book",
         isbn: "1541698967",
-        authors: [{
-          __typename: "Author",
-          name: "lraeP aeduJ",
-        }, {
-          __typename: "Author",
-          name: "eiznekcaM anaD",
-        }],
+        authors: [
+          {
+            __typename: "Author",
+            name: "lraeP aeduJ",
+          },
+          {
+            __typename: "Author",
+            name: "eiznekcaM anaD",
+          },
+        ],
         title: "The Book of Why: The New Science of Cause and Effect",
       },
     });
 
     expect(cache.readQuery({ query })).toEqual({
-      currentlyReading: [{
-        __typename: "Book",
-        title: "Human Compatible: Artificial Intelligence and the Problem of Control",
-        authors: [{
-          __typename: "Author",
-          name: "STUART RUSSELL",
-        }],
-      }, {
-        __typename: "Book",
-        title: "The Book of Why: The New Science of Cause and Effect",
-        authors: [{
-          __typename: "Author",
-          // Note the successful re-reversal and uppercasing, thanks to
-          // the custom read function.
-          name: "JUDEA PEARL",
-        }, {
-          __typename: "Author",
-          name: "DANA MACKENZIE",
-        }],
-      }],
+      currentlyReading: [
+        {
+          __typename: "Book",
+          title:
+            "Human Compatible: Artificial Intelligence and the Problem of Control",
+          authors: [
+            {
+              __typename: "Author",
+              name: "STUART RUSSELL",
+            },
+          ],
+        },
+        {
+          __typename: "Book",
+          title: "The Book of Why: The New Science of Cause and Effect",
+          authors: [
+            {
+              __typename: "Author",
+              // Note the successful re-reversal and uppercasing, thanks to
+              // the custom read function.
+              name: "JUDEA PEARL",
+            },
+            {
+              __typename: "Author",
+              name: "DANA MACKENZIE",
+            },
+          ],
+        },
+      ],
     });
   });
 
@@ -5353,7 +5585,7 @@ describe("type policies", function () {
     });
 
     const query = gql`
-      query GetUser ($units: string) {
+      query GetUser($units: string) {
         people {
           id
           height(units: $units)
@@ -5367,15 +5599,18 @@ describe("type policies", function () {
         units: "meters",
       },
       data: {
-        people: [{
-          __typename: "Person",
-          id: 12345,
-          height: 1.75,
-        }, {
-          __typename: "Person",
-          id: 23456,
-          height: 2,
-        }],
+        people: [
+          {
+            __typename: "Person",
+            id: 12345,
+            height: 1.75,
+          },
+          {
+            __typename: "Person",
+            id: 23456,
+            height: 2,
+          },
+        ],
       },
     });
 
@@ -5383,16 +5618,19 @@ describe("type policies", function () {
       ROOT_QUERY: {
         __typename: "Query",
         // An array of non-normalized objects, not Reference objects.
-        people: [{
-          __typename: "Person",
-          // No serialized units argument, just "height".
-          height: 5.74147,
-          id: 12345,
-        }, {
-          __typename: "Person",
-          height: 6.56168,
-          id: 23456,
-        }],
+        people: [
+          {
+            __typename: "Person",
+            // No serialized units argument, just "height".
+            height: 5.74147,
+            id: 12345,
+          },
+          {
+            __typename: "Person",
+            height: 6.56168,
+            id: 23456,
+          },
+        ],
       },
     });
   });
@@ -5417,7 +5655,7 @@ describe("type policies", function () {
               let firstBook: Reference | null = null;
               let firstYear: number;
               const bookRefs = readField<Reference[]>("books") || [];
-              bookRefs.forEach(bookRef => {
+              bookRefs.forEach((bookRef) => {
                 expect(isReference(bookRef)).toBe(true);
                 const year = readField<number>("year", bookRef);
                 if (firstYear === void 0 || year! < firstYear) {
@@ -5439,10 +5677,10 @@ describe("type policies", function () {
     });
 
     interface BookData {
-      __typename: 'Book'
-      isbn: string
-      title: string
-      year: number
+      __typename: "Book";
+      isbn: string;
+      title: string;
+      year: number;
     }
 
     function addBook(bookData: BookData) {
@@ -5584,7 +5822,13 @@ describe("type policies", function () {
 
     // Write a new, unrelated field.
     cache.writeQuery({
-      query: gql`query { author { afraidCount } }`,
+      query: gql`
+        query {
+          author {
+            afraidCount
+          }
+        }
+      `,
       data: {
         author: {
           __typename: "Author",
@@ -5595,18 +5839,20 @@ describe("type policies", function () {
     });
 
     // Make sure afraidCount was written.
-    expect(cache.readFragment({
-      id: cache.identify({
-        __typename: "Author",
-        name: "Virginia Woolf",
-      })!,
-      fragment: gql`
-        fragment AfraidFragment on Author {
-          name
-          afraidCount
-        }
-      `,
-    })).toEqual({
+    expect(
+      cache.readFragment({
+        id: cache.identify({
+          __typename: "Author",
+          name: "Virginia Woolf",
+        })!,
+        fragment: gql`
+          fragment AfraidFragment on Author {
+            name
+            afraidCount
+          }
+        `,
+      })
+    ).toEqual({
       __typename: "Author",
       name: "Virginia Woolf",
       afraidCount: 2,
@@ -5630,7 +5876,11 @@ describe("type policies", function () {
   });
 
   it("readField can read fields with arguments", function () {
-    const enum Style { UPPER, LOWER, TITLE };
+    const enum Style {
+      UPPER,
+      LOWER,
+      TITLE,
+    }
 
     const cache = new InMemoryCache({
       typePolicies: {
@@ -5641,12 +5891,14 @@ describe("type policies", function () {
             style(_, { args, readField }) {
               const text = readField<string>("text");
               switch (args?.style) {
-                case Style.UPPER: return text?.toUpperCase();
-                case Style.LOWER: return text?.toLowerCase();
+                case Style.UPPER:
+                  return text?.toUpperCase();
+                case Style.LOWER:
+                  return text?.toLowerCase();
                 case Style.TITLE:
-                  return text && (
-                    text.charAt(0).toUpperCase() +
-                    text.slice(1).toLowerCase()
+                  return (
+                    text &&
+                    text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()
                   );
               }
             },
@@ -5674,7 +5926,13 @@ describe("type policies", function () {
     });
 
     cache.writeQuery({
-      query: gql`query { wordOfTheDay { text } }`,
+      query: gql`
+        query {
+          wordOfTheDay {
+            text
+          }
+        }
+      `,
       data: {
         wordOfTheDay: {
           __typename: "Word",
@@ -5683,17 +5941,19 @@ describe("type policies", function () {
       },
     });
 
-    expect(cache.readQuery({
-      query: gql`
-        query {
-          wordOfTheDay {
-            upperCase
-            lowerCase
-            titleCase
+    expect(
+      cache.readQuery({
+        query: gql`
+          query {
+            wordOfTheDay {
+              upperCase
+              lowerCase
+              titleCase
+            }
           }
-        }
-      `,
-    })).toEqual({
+        `,
+      })
+    ).toEqual({
       wordOfTheDay: {
         __typename: "Word",
         upperCase: "INVEIGLE",
@@ -5703,69 +5963,69 @@ describe("type policies", function () {
     });
   });
 
-  withWarningSpy(it, "readField warns if explicitly passed undefined `from` option", function () {
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            fullNameWithDefaults(_, { readField }) {
-              return `${
-                readField<string>({
+  withWarningSpy(
+    it,
+    "readField warns if explicitly passed undefined `from` option",
+    function () {
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              fullNameWithDefaults(_, { readField }) {
+                return `${readField<string>({
                   fieldName: "firstName",
-                })
-              } ${
-                readField<string>("lastName")
-              }`;
-            },
+                })} ${readField<string>("lastName")}`;
+              },
 
-            fullNameWithVoids(_, { readField }) {
-              return `${
-                readField<string>({
+              fullNameWithVoids(_, { readField }) {
+                return `${readField<string>({
                   fieldName: "firstName",
                   // If options.from is explicitly passed but undefined,
                   // readField should not default to reading from the current
                   // object (see issue #8499).
                   from: void 0,
-                })
-              } ${
-                // Likewise for the shorthand version of readField.
-                readField<string>("lastName", void 0)
-              }`;
+                })} ${
+                  // Likewise for the shorthand version of readField.
+                  readField<string>("lastName", void 0)
+                }`;
+              },
             },
           },
         },
-      },
-    });
+      });
 
-    const firstNameLastNameQuery = gql`
-      query {
-        firstName
-        lastName
-      }
-    `;
+      const firstNameLastNameQuery = gql`
+        query {
+          firstName
+          lastName
+        }
+      `;
 
-    const fullNamesQuery = gql`
-      query {
-        fullNameWithVoids
-        fullNameWithDefaults
-      }
-    `;
+      const fullNamesQuery = gql`
+        query {
+          fullNameWithVoids
+          fullNameWithDefaults
+        }
+      `;
 
-    cache.writeQuery({
-      query: firstNameLastNameQuery,
-      data: {
-        firstName: "Alan",
-        lastName: "Turing",
-      },
-    });
+      cache.writeQuery({
+        query: firstNameLastNameQuery,
+        data: {
+          firstName: "Alan",
+          lastName: "Turing",
+        },
+      });
 
-    expect(cache.readQuery({
-      query: fullNamesQuery,
-    })).toEqual({
-      fullNameWithDefaults: "Alan Turing",
-      fullNameWithVoids: "undefined undefined",
-    });
-  });
+      expect(
+        cache.readQuery({
+          query: fullNamesQuery,
+        })
+      ).toEqual({
+        fullNameWithDefaults: "Alan Turing",
+        fullNameWithVoids: "undefined undefined",
+      });
+    }
+  );
 
   it("can return existing object from merge function (issue #6245)", function () {
     const cache = new InMemoryCache({
@@ -5855,12 +6115,18 @@ describe("type policies", function () {
         RootQuery: {
           queryType: true,
         },
-      }
+      },
     });
 
-    expect(cache.readQuery({
-      query: gql`query { __typename }`,
-    })).toEqual({
+    expect(
+      cache.readQuery({
+        query: gql`
+          query {
+            __typename
+          }
+        `,
+      })
+    ).toEqual({
       __typename: "RootQuery",
     });
 
@@ -5890,27 +6156,19 @@ describe("type policies", function () {
       query: ALL_ITEMS,
       data: {
         __typename: "RootQuery",
-        items: [
-          makeItem(0),
-          makeItem(1),
-          makeItem(2),
-          makeItem(3),
-        ],
+        items: [makeItem(0), makeItem(1), makeItem(2), makeItem(3)],
       },
     });
 
     expect(cache.extract()).toMatchSnapshot();
 
-    expect(cache.readQuery({
-      query: ALL_ITEMS,
-    })).toEqual({
+    expect(
+      cache.readQuery({
+        query: ALL_ITEMS,
+      })
+    ).toEqual({
       __typename: "RootQuery",
-      items: [
-        makeItem(0),
-        makeItem(1),
-        makeItem(2),
-        makeItem(3),
-      ],
+      items: [makeItem(0), makeItem(1), makeItem(2), makeItem(3)],
     });
   });
 
@@ -5926,34 +6184,44 @@ describe("type policies", function () {
         RootSubscription: {
           subscriptionType: true,
         },
-      }
+      },
     });
 
-    expect(cache.readQuery({
-      query: gql`query { __typename }`,
-    })).toEqual({
+    expect(
+      cache.readQuery({
+        query: gql`
+          query {
+            __typename
+          }
+        `,
+      })
+    ).toEqual({
       __typename: "RootQuery",
     });
 
-    expect(cache.readFragment({
-      id: "ROOT_MUTATION",
-      fragment: gql`
-        fragment MutationTypename on RootMutation {
-          __typename
-        }
-      `,
-    })).toEqual({
+    expect(
+      cache.readFragment({
+        id: "ROOT_MUTATION",
+        fragment: gql`
+          fragment MutationTypename on RootMutation {
+            __typename
+          }
+        `,
+      })
+    ).toEqual({
       __typename: "RootMutation",
     });
 
-    expect(cache.readFragment({
-      id: "ROOT_SUBSCRIPTION",
-      fragment: gql`
-        fragment SubscriptionTypename on RootSubscription {
-          __typename
-        }
-      `,
-    })).toEqual({
+    expect(
+      cache.readFragment({
+        id: "ROOT_SUBSCRIPTION",
+        fragment: gql`
+          fragment SubscriptionTypename on RootSubscription {
+            __typename
+          }
+        `,
+      })
+    ).toEqual({
       __typename: "RootSubscription",
     });
   });

@@ -1,14 +1,14 @@
-import { invariant } from "../../utilities/globals/index.js";
 import * as React from "react";
+import { invariant } from "../../utilities/globals/index.js";
 import type {
   ApolloClient,
   ApolloQueryResult,
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
-  WatchQueryOptions,
   WatchQueryFetchPolicy,
   FetchMoreQueryOptions,
+  WatchQueryOptions,
 } from "../../core/index.js";
 import { ApolloError, NetworkStatus } from "../../core/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
@@ -20,9 +20,11 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from "../types/types.js";
-import { useDeepMemo, __use } from "./internal/index.js";
+import { __use, useDeepMemo } from "./internal/index.js";
 import { getSuspenseCache } from "../cache/index.js";
 import { canonicalStringify } from "../../cache/index.js";
+import { skipToken } from "./constants.js";
+import type { SkipToken } from "./constants.js";
 import type { CacheKey } from "../cache/types.js";
 
 export interface UseSuspenseQueryResult<
@@ -148,10 +150,31 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = Object.create(null)
+  options:
+    | SkipToken
+    | (SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+        returnPartialData: true;
+      })
+): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?:
+    | SkipToken
+    | SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+): UseSuspenseQueryResult<TData | undefined, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
+    | SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
@@ -306,7 +329,7 @@ interface UseWatchQueryOptionsHookOptions<
 > {
   client: ApolloClient<unknown>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  options: SuspenseQueryHookOptions<TData, TVariables>;
+  options: SkipToken | SuspenseQueryHookOptions<TData, TVariables>;
 }
 
 export function useWatchQueryOptions<
@@ -321,6 +344,10 @@ export function useWatchQueryOptions<
   TData
 > {
   return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
+    if (options === skipToken) {
+      return { query, fetchPolicy: "standby" };
+    }
+
     const fetchPolicy =
       options.fetchPolicy ||
       client.defaultOptions.watchQuery?.fetchPolicy ||

@@ -52,6 +52,7 @@ Array [
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
+  "skipToken",
   "split",
   "throwServerError",
   "toPromise",
@@ -210,7 +211,6 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
-  "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
 ]
@@ -270,6 +270,7 @@ Array [
   "operationName",
   "parser",
   "resetApolloContext",
+  "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
   "useFragment",
@@ -312,6 +313,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
 Array [
+  "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
   "useFragment",
@@ -424,8 +426,6 @@ Array [
   "hasDirectives",
   "isApolloPayloadResult",
   "isArray",
-  "isAsyncIterableIterator",
-  "isBlob",
   "isDocumentNode",
   "isExecutionPatchIncrementalResult",
   "isExecutionPatchInitialResult",
@@ -433,16 +433,12 @@ Array [
   "isField",
   "isInlineFragment",
   "isMutationOperation",
-  "isNodeReadableStream",
-  "isNodeResponse",
   "isNonEmptyArray",
   "isNonNullObject",
   "isPlainObject",
   "isQueryOperation",
-  "isReadableStream",
   "isReference",
   "isStatefulPromise",
-  "isStreamableBlob",
   "isSubscriptionOperation",
   "iterateObserversSafely",
   "makeReference",

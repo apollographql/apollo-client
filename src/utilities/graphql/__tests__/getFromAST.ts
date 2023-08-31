@@ -1,6 +1,6 @@
-import { print } from 'graphql';
-import gql from 'graphql-tag';
-import { FragmentDefinitionNode, OperationDefinitionNode } from 'graphql';
+import { print } from "graphql";
+import gql from "graphql-tag";
+import { FragmentDefinitionNode, OperationDefinitionNode } from "graphql";
 
 import {
   checkDocument,
@@ -8,10 +8,10 @@ import {
   getQueryDefinition,
   getDefaultValues,
   getOperationName,
-} from '../getFromAST';
+} from "../getFromAST";
 
-describe('AST utility functions', () => {
-  it('should correctly check a document for correctness', () => {
+describe("AST utility functions", () => {
+  it("should correctly check a document for correctness", () => {
     const multipleQueries = gql`
       query {
         author {
@@ -47,7 +47,7 @@ describe('AST utility functions', () => {
     }).not.toThrow();
   });
 
-  it('should get fragment definitions from a document containing a single fragment', () => {
+  it("should get fragment definitions from a document containing a single fragment", () => {
     const singleFragmentDefinition = gql`
       query {
         author {
@@ -74,7 +74,7 @@ describe('AST utility functions', () => {
     expect(print(actualResult[0])).toBe(print(expectedResult[0]));
   });
 
-  it('should get fragment definitions from a document containing a multiple fragments', () => {
+  it("should get fragment definitions from a document containing a multiple fragments", () => {
     const multipleFragmentDefinitions = gql`
       query {
         author {
@@ -110,7 +110,7 @@ describe('AST utility functions', () => {
     expect(actualResult.map(print)).toEqual(expectedResult.map(print));
   });
 
-  it('should get the correct query definition out of a query containing multiple fragments', () => {
+  it("should get the correct query definition out of a query containing multiple fragments", () => {
     const queryWithFragments = gql`
       fragment authorDetails on Author {
         firstName
@@ -143,7 +143,7 @@ describe('AST utility functions', () => {
     expect(print(actualResult)).toEqual(print(expectedResult));
   });
 
-  it('should throw if we try to get the query definition of a document with no query', () => {
+  it("should throw if we try to get the query definition of a document with no query", () => {
     const mutationWithFragments = gql`
       fragment authorDetails on Author {
         firstName
@@ -161,27 +161,27 @@ describe('AST utility functions', () => {
     }).toThrow();
   });
 
-  it('should get the operation name out of a query', () => {
+  it("should get the operation name out of a query", () => {
     const query = gql`
       query nameOfQuery {
         fortuneCookie
       }
     `;
     const operationName = getOperationName(query);
-    expect(operationName).toEqual('nameOfQuery');
+    expect(operationName).toEqual("nameOfQuery");
   });
 
-  it('should get the operation name out of a mutation', () => {
+  it("should get the operation name out of a mutation", () => {
     const query = gql`
       mutation nameOfMutation {
         fortuneCookie
       }
     `;
     const operationName = getOperationName(query);
-    expect(operationName).toEqual('nameOfMutation');
+    expect(operationName).toEqual("nameOfMutation");
   });
 
-  it('should return null if the query does not have an operation name', () => {
+  it("should return null if the query does not have an operation name", () => {
     const query = gql`
       {
         fortuneCookie
@@ -191,14 +191,14 @@ describe('AST utility functions', () => {
     expect(operationName).toEqual(null);
   });
 
-  it('should throw if type definitions found in document', () => {
+  it("should throw if type definitions found in document", () => {
     const queryWithTypeDefinition = gql`
       fragment authorDetails on Author {
         firstName
         lastName
       }
 
-      query($search: AuthorSearchInputType) {
+      query ($search: AuthorSearchInputType) {
         author(search: $search) {
           ...authorDetails
         }
@@ -211,12 +211,12 @@ describe('AST utility functions', () => {
     expect(() => {
       getQueryDefinition(queryWithTypeDefinition);
     }).toThrowError(
-      'Schema type definitions not allowed in queries. Found: "InputObjectTypeDefinition"',
+      'Schema type definitions not allowed in queries. Found: "InputObjectTypeDefinition"'
     );
   });
 
-  describe('getDefaultValues', () => {
-    it('will create an empty variable object if no default values are provided', () => {
+  describe("getDefaultValues", () => {
+    it("will create an empty variable object if no default values are provided", () => {
       const basicQuery = gql`
         query people($first: Int, $second: String) {
           allPeople(first: $first) {
@@ -230,7 +230,7 @@ describe('AST utility functions', () => {
       expect(getDefaultValues(getQueryDefinition(basicQuery))).toEqual({});
     });
 
-    it('will create a variable object based on the definition node with default values', () => {
+    it("will create a variable object based on the definition node with default values", () => {
       const basicQuery = gql`
         query people($first: Int = 1, $second: String!) {
           allPeople(first: $first) {

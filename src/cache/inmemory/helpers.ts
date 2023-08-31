@@ -1,19 +1,21 @@
-import type { DocumentNode, FragmentDefinitionNode, SelectionSetNode } from 'graphql';
-
 import type {
-  NormalizedCache,
-  InMemoryCacheConfig,
-} from './types.js';
+  DocumentNode,
+  FragmentDefinitionNode,
+  SelectionSetNode,
+} from "graphql";
 
-import type { KeyFieldsContext } from './policies.js';
-import type { FragmentRegistryAPI } from './fragmentRegistry.js';
+import type { NormalizedCache, InMemoryCacheConfig } from "./types.js";
+
+import type { KeyFieldsContext } from "./policies.js";
+import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
 
 import type {
   Reference,
   StoreValue,
   StoreObject,
   FragmentMap,
-  FragmentMapFunction} from '../../utilities/index.js';
+  FragmentMapFunction,
+} from "../../utilities/index.js";
 import {
   isReference,
   isField,
@@ -25,11 +27,9 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   isArray,
-} from '../../utilities/index.js';
+} from "../../utilities/index.js";
 
-export const {
-  hasOwnProperty: hasOwn,
-} = Object.prototype;
+export const { hasOwnProperty: hasOwn } = Object.prototype;
 
 export function isNullish(value: any): value is null | undefined {
   return value === null || value === void 0;
@@ -39,14 +39,15 @@ export { isArray };
 
 export function defaultDataIdFromObject(
   { __typename, id, _id }: Readonly<StoreObject>,
-  context?: KeyFieldsContext,
+  context?: KeyFieldsContext
 ): string | undefined {
   if (typeof __typename === "string") {
     if (context) {
-      context.keyObject =
-        !isNullish(id) ? { id } :
-        !isNullish(_id) ? { _id } :
-        void 0;
+      context.keyObject = !isNullish(id)
+        ? { id }
+        : !isNullish(_id)
+        ? { _id }
+        : void 0;
     }
 
     // If there is no object.id, fall back to object._id.
@@ -55,10 +56,11 @@ export function defaultDataIdFromObject(
     }
 
     if (!isNullish(id)) {
-      return `${__typename}:${(
-        typeof id === "number" ||
-        typeof id === "string"
-      ) ? id : JSON.stringify(id)}`;
+      return `${__typename}:${
+        typeof id === "number" || typeof id === "string"
+          ? id
+          : JSON.stringify(id)
+      }`;
     }
   }
 }
@@ -77,7 +79,7 @@ export function normalizeConfig(config: InMemoryCacheConfig) {
 }
 
 export function shouldCanonizeResults(
-  config: Pick<InMemoryCacheConfig, "canonizeResults">,
+  config: Pick<InMemoryCacheConfig, "canonizeResults">
 ): boolean {
   const value = config.canonizeResults;
   return value === void 0 ? defaultConfig.canonizeResults : value;
@@ -85,10 +87,10 @@ export function shouldCanonizeResults(
 
 export function getTypenameFromStoreObject(
   store: NormalizedCache,
-  objectOrReference: StoreObject | Reference,
+  objectOrReference: StoreObject | Reference
 ): string | undefined {
   return isReference(objectOrReference)
-    ? store.get(objectOrReference.__ref, "__typename") as string
+    ? (store.get(objectOrReference.__ref, "__typename") as string)
     : objectOrReference && objectOrReference.__typename;
 }
 
@@ -102,44 +104,50 @@ export function fieldNameFromStoreName(storeFieldName: string): string {
 export function selectionSetMatchesResult(
   selectionSet: SelectionSetNode,
   result: Record<string, any>,
-  variables?: Record<string, any>,
+  variables?: Record<string, any>
 ): boolean {
   if (isNonNullObject(result)) {
     return isArray(result)
-      ? result.every(item => selectionSetMatchesResult(selectionSet, item, variables))
-      : selectionSet.selections.every(field => {
-        if (isField(field) && shouldInclude(field, variables)) {
-          const key = resultKeyNameFromField(field);
-          return hasOwn.call(result, key) &&
-            (!field.selectionSet ||
-             selectionSetMatchesResult(field.selectionSet, result[key], variables));
-        }
-        // If the selection has been skipped with @skip(true) or
-        // @include(false), it should not count against the matching. If
-        // the selection is not a field, it must be a fragment (inline or
-        // named). We will determine if selectionSetMatchesResult for that
-        // fragment when we get to it, so for now we return true.
-        return true;
-      });
+      ? result.every((item) =>
+          selectionSetMatchesResult(selectionSet, item, variables)
+        )
+      : selectionSet.selections.every((field) => {
+          if (isField(field) && shouldInclude(field, variables)) {
+            const key = resultKeyNameFromField(field);
+            return (
+              hasOwn.call(result, key) &&
+              (!field.selectionSet ||
+                selectionSetMatchesResult(
+                  field.selectionSet,
+                  result[key],
+                  variables
+                ))
+            );
+          }
+          // If the selection has been skipped with @skip(true) or
+          // @include(false), it should not count against the matching. If
+          // the selection is not a field, it must be a fragment (inline or
+          // named). We will determine if selectionSetMatchesResult for that
+          // fragment when we get to it, so for now we return true.
+          return true;
+        });
   }
   return false;
 }
 
 export function storeValueIsStoreObject(
-  value: StoreValue,
+  value: StoreValue
 ): value is StoreObject {
-  return isNonNullObject(value) &&
-    !isReference(value) &&
-    !isArray(value);
+  return isNonNullObject(value) && !isReference(value) && !isArray(value);
 }
 
 export function makeProcessedFieldsMerger() {
-  return new DeepMerger;
+  return new DeepMerger();
 }
 
 export function extractFragmentContext(
   document: DocumentNode,
-  fragments?: FragmentRegistryAPI,
+  fragments?: FragmentRegistryAPI
 ): {
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;

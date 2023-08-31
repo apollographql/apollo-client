@@ -1,4 +1,4 @@
-import type { Operation } from '../core/index.js';
+import type { Operation } from "../core/index.js";
 
 /**
  * Advanced mode: a function that implements the strategy for calculating delays
@@ -42,7 +42,7 @@ export interface DelayFunctionOptions {
 }
 
 export function buildDelayFunction(
-  delayOptions?: DelayFunctionOptions,
+  delayOptions?: DelayFunctionOptions
 ): DelayFunction {
   const { initial = 300, jitter = true, max = Infinity } = delayOptions || {};
   // If we're jittering, baseDelay is half of the maximum delay for that

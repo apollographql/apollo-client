@@ -1,4 +1,4 @@
-import type { Operation } from '../core/index.js';
+import type { Operation } from "../core/index.js";
 
 /**
  * Advanced mode: a function that determines both whether a particular
@@ -31,7 +31,7 @@ export interface RetryFunctionOptions {
 }
 
 export function buildRetryFunction(
-  retryOptions?: RetryFunctionOptions,
+  retryOptions?: RetryFunctionOptions
 ): RetryFunction {
   const { retryIf, max = 5 } = retryOptions || ({} as RetryFunctionOptions);
   return function retryFunction(count, operation, error) {

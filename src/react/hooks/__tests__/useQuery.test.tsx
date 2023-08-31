@@ -2196,7 +2196,7 @@ describe("useQuery Hook", () => {
       });
     });
 
-    it("calls `onError` when a network error has occured", async () => {
+    it("calls `onError` when a network error has occurred", async () => {
       const query = gql`
         {
           hello

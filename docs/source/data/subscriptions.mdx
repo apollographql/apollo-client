@@ -199,9 +199,11 @@ const wsLink = new GraphQLWsLink(createClient({
 
 Your `GraphQLWsLink` passes the `connectionParams` object to your server whenever it connects. Your server receives the `connectionParams` object and can use it to perform authentication, along with any other connection-related tasks.
 
-## Subscriptions via Multipart HTTP
+## Subscriptions via multipart HTTP
 
 No additional libraries or configuration are required. Apollo Client adds the required headers to your request when the default terminating `HTTPLink` receives a subscription operation at the `uri` specified when initializing the link or Apollo Client instance.
+
+> **Note:** in order to use subscriptions over multipart HTTP in a React Native application, additional configuration is required. See the [React Native docs](../integrations/react-native#consuming-multipart-http-via-text-streaming) for more information.
 
 ## Executing a subscription
 

@@ -3202,7 +3202,7 @@ test("regression test for #10587", async () => {
 });
 
 // https://github.com/apollographql/apollo-client/issues/11184
-test("handles changing variables in rapid succession before other request is aborted", async () => {
+test("handles changing variables in rapid succession before other request is completed", async () => {
   interface UserCountQuery {
     userCount: number;
   }

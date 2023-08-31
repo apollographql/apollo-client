@@ -51,17 +51,17 @@ By default, React Native ships with a `fetch` implementation built on top of XHR
 For this reason, if you are using *either* [`@defer`](../data/defer) or [subscriptions over multipart HTTP](../data/subscriptions#subscriptions-via-multipart-http)—features that use text streaming to read multipart HTTP responses—there are additional steps you'll need to take to polyfill this functionality.
 
 1. Install `react-native-fetch-api` and `react-native-polyfill-globals` and save them both as dependencies.
-2. In your applications entrypoint (i.e. `index.js`, `App.js` or similar), import the following three polyfille, and call each of the `polyfill*` functions before any application code:
-```tsx
-import { polyfill as polyfillEncoding } from "react-native-polyfill-globals/src/encoding";
-import { polyfill as polyfillReadableStream } from "react-native-polyfill-globals/src/readable-stream";
-import { polyfill as polyfillFetch } from "react-native-polyfill-globals/src/fetch";
+2. In your application's entrypoint (i.e. `index.js`, `App.js` or similar), import the following three polyfills and call each of the `polyfill*` functions before any application code:
+  ```tsx
+  import { polyfill as polyfillEncoding } from "react-native-polyfill-globals/src/encoding";
+  import { polyfill as polyfillReadableStream } from "react-native-polyfill-globals/src/readable-stream";
+  import { polyfill as polyfillFetch } from "react-native-polyfill-globals/src/fetch";
 
-polyfillReadableStream();
-polyfillEncoding();
-polyfillFetch();
-```
-1. Finally, there’s a special option we’ll need to pass to our polyfilled `fetch`. Create an `HttpLink` so we can pass the following options in the default `fetchOptions`:
+  polyfillReadableStream();
+  polyfillEncoding();
+  polyfillFetch();
+  ```
+3. Finally, there’s a special option we’ll need to pass to our polyfilled `fetch`. Create an `HttpLink` so we can set the following on our default `fetchOptions`:
 ```tsx
 const link = new HttpLink({
   uri: "http://localhost:4000/graphql",

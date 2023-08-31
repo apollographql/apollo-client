@@ -741,11 +741,6 @@
 
 ## Apollo Client 3.6.10 (2022-09-29)
 
-### Bug Fixes
-
-- Fix a race condition in useReactiveVar.
-  [@Huulivoide](https://github.com/Huulivoide) in [#10072](https://github.com/apollographql/apollo-client/pull/10072)
-
 ### Improvements
 
 - The client options (`variables`, `context`, etc.) used for `mutation` calls are now available as the second argument to the `onCompleted` and `onError` callback functions. <br/>

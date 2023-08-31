@@ -110,12 +110,15 @@ export function profile<Props, Snapshot = void>({
             if (render.phase === "snapshotError") {
               throw render.error;
             }
+            console.log("returning render from render cache", { render })
             return render;
           }
-          return Profiled.waitForNextRender({
+          const render = Profiled.waitForNextRender({
             stackTrace: captureStackTrace(Profiled.takeRender),
             ...options,
           });
+          console.log("returning render from waitForNextRender", { render })
+          return render;
         } finally {
           iteratorPosition++;
         }

@@ -941,7 +941,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     observer: Observer<ApolloQueryResult<TData>>
   ): ObservableSubscription;
 
-  public resubscribeAfterError(...args: any[]) {
+  public resubscribeAfterError(...args: [any, any?, any?]) {
     // If `lastError` is set in the current when the subscription is re-created,
     // the subscription will immediately receive the error, which will
     // cause it to terminate again. To avoid this, we first clear
@@ -951,7 +951,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const last = this.last;
     this.resetLastResults();
 
-    const subscription = this.subscribe(args[0], args[1], args[2]);
+    const subscription = this.subscribe(...args);
     this.last = last;
 
     return subscription;

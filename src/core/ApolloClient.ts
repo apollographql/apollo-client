@@ -192,13 +192,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       };
       const windowWithDevTools = window as Window & {
         [devtoolsSymbol]?: DevToolsConnector;
+        __APOLLO_CLIENT__?: ApolloClient<any>;
       };
       const devtoolsSymbol = Symbol.for("apollo.devtools");
       (windowWithDevTools[devtoolsSymbol] =
         windowWithDevTools[devtoolsSymbol] || ([] as DevToolsConnector)).push(
         this
       );
-      (window as any).__APOLLO_CLIENT__ = this;
+      windowWithDevTools.__APOLLO_CLIENT__ = this;
     }
 
     /**

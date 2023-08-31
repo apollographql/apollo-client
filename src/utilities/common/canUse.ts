@@ -1,14 +1,13 @@
 import { maybe } from "../globals/index.js";
 
 export const canUseWeakMap =
-  typeof WeakMap === 'function' &&
-  maybe(() => navigator.product) !== 'ReactNative';
+  typeof WeakMap === "function" &&
+  maybe(() => navigator.product) !== "ReactNative";
 
-export const canUseWeakSet = typeof WeakSet === 'function';
+export const canUseWeakSet = typeof WeakSet === "function";
 
 export const canUseSymbol =
-  typeof Symbol === 'function' &&
-  typeof Symbol.for === 'function';
+  typeof Symbol === "function" && typeof Symbol.for === "function";
 
 export const canUseAsyncIteratorSymbol = canUseSymbol && Symbol.asyncIterator;
 

@@ -50,10 +50,7 @@ describe("resultCache cleaning", () => {
   `;
 
   function uuid(label: string) {
-    return () =>
-      `${label}-${Math.random()
-        .toString(16)
-        .substr(2)}`;
+    return () => `${label}-${Math.random().toString(16).substr(2)}`;
   }
 
   function emptyList(len: number) {
@@ -142,7 +139,7 @@ describe("resultCache cleaning", () => {
 
   beforeEach(() => {
     client = new ApolloClient({
-      cache: new InMemoryCache,
+      cache: new InMemoryCache(),
       link: new SchemaLink({
         schema: makeExecutableSchema({
           typeDefs,

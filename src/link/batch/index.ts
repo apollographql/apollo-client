@@ -1,1 +1,1 @@
-export * from './batchLink.js';
+export * from "./batchLink.js";

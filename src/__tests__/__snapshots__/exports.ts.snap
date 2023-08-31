@@ -211,7 +211,6 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
-  "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
 ]
@@ -427,8 +426,6 @@ Array [
   "hasDirectives",
   "isApolloPayloadResult",
   "isArray",
-  "isAsyncIterableIterator",
-  "isBlob",
   "isDocumentNode",
   "isExecutionPatchIncrementalResult",
   "isExecutionPatchInitialResult",
@@ -436,16 +433,12 @@ Array [
   "isField",
   "isInlineFragment",
   "isMutationOperation",
-  "isNodeReadableStream",
-  "isNodeResponse",
   "isNonEmptyArray",
   "isNonNullObject",
   "isPlainObject",
   "isQueryOperation",
-  "isReadableStream",
   "isReference",
   "isStatefulPromise",
-  "isStreamableBlob",
   "isSubscriptionOperation",
   "iterateObserversSafely",
   "makeReference",

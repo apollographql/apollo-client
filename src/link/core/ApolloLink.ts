@@ -1,26 +1,26 @@
-import { newInvariantError, invariant } from '../../utilities/globals/index.js';
+import { newInvariantError, invariant } from "../../utilities/globals/index.js";
 
-import type { Observer } from '../../utilities/index.js';
-import { Observable } from '../../utilities/index.js';
+import type { Observer } from "../../utilities/index.js";
+import { Observable } from "../../utilities/index.js";
 import type {
   NextLink,
   Operation,
   RequestHandler,
   FetchResult,
-  GraphQLRequest
-} from './types.js';
+  GraphQLRequest,
+} from "./types.js";
 import {
   validateOperation,
   createOperation,
   transformOperation,
-} from '../utils/index.js';
+} from "../utils/index.js";
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;
 }
 
 function toLink(handler: RequestHandler | ApolloLink) {
-  return typeof handler === 'function' ? new ApolloLink(handler) : handler;
+  return typeof handler === "function" ? new ApolloLink(handler) : handler;
 }
 
 function isTerminating(link: ApolloLink): boolean {
@@ -40,13 +40,13 @@ export class ApolloLink {
   public static split(
     test: (op: Operation) => boolean,
     left: ApolloLink | RequestHandler,
-    right?: ApolloLink | RequestHandler,
+    right?: ApolloLink | RequestHandler
   ): ApolloLink {
     const leftLink = toLink(left);
     const rightLink = toLink(right || new ApolloLink(passthrough));
 
     if (isTerminating(leftLink) && isTerminating(rightLink)) {
-      return new ApolloLink(operation => {
+      return new ApolloLink((operation) => {
         return test(operation)
           ? leftLink.request(operation) || Observable.of()
           : rightLink.request(operation) || Observable.of();
@@ -62,27 +62,27 @@ export class ApolloLink {
 
   public static execute(
     link: ApolloLink,
-    operation: GraphQLRequest,
+    operation: GraphQLRequest
   ): Observable<FetchResult> {
     return (
       link.request(
         createOperation(
           operation.context,
-          transformOperation(validateOperation(operation)),
-        ),
+          transformOperation(validateOperation(operation))
+        )
       ) || Observable.of()
     );
   }
 
   public static concat(
     first: ApolloLink | RequestHandler,
-    second: ApolloLink | RequestHandler,
+    second: ApolloLink | RequestHandler
   ) {
     const firstLink = toLink(first);
     if (isTerminating(firstLink)) {
       invariant.warn(
-          `You are calling concat on a terminating link, which will have no effect %o`,
-          firstLink,
+        `You are calling concat on a terminating link, which will have no effect %o`,
+        firstLink
       );
       return firstLink;
     }
@@ -90,16 +90,16 @@ export class ApolloLink {
 
     if (isTerminating(nextLink)) {
       return new ApolloLink(
-        operation =>
+        (operation) =>
           firstLink.request(
             operation,
-            op => nextLink.request(op) || Observable.of(),
-          ) || Observable.of(),
+            (op) => nextLink.request(op) || Observable.of()
+          ) || Observable.of()
       );
     } else {
       return new ApolloLink((operation, forward) => {
         return (
-          firstLink.request(operation, op => {
+          firstLink.request(operation, (op) => {
             return nextLink.request(op, forward) || Observable.of();
           }) || Observable.of()
         );
@@ -114,7 +114,7 @@ export class ApolloLink {
   public split(
     test: (op: Operation) => boolean,
     left: ApolloLink | RequestHandler,
-    right?: ApolloLink | RequestHandler,
+    right?: ApolloLink | RequestHandler
   ): ApolloLink {
     return this.concat(
       ApolloLink.split(test, left, right || new ApolloLink(passthrough))
@@ -127,14 +127,14 @@ export class ApolloLink {
 
   public request(
     operation: Operation,
-    forward?: NextLink,
+    forward?: NextLink
   ): Observable<FetchResult> | null {
-    throw newInvariantError('request is not implemented');
+    throw newInvariantError("request is not implemented");
   }
 
   protected onError(
     error: any,
-    observer?: Observer<FetchResult>,
+    observer?: Observer<FetchResult>
   ): false | void {
     if (observer && observer.error) {
       observer.error(error);

@@ -119,7 +119,6 @@ export * from "./common/compact.js";
 export * from "./common/makeUniqueId.js";
 export * from "./common/stringifyForDisplay.js";
 export * from "./common/mergeOptions.js";
-export * from "./common/responseIterator.js";
 export * from "./common/incrementalResult.js";
 
 export { omitDeep } from "./common/omitDeep.js";

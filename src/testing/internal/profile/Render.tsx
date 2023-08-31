@@ -1,3 +1,14 @@
+/* istanbul ignore file */
+
+/*
+Something in this file does not compile correctly while measuring code coverage
+and will lead to a
+  Uncaught [ReferenceError: cov_1zb8w312au is not defined]
+if we do not ignore this file in code coverage.
+
+As we only use this file in our internal tests, we can safely ignore it.
+*/
+
 import type { Interaction } from "scheduler/tracing";
 import { within, screen } from "@testing-library/dom";
 import { JSDOM, VirtualConsole } from "jsdom";

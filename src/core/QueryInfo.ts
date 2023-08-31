@@ -342,20 +342,14 @@ export class QueryInfo {
     variables: WatchQueryOptions["variables"]
   ) {
     const { lastWrite } = this;
-    return (
-      // In case variables have changed and there is a race condition where the
-      // previous variables request finishes after the current variables
-      // request, skip the cache update.
-      equal(this.variables, variables) &&
-      !(
-        lastWrite &&
-        // If cache.evict has been called since the last time we wrote this
-        // data into the cache, there's a chance writing this result into
-        // the cache will repair what was evicted.
-        lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
-        equal(variables, lastWrite.variables) &&
-        equal(result.data, lastWrite.result.data)
-      )
+    return !(
+      lastWrite &&
+      // If cache.evict has been called since the last time we wrote this
+      // data into the cache, there's a chance writing this result into
+      // the cache will repair what was evicted.
+      lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
+      equal(variables, lastWrite.variables) &&
+      equal(result.data, lastWrite.result.data)
     );
   }
 
@@ -466,8 +460,11 @@ export class QueryInfo {
 
           // In case the QueryManager stops this QueryInfo before its
           // results are delivered, it's important to avoid restarting the
-          // cache watch when markResult is called.
-          if (!this.stopped) {
+          // cache watch when markResult is called. We also avoid updating
+          // the watch if we are writing a result that doesn't match the current
+          // variables to avoid race conditions from broadcasting the wrong
+          // result.
+          if (!this.stopped && equal(this.variables, options.variables)) {
             // Any time we're about to update this.diff, we need to make
             // sure we've started watching the cache.
             this.updateWatch(options.variables);

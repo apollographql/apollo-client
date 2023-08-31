@@ -163,7 +163,7 @@
     "ts-jest": "29.1.1",
     "ts-jest-resolver": "2.0.1",
     "ts-node": "10.9.1",
-    "typedoc": "0.24.7",
+    "typedoc": "0.25.0",
     "typescript": "5.2.2",
     "wait-for-observables": "1.0.3",
     "web-streams-polyfill": "3.2.1",

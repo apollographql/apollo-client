@@ -3503,6 +3503,258 @@ describe("useBackgroundQuery", () => {
         },
       ]);
     });
+
+    it("can refetch after error is encountered", async () => {
+      type Variables = {
+        id: string;
+      };
+
+      interface Data {
+        todo: {
+          id: string;
+          name: string;
+          completed: boolean;
+        };
+      }
+      const user = userEvent.setup();
+
+      const query: TypedDocumentNode<Data, Variables> = gql`
+        query TodoItemQuery($id: ID!) {
+          todo(id: $id) {
+            id
+            name
+            completed
+          }
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query, variables: { id: "1" } },
+          result: {
+            data: null,
+            errors: [new GraphQLError("Oops couldn't fetch")],
+          },
+          delay: 10,
+        },
+        {
+          request: { query, variables: { id: "1" } },
+          result: {
+            data: { todo: { id: "1", name: "Clean room", completed: true } },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache: new InMemoryCache(),
+      });
+
+      function App() {
+        return (
+          <ApolloProvider client={client}>
+            <Parent />
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [queryRef, { refetch }] = useBackgroundQuery(query, {
+          variables: { id: "1" },
+        });
+
+        return (
+          <Suspense fallback={<SuspenseFallback />}>
+            <ErrorBoundary
+              onReset={() => refetch()}
+              fallbackRender={({ error, resetErrorBoundary }) => (
+                <>
+                  <button onClick={resetErrorBoundary}>Retry</button>
+                  <div>{error.message}</div>
+                </>
+              )}
+            >
+              <Todo queryRef={queryRef} />
+            </ErrorBoundary>
+          </Suspense>
+        );
+      }
+
+      function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
+        const {
+          data: { todo },
+        } = useReadQuery(queryRef);
+
+        return (
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        );
+      }
+
+      render(<App />);
+
+      // Disable error message shown in the console due to an uncaught error.
+      // TODO: need to determine why the error message is logged to the console
+      // as an uncaught error since other tests do not require this.
+      const consoleSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      expect(screen.getByText("Loading")).toBeInTheDocument();
+
+      expect(
+        await screen.findByText("Oops couldn't fetch")
+      ).toBeInTheDocument();
+
+      consoleSpy.mockRestore();
+
+      const button = screen.getByText("Retry");
+
+      await act(() => user.click(button));
+
+      expect(screen.getByText("Loading")).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("todo")).toHaveTextContent(
+          "Clean room (completed)"
+        );
+      });
+    });
+
+    it("throws errors on refetch after error is encountered after first fetch with error", async () => {
+      type Variables = {
+        id: string;
+      };
+
+      interface Data {
+        todo: {
+          id: string;
+          name: string;
+          completed: boolean;
+        };
+      }
+      const user = userEvent.setup();
+
+      const query: TypedDocumentNode<Data, Variables> = gql`
+        query TodoItemQuery($id: ID!) {
+          todo(id: $id) {
+            id
+            name
+            completed
+          }
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query, variables: { id: "1" } },
+          result: {
+            data: null,
+            errors: [new GraphQLError("Oops couldn't fetch")],
+          },
+          delay: 10,
+        },
+        {
+          request: { query, variables: { id: "1" } },
+          result: {
+            data: null,
+            errors: [new GraphQLError("Oops couldn't fetch again")],
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache: new InMemoryCache(),
+      });
+
+      function App() {
+        return (
+          <ApolloProvider client={client}>
+            <Parent />
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [queryRef, { refetch }] = useBackgroundQuery(query, {
+          variables: { id: "1" },
+        });
+
+        return (
+          <Suspense fallback={<SuspenseFallback />}>
+            <ErrorBoundary
+              onReset={() => refetch()}
+              fallbackRender={({ error, resetErrorBoundary }) => (
+                <>
+                  <button onClick={resetErrorBoundary}>Retry</button>
+                  <div>{error.message}</div>
+                </>
+              )}
+            >
+              <Todo queryRef={queryRef} />
+            </ErrorBoundary>
+          </Suspense>
+        );
+      }
+
+      function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
+        const {
+          data: { todo },
+        } = useReadQuery(queryRef);
+
+        return (
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        );
+      }
+
+      render(<App />);
+
+      // Disable error message shown in the console due to an uncaught error.
+      // TODO: need to determine why the error message is logged to the console
+      // as an uncaught error since other tests do not require this.
+      const consoleSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      expect(screen.getByText("Loading")).toBeInTheDocument();
+
+      expect(
+        await screen.findByText("Oops couldn't fetch")
+      ).toBeInTheDocument();
+
+      const button = screen.getByText("Retry");
+
+      await act(() => user.click(button));
+
+      expect(screen.getByText("Loading")).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Oops couldn't fetch again")
+        ).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+
+      consoleSpy.mockRestore();
+    });
+
     it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {
       type Variables = {
         id: string;

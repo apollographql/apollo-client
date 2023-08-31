@@ -53,18 +53,18 @@ const checks = [
     value.path == "dist/apollo-client.min.cjs"
       ? value
       : [
-        { ...value, limit: undefined },
-        {
-          ...value,
-          name: `${value.name} (production)`,
-          modifyEsbuildConfig(config) {
-            config.define = {
-              "globalThis.__DEV__": `false`,
-            };
-            return config;
+          { ...value, limit: undefined },
+          {
+            ...value,
+            name: `${value.name} (production)`,
+            modifyEsbuildConfig(config) {
+              config.define = {
+                "globalThis.__DEV__": `false`,
+              };
+              return config;
+            },
           },
-        },
-      ]
+        ]
   );
 
 module.exports = checks;

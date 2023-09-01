@@ -71,6 +71,8 @@ const link = new HttpLink({
 });
 ```
 
+> **Note**: if you're still experiencing issues on Android after adding the polyfills above, there may be a library like Flipper that is intercepting requests during local development. Try commenting out `NetworkFlipperPlugin` in e.g. `android/app/src/debug/java/com/<projectname>/ReactNativeFlipper.java`, or running your app in release mode.
+
 Now you're ready to use `@defer` and/or multipart subscriptions over HTTP in your React Native app!
 
 ## Troubleshooting

@@ -3534,6 +3534,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("tears down subscription when throwing an error", async () => {
+    jest.useFakeTimers();
     const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
     const { query, mocks } = useErrorCase({
@@ -3551,8 +3552,14 @@ describe("useSuspenseQuery", () => {
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
 
+    // The query was never retained since the error was thrown before the
+    // useEffect coud run. We need to wait for the auto dispose timeout to kick
+    // in before we check whether the observable was cleaned up
+    jest.advanceTimersByTime(30_000);
+
     expect(client.getObservableQueries().size).toBe(0);
 
+    jest.useRealTimers();
     consoleSpy.mockRestore();
   });
 

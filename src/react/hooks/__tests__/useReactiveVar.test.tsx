@@ -323,5 +323,59 @@ describe("useReactiveVar Hook", () => {
         resolve();
       }
     );
+
+    itAsync(
+      "should survive many rerenderings despite racing asynchronous updates",
+      (resolve, reject) => {
+        const rv = makeVar(0);
+
+        function App() {
+          const value = useReactiveVar(rv);
+          return (
+            <div className="App">
+              <h1>{value}</h1>
+            </div>
+          );
+        }
+
+        const goalCount = 1000;
+        let updateCount = 0;
+        let stopped = false;
+
+        function spam() {
+          if (stopped) return;
+          try {
+            if (++updateCount <= goalCount) {
+              act(() => {
+                rv(updateCount);
+                setTimeout(spam, Math.random() * 10);
+              });
+            } else {
+              stopped = true;
+              expect(rv()).toBe(goalCount);
+              screen
+                .findByText(String(goalCount))
+                .then((element) => {
+                  expect(element.nodeName.toLowerCase()).toBe("h1");
+                })
+                .then(resolve, reject);
+            }
+          } catch (e) {
+            stopped = true;
+            reject(e);
+          }
+        }
+        spam();
+        spam();
+        spam();
+        spam();
+
+        render(
+          <StrictMode>
+            <App />
+          </StrictMode>
+        );
+      }
+    );
   });
 });

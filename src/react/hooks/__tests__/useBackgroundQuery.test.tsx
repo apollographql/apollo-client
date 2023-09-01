@@ -3139,6 +3139,7 @@ describe("useBackgroundQuery", () => {
   });
 
   describe("refetch", () => {
+    // flaky test
     it("re-suspends when calling `refetch`", async () => {
       const { renders } = renderVariablesIntegrationTest({
         variables: { id: "1" },
@@ -3758,6 +3759,7 @@ describe("useBackgroundQuery", () => {
       consoleSpy.mockRestore();
     });
 
+    // flaky test
     it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {
       type Variables = {
         id: string;
@@ -3909,6 +3911,7 @@ describe("useBackgroundQuery", () => {
         (li) => li.firstChild!.textContent
       );
     }
+    // flaky test
     it("re-suspends when calling `fetchMore` with different variables", async () => {
       const { renders } = renderPaginatedIntegrationTest();
 
@@ -3931,6 +3934,7 @@ describe("useBackgroundQuery", () => {
 
       expect(getItemTexts()).toStrictEqual(["C", "D"]);
     });
+    // flaky test
     it("properly uses `updateQuery` when calling `fetchMore`", async () => {
       const { renders } = renderPaginatedIntegrationTest({
         updateQuery: true,
@@ -3958,6 +3962,7 @@ describe("useBackgroundQuery", () => {
       expect(moreItems).toHaveLength(4);
       expect(getItemTexts()).toStrictEqual(["A", "B", "C", "D"]);
     });
+    // flaky test
     it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
       const { renders, takeRender } = renderPaginatedIntegrationTest({
         fieldPolicies: true,
@@ -3994,6 +3999,7 @@ describe("useBackgroundQuery", () => {
         expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B", "C", "D"]);
       }
     });
+    // flaky test
     it("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {
       type Variables = {
         offset: number;

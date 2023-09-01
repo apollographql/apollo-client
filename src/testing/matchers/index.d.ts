@@ -3,6 +3,7 @@ import type {
   DocumentNode,
   OperationVariables,
 } from "../../core/index.js";
+import { NextRenderOptions, ProfiledComponent } from "../internal/index.js";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -23,6 +24,14 @@ interface ApolloCustomMatchers<R = void, T = {}> {
         }
       ) => R
     : { error: "matcher needs to be called on an ApolloClient instance" };
+
+  toRerender: T extends ProfiledComponent<any, any>
+    ? (options?: NextRenderOptions) => Promise<R>
+    : { error: "matcher needs to be called on a ProfiledComponent instance" };
+
+  toRenderExactlyTimes: T extends ProfiledComponent<any, any>
+    ? (count: number, options?: NextRenderOptions) => Promise<R>
+    : { error: "matcher needs to be called on a ProfiledComponent instance" };
 }
 
 declare global {

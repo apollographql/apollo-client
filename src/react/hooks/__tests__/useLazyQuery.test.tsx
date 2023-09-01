@@ -724,6 +724,7 @@ describe("useLazyQuery Hook", () => {
     expect(result.current[1].previousData).toEqual({ hello: "world 1" });
   });
 
+  // flaky test
   it("should allow for the query to start with polling", async () => {
     const mocks = [
       {
@@ -1117,6 +1118,7 @@ describe("useLazyQuery Hook", () => {
     });
   });
 
+  // flaky test
   it("the promise should reject with errors the “way useMutation does”", async () => {
     const mocks = [
       {

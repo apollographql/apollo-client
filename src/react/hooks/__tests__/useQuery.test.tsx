@@ -1733,7 +1733,7 @@ describe("useQuery Hook", () => {
         expect(snapshot.data).toEqual(undefined);
       }
 
-      await expect(ProfiledUseQuery.takeRender()).rejects.toThrow();
+      await expect(ProfiledUseQuery).not.toRerender({ timeout: 100 });
 
       rerender(<ProfiledUseQuery skip={false} />);
       {
@@ -5962,6 +5962,7 @@ describe("useQuery Hook", () => {
   });
 
   describe("Previous data", () => {
+    // flaky test
     it("should persist previous data when a query is re-run", async () => {
       const query = gql`
         query car {

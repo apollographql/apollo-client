@@ -9,19 +9,23 @@ import type { Render, BaseRender } from "./Render.js";
 import { RenderInstance } from "./Render.js";
 import { applyStackTrace, captureStackTrace } from "./traces.js";
 
-interface NextRenderOptions {
+export interface NextRenderOptions {
   timeout?: number;
   stackTrace?: string;
 }
 
-interface ProfiledComponent<Props, Snapshot> extends React.FC<Props> {
+export interface ProfiledComponent<Props, Snapshot> extends React.FC<Props> {
   renders: Array<
     Render<Snapshot> | { phase: "snapshotError"; count: number; error: unknown }
   >;
   peekRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
   takeRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
+  currentRenderCount(): number;
   getCurrentRender(): Render<Snapshot>;
-  waitForRenderCount(count: number): Promise<void>;
+  takeUntilRenderCount(
+    count: number,
+    optionsPerRender?: NextRenderOptions
+  ): Promise<void>;
   waitForNextRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
 }
 
@@ -104,6 +108,9 @@ export function profile<Props, Snapshot = void>({
         | Render<Snapshot>
         | { phase: "snapshotError"; count: number; error: unknown }
       >(),
+      currentRenderCount() {
+        return Profiled.renders.length;
+      },
       async peekRender(options: NextRenderOptions = {}) {
         if (iteratorPosition < Profiled.renders.length) {
           const render = Profiled.renders[iteratorPosition];
@@ -126,12 +133,7 @@ export function profile<Props, Snapshot = void>({
           error = e;
           throw e;
         } finally {
-          if (
-            !(
-              error &&
-              error.message == "Exceeded timeout waiting for next render."
-            )
-          ) {
+          if (!(error && error instanceof WaitForRenderTimeoutError)) {
             iteratorPosition++;
           }
         }
@@ -142,9 +144,12 @@ export function profile<Props, Snapshot = void>({
         }
         return currentRender;
       },
-      async waitForRenderCount(count: number) {
+      async takeUntilRenderCount(
+        count: number,
+        optionsPerRender?: NextRenderOptions
+      ) {
         while (Profiled.renders.length < count) {
-          await Profiled.takeRender();
+          await Profiled.takeRender(optionsPerRender);
         }
       },
       waitForNextRender({
@@ -162,10 +167,7 @@ export function profile<Props, Snapshot = void>({
               setTimeout(
                 () =>
                   reject(
-                    applyStackTrace(
-                      new Error("Exceeded timeout waiting for next render."),
-                      stackTrace
-                    )
+                    applyStackTrace(new WaitForRenderTimeoutError(), stackTrace)
                   ),
                 timeout
               )
@@ -177,6 +179,13 @@ export function profile<Props, Snapshot = void>({
     }
   );
   return Profiled;
+}
+
+export class WaitForRenderTimeoutError extends Error {
+  constructor() {
+    super("Exceeded timeout waiting for next render.");
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
 }
 
 export function profileHook<Props, ReturnValue>(

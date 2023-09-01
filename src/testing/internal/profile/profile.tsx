@@ -9,29 +9,57 @@ import type { Render, BaseRender } from "./Render.js";
 import { RenderInstance } from "./Render.js";
 import { applyStackTrace, captureStackTrace } from "./traces.js";
 
+/** @internal */
 export interface NextRenderOptions {
   timeout?: number;
   stackTrace?: string;
 }
 
+/** @internal */
 export interface ProfiledComponent<Props, Snapshot> extends React.FC<Props> {
+  /**
+   * An array of all renders that have happened so far.
+   * Errors thrown during component rember will be captured here, too.
+   */
   renders: Array<
     Render<Snapshot> | { phase: "snapshotError"; count: number; error: unknown }
   >;
+  /**
+   * Peeks the next render from the current iterator position, without advancing the iterator.
+   * If no render has happened yet, it will wait for the next render to happen.
+   * @throws {WaitForRenderTimeoutError} if no render happens within the timeout
+   */
   peekRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
+  /**
+   * Iterates to the next render and returns it.
+   * If no render has happened yet, it will wait for the next render to happen.
+   * @throws {WaitForRenderTimeoutError} if no render happens within the timeout
+   */
   takeRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
+  /**
+   * Returns the current render count.
+   */
   currentRenderCount(): number;
+  /**
+   * Returns the current render.
+   * @throws {Error} if no render has happened yet
+   */
   getCurrentRender(): Render<Snapshot>;
+  /**
+   * Iterates the renders until the render count is reached.
+   */
   takeUntilRenderCount(
     count: number,
     optionsPerRender?: NextRenderOptions
   ): Promise<void>;
+  /**
+   * Waits for the next render to happen.
+   * Does not advance the render iterator.
+   */
   waitForNextRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
 }
 
-/**
- * @internal Should not be exported by the library.
- */
+/** @internal */
 export function profile<Props, Snapshot = void>({
   Component,
   takeSnapshot,
@@ -181,6 +209,7 @@ export function profile<Props, Snapshot = void>({
   return Profiled;
 }
 
+/** @internal */
 export class WaitForRenderTimeoutError extends Error {
   constructor() {
     super("Exceeded timeout waiting for next render.");
@@ -188,6 +217,7 @@ export class WaitForRenderTimeoutError extends Error {
   }
 }
 
+/** @internal */
 export function profileHook<Props, ReturnValue>(
   hook: (props: Props) => ReturnValue
 ) {

@@ -12,7 +12,7 @@ import { ApolloProvider } from "../../../context";
 import { InMemoryCache as Cache } from "../../../../cache";
 import { itAsync, mockSingleLink } from "../../../../testing";
 import { graphql } from "../../graphql";
-import { ChildProps } from "../../types";
+import { ChildProps, DataValue } from "../../types";
 import { profile } from "../../../../testing/internal";
 
 describe("[queries] loading", () => {
@@ -390,7 +390,13 @@ describe("[queries] loading", () => {
     });
 
     const usedFetchPolicies: WatchQueryFetchPolicy[] = [];
-    let currentData;
+    let currentData: DataValue<{
+      allPeople: {
+        people: {
+          name: string;
+        }[];
+      };
+    }>;
     const Container = graphql<{}, Data>(query, {
       options: {
         fetchPolicy: "network-only",
@@ -408,7 +414,7 @@ describe("[queries] loading", () => {
     })(
       class extends React.Component<ChildProps<{}, Data>> {
         render() {
-          currentData = this.props.data;
+          currentData = this.props.data!;
           return null;
         }
       }
@@ -433,7 +439,7 @@ describe("[queries] loading", () => {
     {
       const { snapshot } = await ProfiledContainer.takeRender();
       expect(snapshot.loading).toBe(false);
-      expect(snapshot.allPeople.people[0].name).toMatch(/Darth Skywalker - /);
+      expect(snapshot.allPeople?.people[0].name).toMatch(/Darth Skywalker - /);
     }
     render(App);
     // Loading after remount

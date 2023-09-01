@@ -1597,9 +1597,8 @@ describe("has the same timing as `useQuery`", () => {
       id: cache.identify(item2),
     });
 
-    await ProfiledParent.waitForRenderCount(2);
+    await expect(ProfiledParent).toRenderExactlyTimes(2);
   });
-  2;
 
   /**
    * This would be optimal, but would only work if `useFragment` and
@@ -1687,7 +1686,7 @@ describe("has the same timing as `useQuery`", () => {
         })
     );
 
-    await ProfiledParent.waitForRenderCount(3);
+    await expect(ProfiledParent).toRenderExactlyTimes(3);
   });
 });
 

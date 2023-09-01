@@ -14,6 +14,7 @@ import { within, screen } from "@testing-library/dom";
 import { JSDOM, VirtualConsole } from "jsdom";
 import { applyStackTrace, captureStackTrace } from "./traces.js";
 
+/** @internal */
 export interface BaseRender {
   id: string;
   phase: "mount" | "update";
@@ -22,10 +23,14 @@ export interface BaseRender {
   startTime: number;
   commitTime: number;
   interactions: Set<Interaction>;
+  /**
+   * The number of renders that have happened so far (including this render).
+   */
   count: number;
 }
 
 type Screen = typeof screen;
+/** @internal */
 export type SyncScreen = {
   [K in keyof Screen]: K extends `find${string}`
     ? {
@@ -35,15 +40,33 @@ export type SyncScreen = {
     : Screen[K];
 };
 
+/** @internal */
 export interface Render<Snapshot> extends BaseRender {
+  /**
+   * The snapshot, as returned by the `takeSnapshot` option of `profile`.
+   * (If using `profileHook`, this is the return value of the hook.)
+   */
   snapshot: Snapshot;
+  /**
+   * A DOM snapshot of the rendered component, if the `snapshotDOM`
+   * option of `profile` was enabled.
+   */
   readonly domSnapshot: HTMLElement;
-  // API design note:
-  // could also be `SyncScreen` instead of a function, but then we would get
-  // `testing-library/prefer-screen-queries` warnings everywhere it is used
+  /**
+   * Returns a callback to receive a `screen` instance that is scoped to the
+   * DOM snapshot of this `Render` instance.
+   * Note: this is used as a callback to prevent linter errors.
+   * @example
+   * ```diff
+   * const { withinDOM } = RenderedComponent.takeRender();
+   * -expect(screen.getByText("foo")).toBeInTheDocument();
+   * +expect(withinDOM().getByText("foo")).toBeInTheDocument();
+   * ```
+   */
   withinDOM: () => SyncScreen;
 }
 
+/** @internal */
 export class RenderInstance<Snapshot> implements Render<Snapshot> {
   id: string;
   phase: "mount" | "update";
@@ -121,7 +144,7 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
     return () => snapScreen;
   }
 }
-
+/** @internal */
 export function errorOnDomInteraction() {
   const events: Array<keyof DocumentEventMap> = [
     "auxclick",

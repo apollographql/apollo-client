@@ -157,14 +157,14 @@ export class QueryInfo {
     this.dirty = false;
   }
 
-  getDiff(variables = this.variables): Cache.DiffResult<any> {
-    const options = this.getDiffOptions(variables);
+  getDiff(): Cache.DiffResult<any> {
+    const options = this.getDiffOptions();
 
     if (this.lastDiff && equal(options, this.lastDiff.options)) {
       return this.lastDiff.diff;
     }
 
-    this.updateWatch((this.variables = variables));
+    this.updateWatch(this.variables);
 
     const oq = this.observableQuery;
     if (oq && oq.options.fetchPolicy === "no-cache") {
@@ -460,8 +460,11 @@ export class QueryInfo {
 
           // In case the QueryManager stops this QueryInfo before its
           // results are delivered, it's important to avoid restarting the
-          // cache watch when markResult is called.
-          if (!this.stopped) {
+          // cache watch when markResult is called. We also avoid updating
+          // the watch if we are writing a result that doesn't match the current
+          // variables to avoid race conditions from broadcasting the wrong
+          // result.
+          if (!this.stopped && equal(this.variables, options.variables)) {
             // Any time we're about to update this.diff, we need to make
             // sure we've started watching the cache.
             this.updateWatch(options.variables);

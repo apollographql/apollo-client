@@ -1516,7 +1516,7 @@ export class QueryManager<TStore> {
       networkStatus,
     });
 
-    const readCache = () => queryInfo.getDiff(variables);
+    const readCache = () => queryInfo.getDiff();
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,

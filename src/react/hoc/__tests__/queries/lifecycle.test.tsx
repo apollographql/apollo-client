@@ -14,7 +14,6 @@ import { profile } from "../../../../testing/internal";
 
 describe("[queries] lifecycle", () => {
   // lifecycle
-  // flaky test
   it("reruns the query if it changes", async () => {
     let count = 0;
     const query: DocumentNode = gql`

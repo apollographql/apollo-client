@@ -12,7 +12,7 @@ export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
     const hint = this.utils.matcherHint("toNotRerender");
     let pass = true;
     try {
-      await profiled.peekRender(options);
+      await profiled.peekRender({ timeout: 100, ...options });
     } catch (e) {
       if (e instanceof WaitForRenderTimeoutError) {
         pass = false;
@@ -42,8 +42,7 @@ export const toRenderExactlyTimes: MatcherFunction<
   times: number,
   optionsPerRender?: NextRenderOptions
 ) {
-  const { timeout = 100, ...otherOptions } = optionsPerRender || {};
-  const options = { timeout, ...otherOptions };
+  const options = { timeout: 100, ...optionsPerRender };
   const hint = this.utils.matcherHint("toRenderExactlyTimes");
   let pass = true;
   try {

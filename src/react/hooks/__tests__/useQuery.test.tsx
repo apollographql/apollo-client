@@ -5962,7 +5962,6 @@ describe("useQuery Hook", () => {
   });
 
   describe("Previous data", () => {
-    // flaky test
     it("should persist previous data when a query is re-run", async () => {
       const query = gql`
         query car {
@@ -6001,42 +6000,41 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result } = renderHook(
-        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-        { wrapper }
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { notifyOnNetworkStatusChange: true })
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.previousData).toBe(undefined);
+      render(<ProfiledHook />, { wrapper });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data1);
-      expect(result.current.previousData).toBe(undefined);
+      {
+        const { snapshot } = await ProfiledHook.takeRender();
+        expect(snapshot.loading).toBe(true);
+        expect(snapshot.data).toBe(undefined);
+        expect(snapshot.previousData).toBe(undefined);
+      }
 
-      setTimeout(() => result.current.refetch());
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data1);
-      expect(result.current.previousData).toEqual(data1);
+      {
+        const { snapshot } = await ProfiledHook.takeRender();
+        expect(snapshot.loading).toBe(false);
+        expect(snapshot.data).toEqual(data1);
+        expect(snapshot.previousData).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data2);
-      expect(result.current.previousData).toEqual(data1);
+        snapshot.refetch();
+      }
+
+      {
+        const { snapshot } = await ProfiledHook.takeRender();
+        expect(snapshot.loading).toBe(true);
+        expect(snapshot.data).toEqual(data1);
+        expect(snapshot.previousData).toEqual(data1);
+      }
+
+      {
+        const { snapshot } = await ProfiledHook.takeRender();
+        expect(snapshot.loading).toBe(false);
+        expect(snapshot.data).toEqual(data2);
+        expect(snapshot.previousData).toEqual(data1);
+      }
     });
 
     it("should persist result.previousData across multiple results", async () => {

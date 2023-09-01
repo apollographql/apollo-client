@@ -358,7 +358,6 @@ describe("[queries] loading", () => {
     }
   );
 
-  // flaky test
   it("correctly sets loading state on remounted network-only query", async () => {
     const query: DocumentNode = gql`
       query pollingPeople {

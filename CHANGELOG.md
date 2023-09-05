@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.8.3
+
+### Patch Changes
+
+- [#11193](https://github.com/apollographql/apollo-client/pull/11193) [`fd2a4cf0c`](https://github.com/apollographql/apollo-client/commit/fd2a4cf0c3ada968df3f9814d87dedaaa8eddb5e) Thanks [@phryneas](https://github.com/phryneas)! - Call devtools registration after ApolloClient is fully set up.
+
 ## 3.8.2
 
 ### Patch Changes

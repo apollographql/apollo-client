@@ -224,7 +224,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         : void 0,
     });
 
-    this.connectToDevTools();
+    if (connectToDevTools) this.connectToDevTools();
   }
 
   private connectToDevTools() {

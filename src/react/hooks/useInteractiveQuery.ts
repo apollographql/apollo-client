@@ -5,10 +5,10 @@ import type {
   TypedDocumentNode,
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import {
-  type QueryReference,
-  type InternalQueryReference,
-  wrapQueryRef,
+import { wrapQueryRef } from "../cache/QueryReference.js";
+import type {
+  QueryReference,
+  InternalQueryReference,
 } from "../cache/QueryReference.js";
 import type { InteractiveQueryHookOptions, NoInfer } from "../types/types.js";
 import { __use } from "./internal/index.js";

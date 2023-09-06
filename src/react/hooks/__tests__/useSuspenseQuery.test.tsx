@@ -46,11 +46,12 @@ import {
 } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import { SuspenseQueryHookFetchPolicy, skipToken } from "../../../react";
-import { useSuspenseQuery } from "../useSuspenseQuery";
+import { UseSuspenseQueryResult, useSuspenseQuery } from "../useSuspenseQuery";
 import {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions";
+import { profile } from "../../../testing/internal";
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -360,29 +361,57 @@ describe("useSuspenseQuery", () => {
   it("suspends a query and returns results", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
-    const { result, renders } = renderSuspenseHook(
-      () => useSuspenseQuery(query),
-      { mocks }
-    );
+    const Component = () => {
+      const result = useSuspenseQuery(query);
+      ProfiledApp.updateSnapshot(result);
+      return <div>{result.data.greeting}</div>;
+    };
 
-    // ensure the hook suspends immediately
-    expect(renders.suspenseCount).toBe(1);
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
-        error: undefined,
-      });
+    const App = () => {
+      return (
+        <Suspense fallback={<div>loading</div>}>
+          <ErrorBoundary fallback={<div>Error</div>}>
+            <Component />
+          </ErrorBoundary>
+        </Suspense>
+      );
+    };
+
+    const ProfiledApp = profile<
+      UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
+    >({
+      Component: App,
+      snapshotDOM: true,
     });
 
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.count).toBe(2);
-    expect(renders.frames).toMatchObject([
-      {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    render(<ProfiledApp />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      // ensure the hook suspends immediately
+      const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+      expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      expect(snapshot).toBeUndefined();
+    }
+
+    {
+      const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+      expect(withinDOM().queryByText("loading")).not.toBeInTheDocument();
+      expect(withinDOM().getByText("Hello")).toBeInTheDocument();
+      expect(snapshot).toMatchObject({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-    ]);
+      });
+    }
   });
 
   it("suspends a query with variables and returns results", async () => {
@@ -9569,18 +9598,26 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    render(<App />);
+    const ProfiledApp = profile({
+      Component: App,
+      snapshotDOM: true,
+    });
 
-    expect(screen.getByText("Loading")).toBeInTheDocument();
+    render(<ProfiledApp />);
+    {
+      const { withinDOM } = await ProfiledApp.takeRender();
+      expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+    }
 
-    expect(await screen.findByTestId("todo")).toBeInTheDocument();
+    {
+      const { withinDOM } = await ProfiledApp.takeRender();
 
-    const todo = screen.getByTestId("todo");
-    const button = screen.getByText("Refresh");
+      const todo = withinDOM().getByTestId("todo");
+      expect(todo).toBeInTheDocument();
+      expect(todo).toHaveTextContent("Clean room");
+    }
 
-    expect(todo).toHaveTextContent("Clean room");
-
-    await act(() => user.click(button));
+    await act(() => user.click(screen.getByText("Refresh")));
 
     // startTransition will avoid rendering the suspense fallback for already
     // revealed content if the state update inside the transition causes the
@@ -9589,19 +9626,26 @@ describe("useSuspenseQuery", () => {
     // Here we should not see the suspense fallback while the component suspends
     // until the todo is finished loading. Seeing the suspense fallback is an
     // indication that we are suspending the component too late in the process.
-    expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+    {
+      const { withinDOM } = await ProfiledApp.takeRender();
+      const todo = withinDOM().getByTestId("todo");
 
-    // We can ensure this works with isPending from useTransition in the process
-    expect(todo).toHaveAttribute("aria-busy", "true");
+      expect(withinDOM().queryByText("Loading")).not.toBeInTheDocument();
 
-    // Ensure we are showing the stale UI until the new todo has loaded
-    expect(todo).toHaveTextContent("Clean room");
+      // We can ensure this works with isPending from useTransition in the process
+      expect(todo).toHaveAttribute("aria-busy", "true");
+
+      // Ensure we are showing the stale UI until the new todo has loaded
+      expect(todo).toHaveTextContent("Clean room");
+    }
 
     // Eventually we should see the updated todo content once its done
     // suspending.
-    await waitFor(() => {
+    {
+      const { withinDOM } = await ProfiledApp.takeRender();
+      const todo = withinDOM().getByTestId("todo");
       expect(todo).toHaveTextContent("Take out trash (completed)");
-    });
+    }
   });
 
   it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {

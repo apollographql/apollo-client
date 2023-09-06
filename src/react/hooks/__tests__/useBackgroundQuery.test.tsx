@@ -1,8 +1,9 @@
-import React, { Fragment, StrictMode, Suspense } from "react";
+import React, { ComponentProps, Fragment, StrictMode, Suspense } from "react";
 import {
   act,
   render,
   screen,
+  screen as _screen,
   renderHook,
   RenderHookOptions,
   waitFor,
@@ -38,6 +39,7 @@ import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
+  cloneDeep,
 } from "../../../utilities";
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { useReadQuery } from "../useReadQuery";
@@ -51,6 +53,7 @@ import {
 import equal from "@wry/equality";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
+import { profile } from "../../../testing/internal";
 
 function renderIntegrationTest({
   client,
@@ -329,13 +332,27 @@ function renderVariablesIntegrationTest({
     );
   }
 
+  const ProfiledApp = profile<Renders, ComponentProps<typeof App>>({
+    Component: App,
+    snapshotDOM: true,
+    onRender: ({ updateSnapshot }) => updateSnapshot(cloneDeep(renders)),
+  });
+
   const { ...rest } = render(
-    <App errorPolicy={errorPolicy} variables={variables} />
+    <ProfiledApp errorPolicy={errorPolicy} variables={variables} />
   );
   const rerender = ({ variables }: { variables: VariablesCaseVariables }) => {
     return rest.rerender(<App variables={variables} />);
   };
-  return { ...rest, query, rerender, client, renders, mocks: mocks || _mocks };
+  return {
+    ...rest,
+    ProfiledApp,
+    query,
+    rerender,
+    client,
+    renders,
+    mocks: mocks || _mocks,
+  };
 }
 
 function renderPaginatedIntegrationTest({
@@ -415,23 +432,12 @@ function renderPaginatedIntegrationTest({
     suspenseCount: number;
     count: number;
   }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-  };
-
-  const errorBoundaryProps: ErrorBoundaryProps = {
-    fallback: <div>Error</div>,
-    onError: (error) => {
-      renders.errorCount++;
-      renders.errors.push(error);
-    },
-  };
 
   function SuspenseFallback() {
-    renders.suspenseCount++;
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      suspenseCount: snapshot.suspenseCount + 1,
+    }));
     return <div>loading</div>;
   }
 
@@ -444,7 +450,10 @@ function renderPaginatedIntegrationTest({
   }) {
     const { data, error } = useReadQuery(queryRef);
     // count renders in the child component
-    renders.count++;
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      count: snapshot.count + 1,
+    }));
     return (
       <div>
         {error ? <div>{error.message}</div> : null}
@@ -492,7 +501,16 @@ function renderPaginatedIntegrationTest({
   function App() {
     return (
       <ApolloProvider client={client}>
-        <ErrorBoundary {...errorBoundaryProps}>
+        <ErrorBoundary
+          fallback={<div>Error</div>}
+          onError={(error) => {
+            ProfiledApp.updateSnapshot((snapshot) => ({
+              ...snapshot,
+              errorCount: snapshot.errorCount + 1,
+              errors: snapshot.errors.concat(error),
+            }));
+          }}
+        >
           <Suspense fallback={<SuspenseFallback />}>
             <ParentWithVariables />
           </Suspense>
@@ -501,8 +519,18 @@ function renderPaginatedIntegrationTest({
     );
   }
 
-  const { ...rest } = render(<App />);
-  return { ...rest, data, query, client, renders };
+  const ProfiledApp = profile({
+    Component: App,
+    snapshotDOM: true,
+    initialSnapshot: {
+      errors: [],
+      errorCount: 0,
+      suspenseCount: 0,
+      count: 0,
+    } as Renders,
+  });
+  const { ...rest } = render(<ProfiledApp />);
+  return { ...rest, ProfiledApp, data, query, client };
 }
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
@@ -3137,26 +3165,41 @@ describe("useBackgroundQuery", () => {
 
   describe("refetch", () => {
     it("re-suspends when calling `refetch`", async () => {
-      const { renders } = renderVariablesIntegrationTest({
+      const { ProfiledApp } = renderVariablesIntegrationTest({
         variables: { id: "1" },
       });
 
-      expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText("loading")).toBeInTheDocument();
+      {
+        const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(1);
+        expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      }
 
-      expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        expect(withinDOM().getByText("1 - Spider-Man")).toBeInTheDocument();
+      }
 
       const button = screen.getByText("Refetch");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
-      expect(renders.count).toBe(2);
+      {
+        // parent component re-suspends
+        const { snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(2);
+      }
+      {
+        const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        // @jerelmiller can you please verify that this is still in the spirit of the test?
+        // This seems to have moved onto the next render - or before the test skipped one.
+        expect(snapshot.count).toBe(2);
+        expect(
+          withinDOM().getByText("1 - Spider-Man (updated)")
+        ).toBeInTheDocument();
+      }
 
-      expect(
-        await screen.findByText("1 - Spider-Man (updated)")
-      ).toBeInTheDocument();
+      expect(ProfiledApp).not.toRerender();
     });
     it("re-suspends when calling `refetch` with new variables", async () => {
       interface QueryData {
@@ -3863,17 +3906,23 @@ describe("useBackgroundQuery", () => {
         );
       }
 
-      render(<App />);
+      const ProfiledApp = profile({ Component: App, snapshotDOM: true });
 
-      expect(screen.getByText("Loading")).toBeInTheDocument();
+      render(<ProfiledApp />);
 
-      expect(await screen.findByTestId("todo")).toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+      }
 
-      const todo = screen.getByTestId("todo");
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        const todo = withinDOM().getByTestId("todo");
+        expect(todo).toBeInTheDocument();
+        expect(todo).toHaveTextContent("Clean room");
+      }
+
       const button = screen.getByText("Refresh");
-
-      expect(todo).toHaveTextContent("Clean room");
-
       await act(() => user.click(button));
 
       // startTransition will avoid rendering the suspense fallback for already
@@ -3883,103 +3932,145 @@ describe("useBackgroundQuery", () => {
       // Here we should not see the suspense fallback while the component suspends
       // until the todo is finished loading. Seeing the suspense fallback is an
       // indication that we are suspending the component too late in the process.
-      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        const todo = withinDOM().getByTestId("todo");
+        expect(withinDOM().queryByText("Loading")).not.toBeInTheDocument();
 
-      // We can ensure this works with isPending from useTransition in the process
-      expect(todo).toHaveAttribute("aria-busy", "true");
+        // We can ensure this works with isPending from useTransition in the process
+        expect(todo).toHaveAttribute("aria-busy", "true");
 
-      // Ensure we are showing the stale UI until the new todo has loaded
-      expect(todo).toHaveTextContent("Clean room");
+        // Ensure we are showing the stale UI until the new todo has loaded
+        expect(todo).toHaveTextContent("Clean room");
+      }
 
       // Eventually we should see the updated todo content once its done
       // suspending.
-      await waitFor(() => {
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        const todo = withinDOM().getByTestId("todo");
         expect(todo).toHaveTextContent("Clean room (completed)");
-      });
+      }
     });
   });
 
   describe("fetchMore", () => {
-    function getItemTexts() {
+    function getItemTexts(
+      screen: Pick<typeof _screen, "getAllByTestId"> = _screen
+    ) {
       return screen.getAllByTestId(/letter/).map(
         // eslint-disable-next-line testing-library/no-node-access
         (li) => li.firstChild!.textContent
       );
     }
+
     it("re-suspends when calling `fetchMore` with different variables", async () => {
-      const { renders } = renderPaginatedIntegrationTest();
+      const { ProfiledApp } = renderPaginatedIntegrationTest();
 
-      expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText("loading")).toBeInTheDocument();
+      {
+        const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(1);
+        expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      }
 
-      const items = await screen.findAllByTestId(/letter/i);
-      expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(["A", "B"]);
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        const items = await screen.findAllByTestId(/letter/i);
+        expect(items).toHaveLength(2);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B"]);
+      }
 
       const button = screen.getByText("Fetch more");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
-      await waitFor(() => {
-        expect(renders.count).toBe(2);
-      });
+      {
+        // parent component re-suspends
+        const { snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(2);
+      }
+      {
+        // parent component re-suspends
+        const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        expect(snapshot.count).toBe(2);
 
-      expect(getItemTexts()).toStrictEqual(["C", "D"]);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["C", "D"]);
+      }
     });
+
     it("properly uses `updateQuery` when calling `fetchMore`", async () => {
-      const { renders } = renderPaginatedIntegrationTest({
+      const { ProfiledApp } = renderPaginatedIntegrationTest({
         updateQuery: true,
       });
 
-      expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText("loading")).toBeInTheDocument();
+      {
+        const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(1);
+        expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      }
 
-      const items = await screen.findAllByTestId(/letter/i);
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
 
-      expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(["A", "B"]);
+        const items = withinDOM().getAllByTestId(/letter/i);
+
+        expect(items).toHaveLength(2);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B"]);
+      }
 
       const button = screen.getByText("Fetch more");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
-      await waitFor(() => {
-        expect(renders.count).toBe(2);
-      });
+      {
+        const { snapshot } = await ProfiledApp.takeRender();
+        // parent component re-suspends
+        expect(snapshot.suspenseCount).toBe(2);
+      }
+      {
+        const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        expect(snapshot.count).toBe(2);
 
-      const moreItems = await screen.findAllByTestId(/letter/i);
-      expect(moreItems).toHaveLength(4);
-      expect(getItemTexts()).toStrictEqual(["A", "B", "C", "D"]);
+        const moreItems = withinDOM().getAllByTestId(/letter/i);
+        expect(moreItems).toHaveLength(4);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B", "C", "D"]);
+      }
     });
     it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
-      const { renders } = renderPaginatedIntegrationTest({
+      const { ProfiledApp } = renderPaginatedIntegrationTest({
         fieldPolicies: true,
       });
-      expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText("loading")).toBeInTheDocument();
 
-      const items = await screen.findAllByTestId(/letter/i);
+      {
+        const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(1);
+        expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      }
 
-      expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(["A", "B"]);
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        const items = withinDOM().getAllByTestId(/letter/i);
+        expect(items).toHaveLength(2);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B"]);
+      }
 
       const button = screen.getByText("Fetch more");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
-      await waitFor(() => {
-        expect(renders.count).toBe(2);
-      });
+      {
+        const { snapshot } = await ProfiledApp.takeRender();
+        // parent component re-suspends
+        expect(snapshot.suspenseCount).toBe(2);
+      }
 
-      const moreItems = await screen.findAllByTestId(/letter/i);
-      expect(moreItems).toHaveLength(4);
-      expect(getItemTexts()).toStrictEqual(["A", "B", "C", "D"]);
+      {
+        const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        expect(snapshot.count).toBe(2);
+        const moreItems = await screen.findAllByTestId(/letter/i);
+        expect(moreItems).toHaveLength(4);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B", "C", "D"]);
+      }
     });
     it("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {
       type Variables = {
@@ -4113,43 +4204,57 @@ describe("useBackgroundQuery", () => {
         );
       }
 
-      render(<App />);
+      const ProfiledApp = profile({ Component: App, snapshotDOM: true });
+      render(<ProfiledApp />);
 
-      expect(screen.getByText("Loading")).toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+      }
 
-      expect(await screen.findByTestId("todos")).toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        expect(withinDOM().getByTestId("todos")).toBeInTheDocument();
+        expect(withinDOM().getByTestId("todo:1")).toBeInTheDocument();
+      }
 
-      const todos = screen.getByTestId("todos");
-      const todo1 = screen.getByTestId("todo:1");
       const button = screen.getByText("Load more");
-
-      expect(todo1).toBeInTheDocument();
-
       await act(() => user.click(button));
 
-      // startTransition will avoid rendering the suspense fallback for already
-      // revealed content if the state update inside the transition causes the
-      // component to suspend.
-      //
-      // Here we should not see the suspense fallback while the component suspends
-      // until the todo is finished loading. Seeing the suspense fallback is an
-      // indication that we are suspending the component too late in the process.
-      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        // startTransition will avoid rendering the suspense fallback for already
+        // revealed content if the state update inside the transition causes the
+        // component to suspend.
+        //
+        // Here we should not see the suspense fallback while the component suspends
+        // until the todo is finished loading. Seeing the suspense fallback is an
+        // indication that we are suspending the component too late in the process.
+        expect(withinDOM().queryByText("Loading")).not.toBeInTheDocument();
 
-      // We can ensure this works with isPending from useTransition in the process
-      expect(todos).toHaveAttribute("aria-busy", "true");
+        // We can ensure this works with isPending from useTransition in the process
+        expect(withinDOM().getByTestId("todos")).toHaveAttribute(
+          "aria-busy",
+          "true"
+        );
 
-      // Ensure we are showing the stale UI until the new todo has loaded
-      expect(todo1).toHaveTextContent("Clean room");
+        // Ensure we are showing the stale UI until the new todo has loaded
+        expect(withinDOM().getByTestId("todo:1")).toHaveTextContent(
+          "Clean room"
+        );
+      }
 
-      // Eventually we should see the updated todos content once its done
-      // suspending.
-      await waitFor(() => {
-        expect(screen.getByTestId("todo:2")).toHaveTextContent(
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        // Eventually we should see the updated todos content once its done
+        // suspending.
+        expect(withinDOM().getByTestId("todo:2")).toHaveTextContent(
           "Take out trash (completed)"
         );
-        expect(todo1).toHaveTextContent("Clean room");
-      });
+        expect(withinDOM().getByTestId("todo:1")).toHaveTextContent(
+          "Clean room"
+        );
+      }
     });
 
     it('honors refetchWritePolicy set to "merge"', async () => {

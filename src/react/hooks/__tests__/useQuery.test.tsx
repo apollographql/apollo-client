@@ -26,6 +26,7 @@ import {
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
+import { profileHook } from "../../../testing/internal";
 
 describe("useQuery Hook", () => {
   describe("General use", () => {
@@ -1692,78 +1693,66 @@ describe("useQuery Hook", () => {
         {
           request: { query },
           result: { data: { hello: "world 1" } },
-          delay: 10,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
-          delay: 10,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
-          delay: 10,
         },
       ];
 
       const cache = new InMemoryCache();
-      const { result, rerender } = renderHook(
-        ({ skip }) => useQuery(query, { pollInterval: 10, skip }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
-          initialProps: { skip: undefined } as any,
-        }
+      const ProfiledUseQuery = profileHook(({ skip }: { skip?: boolean }) =>
+        useQuery(query, { pollInterval: 10, skip })
       );
+      const { rerender } = render(<ProfiledUseQuery />, {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks} cache={cache}>
+            {children}
+          </MockedProvider>
+        ),
+      });
+      {
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+      }
+      {
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 1" });
+      }
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      rerender(<ProfiledUseQuery skip />);
+      {
+        const snapshot = await ProfiledUseQuery.takeSnapshot();
+        expect(snapshot.loading).toBe(false);
+        expect(snapshot.data).toEqual(undefined);
+      }
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await expect(ProfiledUseQuery).not.toRerender({ timeout: 100 });
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 1" });
+      rerender(<ProfiledUseQuery skip={false} />);
+      {
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 1" });
+      }
 
-      rerender({ skip: true });
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 2" });
+      }
 
-      await expect(
-        waitFor(
-          () => {
-            expect(result.current.data).toEqual({ hello: "world 1" });
-          },
-          { interval: 1, timeout: 20 }
-        )
-      ).rejects.toThrow();
-
-      rerender({ skip: false });
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 1" });
-
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
-
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
+      {
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 3" });
+      }
     });
 
     it("should return data from network when clients default fetch policy set to network-only", async () => {
@@ -6011,42 +6000,41 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result } = renderHook(
-        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-        { wrapper }
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { notifyOnNetworkStatusChange: true })
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.previousData).toBe(undefined);
+      render(<ProfiledHook />, { wrapper });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data1);
-      expect(result.current.previousData).toBe(undefined);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+        expect(result.previousData).toBe(undefined);
+      }
 
-      setTimeout(() => result.current.refetch());
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data1);
-      expect(result.current.previousData).toEqual(data1);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data1);
+        expect(result.previousData).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data2);
-      expect(result.current.previousData).toEqual(data1);
+        result.refetch();
+      }
+
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toEqual(data1);
+        expect(result.previousData).toEqual(data1);
+      }
+
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data2);
+        expect(result.previousData).toEqual(data1);
+      }
     });
 
     it("should persist result.previousData across multiple results", async () => {

@@ -1,3 +1,8 @@
-export * from "./profile.js";
+export type {
+  NextRenderOptions,
+  ProfiledComponent,
+  ProfiledHook,
+} from "./profile.js";
+export { profile, profileHook } from "./profile.js";
 
 export type { SyncScreen } from "./Render.js";

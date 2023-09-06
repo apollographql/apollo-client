@@ -113,7 +113,6 @@ export function profile<Props, Snapshot = void>({
       currentRender = render;
       Profiled.renders.push(render);
       const resolve = resolveNextRender;
-      nextRender = resolveNextRender = rejectNextRender = undefined;
       resolve?.(render);
     } catch (error) {
       Profiled.renders.push({
@@ -122,8 +121,9 @@ export function profile<Props, Snapshot = void>({
         error,
       });
       const reject = rejectNextRender;
-      nextRender = resolveNextRender = rejectNextRender = undefined;
       reject?.(error);
+    } finally {
+      nextRender = resolveNextRender = rejectNextRender = undefined;
     }
   };
 

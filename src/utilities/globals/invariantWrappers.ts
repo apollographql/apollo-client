@@ -6,7 +6,11 @@ import { stringifyForDisplay } from "../common/stringifyForDisplay.js";
 
 function wrap(fn: (msg?: string, ...args: any[]) => void) {
   return function (message: string | number, ...args: any[]) {
-    fn(typeof message === "number" ? getErrorMsg(message) : message, ...args);
+    if (typeof message === "number") {
+      fn(getErrorMsg(message, args));
+    } else {
+      fn(message, ...args);
+    }
   };
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.8.1",
+  "version": "3.8.3",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -102,7 +102,7 @@
     "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.8.0",
+    "@arethetypeswrong/cli": "0.9.0",
     "@babel/parser": "7.22.11",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.2",

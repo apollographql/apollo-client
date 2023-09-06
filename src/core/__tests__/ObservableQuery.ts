@@ -25,6 +25,7 @@ import {
   MockLink,
   mockSingleLink,
   subscribeAndCount,
+  wait,
 } from "../../testing";
 import mockQueryManager from "../../testing/core/mocking/mockQueryManager";
 import mockWatchQuery from "../../testing/core/mocking/mockWatchQuery";
@@ -3198,4 +3199,65 @@ test("regression test for #10587", async () => {
     expect(query2Spy.mock.calls).toEqual(finalExpectedCalls.query2)
   );
   expect(query1Spy.mock.calls).toEqual(finalExpectedCalls.query1);
+});
+
+// https://github.com/apollographql/apollo-client/issues/11184
+test("handles changing variables in rapid succession before other request is completed", async () => {
+  interface UserCountQuery {
+    userCount: number;
+  }
+  interface UserCountVariables {
+    department: "HR" | null;
+  }
+
+  const query: TypedDocumentNode<UserCountQuery, UserCountVariables> = gql`
+    query UserCountQuery($department: Department) {
+      userCount(department: $department)
+    }
+  `;
+  const mocks = [
+    {
+      request: { query, variables: { department: null } },
+      result: { data: { userCount: 10 } },
+    },
+    {
+      request: { query, variables: { department: "HR" } },
+      result: { data: { userCount: 5 } },
+      delay: 50,
+    },
+  ];
+
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery<UserCountQuery, UserCountVariables>({
+    query,
+    variables: { department: null },
+  });
+
+  observable.subscribe(jest.fn());
+
+  await waitFor(() => {
+    expect(observable.getCurrentResult(false)).toEqual({
+      data: { userCount: 10 },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+  });
+
+  observable.reobserve({ variables: { department: "HR" } });
+  await wait(10);
+  observable.reobserve({ variables: { department: null } });
+
+  // Wait for request to finish
+  await wait(50);
+
+  expect(observable.options.variables).toEqual({ department: null });
+  expect(observable.getCurrentResult(false)).toEqual({
+    data: { userCount: 10 },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
 });

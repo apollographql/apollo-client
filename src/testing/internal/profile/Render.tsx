@@ -94,36 +94,35 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
 
   private _domSnapshot: HTMLElement | undefined;
   get domSnapshot() {
-    if (!this._domSnapshot) {
-      if (!this.stringifiedDOM) {
-        throw new Error(
-          "DOM snapshot is not available - please set the `snapshotDOM` option"
-        );
-      }
+    if (this._domSnapshot) return this._domSnapshot;
+    if (!this.stringifiedDOM) {
+      throw new Error(
+        "DOM snapshot is not available - please set the `snapshotDOM` option"
+      );
+    }
 
-      const virtualConsole = new VirtualConsole();
-      const stackTrace = captureStackTrace("RenderInstance.get");
-      virtualConsole.on("jsdomError", (error) => {
-        throw applyStackTrace(error, stackTrace);
-      });
+    const virtualConsole = new VirtualConsole();
+    const stackTrace = captureStackTrace("RenderInstance.get");
+    virtualConsole.on("jsdomError", (error) => {
+      throw applyStackTrace(error, stackTrace);
+    });
 
-      const snapDOM = new JSDOM(this.stringifiedDOM, {
-        runScripts: "dangerously",
-        virtualConsole,
-      });
-      const document = snapDOM.window.document;
-      const body = document.body;
-      const script = document.createElement("script");
-      script.type = "text/javascript";
-      script.text = `
+    const snapDOM = new JSDOM(this.stringifiedDOM, {
+      runScripts: "dangerously",
+      virtualConsole,
+    });
+    const document = snapDOM.window.document;
+    const body = document.body;
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.text = `
         ${errorOnDomInteraction.toString()};
         ${errorOnDomInteraction.name}();
       `;
-      body.appendChild(script);
-      body.removeChild(script);
-      return body;
-    }
-    return this._domSnapshot;
+    body.appendChild(script);
+    body.removeChild(script);
+
+    return (this._domSnapshot = body);
   }
 
   get withinDOM() {

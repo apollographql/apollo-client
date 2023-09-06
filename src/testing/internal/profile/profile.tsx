@@ -11,10 +11,12 @@ import { applyStackTrace, captureStackTrace } from "./traces.js";
 
 type ValidSnapshot = void | (object & { /* not a function */ call?: never });
 
+/** only used for passing around data internally */
+const _stackTrace = Symbol();
 /** @internal */
 export interface NextRenderOptions {
   timeout?: number;
-  stackTrace?: string;
+  [_stackTrace]?: string;
 }
 
 /** @internal */
@@ -195,7 +197,7 @@ export function profile<
           return render;
         }
         const render = Profiled.waitForNextRender({
-          stackTrace: captureStackTrace(Profiled.takeRender),
+          [_stackTrace]: captureStackTrace(Profiled.peekRender),
           ...options,
         });
         return render;
@@ -203,7 +205,10 @@ export function profile<
       async takeRender(options: NextRenderOptions = {}) {
         let error: { message?: string } | undefined = undefined;
         try {
-          return await Profiled.peekRender(options);
+          return await Profiled.peekRender({
+            [_stackTrace]: captureStackTrace(Profiled.takeRender),
+            ...options,
+          });
         } catch (e) {
           error = e;
           throw e;
@@ -230,7 +235,9 @@ export function profile<
       waitForNextRender({
         timeout = 1000,
         // capture the stack trace here so its stack trace is as close to the calling code as possible
-        stackTrace = captureStackTrace(Profiled.waitForNextRender),
+        [_stackTrace]: stackTrace = captureStackTrace(
+          Profiled.waitForNextRender
+        ),
       }: NextRenderOptions = {}) {
         if (!nextRender) {
           nextRender = Promise.race<Render<Snapshot>>([

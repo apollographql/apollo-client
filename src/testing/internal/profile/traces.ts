@@ -1,5 +1,14 @@
+/**
+ * Captures a StackTrace and (if passed) cuts off
+ * the first lines including the calling function.
+ */
 export function captureStackTrace(callingFunction?: string | (() => {})) {
-  let { stack = "" } = new Error("");
+  let stack = "";
+  try {
+    throw new Error("");
+  } catch (e: any) {
+    ({ stack } = e);
+  }
 
   const callerName =
     typeof callingFunction === "string"

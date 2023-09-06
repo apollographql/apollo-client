@@ -1570,6 +1570,7 @@ describe("has the same timing as `useQuery`", () => {
 
     const ProfiledParent = profile({
       Component: Parent,
+      snapshotDOM: true,
       onRender() {
         const parent = screen.getByTestId("parent");
         const children = screen.getByTestId("children");
@@ -1588,11 +1589,19 @@ describe("has the same timing as `useQuery`", () => {
       ),
     });
 
-    await ProfiledParent.takeRender();
+    {
+      const { withinDOM } = await ProfiledParent.takeRender();
+      expect(withinDOM().queryAllByText(/Item #2/).length).toBe(2);
+    }
 
     cache.evict({
       id: cache.identify(item2),
     });
+
+    {
+      const { withinDOM } = await ProfiledParent.takeRender();
+      expect(withinDOM().queryAllByText(/Item #2/).length).toBe(0);
+    }
 
     await expect(ProfiledParent).toRenderExactlyTimes(2);
   });
@@ -1674,7 +1683,10 @@ describe("has the same timing as `useQuery`", () => {
       ),
     });
 
-    await ProfiledParent.takeRender();
+    {
+      const { withinDOM } = await ProfiledParent.takeRender();
+      expect(withinDOM().queryAllByText(/Item #2/).length).toBe(2);
+    }
 
     act(
       () =>
@@ -1682,6 +1694,11 @@ describe("has the same timing as `useQuery`", () => {
           id: cache.identify(item2),
         })
     );
+
+    {
+      const { withinDOM } = await ProfiledParent.takeRender();
+      expect(withinDOM().queryAllByText(/Item #2/).length).toBe(0);
+    }
 
     await expect(ProfiledParent).toRenderExactlyTimes(3);
   });

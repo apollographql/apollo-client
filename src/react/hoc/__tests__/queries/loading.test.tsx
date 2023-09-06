@@ -426,7 +426,9 @@ describe("[queries] loading", () => {
     });
 
     const App = (
-      <ApolloProvider client={client}>{<ProfiledContainer />}</ApolloProvider>
+      <ApolloProvider client={client}>
+        <ProfiledContainer />
+      </ApolloProvider>
     );
 
     render(App);

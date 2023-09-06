@@ -122,8 +122,7 @@ export function profile<
     actualDuration,
     baseDuration,
     startTime,
-    commitTime,
-    interactions
+    commitTime
   ) => {
     const baseRender = {
       id,
@@ -132,9 +131,7 @@ export function profile<
       baseDuration,
       startTime,
       commitTime,
-      interactions,
       count: Profiled.renders.length + 1,
-      snapshot: undefined,
     };
     try {
       /*

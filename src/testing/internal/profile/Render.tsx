@@ -9,7 +9,6 @@ if we do not ignore this file in code coverage.
 As we only use this file in our internal tests, we can safely ignore it.
 */
 
-import type { Interaction } from "scheduler/tracing";
 import { within, screen } from "@testing-library/dom";
 import { JSDOM, VirtualConsole } from "jsdom";
 import { applyStackTrace, captureStackTrace } from "./traces.js";
@@ -17,12 +16,11 @@ import { applyStackTrace, captureStackTrace } from "./traces.js";
 /** @internal */
 export interface BaseRender {
   id: string;
-  phase: "mount" | "update";
+  phase: "mount" | "update" | "nested-update";
   actualDuration: number;
   baseDuration: number;
   startTime: number;
   commitTime: number;
-  interactions: Set<Interaction>;
   /**
    * The number of renders that have happened so far (including this render).
    */
@@ -69,12 +67,11 @@ export interface Render<Snapshot> extends BaseRender {
 /** @internal */
 export class RenderInstance<Snapshot> implements Render<Snapshot> {
   id: string;
-  phase: "mount" | "update";
+  phase: "mount" | "update" | "nested-update";
   actualDuration: number;
   baseDuration: number;
   startTime: number;
   commitTime: number;
-  interactions: Set<Interaction>;
   count: number;
 
   constructor(
@@ -88,7 +85,6 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
     this.baseDuration = baseRender.baseDuration;
     this.startTime = baseRender.startTime;
     this.commitTime = baseRender.commitTime;
-    this.interactions = baseRender.interactions;
     this.count = baseRender.count;
   }
 

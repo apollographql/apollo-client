@@ -9,6 +9,8 @@ import type { Render, BaseRender } from "./Render.js";
 import { RenderInstance } from "./Render.js";
 import { applyStackTrace, captureStackTrace } from "./traces.js";
 
+type ValidSnapshot = void | (object & { /* not a function */ call?: never });
+
 /** @internal */
 export interface NextRenderOptions {
   timeout?: number;
@@ -18,7 +20,17 @@ export interface NextRenderOptions {
 /** @internal */
 export interface ProfiledComponent<Props, Snapshot>
   extends React.FC<Props>,
-    ProfiledComponentFields<Props, Snapshot> {}
+    ProfiledComponentFields<Props, Snapshot>,
+    ProfiledComponenOnlyFields<Props, Snapshot> {}
+
+interface UpdateSnapshot<Snapshot> {
+  (newSnapshot: Snapshot): void;
+  (updateSnapshot: (lastSnapshot: Readonly<Snapshot>) => Snapshot): void;
+}
+
+interface ProfiledComponenOnlyFields<Props, Snapshot> {
+  updateSnapshot: UpdateSnapshot<Snapshot>;
+}
 interface ProfiledComponentFields<Props, Snapshot> {
   /**
    * An array of all renders that have happened so far.
@@ -63,20 +75,48 @@ interface ProfiledComponentFields<Props, Snapshot> {
 }
 
 /** @internal */
-export function profile<Props, Snapshot = void>({
+export function profile<
+  Snapshot extends ValidSnapshot = void,
+  Props = Record<string, never>,
+>({
   Component,
-  takeSnapshot,
+  onRender,
   snapshotDOM = false,
+  initialSnapshot,
 }: {
   Component: React.ComponentType<Props>;
-  takeSnapshot?: (render: BaseRender) => Snapshot;
+  onRender?: (
+    info: BaseRender & {
+      snapshot: Snapshot;
+      updateSnapshot: UpdateSnapshot<Snapshot>;
+    }
+  ) => void;
   snapshotDOM?: boolean;
+  initialSnapshot?: Snapshot;
 }) {
   let currentRender: Render<Snapshot> | undefined;
   let nextRender: Promise<Render<Snapshot>> | undefined;
   let resolveNextRender: ((render: Render<Snapshot>) => void) | undefined;
   let rejectNextRender: ((error: unknown) => void) | undefined;
-  const onRender: React.ProfilerOnRenderCallback = (
+  const snapshotRef = { current: initialSnapshot };
+  const updateSnapshot: UpdateSnapshot<Snapshot> = (snap) => {
+    if (typeof snap === "function") {
+      if (!initialSnapshot) {
+        throw new Error(
+          "Cannot use a function to update the snapshot if no initial snapshot was provided."
+        );
+      }
+      snapshotRef.current = snap(
+        typeof snapshotRef.current === "object"
+          ? // "cheap best effort" to prevent accidental mutation of the last snapshot
+            { ...snapshotRef.current! }
+          : snapshotRef.current!
+      );
+    } else {
+      snapshotRef.current = snap;
+    }
+  };
+  const profilerOnRender: React.ProfilerOnRenderCallback = (
     id,
     phase,
     actualDuration,
@@ -98,13 +138,19 @@ export function profile<Props, Snapshot = void>({
     };
     try {
       /*
-       * The `takeSnapshot` function could contain `expect` calls that throw
+       * The `onRender` function could contain `expect` calls that throw
        * `JestAssertionError`s - but we are still inside of React, where errors
        * might be swallowed.
        * So we record them and re-throw them in `takeRender`
        * Additionally, we reject the `waitForNextRender` promise.
        */
-      const snapshot = takeSnapshot?.(baseRender) as Snapshot;
+      onRender?.({
+        ...baseRender,
+        updateSnapshot,
+        snapshot: snapshotRef.current!,
+      });
+
+      const snapshot = snapshotRef.current as Snapshot;
       const domSnapshot = snapshotDOM
         ? window.document.body.innerHTML
         : undefined;
@@ -112,16 +158,14 @@ export function profile<Props, Snapshot = void>({
       // eslint-disable-next-line testing-library/render-result-naming-convention
       currentRender = render;
       Profiled.renders.push(render);
-      const resolve = resolveNextRender;
-      resolve?.(render);
+      resolveNextRender?.(render);
     } catch (error) {
       Profiled.renders.push({
         phase: "snapshotError",
         count: Profiled.renders.length,
         error,
       });
-      const reject = rejectNextRender;
-      reject?.(error);
+      rejectNextRender?.(error);
     } finally {
       nextRender = resolveNextRender = rejectNextRender = undefined;
     }
@@ -130,10 +174,13 @@ export function profile<Props, Snapshot = void>({
   let iteratorPosition = 0;
   const Profiled: ProfiledComponent<Props, Snapshot> = Object.assign(
     (props: Props) => (
-      <React.Profiler id="test" onRender={onRender}>
+      <React.Profiler id="test" onRender={profilerOnRender}>
         <Component {...(props as any)} />
       </React.Profiler>
     ),
+    {
+      updateSnapshot,
+    } satisfies ProfiledComponenOnlyFields<Props, Snapshot>,
     {
       renders: new Array<
         | Render<Snapshot>
@@ -207,7 +254,7 @@ export function profile<Props, Snapshot = void>({
         }
         return nextRender;
       },
-    }
+    } satisfies ProfiledComponentFields<Props, Snapshot>
   );
   return Profiled;
 }
@@ -231,9 +278,9 @@ type ResultReplaceRenderWithSnapshot<T> = T extends (
   ? (...args: Args) => Promise<Snapshot>
   : T;
 
-type ProfiledHookFields<Props, ReturnValue> = Omit<
-  ProfiledComponent<Props, ReturnValue>,
-  keyof React.FC<Props>
+type ProfiledHookFields<Props, ReturnValue> = ProfiledComponentFields<
+  Props,
+  ReturnValue
 > extends infer PC
   ? {
       [K in keyof PC as StringReplaceRenderWithSnapshot<
@@ -250,17 +297,17 @@ export interface ProfiledHook<Props, ReturnValue>
 }
 
 /** @internal */
-export function profileHook<Props, ReturnValue>(
+export function profileHook<ReturnValue extends ValidSnapshot, Props>(
   renderCallback: (props: Props) => ReturnValue
 ): ProfiledHook<Props, ReturnValue> {
   let returnValue: ReturnValue;
   const Component = (props: Props) => {
-    returnValue = renderCallback(props);
+    ProfiledComponent.updateSnapshot(renderCallback(props));
     return null;
   };
-  const ProfiledComponent = profile({
+  const ProfiledComponent = profile<ReturnValue, Props>({
     Component,
-    takeSnapshot: () => returnValue,
+    onRender: () => returnValue,
   });
   return Object.assign(
     function ProfiledHook(props: Props) {

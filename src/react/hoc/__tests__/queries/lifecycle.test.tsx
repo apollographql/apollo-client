@@ -9,7 +9,7 @@ import { InMemoryCache as Cache } from "../../../../cache";
 import { mockSingleLink } from "../../../../testing";
 import { Query as QueryComponent } from "../../../components";
 import { graphql } from "../../graphql";
-import { ChildProps } from "../../types";
+import { ChildProps, DataValue } from "../../types";
 import { profile } from "../../../../testing/internal";
 
 describe("[queries] lifecycle", () => {
@@ -44,8 +44,6 @@ describe("[queries] lifecycle", () => {
       cache: new Cache({ addTypename: false }),
     });
 
-    let props: ChildProps<Vars, Data, Vars>;
-
     const Container = graphql<Vars, Data, Vars>(query, {
       options: (props) => ({
         variables: props,
@@ -54,15 +52,14 @@ describe("[queries] lifecycle", () => {
     })(
       class extends React.Component<ChildProps<Vars, Data, Vars>> {
         render() {
-          props = this.props;
+          ProfiledApp.updateSnapshot(this.props.data!);
           return null;
         }
       }
     );
 
-    const ProfiledApp = profile({
+    const ProfiledApp = profile<DataValue<Data, Vars>, Vars>({
       Component: Container,
-      takeSnapshot: () => props!.data,
     });
 
     const { rerender } = render(<ProfiledApp first={1} />, {

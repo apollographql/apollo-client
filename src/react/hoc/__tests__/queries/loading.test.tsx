@@ -390,13 +390,6 @@ describe("[queries] loading", () => {
     });
 
     const usedFetchPolicies: WatchQueryFetchPolicy[] = [];
-    let currentData: DataValue<{
-      allPeople: {
-        people: {
-          name: string;
-        }[];
-      };
-    }>;
     const Container = graphql<{}, Data>(query, {
       options: {
         fetchPolicy: "network-only",
@@ -414,15 +407,22 @@ describe("[queries] loading", () => {
     })(
       class extends React.Component<ChildProps<{}, Data>> {
         render() {
-          currentData = this.props.data!;
+          ProfiledContainer.updateSnapshot(this.props.data!);
           return null;
         }
       }
     );
 
-    const ProfiledContainer = profile({
+    const ProfiledContainer = profile<
+      DataValue<{
+        allPeople: {
+          people: {
+            name: string;
+          }[];
+        };
+      }>
+    >({
       Component: Container,
-      takeSnapshot: () => currentData,
     });
 
     const App = (

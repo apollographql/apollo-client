@@ -1468,26 +1468,23 @@ describe("has the same timing as `useQuery`", () => {
       ),
     });
 
-    let queryData: any, fragmentData: any;
-
     function Component() {
-      ({ data: queryData } = useQuery(query, { returnPartialData: true }));
-      let complete: boolean;
-      ({ data: fragmentData, complete } = useFragment({
+      const { data: queryData } = useQuery(query, { returnPartialData: true });
+      const { data: fragmentData, complete } = useFragment({
         fragment: itemFragment,
         from: initialItem,
-      }));
+      });
+
+      ProfiledComponent.updateSnapshot({ queryData, fragmentData });
 
       return complete ? JSON.stringify(fragmentData) : "loading";
     }
 
     const ProfiledComponent = profile({
       Component,
-      takeSnapshot() {
-        return {
-          queryData,
-          fragmentData,
-        };
+      initialSnapshot: {
+        queryData: undefined as any,
+        fragmentData: undefined as any,
       },
     });
 
@@ -1573,7 +1570,7 @@ describe("has the same timing as `useQuery`", () => {
 
     const ProfiledParent = profile({
       Component: Parent,
-      takeSnapshot() {
+      onRender() {
         const parent = screen.getByTestId("parent");
         const children = screen.getByTestId("children");
         expect(within(parent).queryAllByText(/Item #1/).length).toBe(
@@ -1659,7 +1656,7 @@ describe("has the same timing as `useQuery`", () => {
 
     const ProfiledParent = profile({
       Component: Parent,
-      takeSnapshot() {
+      onRender() {
         const parent = screen.getByTestId("parent");
         const children = screen.getByTestId("children");
         expect(within(parent).queryAllByText(/Item #1/).length).toBe(

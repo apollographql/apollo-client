@@ -361,9 +361,9 @@ describe("useSuspenseQuery", () => {
   it("suspends a query and returns results", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
-    let result: UseSuspenseQueryResult<SimpleQueryData> | undefined;
     const Component = () => {
-      result = useSuspenseQuery(query);
+      const result = useSuspenseQuery(query);
+      ProfiledApp.updateSnapshot(result);
       return <div>{result.data.greeting}</div>;
     };
 
@@ -377,9 +377,10 @@ describe("useSuspenseQuery", () => {
       );
     };
 
-    const ProfiledApp = profile({
+    const ProfiledApp = profile<
+      UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
+    >({
       Component: App,
-      takeSnapshot: () => result,
       snapshotDOM: true,
     });
 

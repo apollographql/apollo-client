@@ -1,4 +1,4 @@
-import React, { Fragment, StrictMode, Suspense } from "react";
+import React, { ComponentProps, Fragment, StrictMode, Suspense } from "react";
 import {
   act,
   render,
@@ -332,10 +332,10 @@ function renderVariablesIntegrationTest({
     );
   }
 
-  const ProfiledApp = profile({
+  const ProfiledApp = profile<Renders, ComponentProps<typeof App>>({
     Component: App,
     snapshotDOM: true,
-    takeSnapshot: () => cloneDeep(renders),
+    onRender: ({ updateSnapshot }) => updateSnapshot(cloneDeep(renders)),
   });
 
   const { ...rest } = render(
@@ -432,23 +432,12 @@ function renderPaginatedIntegrationTest({
     suspenseCount: number;
     count: number;
   }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-  };
-
-  const errorBoundaryProps: ErrorBoundaryProps = {
-    fallback: <div>Error</div>,
-    onError: (error) => {
-      renders.errorCount++;
-      renders.errors.push(error);
-    },
-  };
 
   function SuspenseFallback() {
-    renders.suspenseCount++;
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      suspenseCount: snapshot.suspenseCount + 1,
+    }));
     return <div>loading</div>;
   }
 
@@ -461,7 +450,10 @@ function renderPaginatedIntegrationTest({
   }) {
     const { data, error } = useReadQuery(queryRef);
     // count renders in the child component
-    renders.count++;
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      count: snapshot.count + 1,
+    }));
     return (
       <div>
         {error ? <div>{error.message}</div> : null}
@@ -509,7 +501,16 @@ function renderPaginatedIntegrationTest({
   function App() {
     return (
       <ApolloProvider client={client}>
-        <ErrorBoundary {...errorBoundaryProps}>
+        <ErrorBoundary
+          fallback={<div>Error</div>}
+          onError={(error) => {
+            ProfiledApp.updateSnapshot((snapshot) => ({
+              ...snapshot,
+              errorCount: snapshot.errorCount + 1,
+              errors: snapshot.errors.concat(error),
+            }));
+          }}
+        >
           <Suspense fallback={<SuspenseFallback />}>
             <ParentWithVariables />
           </Suspense>
@@ -521,7 +522,12 @@ function renderPaginatedIntegrationTest({
   const ProfiledApp = profile({
     Component: App,
     snapshotDOM: true,
-    takeSnapshot: () => cloneDeep(renders),
+    initialSnapshot: {
+      errors: [],
+      errorCount: 0,
+      suspenseCount: 0,
+      count: 0,
+    } as Renders,
   });
   const { ...rest } = render(<ProfiledApp />);
   return { ...rest, ProfiledApp, data, query, client };

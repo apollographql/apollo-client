@@ -10,7 +10,6 @@ import { InMemoryCache } from "../../../../cache";
 import { ApolloProvider } from "../../../context";
 import { itAsync, MockedProvider, mockSingleLink } from "../../../../testing";
 import { Query } from "../../Query";
-import { cloneDeep } from "../../../../utilities";
 import { QueryResult } from "../../../types/types";
 import { profile } from "../../../../testing/internal";
 
@@ -1488,23 +1487,19 @@ describe("Query component", () => {
 
     const AllPeopleQuery2 = Query;
 
-    let result: QueryResult | undefined;
     function Container() {
       return (
         <AllPeopleQuery2 query={query} notifyOnNetworkStatusChange={true}>
           {(r: any) => {
-            result = r;
+            ProfiledContainer.updateSnapshot(r);
             return null;
           }}
         </AllPeopleQuery2>
       );
     }
 
-    const ProfiledContainer = profile({
+    const ProfiledContainer = profile<QueryResult>({
       Component: Container,
-      takeSnapshot() {
-        return cloneDeep(result!);
-      },
     });
 
     render(

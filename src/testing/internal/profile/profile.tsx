@@ -34,7 +34,7 @@ interface ProfiledComponenOnlyFields<Props, Snapshot> {
 interface ProfiledComponentFields<Props, Snapshot> {
   /**
    * An array of all renders that have happened so far.
-   * Errors thrown during component rember will be captured here, too.
+   * Errors thrown during component render will be captured here, too.
    */
   renders: Array<
     Render<Snapshot> | { phase: "snapshotError"; count: number; error: unknown }

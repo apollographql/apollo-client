@@ -16,7 +16,10 @@ export interface NextRenderOptions {
 }
 
 /** @internal */
-export interface ProfiledComponent<Props, Snapshot> extends React.FC<Props> {
+export interface ProfiledComponent<Props, Snapshot>
+  extends React.FC<Props>,
+    ProfiledComponentFields<Props, Snapshot> {}
+interface ProfiledComponentFields<Props, Snapshot> {
   /**
    * An array of all renders that have happened so far.
    * Errors thrown during component rember will be captured here, too.
@@ -217,14 +220,71 @@ export class WaitForRenderTimeoutError extends Error {
   }
 }
 
+type StringReplaceRenderWithSnapshot<T extends string> =
+  T extends `${infer Pre}Render${infer Post}` ? `${Pre}Snapshot${Post}` : T;
+
+type ResultReplaceRenderWithSnapshot<T> = T extends (
+  ...args: infer Args
+) => Render<infer Snapshot>
+  ? (...args: Args) => Snapshot
+  : T extends (...args: infer Args) => Promise<Render<infer Snapshot>>
+  ? (...args: Args) => Promise<Snapshot>
+  : T;
+
+type ProfiledHookFields<Props, ReturnValue> = Omit<
+  ProfiledComponent<Props, ReturnValue>,
+  keyof React.FC<Props>
+> extends infer PC
+  ? {
+      [K in keyof PC as StringReplaceRenderWithSnapshot<
+        K & string
+      >]: ResultReplaceRenderWithSnapshot<PC[K]>;
+    }
+  : never;
+
+/** @internal */
+export interface ProfiledHook<Props, ReturnValue>
+  extends React.FC<Props>,
+    ProfiledHookFields<Props, ReturnValue> {
+  ProfiledComponent: ProfiledComponent<Props, ReturnValue>;
+}
+
 /** @internal */
 export function profileHook<Props, ReturnValue>(
-  hook: (props: Props) => ReturnValue
-) {
+  renderCallback: (props: Props) => ReturnValue
+): ProfiledHook<Props, ReturnValue> {
   let returnValue: ReturnValue;
   const Component = (props: Props) => {
-    returnValue = hook(props);
-    return <></>;
+    returnValue = renderCallback(props);
+    return null;
   };
-  return profile({ Component, takeSnapshot: () => returnValue });
+  const ProfiledComponent = profile({
+    Component,
+    takeSnapshot: () => returnValue,
+  });
+  return Object.assign(
+    function ProfiledHook(props: Props) {
+      return <ProfiledComponent {...(props as any)} />;
+    },
+    {
+      ProfiledComponent,
+    },
+    {
+      renders: ProfiledComponent.renders,
+      currentSnapshotCount: ProfiledComponent.currentRenderCount,
+      async peekSnapshot(options) {
+        return (await ProfiledComponent.peekRender(options)).snapshot;
+      },
+      async takeSnapshot(options) {
+        return (await ProfiledComponent.takeRender(options)).snapshot;
+      },
+      getCurrentSnapshot() {
+        return ProfiledComponent.getCurrentRender().snapshot;
+      },
+      takeUntilSnapshotCount: ProfiledComponent.takeUntilRenderCount,
+      async waitForNextSnapshot(options) {
+        return (await ProfiledComponent.waitForNextRender(options)).snapshot;
+      },
+    } satisfies ProfiledHookFields<Props, ReturnValue>
+  );
 }

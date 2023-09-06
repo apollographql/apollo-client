@@ -1716,19 +1716,19 @@ describe("useQuery Hook", () => {
         ),
       });
       {
-        const { snapshot } = await ProfiledUseQuery.takeRender();
-        expect(snapshot.loading).toBe(true);
-        expect(snapshot.data).toBe(undefined);
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
       }
       {
-        const { snapshot } = await ProfiledUseQuery.takeRender();
-        expect(snapshot.loading).toBe(false);
-        expect(snapshot.data).toEqual({ hello: "world 1" });
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 1" });
       }
 
       rerender(<ProfiledUseQuery skip />);
       {
-        const { snapshot } = await ProfiledUseQuery.takeRender();
+        const snapshot = await ProfiledUseQuery.takeSnapshot();
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual(undefined);
       }
@@ -1737,21 +1737,21 @@ describe("useQuery Hook", () => {
 
       rerender(<ProfiledUseQuery skip={false} />);
       {
-        const { snapshot } = await ProfiledUseQuery.takeRender();
-        expect(snapshot.loading).toBe(false);
-        expect(snapshot.data).toEqual({ hello: "world 1" });
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 1" });
       }
 
       {
-        const { snapshot } = await ProfiledUseQuery.takeRender();
-        expect(snapshot.loading).toBe(false);
-        expect(snapshot.data).toEqual({ hello: "world 2" });
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 2" });
       }
 
       {
-        const { snapshot } = await ProfiledUseQuery.takeRender();
-        expect(snapshot.loading).toBe(false);
-        expect(snapshot.data).toEqual({ hello: "world 3" });
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 3" });
       }
     });
 
@@ -6007,33 +6007,33 @@ describe("useQuery Hook", () => {
       render(<ProfiledHook />, { wrapper });
 
       {
-        const { snapshot } = await ProfiledHook.takeRender();
-        expect(snapshot.loading).toBe(true);
-        expect(snapshot.data).toBe(undefined);
-        expect(snapshot.previousData).toBe(undefined);
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+        expect(result.previousData).toBe(undefined);
       }
 
       {
-        const { snapshot } = await ProfiledHook.takeRender();
-        expect(snapshot.loading).toBe(false);
-        expect(snapshot.data).toEqual(data1);
-        expect(snapshot.previousData).toBe(undefined);
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data1);
+        expect(result.previousData).toBe(undefined);
 
-        snapshot.refetch();
+        result.refetch();
       }
 
       {
-        const { snapshot } = await ProfiledHook.takeRender();
-        expect(snapshot.loading).toBe(true);
-        expect(snapshot.data).toEqual(data1);
-        expect(snapshot.previousData).toEqual(data1);
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toEqual(data1);
+        expect(result.previousData).toEqual(data1);
       }
 
       {
-        const { snapshot } = await ProfiledHook.takeRender();
-        expect(snapshot.loading).toBe(false);
-        expect(snapshot.data).toEqual(data2);
-        expect(snapshot.previousData).toEqual(data1);
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data2);
+        expect(result.previousData).toEqual(data1);
       }
     });
 

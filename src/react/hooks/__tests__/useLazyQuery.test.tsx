@@ -751,38 +751,38 @@ describe("useLazyQuery Hook", () => {
     render(<ProfiledHook />, { wrapper });
 
     {
-      const result = (await ProfiledHook.takeRender()).snapshot[1];
+      const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toBe(undefined);
     }
 
     await tick();
-    ProfiledHook.getCurrentRender().snapshot[1].startPolling(10);
+    ProfiledHook.getCurrentSnapshot()[1].startPolling(10);
 
     {
-      const result = (await ProfiledHook.takeRender()).snapshot[1];
+      const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(true);
     }
 
     {
-      const result = (await ProfiledHook.takeRender()).snapshot[1];
+      const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toEqual({ hello: "world 1" });
     }
 
     {
-      const result = (await ProfiledHook.takeRender()).snapshot[1];
+      const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toEqual({ hello: "world 2" });
     }
 
     {
-      const result = (await ProfiledHook.takeRender()).snapshot[1];
+      const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toEqual({ hello: "world 3" });
     }
 
-    ProfiledHook.getCurrentRender().snapshot[1].stopPolling();
+    ProfiledHook.getCurrentSnapshot()[1].stopPolling();
 
     expect(ProfiledHook).not.toRerender();
   });
@@ -1115,10 +1115,10 @@ describe("useLazyQuery Hook", () => {
       ),
     });
 
-    const execute = ProfiledHook.getCurrentRender().snapshot[0];
+    const [execute] = ProfiledHook.getCurrentSnapshot();
 
     {
-      const result = (await ProfiledHook.takeRender()).snapshot[1];
+      const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toBeUndefined();
     }
@@ -1126,14 +1126,14 @@ describe("useLazyQuery Hook", () => {
     const executePromise = Promise.resolve().then(() => execute());
 
     {
-      const result = (await ProfiledHook.takeRender()).snapshot[1];
+      const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(true);
       expect(result.data).toBeUndefined();
       expect(result.error).toBe(undefined);
     }
 
     {
-      const result = (await ProfiledHook.takeRender()).snapshot[1];
+      const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toBeUndefined();
       expect(result.error).toEqual(new Error("error 1"));
@@ -1148,14 +1148,14 @@ describe("useLazyQuery Hook", () => {
     execute();
 
     {
-      const result = (await ProfiledHook.takeRender()).snapshot[1];
+      const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(true);
       expect(result.data).toBeUndefined();
       expect(result.error).toEqual(new Error("error 1"));
     }
 
     {
-      const result = (await ProfiledHook.takeRender()).snapshot[1];
+      const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toBeUndefined();
       expect(result.error).toEqual(new Error("error 2"));

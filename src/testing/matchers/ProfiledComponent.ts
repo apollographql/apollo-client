@@ -3,13 +3,18 @@ import { WaitForRenderTimeoutError } from "../internal/index.js";
 import type {
   NextRenderOptions,
   ProfiledComponent,
+  ProfiledHook,
 } from "../internal/index.js";
 export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
   async function (
-    profiled: ProfiledComponent<any, any>,
+    _profiled: ProfiledComponent<any, any> | ProfiledHook<any, any>,
     options?: NextRenderOptions
   ) {
-    const hint = this.utils.matcherHint("toNotRerender");
+    const profiled =
+      "ProfiledComponent" in _profiled
+        ? _profiled.ProfiledComponent
+        : _profiled;
+    const hint = this.utils.matcherHint("toRerender");
     let pass = true;
     try {
       await profiled.peekRender({ timeout: 100, ...options });
@@ -38,10 +43,12 @@ const failed = {};
 export const toRenderExactlyTimes: MatcherFunction<
   [times: number, options?: NextRenderOptions]
 > = async function (
-  profiled: ProfiledComponent<any, any>,
+  _profiled: ProfiledComponent<any, any> | ProfiledHook<any, any>,
   times: number,
   optionsPerRender?: NextRenderOptions
 ) {
+  const profiled =
+    "ProfiledComponent" in _profiled ? _profiled.ProfiledComponent : _profiled;
   const options = { timeout: 100, ...optionsPerRender };
   const hint = this.utils.matcherHint("toRenderExactlyTimes");
   let pass = true;

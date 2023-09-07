@@ -26,7 +26,7 @@ import {
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
-import { profileHook } from "../../../testing/internal";
+import { profileHook, spyOnConsole } from "../../../testing/internal";
 
 describe("useQuery Hook", () => {
   describe("General use", () => {
@@ -3528,7 +3528,7 @@ describe("useQuery Hook", () => {
 
     it("should fetchMore with updateQuery", async () => {
       // TODO: Calling fetchMore with an updateQuery callback is deprecated
-      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      using _warnSpy = spyOnConsole("warn");
 
       const wrapper = ({ children }: any) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -3567,13 +3567,11 @@ describe("useQuery Hook", () => {
       );
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-
-      warnSpy.mockRestore();
     });
 
     it("should fetchMore with updateQuery and notifyOnNetworkStatusChange", async () => {
       // TODO: Calling fetchMore with an updateQuery callback is deprecated
-      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      using _warnSpy = spyOnConsole("warn");
 
       const wrapper = ({ children }: any) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -3624,8 +3622,6 @@ describe("useQuery Hook", () => {
       );
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
-
-      warnSpy.mockRestore();
     });
 
     it("fetchMore with concatPagination", async () => {

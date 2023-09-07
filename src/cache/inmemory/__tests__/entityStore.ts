@@ -15,6 +15,7 @@ import { MissingFieldError } from "../..";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { stringifyForDisplay } from "../../../utilities";
 import { InvariantError } from "../../../utilities/globals";
+import { spyOnConsole } from "../../../testing/internal";
 
 describe("EntityStore", () => {
   it("should support result caching if so configured", () => {
@@ -1785,23 +1786,17 @@ describe("EntityStore", () => {
     ).toBe('ABCs:{"b":2,"a":1,"c":3}');
 
     {
-      // TODO Extact this to a helper function.
-      const consoleWarnSpy = jest.spyOn(console, "warn");
-      consoleWarnSpy.mockImplementation(() => {});
-      try {
-        expect(cache.identify(ABCs)).toBeUndefined();
-        expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-        expect(consoleWarnSpy).toHaveBeenCalledWith(
-          new InvariantError(
-            `Missing field 'b' while extracting keyFields from ${stringifyForDisplay(
-              ABCs,
-              2
-            )}`
-          )
-        );
-      } finally {
-        consoleWarnSpy.mockRestore();
-      }
+      using consoleSpies = spyOnConsole("warn");
+      expect(cache.identify(ABCs)).toBeUndefined();
+      expect(consoleSpies.warn).toHaveBeenCalledTimes(1);
+      expect(consoleSpies.warn).toHaveBeenCalledWith(
+        new InvariantError(
+          `Missing field 'b' while extracting keyFields from ${stringifyForDisplay(
+            ABCs,
+            2
+          )}`
+        )
+      );
     }
 
     expect(

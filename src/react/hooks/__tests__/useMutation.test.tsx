@@ -29,6 +29,7 @@ import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
+import { spyOnConsole } from "../../../testing/internal";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -227,7 +228,7 @@ describe("useMutation Hook", () => {
     });
 
     it("should not call setResult on an unmounted component", async () => {
-      const errorSpy = jest.spyOn(console, "error");
+      using consoleSpies = spyOnConsole("error");
       const variables = {
         description: "Get milk!",
       };
@@ -260,8 +261,7 @@ describe("useMutation Hook", () => {
         await result.current.reset();
       });
 
-      expect(errorSpy).not.toHaveBeenCalled();
-      errorSpy.mockRestore();
+      expect(consoleSpies.error).not.toHaveBeenCalled();
     });
 
     it("should resolve mutate function promise with mutation results", async () => {
@@ -2498,7 +2498,7 @@ describe("useMutation Hook", () => {
       description: "Get milk!",
     };
     it("resolves a deferred mutation with the full result", async () => {
-      const errorSpy = jest.spyOn(console, "error");
+      using consoleSpies = spyOnConsole("error");
       const link = new MockSubscriptionLink();
 
       const client = new ApolloClient({
@@ -2579,11 +2579,10 @@ describe("useMutation Hook", () => {
           __typename: "Todo",
         },
       });
-      expect(errorSpy).not.toHaveBeenCalled();
-      errorSpy.mockRestore();
+      expect(consoleSpies.error).not.toHaveBeenCalled();
     });
     it("resolves with resulting errors and calls onError callback", async () => {
-      const errorSpy = jest.spyOn(console, "error");
+      using consoleSpies = spyOnConsole("error");
       const link = new MockSubscriptionLink();
 
       const client = new ApolloClient({
@@ -2653,12 +2652,11 @@ describe("useMutation Hook", () => {
         expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
       });
       await waitFor(() => {
-        expect(errorSpy).not.toHaveBeenCalled();
+        expect(consoleSpies.error).not.toHaveBeenCalled();
       });
-      errorSpy.mockRestore();
     });
     it("calls the update function with the final merged result data", async () => {
-      const errorSpy = jest.spyOn(console, "error");
+      using consoleSpies = spyOnConsole("error");
       const link = new MockSubscriptionLink();
       const update = jest.fn();
       const client = new ApolloClient({
@@ -2738,10 +2736,8 @@ describe("useMutation Hook", () => {
         expect.objectContaining({ variables })
       );
       await waitFor(() => {
-        expect(errorSpy).not.toHaveBeenCalled();
+        expect(consoleSpies.error).not.toHaveBeenCalled();
       });
-
-      errorSpy.mockRestore();
     });
   });
 });

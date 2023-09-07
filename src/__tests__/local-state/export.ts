@@ -2,10 +2,11 @@ import gql from "graphql-tag";
 import { print } from "graphql";
 
 import { Observable } from "../../utilities";
-import { itAsync, withErrorSpy } from "../../testing";
+import { itAsync } from "../../testing";
 import { ApolloLink } from "../../link/core";
 import { ApolloClient } from "../../core";
 import { InMemoryCache } from "../../cache";
+import { spyOnConsole } from "../../testing/internal";
 
 describe("@client @export tests", () => {
   itAsync(
@@ -179,10 +180,10 @@ describe("@client @export tests", () => {
     }
   );
 
-  withErrorSpy(
-    itAsync,
+  itAsync(
     "should allow @client @export variables to be used with remote queries",
     (resolve, reject) => {
+      using _consoleSpies = spyOnConsole("error");
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
           currentAuthor @client {
@@ -728,12 +729,12 @@ describe("@client @export tests", () => {
     }
   );
 
-  withErrorSpy(
-    itAsync,
+  itAsync(
     "should refetch if an @export variable changes, the current fetch " +
       "policy is not cache-only, and the query includes fields that need to " +
       "be resolved remotely",
     (resolve, reject) => {
+      using _consoleSpies = spyOnConsole("error");
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
           currentAuthorId @client @export(as: "authorId")
@@ -794,12 +795,12 @@ describe("@client @export tests", () => {
     }
   );
 
-  withErrorSpy(
-    itAsync,
+  itAsync(
     "should NOT refetch if an @export variable has not changed, the " +
       "current fetch policy is not cache-only, and the query includes fields " +
       "that need to be resolved remotely",
     (resolve, reject) => {
+      using _consoleSpies = spyOnConsole("error");
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
           currentAuthorId @client @export(as: "authorId")

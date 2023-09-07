@@ -10,6 +10,8 @@ import { InMemoryCache } from "../../../../cache";
 import { ApolloProvider } from "../../../context";
 import { itAsync, MockedProvider, mockSingleLink } from "../../../../testing";
 import { Query } from "../../Query";
+import { QueryResult } from "../../../types/types";
+import { profile } from "../../../../testing/internal";
 
 const allPeopleQuery: DocumentNode = gql`
   query people {
@@ -1481,8 +1483,6 @@ describe("Query component", () => {
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    let count = 0;
-    let testFailures: any[] = [];
     const noop = () => null;
 
     const AllPeopleQuery2 = Query;
@@ -1490,75 +1490,69 @@ describe("Query component", () => {
     function Container() {
       return (
         <AllPeopleQuery2 query={query} notifyOnNetworkStatusChange={true}>
-          {(result: any) => {
-            try {
-              switch (count++) {
-                case 0:
-                  // Waiting for the first result to load
-                  expect(result.loading).toBe(true);
-                  break;
-                case 1:
-                  // First result is loaded, run a refetch to get the second result
-                  // which is an error.
-                  expect(result.data.allPeople).toEqual(data.allPeople);
-                  setTimeout(() => {
-                    result.refetch().then(() => {
-                      fail("Expected error value on first refetch.");
-                    }, noop);
-                  }, 0);
-                  break;
-                case 2:
-                  // Waiting for the second result to load
-                  expect(result.loading).toBe(true);
-                  break;
-                case 3:
-                  setTimeout(() => {
-                    result.refetch().catch(() => {
-                      fail("Expected good data on second refetch.");
-                    });
-                  }, 0);
-                  // fallthrough
-                  // The error arrived, run a refetch to get the third result
-                  // which should now contain valid data.
-                  expect(result.loading).toBe(false);
-                  expect(result.error).toBeTruthy();
-                  break;
-                case 4:
-                  expect(result.loading).toBe(true);
-                  expect(result.error).toBeFalsy();
-                  break;
-                case 5:
-                  expect(result.loading).toBe(false);
-                  expect(result.error).toBeFalsy();
-                  expect(result.data.allPeople).toEqual(dataTwo.allPeople);
-                  break;
-                default:
-                  throw new Error("Unexpected fall through");
-              }
-            } catch (e) {
-              // if we throw the error inside the component,
-              // we will get more rerenders in the test, but the `expect` error
-              // might not propagate anyways
-              testFailures.push(e);
-            }
+          {(r: any) => {
+            ProfiledContainer.updateSnapshot(r);
             return null;
           }}
         </AllPeopleQuery2>
       );
     }
 
+    const ProfiledContainer = profile<QueryResult>({
+      Component: Container,
+    });
+
     render(
       <ApolloProvider client={client}>
-        <Container />
+        <ProfiledContainer />
       </ApolloProvider>
     );
 
-    await waitFor(() => {
-      if (testFailures.length > 0) {
-        throw testFailures[0];
-      }
-      expect(count).toBe(6);
-    });
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(true);
+    }
+
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(false);
+      expect(snapshot.data.allPeople).toEqual(data.allPeople);
+      // First result is loaded, run a refetch to get the second result
+      // which is an error.
+      snapshot.refetch().then(() => {
+        fail("Expected error value on first refetch.");
+      }, noop);
+    }
+
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      // Waiting for the second result to load
+      expect(snapshot.loading).toBe(true);
+    }
+
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(false);
+      expect(snapshot.error).toBeTruthy();
+      // The error arrived, run a refetch to get the third result
+      // which should now contain valid data.
+      snapshot.refetch().catch(() => {
+        fail("Expected good data on second refetch.");
+      });
+    }
+
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(true);
+      expect(snapshot.error).toBeFalsy();
+    }
+
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(false);
+      expect(snapshot.error).toBeFalsy();
+      expect(snapshot.data.allPeople).toEqual(dataTwo.allPeople);
+    }
   });
 
   itAsync(

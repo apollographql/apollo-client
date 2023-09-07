@@ -28,7 +28,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { print } from '../../utilities/index.js';
+import { print } from "../../utilities/index.js";
 import type { Client } from "graphql-ws";
 
 import type { Operation, FetchResult } from "../core/index.js";
@@ -66,11 +66,11 @@ export class GraphQLWsLink extends ApolloLink {
             if (likeClose || isLikeErrorEvent(err)) {
               return observer.error(
                 // reason will be available on clean closes
-                new Error(`Socket closed${
-                  likeClose ? ` with event ${err.code}` : ""
-                }${
-                  likeClose ? ` ${err.reason}` : ""
-                }`)
+                new Error(
+                  `Socket closed${likeClose ? ` with event ${err.code}` : ""}${
+                    likeClose ? ` ${err.reason}` : ""
+                  }`
+                )
               );
             }
 

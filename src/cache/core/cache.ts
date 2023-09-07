@@ -1,14 +1,10 @@
-import type { DocumentNode } from 'graphql';
-import { wrap } from 'optimism';
+import type { DocumentNode } from "graphql";
+import { wrap } from "optimism";
 
-import type {
-  StoreObject,
-  Reference} from '../../utilities/index.js';
-import {
-  getFragmentQueryDocument,
-} from '../../utilities/index.js';
-import type { DataProxy } from './types/DataProxy.js';
-import type { Cache } from './types/Cache.js';
+import type { StoreObject, Reference } from "../../utilities/index.js";
+import { getFragmentQueryDocument } from "../../utilities/index.js";
+import type { DataProxy } from "./types/DataProxy.js";
+import type { Cache } from "./types/Cache.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -18,14 +14,14 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // required to implement
   // core API
   public abstract read<TData = any, TVariables = any>(
-    query: Cache.ReadOptions<TVariables, TData>,
+    query: Cache.ReadOptions<TVariables, TData>
   ): TData | null;
   public abstract write<TData = any, TVariables = any>(
-    write: Cache.WriteOptions<TData, TVariables>,
+    write: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined;
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch<TData = any, TVariables = any>(
-    watch: Cache.WatchOptions<TData, TVariables>,
+    watch: Cache.WatchOptions<TData, TVariables>
   ): () => void;
 
   // Empty the cache and restart all current watches (unless
@@ -48,7 +44,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    * and also (potentially) during hot reloads.
    */
   public abstract restore(
-    serializedState: TSerialized,
+    serializedState: TSerialized
   ): ApolloCache<TSerialized>;
 
   /**
@@ -69,12 +65,15 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // override the batch method to do more interesting things with its options.
   public batch<U>(options: Cache.BatchOptions<this, U>): U {
     const optimisticId =
-      typeof options.optimistic === "string" ? options.optimistic :
-      options.optimistic === false ? null : void 0;
+      typeof options.optimistic === "string"
+        ? options.optimistic
+        : options.optimistic === false
+        ? null
+        : void 0;
     let updateResult: U;
     this.performTransaction(
-      () => updateResult = options.update(this),
-      optimisticId,
+      () => (updateResult = options.update(this)),
+      optimisticId
     );
     return updateResult!;
   }
@@ -88,12 +87,12 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     // (broadcast-batching) transactions. Passing null for optimisticId is
     // also allowed, and indicates that performTransaction should apply
     // the transaction non-optimistically (ignoring optimistic data).
-    optimisticId?: string | null,
+    optimisticId?: string | null
   ): void;
 
   public recordOptimisticTransaction(
     transaction: Transaction<TSerialized>,
-    optimisticId: string,
+    optimisticId: string
   ) {
     this.performTransaction(transaction, optimisticId);
   }
@@ -120,7 +119,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     return [];
   }
 
-  public modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache.ModifyOptions<Entity>): boolean {
+  public modify<Entity extends Record<string, any> = Record<string, any>>(
+    options: Cache.ModifyOptions<Entity>
+  ): boolean {
     return false;
   }
 
@@ -132,11 +133,11 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    */
   public readQuery<QueryType, TVariables = any>(
     options: Cache.ReadQueryOptions<QueryType, TVariables>,
-    optimistic = !!options.optimistic,
+    optimistic = !!options.optimistic
   ): QueryType | null {
     return this.read({
       ...options,
-      rootId: options.id || 'ROOT_QUERY',
+      rootId: options.id || "ROOT_QUERY",
       optimistic,
     });
   }
@@ -147,7 +148,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public readFragment<FragmentType, TVariables = any>(
     options: Cache.ReadFragmentOptions<FragmentType, TVariables>,
-    optimistic = !!options.optimistic,
+    optimistic = !!options.optimistic
   ): FragmentType | null {
     return this.read({
       ...options,
@@ -162,10 +163,12 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     data,
     ...options
   }: Cache.WriteQueryOptions<TData, TVariables>): Reference | undefined {
-    return this.write(Object.assign(options, {
-      dataId: id || 'ROOT_QUERY',
-      result: data,
-    }));
+    return this.write(
+      Object.assign(options, {
+        dataId: id || "ROOT_QUERY",
+        result: data,
+      })
+    );
   }
 
   public writeFragment<TData = any, TVariables = any>({
@@ -175,16 +178,18 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     fragmentName,
     ...options
   }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined {
-    return this.write(Object.assign(options, {
-      query: this.getFragmentDoc(fragment, fragmentName),
-      dataId: id,
-      result: data,
-    }));
+    return this.write(
+      Object.assign(options, {
+        query: this.getFragmentDoc(fragment, fragmentName),
+        dataId: id,
+        result: data,
+      })
+    );
   }
 
   public updateQuery<TData = any, TVariables = any>(
     options: Cache.UpdateQueryOptions<TData, TVariables>,
-    update: (data: TData | null) => TData | null | void,
+    update: (data: TData | null) => TData | null | void
   ): TData | null {
     return this.batch({
       update(cache) {
@@ -199,7 +204,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public updateFragment<TData = any, TVariables = any>(
     options: Cache.UpdateFragmentOptions<TData, TVariables>,
-    update: (data: TData | null) => TData | null | void,
+    update: (data: TData | null) => TData | null | void
   ): TData | null {
     return this.batch({
       update(cache) {

@@ -1,7 +1,7 @@
-import type { DocumentNode } from 'graphql';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentNode } from "graphql";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import type { FetchResult } from '../link/core/index.js';
+import type { FetchResult } from "../link/core/index.js";
 import type {
   DefaultContext,
   MutationQueryReducersMap,
@@ -9,9 +9,9 @@ import type {
   MutationUpdaterFunction,
   OnQueryUpdated,
   InternalRefetchQueriesInclude,
-} from './types.js';
-import type { ApolloCache } from '../cache/index.js';
-import type { ObservableQuery } from './ObservableQuery.js';
+} from "./types.js";
+import type { ApolloCache } from "../cache/index.js";
+import type { ObservableQuery } from "./ObservableQuery.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -23,18 +23,18 @@ import type { ObservableQuery } from './ObservableQuery.js';
  * - standby: only for queries that aren't actively watched, but should be available for refetch and updateQueries.
  */
 export type FetchPolicy =
-  | 'cache-first'
-  | 'network-only'
-  | 'cache-only'
-  | 'no-cache'
-  | 'standby';
+  | "cache-first"
+  | "network-only"
+  | "cache-only"
+  | "no-cache"
+  | "standby";
 
-export type WatchQueryFetchPolicy = FetchPolicy | 'cache-and-network';
+export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
 export type MutationFetchPolicy = Extract<
   FetchPolicy,
-  | 'network-only' // default behavior (mutation results written to cache)
-  | 'no-cache'     // alternate behavior (results not written to cache)
+  | "network-only" // default behavior (mutation results written to cache)
+  | "no-cache" // alternate behavior (results not written to cache)
 >;
 
 export type RefetchWritePolicy = "merge" | "overwrite";
@@ -45,7 +45,7 @@ export type RefetchWritePolicy = "merge" | "overwrite";
  * - ignore: errors from the request do not stop the observable, but also don't call `next`
  * - all: errors are treated like data and will notify observables
  */
-export type ErrorPolicy = 'none' | 'ignore' | 'all';
+export type ErrorPolicy = "none" | "ignore" | "all";
 
 /**
  * Query options.
@@ -115,8 +115,10 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
 /**
  * Watched query options.
  */
-export interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any>
-  extends Omit<QueryOptions<TVariables, TData>, 'fetchPolicy'> {
+export interface WatchQueryOptions<
+  TVariables extends OperationVariables = OperationVariables,
+  TData = any,
+> extends Omit<QueryOptions<TVariables, TData>, "fetchPolicy"> {
   /**
    * Specifies the {@link FetchPolicy} to be used for this query.
    */
@@ -125,11 +127,13 @@ export interface WatchQueryOptions<TVariables extends OperationVariables = Opera
   /**
    * Specifies the {@link FetchPolicy} to be used after this query has completed.
    */
-  nextFetchPolicy?: WatchQueryFetchPolicy | ((
-    this: WatchQueryOptions<TVariables, TData>,
-    currentFetchPolicy: WatchQueryFetchPolicy,
-    context: NextFetchPolicyContext<TData, TVariables>,
-  ) => WatchQueryFetchPolicy);
+  nextFetchPolicy?:
+    | WatchQueryFetchPolicy
+    | ((
+        this: WatchQueryOptions<TVariables, TData>,
+        currentFetchPolicy: WatchQueryFetchPolicy,
+        context: NextFetchPolicyContext<TData, TVariables>
+      ) => WatchQueryFetchPolicy);
 
   /**
    * Defaults to the initial value of options.fetchPolicy, but can be explicitly
@@ -147,10 +151,11 @@ export interface WatchQueryOptions<TVariables extends OperationVariables = Opera
   refetchWritePolicy?: RefetchWritePolicy;
 }
 
-export interface NextFetchPolicyContext<TData, TVariables extends OperationVariables> {
-  reason:
-    | "after-fetch"
-    | "variables-changed";
+export interface NextFetchPolicyContext<
+  TData,
+  TVariables extends OperationVariables,
+> {
+  reason: "after-fetch" | "variables-changed";
   observable: ObservableQuery<TData, TVariables>;
   options: WatchQueryOptions<TVariables, TData>;
   initialFetchPolicy: WatchQueryFetchPolicy;
@@ -165,28 +170,33 @@ export interface FetchMoreQueryOptions<TVariables, TData = any> {
 export type UpdateQueryFn<
   TData = any,
   TSubscriptionVariables = OperationVariables,
-  TSubscriptionData = TData
+  TSubscriptionData = TData,
 > = (
   previousQueryResult: TData,
   options: {
     subscriptionData: { data: TSubscriptionData };
     variables?: TSubscriptionVariables;
-  },
+  }
 ) => TData;
 
 export type SubscribeToMoreOptions<
   TData = any,
   TSubscriptionVariables = OperationVariables,
-  TSubscriptionData = TData
+  TSubscriptionData = TData,
 > = {
-  document: DocumentNode | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
+  document:
+    | DocumentNode
+    | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
   variables?: TSubscriptionVariables;
   updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
   onError?: (error: Error) => void;
   context?: DefaultContext;
 };
 
-export interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
+export interface SubscriptionOptions<
+  TVariables = OperationVariables,
+  TData = any,
+> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single subscription inside of it.
@@ -307,7 +317,7 @@ export interface MutationBaseOptions<
    * [query `context` option](https://www.apollographql.com/docs/react/api/apollo-client#ApolloClient.query))
    * when the query is first initialized/run.
    */
-   context?: TContext;
+  context?: TContext;
 }
 
 export interface MutationOptions<

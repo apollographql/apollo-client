@@ -1,12 +1,12 @@
-import gql from 'graphql-tag';
-import { ASTNode, print, stripIgnoredCharacters } from 'graphql';
+import gql from "graphql-tag";
+import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 
-import { createOperation } from '../../utils/createOperation';
+import { createOperation } from "../../utils/createOperation";
 import {
   selectHttpOptionsAndBody,
   selectHttpOptionsAndBodyInternal,
   fallbackHttpConfig,
-} from '../selectHttpOptionsAndBody';
+} from "../selectHttpOptionsAndBody";
 
 const query = gql`
   query SampleQuery {
@@ -16,82 +16,81 @@ const query = gql`
   }
 `;
 
-describe('selectHttpOptionsAndBody', () => {
-  it('includeQuery allows the query to be ignored', () => {
-    const { body } = selectHttpOptionsAndBody(
-      createOperation({}, { query }),
-      { http: { includeQuery: false } },
-    );
-    expect(body).not.toHaveProperty('query');
+describe("selectHttpOptionsAndBody", () => {
+  it("includeQuery allows the query to be ignored", () => {
+    const { body } = selectHttpOptionsAndBody(createOperation({}, { query }), {
+      http: { includeQuery: false },
+    });
+    expect(body).not.toHaveProperty("query");
   });
 
-  it('includeExtensions allows the extensions to be added', () => {
-    const extensions = { yo: 'what up' };
+  it("includeExtensions allows the extensions to be added", () => {
+    const extensions = { yo: "what up" };
     const { body } = selectHttpOptionsAndBody(
       createOperation({}, { query, extensions }),
-      { http: { includeExtensions: true } },
+      { http: { includeExtensions: true } }
     );
-    expect(body).toHaveProperty('extensions');
+    expect(body).toHaveProperty("extensions");
     expect((body as any).extensions).toEqual(extensions);
   });
 
-  it('the fallbackConfig is used if no other configs are specified', () => {
+  it("the fallbackConfig is used if no other configs are specified", () => {
     const defaultHeaders = {
-      accept: '*/*',
-      'content-type': 'application/json',
+      accept: "*/*",
+      "content-type": "application/json",
     };
 
     const defaultOptions = {
-      method: 'POST',
+      method: "POST",
     };
 
-    const extensions = { yo: 'what up' };
+    const extensions = { yo: "what up" };
     const { options, body } = selectHttpOptionsAndBody(
       createOperation({}, { query, extensions }),
-      fallbackHttpConfig,
+      fallbackHttpConfig
     );
 
-    expect(body).toHaveProperty('query');
-    expect(body).not.toHaveProperty('extensions');
+    expect(body).toHaveProperty("query");
+    expect(body).not.toHaveProperty("extensions");
 
     expect(options.headers).toEqual(defaultHeaders);
     expect(options.method).toEqual(defaultOptions.method);
   });
 
-  it('allows headers, credentials, and setting of method to function correctly', () => {
+  it("allows headers, credentials, and setting of method to function correctly", () => {
     const headers = {
-      accept: 'application/json',
-      'content-type': 'application/graphql',
+      accept: "application/json",
+      "content-type": "application/graphql",
     };
 
     const credentials = {
-      'X-Secret': 'djmashko',
+      "X-Secret": "djmashko",
     };
 
     const opts = {
-      opt: 'hi',
+      opt: "hi",
     };
 
     const config = { headers, credentials, options: opts };
 
-    const extensions = { yo: 'what up' };
+    const extensions = { yo: "what up" };
 
     const { options, body } = selectHttpOptionsAndBody(
       createOperation({}, { query, extensions }),
       fallbackHttpConfig,
-      config,
+      config
     );
 
-    expect(body).toHaveProperty('query');
-    expect(body).not.toHaveProperty('extensions');
+    expect(body).toHaveProperty("query");
+    expect(body).not.toHaveProperty("extensions");
 
     expect(options.headers).toEqual(headers);
     expect(options.credentials).toEqual(credentials);
-    expect(options.opt).toEqual('hi');
-    expect(options.method).toEqual('POST'); //from default
+    expect(options.opt).toEqual("hi");
+    expect(options.method).toEqual("POST"); //from default
   });
 
-  it('applies custom printer function when provided', () => {
+  it("applies custom printer function when provided", () => {
     const customPrinter = (ast: ASTNode, originalPrint: typeof print) => {
       return stripIgnoredCharacters(originalPrint(ast));
     };
@@ -99,9 +98,9 @@ describe('selectHttpOptionsAndBody', () => {
     const { body } = selectHttpOptionsAndBodyInternal(
       createOperation({}, { query }),
       customPrinter,
-      fallbackHttpConfig,
+      fallbackHttpConfig
     );
 
-    expect(body.query).toBe('query SampleQuery{stub{id}}');
+    expect(body.query).toBe("query SampleQuery{stub{id}}");
   });
 });

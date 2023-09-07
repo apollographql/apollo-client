@@ -18,17 +18,14 @@ function toArrayPromise<T>(observable: Observable<T>): Promise<T[]> {
 
 describe("Observable subclassing", () => {
   it("Symbol.species is defined for Concast subclass", () => {
-    const concast = new Concast([
-      Observable.of(1, 2, 3),
-      Observable.of(4, 5),
-    ]);
+    const concast = new Concast([Observable.of(1, 2, 3), Observable.of(4, 5)]);
     expect(concast).toBeInstanceOf(Concast);
 
-    const mapped = concast.map(n => n * 2);
+    const mapped = concast.map((n) => n * 2);
     expect(mapped).toBeInstanceOf(Observable);
     expect(mapped).not.toBeInstanceOf(Concast);
 
-    return toArrayPromise(mapped).then(doubles => {
+    return toArrayPromise(mapped).then((doubles) => {
       expect(doubles).toEqual([2, 4, 6, 8, 10]);
     });
   });
@@ -38,7 +35,7 @@ describe("Observable subclassing", () => {
     expect(concast).toBeInstanceOf(Observable);
     expect(concast).toBeInstanceOf(Concast);
 
-    return toArrayPromise(concast).then(values => {
+    return toArrayPromise(concast).then((values) => {
       expect(values).toEqual(["asdf", "qwer", "zxcv"]);
     });
   });

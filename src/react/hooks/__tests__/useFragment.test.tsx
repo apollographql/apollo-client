@@ -29,6 +29,7 @@ import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
+import { profile } from "../../../testing/internal";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -1474,26 +1475,54 @@ describe("has the same timing as `useQuery`", () => {
         from: initialItem,
       });
 
-      if (!queryData) {
-        expect(fragmentData).toStrictEqual({});
-      } else {
-        expect({ item: fragmentData }).toStrictEqual(queryData);
-      }
+      ProfiledComponent.updateSnapshot({ queryData, fragmentData });
+
       return complete ? JSON.stringify(fragmentData) : "loading";
     }
-    render(<Component />, {
+
+    const ProfiledComponent = profile({
+      Component,
+      initialSnapshot: {
+        queryData: undefined as any,
+        fragmentData: undefined as any,
+      },
+    });
+
+    render(<ProfiledComponent />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
-    await screen.findByText(/loading/);
+
+    {
+      const { snapshot } = await ProfiledComponent.takeRender();
+      expect(snapshot.queryData).toBe(undefined);
+      expect(snapshot.fragmentData).toStrictEqual({});
+    }
+
     assert(observer!);
     observer.next({ data: { item: initialItem } });
     observer.complete();
-    await screen.findByText(/Item #initial/);
+
+    {
+      const { snapshot } = await ProfiledComponent.takeRender();
+      expect(snapshot.queryData).toStrictEqual({ item: initialItem });
+      expect(snapshot.fragmentData).toStrictEqual(initialItem);
+    }
+
     cache.writeQuery({ query, data: { item: updatedItem } });
-    await screen.findByText(/Item #updated/);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    if (React.version.startsWith("17.")) {
+      const { snapshot } = await ProfiledComponent.takeRender();
+      expect(snapshot.queryData).toStrictEqual({ item: initialItem });
+      expect(snapshot.fragmentData).toStrictEqual(updatedItem);
+    }
+
+    {
+      const { snapshot } = await ProfiledComponent.takeRender();
+      expect(snapshot.queryData).toStrictEqual({ item: updatedItem });
+      expect(snapshot.fragmentData).toStrictEqual(updatedItem);
+    }
   });
 
   it("`useQuery` in parent, `useFragment` in child", async () => {
@@ -1513,28 +1542,9 @@ describe("has the same timing as `useQuery`", () => {
     });
     cache.writeQuery({ query, data: { items: [item1, item2] } });
 
-    const valuePairs: Array<
-      [item: string, parentCount: number, childCount: number]
-    > = [];
-    function captureDOMState() {
-      const parent = screen.getByTestId("parent");
-      const children = screen.getByTestId("children");
-      valuePairs.push([
-        "Item 1",
-        within(parent).queryAllByText(/Item #1/).length,
-        within(children).queryAllByText(/Item #1/).length,
-      ]);
-      valuePairs.push([
-        "Item 2",
-        within(parent).queryAllByText(/Item #2/).length,
-        within(children).queryAllByText(/Item #2/).length,
-      ]);
-    }
-
     function Parent() {
       const { data } = useQuery(query);
       if (!data) throw new Error("should never happen");
-      React.useEffect(captureDOMState);
       return (
         <>
           <div data-testid="parent">
@@ -1555,25 +1565,45 @@ describe("has the same timing as `useQuery`", () => {
         fragment: itemFragment,
         from: { __typename: "Item", id },
       });
-      React.useEffect(captureDOMState);
       return <>{JSON.stringify({ item: data })}</>;
     }
 
-    render(<Parent />, {
+    const ProfiledParent = profile({
+      Component: Parent,
+      snapshotDOM: true,
+      onRender() {
+        const parent = screen.getByTestId("parent");
+        const children = screen.getByTestId("children");
+        expect(within(parent).queryAllByText(/Item #1/).length).toBe(
+          within(children).queryAllByText(/Item #1/).length
+        );
+        expect(within(parent).queryAllByText(/Item #2/).length).toBe(
+          within(children).queryAllByText(/Item #2/).length
+        );
+      },
+    });
+
+    render(<ProfiledParent />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
+
+    {
+      const { withinDOM } = await ProfiledParent.takeRender();
+      expect(withinDOM().queryAllByText(/Item #2/).length).toBe(2);
+    }
+
     cache.evict({
       id: cache.identify(item2),
     });
-    await waitFor(() => {
-      expect(() => screen.getByText(/Item #2/)).toThrow();
-    });
 
-    for (const [_item, parentChount, childCount] of valuePairs) {
-      expect(parentChount).toBe(childCount);
+    {
+      const { withinDOM } = await ProfiledParent.takeRender();
+      expect(withinDOM().queryAllByText(/Item #2/).length).toBe(0);
     }
+
+    await expect(ProfiledParent).toRenderExactlyTimes(2);
   });
 
   /**
@@ -1604,24 +1634,6 @@ describe("has the same timing as `useQuery`", () => {
     });
     cache.writeQuery({ query, data: { items: [item1, item2] } });
 
-    const valuePairs: Array<
-      [item: string, parentCount: number, childCount: number]
-    > = [];
-    function captureDOMState() {
-      const parent = screen.getByTestId("parent");
-      const children = screen.getByTestId("children");
-      valuePairs.push([
-        "Item 1",
-        within(parent).queryAllByText(/Item #1/).length,
-        within(children).queryAllByText(/Item #1/).length,
-      ]);
-      valuePairs.push([
-        "Item 2",
-        within(parent).queryAllByText(/Item #2/).length,
-        within(children).queryAllByText(/Item #2/).length,
-      ]);
-    }
-
     function Parent() {
       const { data: data1 } = useFragment({
         fragment: itemFragment,
@@ -1631,7 +1643,6 @@ describe("has the same timing as `useQuery`", () => {
         fragment: itemFragment,
         from: { __typename: "Item", id: 2 },
       });
-      React.useEffect(captureDOMState);
       return (
         <>
           <div data-testid="parent">
@@ -1649,28 +1660,47 @@ describe("has the same timing as `useQuery`", () => {
     function Child() {
       const { data } = useQuery(query);
       if (!data) throw new Error("should never happen");
-      React.useEffect(captureDOMState);
       return <>{JSON.stringify(data)}</>;
     }
 
-    render(<Parent />, {
+    const ProfiledParent = profile({
+      Component: Parent,
+      onRender() {
+        const parent = screen.getByTestId("parent");
+        const children = screen.getByTestId("children");
+        expect(within(parent).queryAllByText(/Item #1/).length).toBe(
+          within(children).queryAllByText(/Item #1/).length
+        );
+        expect(within(parent).queryAllByText(/Item #2/).length).toBe(
+          within(children).queryAllByText(/Item #2/).length
+        );
+      },
+    });
+
+    render(<ProfiledParent />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
+
+    {
+      const { withinDOM } = await ProfiledParent.takeRender();
+      expect(withinDOM().queryAllByText(/Item #2/).length).toBe(2);
+    }
+
     act(
       () =>
         void cache.evict({
           id: cache.identify(item2),
         })
     );
-    await waitFor(() => {
-      expect(() => screen.getByText(/Item #2/)).toThrow();
-    });
 
-    for (const [_item, parentChount, childCount] of valuePairs) {
-      expect(parentChount).toBe(childCount);
+    {
+      const { withinDOM } = await ProfiledParent.takeRender();
+      expect(withinDOM().queryAllByText(/Item #2/).length).toBe(0);
     }
+
+    await expect(ProfiledParent).toRenderExactlyTimes(3);
   });
 });
 

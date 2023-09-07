@@ -1,5 +1,5 @@
-import { assign, cloneDeep } from 'lodash';
-import gql from 'graphql-tag';
+import { assign, cloneDeep } from "lodash";
+import gql from "graphql-tag";
 
 import {
   ApolloClient,
@@ -7,28 +7,24 @@ import {
   NetworkStatus,
   ObservableQuery,
   TypedDocumentNode,
-} from '../core';
+} from "../core";
 
 import {
   Observable,
   offsetLimitPagination,
   concatPagination,
-} from '../utilities';
+} from "../utilities";
 
 import {
   ApolloCache,
   InMemoryCache,
   InMemoryCacheConfig,
   FieldMergeFunction,
-} from '../cache';
+} from "../cache";
 
-import {
-  itAsync,
-  mockSingleLink,
-  subscribeAndCount,
-} from '../testing';
+import { itAsync, mockSingleLink, subscribeAndCount } from "../testing";
 
-describe('updateQuery on a simple query', () => {
+describe("updateQuery on a simple query", () => {
   const query = gql`
     query thing {
       entry {
@@ -40,15 +36,15 @@ describe('updateQuery on a simple query', () => {
   `;
   const result = {
     data: {
-      __typename: 'Query',
+      __typename: "Query",
       entry: {
-        __typename: 'Entry',
+        __typename: "Entry",
         value: 1,
       },
     },
   };
 
-  itAsync('triggers new result from updateQuery', (resolve, reject) => {
+  itAsync("triggers new result from updateQuery", (resolve, reject) => {
     let latestResult: any = null;
     const link = mockSingleLink({
       request: { query },
@@ -70,7 +66,7 @@ describe('updateQuery on a simple query', () => {
       },
     });
 
-    return new Promise(resolve => setTimeout(resolve, 5))
+    return new Promise((resolve) => setTimeout(resolve, 5))
       .then(() => obsHandle)
       .then((watchedQuery: ObservableQuery<any>) => {
         expect(latestResult.data.entry.value).toBe(1);
@@ -86,7 +82,7 @@ describe('updateQuery on a simple query', () => {
   });
 });
 
-describe('updateQuery on a query with required and optional variables', () => {
+describe("updateQuery on a query with required and optional variables", () => {
   const query = gql`
     query thing($requiredVar: String!, $optionalVar: String) {
       entry(requiredVar: $requiredVar, optionalVar: $optionalVar) {
@@ -98,20 +94,20 @@ describe('updateQuery on a query with required and optional variables', () => {
   `;
   // the test will pass if optionalVar is uncommented
   const variables = {
-    requiredVar: 'x',
+    requiredVar: "x",
     // optionalVar: 'y',
   };
   const result = {
     data: {
-      __typename: 'Query',
+      __typename: "Query",
       entry: {
-        __typename: 'Entry',
+        __typename: "Entry",
         value: 1,
       },
     },
   };
 
-  itAsync('triggers new result from updateQuery', (resolve, reject) => {
+  itAsync("triggers new result from updateQuery", (resolve, reject) => {
     let latestResult: any = null;
     const link = mockSingleLink({
       request: {
@@ -137,7 +133,7 @@ describe('updateQuery on a query with required and optional variables', () => {
       },
     });
 
-    return new Promise(resolve => setTimeout(resolve, 5))
+    return new Promise((resolve) => setTimeout(resolve, 5))
       .then(() => obsHandle)
       .then((watchedQuery: ObservableQuery<any, any>) => {
         expect(latestResult.data.entry.value).toBe(1);
@@ -153,7 +149,7 @@ describe('updateQuery on a query with required and optional variables', () => {
   });
 });
 
-describe('fetchMore on an observable query', () => {
+describe("fetchMore on an observable query", () => {
   type TCommentData = {
     entry: {
       __typename: string;
@@ -161,7 +157,7 @@ describe('fetchMore on an observable query', () => {
         __typename: string;
         text: string;
       }>;
-    }
+    };
   };
 
   type TCommentVars = {
@@ -194,7 +190,7 @@ describe('fetchMore on an observable query', () => {
     }
   `;
   const variables = {
-    repoName: 'org/repo',
+    repoName: "org/repo",
     start: 0,
     limit: 10,
   };
@@ -206,9 +202,9 @@ describe('fetchMore on an observable query', () => {
 
   const result: any = {
     data: {
-      __typename: 'Query',
+      __typename: "Query",
       entry: {
-        __typename: 'Entry',
+        __typename: "Entry",
         comments: [],
       },
     },
@@ -216,38 +212,38 @@ describe('fetchMore on an observable query', () => {
   const resultMore = cloneDeep(result);
   const result2: any = {
     data: {
-      __typename: 'Query',
+      __typename: "Query",
       comments: [],
     },
   };
   for (let i = 1; i <= 10; i++) {
     result.data.entry.comments.push({
       text: `comment ${i}`,
-      __typename: 'Comment',
+      __typename: "Comment",
     });
   }
   for (let i = 11; i <= 20; i++) {
     resultMore.data.entry.comments.push({
       text: `comment ${i}`,
-      __typename: 'Comment',
+      __typename: "Comment",
     });
     result2.data.comments.push({
       text: `new comment ${i}`,
-      __typename: 'Comment',
+      __typename: "Comment",
     });
   }
 
-  function setup(
-    reject: (reason: any) => any,
-    ...mockedResponses: any[]
-  ) {
-    const link = mockSingleLink({
-      request: {
-        query,
-        variables,
+  function setup(reject: (reason: any) => any, ...mockedResponses: any[]) {
+    const link = mockSingleLink(
+      {
+        request: {
+          query,
+          variables,
+        },
+        result,
       },
-      result,
-    }, ...mockedResponses).setOnError(reject);
+      ...mockedResponses
+    ).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -276,13 +272,16 @@ describe('fetchMore on an observable query', () => {
     ...mockedResponses: any[]
   ) {
     const client = new ApolloClient({
-      link: mockSingleLink({
-        request: {
-          query,
-          variables,
+      link: mockSingleLink(
+        {
+          request: {
+            query,
+            variables,
+          },
+          result,
         },
-        result,
-      }, ...mockedResponses).setOnError(reject),
+        ...mockedResponses
+      ).setOnError(reject),
       cache: new InMemoryCache(cacheConfig),
     });
 
@@ -292,8 +291,8 @@ describe('fetchMore on an observable query', () => {
     });
   }
 
-  describe('triggers new result with async new variables', () => {
-    itAsync('updateQuery', (resolve, reject) => {
+  describe("triggers new result with async new variables", () => {
+    itAsync("updateQuery", (resolve, reject) => {
       const observable = setup(reject, {
         request: {
           query,
@@ -307,25 +306,26 @@ describe('fetchMore on an observable query', () => {
           expect(result.loading).toBe(false);
           expect(result.data.entry.comments).toHaveLength(10);
 
-          return observable.fetchMore({
-            // Rely on the fact that the original variables had limit: 10
-            variables: { start: 10 },
-            updateQuery: (prev, options) => {
-              expect(options.variables).toEqual(variablesMore);
+          return observable
+            .fetchMore({
+              // Rely on the fact that the original variables had limit: 10
+              variables: { start: 10 },
+              updateQuery: (prev, options) => {
+                expect(options.variables).toEqual(variablesMore);
 
-              const state = cloneDeep(prev) as any;
-              state.entry.comments = [
-                ...state.entry.comments,
-                ...options.fetchMoreResult.entry.comments,
-              ];
-              return state;
-            },
-          }).then(fetchMoreResult => {
-            // This is the server result
-            expect(fetchMoreResult.loading).toBe(false);
-            expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
-          });
-
+                const state = cloneDeep(prev) as any;
+                state.entry.comments = [
+                  ...state.entry.comments,
+                  ...options.fetchMoreResult.entry.comments,
+                ];
+                return state;
+              },
+            })
+            .then((fetchMoreResult) => {
+              // This is the server result
+              expect(fetchMoreResult.loading).toBe(false);
+              expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+            });
         } else if (count === 2) {
           const combinedComments = result.data.entry.comments;
           expect(combinedComments).toHaveLength(20);
@@ -335,41 +335,45 @@ describe('fetchMore on an observable query', () => {
 
           setTimeout(resolve, 10);
         } else {
-          reject(`Too many results (${
-            JSON.stringify({ count, result })
-          })`);
+          reject(`Too many results (${JSON.stringify({ count, result })})`);
         }
       });
     });
 
-    itAsync('field policy', (resolve, reject) => {
-      const observable = setupWithCacheConfig(reject, {
-        typePolicies: {
-          Entry: {
-            fields: {
-              comments: concatPagination(),
+    itAsync("field policy", (resolve, reject) => {
+      const observable = setupWithCacheConfig(
+        reject,
+        {
+          typePolicies: {
+            Entry: {
+              fields: {
+                comments: concatPagination(),
+              },
             },
           },
         },
-      }, {
-        request: { query, variables: variablesMore },
-        result: resultMore,
-      });
+        {
+          request: { query, variables: variablesMore },
+          result: resultMore,
+        }
+      );
 
       subscribeAndCount(reject, observable, (count, result) => {
         if (count === 1) {
           expect(result.loading).toBe(false);
           expect(result.data.entry.comments).toHaveLength(10);
 
-          return observable.fetchMore({
-            // Rely on the fact that the original variables had limit: 10
-            variables: { start: 10 },
-          }).then(fetchMoreResult => {
-            // This is the server result
-            expect(fetchMoreResult.loading).toBe(false);
-            expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
-          }).catch(reject);
-
+          return observable
+            .fetchMore({
+              // Rely on the fact that the original variables had limit: 10
+              variables: { start: 10 },
+            })
+            .then((fetchMoreResult) => {
+              // This is the server result
+              expect(fetchMoreResult.loading).toBe(false);
+              expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+            })
+            .catch(reject);
         } else if (count === 2) {
           expect(result.loading).toBe(false);
           const combinedComments = result.data.entry.comments;
@@ -380,16 +384,14 @@ describe('fetchMore on an observable query', () => {
 
           setTimeout(resolve, 10);
         } else {
-          reject(`Too many results (${
-            JSON.stringify({ count, result })
-          })`);
+          reject(`Too many results (${JSON.stringify({ count, result })})`);
         }
       });
     });
   });
 
-  describe('basic fetchMore results merging', () => {
-    itAsync('updateQuery', (resolve, reject) => {
+  describe("basic fetchMore results merging", () => {
+    itAsync("updateQuery", (resolve, reject) => {
       const observable = setup(reject, {
         request: {
           query,
@@ -403,26 +405,27 @@ describe('fetchMore on an observable query', () => {
           expect(result.loading).toBe(false);
           expect(result.data.entry.comments).toHaveLength(10);
 
-          return observable.fetchMore({
-            variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-            updateQuery: (prev, options) => {
-              expect(options.variables).toEqual(variablesMore);
-              const state = cloneDeep(prev) as any;
-              state.entry.comments = [
-                ...state.entry.comments,
-                ...options.fetchMoreResult.entry.comments,
-              ];
-              return state;
-            },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult.loading).toBe(false);
-            const fetchMoreComments = fetchMoreResult.data.entry.comments;
-            expect(fetchMoreComments).toHaveLength(10);
-            fetchMoreComments.forEach((comment, i) => {
-              expect(comment.text).toEqual(`comment ${i + 11}`)
+          return observable
+            .fetchMore({
+              variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+              updateQuery: (prev, options) => {
+                expect(options.variables).toEqual(variablesMore);
+                const state = cloneDeep(prev) as any;
+                state.entry.comments = [
+                  ...state.entry.comments,
+                  ...options.fetchMoreResult.entry.comments,
+                ];
+                return state;
+              },
+            })
+            .then((fetchMoreResult) => {
+              expect(fetchMoreResult.loading).toBe(false);
+              const fetchMoreComments = fetchMoreResult.data.entry.comments;
+              expect(fetchMoreComments).toHaveLength(10);
+              fetchMoreComments.forEach((comment, i) => {
+                expect(comment.text).toEqual(`comment ${i + 11}`);
+              });
             });
-          });
-
         } else if (count === 2) {
           expect(result.loading).toBe(false);
           const combinedComments = result.data.entry.comments;
@@ -434,43 +437,47 @@ describe('fetchMore on an observable query', () => {
 
           setTimeout(resolve, 10);
         } else {
-          reject(`Too many results (${
-            JSON.stringify({ count, result })
-          })`);
+          reject(`Too many results (${JSON.stringify({ count, result })})`);
         }
       });
     });
 
-    itAsync('field policy', (resolve, reject) => {
-      const observable = setupWithCacheConfig(reject, {
-        typePolicies: {
-          Entry: {
-            fields: {
-              comments: concatPagination(),
+    itAsync("field policy", (resolve, reject) => {
+      const observable = setupWithCacheConfig(
+        reject,
+        {
+          typePolicies: {
+            Entry: {
+              fields: {
+                comments: concatPagination(),
+              },
             },
           },
         },
-      }, {
-        request: {
-          query,
-          variables: variablesMore,
-        },
-        result: resultMore,
-      });
+        {
+          request: {
+            query,
+            variables: variablesMore,
+          },
+          result: resultMore,
+        }
+      );
 
       subscribeAndCount(reject, observable, (count, result) => {
         if (count === 1) {
           expect(result.loading).toBe(false);
           expect(result.data.entry.comments).toHaveLength(10);
 
-          return observable.fetchMore({
-            // rely on the fact that the original variables had limit: 10
-            variables: { start: 10 },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult.loading).toBe(false);
-            expect(fetchMoreResult.data.entry.comments).toHaveLength(10); // this is the server result
-          }).catch(reject);
-
+          return observable
+            .fetchMore({
+              // rely on the fact that the original variables had limit: 10
+              variables: { start: 10 },
+            })
+            .then((fetchMoreResult) => {
+              expect(fetchMoreResult.loading).toBe(false);
+              expect(fetchMoreResult.data.entry.comments).toHaveLength(10); // this is the server result
+            })
+            .catch(reject);
         } else if (count === 2) {
           expect(result.loading).toBe(false);
           const combinedComments = result.data.entry.comments;
@@ -481,9 +488,7 @@ describe('fetchMore on an observable query', () => {
 
           setTimeout(resolve, 10);
         } else {
-          reject(`Too many results (${
-            JSON.stringify({ count, result })
-          })`);
+          reject(`Too many results (${JSON.stringify({ count, result })})`);
         }
       });
     });
@@ -513,50 +518,50 @@ describe('fetchMore on an observable query', () => {
     function makeClient(): {
       client: ApolloClient<any>;
       linkRequests: Array<{
-        operationName: string,
+        operationName: string;
         offset: number;
         limit: number;
       }>;
     } {
       const linkRequests: Array<{
-        operationName: string,
+        operationName: string;
         offset: number;
         limit: number;
       }> = [];
 
       const client = new ApolloClient({
-        link: new ApolloLink(operation => new Observable(observer => {
-          const {
-            variables: {
-              offset = 0,
-              limit = 2,
-            },
-          } = operation;
+        link: new ApolloLink(
+          (operation) =>
+            new Observable((observer) => {
+              const {
+                variables: { offset = 0, limit = 2 },
+              } = operation;
 
-          linkRequests.push({
-            operationName: operation.operationName,
-            offset,
-            limit,
-          });
+              linkRequests.push({
+                operationName: operation.operationName,
+                offset,
+                limit,
+              });
 
-          observer.next({
-            data: {
-              TODO: tasks.slice(offset, offset + limit),
-            },
-          });
+              observer.next({
+                data: {
+                  TODO: tasks.slice(offset, offset + limit),
+                },
+              });
 
-          observer.complete();
-        })),
+              observer.complete();
+            })
+        ),
 
         cache: new InMemoryCache({
           typePolicies: {
             Query: {
               fields: {
                 TODO: concatPagination(),
-              }
-            }
-          }
-        })
+              },
+            },
+          },
+        }),
       });
 
       return {
@@ -617,20 +622,22 @@ describe('fetchMore on an observable query', () => {
             { operationName: "GetTODOs", offset: 0, limit: 2 },
           ]);
 
-          observable.fetchMore({
-            variables: {
-              offset: 2,
-            },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult).toEqual({
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              data: {
-                TODO: tasks.slice(2, 4),
+          observable
+            .fetchMore({
+              variables: {
+                offset: 2,
               },
-            });
-          }).catch(reject);
-
+            })
+            .then((fetchMoreResult) => {
+              expect(fetchMoreResult).toEqual({
+                loading: false,
+                networkStatus: NetworkStatus.ready,
+                data: {
+                  TODO: tasks.slice(2, 4),
+                },
+              });
+            })
+            .catch(reject);
         } else if (count === 2) {
           expect(result).toEqual({
             loading: false,
@@ -645,30 +652,28 @@ describe('fetchMore on an observable query', () => {
             { operationName: "GetTODOs", offset: 2, limit: 2 },
           ]);
 
-          return observable.fetchMore({
-            variables: {
-              offset: 5,
-              limit: 3,
-            },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult).toEqual({
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              data: {
-                TODO: tasks.slice(5, 8),
+          return observable
+            .fetchMore({
+              variables: {
+                offset: 5,
+                limit: 3,
               },
+            })
+            .then((fetchMoreResult) => {
+              expect(fetchMoreResult).toEqual({
+                loading: false,
+                networkStatus: NetworkStatus.ready,
+                data: {
+                  TODO: tasks.slice(5, 8),
+                },
+              });
             });
-          });
-
         } else if (count === 3) {
           expect(result).toEqual({
             loading: false,
             networkStatus: NetworkStatus.ready,
             data: {
-              TODO: [
-                ...tasks.slice(0, 4),
-                ...tasks.slice(5, 8),
-              ],
+              TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
             },
           });
 
@@ -689,124 +694,125 @@ describe('fetchMore on an observable query', () => {
       });
     });
 
-    itAsync("cache-and-network with notifyOnNetworkStatusChange: true", (resolve, reject) => {
-      const { client, linkRequests } = makeClient();
+    itAsync(
+      "cache-and-network with notifyOnNetworkStatusChange: true",
+      (resolve, reject) => {
+        const { client, linkRequests } = makeClient();
 
-      const observable = client.watchQuery({
-        query,
-        fetchPolicy: "cache-and-network",
-        notifyOnNetworkStatusChange: true,
-        variables: {
-          offset: 0,
-          limit: 2,
-        },
-      });
+        const observable = client.watchQuery({
+          query,
+          fetchPolicy: "cache-and-network",
+          notifyOnNetworkStatusChange: true,
+          variables: {
+            offset: 0,
+            limit: 2,
+          },
+        });
 
-      expect(linkRequests.length).toBe(0);
+        expect(linkRequests.length).toBe(0);
 
-      subscribeAndCount(reject, observable, (count, result) => {
-        if (count === 1) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              TODO: tasks.slice(0, 2),
-            },
-          });
-
-          expect(linkRequests).toEqual([
-            { operationName: "GetTODOs", offset: 0, limit: 2 },
-          ]);
-
-          observable.fetchMore({
-            variables: {
-              offset: 2,
-            },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult).toEqual({
+        subscribeAndCount(reject, observable, (count, result) => {
+          if (count === 1) {
+            expect(result).toEqual({
               loading: false,
               networkStatus: NetworkStatus.ready,
               data: {
-                TODO: tasks.slice(2, 4),
+                TODO: tasks.slice(0, 2),
               },
             });
-          }).catch(reject);
 
-        } else if (count === 2) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.fetchMore,
-            data: {
-              TODO: tasks.slice(0, 2),
-            },
-          });
+            expect(linkRequests).toEqual([
+              { operationName: "GetTODOs", offset: 0, limit: 2 },
+            ]);
 
-        } else if (count === 3) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              TODO: tasks.slice(0, 4),
-            },
-          });
-
-          expect(linkRequests).toEqual([
-            { operationName: "GetTODOs", offset: 0, limit: 2 },
-            { operationName: "GetTODOs", offset: 2, limit: 2 },
-          ]);
-
-          return observable.fetchMore({
-            variables: {
-              offset: 5,
-              limit: 3,
-            },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult).toEqual({
+            observable
+              .fetchMore({
+                variables: {
+                  offset: 2,
+                },
+              })
+              .then((fetchMoreResult) => {
+                expect(fetchMoreResult).toEqual({
+                  loading: false,
+                  networkStatus: NetworkStatus.ready,
+                  data: {
+                    TODO: tasks.slice(2, 4),
+                  },
+                });
+              })
+              .catch(reject);
+          } else if (count === 2) {
+            expect(result).toEqual({
+              loading: true,
+              networkStatus: NetworkStatus.fetchMore,
+              data: {
+                TODO: tasks.slice(0, 2),
+              },
+            });
+          } else if (count === 3) {
+            expect(result).toEqual({
               loading: false,
               networkStatus: NetworkStatus.ready,
               data: {
-                TODO: tasks.slice(5, 8),
+                TODO: tasks.slice(0, 4),
               },
             });
-          });
 
-        } else if (count === 4) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.fetchMore,
-            data: {
-              TODO: tasks.slice(0, 4),
-            },
-          });
+            expect(linkRequests).toEqual([
+              { operationName: "GetTODOs", offset: 0, limit: 2 },
+              { operationName: "GetTODOs", offset: 2, limit: 2 },
+            ]);
 
-        } else if (count === 5) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              TODO: [
-                ...tasks.slice(0, 4),
-                ...tasks.slice(5, 8),
-              ],
-            },
-          });
+            return observable
+              .fetchMore({
+                variables: {
+                  offset: 5,
+                  limit: 3,
+                },
+              })
+              .then((fetchMoreResult) => {
+                expect(fetchMoreResult).toEqual({
+                  loading: false,
+                  networkStatus: NetworkStatus.ready,
+                  data: {
+                    TODO: tasks.slice(5, 8),
+                  },
+                });
+              });
+          } else if (count === 4) {
+            expect(result).toEqual({
+              loading: true,
+              networkStatus: NetworkStatus.fetchMore,
+              data: {
+                TODO: tasks.slice(0, 4),
+              },
+            });
+          } else if (count === 5) {
+            expect(result).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
+              },
+            });
 
-          expect(linkRequests).toEqual([
-            { operationName: "GetTODOs", offset: 0, limit: 2 },
-            { operationName: "GetTODOs", offset: 2, limit: 2 },
-            { operationName: "GetTODOs", offset: 5, limit: 3 },
-          ]);
+            expect(linkRequests).toEqual([
+              { operationName: "GetTODOs", offset: 0, limit: 2 },
+              { operationName: "GetTODOs", offset: 2, limit: 2 },
+              { operationName: "GetTODOs", offset: 5, limit: 3 },
+            ]);
 
-          checkCacheExtract1234678(client.cache);
+            checkCacheExtract1234678(client.cache);
 
-          // Wait 20ms to allow unexpected results to be delivered, failing in
-          // the else block below.
-          setTimeout(resolve, 20);
-        } else {
-          reject(`too many results (${count})`);
-        }
-      });
-    });
+            // Wait 20ms to allow unexpected results to be delivered, failing in
+            // the else block below.
+            setTimeout(resolve, 20);
+          } else {
+            reject(`too many results (${count})`);
+          }
+        });
+      }
+    );
 
     itAsync("network-only", (resolve, reject) => {
       const { client, linkRequests } = makeClient();
@@ -836,20 +842,22 @@ describe('fetchMore on an observable query', () => {
             { operationName: "GetTODOs", offset: 0, limit: 2 },
           ]);
 
-          observable.fetchMore({
-            variables: {
-              offset: 2,
-            },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult).toEqual({
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              data: {
-                TODO: tasks.slice(2, 4),
+          observable
+            .fetchMore({
+              variables: {
+                offset: 2,
               },
-            });
-          }).catch(reject);
-
+            })
+            .then((fetchMoreResult) => {
+              expect(fetchMoreResult).toEqual({
+                loading: false,
+                networkStatus: NetworkStatus.ready,
+                data: {
+                  TODO: tasks.slice(2, 4),
+                },
+              });
+            })
+            .catch(reject);
         } else if (count === 2) {
           expect(result).toEqual({
             loading: false,
@@ -864,30 +872,28 @@ describe('fetchMore on an observable query', () => {
             { operationName: "GetTODOs", offset: 2, limit: 2 },
           ]);
 
-          return observable.fetchMore({
-            variables: {
-              offset: 5,
-              limit: 3,
-            },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult).toEqual({
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              data: {
-                TODO: tasks.slice(5, 8),
+          return observable
+            .fetchMore({
+              variables: {
+                offset: 5,
+                limit: 3,
               },
+            })
+            .then((fetchMoreResult) => {
+              expect(fetchMoreResult).toEqual({
+                loading: false,
+                networkStatus: NetworkStatus.ready,
+                data: {
+                  TODO: tasks.slice(5, 8),
+                },
+              });
             });
-          });
-
         } else if (count === 3) {
           expect(result).toEqual({
             loading: false,
             networkStatus: NetworkStatus.ready,
             data: {
-              TODO: [
-                ...tasks.slice(0, 4),
-                ...tasks.slice(5, 8),
-              ],
+              TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
             },
           });
 
@@ -908,124 +914,125 @@ describe('fetchMore on an observable query', () => {
       });
     });
 
-    itAsync("network-only with notifyOnNetworkStatusChange: true", (resolve, reject) => {
-      const { client, linkRequests } = makeClient();
+    itAsync(
+      "network-only with notifyOnNetworkStatusChange: true",
+      (resolve, reject) => {
+        const { client, linkRequests } = makeClient();
 
-      const observable = client.watchQuery({
-        query,
-        fetchPolicy: "network-only",
-        notifyOnNetworkStatusChange: true,
-        variables: {
-          offset: 0,
-          limit: 2,
-        },
-      });
+        const observable = client.watchQuery({
+          query,
+          fetchPolicy: "network-only",
+          notifyOnNetworkStatusChange: true,
+          variables: {
+            offset: 0,
+            limit: 2,
+          },
+        });
 
-      expect(linkRequests.length).toBe(0);
+        expect(linkRequests.length).toBe(0);
 
-      subscribeAndCount(reject, observable, (count, result) => {
-        if (count === 1) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              TODO: tasks.slice(0, 2),
-            },
-          });
-
-          expect(linkRequests).toEqual([
-            { operationName: "GetTODOs", offset: 0, limit: 2 },
-          ]);
-
-          observable.fetchMore({
-            variables: {
-              offset: 2,
-            },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult).toEqual({
+        subscribeAndCount(reject, observable, (count, result) => {
+          if (count === 1) {
+            expect(result).toEqual({
               loading: false,
               networkStatus: NetworkStatus.ready,
               data: {
-                TODO: tasks.slice(2, 4),
+                TODO: tasks.slice(0, 2),
               },
             });
-          }).catch(reject);
 
-        } else if (count === 2) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.fetchMore,
-            data: {
-              TODO: tasks.slice(0, 2),
-            },
-          });
+            expect(linkRequests).toEqual([
+              { operationName: "GetTODOs", offset: 0, limit: 2 },
+            ]);
 
-        } else if (count === 3) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              TODO: tasks.slice(0, 4),
-            },
-          });
-
-          expect(linkRequests).toEqual([
-            { operationName: "GetTODOs", offset: 0, limit: 2 },
-            { operationName: "GetTODOs", offset: 2, limit: 2 },
-          ]);
-
-          return observable.fetchMore({
-            variables: {
-              offset: 5,
-              limit: 3,
-            },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult).toEqual({
+            observable
+              .fetchMore({
+                variables: {
+                  offset: 2,
+                },
+              })
+              .then((fetchMoreResult) => {
+                expect(fetchMoreResult).toEqual({
+                  loading: false,
+                  networkStatus: NetworkStatus.ready,
+                  data: {
+                    TODO: tasks.slice(2, 4),
+                  },
+                });
+              })
+              .catch(reject);
+          } else if (count === 2) {
+            expect(result).toEqual({
+              loading: true,
+              networkStatus: NetworkStatus.fetchMore,
+              data: {
+                TODO: tasks.slice(0, 2),
+              },
+            });
+          } else if (count === 3) {
+            expect(result).toEqual({
               loading: false,
               networkStatus: NetworkStatus.ready,
               data: {
-                TODO: tasks.slice(5, 8),
+                TODO: tasks.slice(0, 4),
               },
             });
-          });
 
-        } else if (count === 4) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.fetchMore,
-            data: {
-              TODO: tasks.slice(0, 4),
-            },
-          });
+            expect(linkRequests).toEqual([
+              { operationName: "GetTODOs", offset: 0, limit: 2 },
+              { operationName: "GetTODOs", offset: 2, limit: 2 },
+            ]);
 
-        } else if (count === 5) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              TODO: [
-                ...tasks.slice(0, 4),
-                ...tasks.slice(5, 8),
-              ],
-            },
-          });
+            return observable
+              .fetchMore({
+                variables: {
+                  offset: 5,
+                  limit: 3,
+                },
+              })
+              .then((fetchMoreResult) => {
+                expect(fetchMoreResult).toEqual({
+                  loading: false,
+                  networkStatus: NetworkStatus.ready,
+                  data: {
+                    TODO: tasks.slice(5, 8),
+                  },
+                });
+              });
+          } else if (count === 4) {
+            expect(result).toEqual({
+              loading: true,
+              networkStatus: NetworkStatus.fetchMore,
+              data: {
+                TODO: tasks.slice(0, 4),
+              },
+            });
+          } else if (count === 5) {
+            expect(result).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: {
+                TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
+              },
+            });
 
-          expect(linkRequests).toEqual([
-            { operationName: "GetTODOs", offset: 0, limit: 2 },
-            { operationName: "GetTODOs", offset: 2, limit: 2 },
-            { operationName: "GetTODOs", offset: 5, limit: 3 },
-          ]);
+            expect(linkRequests).toEqual([
+              { operationName: "GetTODOs", offset: 0, limit: 2 },
+              { operationName: "GetTODOs", offset: 2, limit: 2 },
+              { operationName: "GetTODOs", offset: 5, limit: 3 },
+            ]);
 
-          checkCacheExtract1234678(client.cache);
+            checkCacheExtract1234678(client.cache);
 
-          // Wait 20ms to allow unexpected results to be delivered, failing in
-          // the else block below.
-          setTimeout(resolve, 20);
-        } else {
-          reject(`too many results (${count})`);
-        }
-      });
-    });
+            // Wait 20ms to allow unexpected results to be delivered, failing in
+            // the else block below.
+            setTimeout(resolve, 20);
+          } else {
+            reject(`too many results (${count})`);
+          }
+        });
+      }
+    );
 
     // itAsync("no-cache", (resolve, reject) => {
     //   const client = makeClient();
@@ -1033,171 +1040,177 @@ describe('fetchMore on an observable query', () => {
     // });
   });
 
-  itAsync('fetchMore passes new args to field merge function', (resolve, reject) => {
-    const mergeArgsHistory: (Record<string, any> | null)[] = [];
-    const groceriesFieldPolicy = offsetLimitPagination();
-    const { merge } = groceriesFieldPolicy;
-    groceriesFieldPolicy.merge = function (existing, incoming, options) {
-      mergeArgsHistory.push(options.args);
-      return (merge as FieldMergeFunction<any>).call(
-        this, existing, incoming, options);
-    };
+  itAsync(
+    "fetchMore passes new args to field merge function",
+    (resolve, reject) => {
+      const mergeArgsHistory: (Record<string, any> | null)[] = [];
+      const groceriesFieldPolicy = offsetLimitPagination();
+      const { merge } = groceriesFieldPolicy;
+      groceriesFieldPolicy.merge = function (existing, incoming, options) {
+        mergeArgsHistory.push(options.args);
+        return (merge as FieldMergeFunction<any>).call(
+          this,
+          existing,
+          incoming,
+          options
+        );
+      };
 
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            groceries: groceriesFieldPolicy,
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              groceries: groceriesFieldPolicy,
+            },
           },
         },
-      },
-    });
+      });
 
-    const query = gql`
-      query GroceryList($offset: Int!, $limit: Int!) {
-        groceries(offset: $offset, limit: $limit) {
-          id
-          item
-          found
+      const query = gql`
+        query GroceryList($offset: Int!, $limit: Int!) {
+          groceries(offset: $offset, limit: $limit) {
+            id
+            item
+            found
+          }
         }
-      }
-    `;
+      `;
 
-    const initialVars = {
-      offset: 0,
-      limit: 2,
-    };
+      const initialVars = {
+        offset: 0,
+        limit: 2,
+      };
 
-    const initialGroceries = [
-      {
-        __typename: "GroceryItem",
-        id: 1,
-        item: "organic whole milk",
-        found: false,
-      },
-      {
-        __typename: "GroceryItem",
-        id: 2,
-        item: "beer that we both like",
-        found: false,
-      },
-    ];
-
-    const additionalVars = {
-      offset: 2,
-      limit: 3,
-    };
-
-    const additionalGroceries = [
-      {
-        __typename: "GroceryItem",
-        id: 3,
-        item: "gluten-free pasta",
-        found: false,
-      },
-      {
-        __typename: "GroceryItem",
-        id: 4,
-        item: "goat cheese",
-        found: false,
-      },
-      {
-        __typename: "GroceryItem",
-        id: 5,
-        item: "paper towels",
-        found: false,
-      },
-    ];
-
-    const finalGroceries = [
-      ...initialGroceries,
-      ...additionalGroceries,
-    ];
-
-    const client = new ApolloClient({
-      cache,
-      link: mockSingleLink({
-        request: {
-          query,
-          variables: initialVars,
+      const initialGroceries = [
+        {
+          __typename: "GroceryItem",
+          id: 1,
+          item: "organic whole milk",
+          found: false,
         },
-        result: {
-          data: {
-            groceries: initialGroceries,
-          },
+        {
+          __typename: "GroceryItem",
+          id: 2,
+          item: "beer that we both like",
+          found: false,
         },
-      }, {
-        request: {
-          query,
-          variables: additionalVars,
+      ];
+
+      const additionalVars = {
+        offset: 2,
+        limit: 3,
+      };
+
+      const additionalGroceries = [
+        {
+          __typename: "GroceryItem",
+          id: 3,
+          item: "gluten-free pasta",
+          found: false,
         },
-        result: {
-          data: {
-            groceries: additionalGroceries,
-          },
+        {
+          __typename: "GroceryItem",
+          id: 4,
+          item: "goat cheese",
+          found: false,
         },
-      }).setOnError(reject),
-    });
+        {
+          __typename: "GroceryItem",
+          id: 5,
+          item: "paper towels",
+          found: false,
+        },
+      ];
 
-    const observable = client.watchQuery({
-      query,
-      variables: initialVars,
-    });
+      const finalGroceries = [...initialGroceries, ...additionalGroceries];
 
-    subscribeAndCount(reject, observable, (count, result) => {
-      if (count === 1) {
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            groceries: initialGroceries,
+      const client = new ApolloClient({
+        cache,
+        link: mockSingleLink(
+          {
+            request: {
+              query,
+              variables: initialVars,
+            },
+            result: {
+              data: {
+                groceries: initialGroceries,
+              },
+            },
           },
-        });
+          {
+            request: {
+              query,
+              variables: additionalVars,
+            },
+            result: {
+              data: {
+                groceries: additionalGroceries,
+              },
+            },
+          }
+        ).setOnError(reject),
+      });
 
-        expect(mergeArgsHistory).toEqual([
-          { offset: 0, limit: 2 },
-        ]);
+      const observable = client.watchQuery({
+        query,
+        variables: initialVars,
+      });
 
-        observable.fetchMore({
-          variables: {
-            offset: 2,
-            limit: 3,
-          },
-        }).then(result => {
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
           expect(result).toEqual({
             loading: false,
             networkStatus: NetworkStatus.ready,
             data: {
-              groceries: additionalGroceries,
+              groceries: initialGroceries,
             },
           });
 
-          expect(observable.options.fetchPolicy).toBe("cache-first");
-        });
+          expect(mergeArgsHistory).toEqual([{ offset: 0, limit: 2 }]);
 
-      } else if (count === 2) {
-        // This result comes entirely from the cache, without updating the
-        // original variables for the ObservableQuery, because the
-        // offsetLimitPagination field policy has keyArgs:false.
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            groceries: finalGroceries,
-          },
-        });
+          observable
+            .fetchMore({
+              variables: {
+                offset: 2,
+                limit: 3,
+              },
+            })
+            .then((result) => {
+              expect(result).toEqual({
+                loading: false,
+                networkStatus: NetworkStatus.ready,
+                data: {
+                  groceries: additionalGroceries,
+                },
+              });
 
-        expect(mergeArgsHistory).toEqual([
-          { offset: 0, limit: 2 },
-          { offset: 2, limit: 3 },
-        ]);
+              expect(observable.options.fetchPolicy).toBe("cache-first");
+            });
+        } else if (count === 2) {
+          // This result comes entirely from the cache, without updating the
+          // original variables for the ObservableQuery, because the
+          // offsetLimitPagination field policy has keyArgs:false.
+          expect(result).toEqual({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: {
+              groceries: finalGroceries,
+            },
+          });
 
-        resolve();
-      }
-    });
-  });
+          expect(mergeArgsHistory).toEqual([
+            { offset: 0, limit: 2 },
+            { offset: 2, limit: 3 },
+          ]);
 
-  itAsync('fetching more with a different query', (resolve, reject) => {
+          resolve();
+        }
+      });
+    }
+  );
+
+  itAsync("fetching more with a different query", (resolve, reject) => {
     const observable = setup(reject, {
       request: {
         query: query2,
@@ -1211,22 +1224,23 @@ describe('fetchMore on an observable query', () => {
         expect(result.loading).toBe(false);
         expect(result.data.entry.comments).toHaveLength(10);
 
-        return observable.fetchMore({
-          query: query2,
-          variables: variables2,
-          updateQuery: (prev, options) => {
-            const state = cloneDeep(prev) as any;
-            state.entry.comments = [
-              ...state.entry.comments,
-              ...options.fetchMoreResult.comments,
-            ];
-            return state;
-          },
-        }).then(fetchMoreResult => {
-          expect(fetchMoreResult.loading).toBe(false);
-          expect(fetchMoreResult.data.comments).toHaveLength(10);
-        });
-
+        return observable
+          .fetchMore({
+            query: query2,
+            variables: variables2,
+            updateQuery: (prev, options) => {
+              const state = cloneDeep(prev) as any;
+              state.entry.comments = [
+                ...state.entry.comments,
+                ...options.fetchMoreResult.comments,
+              ];
+              return state;
+            },
+          })
+          .then((fetchMoreResult) => {
+            expect(fetchMoreResult.loading).toBe(false);
+            expect(fetchMoreResult.data.comments).toHaveLength(10);
+          });
       } else if (count === 2) {
         expect(result.loading).toBe(false);
         const combinedComments = result.data.entry.comments;
@@ -1241,25 +1255,26 @@ describe('fetchMore on an observable query', () => {
 
         setTimeout(resolve, 10);
       } else {
-        reject(`Too many results (${
-          JSON.stringify({ count, result })
-        })`);
+        reject(`Too many results (${JSON.stringify({ count, result })})`);
       }
     });
   });
 
-  describe('will not get an error from `fetchMore` if thrown', () => {
-    itAsync('updateQuery', (resolve, reject) => {
-      const fetchMoreError = new Error('Uh, oh!');
-      const link = mockSingleLink({
-        request: { query, variables },
-        result,
-        delay: 5,
-      }, {
-        request: { query, variables: variablesMore },
-        error: fetchMoreError,
-        delay: 5,
-      });
+  describe("will not get an error from `fetchMore` if thrown", () => {
+    itAsync("updateQuery", (resolve, reject) => {
+      const fetchMoreError = new Error("Uh, oh!");
+      const link = mockSingleLink(
+        {
+          request: { query, variables },
+          result,
+          delay: 5,
+        },
+        {
+          request: { query, variables: variablesMore },
+          error: fetchMoreError,
+          delay: 5,
+        }
+      );
 
       const client = new ApolloClient({
         link,
@@ -1279,41 +1294,44 @@ describe('fetchMore on an observable query', () => {
             case 1:
               expect(networkStatus).toBe(NetworkStatus.ready);
               expect((data as any).entry.comments.length).toBe(10);
-              observable.fetchMore({
-                variables: { start: 10 },
-                updateQuery: prev => {
-                  reject(new Error("should not have called updateQuery"));
-                  return prev;
-                },
-              }).catch(e => {
-                expect(e.networkError).toBe(fetchMoreError);
-                resolve();
-              });
+              observable
+                .fetchMore({
+                  variables: { start: 10 },
+                  updateQuery: (prev) => {
+                    reject(new Error("should not have called updateQuery"));
+                    return prev;
+                  },
+                })
+                .catch((e) => {
+                  expect(e.networkError).toBe(fetchMoreError);
+                  resolve();
+                });
               break;
           }
         },
         error: () => {
-          reject(new Error('`error` called when it wasn’t supposed to be.'));
+          reject(new Error("`error` called when it wasn’t supposed to be."));
         },
         complete: () => {
-          reject(
-            new Error('`complete` called when it wasn’t supposed to be.'),
-          );
+          reject(new Error("`complete` called when it wasn’t supposed to be."));
         },
       });
     });
 
-    itAsync('field policy', (resolve, reject) => {
-      const fetchMoreError = new Error('Uh, oh!');
-      const link = mockSingleLink({
-        request: { query, variables },
-        result,
-        delay: 5,
-      }, {
-        request: { query, variables: variablesMore },
-        error: fetchMoreError,
-        delay: 5,
-      });
+    itAsync("field policy", (resolve, reject) => {
+      const fetchMoreError = new Error("Uh, oh!");
+      const link = mockSingleLink(
+        {
+          request: { query, variables },
+          result,
+          delay: 5,
+        },
+        {
+          request: { query, variables: variablesMore },
+          error: fetchMoreError,
+          delay: 5,
+        }
+      );
 
       let calledFetchMore = false;
 
@@ -1352,35 +1370,35 @@ describe('fetchMore on an observable query', () => {
               expect(networkStatus).toBe(NetworkStatus.ready);
               expect((data as any).entry.comments.length).toBe(10);
               calledFetchMore = true;
-              observable.fetchMore({
-                variables: { start: 10 },
-              }).catch(e => {
-                expect(e.networkError).toBe(fetchMoreError);
-                resolve();
-              });
+              observable
+                .fetchMore({
+                  variables: { start: 10 },
+                })
+                .catch((e) => {
+                  expect(e.networkError).toBe(fetchMoreError);
+                  resolve();
+                });
               break;
           }
         },
         error: () => {
-          reject(new Error('`error` called when it wasn’t supposed to be.'));
+          reject(new Error("`error` called when it wasn’t supposed to be."));
         },
         complete: () => {
-          reject(
-            new Error('`complete` called when it wasn’t supposed to be.'),
-          );
+          reject(new Error("`complete` called when it wasn’t supposed to be."));
         },
       });
     });
   });
 
-  itAsync('will not leak fetchMore query', (resolve, reject) => {
+  itAsync("will not leak fetchMore query", (resolve, reject) => {
     const observable = setup(reject, {
       request: {
         query,
         variables: variablesMore,
       },
       result: resultMore,
-    })
+    });
 
     function count(): number {
       return (observable as any).queryManager.queries.size;
@@ -1388,93 +1406,98 @@ describe('fetchMore on an observable query', () => {
 
     const beforeQueryCount = count();
 
-    observable.fetchMore({
-      variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-    }).then(() => {
-      expect(count()).toBe(beforeQueryCount);
-    }).then(resolve, reject);
+    observable
+      .fetchMore({
+        variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+      })
+      .then(() => {
+        expect(count()).toBe(beforeQueryCount);
+      })
+      .then(resolve, reject);
   });
 
-  itAsync("delivers all loading states even if data unchanged", (resolve, reject) => {
-    type TEmptyItems = {
-      emptyItems: Array<{
-        text: string;
-      }>;
-    };
+  itAsync(
+    "delivers all loading states even if data unchanged",
+    (resolve, reject) => {
+      type TEmptyItems = {
+        emptyItems: Array<{
+          text: string;
+        }>;
+      };
 
-    const query: TypedDocumentNode<TEmptyItems> = gql`
-      query GetNothing {
-        emptyItems {
-          text
+      const query: TypedDocumentNode<TEmptyItems> = gql`
+        query GetNothing {
+          emptyItems {
+            text
+          }
         }
-      }
-    `;
+      `;
 
-    const variables = {};
+      const variables = {};
 
-    const emptyItemsMock = {
-      request: {
+      const emptyItemsMock = {
+        request: {
+          query,
+          variables,
+        },
+        result: {
+          data: {
+            emptyItems: [],
+          },
+        },
+      };
+
+      const link = mockSingleLink(
+        emptyItemsMock,
+        emptyItemsMock,
+        emptyItemsMock
+      ).setOnError(reject);
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const observable = client.watchQuery({
         query,
         variables,
-      },
-      result: {
-        data: {
-          emptyItems: [],
-        },
-      },
-    };
+        notifyOnNetworkStatusChange: true,
+      });
 
-    const link = mockSingleLink(
-      emptyItemsMock,
-      emptyItemsMock,
-      emptyItemsMock,
-    ).setOnError(reject);
+      subscribeAndCount(reject, observable, (count, result) => {
+        if (count === 1) {
+          expect(result.loading).toBe(false);
+          expect(result.networkStatus).toBe(NetworkStatus.ready);
+          expect(result.data.emptyItems).toHaveLength(0);
 
-    const client = new ApolloClient({
-      link,
-      cache: new InMemoryCache(),
-    });
+          return observable
+            .fetchMore({
+              variables,
+            })
+            .then((fetchMoreResult) => {
+              expect(fetchMoreResult.loading).toBe(false);
+              expect(fetchMoreResult.networkStatus).toBe(NetworkStatus.ready);
+              expect(fetchMoreResult.data.emptyItems).toHaveLength(0);
+            });
+        } else if (count === 2) {
+          expect(result.loading).toBe(true);
+          expect(result.networkStatus).toBe(NetworkStatus.fetchMore);
+          expect(result.data.emptyItems).toHaveLength(0);
+        } else if (count === 3) {
+          expect(result.loading).toBe(false);
+          expect(result.networkStatus).toBe(NetworkStatus.ready);
+          expect(result.data.emptyItems).toHaveLength(0);
 
-    const observable = client.watchQuery({
-      query,
-      variables,
-      notifyOnNetworkStatusChange: true,
-    });
-
-    subscribeAndCount(reject, observable, (count, result) => {
-      if (count === 1) {
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.data.emptyItems).toHaveLength(0);
-
-        return observable.fetchMore({
-          variables,
-        }).then(fetchMoreResult => {
-          expect(fetchMoreResult.loading).toBe(false);
-          expect(fetchMoreResult.networkStatus).toBe(NetworkStatus.ready);
-          expect(fetchMoreResult.data.emptyItems).toHaveLength(0);
-        });
-      } else if (count === 2) {
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.fetchMore);
-        expect(result.data.emptyItems).toHaveLength(0);
-
-      } else if (count === 3) {
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.data.emptyItems).toHaveLength(0);
-
-        setTimeout(resolve, 10);
-      } else {
-        reject(`Too many results (${
-          JSON.stringify({ count, result })
-        })`);
-      }
-    });
-  });
+          setTimeout(resolve, 10);
+        } else {
+          reject(`Too many results (${JSON.stringify({ count, result })})`);
+        }
+      });
+    }
+  );
 });
 
-describe('fetchMore on an observable query with connection', () => {
+describe("fetchMore on an observable query with connection", () => {
   type TEntryComments = {
     entry: {
       comments: Array<{
@@ -1514,7 +1537,7 @@ describe('fetchMore on an observable query with connection', () => {
   `;
 
   const variables = {
-    repoName: 'org/repo',
+    repoName: "org/repo",
     start: 0,
     limit: 10,
   };
@@ -1522,9 +1545,9 @@ describe('fetchMore on an observable query with connection', () => {
 
   const result: any = {
     data: {
-      __typename: 'Query',
+      __typename: "Query",
       entry: {
-        __typename: 'Entry',
+        __typename: "Entry",
         comments: [],
       },
     },
@@ -1534,27 +1557,27 @@ describe('fetchMore on an observable query with connection', () => {
   for (let i = 1; i <= 10; i++) {
     result.data.entry.comments.push({
       text: `comment ${i}`,
-      __typename: 'Comment',
+      __typename: "Comment",
     });
   }
   for (let i = 11; i <= 20; i++) {
     resultMore.data.entry.comments.push({
       text: `comment ${i}`,
-      __typename: 'Comment',
+      __typename: "Comment",
     });
   }
 
-  function setup(
-    reject: (reason: any) => any,
-    ...mockedResponses: any[]
-  ) {
-    const link = mockSingleLink({
-      request: {
-        query: transformedQuery,
-        variables,
+  function setup(reject: (reason: any) => any, ...mockedResponses: any[]) {
+    const link = mockSingleLink(
+      {
+        request: {
+          query: transformedQuery,
+          variables,
+        },
+        result,
       },
-      result,
-    }, ...mockedResponses).setOnError(reject);
+      ...mockedResponses
+    ).setOnError(reject);
 
     const client = new ApolloClient({
       link,
@@ -1583,13 +1606,16 @@ describe('fetchMore on an observable query with connection', () => {
     ...mockedResponses: any[]
   ) {
     const client = new ApolloClient({
-      link: mockSingleLink({
-        request: {
-          query: transformedQuery,
-          variables,
+      link: mockSingleLink(
+        {
+          request: {
+            query: transformedQuery,
+            variables,
+          },
+          result,
         },
-        result,
-      }, ...mockedResponses).setOnError(reject),
+        ...mockedResponses
+      ).setOnError(reject),
       cache: new InMemoryCache(cacheConfig),
     });
 
@@ -1599,8 +1625,8 @@ describe('fetchMore on an observable query with connection', () => {
     });
   }
 
-  describe('fetchMore with connection results merging', () => {
-    itAsync('updateQuery', (resolve, reject) => {
+  describe("fetchMore with connection results merging", () => {
+    itAsync("updateQuery", (resolve, reject) => {
       const observable = setup(reject, {
         request: {
           query: transformedQuery,
@@ -1614,20 +1640,22 @@ describe('fetchMore on an observable query with connection', () => {
           expect(result.loading).toBe(false);
           expect(result.data.entry.comments).toHaveLength(10);
 
-          return observable.fetchMore({
-            variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-            updateQuery: (prev, options) => {
-              const state = cloneDeep(prev) as any;
-              state.entry.comments = [
-                ...state.entry.comments,
-                ...options.fetchMoreResult.entry.comments,
-              ];
-              return state;
-            },
-          }).then(fetchMoreResult => {
-            expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
-            expect(fetchMoreResult.loading).toBe(false);
-          });
+          return observable
+            .fetchMore({
+              variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+              updateQuery: (prev, options) => {
+                const state = cloneDeep(prev) as any;
+                state.entry.comments = [
+                  ...state.entry.comments,
+                  ...options.fetchMoreResult.entry.comments,
+                ];
+                return state;
+              },
+            })
+            .then((fetchMoreResult) => {
+              expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+              expect(fetchMoreResult.loading).toBe(false);
+            });
         } else if (count === 2) {
           const combinedComments = result.data.entry.comments;
           expect(combinedComments).toHaveLength(20);
@@ -1637,44 +1665,47 @@ describe('fetchMore on an observable query with connection', () => {
 
           setTimeout(resolve, 10);
         } else {
-          reject(`Too many results (${
-            JSON.stringify({ count, result })
-          })`);
+          reject(`Too many results (${JSON.stringify({ count, result })})`);
         }
       });
     });
 
-    itAsync('field policy', (resolve, reject) => {
-      const observable = setupWithCacheConfig(reject, {
-        typePolicies: {
-          Entry: {
-            fields: {
-              comments: concatPagination(),
+    itAsync("field policy", (resolve, reject) => {
+      const observable = setupWithCacheConfig(
+        reject,
+        {
+          typePolicies: {
+            Entry: {
+              fields: {
+                comments: concatPagination(),
+              },
             },
           },
         },
-      }, {
-        request: {
-          query: transformedQuery,
-          variables: variablesMore,
-        },
-        result: resultMore,
-      });
+        {
+          request: {
+            query: transformedQuery,
+            variables: variablesMore,
+          },
+          result: resultMore,
+        }
+      );
 
       subscribeAndCount(reject, observable, (count, result) => {
         if (count === 1) {
           expect(result.loading).toBe(false);
           expect(result.data.entry.comments).toHaveLength(10);
 
-          return observable.fetchMore({
-            // rely on the fact that the original variables had limit: 10
-            variables: { start: 10 },
-          }).then(fetchMoreResult => {
-            // this is the server result
-            expect(fetchMoreResult.loading).toBe(false);
-            expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
-          });
-
+          return observable
+            .fetchMore({
+              // rely on the fact that the original variables had limit: 10
+              variables: { start: 10 },
+            })
+            .then((fetchMoreResult) => {
+              // this is the server result
+              expect(fetchMoreResult.loading).toBe(false);
+              expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+            });
         } else if (count === 2) {
           const combinedComments = result.data.entry.comments;
           expect(combinedComments).toHaveLength(20);
@@ -1684,25 +1715,26 @@ describe('fetchMore on an observable query with connection', () => {
 
           setTimeout(resolve, 10);
         } else {
-          reject(`Too many results (${
-            JSON.stringify({ count, result })
-          })`);
+          reject(`Too many results (${JSON.stringify({ count, result })})`);
         }
       });
     });
   });
 
-  describe('will set the network status to `fetchMore`', () => {
-    itAsync('updateQuery', (resolve, reject) => {
-      const link = mockSingleLink({
-        request: { query: transformedQuery, variables },
-        result,
-        delay: 5,
-      }, {
-        request: { query: transformedQuery, variables: variablesMore },
-        result: resultMore,
-        delay: 5,
-      }).setOnError(reject);
+  describe("will set the network status to `fetchMore`", () => {
+    itAsync("updateQuery", (resolve, reject) => {
+      const link = mockSingleLink(
+        {
+          request: { query: transformedQuery, variables },
+          result,
+          delay: 5,
+        },
+        {
+          request: { query: transformedQuery, variables: variablesMore },
+          result: resultMore,
+          delay: 5,
+        }
+      ).setOnError(reject);
 
       const client = new ApolloClient({
         link,
@@ -1744,24 +1776,27 @@ describe('fetchMore on an observable query with connection', () => {
               setTimeout(resolve, 10);
               break;
             default:
-              reject(new Error('`next` called too many times'));
+              reject(new Error("`next` called too many times"));
           }
         },
         error: (error: any) => reject(error),
-        complete: () => reject(new Error('Should not have completed')),
+        complete: () => reject(new Error("Should not have completed")),
       });
     });
 
-    itAsync('field policy', (resolve, reject) => {
-      const link = mockSingleLink({
-        request: { query: transformedQuery, variables },
-        result,
-        delay: 5,
-      }, {
-        request: { query: transformedQuery, variables: variablesMore },
-        result: resultMore,
-        delay: 5,
-      }).setOnError(reject);
+    itAsync("field policy", (resolve, reject) => {
+      const link = mockSingleLink(
+        {
+          request: { query: transformedQuery, variables },
+          result,
+          delay: 5,
+        },
+        {
+          request: { query: transformedQuery, variables: variablesMore },
+          result: resultMore,
+          delay: 5,
+        }
+      ).setOnError(reject);
 
       const client = new ApolloClient({
         link,
@@ -1803,11 +1838,11 @@ describe('fetchMore on an observable query with connection', () => {
               setTimeout(resolve, 10);
               break;
             default:
-              reject(new Error('`next` called too many times'));
+              reject(new Error("`next` called too many times"));
           }
         },
         error: (error: any) => reject(error),
-        complete: () => reject(new Error('Should not have completed')),
+        complete: () => reject(new Error("Should not have completed")),
       });
     });
   });

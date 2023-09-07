@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2023-08-09**
+**Last updated: 2023-08-29**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -21,8 +21,7 @@ Features we plan to tackle:
 
 - Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
 - Ability to preload a query outside of a React component that can be used with `useReadQuery` to suspend while loading
-- Introduce a new `useInteractiveQuery`/`useLazyBackgroundQuery` hook (name TBD) 
-- Add metrics integration throughout the library for powerful insights
+- Introduce a new `useInteractiveQuery`/`useLazyBackgroundQuery` hook (name TBD)
 - Improved testing utilities 
 
 > NOTE: These are subject to change and are not guaranteed to be part of 3.9 at the time of this writing.

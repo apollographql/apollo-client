@@ -1,7 +1,9 @@
-import { newInvariantError } from '../../utilities/globals/index.js';
+import { newInvariantError } from "../../utilities/globals/index.js";
 
-export const checkFetcher = (fetcher: WindowOrWorkerGlobalScope['fetch'] | undefined) => {
-  if (!fetcher && typeof fetch === 'undefined') {
+export const checkFetcher = (
+  fetcher: WindowOrWorkerGlobalScope["fetch"] | undefined
+) => {
+  if (!fetcher && typeof fetch === "undefined") {
     throw newInvariantError(`
 "fetch" has not been found globally and no fetcher has been \
 configured. To fix this, install a fetch package (like \

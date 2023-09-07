@@ -10,7 +10,7 @@ export const throwServerError = (
   message: string
 ) => {
   const error = new Error(message) as ServerError;
-  error.name = 'ServerError';
+  error.name = "ServerError";
   error.response = response;
   error.statusCode = response.status;
   error.result = result;

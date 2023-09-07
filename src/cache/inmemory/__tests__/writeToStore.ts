@@ -2046,7 +2046,7 @@ describe("writing to the store", () => {
 
   describe('"Cache data maybe lost..." warnings', () => {
     it("should not warn when scalar fields are updated", () => {
-      using consoleSpy = spyOnConsole("warn");
+      using _consoleSpy = spyOnConsole("warn");
       const cache = new InMemoryCache();
 
       const query = gql`
@@ -2101,7 +2101,7 @@ describe("writing to the store", () => {
     `;
 
     it("should write the result data without validating its shape when a fragment matcher is not provided", () => {
-      using consoleSpy = spyOnConsole("error");
+      using _consoleSpy = spyOnConsole("error");
       const result = {
         todos: [
           {
@@ -2127,7 +2127,7 @@ describe("writing to the store", () => {
     });
 
     it("should warn when it receives the wrong data with non-union fragments", () => {
-      using consoleSpy = spyOnConsole("error");
+      using _consoleSpy = spyOnConsole("error");
       const result = {
         todos: [
           {
@@ -2152,7 +2152,7 @@ describe("writing to the store", () => {
     });
 
     it("should warn when it receives the wrong data inside a fragment", () => {
-      using consoleSpy = spyOnConsole("error");
+      using _consoleSpy = spyOnConsole("error");
       const queryWithInterface = gql`
         query {
           todos {
@@ -2252,7 +2252,7 @@ describe("writing to the store", () => {
     });
 
     it("should not warn if a field is defered", () => {
-      using consoleSpy = spyOnConsole("error");
+      using _consoleSpy = spyOnConsole("error");
       const defered = gql`
         query LazyLoad {
           id
@@ -2491,7 +2491,7 @@ describe("writing to the store", () => {
   });
 
   it("should not keep reference when type of mixed inlined field changes to non-inlined field", () => {
-    using consoleSpy = spyOnConsole("error");
+    using _consoleSpy = spyOnConsole("error");
     const store = defaultNormalizedCacheFactory();
 
     const query = gql`

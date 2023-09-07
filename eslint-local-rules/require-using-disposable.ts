@@ -1,6 +1,5 @@
-// @ts-check
 import { ESLintUtils } from "@typescript-eslint/utils";
-import { unionTypeParts, isObjectType } from "ts-api-tools";
+import ts from "typescript";
 
 export const rule = ESLintUtils.RuleCreator.withoutDocs({
   create(context) {
@@ -10,8 +9,9 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs({
           if (!declarator.init) continue;
           const services = ESLintUtils.getParserServices(context);
           const type = services.getTypeAtLocation(declarator.init);
-          for (const typePart of unionTypeParts(type)) {
-            if (!isObjectType(typePart)) {
+          for (const typePart of type.isUnion() ? type.types : [type]) {
+            // is object type
+            if (!type || !(type.flags & ts.TypeFlags.Object)) {
               continue;
             }
             if (

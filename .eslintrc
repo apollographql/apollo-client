@@ -57,7 +57,12 @@
       }
     },
     {
-      "files": ["**/__tests__/**/*.[jt]s", "**/__tests__/**/*.[jt]sx", "**/?(*.)+(test).[jt]s", "**/?(*.)+(test).[jt]sx"],
+      "files": [
+        "**/__tests__/**/*.[jt]s",
+        "**/__tests__/**/*.[jt]sx",
+        "**/?(*.)+(test).[jt]s",
+        "**/?(*.)+(test).[jt]sx"
+      ],
       "extends": ["plugin:testing-library/react"],
       "parserOptions": {
         "project": "./tsconfig.tests.json"

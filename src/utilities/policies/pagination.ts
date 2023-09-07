@@ -42,7 +42,7 @@ export function offsetLimitPagination<T = Reference>(
           // to receive any arguments, so you might prefer to throw an
           // exception here, instead of recovering by appending incoming
           // onto the existing array.
-          merged.push.apply(merged, incoming);
+          merged.push(...incoming);
         }
       }
 

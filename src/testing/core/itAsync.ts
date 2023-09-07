@@ -9,7 +9,7 @@ function wrap(key?: "only" | "skip" | "todo") {
   ) =>
     (key ? it[key] : it)(
       message,
-      function () {
+      function (this: unknown) {
         return new Promise((resolve, reject) =>
           callback.call(this, resolve, reject)
         );
@@ -21,7 +21,7 @@ function wrap(key?: "only" | "skip" | "todo") {
 const wrappedIt = wrap();
 
 export const itAsync = Object.assign(
-  function (...args: Parameters<typeof wrappedIt>) {
+  function (this: unknown, ...args: Parameters<typeof wrappedIt>) {
     return wrappedIt.apply(this, args);
   },
   {

@@ -11,7 +11,11 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs({
           const type = services.getTypeAtLocation(declarator.init);
           for (const typePart of type.isUnion() ? type.types : [type]) {
             // is object type
-            if (!type || !(type.flags & ts.TypeFlags.Object)) {
+            if (
+              !typePart ||
+              !typePart.symbol ||
+              !(typePart.flags & ts.TypeFlags.Object)
+            ) {
               continue;
             }
             if (

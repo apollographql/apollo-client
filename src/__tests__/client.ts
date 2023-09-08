@@ -2879,49 +2879,51 @@ describe("client", () => {
       .then(resolve, reject);
   });
 
-  itAsync("should warn if server returns wrong data", (resolve, reject) => {
-    using _consoleSpies = spyOnConsole("error");
-    const query = gql`
-      query {
-        todos {
-          id
-          name
-          description
-          __typename
+  it("should warn if server returns wrong data", async () => {
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    await new Promise((resolve, reject) => {
+      const query = gql`
+        query {
+          todos {
+            id
+            name
+            description
+            __typename
+          }
         }
-      }
-    `;
-    const result = {
-      data: {
-        todos: [
-          {
-            id: "1",
-            name: "Todo 1",
-            price: 100,
-            __typename: "Todo",
-          },
-        ],
-      },
-    };
+      `;
+      const result = {
+        data: {
+          todos: [
+            {
+              id: "1",
+              name: "Todo 1",
+              price: 100,
+              __typename: "Todo",
+            },
+          ],
+        },
+      };
 
-    const link = mockSingleLink({
-      request: { query },
-      result,
-    }).setOnError(reject);
-    const client = new ApolloClient({
-      link,
-      cache: new InMemoryCache({
-        // Passing an empty map enables the warning:
-        possibleTypes: {},
-      }),
+      const link = mockSingleLink({
+        request: { query },
+        result,
+      }).setOnError(reject);
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          // Passing an empty map enables the warning:
+          possibleTypes: {},
+        }),
+      });
+
+      return client
+        .query({ query })
+        .then(({ data }) => {
+          expect(data).toEqual(result.data);
+        })
+        .then(resolve, reject);
     });
-
-    return client
-      .query({ query })
-      .then(({ data }) => {
-        expect(data).toEqual(result.data);
-      })
-      .then(resolve, reject);
   });
 
   itAsync(

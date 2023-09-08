@@ -1,5 +1,6 @@
 import { ESLintUtils } from "@typescript-eslint/utils";
 import ts from "typescript";
+import * as utils from "ts-api-utils";
 
 export const rule = ESLintUtils.RuleCreator.withoutDocs({
   create(context) {
@@ -9,19 +10,14 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs({
           if (!declarator.init) continue;
           const services = ESLintUtils.getParserServices(context);
           const type = services.getTypeAtLocation(declarator.init);
-          for (const typePart of type.isUnion() ? type.types : [type]) {
-            // is object type
-            if (
-              !typePart ||
-              !typePart.symbol ||
-              !(typePart.flags & ts.TypeFlags.Object)
-            ) {
+          for (const typePart of parts(type)) {
+            if (!utils.isObjectType(typePart) || !typePart.symbol) {
               continue;
             }
             if (
               // bad check, but will do for now
               // in the future, we should check for a `[Symbol.disposable]` property
-              // but I have no idea how to use that right now
+              // but I have no idea how to do that right now
               typePart.symbol.escapedName === "Disposable" &&
               node.kind != "using"
             ) {
@@ -31,7 +27,7 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs({
               });
             }
             if (
-              // bad check
+              // similarly bad check
               typePart.symbol.escapedName === "AsyncDisposable" &&
               node.kind != "await using"
             ) {
@@ -57,3 +53,11 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs({
   },
   defaultOptions: [],
 });
+
+function parts(type: ts.Type): ts.Type[] {
+  return type.isUnion()
+    ? utils.unionTypeParts(type).flatMap(parts)
+    : type.isIntersection()
+    ? utils.intersectionTypeParts(type).flatMap(parts)
+    : [type];
+}

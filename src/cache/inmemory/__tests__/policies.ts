@@ -418,7 +418,7 @@ describe("type policies", function () {
   });
 
   it("complains about missing key fields", function () {
-    using _consoleSpies = spyOnConsole("error");
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
     const cache = new InMemoryCache({
       typePolicies: {
         Book: {
@@ -2716,7 +2716,7 @@ describe("type policies", function () {
     });
 
     it("readField helper function calls custom read functions", function () {
-      using _consoleSpies = spyOnConsole("error");
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
       // Rather than writing ownTime data into the cache, we maintain it
       // externally in this object:
       const ownTimes: Record<string, ReactiveVar<number>> = {
@@ -4358,7 +4358,7 @@ describe("type policies", function () {
     });
 
     it("runs nested merge functions as well as ancestors", function () {
-      using _consoleSpies = spyOnConsole("error");
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
       let eventMergeCount = 0;
       let attendeeMergeCount = 0;
 
@@ -5950,7 +5950,7 @@ describe("type policies", function () {
   });
 
   it("readField warns if explicitly passed undefined `from` option", function () {
-    using _consoleSpies = spyOnConsole("warn");
+    using _consoleSpies = spyOnConsole.takeSnapshots("warn");
     const cache = new InMemoryCache({
       typePolicies: {
         Query: {

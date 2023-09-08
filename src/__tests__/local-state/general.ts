@@ -1015,10 +1015,9 @@ describe("Combining client and server state/operations", () => {
     }
   );
 
-  itAsync(
-    "should handle a simple query with both server and client fields",
-    (resolve, reject) => {
-      using _consoleSpies = spyOnConsole("error");
+  it("should handle a simple query with both server and client fields", async () => {
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    await new Promise<void>((resolve, reject) => {
       const query = gql`
         query GetCount {
           count @client
@@ -1051,13 +1050,12 @@ describe("Combining client and server state/operations", () => {
           resolve();
         },
       });
-    }
-  );
+    });
+  });
 
-  itAsync(
-    "should support nested querying of both server and client fields",
-    (resolve, reject) => {
-      using _consoleSpies = spyOnConsole("error");
+  it("should support nested querying of both server and client fields", async () => {
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    await new Promise<void>((resolve, reject) => {
       const query = gql`
         query GetUser {
           user {
@@ -1117,8 +1115,8 @@ describe("Combining client and server state/operations", () => {
           resolve();
         },
       });
-    }
-  );
+    });
+  });
 
   itAsync(
     "should combine both server and client mutations",

@@ -54,8 +54,19 @@ exports[`@client @export tests should refetch if an @export variable changes, th
         "currentAuthorId": 100,
       },
     ],
+    Array [
+      "Missing field '%s' while writing result %o",
+      "postCount",
+      Object {
+        "currentAuthorId": 101,
+      },
+    ],
   ],
   "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
     Object {
       "type": "return",
       "value": undefined,

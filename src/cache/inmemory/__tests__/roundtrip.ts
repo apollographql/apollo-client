@@ -316,7 +316,7 @@ describe("roundtrip", () => {
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
     it("should throw an error on two of the same inline fragment types", () => {
-      using _consoleSpies = spyOnConsole("error");
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
       expect(() => {
         storeRoundtrip(
           gql`
@@ -457,7 +457,7 @@ describe("roundtrip", () => {
     });
 
     it("should throw on error on two of the same spread fragment types", () => {
-      using _consoleSpies = spyOnConsole("error");
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
       expect(() => {
         storeRoundtrip(
           gql`

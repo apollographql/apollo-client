@@ -165,7 +165,7 @@
     "size-limit": "8.2.6",
     "subscriptions-transport-ws": "0.11.0",
     "terser": "5.19.2",
-    "ts-api-tools": "^0.0.20",
+    "ts-api-utils": "1.0.3",
     "ts-jest": "29.1.1",
     "ts-jest-resolver": "2.0.1",
     "ts-node": "10.9.1",

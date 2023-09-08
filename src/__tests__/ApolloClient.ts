@@ -805,7 +805,7 @@ describe("ApolloClient", () => {
     });
 
     it("should warn when the data provided does not match the query shape", () => {
-      using _consoleSpies = spyOnConsole("error");
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({
@@ -1089,7 +1089,7 @@ describe("ApolloClient", () => {
     });
 
     it("should warn when the data provided does not match the fragment shape", () => {
-      using _consoleSpies = spyOnConsole("error");
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache({

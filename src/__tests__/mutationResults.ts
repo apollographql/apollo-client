@@ -432,10 +432,9 @@ describe("mutation results", () => {
     }
   );
 
-  itAsync(
-    "should warn when the result fields don't match the query fields",
-    (resolve, reject) => {
-      using _consoleSpies = spyOnConsole("error");
+  it("should warn when the result fields don't match the query fields", async () => {
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    await new Promise((resolve, reject) => {
       let handle: any;
       let subscriptionHandle: Subscription;
 
@@ -528,8 +527,8 @@ describe("mutation results", () => {
           expect(result).toEqual(mutationTodoResult);
         })
         .then(resolve, reject);
-    }
-  );
+    });
+  });
 
   describe("InMemoryCache type/field policies", () => {
     const startTime = Date.now();

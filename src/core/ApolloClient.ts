@@ -86,7 +86,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readonly typeDefs: ApolloClientOptions<TCacheShape>["typeDefs"];
 
   private queryManager: QueryManager<TCacheShape>;
-  private devToolsHookCb: Function;
+  private devToolsHookCb?: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
   private localState: LocalState<TCacheShape>;
@@ -586,11 +586,33 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
+  public refetchQueries<TResult = Promise<ApolloQueryResult<any>>>(
+    options: RefetchQueriesOptions<ApolloCache<TCacheShape>, TResult>
+  ): RefetchQueriesResult<TResult>;
+
+  /**
+   * @deprecated The two-generics version of refetchQueries is deprecated
+   * and will be removed in the next major version.
+   *
+   * Please use the single-generic version only specifying the return type instead.
+   *
+   * The first generic argument of this overload is essentially an
+   * `cache as any as TCache`
+   * assertion and does not give you any type safety.
+   *
+   * If you rely on a specific cache implementation, please do an `instanceof` check
+   * in your runtime code to narrow down the type in a type-safe manner.
+   */
   public refetchQueries<
-    TCache extends ApolloCache<any> = ApolloCache<TCacheShape>,
-    TResult = Promise<ApolloQueryResult<any>>,
+    /** @deprecated */
+    TCache extends ApolloCache<any>,
+    TResult,
   >(
     options: RefetchQueriesOptions<TCache, TResult>
+  ): RefetchQueriesResult<TResult>;
+
+  public refetchQueries<TResult>(
+    options: RefetchQueriesOptions<ApolloCache<TCacheShape>, TResult>
   ): RefetchQueriesResult<TResult> {
     const map = this.queryManager.refetchQueries(options);
     const queries: ObservableQuery<any>[] = [];

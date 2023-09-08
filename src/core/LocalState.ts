@@ -75,9 +75,9 @@ export type LocalStateOptions<TCacheShape> = {
 
 export class LocalState<TCacheShape> {
   private cache: ApolloCache<TCacheShape>;
-  private client: ApolloClient<TCacheShape>;
+  private client?: ApolloClient<TCacheShape>;
   private resolvers?: Resolvers;
-  private fragmentMatcher: FragmentMatcher;
+  private fragmentMatcher?: FragmentMatcher;
   private selectionsToResolveCache = new WeakMap<
     ExecutableDefinitionNode,
     Set<SelectionNode>
@@ -162,7 +162,7 @@ export class LocalState<TCacheShape> {
     this.fragmentMatcher = fragmentMatcher;
   }
 
-  public getFragmentMatcher(): FragmentMatcher {
+  public getFragmentMatcher(): FragmentMatcher | undefined {
     return this.fragmentMatcher;
   }
 

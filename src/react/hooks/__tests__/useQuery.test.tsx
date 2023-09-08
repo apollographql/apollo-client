@@ -4652,7 +4652,7 @@ describe("useQuery Hook", () => {
 
     // This test was added for issue https://github.com/apollographql/apollo-client/issues/9794
     it("onCompleted can set state without causing react errors", async () => {
-      const errorSpy = jest.spyOn(console, "error");
+      using consoleSpy = spyOnConsole("error");
       const query = gql`
         {
           hello
@@ -4692,8 +4692,7 @@ describe("useQuery Hook", () => {
 
       render(<ParentComponent />);
       await screen.findByText("onCompletedCalled: true");
-      expect(errorSpy).not.toHaveBeenCalled();
-      errorSpy.mockRestore();
+      expect(consoleSpy.error).not.toHaveBeenCalled();
     });
 
     it("onCompleted should not execute on cache writes after initial query execution", async () => {
@@ -4978,9 +4977,7 @@ describe("useQuery Hook", () => {
 
   describe("Partial refetch", () => {
     it("should attempt a refetch when data is missing and partialRefetch is true", async () => {
-      const errorSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      using consoleSpy = spyOnConsole("error");
       const query = gql`
         {
           hello
@@ -5033,9 +5030,8 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      expect(errorSpy).toHaveBeenCalledTimes(1);
-      expect(errorSpy.mock.calls[0][0]).toMatch("Missing field");
-      errorSpy.mockRestore();
+      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
 
       await waitFor(
         () => {
@@ -5064,9 +5060,7 @@ describe("useQuery Hook", () => {
         allPeople: { people: [{ name: "Luke Skywalker" }] },
       };
 
-      const errorSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      using consoleSpy = spyOnConsole("error");
       const link = mockSingleLink(
         { request: { query }, result: { data: {} }, delay: 20 },
         { request: { query }, result: { data }, delay: 20 }
@@ -5105,9 +5099,8 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      expect(errorSpy).toHaveBeenCalledTimes(1);
-      expect(errorSpy.mock.calls[0][0]).toMatch("Missing field");
-      errorSpy.mockRestore();
+      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
 
       await waitFor(
         () => {
@@ -5121,9 +5114,7 @@ describe("useQuery Hook", () => {
     });
 
     it("should attempt a refetch when data is missing, partialRefetch is true and addTypename is false for the cache", async () => {
-      const errorSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      using consoleSpy = spyOnConsole("error");
       const query = gql`
         {
           hello
@@ -5177,9 +5168,8 @@ describe("useQuery Hook", () => {
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toBe(undefined);
 
-      expect(errorSpy).toHaveBeenCalledTimes(1);
-      expect(errorSpy.mock.calls[0][0]).toMatch("Missing field");
-      errorSpy.mockRestore();
+      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
 
       await waitFor(
         () => {
@@ -5646,9 +5636,7 @@ describe("useQuery Hook", () => {
 
   describe("Missing Fields", () => {
     it("should log debug messages about MissingFieldErrors from the cache", async () => {
-      const errorSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      using consoleSpy = spyOnConsole("error");
 
       const carQuery: DocumentNode = gql`
         query cars($id: Int) {
@@ -5705,8 +5693,8 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toEqual(carData);
       expect(result.current.error).toBeUndefined();
 
-      expect(errorSpy).toHaveBeenCalled();
-      expect(errorSpy).toHaveBeenLastCalledWith(
+      expect(consoleSpy.error).toHaveBeenCalled();
+      expect(consoleSpy.error).toHaveBeenLastCalledWith(
         `Missing field '%s' while writing result %o`,
         "vin",
         {
@@ -5717,7 +5705,6 @@ describe("useQuery Hook", () => {
           __typename: "Car",
         }
       );
-      errorSpy.mockRestore();
     });
 
     it("should return partial cache data when `returnPartialData` is true", async () => {
@@ -8039,17 +8026,18 @@ describe("useQuery Hook", () => {
 
       // We know we are writing partial data to the cache so suppress the console
       // warning.
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-      cache.writeQuery({
-        query,
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            recipient: { __typename: "Person", name: "Cached Alice" },
+      {
+        using _consoleSpy = spyOnConsole("error");
+        cache.writeQuery({
+          query,
+          data: {
+            greeting: {
+              __typename: "Greeting",
+              recipient: { __typename: "Person", name: "Cached Alice" },
+            },
           },
-        },
-      });
-      consoleSpy.mockRestore();
+        });
+      }
 
       const { result } = renderHook(
         () =>

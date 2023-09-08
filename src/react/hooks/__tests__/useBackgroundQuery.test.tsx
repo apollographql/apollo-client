@@ -3767,9 +3767,7 @@ describe("useBackgroundQuery", () => {
       // Disable error message shown in the console due to an uncaught error.
       // TODO: need to determine why the error message is logged to the console
       // as an uncaught error since other tests do not require this.
-      const consoleSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      using _consoleSpy = spyOnConsole("error");
 
       expect(screen.getByText("Loading")).toBeInTheDocument();
 
@@ -3790,8 +3788,6 @@ describe("useBackgroundQuery", () => {
       });
 
       expect(screen.queryByText("Loading")).not.toBeInTheDocument();
-
-      consoleSpy.mockRestore();
     });
 
     it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {

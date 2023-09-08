@@ -496,9 +496,7 @@ describe("useMutation Hook", () => {
       });
 
       it(`should ignore errors when errorPolicy is 'ignore'`, async () => {
-        const errorMock = jest
-          .spyOn(console, "error")
-          .mockImplementation(() => {});
+        using consoleSpy = spyOnConsole("error");
         const variables = {
           description: "Get milk!",
         };
@@ -531,9 +529,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(fetchResult).toEqual({});
-        expect(errorMock).toHaveBeenCalledTimes(1);
-        expect(errorMock.mock.calls[0][0]).toMatch("Missing field");
-        errorMock.mockRestore();
+        expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+        expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
       });
 
       it(`should not call onError when errorPolicy is 'ignore'`, async () => {

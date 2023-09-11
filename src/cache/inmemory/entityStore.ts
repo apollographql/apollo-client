@@ -258,27 +258,43 @@ export abstract class EntityStore implements NormalizedCache {
               needToMerge = true;
               fieldValue = newValue;
 
-              if (__DEV__ && Array.isArray(newValue)) {
-                // Warn about writing "mixed" arrays of Reference and non-Reference objects
-                let seenReference: boolean = false;
-                let someNonReference: unknown;
-                for (const value of newValue) {
-                  if (isReference(value)) {
-                    seenReference = true;
-                  } else {
-                    // Do not warn on primitive values, since those could never be represented
-                    // by a reference. This is a valid (albeit uncommon) use case.
-                    if (typeof value === "object" && !!value) {
-                      someNonReference = value;
-                    }
-                  }
-                  if (seenReference && someNonReference !== undefined) {
+              if (__DEV__) {
+                const checkReference = (ref: Reference) => {
+                  if (this.lookup(ref.__ref) === undefined) {
                     invariant.warn(
-                      "cache.modify: Writing an array with a mix of both References and Objects will not result in the Objects being normalized correctly.\n" +
-                        "Please convert the object instance %o to a Reference before writing it to the cache by calling `toReference(object, true).`",
-                      someNonReference
+                      "cache.modify: You are trying to write a Reference that is not part of the store: %o\n" +
+                        "Please make sure to set the `mergeIntoStore` parameter to `true` when creating a Reference that is not part of the store yet:\n" +
+                        "`toReference(object, true)`",
+                      ref
                     );
-                    break;
+                    return true;
+                  }
+                };
+                if (isReference(newValue)) {
+                  checkReference(newValue);
+                } else if (Array.isArray(newValue)) {
+                  // Warn about writing "mixed" arrays of Reference and non-Reference objects
+                  let seenReference: boolean = false;
+                  let someNonReference: unknown;
+                  for (const value of newValue) {
+                    if (isReference(value)) {
+                      seenReference = true;
+                      if (checkReference(value)) break;
+                    } else {
+                      // Do not warn on primitive values, since those could never be represented
+                      // by a reference. This is a valid (albeit uncommon) use case.
+                      if (typeof value === "object" && !!value) {
+                        someNonReference = value;
+                      }
+                    }
+                    if (seenReference && someNonReference !== undefined) {
+                      invariant.warn(
+                        "cache.modify: Writing an array with a mix of both References and Objects will not result in the Objects being normalized correctly.\n" +
+                          "Please convert the object instance %o to a Reference before writing it to the cache by calling `toReference(object, true)`.",
+                        someNonReference
+                      );
+                      break;
+                    }
                   }
                 }
               }

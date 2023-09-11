@@ -284,7 +284,11 @@ export abstract class EntityStore implements NormalizedCache {
                       // Do not warn on primitive values, since those could never be represented
                       // by a reference. This is a valid (albeit uncommon) use case.
                       if (typeof value === "object" && !!value) {
-                        someNonReference = value;
+                        const [id] = this.policies.identify(value);
+                        // check if object could even be referenced, otherwise we are not interested in it for this warning
+                        if (id) {
+                          someNonReference = value;
+                        }
                       }
                     }
                     if (seenReference && someNonReference !== undefined) {

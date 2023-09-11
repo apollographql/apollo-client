@@ -72,7 +72,7 @@ export async function readMultipartBody<
       const body = message.slice(i);
 
       if (body) {
-        const result = parseJsonBody<T>(response, body);
+        const result = await parseJsonBody<T>(response, body);
         if (
           Object.keys(result).length > 1 ||
           "data" in result ||
@@ -129,25 +129,33 @@ export function parseHeaders(headerText: string): Record<string, string> {
   return headersInit;
 }
 
-export function parseJsonBody<T>(response: Response, bodyText: string): T {
+export async function parseJsonBody<T>(
+  response: Response,
+  bodyText: string
+): Promise<T> {
+  const tryParseAsync = () => {
+    try {
+      return new Response(bodyText).json();
+    } catch (err) {
+      if (err.name === "SyntaxError") throw err;
+      // if we encountered a different error than a SyntaxError,
+      // something else probably happened, like `Response` not being
+      // polyfilled as a global object - fall back to synchronous
+      // JSON.parse
+      return JSON.parse(bodyText);
+    }
+  };
   if (response.status >= 300) {
     // Network error
-    const getResult = (): Record<string, unknown> | string => {
-      try {
-        return JSON.parse(bodyText);
-      } catch (err) {
-        return bodyText;
-      }
-    };
     throwServerError(
       response,
-      getResult(),
+      await tryParseAsync().catch(() => bodyText),
       `Response not successful: Received status code ${response.status}`
     );
   }
 
   try {
-    return JSON.parse(bodyText) as T;
+    return (await tryParseAsync()) as T;
   } catch (err) {
     const parseError = err as ServerParseError;
     parseError.name = "ServerParseError";
@@ -204,14 +212,6 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
       .text()
       .then((bodyText) => parseJsonBody(response, bodyText))
       .then((result: any) => {
-        if (response.status >= 300) {
-          // Network error
-          throwServerError(
-            response,
-            result,
-            `Response not successful: Received status code ${response.status}`
-          );
-        }
         if (
           !Array.isArray(result) &&
           !hasOwnProperty.call(result, "data") &&

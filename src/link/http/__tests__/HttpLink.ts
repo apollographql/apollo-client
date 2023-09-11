@@ -18,7 +18,6 @@ import { createHttpLink } from "../createHttpLink";
 import { ClientParseError } from "../serializeFetchParameter";
 import { ServerParseError } from "../parseAndCheckHttpResponse";
 import { FetchResult, ServerError } from "../../..";
-import { voidFetchDuringEachTest } from "./helpers";
 import { itAsync } from "../../../testing";
 
 const sampleQuery = gql`
@@ -1194,32 +1193,46 @@ describe("HttpLink", () => {
   });
 
   describe("Dev warnings", () => {
-    voidFetchDuringEachTest();
-
-    itAsync("warns if fetch is undeclared", (resolve, reject) => {
-      try {
-        createHttpLink({ uri: "data" });
-        reject("warning wasn't called");
-      } catch (e) {
-        makeCallback(resolve, reject, () =>
-          expect(e.message).toMatch(/has not been found globally/)
-        )();
-      }
+    // voidFetchDuringEachTest();
+    const fetch = window.fetch;
+    afterEach(() => {
+      window.fetch = fetch;
     });
 
-    itAsync("warns if fetch is undefined", (resolve, reject) => {
+    it("warns if fetch is undeclared", async () => {
+      // @ts-expect-error
+      delete window.fetch;
+      jest.resetModules();
+      const { createHttpLink } = await import("../createHttpLink");
+
+      expect(() => createHttpLink({ uri: "data" })).toThrowError(
+        /has not been found globally/
+      );
+    });
+
+    it("warns if fetch is undefined", async () => {
       window.fetch = undefined as any;
-      try {
-        createHttpLink({ uri: "data" });
-        reject("warning wasn't called");
-      } catch (e) {
-        makeCallback(resolve, reject, () =>
-          expect(e.message).toMatch(/has not been found globally/)
-        )();
-      }
+      jest.resetModules();
+      const { createHttpLink } = await import("../createHttpLink");
+
+      expect(() => createHttpLink({ uri: "data" })).toThrowError(
+        /has not been found globally/
+      );
     });
 
-    it("does not warn if fetch is undeclared but a fetch is passed", () => {
+    it("does not warn if fetch is undeclared but a fetch is passed", async () => {
+      // @ts-expect-error
+      delete window.fetch;
+      jest.resetModules();
+      const { createHttpLink } = await import("../createHttpLink");
+      expect(() => {
+        createHttpLink({ uri: "data", fetch: (() => {}) as any });
+      }).not.toThrow();
+    });
+
+    it("does not warn if fetch is available", async () => {
+      jest.resetModules();
+      const { createHttpLink } = await import("../createHttpLink");
       expect(() => {
         createHttpLink({ uri: "data", fetch: (() => {}) as any });
       }).not.toThrow();

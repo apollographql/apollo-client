@@ -961,16 +961,13 @@ describe("HttpLink", () => {
         expect(typeof fetch).toBe("function");
 
         const fetchSpy = jest.spyOn(window, "fetch");
-        fetchSpy.mockImplementation(() =>
-          Promise.resolve<Response>({
-            text() {
-              return Promise.resolve(
-                JSON.stringify({
-                  data: { hello: "from spy" },
-                })
-              );
-            },
-          } as Response)
+        fetchSpy.mockImplementation(
+          async () =>
+            new Response(
+              JSON.stringify({
+                data: { hello: "from spy" },
+              })
+            )
         );
 
         const spyFn = window.fetch;
@@ -1240,43 +1237,30 @@ describe("HttpLink", () => {
   });
 
   describe("Error handling", () => {
-    let responseBody: any;
-    const text = jest.fn(() => {
-      const responseBodyText = "{}";
-      responseBody = JSON.parse(responseBodyText);
-      return Promise.resolve(responseBodyText);
+    const resultEmpty = JSON.stringify({});
+    const resultWithStringError = "Error! Foo bar";
+    const resultWithData = JSON.stringify({
+      data: { stub: { id: 1 } },
+      errors: [{ message: "dangit" }],
     });
-    const textWithStringError = jest.fn(() => {
-      const responseBodyText = "Error! Foo bar";
-      responseBody = responseBodyText;
-      return Promise.resolve(responseBodyText);
-    });
-    const textWithData = jest.fn(() => {
-      responseBody = {
-        data: { stub: { id: 1 } },
-        errors: [{ message: "dangit" }],
-      };
-
-      return Promise.resolve(JSON.stringify(responseBody));
+    const resultWithErrors = JSON.stringify({
+      errors: [{ message: "dangit" }],
     });
 
-    const textWithErrors = jest.fn(() => {
-      responseBody = {
-        errors: [{ message: "dangit" }],
-      };
-
-      return Promise.resolve(JSON.stringify(responseBody));
-    });
-    const fetch = jest.fn((uri, options) => {
-      return Promise.resolve({ text });
-    });
+    const fetch = jest.fn(async (uri, options) => new Response(resultEmpty));
+    function mockFetchOnce({
+      resultBody,
+      status = 200,
+    }: Pick<Response, "status"> & { resultBody: string }) {
+      fetch.mockResolvedValueOnce(new Response(resultBody, { status }));
+    }
     beforeEach(() => {
       fetch.mockReset();
     });
     itAsync("makes it easy to do stuff on a 401", (resolve, reject) => {
       const middleware = new ApolloLink((operation, forward) => {
         return new Observable((ob) => {
-          fetch.mockReturnValueOnce(Promise.resolve({ status: 401, text }));
+          mockFetchOnce({ status: 401, resultBody: resultEmpty });
           const op = forward(operation);
           const sub = op.subscribe({
             next: ob.next.bind(ob),
@@ -1307,7 +1291,7 @@ describe("HttpLink", () => {
     });
 
     itAsync("throws an error if response code is > 300", (resolve, reject) => {
-      fetch.mockReturnValueOnce(Promise.resolve({ status: 400, text }));
+      mockFetchOnce({ status: 400, resultBody: resultEmpty });
       const link = createHttpLink({ uri: "data", fetch: fetch as any });
 
       execute(link, { query: sampleQuery }).subscribe(
@@ -1317,16 +1301,17 @@ describe("HttpLink", () => {
         makeCallback(resolve, reject, (e: ServerError) => {
           expect(e.message).toMatch(/Received status code 400/);
           expect(e.statusCode).toBe(400);
-          expect(e.result).toEqual(responseBody);
+          expect(e.result).toEqual(JSON.parse(resultEmpty));
         })
       );
     });
     itAsync(
       "throws an error if response code is > 300 and handles string response body",
       (resolve, reject) => {
-        fetch.mockReturnValueOnce(
-          Promise.resolve({ status: 302, text: textWithStringError })
-        );
+        mockFetchOnce({
+          status: 302,
+          resultBody: resultWithStringError as any,
+        });
         const link = createHttpLink({ uri: "data", fetch: fetch as any });
         execute(link, { query: sampleQuery }).subscribe(
           (result) => {
@@ -1335,7 +1320,8 @@ describe("HttpLink", () => {
           makeCallback(resolve, reject, (e: ServerError) => {
             expect(e.message).toMatch(/Received status code 302/);
             expect(e.statusCode).toBe(302);
-            expect(e.result).toEqual(responseBody);
+            // JSON.parse consumed the buffer, we cannot read it with `.text` anymore
+            expect(e.result).toEqual(undefined);
           })
         );
       }
@@ -1343,10 +1329,7 @@ describe("HttpLink", () => {
     itAsync(
       "throws an error if response code is > 300 and returns data",
       (resolve, reject) => {
-        fetch.mockReturnValueOnce(
-          Promise.resolve({ status: 400, text: textWithData })
-        );
-
+        mockFetchOnce({ status: 400, resultBody: resultWithData });
         const link = createHttpLink({ uri: "data", fetch: fetch as any });
 
         let called = false;
@@ -1354,13 +1337,13 @@ describe("HttpLink", () => {
         execute(link, { query: sampleQuery }).subscribe(
           (result) => {
             called = true;
-            expect(result).toEqual(responseBody);
+            expect(result).toEqual(JSON.parse(resultWithData));
           },
           (e) => {
             expect(called).toBe(true);
             expect(e.message).toMatch(/Received status code 400/);
             expect(e.statusCode).toBe(400);
-            expect(e.result).toEqual(responseBody);
+            expect(e.result).toEqual(JSON.parse(resultWithData));
             resolve();
           }
         );
@@ -1369,9 +1352,7 @@ describe("HttpLink", () => {
     itAsync(
       "throws an error if only errors are returned",
       (resolve, reject) => {
-        fetch.mockReturnValueOnce(
-          Promise.resolve({ status: 400, text: textWithErrors })
-        );
+        mockFetchOnce({ status: 400, resultBody: resultWithErrors });
 
         const link = createHttpLink({ uri: "data", fetch: fetch as any });
         execute(link, { query: sampleQuery }).subscribe(
@@ -1381,7 +1362,7 @@ describe("HttpLink", () => {
           (e) => {
             expect(e.message).toMatch(/Received status code 400/);
             expect(e.statusCode).toBe(400);
-            expect(e.result).toEqual(responseBody);
+            expect(e.result).toEqual(JSON.parse(resultWithErrors));
             resolve();
           }
         );
@@ -1390,8 +1371,10 @@ describe("HttpLink", () => {
     itAsync(
       "throws an error if empty response from the server ",
       (resolve, reject) => {
-        fetch.mockReturnValueOnce(Promise.resolve({ text }));
-        text.mockReturnValueOnce(Promise.resolve('{ "body": "boo" }'));
+        mockFetchOnce({
+          status: 200,
+          resultBody: JSON.stringify({ body: "boo" }),
+        });
         const link = createHttpLink({ uri: "data", fetch: fetch as any });
 
         execute(link, { query: sampleQuery }).subscribe(
@@ -1407,7 +1390,7 @@ describe("HttpLink", () => {
       }
     );
     itAsync("throws if the body can't be stringified", (resolve, reject) => {
-      fetch.mockReturnValueOnce(Promise.resolve({ data: {}, text }));
+      // no need to mock fetch, it won't even get that far
       const link = createHttpLink({
         uri: "data",
         fetch: fetch as any,
@@ -1467,12 +1450,9 @@ describe("HttpLink", () => {
         },
       };
 
-      function mockFetch() {
-        const text = jest.fn(
-          async () => '{ "data": { "stub": { "id": "foo" } } }'
-        );
-        const fetch = jest.fn(async (uri, options) => ({ text }));
-        return { text, fetch };
+      function mockFetch(body = '{ "data": { "stub": { "id": "foo" } } }') {
+        const fetch = jest.fn(async (uri, options) => new Response(body));
+        return { fetch };
       }
 
       it("aborts the request when unsubscribing before the request has completed", () => {
@@ -1540,9 +1520,8 @@ describe("HttpLink", () => {
       });
 
       it("resolving fetch does not cause the AbortController to be aborted", async () => {
-        const { text, fetch } = mockFetch();
+        const { fetch } = mockFetch('{ "data": { "hello": "world" } }');
         const abortControllers = trackGlobalAbortControllers();
-        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
 
         // (the request is already finished at that point)
         const link = createHttpLink({ uri: "data", fetch: fetch as any });
@@ -1575,14 +1554,10 @@ describe("HttpLink", () => {
       });
     });
 
-    const body = "{";
-    const unparsableJson = jest.fn(() => Promise.resolve(body));
     itAsync(
       "throws a Server error if response is > 300 with unparsable json",
       (resolve, reject) => {
-        fetch.mockReturnValueOnce(
-          Promise.resolve({ status: 400, text: unparsableJson })
-        );
+        mockFetchOnce({ status: 400, resultBody: "{" });
         const link = createHttpLink({ uri: "data", fetch: fetch as any });
 
         execute(link, { query: sampleQuery }).subscribe(
@@ -1604,9 +1579,7 @@ describe("HttpLink", () => {
     itAsync(
       "throws a ServerParse error if response is 200 with unparsable json",
       (resolve, reject) => {
-        fetch.mockReturnValueOnce(
-          Promise.resolve({ status: 200, text: unparsableJson })
-        );
+        mockFetchOnce({ status: 200, resultBody: "{" });
         const link = createHttpLink({ uri: "data", fetch: fetch as any });
 
         execute(link, { query: sampleQuery }).subscribe(
@@ -1617,7 +1590,8 @@ describe("HttpLink", () => {
             expect(e.message).toMatch(/JSON/);
             expect(e.statusCode).toBe(200);
             expect(e.response).toBeDefined();
-            expect(e.bodyText).toBe(body);
+            // bodyText cannot be read a second time - the buffer has been consumed by `Response.json()`
+            expect(e.bodyText).toBe("");
           })
         );
       }

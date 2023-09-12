@@ -2,7 +2,10 @@ import gql from "graphql-tag";
 import fetchMock from "fetch-mock";
 
 import { createOperation } from "../../utils/createOperation";
-import { parseAndCheckHttpResponse } from "../parseAndCheckHttpResponse";
+import {
+  parseAndCheckHttpResponse,
+  parseJsonBody,
+} from "../parseAndCheckHttpResponse";
 import { itAsync } from "../../../testing";
 
 const query = gql`
@@ -113,5 +116,46 @@ describe("parseAndCheckResponse", () => {
         resolve();
       })
       .catch(reject);
+  });
+});
+
+describe("parseJsonBody", () => {
+  it("(called with one argument) parses JSON from response without calling JSON.parse", async () => {
+    const spy = jest.spyOn(JSON, "parse");
+    try {
+      const received = { data: new Array(1000).fill({ hello: "world" }) };
+      const response = new Response(JSON.stringify(received), {
+        status: 200,
+      });
+      const promise = parseJsonBody(response);
+      await expect(promise).resolves.toEqual(received);
+
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("(called with two arguments) uses `JSON.parse`", async () => {
+    const spy = jest.spyOn(JSON, "parse");
+    const originalResponse = global.Response;
+    try {
+      const received = { data: new Array(1000).fill({ hello: "world" }) };
+      const response = new Response(JSON.stringify(received), {
+        status: 200,
+      });
+      const bodyText = await response.text();
+
+      // @ts-expect-error
+      delete global.Response;
+
+      const promise = parseJsonBody(response, bodyText);
+      await expect(promise).resolves.toEqual(received);
+
+      expect(spy).toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+      global.Response = originalResponse;
+    }
   });
 });

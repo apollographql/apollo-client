@@ -1124,12 +1124,9 @@ describe("SharedHttpTest", () => {
       },
     };
 
-    function mockFetch() {
-      const text = jest.fn(
-        async () => '{ "data": { "stub": { "id": "foo" } } }'
-      );
-      const fetch = jest.fn(async (uri, options) => ({ text }));
-      return { text, fetch };
+    function mockFetch(body = '{ "data": { "stub": { "id": "foo" } } }') {
+      const fetch = jest.fn(async (uri, options) => new Response(body));
+      return { fetch };
     }
 
     it("aborts the request when unsubscribing before the request has completed", () => {
@@ -1186,9 +1183,8 @@ describe("SharedHttpTest", () => {
     });
 
     it("resolving fetch does not cause the AbortController to be aborted", async () => {
-      const { text, fetch } = mockFetch();
+      const { fetch } = mockFetch('{ "data": { "hello": "world" } }');
       const abortControllers = trackGlobalAbortControllers();
-      text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
 
       // (the request is already finished at that point)
       const link = createHttpLink({ uri: "data", fetch: fetch as any });

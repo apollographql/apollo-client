@@ -131,20 +131,10 @@ export function parseHeaders(headerText: string): Record<string, string> {
 
 export async function parseJsonBody<T>(
   response: Response,
-  bodyText: string
+  bodyText?: string
 ): Promise<T> {
-  const tryParseAsync = () => {
-    try {
-      return new Response(bodyText).json();
-    } catch (err) {
-      if (err.name === "SyntaxError") throw err;
-      // if we encountered a different error than a SyntaxError,
-      // something else probably happened, like `Response` not being
-      // polyfilled as a global object - fall back to synchronous
-      // JSON.parse
-      return JSON.parse(bodyText);
-    }
-  };
+  const tryParseAsync = () =>
+    bodyText !== undefined ? JSON.parse(bodyText) : response.json();
   if (response.status >= 300) {
     // Network error
     throwServerError(
@@ -161,7 +151,10 @@ export async function parseJsonBody<T>(
     parseError.name = "ServerParseError";
     parseError.response = response;
     parseError.statusCode = response.status;
-    parseError.bodyText = bodyText;
+    parseError.bodyText =
+      bodyText ||
+      // at this point, the response has already been consumed, so we cannot get the body anymore
+      "";
     throw parseError;
   }
 }
@@ -208,26 +201,23 @@ export function handleError(err: any, observer: SubscriptionObserver<any>) {
 
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
   return (response: Response) =>
-    response
-      .text()
-      .then((bodyText) => parseJsonBody(response, bodyText))
-      .then((result: any) => {
-        if (
-          !Array.isArray(result) &&
-          !hasOwnProperty.call(result, "data") &&
-          !hasOwnProperty.call(result, "errors")
-        ) {
-          // Data error
-          throwServerError(
-            response,
-            result,
-            `Server response was missing for query '${
-              Array.isArray(operations)
-                ? operations.map((op) => op.operationName)
-                : operations.operationName
-            }'.`
-          );
-        }
-        return result;
-      });
+    parseJsonBody(response).then((result: any) => {
+      if (
+        !Array.isArray(result) &&
+        !hasOwnProperty.call(result, "data") &&
+        !hasOwnProperty.call(result, "errors")
+      ) {
+        // Data error
+        throwServerError(
+          response,
+          result,
+          `Server response was missing for query '${
+            Array.isArray(operations)
+              ? operations.map((op) => op.operationName)
+              : operations.operationName
+          }'.`
+        );
+      }
+      return result;
+    });
 }

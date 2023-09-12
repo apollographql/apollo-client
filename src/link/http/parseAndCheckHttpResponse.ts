@@ -137,12 +137,10 @@ export async function parseJsonBody<T>(
     if (bodyText !== undefined) return JSON.parse(bodyText);
 
     const json = response.clone().json();
-    return response
-      .text()
-      .then((text) => {
-        bodyText = text;
-      })
-      .then(() => json);
+    return response.text().then((text) => {
+      bodyText = text;
+      return json;
+    });
   };
   if (response.status >= 300) {
     // Network error

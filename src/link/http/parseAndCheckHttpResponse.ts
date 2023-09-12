@@ -133,8 +133,17 @@ export async function parseJsonBody<T>(
   response: Response,
   bodyText?: string
 ): Promise<T> {
-  const tryParseAsync = () =>
-    bodyText !== undefined ? JSON.parse(bodyText) : response.json();
+  const tryParseAsync = () => {
+    if (bodyText !== undefined) return JSON.parse(bodyText);
+
+    const json = response.clone().json();
+    return response
+      .text()
+      .then((text) => {
+        bodyText = text;
+      })
+      .then(() => json);
+  };
   if (response.status >= 300) {
     // Network error
     throwServerError(
@@ -151,10 +160,7 @@ export async function parseJsonBody<T>(
     parseError.name = "ServerParseError";
     parseError.response = response;
     parseError.statusCode = response.status;
-    parseError.bodyText =
-      bodyText ||
-      // at this point, the response has already been consumed, so we cannot get the body anymore
-      "";
+    parseError.bodyText = bodyText!;
     throw parseError;
   }
 }

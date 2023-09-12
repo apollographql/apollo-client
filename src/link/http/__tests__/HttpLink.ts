@@ -1320,8 +1320,7 @@ describe("HttpLink", () => {
           makeCallback(resolve, reject, (e: ServerError) => {
             expect(e.message).toMatch(/Received status code 302/);
             expect(e.statusCode).toBe(302);
-            // JSON.parse consumed the buffer, we cannot read it with `.text` anymore
-            expect(e.result).toEqual(undefined);
+            expect(e.result).toEqual("Error! Foo bar");
           })
         );
       }
@@ -1590,8 +1589,7 @@ describe("HttpLink", () => {
             expect(e.message).toMatch(/JSON/);
             expect(e.statusCode).toBe(200);
             expect(e.response).toBeDefined();
-            // bodyText cannot be read a second time - the buffer has been consumed by `Response.json()`
-            expect(e.bodyText).toBe("");
+            expect(e.bodyText).toBe("{");
           })
         );
       }

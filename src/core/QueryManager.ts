@@ -1308,7 +1308,7 @@ export class QueryManager<TStore> {
             normalized.variables,
             normalized.context
           )
-          .then(fromVariables as (Variables: any) => SourcesAndInfo<TData>)
+          .then(fromVariables)
           .then((sourcesWithInfo) => sourcesWithInfo.sources)
       );
       // there is just no way we can synchronously get the *right* value here,

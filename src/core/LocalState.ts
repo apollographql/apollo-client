@@ -197,11 +197,11 @@ export class LocalState<TCacheShape> {
   // To support `@client @export(as: "someVar")` syntax, we'll first resolve
   // @client @export fields locally, then pass the resolved values back to be
   // used alongside the original operation variables.
-  public async addExportedVariables(
+  public async addExportedVariables<TVars extends OperationVariables>(
     document: DocumentNode,
-    variables: OperationVariables = {},
+    variables: TVars = {} as TVars,
     context = {}
-  ) {
+  ): /* returns at least the variables that were passed in */ Promise<TVars> {
     if (document) {
       return this.resolveDocument(
         document,

@@ -26,7 +26,6 @@ import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
 import type { CacheKey } from "../cache/types.js";
-import { Operation } from "subscriptions-transport-ws";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -42,10 +41,7 @@ export interface UseSuspenseQueryResult<
 }
 
 export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
-  fetchMoreOptions: Omit<
-    FetchMoreQueryOptions<TVariables, TData>,
-    "updateQuery"
-  > & {
+  fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
     updateQuery?: (
       previousQueryResult: TData,
       options: {

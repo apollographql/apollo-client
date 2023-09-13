@@ -61,7 +61,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
       (immutableResult as any).illegal = "this should not work";
       throw new Error("unreached");
     } catch (e) {
-      expect(e.message).not.toMatch(/unreached/);
+      expect((e as Error).message).not.toMatch(/unreached/);
       expect(e).toBeInstanceOf(TypeError);
     }
     assertDeeplyFrozen(immutableResult);

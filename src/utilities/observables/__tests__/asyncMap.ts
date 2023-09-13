@@ -25,6 +25,7 @@ function rejectExceptions<Args extends any[], Ret>(
 ) {
   return function () {
     try {
+      // @ts-expect-error
       return fn.apply(this, arguments);
     } catch (error) {
       reject(error);

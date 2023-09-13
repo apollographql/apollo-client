@@ -1360,7 +1360,7 @@ describe("writing to the store", () => {
       return value.kind === "OperationDefinition";
     }
 
-    mutation.definitions.map((def: OperationDefinitionNode) => {
+    mutation.definitions.map((def) => {
       if (isOperationDefinition(def)) {
         const writer = new StoreWriter(
           new InMemoryCache({

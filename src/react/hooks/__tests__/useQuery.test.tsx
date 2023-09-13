@@ -5708,9 +5708,7 @@ describe("useQuery Hook", () => {
       );
       const { vine, ...carDataWithoutVine } = carData.cars[0];
       expect(result.current.data).toEqual({
-        cars: [
-          carDataWithoutVine,
-        ],
+        cars: [carDataWithoutVine],
       });
       expect(result.current.error).toBeUndefined();
 

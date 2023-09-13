@@ -2923,9 +2923,7 @@ describe("client", () => {
         .then(({ data }) => {
           const { price, ...todoWithoutPrice } = data.todos[0];
           expect(data).toEqual({
-            todos: [
-              todoWithoutPrice,
-            ],
+            todos: [todoWithoutPrice],
           });
         })
         .then(resolve, reject);

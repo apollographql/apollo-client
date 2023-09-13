@@ -1180,7 +1180,7 @@ export class QueryManager<TStore> {
             result,
             linkDocument,
             options,
-            cacheWriteBehavior,
+            cacheWriteBehavior
           );
           queryInfo.markReady();
         }

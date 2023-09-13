@@ -13,6 +13,10 @@
 !/docs
 /docs/**
 
+# ignore generated pre.json file which is missing a newline at the end
+# every time it's recreated
+.changeset/pre.json
+
 # Ignore all mdx & md files:
 *.mdx
 *.md

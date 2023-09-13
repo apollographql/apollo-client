@@ -26,6 +26,7 @@ import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
 import type { CacheKey } from "../cache/types.js";
+import { Operation } from "subscriptions-transport-ws";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -41,7 +42,10 @@ export interface UseSuspenseQueryResult<
 }
 
 export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
-  fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
+  fetchMoreOptions: Omit<
+    FetchMoreQueryOptions<TVariables, TData>,
+    "updateQuery"
+  > & {
     updateQuery?: (
       previousQueryResult: TData,
       options: {
@@ -178,7 +182,11 @@ export function useSuspenseQuery<
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
-  const watchQueryOptions = useWatchQueryOptions({ client, query, options });
+  const watchQueryOptions = useWatchQueryOptions<any, any>({
+    client,
+    query,
+    options,
+  });
   const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
@@ -189,7 +197,7 @@ export function useSuspenseQuery<
   ];
 
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-    client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
+    client.watchQuery(watchQueryOptions)
   );
 
   const [promiseCache, setPromiseCache] = React.useState(
@@ -236,21 +244,21 @@ export function useSuspenseQuery<
 
   const result = fetchPolicy === "standby" ? skipResult : __use(promise);
 
-  const fetchMore: FetchMoreFunction<TData | undefined, TVariables> =
-    React.useCallback(
-      (options) => {
-        const promise = queryRef.fetchMore(
-          options as WatchQueryOptions<TVariables, TData | undefined>
-        );
+  const fetchMore = React.useCallback(
+    ((options) => {
+      const promise = queryRef.fetchMore(options);
 
-        setPromiseCache((previousPromiseCache) =>
-          new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
-        );
+      setPromiseCache((previousPromiseCache) =>
+        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
+      );
 
-        return promise;
-      },
-      [queryRef]
-    );
+      return promise;
+    }) satisfies FetchMoreFunction<
+      unknown,
+      OperationVariables
+    > as FetchMoreFunction<TData | undefined, TVariables>,
+    [queryRef]
+  );
 
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {

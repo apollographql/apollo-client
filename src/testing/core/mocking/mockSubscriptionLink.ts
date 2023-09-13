@@ -15,7 +15,7 @@ export interface MockedSubscriptionResult {
 export class MockSubscriptionLink extends ApolloLink {
   public unsubscribers: any[] = [];
   public setups: any[] = [];
-  public operation: Operation;
+  public operation?: Operation;
 
   private observers: any[] = [];
 

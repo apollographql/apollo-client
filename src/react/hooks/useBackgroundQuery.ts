@@ -1,8 +1,10 @@
 import * as React from "react";
 import type {
   DocumentNode,
+  FetchMoreQueryOptions,
   OperationVariables,
   TypedDocumentNode,
+  WatchQueryOptions,
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { wrapQueryRef } from "../cache/QueryReference.js";
@@ -197,7 +199,7 @@ export function useBackgroundQuery<
   ];
 
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-    client.watchQuery(watchQueryOptions)
+    client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
   );
 
   const [promiseCache, setPromiseCache] = React.useState(
@@ -213,7 +215,7 @@ export function useBackgroundQuery<
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
-      const promise = queryRef.fetchMore(options);
+      const promise = queryRef.fetchMore(options as FetchMoreQueryOptions<any>);
 
       setPromiseCache((promiseCache) =>
         new Map(promiseCache).set(queryRef.key, queryRef.promise)

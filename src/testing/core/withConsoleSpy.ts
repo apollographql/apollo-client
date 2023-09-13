@@ -2,8 +2,7 @@ function wrapTestFunction(
   fn: (...args: any[]) => any,
   consoleMethodName: "log" | "warn" | "error"
 ) {
-  return function () {
-    const args = arguments;
+  return function (this: any, ...args: any[]) {
     const spy = jest.spyOn(console, consoleMethodName);
     spy.mockImplementation(() => {});
     return new Promise((resolve) => {

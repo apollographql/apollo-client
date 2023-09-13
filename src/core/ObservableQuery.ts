@@ -929,13 +929,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newNetworkStatus?: NetworkStatus
   ) {
     return this.reobserveAsConcast(newOptions, newNetworkStatus).promise.then(
-      (value) => {
-        invariant(
-          value,
-          "A Concast finished without a result. This in an Apollo Client bug, please file a bug report."
-        );
-        return value;
-      }
+      ensureResult
     );
   }
 
@@ -1101,4 +1095,14 @@ function skipCacheDataFor(
     fetchPolicy === "no-cache" ||
     fetchPolicy === "standby"
   );
+}
+
+export function ensureResult<TData = any>(
+  value: ApolloQueryResult<TData> | undefined
+): ApolloQueryResult<TData> {
+  invariant(
+    value,
+    "A Concast finished without a result. This in an Apollo Client bug, please file a bug report."
+  );
+  return value;
 }

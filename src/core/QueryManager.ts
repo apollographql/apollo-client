@@ -51,7 +51,11 @@ import type {
   ErrorPolicy,
   MutationFetchPolicy,
 } from "./watchQueryOptions.js";
-import { ObservableQuery, logMissingFieldErrors } from "./ObservableQuery.js";
+import {
+  ObservableQuery,
+  ensureResult,
+  logMissingFieldErrors,
+} from "./ObservableQuery.js";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
 import type {
   ApolloQueryResult,
@@ -479,7 +483,7 @@ export class QueryManager<TStore> {
       const results: any[] = [];
 
       this.refetchQueries({
-        updateCache: (cache: TCache) => {
+        updateCache: (cache) => {
           if (!skipCache) {
             cacheWrites.forEach((write) => cache.write(write));
           }
@@ -526,7 +530,7 @@ export class QueryManager<TStore> {
             // either a SingleExecutionResult or the final ExecutionPatchResult,
             // call the update function.
             if (isFinalResult) {
-              update(cache, result, {
+              update(cache as TCache, result, {
                 context: mutation.context,
                 variables: mutation.variables,
               });
@@ -616,8 +620,11 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<TData>> {
-    return this.fetchConcastWithInfo(queryId, options, networkStatus).concast
-      .promise;
+    return this.fetchConcastWithInfo(
+      queryId,
+      options,
+      networkStatus
+    ).concast.promise.then(ensureResult);
   }
 
   public getQueryStore() {
@@ -1301,7 +1308,7 @@ export class QueryManager<TStore> {
             normalized.variables,
             normalized.context
           )
-          .then(fromVariables)
+          .then(fromVariables as (Variables: any) => SourcesAndInfo<TData>)
           .then((sourcesWithInfo) => sourcesWithInfo.sources)
       );
       // there is just no way we can synchronously get the *right* value here,

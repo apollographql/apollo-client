@@ -189,7 +189,7 @@ export function useSuspenseQuery<
   ];
 
   const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-    client.watchQuery(watchQueryOptions)
+    client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
   );
 
   const [promiseCache, setPromiseCache] = React.useState(
@@ -236,18 +236,21 @@ export function useSuspenseQuery<
 
   const result = fetchPolicy === "standby" ? skipResult : __use(promise);
 
-  const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
-    (options) => {
-      const promise = queryRef.fetchMore(options);
+  const fetchMore: FetchMoreFunction<TData | undefined, TVariables> =
+    React.useCallback(
+      (options) => {
+        const promise = queryRef.fetchMore(
+          options as WatchQueryOptions<TVariables, TData | undefined>
+        );
 
-      setPromiseCache((previousPromiseCache) =>
-        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
-      );
+        setPromiseCache((previousPromiseCache) =>
+          new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
+        );
 
-      return promise;
-    },
-    [queryRef]
-  );
+        return promise;
+      },
+      [queryRef]
+    );
 
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {
@@ -262,13 +265,17 @@ export function useSuspenseQuery<
     [queryRef]
   );
 
-  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-    React.useCallback(
-      (options) => queryRef.observable.subscribeToMore(options),
-      [queryRef]
-    );
+  const subscribeToMore: SubscribeToMoreFunction<
+    TData | undefined,
+    TVariables
+  > = React.useCallback(
+    (options) => queryRef.observable.subscribeToMore(options),
+    [queryRef]
+  );
 
-  return React.useMemo(() => {
+  return React.useMemo<
+    UseSuspenseQueryResult<TData | undefined, TVariables>
+  >(() => {
     return {
       client,
       data: result.data,

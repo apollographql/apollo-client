@@ -95,6 +95,14 @@ export function useLazyQuery<
             fetchPolicy: initialFetchPolicy,
           };
 
+      if (
+          execOptionsRef.current.variables &&
+          optionsRef.current &&
+          optionsRef.current.variables
+      ) {
+        delete optionsRef.current.variables
+      }
+
       const options = mergeOptions(optionsRef.current, {
         query: queryRef.current,
         ...execOptionsRef.current,

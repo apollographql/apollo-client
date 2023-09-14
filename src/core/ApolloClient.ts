@@ -67,7 +67,7 @@ export type ApolloClientOptions<TCacheShape> = {
 // previously declared and exported from this module, and then reexported from
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
-import { mergeOptions } from "../utilities/index.js";
+import { mergeOptions, detectExtension } from "../utilities/index.js";
 export { mergeOptions };
 
 /**
@@ -254,32 +254,47 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         if (
           typeof window !== "undefined" &&
           window.document &&
-          window.top === window.self &&
-          !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__
+          window.top === window.self
         ) {
           const nav = window.navigator;
           const ua = nav && nav.userAgent;
+          const userAgentExists = typeof ua === 'string';
+          const isChromeAgent = userAgentExists && ua.indexOf("Chrome/") > -1;
+          const isFirefoxAgent = userAgentExists && ua.indexOf("Chrome/") > -1;
           let url: string | undefined;
-          if (typeof ua === "string") {
-            if (ua.indexOf("Chrome/") > -1) {
-              url =
-                "https://chrome.google.com/webstore/detail/" +
-                "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
-            } else if (ua.indexOf("Firefox/") > -1) {
-              url =
-                "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
-            }
+
+          if (isChromeAgent) {
+            url =
+              "https://chrome.google.com/webstore/detail/" +
+              `apollo-client-developer-t/${this.EXTENSION_ID}`;
+          } else if (isFirefoxAgent) {
+            url =
+              "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
           }
-          if (url) {
-            invariant.log(
-              "Download the Apollo DevTools for a better development " +
-                "experience: %s",
-              url
-            );
+
+          if (isFirefoxAgent && url) {
+            this.logExtensionDownloadMessage(url);
+            return;
+          }
+
+          if (isChromeAgent) {
+            detectExtension(this.EXTENSION_ID, (isInstalled) => {
+              if (!isInstalled && url) {
+                this.logExtensionDownloadMessage(url);
+              }
+            });
           }
         }
       }, 10000);
     }
+  }
+
+  private logExtensionDownloadMessage(url: string) {
+    invariant.log(
+      "Download the Apollo DevTools for a better development " +
+      "experience: %s",
+      url
+    );
   }
 
   /**

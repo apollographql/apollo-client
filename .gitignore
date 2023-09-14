@@ -70,3 +70,6 @@ junit.xml
 reports
 
 esbuild-why-*.html
+
+.yalc
+yalc.lock

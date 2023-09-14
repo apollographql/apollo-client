@@ -1,8 +1,8 @@
-import { invariant } from '../globals';
+import { invariant } from "../globals/index.js";
 
 // Provides the methods that allow QueryManager to handle the `skip` and
 // `include` directives within GraphQL.
-import {
+import type {
   SelectionNode,
   VariableNode,
   BooleanValueNode,
@@ -11,9 +11,8 @@ import {
   ArgumentNode,
   ValueNode,
   ASTNode,
-  visit,
-  BREAK,
-} from 'graphql';
+} from "graphql";
+import { visit, BREAK } from "graphql";
 
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };
@@ -21,26 +20,28 @@ export type DirectiveInfo = {
 
 export function shouldInclude(
   { directives }: SelectionNode,
-  variables?: Record<string, any>,
+  variables?: Record<string, any>
 ): boolean {
   if (!directives || !directives.length) {
     return true;
   }
-  return getInclusionDirectives(
-    directives
-  ).every(({ directive, ifArgument }) => {
-    let evaledValue: boolean = false;
-    if (ifArgument.value.kind === 'Variable') {
-      evaledValue = variables && variables[(ifArgument.value as VariableNode).name.value];
-      invariant(
-        evaledValue !== void 0,
-        `Invalid variable referenced in @${directive.name.value} directive.`,
-      );
-    } else {
-      evaledValue = (ifArgument.value as BooleanValueNode).value;
+  return getInclusionDirectives(directives).every(
+    ({ directive, ifArgument }) => {
+      let evaledValue: boolean = false;
+      if (ifArgument.value.kind === "Variable") {
+        evaledValue =
+          variables && variables[(ifArgument.value as VariableNode).name.value];
+        invariant(
+          evaledValue !== void 0,
+          `Invalid variable referenced in @%s directive.`,
+          directive.name.value
+        );
+      } else {
+        evaledValue = (ifArgument.value as BooleanValueNode).value;
+      }
+      return directive.name.value === "skip" ? !evaledValue : evaledValue;
     }
-    return directive.name.value === 'skip' ? !evaledValue : evaledValue;
-  });
+  );
 }
 
 export function getDirectiveNames(root: ASTNode) {
@@ -55,30 +56,19 @@ export function getDirectiveNames(root: ASTNode) {
   return names;
 }
 
-export const hasAnyDirectives = (
-  names: string[],
-  root: ASTNode,
-) => hasDirectives(names, root, false);
+export const hasAnyDirectives = (names: string[], root: ASTNode) =>
+  hasDirectives(names, root, false);
 
-export const hasAllDirectives = (
-  names: string[],
-  root: ASTNode,
-) => hasDirectives(names, root, true);
+export const hasAllDirectives = (names: string[], root: ASTNode) =>
+  hasDirectives(names, root, true);
 
-export function hasDirectives(
-  names: string[],
-  root: ASTNode,
-  all?: boolean,
-) {
+export function hasDirectives(names: string[], root: ASTNode, all?: boolean) {
   const nameSet = new Set(names);
   const uniqueCount = nameSet.size;
 
   visit(root, {
     Directive(node) {
-      if (
-        nameSet.delete(node.name.value) &&
-        (!all || !nameSet.size)
-      ) {
+      if (nameSet.delete(node.name.value) && (!all || !nameSet.size)) {
         return BREAK;
       }
     },
@@ -90,7 +80,7 @@ export function hasDirectives(
 }
 
 export function hasClientExports(document: DocumentNode) {
-  return document && hasDirectives(['client', 'export'], document, true);
+  return document && hasDirectives(["client", "export"], document, true);
 }
 
 export type InclusionDirectives = Array<{
@@ -99,16 +89,16 @@ export type InclusionDirectives = Array<{
 }>;
 
 function isInclusionDirective({ name: { value } }: DirectiveNode): boolean {
-  return value === 'skip' || value === 'include';
+  return value === "skip" || value === "include";
 }
 
 export function getInclusionDirectives(
-  directives: ReadonlyArray<DirectiveNode>,
+  directives: ReadonlyArray<DirectiveNode>
 ): InclusionDirectives {
   const result: InclusionDirectives = [];
 
   if (directives && directives.length) {
-    directives.forEach(directive => {
+    directives.forEach((directive) => {
       if (!isInclusionDirective(directive)) return;
 
       const directiveArguments = directive.arguments;
@@ -116,13 +106,15 @@ export function getInclusionDirectives(
 
       invariant(
         directiveArguments && directiveArguments.length === 1,
-        `Incorrect number of arguments for the @${directiveName} directive.`,
+        `Incorrect number of arguments for the @%s directive.`,
+        directiveName
       );
 
       const ifArgument = directiveArguments![0];
       invariant(
-        ifArgument.name && ifArgument.name.value === 'if',
-        `Invalid argument for the @${directiveName} directive.`,
+        ifArgument.name && ifArgument.name.value === "if",
+        `Invalid argument for the @%s directive.`,
+        directiveName
       );
 
       const ifValue: ValueNode = ifArgument.value;
@@ -130,8 +122,9 @@ export function getInclusionDirectives(
       // means it has to be a variable value if this is a valid @skip or @include directive
       invariant(
         ifValue &&
-          (ifValue.kind === 'Variable' || ifValue.kind === 'BooleanValue'),
-        `Argument for the @${directiveName} directive must be a variable or a boolean value.`,
+          (ifValue.kind === "Variable" || ifValue.kind === "BooleanValue"),
+        `Argument for the @%s directive must be a variable or a boolean value.`,
+        directiveName
       );
 
       result.push({ directive, ifArgument });
@@ -140,4 +133,3 @@ export function getInclusionDirectives(
 
   return result;
 }
-

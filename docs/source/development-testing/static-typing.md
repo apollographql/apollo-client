@@ -256,7 +256,7 @@ export function NewRocketForm() {
 
 ### `useSubscription`
 
-We can type our `useSubscription` hooks the same way we typed our `useQuery` and ` useMutation` hooks. Using the generated `gql` function to define our GraphQL subscriptions, we ensure that we type our subscription variables and return data:
+We can type our `useSubscription` hooks the same way we typed our `useQuery` and `useMutation` hooks. Using the generated `gql` function to define our GraphQL subscriptions, we ensure that we type our subscription variables and return data:
 
 ```tsx
 import React from 'react';

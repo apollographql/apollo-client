@@ -44,6 +44,37 @@ For more information on setting up Apollo Client, see [Getting started](../get-s
 2. Enable "Debug JS Remotely" in your app.
 3. If you don't see the Developer Tools panel or the Apollo tab is missing from it, toggle the Developer Tools by right-clicking anywhere and selecting **Toggle Developer Tools**.
 
+## Consuming multipart HTTP via text streaming
+
+By default, React Native ships with a `fetch` implementation built on top of XHR that does not support text streaming.
+
+For this reason, if you are using *either* [`@defer`](../data/defer) or [subscriptions over multipart HTTP](../data/subscriptions#subscriptions-via-multipart-http)—features that use text streaming to read multipart HTTP responses—there are additional steps you'll need to take to polyfill this functionality.
+
+1. Install `react-native-fetch-api` and `react-native-polyfill-globals` and save them both as dependencies.
+2. In your application's entrypoint (i.e. `index.js`, `App.js` or similar), import the following three polyfills and call each of the `polyfill*` functions before any application code:
+  ```tsx
+  import { polyfill as polyfillEncoding } from "react-native-polyfill-globals/src/encoding";
+  import { polyfill as polyfillReadableStream } from "react-native-polyfill-globals/src/readable-stream";
+  import { polyfill as polyfillFetch } from "react-native-polyfill-globals/src/fetch";
+
+  polyfillReadableStream();
+  polyfillEncoding();
+  polyfillFetch();
+  ```
+3. Finally, there’s a special option we’ll need to pass to our polyfilled `fetch`. Create an `HttpLink` so we can set the following on our default `fetchOptions`:
+```tsx
+const link = new HttpLink({
+  uri: "http://localhost:4000/graphql",
+  fetchOptions: {
+    reactNative: { textStreaming: true },
+  },
+});
+```
+
+> **Note**: if you're still experiencing issues on Android after adding the polyfills above, there may be a library like Flipper that is intercepting requests during local development. Try commenting out `NetworkFlipperPlugin` in e.g. `android/app/src/debug/java/com/<projectname>/ReactNativeFlipper.java`, or running your app in release mode.
+
+Now you're ready to use `@defer` and/or multipart subscriptions over HTTP in your React Native app!
+
 ## Troubleshooting
 
 * `Uncaught Error: Cannot read property 'prototype' of undefined`, or similar Metro build error when importing from `@apollo/client`

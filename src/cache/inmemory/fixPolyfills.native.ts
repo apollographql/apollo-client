@@ -20,7 +20,7 @@ if (testSet.add(3) !== testSet) {
 }
 
 const frozen = {};
-if (typeof Object.freeze === 'function') {
+if (typeof Object.freeze === "function") {
   Object.freeze(frozen);
 }
 
@@ -34,20 +34,23 @@ try {
   testMap.set(frozen, frozen).delete(frozen);
 } catch {
   const wrap = (method: <T>(obj: T) => T): typeof method => {
-    return method && (obj => {
-      try {
-        // If .set succeeds, also call .delete to avoid leaking memory.
-        testMap.set(obj, obj).delete(obj);
-      } finally {
-        // If .set or .delete fails, the exception will be silently swallowed
-        // by this return-from-finally statement:
-        return method.call(Object, obj);
-      }
-    });
+    return (
+      method &&
+      ((obj) => {
+        try {
+          // If .set succeeds, also call .delete to avoid leaking memory.
+          testMap.set(obj, obj).delete(obj);
+        } finally {
+          // If .set or .delete fails, the exception will be silently swallowed
+          // by this return-from-finally statement:
+          return method.call(Object, obj);
+        }
+      })
+    );
   };
   Object.freeze = wrap(Object.freeze);
   Object.seal = wrap(Object.seal);
   Object.preventExtensions = wrap(Object.preventExtensions);
 }
 
-export {}
+export {};

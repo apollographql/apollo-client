@@ -1,44 +1,46 @@
 const entryPoints = [
   { dirs: [], bundleName: "main" },
-  { dirs: ['cache'] },
-  { dirs: ['core'] },
-  { dirs: ['errors'] },
-  { dirs: ['link', 'batch'] },
-  { dirs: ['link', 'batch-http'] },
-  { dirs: ['link', 'context'] },
-  { dirs: ['link', 'core'] },
-  { dirs: ['link', 'error'] },
-  { dirs: ['link', 'http'] },
-  { dirs: ['link', 'persisted-queries'] },
-  { dirs: ['link', 'retry'] },
-  { dirs: ['link', 'schema'] },
-  { dirs: ['link', 'subscriptions'] },
-  { dirs: ['link', 'utils'] },
-  { dirs: ['link', 'ws'] },
-  { dirs: ['react'] },
-  { dirs: ['react', 'components'] },
-  { dirs: ['react', 'context'] },
-  { dirs: ['react', 'hoc'] },
-  { dirs: ['react', 'hooks'] },
-  { dirs: ['react', 'parser'] },
-  { dirs: ['react', 'ssr'] },
-  { dirs: ['testing'], extensions: [".js", ".jsx"] },
-  { dirs: ['testing', 'core'] },
-  { dirs: ['utilities'] },
-  { dirs: ['utilities', 'globals'], sideEffects: true },
+  { dirs: ["cache"] },
+  { dirs: ["core"] },
+  { dirs: ["dev"] },
+  { dirs: ["errors"] },
+  { dirs: ["link", "batch"] },
+  { dirs: ["link", "batch-http"] },
+  { dirs: ["link", "context"] },
+  { dirs: ["link", "core"] },
+  { dirs: ["link", "error"] },
+  { dirs: ["link", "http"] },
+  { dirs: ["link", "persisted-queries"] },
+  { dirs: ["link", "retry"] },
+  { dirs: ["link", "remove-typename"] },
+  { dirs: ["link", "schema"] },
+  { dirs: ["link", "subscriptions"] },
+  { dirs: ["link", "utils"] },
+  { dirs: ["link", "ws"] },
+  { dirs: ["react"] },
+  { dirs: ["react", "components"] },
+  { dirs: ["react", "context"] },
+  { dirs: ["react", "hoc"] },
+  { dirs: ["react", "hooks"] },
+  { dirs: ["react", "parser"] },
+  { dirs: ["react", "ssr"] },
+  { dirs: ["testing"], extensions: [".js", ".jsx"] },
+  { dirs: ["testing", "core"] },
+  { dirs: ["utilities"] },
+  { dirs: ["utilities", "globals"], sideEffects: true },
 ];
 
 const lookupTrie = Object.create(null);
-entryPoints.forEach(info => {
+entryPoints.forEach((info) => {
   let node = lookupTrie;
-  info.dirs.forEach(dir => {
+  info.dirs.forEach((dir) => {
     const dirs = node.dirs || (node.dirs = Object.create(null));
     node = dirs[dir] || (dirs[dir] = { isEntry: false });
   });
   node.isEntry = true;
 });
 
-exports.forEach = function(callback, context) {
+exports.forEach = function (callback, context) {
   entryPoints.forEach(callback, context);
 };
 
@@ -74,9 +76,11 @@ exports.check = function (id, parentId) {
         return false;
       }
 
-      console.warn(`Risky cross-entry-point nested import of ${id} in ${
-        partsAfterDist(parentId).join("/")
-      }`);
+      console.warn(
+        `Risky cross-entry-point nested import of ${id} in ${partsAfterDist(
+          parentId
+        ).join("/")}`
+      );
     }
   }
 
@@ -86,6 +90,9 @@ exports.check = function (id, parentId) {
 function partsAfterDist(id) {
   const parts = id.split(path.sep);
   const distIndex = parts.lastIndexOf("dist");
+  if (/^index.jsx?$/.test(parts[parts.length - 1])) {
+    parts.pop();
+  }
   if (distIndex >= 0) {
     return parts.slice(distIndex + 1);
   }

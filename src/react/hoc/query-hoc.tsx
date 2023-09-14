@@ -1,24 +1,24 @@
-import * as React from 'react';
-import { DocumentNode } from 'graphql';
-import hoistNonReactStatics from 'hoist-non-react-statics';
+import * as React from "react";
+import type { DocumentNode } from "graphql";
+import hoistNonReactStatics from "hoist-non-react-statics";
 
-import { parser } from '../parser';
-import { BaseQueryOptions } from '../types/types';
-import { Query } from '../components';
+import { parser } from "../parser/index.js";
+import type { BaseQueryOptions } from "../types/types.js";
+import { Query } from "../components/index.js";
 import {
   getDisplayName,
   GraphQLBase,
   calculateVariablesFromProps,
   defaultMapPropsToOptions,
-  defaultMapPropsToSkip
-} from './hoc-utils';
-import { OperationOption, OptionProps, DataProps } from './types';
+  defaultMapPropsToSkip,
+} from "./hoc-utils.js";
+import type { OperationOption, OptionProps, DataProps } from "./types.js";
 
 export function withQuery<
   TProps extends TGraphQLVariables | Record<string, any> = Record<string, any>,
   TData extends object = {},
   TGraphQLVariables extends object = {},
-  TChildProps extends object = DataProps<TData, TGraphQLVariables>
+  TChildProps extends object = DataProps<TData, TGraphQLVariables>,
 >(
   document: DocumentNode,
   operationOptions: OperationOption<
@@ -34,16 +34,16 @@ export function withQuery<
   const {
     options = defaultMapPropsToOptions,
     skip = defaultMapPropsToSkip,
-    alias = 'Apollo'
+    alias = "Apollo",
   } = operationOptions;
 
   let mapPropsToOptions = options as (props: any) => BaseQueryOptions;
-  if (typeof mapPropsToOptions !== 'function') {
+  if (typeof mapPropsToOptions !== "function") {
     mapPropsToOptions = () => options as BaseQueryOptions;
   }
 
   let mapPropsToSkip = skip as (props: any) => boolean;
-  if (typeof mapPropsToSkip !== 'function') {
+  if (typeof mapPropsToSkip !== "function") {
     mapPropsToSkip = () => skip as any;
   }
 
@@ -79,7 +79,7 @@ export function withQuery<
               if (operationOptions.withRef) {
                 this.withRef = true;
                 props = Object.assign({}, props, {
-                  ref: this.setWrappedInstance
+                  ref: this.setWrappedInstance,
                 });
               }
 
@@ -97,17 +97,14 @@ export function withQuery<
               // up onto the result since it was passed as a nested prop
               // we massage the Query components shape here to replicate that
               const result = Object.assign(r, data || {});
-              const name = operationOptions.name || 'data';
+              const name = operationOptions.name || "data";
               let childProps = { [name]: result };
               if (operationOptions.props) {
-                const newResult: OptionProps<
-                  TProps,
-                  TData,
-                  TGraphQLVariables
-                > = {
-                  [name]: result,
-                  ownProps: props as TProps
-                };
+                const newResult: OptionProps<TProps, TData, TGraphQLVariables> =
+                  {
+                    [name]: result,
+                    ownProps: props as TProps,
+                  };
                 lastResultProps = operationOptions.props(
                   newResult,
                   lastResultProps

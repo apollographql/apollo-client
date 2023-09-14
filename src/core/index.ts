@@ -1,19 +1,13 @@
 /* Core */
 
-import { DEV } from '../utilities/globals';
-
-export {
-  ApolloClient,
-  ApolloClientOptions,
-  DefaultOptions,
-  mergeOptions,
-} from './ApolloClient';
-export {
-  ObservableQuery,
+export type { ApolloClientOptions, DefaultOptions } from "./ApolloClient.js";
+export { ApolloClient, mergeOptions } from "./ApolloClient.js";
+export type {
   FetchMoreOptions,
   UpdateQueryOptions,
-} from './ObservableQuery';
-export {
+} from "./ObservableQuery.js";
+export { ObservableQuery } from "./ObservableQuery.js";
+export type {
   QueryOptions,
   WatchQueryOptions,
   MutationOptions,
@@ -23,30 +17,20 @@ export {
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-} from './watchQueryOptions';
-export { NetworkStatus } from './networkStatus';
-export * from './types';
-export {
-  Resolver,
-  FragmentMatcher,
-} from './LocalState';
-export { isApolloError, ApolloError } from '../errors';
-
+} from "./watchQueryOptions.js";
+export { NetworkStatus, isNetworkRequestSettled } from "./networkStatus.js";
+export * from "./types.js";
+export type { Resolver, FragmentMatcher } from "./LocalState.js";
+export { isApolloError, ApolloError } from "../errors/index.js";
 /* Cache */
 
-export {
-  // All the exports (types and values) from ../cache, minus cacheSlot,
+export type {
+  // All the exports (types) from ../cache, minus cacheSlot,
   // which we want to keep semi-private.
-  Cache,
-  ApolloCache,
   Transaction,
   DataProxy,
-  InMemoryCache,
   InMemoryCacheConfig,
-  MissingFieldError,
-  defaultDataIdFromObject,
   ReactiveVar,
-  makeVar,
   TypePolicies,
   TypePolicy,
   FieldPolicy,
@@ -54,33 +38,45 @@ export {
   FieldMergeFunction,
   FieldFunctionOptions,
   PossibleTypesMap,
-} from '../cache';
+} from "../cache/index.js";
+export {
+  Cache,
+  ApolloCache,
+  InMemoryCache,
+  MissingFieldError,
+  defaultDataIdFromObject,
+  makeVar,
+} from "../cache/index.js";
 
-export * from '../cache/inmemory/types';
+export * from "../cache/inmemory/types.js";
 
 /* Link */
 
-export * from '../link/core';
-export * from '../link/http';
+export * from "../link/core/index.js";
+export * from "../link/http/index.js";
+export type { ServerError } from "../link/utils/index.js";
 export {
   fromError,
   toPromise,
   fromPromise,
-  ServerError,
   throwServerError,
-} from '../link/utils';
+} from "../link/utils/index.js";
 
 /* Utilities */
 
-export {
-  Observable,
+export type {
+  DocumentTransformCacheKey,
   Observer,
   ObservableSubscription,
   Reference,
+  StoreObject,
+} from "../utilities/index.js";
+export {
+  DocumentTransform,
+  Observable,
   isReference,
   makeReference,
-  StoreObject,
-} from '../utilities';
+} from "../utilities/index.js";
 
 /* Supporting */
 
@@ -89,8 +85,8 @@ export {
 // "warn", "error", or "silent" to setVerbosity ("log" is the default).
 // Note that all invariant.* logging is hidden in production.
 import { setVerbosity } from "ts-invariant";
-export { setVerbosity as setLogVerbosity }
-setVerbosity(DEV ? "log" : "silent");
+export { setVerbosity as setLogVerbosity };
+setVerbosity(__DEV__ ? "log" : "silent");
 
 // Note that importing `gql` by itself, then destructuring
 // additional properties separately before exporting, is intentional.
@@ -110,4 +106,4 @@ export {
   disableFragmentWarnings,
   enableExperimentalFragmentVariables,
   disableExperimentalFragmentVariables,
-} from 'graphql-tag';
+} from "graphql-tag";

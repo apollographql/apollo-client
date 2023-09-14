@@ -46,12 +46,14 @@ exports[`client should warn if server returns wrong data 1`] = `
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'description' while writing result {
-  \\"id\\": \\"1\\",
-  \\"name\\": \\"Todo 1\\",
-  \\"price\\": 100,
-  \\"__typename\\": \\"Todo\\"
-}",
+      "Missing field '%s' while writing result %o",
+      "description",
+      Object {
+        "__typename": "Todo",
+        "id": "1",
+        "name": "Todo 1",
+        "price": 100,
+      },
     ],
   ],
   "results": Array [

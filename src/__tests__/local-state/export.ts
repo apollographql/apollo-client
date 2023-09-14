@@ -1,16 +1,16 @@
-import gql from 'graphql-tag';
-import { print } from 'graphql';
+import gql from "graphql-tag";
+import { print } from "graphql";
 
-import { Observable } from '../../utilities';
-import { itAsync, withErrorSpy } from '../../testing';
-import { ApolloLink } from '../../link/core';
-import { ApolloClient } from '../../core';
-import { InMemoryCache } from '../../cache';
+import { Observable } from "../../utilities";
+import { itAsync, withErrorSpy } from "../../testing";
+import { ApolloLink } from "../../link/core";
+import { ApolloClient } from "../../core";
+import { InMemoryCache } from "../../cache";
 
-describe('@client @export tests', () => {
+describe("@client @export tests", () => {
   itAsync(
-    'should not break @client only queries when the @export directive is ' +
-      'used',
+    "should not break @client only queries when the @export directive is " +
+      "used",
     (resolve, reject) => {
       const query = gql`
         {
@@ -34,12 +34,12 @@ describe('@client @export tests', () => {
         expect({ ...data }).toMatchObject({ field: 1 });
         resolve();
       });
-    },
+    }
   );
 
   itAsync(
-    'should not break @client only queries when the @export directive is ' +
-      'used on nested fields',
+    "should not break @client only queries when the @export directive is " +
+      "used on nested fields",
     (resolve, reject) => {
       const query = gql`
         {
@@ -65,9 +65,9 @@ describe('@client @export tests', () => {
             engine: {
               cylinders: 8,
               torque: 7200,
-              __typename: 'Engine',
+              __typename: "Engine",
             },
-            __typename: 'Car',
+            __typename: "Car",
           },
         },
       });
@@ -82,12 +82,12 @@ describe('@client @export tests', () => {
         });
         resolve();
       });
-    },
+    }
   );
 
   itAsync(
-    'should store the @client field value in the specified @export ' +
-      'variable, and make it available to a subsequent resolver',
+    "should store the @client field value in the specified @export " +
+      "variable, and make it available to a subsequent resolver",
     (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
@@ -125,12 +125,12 @@ describe('@client @export tests', () => {
         });
         resolve();
       });
-    },
+    }
   );
 
   itAsync(
-    'should store the @client nested field value in the specified @export ' +
-      'variable, and make it avilable to a subsequent resolver',
+    "should store the @client nested field value in the specified @export " +
+      "variable, and make it avilable to a subsequent resolver",
     (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
@@ -143,9 +143,9 @@ describe('@client @export tests', () => {
       `;
 
       const testAuthor = {
-        name: 'John Smith',
+        name: "John Smith",
         authorId: 100,
-        __typename: 'Author',
+        __typename: "Author",
       };
 
       const testPostCount = 200;
@@ -176,62 +176,66 @@ describe('@client @export tests', () => {
         });
         resolve();
       });
-    },
+    }
   );
 
-  withErrorSpy(itAsync, 'should allow @client @export variables to be used with remote queries', (resolve, reject) => {
-    const query = gql`
-      query currentAuthorPostCount($authorId: Int!) {
-        currentAuthor @client {
-          name
-          authorId @export(as: "authorId")
+  withErrorSpy(
+    itAsync,
+    "should allow @client @export variables to be used with remote queries",
+    (resolve, reject) => {
+      const query = gql`
+        query currentAuthorPostCount($authorId: Int!) {
+          currentAuthor @client {
+            name
+            authorId @export(as: "authorId")
+          }
+          postCount(authorId: $authorId)
         }
-        postCount(authorId: $authorId)
-      }
-    `;
+      `;
 
-    const testAuthor = {
-      name: 'John Smith',
-      authorId: 100,
-      __typename: 'Author',
-    };
+      const testAuthor = {
+        name: "John Smith",
+        authorId: 100,
+        __typename: "Author",
+      };
 
-    const testPostCount = 200;
+      const testPostCount = 200;
 
-    const link = new ApolloLink(() =>
-      Observable.of({
-        data: {
-          postCount: testPostCount,
-        },
-      }),
-    );
+      const link = new ApolloLink(() =>
+        Observable.of({
+          data: {
+            postCount: testPostCount,
+          },
+        })
+      );
 
-    const cache = new InMemoryCache();
-    const client = new ApolloClient({
-      cache,
-      link,
-      resolvers: {},
-    });
-
-    cache.writeQuery({
-      query,
-      data: {
-        currentAuthor: testAuthor,
-      },
-    });
-
-    return client.query({ query }).then(({ data }: any) => {
-      expect({ ...data }).toMatchObject({
-        currentAuthor: testAuthor,
-        postCount: testPostCount,
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link,
+        resolvers: {},
       });
-      resolve();
-    });
-  });
+
+      cache.writeQuery({
+        query,
+        data: {
+          currentAuthor: testAuthor,
+        },
+      });
+
+      return client.query({ query }).then(({ data }: any) => {
+        expect({ ...data }).toMatchObject({
+          currentAuthor: testAuthor,
+          postCount: testPostCount,
+        });
+        resolve();
+      });
+    }
+  );
 
   itAsync(
-    'should support @client @export variables that are nested multiple ' +
-      'levels deep',
+    "should support @client @export variables that are nested multiple " +
+      "levels deep",
     (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
@@ -250,13 +254,13 @@ describe('@client @export tests', () => {
       const appContainer = {
         systemDetails: {
           currentAuthor: {
-            name: 'John Smith',
+            name: "John Smith",
             authorId: 100,
-            __typename: 'Author',
+            __typename: "Author",
           },
-          __typename: 'SystemDetails',
+          __typename: "SystemDetails",
         },
-        __typename: 'AppContainer',
+        __typename: "AppContainer",
       };
 
       const testPostCount = 200;
@@ -266,7 +270,7 @@ describe('@client @export tests', () => {
           data: {
             postCount: testPostCount,
           },
-        }),
+        })
       );
 
       const cache = new InMemoryCache();
@@ -290,54 +294,57 @@ describe('@client @export tests', () => {
         });
         resolve();
       });
-    },
+    }
   );
 
-  itAsync('should ignore @export directives if not used with @client', (resolve, reject) => {
-    const query = gql`
-      query currentAuthorPostCount($authorId: Int!) {
-        currentAuthor {
-          name
-          authorId @export(as: "authorId")
+  itAsync(
+    "should ignore @export directives if not used with @client",
+    (resolve, reject) => {
+      const query = gql`
+        query currentAuthorPostCount($authorId: Int!) {
+          currentAuthor {
+            name
+            authorId @export(as: "authorId")
+          }
+          postCount(authorId: $authorId)
         }
-        postCount(authorId: $authorId)
-      }
-    `;
+      `;
 
-    const testAuthor = {
-      name: 'John Smith',
-      authorId: 100,
-      __typename: 'Author',
-    };
-    const testPostCount = 200;
+      const testAuthor = {
+        name: "John Smith",
+        authorId: 100,
+        __typename: "Author",
+      };
+      const testPostCount = 200;
 
-    const link = new ApolloLink(() =>
-      Observable.of({
-        data: {
+      const link = new ApolloLink(() =>
+        Observable.of({
+          data: {
+            currentAuthor: testAuthor,
+            postCount: testPostCount,
+          },
+        })
+      );
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+        resolvers: {},
+      });
+
+      return client.query({ query }).then(({ data }: any) => {
+        expect({ ...data }).toMatchObject({
           currentAuthor: testAuthor,
           postCount: testPostCount,
-        },
-      }),
-    );
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
-      resolvers: {},
-    });
-
-    return client.query({ query }).then(({ data }: any) => {
-      expect({ ...data }).toMatchObject({
-        currentAuthor: testAuthor,
-        postCount: testPostCount,
+        });
+        resolve();
       });
-      resolve();
-    });
-  });
+    }
+  );
 
   itAsync(
-    'should support setting an @client @export variable, loaded from the ' +
-      'cache, on a virtual field that is combined into a remote query.',
+    "should support setting an @client @export variable, loaded from the " +
+      "cache, on a virtual field that is combined into a remote query.",
     (resolve, reject) => {
       const query = gql`
         query postRequiringReview($reviewerId: Int!) {
@@ -354,12 +361,12 @@ describe('@client @export tests', () => {
 
       const postRequiringReview = {
         id: 10,
-        title: 'The Local State Conundrum',
-        __typename: 'Post',
+        title: "The Local State Conundrum",
+        __typename: "Post",
       };
       const reviewerDetails = {
-        name: 'John Smith',
-        __typename: 'Reviewer',
+        name: "John Smith",
+        __typename: "Reviewer",
       };
       const loggedInReviewerId = 100;
 
@@ -385,28 +392,31 @@ describe('@client @export tests', () => {
         data: {
           postRequiringReview: {
             loggedInReviewerId,
-            __typename: 'Post',
+            __typename: "Post",
             id: 10,
           },
         },
       });
 
-      return client.query({ query }).then(({ data }: any) => {
-        expect({ ...data }).toMatchObject({
-          postRequiringReview: {
-            id: postRequiringReview.id,
-            title: postRequiringReview.title,
-            loggedInReviewerId,
-          },
-          reviewerDetails,
-        });
-      }).then(resolve, reject);
-    },
+      return client
+        .query({ query })
+        .then(({ data }: any) => {
+          expect({ ...data }).toMatchObject({
+            postRequiringReview: {
+              id: postRequiringReview.id,
+              title: postRequiringReview.title,
+              loggedInReviewerId,
+            },
+            reviewerDetails,
+          });
+        })
+        .then(resolve, reject);
+    }
   );
 
   itAsync(
-    'should support setting a @client @export variable, loaded via a ' +
-      'local resolver, on a virtual field that is combined into a remote query.',
+    "should support setting a @client @export variable, loaded via a " +
+      "local resolver, on a virtual field that is combined into a remote query.",
     (resolve, reject) => {
       const query = gql`
         query postRequiringReview($reviewerId: Int!) {
@@ -425,16 +435,16 @@ describe('@client @export tests', () => {
 
       const postRequiringReview = {
         id: 10,
-        title: 'The Local State Conundrum',
-        __typename: 'Post',
+        title: "The Local State Conundrum",
+        __typename: "Post",
       };
       const reviewerDetails = {
-        name: 'John Smith',
-        __typename: 'Reviewer',
+        name: "John Smith",
+        __typename: "Reviewer",
       };
       const currentReviewer = {
         id: 100,
-        __typename: 'CurrentReviewer',
+        __typename: "CurrentReviewer",
       };
 
       const link = new ApolloLink(({ variables }) => {
@@ -464,7 +474,7 @@ describe('@client @export tests', () => {
         query,
         data: {
           postRequiringReview: {
-            __typename: 'Post',
+            __typename: "Post",
           },
         },
       });
@@ -480,12 +490,12 @@ describe('@client @export tests', () => {
         });
         resolve();
       });
-    },
+    }
   );
 
   itAsync(
-    'should support combining @client @export variables, calculated by a ' +
-      'local resolver, with remote mutations',
+    "should support combining @client @export variables, calculated by a " +
+      "local resolver, with remote mutations",
     (resolve, reject) => {
       const mutation = gql`
         mutation upvotePost($postId: Int!) {
@@ -499,9 +509,9 @@ describe('@client @export tests', () => {
 
       const testPostId = 100;
       const testPost = {
-        title: 'The Day of the Jackal',
+        title: "The Day of the Jackal",
         votes: 10,
-        __typename: 'post',
+        __typename: "post",
       };
 
       const link = new ApolloLink(({ variables }) => {
@@ -531,12 +541,12 @@ describe('@client @export tests', () => {
         });
         resolve();
       });
-    },
+    }
   );
 
   itAsync(
-    'should support combining @client @export variables, calculated by ' +
-      'reading from the cache, with remote mutations',
+    "should support combining @client @export variables, calculated by " +
+      "reading from the cache, with remote mutations",
     (resolve, reject) => {
       const mutation = gql`
         mutation upvotePost($postId: Int!) {
@@ -550,9 +560,9 @@ describe('@client @export tests', () => {
 
       const testPostId = 100;
       const testPost = {
-        title: 'The Day of the Jackal',
+        title: "The Day of the Jackal",
         votes: 10,
-        __typename: 'post',
+        __typename: "post",
       };
 
       const link = new ApolloLink(({ variables }) => {
@@ -572,7 +582,11 @@ describe('@client @export tests', () => {
       });
 
       cache.writeQuery({
-        query: gql`{ topPost }`,
+        query: gql`
+          {
+            topPost
+          }
+        `,
         data: {
           topPost: testPostId,
         },
@@ -584,10 +598,10 @@ describe('@client @export tests', () => {
         });
         resolve();
       });
-    },
+    }
   );
 
-  it('should not add __typename to @export-ed objects (#4691)', () => {
+  it("should not add __typename to @export-ed objects (#4691)", () => {
     const query = gql`
       query GetListItems($where: LessonFilter) {
         currentFilter @client @export(as: "where") {
@@ -617,25 +631,25 @@ describe('@client @export tests', () => {
     `;
 
     const currentFilter = {
-      title_contains: 'full',
+      title_contains: "full",
       enabled: true,
     };
 
     const data = {
       lessonCollection: {
-        __typename: 'LessonCollection',
+        __typename: "LessonCollection",
         items: [
           {
-            __typename: 'ListItem',
-            title: 'full title',
-            slug: 'slug-title',
+            __typename: "ListItem",
+            title: "full title",
+            slug: "slug-title",
           },
         ],
       },
     };
 
     const client = new ApolloClient({
-      link: new ApolloLink(request => {
+      link: new ApolloLink((request) => {
         expect(request.variables.where).toEqual(currentFilter);
         expect(print(request.query)).toBe(print(expectedServerQuery));
         return Observable.of({ data });
@@ -652,7 +666,7 @@ describe('@client @export tests', () => {
       },
     });
 
-    return client.query({ query }).then(result => {
+    return client.query({ query }).then((result) => {
       expect(result.data).toEqual({
         currentFilter,
         ...data,
@@ -661,8 +675,8 @@ describe('@client @export tests', () => {
   });
 
   itAsync(
-    'should use the value of the last @export variable defined, if multiple ' +
-      'variables are defined with the same name',
+    "should use the value of the last @export variable defined, if multiple " +
+      "variables are defined with the same name",
     (resolve, reject) => {
       const query = gql`
         query reviewerPost($reviewerId: Int!) {
@@ -675,8 +689,8 @@ describe('@client @export tests', () => {
       `;
 
       const post = {
-        title: 'The One Post to Rule Them All',
-        __typename: 'Post',
+        title: "The One Post to Rule Them All",
+        __typename: "Post",
       };
       const primaryReviewerId = 100;
       const secondaryReviewerId = 200;
@@ -711,13 +725,14 @@ describe('@client @export tests', () => {
         });
         resolve();
       });
-    },
+    }
   );
 
-  withErrorSpy(itAsync,
-    'should refetch if an @export variable changes, the current fetch ' +
-    'policy is not cache-only, and the query includes fields that need to ' +
-    'be resolved remotely',
+  withErrorSpy(
+    itAsync,
+    "should refetch if an @export variable changes, the current fetch " +
+      "policy is not cache-only, and the query includes fields that need to " +
+      "be resolved remotely",
     (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
@@ -737,9 +752,9 @@ describe('@client @export tests', () => {
       const link = new ApolloLink(() =>
         Observable.of({
           data: {
-            postCount: resultCount === 0 ? testPostCount1 : testPostCount2
+            postCount: resultCount === 0 ? testPostCount1 : testPostCount2,
           },
-        }),
+        })
       );
 
       const cache = new InMemoryCache();
@@ -774,15 +789,16 @@ describe('@client @export tests', () => {
             resolve();
           }
           resultCount += 1;
-        }
+        },
       });
     }
   );
 
-  withErrorSpy(itAsync,
-    'should NOT refetch if an @export variable has not changed, the ' +
-    'current fetch policy is not cache-only, and the query includes fields ' +
-    'that need to be resolved remotely',
+  withErrorSpy(
+    itAsync,
+    "should NOT refetch if an @export variable has not changed, the " +
+      "current fetch policy is not cache-only, and the query includes fields " +
+      "that need to be resolved remotely",
     (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
@@ -803,7 +819,7 @@ describe('@client @export tests', () => {
         fetchCount += 1;
         return Observable.of({
           data: {
-            postCount: testPostCount1
+            postCount: testPostCount1,
           },
         });
       });
@@ -833,7 +849,7 @@ describe('@client @export tests', () => {
             client.writeQuery({
               query,
               variables: { authorId: testAuthorId1 },
-              data: { postCount: testPostCount2 }
+              data: { postCount: testPostCount2 },
             });
           } else if (resultCount === 1) {
             // Should not have refetched
@@ -841,17 +857,17 @@ describe('@client @export tests', () => {
             resolve();
           }
 
-          resultCount +=1;
+          resultCount += 1;
         },
       });
     }
   );
 
   itAsync(
-    'should NOT attempt to refetch over the network if an @export variable ' +
-    'has changed, the current fetch policy is cache-first, and the remote ' +
-    'part of the query (that leverages the @export variable) can be fully ' +
-    'found in the cache.',
+    "should NOT attempt to refetch over the network if an @export variable " +
+      "has changed, the current fetch policy is cache-first, and the remote " +
+      "part of the query (that leverages the @export variable) can be fully " +
+      "found in the cache.",
     (resolve, reject) => {
       const query = gql`
         query currentAuthorPostCount($authorId: Int!) {
@@ -871,7 +887,7 @@ describe('@client @export tests', () => {
         fetchCount += 1;
         return Observable.of({
           data: {
-            postCount: testPostCount1
+            postCount: testPostCount1,
           },
         });
       });
@@ -884,12 +900,16 @@ describe('@client @export tests', () => {
       });
 
       client.writeQuery({
-        query: gql`{ currentAuthorId }`,
-        data: { currentAuthorId: testAuthorId1 }
+        query: gql`
+          {
+            currentAuthorId
+          }
+        `,
+        data: { currentAuthorId: testAuthorId1 },
       });
 
       let resultCount = 0;
-      const obs = client.watchQuery({ query, fetchPolicy: 'cache-first' });
+      const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
       obs.subscribe({
         next(result) {
           if (resultCount === 0) {
@@ -903,11 +923,15 @@ describe('@client @export tests', () => {
             client.writeQuery({
               query,
               variables: { authorId: testAuthorId2 },
-              data: { postCount: testPostCount2 }
+              data: { postCount: testPostCount2 },
             });
             client.writeQuery({
-              query: gql`{ currentAuthorId }`,
-              data: { currentAuthorId: testAuthorId2 }
+              query: gql`
+                {
+                  currentAuthorId
+                }
+              `,
+              data: { currentAuthorId: testAuthorId2 },
             });
           } else if (resultCount === 1) {
             // The updated result should not have been fetched over the
@@ -928,16 +952,20 @@ describe('@client @export tests', () => {
 
   itAsync(
     "should update @client @export variables on each broadcast if they've " +
-    "changed",
+      "changed",
     (resolve, reject) => {
       const cache = new InMemoryCache();
 
-      const widgetCountQuery = gql`{ widgetCount @client }`;
+      const widgetCountQuery = gql`
+        {
+          widgetCount @client
+        }
+      `;
       cache.writeQuery({
         query: widgetCountQuery,
         data: {
-          widgetCount: 100
-        }
+          widgetCount: 100,
+        },
       });
 
       const client = new ApolloClient({
@@ -946,9 +974,9 @@ describe('@client @export tests', () => {
           Query: {
             doubleWidgets(_, { widgetCount }) {
               return widgetCount ? widgetCount * 2 : 0;
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const doubleWidgetsQuery = gql`
@@ -970,8 +998,8 @@ describe('@client @export tests', () => {
               client.writeQuery({
                 query: widgetCountQuery,
                 data: {
-                  widgetCount: 500
-                }
+                  widgetCount: 500,
+                },
               });
               break;
             case 1:

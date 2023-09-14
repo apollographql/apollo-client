@@ -4,14 +4,18 @@ exports[`@client @export tests should NOT refetch if an @export variable has not
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'postCount' while writing result {
-  \\"currentAuthorId\\": 101
-}",
+      "Missing field '%s' while writing result %o",
+      "postCount",
+      Object {
+        "currentAuthorId": 101,
+      },
     ],
     Array [
-      "Missing field 'postCount' while writing result {
-  \\"currentAuthorId\\": 100
-}",
+      "Missing field '%s' while writing result %o",
+      "postCount",
+      Object {
+        "currentAuthorId": 100,
+      },
     ],
   ],
   "results": Array [
@@ -31,13 +35,15 @@ exports[`@client @export tests should allow @client @export variables to be used
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'postCount' while writing result {
-  \\"currentAuthor\\": {
-    \\"name\\": \\"John Smith\\",
-    \\"authorId\\": 100,
-    \\"__typename\\": \\"Author\\"
-  }
-}",
+      "Missing field '%s' while writing result %o",
+      "postCount",
+      Object {
+        "currentAuthor": Object {
+          "__typename": "Author",
+          "authorId": 100,
+          "name": "John Smith",
+        },
+      },
     ],
   ],
   "results": Array [
@@ -53,63 +59,79 @@ exports[`@client @export tests should refetch if an @export variable changes, th
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'postCount' while writing result {
-  \\"appContainer\\": {
-    \\"systemDetails\\": {
-      \\"currentAuthor\\": {
-        \\"name\\": \\"John Smith\\",
-        \\"authorId\\": 100,
-        \\"__typename\\": \\"Author\\"
+      "Missing field '%s' while writing result %o",
+      "postCount",
+      Object {
+        "appContainer": Object {
+          "__typename": "AppContainer",
+          "systemDetails": Object {
+            "__typename": "SystemDetails",
+            "currentAuthor": Object {
+              "__typename": "Author",
+              "authorId": 100,
+              "name": "John Smith",
+            },
+          },
+        },
       },
-      \\"__typename\\": \\"SystemDetails\\"
-    },
-    \\"__typename\\": \\"AppContainer\\"
-  }
-}",
     ],
     Array [
-      "Missing field 'title' while writing result {
-  \\"loggedInReviewerId\\": 100,
-  \\"__typename\\": \\"Post\\",
-  \\"id\\": 10
-}",
+      "Missing field '%s' while writing result %o",
+      "title",
+      Object {
+        "__typename": "Post",
+        "id": 10,
+        "loggedInReviewerId": 100,
+      },
     ],
     Array [
-      "Missing field 'reviewerDetails' while writing result {
-  \\"postRequiringReview\\": {
-    \\"loggedInReviewerId\\": 100,
-    \\"__typename\\": \\"Post\\",
-    \\"id\\": 10
-  }
-}",
+      "Missing field '%s' while writing result %o",
+      "reviewerDetails",
+      Object {
+        "postRequiringReview": Object {
+          "__typename": "Post",
+          "id": 10,
+          "loggedInReviewerId": 100,
+        },
+      },
     ],
     Array [
-      "Missing field 'id' while writing result {
-  \\"__typename\\": \\"Post\\"
-}",
+      "Missing field '%s' while writing result %o",
+      "id",
+      Object {
+        "__typename": "Post",
+      },
     ],
     Array [
-      "Missing field 'title' while writing result {
-  \\"__typename\\": \\"Post\\"
-}",
+      "Missing field '%s' while writing result %o",
+      "title",
+      Object {
+        "__typename": "Post",
+      },
     ],
     Array [
-      "Missing field 'reviewerDetails' while writing result {
-  \\"postRequiringReview\\": {
-    \\"__typename\\": \\"Post\\"
-  }
-}",
+      "Missing field '%s' while writing result %o",
+      "reviewerDetails",
+      Object {
+        "postRequiringReview": Object {
+          "__typename": "Post",
+        },
+      },
     ],
     Array [
-      "Missing field 'post' while writing result {
-  \\"primaryReviewerId\\": 100,
-  \\"secondaryReviewerId\\": 200
-}",
+      "Missing field '%s' while writing result %o",
+      "post",
+      Object {
+        "primaryReviewerId": 100,
+        "secondaryReviewerId": 200,
+      },
     ],
     Array [
-      "Missing field 'postCount' while writing result {
-  \\"currentAuthorId\\": 100
-}",
+      "Missing field '%s' while writing result %o",
+      "postCount",
+      Object {
+        "currentAuthorId": 100,
+      },
     ],
   ],
   "results": Array [

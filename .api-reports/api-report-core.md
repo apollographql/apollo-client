@@ -291,7 +291,7 @@ namespace Cache_2 {
     // (undocumented)
     interface BatchOptions<TCache extends ApolloCache<any>, TUpdateResult = void> {
         // (undocumented)
-        onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => any;
+        onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff?: Cache_2.DiffResult<any> | undefined) => any;
         // (undocumented)
         optimistic?: string | boolean;
         // (undocumented)
@@ -426,7 +426,7 @@ class Concast<T> extends Observable<T> {
     // (undocumented)
     cancel: (reason: any) => void;
     // (undocumented)
-    readonly promise: Promise<T>;
+    readonly promise: Promise<T | undefined>;
     // (undocumented)
     removeObserver(observer: Observer<T>): void;
 }
@@ -922,8 +922,6 @@ export class HttpLink extends ApolloLink {
     constructor(options?: HttpOptions);
     // (undocumented)
     options: HttpOptions;
-    // (undocumented)
-    requester: RequestHandler;
 }
 
 // @public (undocumented)
@@ -1157,15 +1155,13 @@ class LocalState<TCacheShape> {
     // Warning: (ae-forgotten-export) The symbol "LocalStateOptions" needs to be exported by the entry point index.d.ts
     constructor({ cache, client, resolvers, fragmentMatcher, }: LocalStateOptions<TCacheShape>);
     // (undocumented)
-    addExportedVariables(document: DocumentNode, variables?: OperationVariables, context?: {}): Promise<{
-        [x: string]: any;
-    }>;
+    addExportedVariables<TVars extends OperationVariables>(document: DocumentNode, variables?: TVars, context?: {}): Promise<TVars>;
     // (undocumented)
     addResolvers(resolvers: Resolvers | Resolvers[]): void;
     // (undocumented)
     clientQuery(document: DocumentNode): DocumentNode | null;
     // (undocumented)
-    getFragmentMatcher(): FragmentMatcher;
+    getFragmentMatcher(): FragmentMatcher | undefined;
     // (undocumented)
     getResolvers(): Resolvers;
     // (undocumented)
@@ -1548,7 +1544,7 @@ export type OptimisticStoreItem = {
 };
 
 // @public (undocumented)
-type OptionsUnion<TData, TVariables extends OperationVariables, TContext> = WatchQueryOptions<TVariables, TData> | QueryOptions<TVariables, TData> | MutationOptions<TData, TVariables, TContext>;
+type OptionsUnion<TData, TVariables extends OperationVariables, TContext> = WatchQueryOptions<TVariables, TData> | QueryOptions<TVariables, TData> | MutationOptions<TData, TVariables, TContext, any>;
 
 // @public (undocumented)
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]): (response: Response) => Promise<any>;
@@ -1628,7 +1624,7 @@ class QueryInfo {
         document: DocumentNode;
         variables: Record<string, any> | undefined;
         networkStatus?: NetworkStatus;
-        observableQuery?: ObservableQuery<any>;
+        observableQuery?: ObservableQuery<any, any>;
         lastRequestId?: number;
     }): this;
     // (undocumented)
@@ -1650,7 +1646,7 @@ class QueryInfo {
     // (undocumented)
     notify(): void;
     // (undocumented)
-    readonly observableQuery: ObservableQuery<any> | null;
+    readonly observableQuery: ObservableQuery<any, any> | null;
     // (undocumented)
     readonly queryId: string;
     // (undocumented)
@@ -1660,7 +1656,7 @@ class QueryInfo {
     // (undocumented)
     setDiff(diff: Cache_2.DiffResult<any> | null): void;
     // (undocumented)
-    setObservableQuery(oq: ObservableQuery<any> | null): void;
+    setObservableQuery(oq: ObservableQuery<any, any> | null): void;
     // (undocumented)
     stop(): void;
     // (undocumented)
@@ -1936,7 +1932,7 @@ export interface Resolvers {
 //
 // @public (undocumented)
 export function rewriteURIForGET(chosenURI: string, body: Body_2): {
-    parseError: any;
+    parseError: unknown;
     newURI?: undefined;
 } | {
     newURI: string;
@@ -2017,7 +2013,7 @@ export type StoreValue = number | string | string[] | Reference | Reference[] | 
 class Stump extends Layer {
     constructor(root: EntityStore.Root);
     // (undocumented)
-    merge(): any;
+    merge(older: string | StoreObject, newer: string | StoreObject): void;
     // (undocumented)
     removeLayer(): this;
 }
@@ -2183,11 +2179,11 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:126:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:112:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:116:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:378:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:117:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:150:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:379:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 

@@ -362,6 +362,7 @@ export class QueryInfo {
     >,
     cacheWriteBehavior: CacheWriteBehavior
   ): typeof result {
+    result = { ...result };
     const merger = new DeepMerger();
     const graphQLErrors = isNonEmptyArray(result.errors)
       ? result.errors.slice(0)
@@ -451,10 +452,7 @@ export class QueryInfo {
             if (this.lastDiff && this.lastDiff.diff.complete) {
               // Reuse data from the last good (complete) diff that we
               // received, when possible.
-              result = {
-                ...result,
-                data: this.lastDiff.diff.result,
-              };
+              result.data = this.lastDiff.diff.result;
               return;
             }
             // If the previous this.diff was incomplete, fall through to
@@ -481,11 +479,7 @@ export class QueryInfo {
           // result. Set without setDiff to avoid triggering a notify call,
           // since we have other ways of notifying for this result.
           this.updateLastDiff(diff, diffOptions);
-          result = {
-            ...result,
-            // TODO Improve types so we don't need this cast.
-            data: diff.result as any,
-          };
+          result.data = diff.result;
         });
       } else {
         this.lastWrite = void 0;

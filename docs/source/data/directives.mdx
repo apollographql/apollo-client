@@ -1,0 +1,177 @@
+---
+title: "Using GraphQL directives in Apollo Client"
+description: Configure GraphQL fields and fragments
+---
+
+A directive decorates part of a GraphQL schema or operation with additional configuration. Tools like Apollo Client can read a GraphQL document's directives and perform custom logic as appropriate.
+
+Directives are preceded by the `@` character, like so:
+
+```graphql
+query myQuery($someTest: Boolean) {
+  experimentalField @skip(if: $someTest)
+}
+```
+
+This example shows the `@skip` directive, which is a built-in directive (i.e., it's part of the [GraphQL specification](http://spec.graphql.org/June2018/#sec-Type-System.Directives)). It demonstrates the following about directives:
+
+- Directives can take arguments of their own (`if` in this case).
+- Directives appear after the declaration of what they decorate (the `experimentalField` field in this case).
+
+## `@client`
+
+The `@client` directive allows you to resolve client-only data alongside your server data. These fields are not sent to the GraphQL server.
+
+```graphql
+query LaunchDetails($launchId: ID!) {
+  launch(id: $launchId) {
+    site
+    rocket {
+      type
+      # resolved locally on the client,
+      # removed from the request to the server
+      description @client
+    }
+  }
+}
+```
+
+For more information about the `@client` directive, see this section on [local-only fields](/react/local-state/managing-state-with-field-policies/). The `@client` directive is also useful for [client schema mocking](/react/development-testing/client-schema-mocking/#3-query-with-the-client-directive) before a given field is supported in the GraphQL API your application is consuming.
+
+## `@connection`
+
+The `@connection` directive allows you to specify a custom cache key for paginated results. For more information, see this section on the [`@connection` directive](/react/caching/advanced-topics/#the-connection-directive).
+
+```graphql
+query Feed($offset: Int, $limit: Int) {
+  feed(offset: $offset, limit: $limit) @connection(key: "feed") {
+    ...FeedFields
+  }
+}
+```
+
+## `@defer`
+
+Beginning with version `3.7.0`, Apollo Client provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
+
+To use the `@defer` directive, we apply it to an inline or named fragment that contains all slow-resolving fields:
+
+```graphql
+query PersonQuery($personId: ID!) {
+  person(id: $personId) {
+    # Basic fields (fast)
+    id
+    firstName
+    lastName
+
+    # Friend fields (slower)
+    ... @defer {
+      friends {
+        id
+      }
+    }
+  }
+}
+```
+
+> **Note:** in order to use `@defer` in a React Native application, additional configuration is required. See the [React Native docs](../integrations/react-native#consuming-multipart-http-via-text-streaming) for more information.
+
+For more information about the `@defer` directive, check out the [`@defer` docs](/react/data/defer).
+
+## `@export`
+
+If your GraphQL query uses variables, the local-only fields of that query can provide the values of those variables.
+
+To do so, you apply the `@export(as: "variableName")` directive, like so:
+
+```js
+const GET_CURRENT_AUTHOR_POST_COUNT = gql`
+  query CurrentAuthorPostCount($authorId: Int!) {
+    currentAuthorId @client @export(as: "authorId")
+    postCount(authorId: $authorId)
+  }
+`;
+```
+
+In the query above, the result of the local-only field `currentAuthorId` is used as the value of the `$authorId` variable that's passed to `postCount`.
+
+You can do this even if `postCount` is also a local-only field (i.e., if it's also marked as `@client`).
+
+For more information and other considerations when using the `@export` directive, check out the [local-only fields docs](/react/local-state/managing-state-with-field-policies/#using-local-only-fields-as-graphql-variables).
+
+<MinVersion version="3.8.0">
+
+## `@nonreactive`
+
+</MinVersion>
+
+The `@nonreactive` directive can be used to mark query fields or fragment spreads and is used to indicate that changes to the data contained within the subtrees marked `@nonreactive` should _not_ trigger rerendering. This allows parent components to fetch data to be rendered by their children without rerendering themselves when the data corresponding with fields marked as `@nonreactive` change.
+
+Consider an `App` component that fetches and renders a list of ski trails:
+
+```jsx
+const TrailFragment = gql`
+  fragment TrailFragment on Trail {
+    name
+    status
+  }
+`;
+
+const ALL_TRAILS = gql`
+  query allTrails {
+    allTrails {
+      id
+      ...TrailFragment @nonreactive
+    }
+  }
+  ${TrailFragment}
+`;
+
+function App() {
+  const { data, loading } = useQuery(ALL_TRAILS);
+  return (
+    <main>
+      <h2>Ski Trails</h2>
+      <ul>
+        {data?.trails.map((trail) => (
+          <Trail key={trail.id} id={trail.id} />
+        ))}
+      </ul>
+    </main>
+  );
+}
+```
+
+The `Trail` component renders a trail's name and status and allows the user to execute a mutation to toggle the status of the trail between `"OPEN"` and `"CLOSED"`:
+
+```jsx
+const Trail = ({ id }) => {
+  const [updateTrail] = useMutation(UPDATE_TRAIL);
+  const { data } = useFragment({
+    fragment: TrailFragment,
+    from: {
+      __typename: "Trail",
+      id,
+    },
+  });
+  return (
+    <li key={id}>
+      {data.name} - {data.status}
+      <input
+        checked={data.status === "OPEN" ? true : false}
+        type="checkbox"
+        onChange={(e) => {
+          updateTrail({
+            variables: {
+              trailId: id,
+              status: e.target.checked ? "OPEN" : "CLOSED",
+            },
+          });
+        }}
+      />
+    </li>
+  );
+};
+```
+
+Notice that the `Trail` component isn't receiving the entire `trail` object via props, only the `id` which is used along with the fragment document to create a live binding for each trail item in the cache. This allows each `Trail` component to react to the cache updates for a single trail independently. Updates to a trail's `status` will not cause the parent `App` component to rerender since the `@nonreactive` directive is applied to the `TrailFragment` spread, a fragment that includes the `status` field.

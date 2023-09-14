@@ -1,8 +1,9 @@
-import { DocumentNode, ExecutionResult, GraphQLError } from "graphql";
-import { DefaultContext } from "../../core";
-export { DocumentNode };
+import type { ExecutionResult, GraphQLError } from "graphql";
+import type { DocumentNode } from "graphql";
+import type { DefaultContext } from "../../core/index.js";
+export type { DocumentNode };
 
-import { Observable } from "../../utilities";
+import type { Observable } from "../../utilities/index.js";
 
 export type Path = ReadonlyArray<string | number>;
 
@@ -12,7 +13,7 @@ interface ExecutionPatchResultBase {
 
 export interface ExecutionPatchInitialResult<
   TData = Record<string, any>,
-  TExtensions = Record<string, any>
+  TExtensions = Record<string, any>,
 > extends ExecutionPatchResultBase {
   // if data is present, incremental is not
   data: TData | null | undefined;
@@ -33,7 +34,7 @@ export interface IncrementalPayload<TData, TExtensions> {
 
 export interface ExecutionPatchIncrementalResult<
   TData = Record<string, any>,
-  TExtensions = Record<string, any>
+  TExtensions = Record<string, any>,
 > extends ExecutionPatchResultBase {
   // the reverse is also true: if incremental is present,
   // data (and errors and extensions) are not
@@ -47,7 +48,7 @@ export interface ExecutionPatchIncrementalResult<
 
 export interface ApolloPayloadResult<
   TData = Record<string, any>,
-  TExtensions = Record<string, any>
+  TExtensions = Record<string, any>,
 > {
   payload: SingleExecutionResult | ExecutionPatchResult | null;
   // Transport layer errors (as distinct from GraphQL or NetworkErrors),
@@ -57,7 +58,7 @@ export interface ApolloPayloadResult<
 
 export type ExecutionPatchResult<
   TData = Record<string, any>,
-  TExtensions = Record<string, any>
+  TExtensions = Record<string, any>,
 > =
   | ExecutionPatchInitialResult<TData, TExtensions>
   | ExecutionPatchIncrementalResult<TData, TExtensions>;
@@ -82,7 +83,7 @@ export interface Operation {
 export interface SingleExecutionResult<
   TData = Record<string, any>,
   TContext = DefaultContext,
-  TExtensions = Record<string, any>
+  TExtensions = Record<string, any>,
 > extends ExecutionResult<TData, TExtensions> {
   data?: TData | null;
   context?: TContext;
@@ -91,7 +92,7 @@ export interface SingleExecutionResult<
 export type FetchResult<
   TData = Record<string, any>,
   TContext = Record<string, any>,
-  TExtensions = Record<string, any>
+  TExtensions = Record<string, any>,
 > =
   | SingleExecutionResult<TData, TContext, TExtensions>
   | ExecutionPatchResult<TData, TExtensions>;

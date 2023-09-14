@@ -1,17 +1,17 @@
-import React from 'react';
-import gql from 'graphql-tag';
-import { DocumentNode } from 'graphql';
-import { render, screen, waitFor } from '@testing-library/react';
+import React from "react";
+import gql from "graphql-tag";
+import { DocumentNode } from "graphql";
+import { render, screen, waitFor } from "@testing-library/react";
 
-import { ApolloClient, NetworkStatus } from '../../../../core';
-import { ApolloError } from '../../../../errors';
-import { ApolloLink } from '../../../../link/core';
-import { InMemoryCache } from '../../../../cache';
-import { ApolloProvider } from '../../../context';
-import { itAsync, MockedProvider, mockSingleLink } from '../../../../testing';
-import { Query } from '../../Query';
-
-const IS_REACT_18 = React.version.startsWith('18');
+import { ApolloClient, NetworkStatus } from "../../../../core";
+import { ApolloError } from "../../../../errors";
+import { ApolloLink } from "../../../../link/core";
+import { InMemoryCache } from "../../../../cache";
+import { ApolloProvider } from "../../../context";
+import { itAsync, MockedProvider, mockSingleLink } from "../../../../testing";
+import { Query } from "../../Query";
+import { QueryResult } from "../../../types/types";
+import { profile } from "../../../../testing/internal";
 
 const allPeopleQuery: DocumentNode = gql`
   query people {
@@ -30,7 +30,7 @@ interface Data {
 }
 
 const allPeopleData: Data = {
-  allPeople: { people: [{ name: 'Luke Skywalker' }] },
+  allPeople: { people: [{ name: "Luke Skywalker" }] },
 };
 const allPeopleMocks = [
   {
@@ -41,8 +41,8 @@ const allPeopleMocks = [
 
 const AllPeopleQuery = Query;
 
-describe('Query component', () => {
-  itAsync('calls the children prop', (resolve, reject) => {
+describe("Query component", () => {
+  itAsync("calls the children prop", (resolve, reject) => {
     let finished = false;
     const link = mockSingleLink({
       request: { query: allPeopleQuery },
@@ -113,11 +113,11 @@ describe('Query component', () => {
     );
 
     waitFor(() => {
-      expect(finished).toBe(true)
+      expect(finished).toBe(true);
     }).then(resolve, reject);
   });
 
-  it('renders using the children prop', async () => {
+  it("renders using the children prop", async () => {
     const Component = () => (
       <Query query={allPeopleQuery}>{(_: any) => <div>test</div>}</Query>
     );
@@ -129,11 +129,11 @@ describe('Query component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('test')).toBeTruthy();
+      expect(screen.getByText("test")).toBeTruthy();
     });
   });
 
-  describe('result provides', () => {
+  describe("result provides", () => {
     let consoleWarn = console.warn;
     beforeAll(() => {
       console.warn = () => null;
@@ -143,7 +143,7 @@ describe('Query component', () => {
       console.warn = consoleWarn;
     });
 
-    itAsync('client', (resolve, reject) => {
+    itAsync("client", (resolve, reject) => {
       let count = 0;
       const queryWithVariables: DocumentNode = gql`
         query people($first: Int) {
@@ -197,12 +197,12 @@ describe('Query component', () => {
       }).then(resolve, reject);
     });
 
-    itAsync('error', (resolve, reject) => {
+    itAsync("error", (resolve, reject) => {
       let finished = false;
       const mockError = [
         {
           request: { query: allPeopleQuery },
-          error: new Error('error occurred'),
+          error: new Error("error occurred"),
         },
       ];
 
@@ -213,9 +213,7 @@ describe('Query component', () => {
               return null;
             }
             try {
-              expect(result.error).toEqual(
-                new Error('error occurred')
-              );
+              expect(result.error).toEqual(new Error("error occurred"));
               finished = true;
             } catch (error) {
               reject(error);
@@ -236,7 +234,7 @@ describe('Query component', () => {
       }).then(resolve, reject);
     });
 
-    itAsync('refetch', (resolve, reject) => {
+    itAsync("refetch", (resolve, reject) => {
       const queryRefetch: DocumentNode = gql`
         query people($first: Int) {
           allPeople(first: $first) {
@@ -247,9 +245,9 @@ describe('Query component', () => {
         }
       `;
 
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-      const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
-      const data3 = { allPeople: { people: [{ name: 'Darth Vader' }] } };
+      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
+      const data3 = { allPeople: { people: [{ name: "Darth Vader" }] } };
 
       const refetchVariables = {
         first: 1,
@@ -293,11 +291,7 @@ describe('Query component', () => {
               }
               if (count === 3) {
                 // second data
-                if (IS_REACT_18) {
-                  expect(data).toEqual(data3);
-                } else {
-                  expect(data).toEqual(data2);
-                }
+                expect(data).toEqual(data2);
               }
               if (count === 5) {
                 // third data
@@ -338,17 +332,13 @@ describe('Query component', () => {
       );
 
       waitFor(() => {
-        if (IS_REACT_18) {
-          expect(count).toBe(4);
-        } else {
-          expect(count).toBe(6);
-        }
+        expect(count).toBe(6);
       }).then(resolve, reject);
     });
 
-    itAsync('fetchMore', (resolve, reject) => {
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-      const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
+    itAsync("fetchMore", (resolve, reject) => {
+      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
 
       const variables = {
         first: 2,
@@ -425,10 +415,10 @@ describe('Query component', () => {
       waitFor(() => expect(count).toBe(2)).then(resolve, reject);
     });
 
-    itAsync('startPolling', (resolve, reject) => {
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-      const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
-      const data3 = { allPeople: { people: [{ name: 'Darth Vader' }] } };
+    itAsync("startPolling", (resolve, reject) => {
+      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
+      const data3 = { allPeople: { people: [{ name: "Darth Vader" }] } };
 
       const mocks = [
         {
@@ -490,10 +480,10 @@ describe('Query component', () => {
       waitFor(() => expect(count).toBe(3)).then(resolve, reject);
     });
 
-    itAsync('stopPolling', (resolve, reject) => {
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-      const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
-      const data3 = { allPeople: { people: [{ name: 'Darth Vader' }] } };
+    itAsync("stopPolling", (resolve, reject) => {
+      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
+      const data3 = { allPeople: { people: [{ name: "Darth Vader" }] } };
 
       const mocks = [
         {
@@ -541,9 +531,9 @@ describe('Query component', () => {
       waitFor(() => expect(count).toBe(POLL_COUNT)).then(resolve, reject);
     });
 
-    itAsync('updateQuery', (resolve, reject) => {
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-      const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
+    itAsync("updateQuery", (resolve, reject) => {
+      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
       const variables = {
         first: 2,
       };
@@ -604,11 +594,11 @@ describe('Query component', () => {
     });
   });
 
-  describe('props allow', () => {
-    it('custom fetch-policy', async () => {
+  describe("props allow", () => {
+    it("custom fetch-policy", async () => {
       let count = 0;
       const Component = () => (
-        <Query query={allPeopleQuery} fetchPolicy={'cache-only'}>
+        <Query query={allPeopleQuery} fetchPolicy={"cache-only"}>
           {(result: any) => {
             if (!result.loading) {
               expect(result.networkStatus).toBe(NetworkStatus.ready);
@@ -630,7 +620,7 @@ describe('Query component', () => {
       });
     });
 
-    it('default fetch-policy', async () => {
+    it("default fetch-policy", async () => {
       let count = 0;
       const Component = () => (
         <Query query={allPeopleQuery}>
@@ -646,7 +636,7 @@ describe('Query component', () => {
 
       render(
         <MockedProvider
-          defaultOptions={{ watchQuery: { fetchPolicy: 'cache-only' } }}
+          defaultOptions={{ watchQuery: { fetchPolicy: "cache-only" } }}
           mocks={allPeopleMocks}
         >
           <Component />
@@ -658,9 +648,9 @@ describe('Query component', () => {
       });
     });
 
-    itAsync('notifyOnNetworkStatusChange', (resolve, reject) => {
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-      const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
+    itAsync("notifyOnNetworkStatusChange", (resolve, reject) => {
+      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
 
       const mocks = [
         {
@@ -688,11 +678,7 @@ describe('Query component', () => {
                 });
               }
               if (count === 2) {
-                if (IS_REACT_18) {
-                  expect(result.loading).toBeFalsy();
-                } else {
-                  expect(result.loading).toBeTruthy();
-                }
+                expect(result.loading).toBeTruthy();
               }
               if (count === 3) {
                 expect(result.loading).toBeFalsy();
@@ -714,18 +700,14 @@ describe('Query component', () => {
       );
 
       waitFor(() => {
-        if (IS_REACT_18) {
-          expect(count).toBe(3)
-        } else {
-          expect(count).toBe(4)
-        }
+        expect(count).toBe(4);
       }).then(resolve, reject);
     });
 
-    itAsync('pollInterval', (resolve, reject) => {
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-      const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
-      const data3 = { allPeople: { people: [{ name: 'Darth Vader' }] } };
+    itAsync("pollInterval", (resolve, reject) => {
+      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
+      const data3 = { allPeople: { people: [{ name: "Darth Vader" }] } };
 
       const mocks = [
         {
@@ -775,7 +757,7 @@ describe('Query component', () => {
       waitFor(() => expect(count).toBe(POLL_COUNT)).then(resolve, reject);
     });
 
-    itAsync('skip', (resolve, reject) => {
+    itAsync("skip", (resolve, reject) => {
       let finished = false;
       const Component = () => (
         <Query query={allPeopleQuery} skip>
@@ -804,7 +786,7 @@ describe('Query component', () => {
       }).then(resolve, reject);
     });
 
-    it('onCompleted with data', async () => {
+    it("onCompleted with data", async () => {
       const query = gql`
         query people($first: Int) {
           allPeople(first: $first) {
@@ -815,8 +797,8 @@ describe('Query component', () => {
         }
       `;
 
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-      const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
+      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
       const mocks = [
         {
           request: { query, variables: { first: 1 } },
@@ -878,9 +860,9 @@ describe('Query component', () => {
       });
     });
 
-    itAsync('onError with data', (resolve, reject) => {
+    itAsync("onError with data", (resolve, reject) => {
       let finished = false;
-      const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
 
       const mocks = [
         {
@@ -919,8 +901,8 @@ describe('Query component', () => {
     });
   });
 
-  describe('props disallow', () => {
-    it('Mutation provided as query', () => {
+  describe("props disallow", () => {
+    it("Mutation provided as query", () => {
       const mutation = gql`
         mutation submitRepository {
           submitRepository(repoFullName: "apollographql/apollo-client") {
@@ -939,14 +921,14 @@ describe('Query component', () => {
           </MockedProvider>
         );
       }).toThrowError(
-        'Running a Query requires a graphql Query, but a Mutation was used ' +
-          'instead.'
+        "Running a Query requires a graphql Query, but a Mutation was used " +
+          "instead."
       );
 
       console.error = errorLogger;
     });
 
-    it('Subscription provided as query', () => {
+    it("Subscription provided as query", () => {
       const subscription = gql`
         subscription onCommentAdded($repoFullName: String!) {
           commentAdded(repoFullName: $repoFullName) {
@@ -966,19 +948,19 @@ describe('Query component', () => {
           </MockedProvider>
         );
       }).toThrowError(
-        'Running a Query requires a graphql Query, but a Subscription was ' +
-          'used instead.'
+        "Running a Query requires a graphql Query, but a Subscription was " +
+          "used instead."
       );
 
       console.error = errorLogger;
     });
 
-    itAsync('onCompleted with error', (resolve, reject) => {
+    itAsync("onCompleted with error", (resolve, reject) => {
       let finished = false;
       const mockError = [
         {
           request: { query: allPeopleQuery },
-          error: new Error('error occurred'),
+          error: new Error("error occurred"),
         },
       ];
 
@@ -1007,9 +989,9 @@ describe('Query component', () => {
       }).then(resolve, reject);
     });
 
-    it('onError with error', async () => {
+    it("onError with error", async () => {
       let finished = false;
-      const error = new Error('error occurred');
+      const error = new Error("error occurred");
       const mockError = [
         {
           request: { query: allPeopleQuery },
@@ -1042,8 +1024,8 @@ describe('Query component', () => {
     });
   });
 
-  describe('should update', () => {
-    itAsync('if props change', (resolve, reject) => {
+  describe("should update", () => {
+    itAsync("if props change", (resolve, reject) => {
       const query = gql`
         query people($first: Int) {
           allPeople(first: $first) {
@@ -1054,8 +1036,8 @@ describe('Query component', () => {
         }
       `;
 
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-      const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
+      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
       const mocks = [
         {
           request: { query, variables: { first: 1 } },
@@ -1134,7 +1116,7 @@ describe('Query component', () => {
       waitFor(() => expect(count).toBe(4)).then(resolve, reject);
     });
 
-    itAsync('if the query changes', (resolve, reject) => {
+    itAsync("if the query changes", (resolve, reject) => {
       const query1 = allPeopleQuery;
       const query2 = gql`
         query people {
@@ -1147,8 +1129,8 @@ describe('Query component', () => {
         }
       `;
 
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-      const data2 = { allPeople: { people: [{ name: 'Han Solo', id: '1' }] } };
+      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const data2 = { allPeople: { people: [{ name: "Han Solo", id: "1" }] } };
       const mocks = [
         {
           request: { query: query1 },
@@ -1211,7 +1193,7 @@ describe('Query component', () => {
       waitFor(() => expect(count).toBe(2)).then(resolve, reject);
     });
 
-    itAsync('with data while loading', (resolve, reject) => {
+    it("with data while loading", async () => {
       const query = gql`
         query people($first: Int) {
           allPeople(first: $first) {
@@ -1224,11 +1206,11 @@ describe('Query component', () => {
 
       const data1 = {
         allPeople: {
-          people: [{ name: 'Luke Skywalker' }],
+          people: [{ name: "Luke Skywalker" }],
         },
       };
       const data2 = {
-        allPeople: { people: [{ name: 'Han Solo' }] },
+        allPeople: { people: [{ name: "Han Solo" }] },
       };
       const mocks = [
         {
@@ -1274,7 +1256,9 @@ describe('Query component', () => {
                     case 3:
                       expect(result.loading).toBe(true);
                       expect(result.data).toBeUndefined();
-                      expect(result.networkStatus).toBe(NetworkStatus.setVariables);
+                      expect(result.networkStatus).toBe(
+                        NetworkStatus.setVariables
+                      );
                       break;
                     case 4:
                       expect(result.loading).toBe(false);
@@ -1283,9 +1267,8 @@ describe('Query component', () => {
                       break;
                   }
                 } catch (err) {
-                  reject(err);
+                  fail(err);
                 }
-
                 return null;
               }}
             </AllPeopleQuery>
@@ -1298,137 +1281,130 @@ describe('Query component', () => {
           <Component />
         </MockedProvider>
       );
-
-      waitFor(() => expect(count).toBe(4)).then(resolve, reject);
     });
 
-    itAsync('should update if a manual `refetch` is triggered after a state change', (resolve, reject) => {
-      const query: DocumentNode = gql`
-        query {
-          allPeople {
-            people {
-              name
+    itAsync(
+      "should update if a manual `refetch` is triggered after a state change",
+      (resolve, reject) => {
+        const query: DocumentNode = gql`
+          query {
+            allPeople {
+              people {
+                name
+              }
             }
           }
-        }
-      `;
+        `;
 
-      const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+        const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
 
-      const link = mockSingleLink(
-        {
-          request: { query },
-          result: { data: data1 },
-        },
-        {
-          request: { query },
-          result: { data: data1 },
-        },
-        {
-          request: { query },
-          result: { data: data1 },
-        }
-      );
+        const link = mockSingleLink(
+          {
+            request: { query },
+            result: { data: data1 },
+          },
+          {
+            request: { query },
+            result: { data: data1 },
+          },
+          {
+            request: { query },
+            result: { data: data1 },
+          }
+        );
 
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      });
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache({ addTypename: false }),
+        });
 
-      let count = 0;
+        let count = 0;
 
-      class SomeComponent extends React.Component {
-        constructor(props: any) {
-          super(props);
-          this.state = {
-            open: false,
-          };
-          this.toggle = this.toggle.bind(this);
-        }
+        class SomeComponent extends React.Component {
+          constructor(props: any) {
+            super(props);
+            this.state = {
+              open: false,
+            };
+            this.toggle = this.toggle.bind(this);
+          }
 
-        toggle() {
-          this.setState((prevState: any) => ({
-            open: !prevState.open,
-          }));
-        }
+          toggle() {
+            this.setState((prevState: any) => ({
+              open: !prevState.open,
+            }));
+          }
 
-        render() {
-          const { open } = this.state as any;
-          return (
-            <Query client={client} query={query} notifyOnNetworkStatusChange>
-              {(props: any) => {
-                try {
-                  switch (count) {
-                    case 0:
-                      // Loading first response
-                      expect(props.loading).toBe(true);
-                      expect(open).toBe(false);
-                      break;
-                    case 1:
-                      // First response loaded, change state value
-                      expect(props.data).toEqual(data1);
-                      expect(open).toBe(false);
-                      setTimeout(() => {
-                        this.toggle();
-                      });
-                      break;
-                    case 2:
-                      // State value changed, fire a refetch
-                      expect(open).toBe(true);
-                      setTimeout(() => {
-                        props.refetch();
-                      });
-                      break;
-                    case 3:
-                      // Second response loading
-                      if (IS_REACT_18) {
-                        expect(props.loading).toBe(false);
-                      } else {
+          render() {
+            const { open } = this.state as any;
+            return (
+              <Query client={client} query={query} notifyOnNetworkStatusChange>
+                {(props: any) => {
+                  try {
+                    switch (count) {
+                      case 0:
+                        // Loading first response
                         expect(props.loading).toBe(true);
-                      }
-                      break;
-                    case 4:
-                      // Second response received, fire another refetch
-                      expect(props.data).toEqual(data1);
-                      setTimeout(() => {
-                        props.refetch();
-                      });
-                      break;
-                    case 5:
-                      // Third response loading
-                      expect(props.loading).toBe(true);
-                      break;
-                    case 6:
-                      // Third response received
-                      expect(props.data).toEqual(data1);
-                      break;
-                    default:
-                      reject('Unknown count');
+                        expect(open).toBe(false);
+                        break;
+                      case 1:
+                        // First response loaded, change state value
+                        expect(props.data).toEqual(data1);
+                        expect(open).toBe(false);
+                        setTimeout(() => {
+                          this.toggle();
+                        });
+                        break;
+                      case 2:
+                        // State value changed, fire a refetch
+                        expect(open).toBe(true);
+                        setTimeout(() => {
+                          props.refetch();
+                        });
+                        break;
+                      case 3:
+                        // Second response loading
+                        expect(props.loading).toBe(true);
+                        break;
+                      case 4:
+                        // Second response received, fire another refetch
+                        expect(props.data).toEqual(data1);
+                        setTimeout(() => {
+                          props.refetch();
+                        });
+                        break;
+                      case 5:
+                        // Third response loading
+                        expect(props.loading).toBe(true);
+                        break;
+                      case 6:
+                        // Third response received
+                        expect(props.data).toEqual(data1);
+                        break;
+                      default:
+                        reject("Unknown count");
+                    }
+                    count += 1;
+                  } catch (error) {
+                    reject(error);
                   }
-                  count += 1;
-                } catch (error) {
-                  reject(error);
-                }
-                return null;
-              }}
-            </Query>
-          );
+                  return null;
+                }}
+              </Query>
+            );
+          }
         }
+
+        render(<SomeComponent />);
+
+        waitFor(() => {
+          expect(count).toBe(7);
+        }).then(resolve, reject);
       }
-
-      render(<SomeComponent />);
-
-      waitFor(() => {
-        if (IS_REACT_18) {
-          expect(count).toBe(4)
-        } else {
-          expect(count).toBe(7)
-        }
-      }).then(resolve, reject);
-    });
+    );
   });
 
-  it('should error if the query changes type to a subscription', async () => {
+  it("should error if the query changes type to a subscription", async () => {
     let finished = false;
     const subscription = gql`
       subscription onCommentAdded($repoFullName: String!) {
@@ -1448,8 +1424,8 @@ describe('Query component', () => {
 
       componentDidCatch(error: any) {
         const expectedError = new Error(
-          'Running a Query requires a graphql Query, but a Subscription was ' +
-            'used instead.'
+          "Running a Query requires a graphql Query, but a Subscription was " +
+            "used instead."
         );
         expect(error).toEqual(expectedError);
         finished = true;
@@ -1475,13 +1451,16 @@ describe('Query component', () => {
       </MockedProvider>
     );
 
-    await waitFor(() => {
-      expect(finished).toBe(true);
-    }, { interval: 1 });
+    await waitFor(
+      () => {
+        expect(finished).toBe(true);
+      },
+      { interval: 1 }
+    );
     console.error = errorLog;
   });
 
-  itAsync('should be able to refetch after there was a network error', (resolve, reject) => {
+  it("should be able to refetch after there was a network error", async () => {
     const query: DocumentNode = gql`
       query somethingelse {
         allPeople(first: 1) {
@@ -1492,19 +1471,18 @@ describe('Query component', () => {
       }
     `;
 
-    const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-    const dataTwo = { allPeople: { people: [{ name: 'Princess Leia' }] } };
+    const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+    const dataTwo = { allPeople: { people: [{ name: "Princess Leia" }] } };
     const link = mockSingleLink(
       { request: { query }, result: { data } },
-      { request: { query }, error: new Error('This is an error!') },
-      { request: { query }, result: { data: dataTwo }, delay: 10 },
+      { request: { query }, error: new Error("This is an error!") },
+      { request: { query }, result: { data: dataTwo }, delay: 10 }
     );
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    let count = 0;
     const noop = () => null;
 
     const AllPeopleQuery2 = Query;
@@ -1512,83 +1490,73 @@ describe('Query component', () => {
     function Container() {
       return (
         <AllPeopleQuery2 query={query} notifyOnNetworkStatusChange={true}>
-          {(result: any) => {
-            try {
-              switch (count++) {
-                case 0:
-                  // Waiting for the first result to load
-                  expect(result.loading).toBe(true);
-                  break;
-                case 1:
-                  // First result is loaded, run a refetch to get the second result
-                  // which is an error.
-                  expect(result.data.allPeople).toEqual(
-                    data.allPeople
-                  );
-                  setTimeout(() => {
-                    result.refetch().then(() => {
-                      reject('Expected error value on first refetch.');
-                    }, noop);
-                  }, 0);
-                  break;
-                case 2:
-                  // Waiting for the second result to load
-                  if (IS_REACT_18) {
-                    expect(result.loading).toBe(false);
-                  } else {
-                    expect(result.loading).toBe(true);
-                  }
-                  break;
-                case 3:
-                  setTimeout(() => {
-                    result.refetch().catch(() => {
-                      reject('Expected good data on second refetch.');
-                    });
-                  }, 0);
-                  // fallthrough
-                  // The error arrived, run a refetch to get the third result
-                  // which should now contain valid data.
-                  expect(result.loading).toBe(false);
-                  expect(result.error).toBeTruthy();
-                  break;
-                case 4:
-                  expect(result.loading).toBe(true);
-                  expect(result.error).toBeFalsy();
-                  break;
-                case 5:
-                  expect(result.loading).toBe(false);
-                  expect(result.error).toBeFalsy();
-                  expect(result.data.allPeople).toEqual(dataTwo.allPeople);
-                  break;
-                default:
-                  throw new Error('Unexpected fall through');
-              }
-            } catch (e) {
-              reject(e);
-            }
+          {(r: any) => {
+            ProfiledContainer.updateSnapshot(r);
             return null;
           }}
         </AllPeopleQuery2>
       );
     }
 
+    const ProfiledContainer = profile<QueryResult>({
+      Component: Container,
+    });
+
     render(
       <ApolloProvider client={client}>
-        <Container />
+        <ProfiledContainer />
       </ApolloProvider>
     );
 
-    waitFor(() => {
-      if (IS_REACT_18) {
-        expect(count).toBe(3)
-      } else {
-        expect(count).toBe(6)
-      }
-    }).then(resolve, reject);
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(true);
+    }
+
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(false);
+      expect(snapshot.data.allPeople).toEqual(data.allPeople);
+      // First result is loaded, run a refetch to get the second result
+      // which is an error.
+      snapshot.refetch().then(() => {
+        fail("Expected error value on first refetch.");
+      }, noop);
+    }
+
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      // Waiting for the second result to load
+      expect(snapshot.loading).toBe(true);
+    }
+
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(false);
+      expect(snapshot.error).toBeTruthy();
+      // The error arrived, run a refetch to get the third result
+      // which should now contain valid data.
+      snapshot.refetch().catch(() => {
+        fail("Expected good data on second refetch.");
+      });
+    }
+
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(true);
+      expect(snapshot.error).toBeFalsy();
+    }
+
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(false);
+      expect(snapshot.error).toBeFalsy();
+      expect(snapshot.data.allPeople).toEqual(dataTwo.allPeople);
+    }
   });
 
   itAsync(
-    'should not persist previous result errors when a subsequent valid result is received',
+    "should not persist previous result errors when a subsequent valid result is received",
     (resolve, reject) => {
       const query: DocumentNode = gql`
         query somethingelse($variable: Boolean) {
@@ -1600,7 +1568,7 @@ describe('Query component', () => {
         }
       `;
 
-      const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+      const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
       const variableGood = { variable: true };
       const variableBad = { variable: false };
 
@@ -1620,7 +1588,7 @@ describe('Query component', () => {
             variables: variableBad,
           },
           result: {
-            errors: [new Error('This is an error!')],
+            errors: [new Error("This is an error!")],
           },
         },
         {
@@ -1652,11 +1620,7 @@ describe('Query component', () => {
               // Change query variables to trigger bad result.
               setTimeout(() => {
                 render(
-                  <Query
-                    client={client}
-                    query={query}
-                    variables={variableBad}
-                  >
+                  <Query client={client} query={query} variables={variableBad}>
                     {(result: any) => {
                       return <DummyComp id="dummyId" {...result} />;
                     }}
@@ -1673,11 +1637,7 @@ describe('Query component', () => {
               // Change query variables to trigger a good result.
               setTimeout(() => {
                 render(
-                  <Query
-                    client={client}
-                    query={query}
-                    variables={variableGood}
-                  >
+                  <Query client={client} query={query} variables={variableGood}>
                     {(result: any) => {
                       return <DummyComp id="dummyId" {...result} />;
                     }}
@@ -1691,7 +1651,7 @@ describe('Query component', () => {
               expect(props.data.allPeople).toBeTruthy();
               break;
             default:
-              reject('Unknown count');
+              reject("Unknown count");
           }
         } catch (error) {
           reject(error);
@@ -1711,7 +1671,7 @@ describe('Query component', () => {
     }
   );
 
-  it('should support mixing setState and onCompleted', async () => {
+  it("should support mixing setState and onCompleted", async () => {
     const query = gql`
       query people($first: Int) {
         allPeople(first: $first) {
@@ -1722,8 +1682,8 @@ describe('Query component', () => {
       }
     `;
 
-    const data1 = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
-    const data2 = { allPeople: { people: [{ name: 'Han Solo' }] } };
+    const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+    const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
     const mocks = [
       {
         request: { query, variables: { first: 1 } },
@@ -1811,61 +1771,63 @@ describe('Query component', () => {
     });
   });
 
-  itAsync('should not repeatedly call onError if setState in it', (resolve, reject) => {
-    const mockError = [
-      {
-        request: { query: allPeopleQuery, variables: { first: 1 } },
-        error: new Error('error occurred'),
-      },
-    ];
-
-    let unmount: any;
-    let onErrorCallCount = 0;
-    class Component extends React.Component {
-      state = {
-        variables: {
-          first: 1,
+  itAsync(
+    "should not repeatedly call onError if setState in it",
+    (resolve, reject) => {
+      const mockError = [
+        {
+          request: { query: allPeopleQuery, variables: { first: 1 } },
+          error: new Error("error occurred"),
         },
-      };
-      onError = () => {
-        onErrorCallCount += 1;
-        this.setState({ causeUpdate: true });
-      };
-      render() {
-        return (
-          <Query
-            query={allPeopleQuery}
-            variables={this.state.variables}
-            onError={this.onError}
-          >
-            {({ loading }: any) => {
-              if (!loading) {
-                setTimeout(unmount);
-              }
-              return null;
-            }}
-          </Query>
-        );
+      ];
+
+      let unmount: any;
+      let onErrorCallCount = 0;
+      class Component extends React.Component {
+        state = {
+          variables: {
+            first: 1,
+          },
+        };
+        onError = () => {
+          onErrorCallCount += 1;
+          this.setState({ causeUpdate: true });
+        };
+        render() {
+          return (
+            <Query
+              query={allPeopleQuery}
+              variables={this.state.variables}
+              onError={this.onError}
+            >
+              {({ loading }: any) => {
+                if (!loading) {
+                  setTimeout(unmount);
+                }
+                return null;
+              }}
+            </Query>
+          );
+        }
       }
+
+      unmount = render(
+        <MockedProvider mocks={mockError} addTypename={false}>
+          <Component />
+        </MockedProvider>
+      ).unmount;
+
+      waitFor(() => {
+        expect(onErrorCallCount).toBe(1);
+      }).then(resolve, reject);
     }
+  );
 
-    unmount = render(
-      <MockedProvider mocks={mockError} addTypename={false}>
-        <Component />
-      </MockedProvider>
-    ).unmount;
-
-    waitFor(() => {
-      expect(onErrorCallCount).toBe(1);
-    }).then(resolve, reject);
-  });
-
-  describe('Partial refetching', () => {
+  describe("Partial refetching", () => {
     let errorSpy!: ReturnType<typeof jest.spyOn>;
 
     beforeEach(() => {
-      errorSpy = jest.spyOn(console, 'error')
-        .mockImplementation(() => {});
+      errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
     });
 
     afterAll(() => {
@@ -1876,10 +1838,10 @@ describe('Query component', () => {
     // error calls no matter what I try and I do not want to care about it
     // anymore :)
     itAsync.skip(
-      'should attempt a refetch when the query result was marked as being ' +
-        'partial, the returned data was reset to an empty Object by the ' +
-        'Apollo Client QueryManager (due to a cache miss), and the ' +
-        '`partialRefetch` prop is `true`',
+      "should attempt a refetch when the query result was marked as being " +
+        "partial, the returned data was reset to an empty Object by the " +
+        "Apollo Client QueryManager (due to a cache miss), and the " +
+        "`partialRefetch` prop is `true`",
       (resolve, reject) => {
         const allPeopleQuery: DocumentNode = gql`
           query people {
@@ -1893,7 +1855,7 @@ describe('Query component', () => {
 
         let count = 0;
         const allPeopleData = {
-          allPeople: { people: [{ name: 'Luke Skywalker' }] },
+          allPeople: { people: [{ name: "Luke Skywalker" }] },
         };
         const query = allPeopleQuery;
         const link = mockSingleLink(
@@ -1915,7 +1877,7 @@ describe('Query component', () => {
                 if (!loading) {
                   expect(data).toEqual(allPeopleData);
                   expect(errorSpy).toHaveBeenCalledTimes(1);
-                  expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
+                  expect(errorSpy.mock.calls[0][0]).toMatch("Missing field");
                 }
               } catch (err) {
                 reject(err);
@@ -1938,8 +1900,8 @@ describe('Query component', () => {
     );
 
     itAsync.skip(
-      'should not refetch when an empty partial is returned if the ' +
-        '`partialRefetch` prop is false/not set',
+      "should not refetch when an empty partial is returned if the " +
+        "`partialRefetch` prop is false/not set",
       (resolve, reject) => {
         let finished = false;
         const query = allPeopleQuery;
@@ -1970,16 +1932,16 @@ describe('Query component', () => {
           </ApolloProvider>
         );
 
-       waitFor(() => {
-         expect(finished).toBe(true);
-       }).then(resolve, reject);
+        waitFor(() => {
+          expect(finished).toBe(true);
+        }).then(resolve, reject);
       }
     );
   });
 
   itAsync(
-    'should keep data for a `Query` component using `no-cache` when the ' +
-      'tree is re-rendered',
+    "should keep data for a `Query` component using `no-cache` when the " +
+      "tree is re-rendered",
     (resolve, reject) => {
       const query1 = allPeopleQuery;
 
@@ -2001,14 +1963,14 @@ describe('Query component', () => {
 
       const allThingsData: ThingData = {
         allThings: {
-          thing: [{ description: 'Thing 1' }, { description: 'Thing 2' }],
+          thing: [{ description: "Thing 1" }, { description: "Thing 2" }],
         },
       };
 
       const link = mockSingleLink(
         { request: { query: query1 }, result: { data: allPeopleData } },
         { request: { query: query2 }, result: { data: allThingsData } },
-        { request: { query: query1 }, result: { data: allPeopleData } },
+        { request: { query: query1 }, result: { data: allPeopleData } }
       );
 
       const client = new ApolloClient({
@@ -2059,7 +2021,7 @@ describe('Query component', () => {
     }
   );
 
-  describe('Return partial data', () => {
+  describe("Return partial data", () => {
     const origConsoleWarn = console.warn;
 
     beforeAll(() => {
@@ -2070,7 +2032,7 @@ describe('Query component', () => {
       console.warn = origConsoleWarn;
     });
 
-    it('should not return partial cache data when `returnPartialData` is false', async () => {
+    it("should not return partial cache data when `returnPartialData` is false", async () => {
       let finished = false;
       const cache = new InMemoryCache();
       const client = new ApolloClient({
@@ -2096,15 +2058,15 @@ describe('Query component', () => {
         data: {
           cars: [
             {
-              __typename: 'Car',
-              make: 'Ford',
-              model: 'Mustang',
-              vin: 'PONY123',
+              __typename: "Car",
+              make: "Ford",
+              model: "Mustang",
+              vin: "PONY123",
               repairs: [
                 {
-                  __typename: 'Repair',
-                  date: '2019-05-08',
-                  description: 'Could not get after it.',
+                  __typename: "Repair",
+                  date: "2019-05-08",
+                  description: "Could not get after it.",
                 },
               ],
             },
@@ -2138,11 +2100,11 @@ describe('Query component', () => {
       render(<App />);
 
       await waitFor(() => {
-        expect(finished).toBe(true)
-      })
+        expect(finished).toBe(true);
+      });
     });
 
-    it('should return partial cache data when `returnPartialData` is true', async () => {
+    it("should return partial cache data when `returnPartialData` is true", async () => {
       let finished = false;
       const cache = new InMemoryCache();
       const client = new ApolloClient({
@@ -2168,15 +2130,15 @@ describe('Query component', () => {
         data: {
           cars: [
             {
-              __typename: 'Car',
-              make: 'Ford',
-              model: 'Mustang',
-              vin: 'PONY123',
+              __typename: "Car",
+              make: "Ford",
+              model: "Mustang",
+              vin: "PONY123",
               repairs: [
                 {
-                  __typename: 'Repair',
-                  date: '2019-05-08',
-                  description: 'Could not get after it.',
+                  __typename: "Repair",
+                  date: "2019-05-08",
+                  description: "Could not get after it.",
                 },
               ],
             },
@@ -2202,11 +2164,11 @@ describe('Query component', () => {
               expect(data).toEqual({
                 cars: [
                   {
-                    __typename: 'Car',
+                    __typename: "Car",
                     repairs: [
                       {
-                        __typename: 'Repair',
-                        date: '2019-05-08',
+                        __typename: "Repair",
+                        date: "2019-05-08",
                       },
                     ],
                   },

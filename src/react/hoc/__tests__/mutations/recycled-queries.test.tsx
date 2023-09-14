@@ -1,19 +1,21 @@
-import React from 'react';
-import { render, waitFor } from '@testing-library/react';
-import gql from 'graphql-tag';
-import { DocumentNode } from 'graphql';
+import React from "react";
+import { render, waitFor } from "@testing-library/react";
+import gql from "graphql-tag";
+import { DocumentNode } from "graphql";
 
-import { ApolloCache, ApolloClient, MutationUpdaterFunction } from '../../../../core';
-import { ApolloProvider } from '../../../context';
-import { InMemoryCache as Cache } from '../../../../cache';
-import { MutationFunction } from '../../../types/types';
-import { mockSingleLink } from '../../../../testing';
-import { graphql } from '../../graphql';
-import { ChildProps } from '../../types';
+import {
+  ApolloCache,
+  ApolloClient,
+  MutationUpdaterFunction,
+} from "../../../../core";
+import { ApolloProvider } from "../../../context";
+import { InMemoryCache as Cache } from "../../../../cache";
+import { MutationFunction } from "../../../types/types";
+import { mockSingleLink } from "../../../../testing";
+import { graphql } from "../../graphql";
+import { ChildProps } from "../../types";
 
-const IS_REACT_18 = React.version.startsWith('18')
-
-describe('graphql(mutation) update queries', () => {
+describe("graphql(mutation) update queries", () => {
   // This is a long test that keeps track of a lot of stuff. It is testing
   // whether or not the `options.update` reducers will run even when a given
   // container component is unmounted.
@@ -33,7 +35,7 @@ describe('graphql(mutation) update queries', () => {
   //
   // There are also a lot more assertions on the way to make sure everything is
   // going as smoothly as planned.
-  it('will run `update` for a previously mounted component', async () => {
+  it("will run `update` for a previously mounted component", async () => {
     const query: DocumentNode = gql`
       query todos {
         todo_list {
@@ -68,10 +70,10 @@ describe('graphql(mutation) update queries', () => {
 
     const mutationData = {
       createTodo: {
-        id: '99',
-        text: 'This one was created with a mutation.',
-        completed: true
-      }
+        id: "99",
+        text: "This one was created with a mutation.",
+        completed: true,
+      },
     };
     type MutationData = typeof mutationData;
 
@@ -84,35 +86,33 @@ describe('graphql(mutation) update queries', () => {
     > = (proxy, result) => {
       todoUpdateQueryCount++;
       const data = JSON.parse(
-        JSON.stringify(
-          proxy.readQuery<QueryData>({ query })
-        ) // read from cache
+        JSON.stringify(proxy.readQuery<QueryData>({ query })) // read from cache
       );
       data!.todo_list.tasks.push(result.data!.createTodo); // update value
       proxy.writeQuery({ query, data }); // write to cache
     };
 
     const expectedData = {
-      todo_list: { id: '123', title: 'how to apollo', tasks: [] }
+      todo_list: { id: "123", title: "how to apollo", tasks: [] },
     };
 
     const link = mockSingleLink(
       {
         request: { query },
-        result: { data: expectedData }
+        result: { data: expectedData },
       },
       { request: { query: mutation }, result: { data: mutationData } },
       { request: { query: mutation }, result: { data: mutationData } }
     );
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     let mutate: MutationFunction<MutationData>;
 
     const MyMutation = graphql<{}, MutationData>(mutation, {
-      options: () => ({ update })
+      options: () => ({ update }),
     })(
       class extends React.Component<ChildProps<{}, MutationData>> {
         componentDidMount() {
@@ -128,6 +128,7 @@ describe('graphql(mutation) update queries', () => {
     let queryMountCount = 0;
     let queryUnmountCount = 0;
     let queryRenderCount = 0;
+    const testFailures: any[] = [];
 
     const MyQuery = graphql<{}, QueryData>(query)(
       class extends React.Component<ChildProps<{}, QueryData>> {
@@ -140,55 +141,60 @@ describe('graphql(mutation) update queries', () => {
         }
 
         render() {
-          switch (queryRenderCount) {
-            case 0:
-              expect(this.props.data!.loading).toBeTruthy();
-              expect(this.props.data!.todo_list).toBeFalsy();
-              break;
-            case 1:
-              expect(this.props.data!.loading).toBeFalsy();
-              if (!IS_REACT_18) {
+          try {
+            switch (queryRenderCount) {
+              case 0:
+                expect(this.props.data!.loading).toBeTruthy();
+                expect(this.props.data!.todo_list).toBeFalsy();
+                break;
+              case 1:
+                expect(this.props.data!.loading).toBeFalsy();
                 expect(this.props.data!.todo_list).toEqual({
-                  id: '123',
-                  title: 'how to apollo',
-                  tasks: []
+                  id: "123",
+                  title: "how to apollo",
+                  tasks: [],
                 });
-              }
-              break;
-            case 2:
-              expect(this.props.data!.loading).toBeFalsy();
-              expect(queryMountCount).toBe(1);
-              expect(this.props.data!.todo_list).toEqual({
-                id: '123',
-                title: 'how to apollo',
-                tasks: [
-                  {
-                    id: '99',
-                    text: 'This one was created with a mutation.',
-                    completed: true
-                  }
-                ]
-              });
-              break;
-            case 3:
-              expect(this.props.data!.todo_list).toEqual({
-                id: '123',
-                title: 'how to apollo',
-                tasks: [
-                  {
-                    id: '99',
-                    text: 'This one was created with a mutation.',
-                    completed: true
-                  },
-                  {
-                    id: '99',
-                    text: 'This one was created with a mutation.',
-                    completed: true
-                  }
-                ]
-              });
-              break;
-            default:
+                break;
+              case 2:
+                expect(this.props.data!.loading).toBeFalsy();
+                expect(queryMountCount).toBe(1);
+                expect(this.props.data!.todo_list).toEqual({
+                  id: "123",
+                  title: "how to apollo",
+                  tasks: [
+                    {
+                      id: "99",
+                      text: "This one was created with a mutation.",
+                      completed: true,
+                    },
+                  ],
+                });
+                break;
+              case 3:
+                expect(this.props.data!.loading).toBeFalsy();
+                expect(queryMountCount).toBe(1);
+                expect(this.props.data!.todo_list).toEqual({
+                  id: "123",
+                  title: "how to apollo",
+                  tasks: [
+                    {
+                      id: "99",
+                      text: "This one was created with a mutation.",
+                      completed: true,
+                    },
+                    {
+                      id: "99",
+                      text: "This one was created with a mutation.",
+                      completed: true,
+                    },
+                  ],
+                });
+                break;
+              default:
+                throw new Error("too many rerenders");
+            }
+          } catch (e) {
+            testFailures.push(e);
           }
 
           queryRenderCount += 1;
@@ -209,35 +215,47 @@ describe('graphql(mutation) update queries', () => {
       </ApolloProvider>
     );
 
-    setTimeout(() => {
+    let resolveLastTimeout: () => void;
+    const allTimeoutsFinished = new Promise<void>((r) => {
+      resolveLastTimeout = r;
+    });
+
+    const catchingSetTimeout = (cb: (args: void) => void, ms: number) => {
+      return setTimeout(() => {
+        try {
+          cb();
+        } catch (e) {
+          testFailures.push(e);
+        }
+      }, ms);
+    };
+
+    catchingSetTimeout(() => {
       mutate();
 
-      setTimeout(() => {
-        if (IS_REACT_18) {
-          expect(queryUnmountCount).toBe(1);
-        } else {
-          expect(queryUnmountCount).toBe(0);
-        }
+      catchingSetTimeout(() => {
+        expect(queryUnmountCount).toBe(0);
         query1Unmount();
         expect(queryUnmountCount).toBe(1);
 
-        setTimeout(() => {
+        catchingSetTimeout(() => {
           mutate();
 
-          setTimeout(() => {
+          catchingSetTimeout(() => {
             const { unmount: query2Unmount } = render(
               <ApolloProvider client={client}>
                 <MyQuery />
               </ApolloProvider>
             );
 
-            setTimeout(() => {
+            catchingSetTimeout(() => {
               mutationUnmount();
               query2Unmount();
 
               expect(todoUpdateQueryCount).toBe(2);
               expect(queryMountCount).toBe(2);
               expect(queryUnmountCount).toBe(2);
+              resolveLastTimeout!();
             }, 5);
           }, 5);
         }, 5);
@@ -245,13 +263,15 @@ describe('graphql(mutation) update queries', () => {
     }, 5);
 
     await waitFor(() => {
-      if (!IS_REACT_18) {
-        expect(queryRenderCount).toBe(4);
-      }
+      expect(queryRenderCount).toBe(4);
     });
+    await allTimeoutsFinished;
+    if (testFailures.length > 0) {
+      throw testFailures[0];
+    }
   });
 
-  it('will run `refetchQueries` for a recycled queries', async () => {
+  it("will run `refetchQueries` for a recycled queries", async () => {
     const mutation: DocumentNode = gql`
       mutation createTodo {
         createTodo {
@@ -264,10 +284,10 @@ describe('graphql(mutation) update queries', () => {
 
     const mutationData = {
       createTodo: {
-        id: '99',
-        text: 'This one was created with a mutation.',
-        completed: true
-      }
+        id: "99",
+        text: "This one was created with a mutation.",
+        completed: true,
+      },
     };
 
     type MutationData = typeof mutationData;
@@ -299,28 +319,28 @@ describe('graphql(mutation) update queries', () => {
     }
 
     const data = {
-      todo_list: { id: '123', title: 'how to apollo', tasks: [] }
+      todo_list: { id: "123", title: "how to apollo", tasks: [] },
     };
 
     const updatedData = {
       todo_list: {
-        id: '123',
-        title: 'how to apollo',
-        tasks: [mutationData.createTodo]
-      }
+        id: "123",
+        title: "how to apollo",
+        tasks: [mutationData.createTodo],
+      },
     };
 
     const link = mockSingleLink(
-      { request: { query, variables: { id: '123' } }, result: { data } },
+      { request: { query, variables: { id: "123" } }, result: { data } },
       { request: { query: mutation }, result: { data: mutationData } },
       {
-        request: { query, variables: { id: '123' } },
-        result: { data: updatedData }
+        request: { query, variables: { id: "123" } },
+        result: { data: updatedData },
       }
     );
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     let mutate: MutationFunction<MutationData>;
@@ -357,23 +377,19 @@ describe('graphql(mutation) update queries', () => {
             case 1:
               expect(this.props.data!.loading).toBeFalsy();
               expect(this.props.data!.todo_list).toEqual({
-                id: '123',
-                title: 'how to apollo',
-                tasks: []
+                id: "123",
+                title: "how to apollo",
+                tasks: [],
               });
               break;
             case 2:
               expect(this.props.data!.loading).toBeFalsy();
               expect(queryMountCount).toBe(1);
-              expect(this.props.data!.todo_list).toEqual(
-                updatedData.todo_list
-              );
+              expect(this.props.data!.todo_list).toEqual(updatedData.todo_list);
               break;
             case 3:
               expect(this.props.data!.loading).toBeFalsy();
-              expect(this.props.data!.todo_list).toEqual(
-                updatedData.todo_list
-              );
+              expect(this.props.data!.todo_list).toEqual(updatedData.todo_list);
               break;
             default:
           }
@@ -396,7 +412,7 @@ describe('graphql(mutation) update queries', () => {
     );
 
     setTimeout(() => {
-      mutate({ refetchQueries: [{ query, variables: { id: '123' } }] }).then(
+      mutate({ refetchQueries: [{ query, variables: { id: "123" } }] }).then(
         () => {
           setTimeout(() => {
             render(

@@ -1,41 +1,41 @@
-import React from 'react';
-import { render, cleanup } from '@testing-library/react';
-import gql from 'graphql-tag';
-import { DocumentNode } from 'graphql';
+import React from "react";
+import { render, cleanup } from "@testing-library/react";
+import gql from "graphql-tag";
+import { DocumentNode } from "graphql";
 
-import { ApolloClient } from '../../../core';
-import { ApolloProvider } from '../../context';
-import { InMemoryCache as Cache } from '../../../cache';
-import { ApolloLink } from '../../../link/core';
-import { itAsync, mockSingleLink } from '../../../testing';
-import { graphql } from '../graphql';
-import { ChildProps, DataValue } from '../types';
-import { withApollo } from '../withApollo';
+import { ApolloClient } from "../../../core";
+import { ApolloProvider } from "../../context";
+import { InMemoryCache as Cache } from "../../../cache";
+import { ApolloLink } from "../../../link/core";
+import { itAsync, mockSingleLink } from "../../../testing";
+import { graphql } from "../graphql";
+import { ChildProps, DataValue } from "../types";
+import { withApollo } from "../withApollo";
 
 function compose(...funcs: Function[]) {
   const functions = funcs.reverse();
-  return function(...args: any[]) {
+  return function (...args: any[]) {
     const [firstFunction, ...restFunctions] = functions;
     let result = firstFunction.apply(null, args);
-    restFunctions.forEach(fnc => {
+    restFunctions.forEach((fnc) => {
       result = fnc.call(null, result);
     });
     return result;
   };
 }
 
-describe('shared operations', () => {
+describe("shared operations", () => {
   afterEach(cleanup);
 
-  describe('withApollo', () => {
-    it('passes apollo-client to props', () => {
+  describe("withApollo", () => {
+    it("passes apollo-client to props", () => {
       const client = new ApolloClient({
         link: new ApolloLink((o, f) => (f ? f(o) : null)),
-        cache: new Cache()
+        cache: new Cache(),
       });
 
       @withApollo
-      class ContainerWithData extends React.Component<any > {
+      class ContainerWithData extends React.Component<any> {
         render(): React.ReactNode {
           expect(this.props.client).toEqual(client);
           return null;
@@ -50,7 +50,7 @@ describe('shared operations', () => {
     });
   });
 
-  it('binds two queries to props', () => {
+  it("binds two queries to props", () => {
     const peopleQuery: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -60,7 +60,7 @@ describe('shared operations', () => {
         }
       }
     `;
-    const peopleData = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const peopleData = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
     interface PeopleData {
       allPeople: { people: [{ name: string }] };
     }
@@ -74,7 +74,7 @@ describe('shared operations', () => {
         }
       }
     `;
-    const shipsData = { allships: { ships: [{ name: 'Tie Fighter' }] } };
+    const shipsData = { allships: { ships: [{ name: "Tie Fighter" }] } };
     interface ShipsData {
       allShips: { ships: [{ name: string }] };
     }
@@ -85,7 +85,7 @@ describe('shared operations', () => {
     );
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     interface PeopleChildProps {
@@ -97,7 +97,7 @@ describe('shared operations', () => {
     const withPeople: any = graphql<{}, PeopleData, {}, PeopleChildProps>(
       peopleQuery,
       {
-        name: 'people'
+        name: "people",
       }
     );
 
@@ -107,7 +107,7 @@ describe('shared operations', () => {
     const withShips: any = graphql<{}, ShipsData, {}, ShipsChildProps>(
       shipsQuery,
       {
-        name: 'ships'
+        name: "ships",
       }
     );
 
@@ -134,7 +134,7 @@ describe('shared operations', () => {
     unmount();
   });
 
-  it('binds two queries to props with different syntax', () => {
+  it("binds two queries to props with different syntax", () => {
     const peopleQuery: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -144,7 +144,7 @@ describe('shared operations', () => {
         }
       }
     `;
-    const peopleData = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const peopleData = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
     interface PeopleData {
       allPeople: { people: [{ name: string }] };
     }
@@ -157,7 +157,7 @@ describe('shared operations', () => {
         }
       }
     `;
-    const shipsData = { allships: { ships: [{ name: 'Tie Fighter' }] } };
+    const shipsData = { allships: { ships: [{ name: "Tie Fighter" }] } };
     interface ShipsData {
       allShips: { ships: [{ name: string }] };
     }
@@ -168,7 +168,7 @@ describe('shared operations', () => {
     );
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     interface PeopleChildProps {
@@ -178,7 +178,7 @@ describe('shared operations', () => {
     const withPeople = graphql<{}, PeopleData, {}, PeopleChildProps>(
       peopleQuery,
       {
-        name: 'people'
+        name: "people",
       }
     );
 
@@ -191,7 +191,7 @@ describe('shared operations', () => {
       {},
       ShipsAndPeopleChildProps
     >(shipsQuery, {
-      name: 'ships'
+      name: "ships",
     });
 
     const ContainerWithData = withPeople(
@@ -216,7 +216,7 @@ describe('shared operations', () => {
     unmount();
   });
 
-  it('binds two operations to props', () => {
+  it("binds two operations to props", () => {
     const peopleQuery: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -226,7 +226,7 @@ describe('shared operations', () => {
         }
       }
     `;
-    const peopleData = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const peopleData = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
 
     const peopleMutation: DocumentNode = gql`
       mutation addPerson {
@@ -238,23 +238,23 @@ describe('shared operations', () => {
       }
     `;
     const peopleMutationData = {
-      allPeople: { people: [{ name: 'Leia Skywalker' }] }
+      allPeople: { people: [{ name: "Leia Skywalker" }] },
     };
 
     const link = mockSingleLink(
       { request: { query: peopleQuery }, result: { data: peopleData } },
       {
         request: { query: peopleMutation },
-        result: { data: peopleMutationData }
+        result: { data: peopleMutationData },
       }
     );
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
-    const withPeople = graphql(peopleQuery, { name: 'people' });
-    const withPeopleMutation = graphql(peopleMutation, { name: 'addPerson' });
+    const withPeople = graphql(peopleQuery, { name: "people" });
+    const withPeopleMutation = graphql(peopleMutation, { name: "addPerson" });
 
     const ContainerWithData = withPeople(
       withPeopleMutation(
@@ -281,7 +281,7 @@ describe('shared operations', () => {
     unmount();
   });
 
-  itAsync('allows options to take an object', (resolve, reject) => {
+  itAsync("allows options to take an object", (resolve, reject) => {
     const query: DocumentNode = gql`
       query people {
         allPeople(first: 1) {
@@ -291,16 +291,16 @@ describe('shared operations', () => {
         }
       }
     `;
-    const data = { allPeople: { people: [{ name: 'Luke Skywalker' }] } };
+    const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
     type Data = typeof data;
 
     const link = mockSingleLink({
       request: { query },
-      result: { data }
+      result: { data },
     });
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     let queryExecuted = false;
@@ -327,12 +327,12 @@ describe('shared operations', () => {
         resolve();
         return;
       }
-      reject(new Error('query ran even though skip present'));
+      reject(new Error("query ran even though skip present"));
     }, 25);
   });
 
-  describe('compose', () => {
-    it('binds two queries to props with different syntax', () => {
+  describe("compose", () => {
+    it("binds two queries to props with different syntax", () => {
       const peopleQuery: DocumentNode = gql`
         query people {
           allPeople(first: 1) {
@@ -343,7 +343,7 @@ describe('shared operations', () => {
         }
       `;
       const peopleData = {
-        allPeople: { people: [{ name: 'Luke Skywalker' }] }
+        allPeople: { people: [{ name: "Luke Skywalker" }] },
       };
 
       type PeopleData = typeof peopleData;
@@ -357,7 +357,7 @@ describe('shared operations', () => {
           }
         }
       `;
-      const shipsData = { allships: { ships: [{ name: 'Tie Fighter' }] } };
+      const shipsData = { allships: { ships: [{ name: "Tie Fighter" }] } };
 
       type ShipsData = typeof shipsData;
 
@@ -367,7 +367,7 @@ describe('shared operations', () => {
       );
       const client = new ApolloClient({
         link,
-        cache: new Cache({ addTypename: false })
+        cache: new Cache({ addTypename: false }),
       });
 
       interface PeopleChildProps {
@@ -381,12 +381,12 @@ describe('shared operations', () => {
 
       const enhanced = compose(
         graphql<{}, PeopleData, {}, PeopleChildProps>(peopleQuery, {
-          name: 'people'
+          name: "people",
         }),
         graphql<PeopleChildProps, ShipsData, {}, ShipsAndPeopleChildProps>(
           shipsQuery,
           {
-            name: 'ships'
+            name: "ships",
           }
         )
       );

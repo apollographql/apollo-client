@@ -1,14 +1,14 @@
-import { invariant } from '../../utilities/globals';
-import * as React from 'react';
-import { OperationVariables } from '../../core';
-import { IDocumentDefinition } from '../parser';
+import { invariant } from "../../utilities/globals/index.js";
+import * as React from "react";
+import type { OperationVariables } from "../../core/index.js";
+import type { IDocumentDefinition } from "../parser/index.js";
 
 export const defaultMapPropsToOptions = () => ({});
-export const defaultMapResultToProps: <P>(props: P) => P = props => props;
+export const defaultMapResultToProps: <P>(props: P) => P = (props) => props;
 export const defaultMapPropsToSkip = () => false;
 
 export function getDisplayName<P>(WrappedComponent: React.ComponentType<P>) {
-  return WrappedComponent.displayName || WrappedComponent.name || 'Component';
+  return WrappedComponent.displayName || WrappedComponent.name || "Component";
 }
 
 export function calculateVariablesFromProps<TProps>(
@@ -22,13 +22,13 @@ export function calculateVariablesFromProps<TProps>(
     const variableName = variable.name.value;
     const variableProp = (props as any)[variableName];
 
-    if (typeof variableProp !== 'undefined') {
+    if (typeof variableProp !== "undefined") {
       variables[variableName] = variableProp;
       continue;
     }
 
     // Allow optional props
-    if (type.kind !== 'NonNullType') {
+    if (type.kind !== "NonNullType") {
       variables[variableName] = undefined;
     }
   }
@@ -43,7 +43,7 @@ export type RefSetter<TChildProps> = (
 export class GraphQLBase<
   TProps,
   TChildProps,
-  TState = any
+  TState = any,
 > extends React.Component<TProps, TState> {
   public withRef: boolean = false;
   // wrapped instance

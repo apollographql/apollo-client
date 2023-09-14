@@ -62,24 +62,6 @@ The default value is `none`, which causes the hook to throw the error.
 <tr>
 <td>
 
-###### `suspensePolicy`
-
-`SuspensePolicy`
-</td>
-
-<td>
-
-Determines whether the component should re-suspend when refetching data. Set to
-`initial` to avoid re-suspending the component on a refetch.
-
-The default value is `always`, which will cause the component to always
-re-suspend when refetching data.
-</td>
-</tr>
-
-<tr>
-<td>
-
 ###### `context`
 
 `Record<string, any>`
@@ -88,6 +70,23 @@ re-suspend when refetching data.
 <td>
 
 If you're using [Apollo Link](/react/api/link/introduction/), this object is the initial value of the `context` object that's passed along your link chain.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `canonizeResults`
+
+`Boolean`
+</td>
+
+<td>
+
+If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
+
+The default value is `false`.
 
 </td>
 </tr>
@@ -105,6 +104,23 @@ If you're using [Apollo Link](/react/api/link/introduction/), this object is the
 The instance of `ApolloClient` to use to execute the query.
 
 By default, the instance that's passed down via context is used, but you can provide a different instance here.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `queryKey`
+
+`string | number | any[]`
+</td>
+
+<td>
+
+A unique identifier for the query. Each item in the array must be a stable identifier to prevent infinite fetches.
+
+This is useful when using the same query and variables combination in more than one component, otherwise the components may clobber each other. This can also be used to force the query to re-evaluate fresh.
 
 </td>
 </tr>
@@ -142,23 +158,6 @@ The default value is `cache-first`.
 <tr>
 <td>
 
-###### `nextFetchPolicy`
-
-`SuspenseQueryHookFetchPolicy`
-</td>
-
-<td>
-
-Specifies the [`fetchPolicy`](#fetchpolicy) to use for all executions of this query _after_ this execution.
-
-For example, you can use this to switch back to a `cache-first` fetch policy after using `cache-and-network` or `network-only` for a single execution.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 ###### `returnPartialData`
 
 `boolean`
@@ -172,6 +171,42 @@ The default value is `false`.
 
 </td>
 </tr>
+
+<tr>
+<td>
+
+###### `refetchWritePolicy`
+
+`"merge" | "overwrite"`
+</td>
+
+<td>
+
+Watched queries must opt into overwriting existing data on refetch, by passing `refetchWritePolicy: "overwrite"` in their `WatchQueryOptions`.
+
+The default value is `"overwrite"`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `skip` (deprecated)
+
+`boolean`
+</td>
+
+<td>
+
+If `true`, the query is not executed. The default value is `false`.
+
+This option is deprecated and only supported to ease the migration from `useQuery`. It will be removed in a future release.
+Please use [`skipToken`](/react/api/react/hooks#skiptoken`) instead of the `skip` option as it is more type-safe.
+
+</td>
+</tr>
+
 
 </tbody>
 

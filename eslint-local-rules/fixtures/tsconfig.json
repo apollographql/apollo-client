@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "esnext"
+  },
+  "include": ["file.ts", "react.tsx"]
+}

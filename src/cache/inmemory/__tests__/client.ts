@@ -18,7 +18,8 @@ describe("InMemoryCache tests exercising ApolloClient", () => {
   ])(
     "results should be read from cache even when incomplete (fetchPolicy %s)",
     (fetchPolicy) => {
-      const dateString = new Date().toISOString();
+      const dateFromCache = "2023-09-14T13:03:22.616Z";
+      const dateFromNetwork = "2023-09-15T13:03:22.616Z";
 
       const cache = new InMemoryCache({
         typePolicies: {
@@ -26,7 +27,7 @@ describe("InMemoryCache tests exercising ApolloClient", () => {
             fields: {
               date: {
                 read(existing) {
-                  return new Date(existing || dateString);
+                  return new Date(existing || dateFromCache);
                 },
               },
             },
@@ -42,7 +43,7 @@ describe("InMemoryCache tests exercising ApolloClient", () => {
                 data: {
                   // This raw string should be converted to a Date by the Query.date
                   // read function passed to InMemoryCache below.
-                  date: dateString,
+                  date: dateFromNetwork,
                   // Make sure we don't accidentally return fields not mentioned in
                   // the query just because the result is incomplete.
                   ignored: "irrelevant to the subscribed query",
@@ -88,18 +89,22 @@ describe("InMemoryCache tests exercising ApolloClient", () => {
           // the "no-cache" policy. In this test, that means the Query.date field
           // will remain as a raw string rather than being converted to a Date by
           // the read function.
-          const expectedDate =
-            fetchPolicy === "no-cache" ? dateString : new Date(dateString);
+          const expectedDateAfterResult =
+            fetchPolicy === "cache-only"
+              ? new Date(dateFromCache)
+              : fetchPolicy === "no-cache"
+              ? dateFromNetwork
+              : new Date(dateFromNetwork);
 
           if (adjustedCount === 1) {
             expect(result.loading).toBe(true);
             expect(result.data).toEqual({
-              date: expectedDate,
+              date: new Date(dateFromCache),
             });
           } else if (adjustedCount === 2) {
             expect(result.loading).toBe(false);
             expect(result.data).toEqual({
-              date: expectedDate,
+              date: expectedDateAfterResult,
               // The no-cache fetch policy does return extraneous fields from the
               // raw network result that were not requested in the query, since
               // the cache is not consulted.
@@ -129,7 +134,7 @@ describe("InMemoryCache tests exercising ApolloClient", () => {
           } else if (adjustedCount === 3) {
             expect(result.loading).toBe(false);
             expect(result.data).toEqual({
-              date: expectedDate,
+              date: expectedDateAfterResult,
               missing: "not missing anymore",
             });
 
@@ -144,7 +149,7 @@ describe("InMemoryCache tests exercising ApolloClient", () => {
                   ? null
                   : {
                       // Make sure this field is stored internally as a raw string.
-                      date: dateString,
+                      date: dateFromNetwork,
                     }),
                 // Written explicitly with cache.writeQuery above.
                 missing: "not missing anymore",

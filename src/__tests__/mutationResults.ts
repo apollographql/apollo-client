@@ -9,12 +9,8 @@ import {
   Observable,
   ObservableSubscription as Subscription,
 } from "../utilities";
-import {
-  itAsync,
-  subscribeAndCount,
-  mockSingleLink,
-  withErrorSpy,
-} from "../testing";
+import { itAsync, subscribeAndCount, mockSingleLink } from "../testing";
+import { spyOnConsole } from "../testing/internal";
 
 describe("mutation results", () => {
   const query = gql`
@@ -436,10 +432,9 @@ describe("mutation results", () => {
     }
   );
 
-  withErrorSpy(
-    itAsync,
-    "should warn when the result fields don't match the query fields",
-    (resolve, reject) => {
+  it("should warn when the result fields don't match the query fields", async () => {
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    await new Promise((resolve, reject) => {
       let handle: any;
       let subscriptionHandle: Subscription;
 
@@ -532,8 +527,8 @@ describe("mutation results", () => {
           expect(result).toEqual(mutationTodoResult);
         })
         .then(resolve, reject);
-    }
-  );
+    });
+  });
 
   describe("InMemoryCache type/field policies", () => {
     const startTime = Date.now();

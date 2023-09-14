@@ -8,6 +8,7 @@ import { ApolloProvider } from "../../../context";
 import { ApolloLink, Operation } from "../../../../link/core";
 import { itAsync, MockSubscriptionLink } from "../../../../testing";
 import { Subscription } from "../../Subscription";
+import { spyOnConsole } from "../../../../testing/internal";
 
 const results = [
   "Luke Skywalker",
@@ -118,9 +119,7 @@ it("calls onData if given", async () => {
 });
 
 it("calls onSubscriptionData with deprecation warning if given", async () => {
-  const consoleWarnSpy = jest
-    .spyOn(console, "warn")
-    .mockImplementation(() => {});
+  using consoleSpy = spyOnConsole("warn");
   let count = 0;
 
   const Component = () => (
@@ -141,8 +140,8 @@ it("calls onSubscriptionData with deprecation warning if given", async () => {
     </ApolloProvider>
   );
 
-  expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-  expect(consoleWarnSpy).toHaveBeenCalledWith(
+  expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
     expect.stringContaining("'onSubscriptionData' is deprecated")
   );
 
@@ -152,8 +151,6 @@ it("calls onSubscriptionData with deprecation warning if given", async () => {
   }, 10);
 
   await waitFor(() => expect(count).toBe(4));
-
-  consoleWarnSpy.mockRestore();
 });
 
 it("should call onComplete if specified", async () => {
@@ -187,9 +184,7 @@ it("should call onComplete if specified", async () => {
 });
 
 it("should call onSubscriptionComplete with deprecation warning if specified", async () => {
-  const consoleWarnSpy = jest
-    .spyOn(console, "warn")
-    .mockImplementation(() => {});
+  using consoleSpy = spyOnConsole("warn");
   let count = 0;
 
   let done = false;
@@ -211,8 +206,8 @@ it("should call onSubscriptionComplete with deprecation warning if specified", a
     </ApolloProvider>
   );
 
-  expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-  expect(consoleWarnSpy).toHaveBeenCalledWith(
+  expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
     expect.stringContaining("'onSubscriptionComplete' is deprecated")
   );
 
@@ -222,8 +217,6 @@ it("should call onSubscriptionComplete with deprecation warning if specified", a
   }, 10);
 
   await waitFor(() => expect(done).toBeTruthy());
-
-  consoleWarnSpy.mockRestore();
 });
 
 itAsync(

@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "test": "node -r ts-node/register/transpile-only --no-warnings --test --watch *.test.ts"
+  }
+}

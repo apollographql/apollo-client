@@ -6,6 +6,7 @@ import { ApolloError, PROTOCOL_ERRORS_SYMBOL } from "../errors";
 import { QueryManager } from "../core/QueryManager";
 import { itAsync, mockObservableLink } from "../testing";
 import { GraphQLError } from "graphql";
+import { spyOnConsole } from "../testing/internal";
 
 describe("GraphQL Subscriptions", () => {
   const results = [
@@ -328,9 +329,7 @@ describe("GraphQL Subscriptions", () => {
     };
 
     // Silence expected warning about missing field for cache write
-    const consoleSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    using _consoleSpy = spyOnConsole("warn");
 
     link.simulateResult(errorResult, true);
 
@@ -348,8 +347,6 @@ describe("GraphQL Subscriptions", () => {
         ],
       })
     );
-
-    consoleSpy.mockRestore();
   });
 
   it('strips errors in next result when `errorPolicy` is "ignore"', async () => {
@@ -443,9 +440,7 @@ describe("GraphQL Subscriptions", () => {
     };
 
     // Silence expected warning about missing field for cache write
-    const consoleSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    using _consoleSpy = spyOnConsole("warn");
 
     link.simulateResult(errorResult, true);
 
@@ -463,8 +458,6 @@ describe("GraphQL Subscriptions", () => {
         ],
       })
     );
-
-    consoleSpy.mockRestore();
   });
 
   it("should call complete handler when the subscription completes", () => {
@@ -546,14 +539,10 @@ describe("GraphQL Subscriptions", () => {
     };
 
     // Silence expected warning about missing field for cache write
-    const consoleSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    using _consoleSpy = spyOnConsole("warn");
 
     link.simulateResult(errorResult);
 
     await promise;
-
-    consoleSpy.mockRestore();
   });
 });

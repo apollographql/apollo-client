@@ -14,6 +14,7 @@ import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../context";
 import { MockSubscriptionLink } from "../../../testing";
 import { useSubscription } from "../useSubscription";
+import { spyOnConsole } from "../../../testing/internal";
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {
@@ -525,7 +526,7 @@ describe("useSubscription Hook", () => {
   });
 
   it("should handle immediate completions gracefully", async () => {
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    using consoleSpy = spyOnConsole("error");
 
     const subscription = gql`
       subscription {
@@ -564,17 +565,16 @@ describe("useSubscription Hook", () => {
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(null);
 
-    expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy.mock.calls[0]).toStrictEqual([
+    expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
       Object.create(null),
     ]);
-    errorSpy.mockRestore();
   });
 
   it("should handle immediate completions with multiple subscriptions gracefully", async () => {
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    using consoleSpy = spyOnConsole("error");
     const subscription = gql`
       subscription {
         car {
@@ -633,27 +633,26 @@ describe("useSubscription Hook", () => {
     expect(result.current.sub3.error).toBe(undefined);
     expect(result.current.sub3.data).toBe(null);
 
-    expect(errorSpy).toHaveBeenCalledTimes(3);
-    expect(errorSpy.mock.calls[0]).toStrictEqual([
+    expect(consoleSpy.error).toHaveBeenCalledTimes(3);
+    expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
       Object.create(null),
     ]);
-    expect(errorSpy.mock.calls[1]).toStrictEqual([
+    expect(consoleSpy.error.mock.calls[1]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
       Object.create(null),
     ]);
-    expect(errorSpy.mock.calls[2]).toStrictEqual([
+    expect(consoleSpy.error.mock.calls[2]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
       Object.create(null),
     ]);
-    errorSpy.mockRestore();
   });
 
   test("should warn when using 'onSubscriptionData' and 'onData' together", () => {
-    const warningSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    using consoleSpy = spyOnConsole("warn");
     const subscription = gql`
       subscription {
         car {
@@ -681,13 +680,12 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(warningSpy).toHaveBeenCalledTimes(1);
-    expect(warningSpy).toHaveBeenCalledWith(
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.warn).toHaveBeenCalledWith(
       expect.stringContaining(
         "supports only the 'onSubscriptionData' or 'onData' option"
       )
     );
-    warningSpy.mockRestore();
   });
 
   test("prefers 'onData' when using 'onSubscriptionData' and 'onData' together", async () => {
@@ -739,7 +737,7 @@ describe("useSubscription Hook", () => {
   });
 
   test("uses 'onSubscriptionData' when 'onData' is absent", async () => {
-    const warningSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    using _consoleSpy = spyOnConsole("warn");
     const subscription = gql`
       subscription {
         car {
@@ -781,11 +779,10 @@ describe("useSubscription Hook", () => {
       },
       { interval: 1 }
     );
-    warningSpy.mockRestore();
   });
 
   test("only warns once using `onSubscriptionData`", () => {
-    const warningSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    using consoleSpy = spyOnConsole("warn");
     const subscription = gql`
       subscription {
         car {
@@ -814,12 +811,11 @@ describe("useSubscription Hook", () => {
 
     rerender();
 
-    expect(warningSpy).toHaveBeenCalledTimes(1);
-    warningSpy.mockRestore();
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
   });
 
   test("should warn when using 'onComplete' and 'onSubscriptionComplete' together", () => {
-    const warningSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    using consoleSpy = spyOnConsole("warn");
     const subscription = gql`
       subscription {
         car {
@@ -847,17 +843,16 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(warningSpy).toHaveBeenCalledTimes(1);
-    expect(warningSpy).toHaveBeenCalledWith(
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.warn).toHaveBeenCalledWith(
       expect.stringContaining(
         "supports only the 'onSubscriptionComplete' or 'onComplete' option"
       )
     );
-    warningSpy.mockRestore();
   });
 
   test("prefers 'onComplete' when using 'onComplete' and 'onSubscriptionComplete' together", async () => {
-    const warningSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    using _consoleSpy = spyOnConsole("warn");
     const subscription = gql`
       subscription {
         car {
@@ -904,11 +899,10 @@ describe("useSubscription Hook", () => {
       { interval: 1 }
     );
     expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
-    warningSpy.mockRestore();
   });
 
   test("uses 'onSubscriptionComplete' when 'onComplete' is absent", async () => {
-    const warningSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    using _consoleSpy = spyOnConsole("warn");
     const subscription = gql`
       subscription {
         car {
@@ -952,11 +946,10 @@ describe("useSubscription Hook", () => {
       },
       { interval: 1 }
     );
-    warningSpy.mockRestore();
   });
 
   test("only warns once using `onSubscriptionComplete`", () => {
-    const warningSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    using consoleSpy = spyOnConsole("warn");
     const subscription = gql`
       subscription {
         car {
@@ -985,8 +978,7 @@ describe("useSubscription Hook", () => {
 
     rerender();
 
-    expect(warningSpy).toHaveBeenCalledTimes(1);
-    warningSpy.mockRestore();
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
   });
 
   describe("multipart subscriptions", () => {

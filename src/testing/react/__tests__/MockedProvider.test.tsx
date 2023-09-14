@@ -8,6 +8,7 @@ import { MockedProvider } from "../MockedProvider";
 import { useQuery } from "../../../react/hooks";
 import { InMemoryCache } from "../../../cache";
 import { ApolloLink } from "../../../link/core";
+import { spyOnConsole } from "../../internal";
 
 const variables = {
   username: "mock_username",
@@ -521,7 +522,7 @@ describe("General use", () => {
   });
 
   it("shows a warning in the console when there is no matched mock", async () => {
-    const consoleSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    using _consoleSpy = spyOnConsole("warn");
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -561,12 +562,10 @@ describe("General use", () => {
     expect(console.warn).toHaveBeenCalledWith(
       expect.stringContaining("No more mocked responses for the query")
     );
-
-    consoleSpy.mockRestore();
   });
 
   it("silences console warning for unmatched mocks when `showWarnings` is `false`", async () => {
-    const consoleSpy = jest.spyOn(console, "warn");
+    using _consoleSpy = spyOnConsole("warn");
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -603,12 +602,10 @@ describe("General use", () => {
     });
 
     expect(console.warn).not.toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
   });
 
   it("silences console warning for unmatched mocks when passing `showWarnings` to `MockLink` directly", async () => {
-    const consoleSpy = jest.spyOn(console, "warn");
+    using _consoleSpy = spyOnConsole("warn");
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -649,8 +646,6 @@ describe("General use", () => {
     });
 
     expect(console.warn).not.toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
   });
 
   itAsync(

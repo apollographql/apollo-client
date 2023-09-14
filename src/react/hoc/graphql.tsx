@@ -1,18 +1,18 @@
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from "graphql";
 
-import { parser, DocumentType } from '../parser';
-import { withQuery } from './query-hoc';
-import { withMutation } from './mutation-hoc';
-import { withSubscription } from './subscription-hoc';
-import { OperationOption, DataProps, MutateProps } from './types';
-import { OperationVariables } from '../../core';
+import { parser, DocumentType } from "../parser/index.js";
+import { withQuery } from "./query-hoc.js";
+import { withMutation } from "./mutation-hoc.js";
+import { withSubscription } from "./subscription-hoc.js";
+import type { OperationOption, DataProps, MutateProps } from "./types.js";
+import type { OperationVariables } from "../../core/index.js";
 
 export function graphql<
   TProps extends TGraphQLVariables | {} = {},
   TData extends object = {},
   TGraphQLVariables extends OperationVariables = {},
   TChildProps extends object = Partial<DataProps<TData, TGraphQLVariables>> &
-    Partial<MutateProps<TData, TGraphQLVariables>>
+    Partial<MutateProps<TData, TGraphQLVariables>>,
 >(
   document: DocumentNode,
   operationOptions: OperationOption<

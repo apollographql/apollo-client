@@ -1,14 +1,15 @@
-import {
+import type {
   DocumentNode,
   ASTNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
-  visit,
 } from "graphql";
+import { visit } from "graphql";
 
 import { wrap } from "optimism";
 
-import { FragmentMap, getFragmentDefinitions } from "../../utilities";
+import type { FragmentMap } from "../../utilities/index.js";
+import { getFragmentDefinitions } from "../../utilities/index.js";
 
 export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;
@@ -46,7 +47,7 @@ class FragmentRegistry implements FragmentRegistryAPI {
   public register(): this {
     const definitions = new Map<string, FragmentDefinitionNode>();
     arrayLikeForEach.call(arguments, (doc: DocumentNode) => {
-      getFragmentDefinitions(doc).forEach(node => {
+      getFragmentDefinitions(doc).forEach((node) => {
         definitions.set(node.name.value, node);
       });
     });
@@ -65,25 +66,27 @@ class FragmentRegistry implements FragmentRegistryAPI {
   private invalidate(name: string) {}
 
   public resetCaches() {
-    this.invalidate = (
-      this.lookup = this.cacheUnaryMethod("lookup")
-    ).dirty; // This dirty function is bound to the wrapped lookup method.
+    this.invalidate = (this.lookup = this.cacheUnaryMethod("lookup")).dirty; // This dirty function is bound to the wrapped lookup method.
     this.transform = this.cacheUnaryMethod("transform");
     this.findFragmentSpreads = this.cacheUnaryMethod("findFragmentSpreads");
   }
 
-  private cacheUnaryMethod<TName extends keyof Pick<FragmentRegistry,
-    | "lookup"
-    | "transform"
-    | "findFragmentSpreads"
-  >>(name: TName) {
+  private cacheUnaryMethod<
+    TName extends keyof Pick<
+      FragmentRegistry,
+      "lookup" | "transform" | "findFragmentSpreads"
+    >,
+  >(name: TName) {
     const registry = this;
     const originalMethod = FragmentRegistry.prototype[name];
-    return wrap(function () {
-      return originalMethod.apply(registry, arguments);
-    }, {
-      makeCacheKey: arg => arg,
-    });
+    return wrap(
+      function () {
+        return originalMethod.apply(registry, arguments);
+      },
+      {
+        makeCacheKey: (arg) => arg,
+      }
+    );
   }
 
   public lookup(fragmentName: string): FragmentDefinitionNode | null {
@@ -92,7 +95,7 @@ class FragmentRegistry implements FragmentRegistryAPI {
 
   public transform<D extends DocumentNode>(document: D): D {
     const defined = new Map<string, FragmentDefinitionNode>();
-    getFragmentDefinitions(document).forEach(def => {
+    getFragmentDefinitions(document).forEach((def) => {
       defined.set(def.name.value, def);
     });
 
@@ -103,9 +106,8 @@ class FragmentRegistry implements FragmentRegistryAPI {
       }
     };
 
-    const enqueueChildSpreads = (node: ASTNode) => Object.keys(
-      this.findFragmentSpreads(node)
-    ).forEach(enqueue);
+    const enqueueChildSpreads = (node: ASTNode) =>
+      Object.keys(this.findFragmentSpreads(node)).forEach(enqueue);
 
     enqueueChildSpreads(document);
 
@@ -114,22 +116,22 @@ class FragmentRegistry implements FragmentRegistryAPI {
 
     // This Set forEach loop can be extended during iteration by adding
     // additional strings to the unbound set.
-    unbound.forEach(fragmentName => {
+    unbound.forEach((fragmentName) => {
       const knownFragmentDef = defined.get(fragmentName);
       if (knownFragmentDef) {
-        enqueueChildSpreads(map[fragmentName] = knownFragmentDef);
+        enqueueChildSpreads((map[fragmentName] = knownFragmentDef));
       } else {
         missing.push(fragmentName);
         const def = this.lookup(fragmentName);
         if (def) {
-          enqueueChildSpreads(map[fragmentName] = def);
+          enqueueChildSpreads((map[fragmentName] = def));
         }
       }
     });
 
     if (missing.length) {
       const defsToAppend: FragmentDefinitionNode[] = [];
-      missing.forEach(name => {
+      missing.forEach((name) => {
         const def = map[name];
         if (def) {
           defsToAppend.push(def);

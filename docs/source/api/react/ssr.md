@@ -24,7 +24,7 @@ import { getDataFromTree } from "@apollo/client/react/ssr";
 
 ### Result
 
-`getDataFromTree` returns a promise (`Promise<string>`) which resolves when the data is ready in your Apollo Client store. The result is generated using [`ReactDOMServer.renderToStaticMarkup`](https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup) under the hood.
+`getDataFromTree` returns a promise (`Promise<string>`) which resolves when the data is ready in your Apollo Client store. The result is generated using [`ReactDOMServer.renderToStaticMarkup`](https://react.dev/reference/react-dom/server/renderToStaticMarkup) under the hood.
 
 ### Example
 
@@ -32,7 +32,7 @@ See [Executing queries with `getDataFromTree`](../../performance/server-side-ren
 
 ## `renderToStringWithData`
 
-The `renderToStringWithData` function is similar to `getDataFromTree`, but uses [`ReactDOMServer.renderToString`](https://reactjs.org/docs/react-dom-server.html#rendertostring) to render its result instead of [`ReactDOMServer.renderToStaticMarkup`](https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup) (the React docs help explain the difference).
+The `renderToStringWithData` function is similar to `getDataFromTree`, but uses [`ReactDOMServer.renderToString`](https://react.dev/reference/react-dom/server/renderToString) to render its result instead of [`ReactDOMServer.renderToStaticMarkup`](https://react.dev/reference/react-dom/server/renderToStaticMarkup) (the React docs help explain the difference).
 
 ```js
 import { renderToStringWithData } from "@apollo/client/react/ssr";
@@ -46,4 +46,4 @@ import { renderToStringWithData } from "@apollo/client/react/ssr";
 
 ### Result
 
-`renderToStringWithData` returns a promise (`Promise<string>`) which resolves when the data is ready in your Apollo Client store. The result is generated using [`ReactDOMServer.renderToString`](https://reactjs.org/docs/react-dom-server.html#rendertostring) under the hood.
+`renderToStringWithData` returns a promise (`Promise<string>`) which resolves when the data is ready in your Apollo Client store. The result is generated using [`ReactDOMServer.renderToString`](https://react.dev/reference/react-dom/server/renderToString) under the hood.

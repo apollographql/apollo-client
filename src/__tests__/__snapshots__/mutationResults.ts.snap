@@ -4,11 +4,13 @@ exports[`mutation results should warn when the result fields don't match the que
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'description' while writing result {
-  \\"id\\": \\"2\\",
-  \\"name\\": \\"Todo 2\\",
-  \\"__typename\\": \\"createTodo\\"
-}",
+      "Missing field '%s' while writing result %o",
+      "description",
+      Object {
+        "__typename": "createTodo",
+        "id": "2",
+        "name": "Todo 2",
+      },
     ],
   ],
   "results": Array [

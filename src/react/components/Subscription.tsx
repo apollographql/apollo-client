@@ -1,18 +1,21 @@
-import * as PropTypes from 'prop-types';
+import * as PropTypes from "prop-types";
 
-import { OperationVariables } from '../../core';
-import { SubscriptionComponentOptions } from './types';
-import { useSubscription } from '../hooks';
+import type { OperationVariables } from "../../core/index.js";
+import type { SubscriptionComponentOptions } from "./types.js";
+import { useSubscription } from "../hooks/index.js";
 
-export function Subscription<TData = any, TVariables extends OperationVariables = OperationVariables>(
-  props: SubscriptionComponentOptions<TData, TVariables>
-) {
+export function Subscription<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(props: SubscriptionComponentOptions<TData, TVariables>) {
   const result = useSubscription(props.subscription, props);
   return props.children && result ? props.children(result) : null;
 }
 
 export interface Subscription<TData, TVariables extends OperationVariables> {
-  propTypes: PropTypes.InferProps<SubscriptionComponentOptions<TData, TVariables>>;
+  propTypes: PropTypes.InferProps<
+    SubscriptionComponentOptions<TData, TVariables>
+  >;
 }
 
 Subscription.propTypes = {
@@ -23,5 +26,5 @@ Subscription.propTypes = {
   onData: PropTypes.func,
   onSubscriptionComplete: PropTypes.func,
   onComplete: PropTypes.func,
-  shouldResubscribe: PropTypes.oneOfType([PropTypes.func, PropTypes.bool])
+  shouldResubscribe: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
 } as Subscription<any, any>["propTypes"];

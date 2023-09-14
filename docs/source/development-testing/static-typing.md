@@ -26,7 +26,8 @@ import { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
   schema: '<URL_OF_YOUR_GRAPHQL_API>',
-  documents: ['src/**/*.tsx'],
+  // this assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
+  documents: ['src/**/*.{ts,tsx}'],
   generates: {
     './src/__generated__/': {
       preset: 'client',
@@ -43,8 +44,6 @@ export default config;
 ```
 
 > There are multiple ways to [specify a schema](https://www.the-guild.dev/graphql/codegen/docs/config-reference/schema-field#root-level) in your `codegen.ts`, so pick whichever way works best for your project setup.
-
-> Your `documents` might exist in directories other than `src` and may include `ts` files, please adjust accordingly.  To catch everything, consider implementing: `documents: ['**/*.{ts,tsx}']`.
 
 Finally, we'll add the following scripts to our `package.json` file:
 

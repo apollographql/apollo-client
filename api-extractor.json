@@ -42,7 +42,6 @@
 
   "dtsRollup": {
     "enabled": false
-
   },
   "tsdocMetadata": {
     "enabled": false
@@ -117,11 +116,11 @@
       }
     }
 
-      // "ae-extra-release-tag": {
-      //   "logLevel": "warning",
-      //   "addToApiReportFile": true
-      // },
-      //
-      // . . .
-    }
+    // "ae-extra-release-tag": {
+    //   "logLevel": "warning",
+    //   "addToApiReportFile": true
+    // },
+    //
+    // . . .
+  }
 }

@@ -51,11 +51,7 @@ import type {
   ErrorPolicy,
   MutationFetchPolicy,
 } from "./watchQueryOptions.js";
-import {
-  ObservableQuery,
-  ensureResult,
-  logMissingFieldErrors,
-} from "./ObservableQuery.js";
+import { ObservableQuery, logMissingFieldErrors } from "./ObservableQuery.js";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
 import type {
   ApolloQueryResult,
@@ -78,6 +74,7 @@ import {
 import type { ApolloErrorOptions } from "../errors/index.js";
 import { PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
 import { print } from "../utilities/index.js";
+import type { TODO } from "../utilities/types/TODO.js";
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -620,11 +617,8 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<TData>> {
-    return this.fetchConcastWithInfo(
-      queryId,
-      options,
-      networkStatus
-    ).concast.promise.then(ensureResult);
+    return this.fetchConcastWithInfo(queryId, options, networkStatus).concast
+      .promise as TODO;
   }
 
   public getQueryStore() {

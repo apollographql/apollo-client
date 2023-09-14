@@ -35,6 +35,7 @@ import type { QueryInfo } from "./QueryInfo.js";
 import type { MissingFieldError } from "../cache/index.js";
 import type { MissingTree } from "../cache/core/types/common.js";
 import { equalByQuery } from "./equalByQuery.js";
+import type { TODO } from "../utilities/types/TODO.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -927,10 +928,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ) {
-    return this.reobserveAsConcast(newOptions, newNetworkStatus).promise.then(
-      ensureResult
-    );
+  ): Promise<ApolloQueryResult<TData>> {
+    return this.reobserveAsConcast(newOptions, newNetworkStatus)
+      .promise as TODO;
   }
 
   public resubscribeAfterError(
@@ -1095,14 +1095,4 @@ function skipCacheDataFor(
     fetchPolicy === "no-cache" ||
     fetchPolicy === "standby"
   );
-}
-
-export function ensureResult<TData = any>(
-  value: ApolloQueryResult<TData> | undefined
-): ApolloQueryResult<TData> {
-  invariant(
-    value,
-    "A Concast finished without a result. This in an Apollo Client bug, please file a bug report."
-  );
-  return value;
 }

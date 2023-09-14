@@ -97,7 +97,7 @@ interface TransformCacheEntry {
   asQuery: DocumentNode;
 }
 
-type DefaultOptions = import("./ApolloClient.js").DefaultOptions;
+import type { DefaultOptions } from "./ApolloClient.js";
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;

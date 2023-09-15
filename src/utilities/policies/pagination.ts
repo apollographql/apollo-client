@@ -1,22 +1,19 @@
 import { __rest } from "tslib";
 
-import type { FieldPolicy, Reference } from '../../cache/index.js';
-import { mergeDeep } from '../common/mergeDeep.js';
+import type { FieldPolicy, Reference } from "../../cache/index.js";
+import { mergeDeep } from "../common/mergeDeep.js";
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 
 // A very basic pagination field policy that always concatenates new
 // results onto the existing array, without examining options.args.
 export function concatPagination<T = Reference>(
-  keyArgs: KeyArgs = false,
+  keyArgs: KeyArgs = false
 ): FieldPolicy<T[]> {
   return {
     keyArgs,
     merge(existing, incoming) {
-      return existing ? [
-        ...existing,
-        ...incoming,
-      ] : incoming;
+      return existing ? [...existing, ...incoming] : incoming;
     },
   };
 }
@@ -26,7 +23,7 @@ export function concatPagination<T = Reference>(
 // something different (like args.{start,count}), feel free to copy/paste
 // this implementation and make the appropriate changes.
 export function offsetLimitPagination<T = Reference>(
-  keyArgs: KeyArgs = false,
+  keyArgs: KeyArgs = false
 ): FieldPolicy<T[]> {
   return {
     keyArgs,
@@ -61,10 +58,12 @@ export function offsetLimitPagination<T = Reference>(
 // attempting to update the cursor field of the normalized StoreObject
 // that the reference refers to, or managing edge wrapper objects
 // (something I attempted in #7023, but abandoned because of #7088).
-export type TRelayEdge<TNode> = {
-  cursor?: string;
-  node: TNode;
-} | (Reference & { cursor?: string });
+export type TRelayEdge<TNode> =
+  | {
+      cursor?: string;
+      node: TNode;
+    }
+  | (Reference & { cursor?: string });
 
 export type TRelayPageInfo = {
   hasPreviousPage: boolean;
@@ -93,7 +92,7 @@ export type RelayFieldPolicy<TNode> = FieldPolicy<
 // one that handles Relay-style pagination, without Apollo Client knowing
 // anything about connections, edges, cursors, or pageInfo objects.
 export function relayStylePagination<TNode extends Reference = Reference>(
-  keyArgs: KeyArgs = false,
+  keyArgs: KeyArgs = false
 ): RelayFieldPolicy<TNode> {
   return {
     keyArgs,
@@ -104,7 +103,7 @@ export function relayStylePagination<TNode extends Reference = Reference>(
       const edges: TRelayEdge<TNode>[] = [];
       let firstEdgeCursor = "";
       let lastEdgeCursor = "";
-      existing.edges.forEach(edge => {
+      existing.edges.forEach((edge) => {
         // Edges themselves could be Reference objects, so it's important
         // to use readField to access the edge.edge.node property.
         if (canRead(readField("node", edge))) {
@@ -117,13 +116,10 @@ export function relayStylePagination<TNode extends Reference = Reference>(
       });
 
       if (edges.length > 1 && firstEdgeCursor === lastEdgeCursor) {
-        firstEdgeCursor = ""
+        firstEdgeCursor = "";
       }
 
-      const {
-        startCursor,
-        endCursor,
-      } = existing.pageInfo || {};
+      const { startCursor, endCursor } = existing.pageInfo || {};
 
       return {
         // Some implementations return additional Connection fields, such
@@ -150,14 +146,16 @@ export function relayStylePagination<TNode extends Reference = Reference>(
         return existing;
       }
 
-      const incomingEdges = incoming.edges ? incoming.edges.map(edge => {
-        if (isReference(edge = { ...edge })) {
-          // In case edge is a Reference, we read out its cursor field and
-          // store it as an extra property of the Reference object.
-          edge.cursor = readField<string>("cursor", edge);
-        }
-        return edge;
-      }) : [];
+      const incomingEdges = incoming.edges
+        ? incoming.edges.map((edge) => {
+            if (isReference((edge = { ...edge }))) {
+              // In case edge is a Reference, we read out its cursor field and
+              // store it as an extra property of the Reference object.
+              edge.cursor = readField<string>("cursor", edge);
+            }
+            return edge;
+          })
+        : [];
 
       if (incoming.pageInfo) {
         const { pageInfo } = incoming;
@@ -199,13 +197,13 @@ export function relayStylePagination<TNode extends Reference = Reference>(
         // This comparison does not need to use readField("cursor", edge),
         // because we stored the cursor field of any Reference edges as an
         // extra property of the Reference object.
-        const index = prefix.findIndex(edge => edge.cursor === args.after);
+        const index = prefix.findIndex((edge) => edge.cursor === args.after);
         if (index >= 0) {
           prefix = prefix.slice(0, index + 1);
           // suffix = []; // already true
         }
       } else if (args && args.before) {
-        const index = prefix.findIndex(edge => edge.cursor === args.before);
+        const index = prefix.findIndex((edge) => edge.cursor === args.before);
         suffix = index < 0 ? prefix : prefix.slice(index);
         prefix = [];
       } else if (incoming.edges) {
@@ -215,11 +213,7 @@ export function relayStylePagination<TNode extends Reference = Reference>(
         prefix = [];
       }
 
-      const edges = [
-        ...prefix,
-        ...incomingEdges,
-        ...suffix,
-      ];
+      const edges = [...prefix, ...incomingEdges, ...suffix];
 
       const pageInfo: TRelayPageInfo = {
         // The ordering of these two ...spreads may be surprising, but it
@@ -233,8 +227,10 @@ export function relayStylePagination<TNode extends Reference = Reference>(
 
       if (incoming.pageInfo) {
         const {
-          hasPreviousPage, hasNextPage,
-          startCursor, endCursor,
+          hasPreviousPage,
+          hasNextPage,
+          startCursor,
+          endCursor,
           ...extras
         } = incoming.pageInfo;
 
@@ -252,7 +248,8 @@ export function relayStylePagination<TNode extends Reference = Reference>(
         // coincides with the beginning or end of the existing data, as
         // determined using prefix.length and suffix.length.
         if (!prefix.length) {
-          if (void 0 !== hasPreviousPage) pageInfo.hasPreviousPage = hasPreviousPage;
+          if (void 0 !== hasPreviousPage)
+            pageInfo.hasPreviousPage = hasPreviousPage;
           if (void 0 !== startCursor) pageInfo.startCursor = startCursor;
         }
         if (!suffix.length) {

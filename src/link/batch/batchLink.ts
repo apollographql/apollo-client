@@ -1,11 +1,10 @@
-import type { Operation, FetchResult, NextLink } from '../core/index.js';
-import { ApolloLink } from '../core/index.js';
-import type { Observable } from '../../utilities/index.js';
-import type { BatchHandler } from './batching.js';
-import { OperationBatcher } from './batching.js';
-export type { BatchableRequest, BatchHandler } from './batching.js';
-export { OperationBatcher } from './batching.js';
-
+import type { Operation, FetchResult, NextLink } from "../core/index.js";
+import { ApolloLink } from "../core/index.js";
+import type { Observable } from "../../utilities/index.js";
+import type { BatchHandler } from "./batching.js";
+import { OperationBatcher } from "./batching.js";
+export type { BatchableRequest, BatchHandler } from "./batching.js";
+export { OperationBatcher } from "./batching.js";
 
 export namespace BatchLink {
   export interface Options {
@@ -53,7 +52,7 @@ export class BatchLink extends ApolloLink {
       batchInterval = 10,
       batchMax = 0,
       batchHandler = () => null,
-      batchKey = () => '',
+      batchKey = () => "",
     } = fetchParams || {};
 
     this.batcher = new OperationBatcher({
@@ -66,13 +65,13 @@ export class BatchLink extends ApolloLink {
 
     //make this link terminating
     if (fetchParams!.batchHandler!.length <= 1) {
-      this.request = operation => this.batcher.enqueueRequest({ operation });
+      this.request = (operation) => this.batcher.enqueueRequest({ operation });
     }
   }
 
   public request(
     operation: Operation,
-    forward?: NextLink,
+    forward?: NextLink
   ): Observable<FetchResult> | null {
     return this.batcher.enqueueRequest({
       operation,

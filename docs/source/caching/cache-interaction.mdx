@@ -48,7 +48,24 @@ const { todo } = client.readQuery({
 });
 ```
 
-If your cache contains data for _all_ of the query's fields, `readQuery` returns an object that matches the shape of the query:
+If your cache contains data for _all_ of the query's fields, `readQuery` returns an object that matches the shape of the query.
+
+To successfully execute queries with variables, the field with the specified argument must already be in the cache. In the above example, to get the to-do item with the `id` of `5`, the `todo` field(s) for `id:5` must already be cached. For this example, the cache would need to look something like this:
+
+```js
+{
+  ROOT_QUERY: {
+    'todo({"id":5})': {
+      __ref: 'Todo:5'
+    }
+  },
+  'Todo:5': {
+    // ...
+  }
+}
+```
+
+Otherwise the client treats the data as missing and `readQuery` returns `null`. To learn more about how the caching works, checkout the [caching overview](./overview).
 
 ```js
 {

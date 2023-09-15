@@ -1,5 +1,5 @@
-import type { VariableDefinitionNode, DocumentNode } from 'graphql';
-import { visit } from 'graphql';
+import type { VariableDefinitionNode, DocumentNode } from "graphql";
+import { visit } from "graphql";
 
 export function filterOperationVariables(
   variables: Record<string, any>,
@@ -15,7 +15,7 @@ export function filterOperationVariables(
       // https://spec.graphql.org/draft/#sec-All-Variables-Used
       if (
         parent &&
-        (parent as VariableDefinitionNode).kind !== 'VariableDefinition'
+        (parent as VariableDefinitionNode).kind !== "VariableDefinition"
       ) {
         unusedNames.delete(node.name.value);
       }

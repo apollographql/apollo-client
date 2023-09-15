@@ -1,10 +1,10 @@
-import '../utilities/globals/index.js';
+import "../utilities/globals/index.js";
 
-import type { GraphQLError, GraphQLErrorExtensions } from 'graphql';
+import type { GraphQLError, GraphQLErrorExtensions } from "graphql";
 
-import { isNonNullObject } from '../utilities/index.js';
-import type { ServerParseError } from '../link/http/index.js';
-import type { ServerError } from '../link/utils/index.js';
+import { isNonNullObject } from "../utilities/index.js";
+import type { ServerParseError } from "../link/http/index.js";
+import type { ServerError } from "../link/utils/index.js";
 import type { FetchResult } from "../link/core/index.js";
 
 // This Symbol allows us to pass transport-specific errors from the link chain
@@ -13,7 +13,7 @@ import type { FetchResult } from "../link/core/index.js";
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol = Symbol();
 
 type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
-  extensions: Record<string | symbol, any>
+  extensions: Record<string | symbol, any>;
 };
 
 export interface ApolloErrorOptions {
@@ -41,9 +41,8 @@ export function graphQLResultHasProtocolErrors<T>(
   return false;
 }
 
-
 export function isApolloError(err: Error): err is ApolloError {
-  return err.hasOwnProperty('graphQLErrors');
+  return err.hasOwnProperty("graphQLErrors");
 }
 
 // Sets the error message on this error according to the
@@ -54,13 +53,18 @@ const generateErrorMessage = (err: ApolloError) => {
   const errors = [
     ...err.graphQLErrors,
     ...err.clientErrors,
-    ...err.protocolErrors
+    ...err.protocolErrors,
   ];
   if (err.networkError) errors.push(err.networkError);
-  return errors
-    // The rest of the code sometimes unsafely types non-Error objects as GraphQLErrors
-    .map(err => isNonNullObject(err) && err.message || 'Error message not found.')
-    .join('\n');
+  return (
+    errors
+      // The rest of the code sometimes unsafely types non-Error objects as GraphQLErrors
+      .map(
+        (err) =>
+          (isNonNullObject(err) && err.message) || "Error message not found."
+      )
+      .join("\n")
+  );
 };
 
 export type GraphQLErrors = ReadonlyArray<GraphQLError>;
@@ -95,7 +99,7 @@ export class ApolloError extends Error {
     extraInfo,
   }: ApolloErrorOptions) {
     super(errorMessage);
-    this.name = 'ApolloError';
+    this.name = "ApolloError";
     this.graphQLErrors = graphQLErrors || [];
     this.protocolErrors = protocolErrors || [];
     this.clientErrors = clientErrors || [];

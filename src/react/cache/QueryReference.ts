@@ -60,7 +60,7 @@ const OBSERVED_CHANGED_OPTIONS = [
 
 type ObservedOptions = Pick<
   WatchQueryOptions,
-  typeof OBSERVED_CHANGED_OPTIONS[number]
+  (typeof OBSERVED_CHANGED_OPTIONS)[number]
 >;
 
 export class InternalQueryReference<TData = unknown> {
@@ -248,6 +248,12 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private handleError(error: ApolloError) {
+    this.subscription.unsubscribe();
+    this.subscription = this.observable.resubscribeAfterError(
+      this.handleNext,
+      this.handleError
+    );
+
     switch (this.status) {
       case "loading": {
         this.status = "idle";

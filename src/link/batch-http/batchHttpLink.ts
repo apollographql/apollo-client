@@ -1,13 +1,12 @@
-import type { Operation, FetchResult } from '../core/index.js';
-import { ApolloLink } from '../core/index.js';
+import type { Operation, FetchResult } from "../core/index.js";
+import { ApolloLink } from "../core/index.js";
 import {
   Observable,
   hasDirectives,
-  removeClientSetsFromDocument
-} from '../../utilities/index.js';
-import { fromError } from '../utils/index.js';
-import type {
-  HttpOptions} from '../http/index.js';
+  removeClientSetsFromDocument,
+} from "../../utilities/index.js";
+import { fromError } from "../utils/index.js";
+import type { HttpOptions } from "../http/index.js";
 import {
   serializeFetchParameter,
   selectURI,
@@ -16,15 +15,16 @@ import {
   selectHttpOptionsAndBodyInternal,
   defaultPrinter,
   fallbackHttpConfig,
-} from '../http/index.js';
-import { BatchLink } from '../batch/index.js';
+} from "../http/index.js";
+import { BatchLink } from "../batch/index.js";
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
 
 export namespace BatchHttpLink {
   export type Options = Pick<
     BatchLink.Options,
-    'batchMax' | 'batchDebounce' | 'batchInterval' | 'batchKey'
-  > & Omit<HttpOptions, 'useGETForQueries'>;
+    "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"
+  > &
+    Omit<HttpOptions, "useGETForQueries">;
 }
 
 /**
@@ -41,7 +41,7 @@ export class BatchHttpLink extends ApolloLink {
     super();
 
     let {
-      uri = '/graphql',
+      uri = "/graphql",
       // use default global fetch if nothing is passed in
       fetch: fetcher,
       print = defaultPrinter,
@@ -82,16 +82,16 @@ export class BatchHttpLink extends ApolloLink {
       const context = operations[0].getContext();
 
       const clientAwarenessHeaders: {
-        'apollographql-client-name'?: string;
-        'apollographql-client-version'?: string;
+        "apollographql-client-name"?: string;
+        "apollographql-client-version"?: string;
       } = {};
       if (context.clientAwareness) {
         const { name, version } = context.clientAwareness;
         if (name) {
-          clientAwarenessHeaders['apollographql-client-name'] = name;
+          clientAwarenessHeaders["apollographql-client-name"] = name;
         }
         if (version) {
-          clientAwarenessHeaders['apollographql-client-version'] = version;
+          clientAwarenessHeaders["apollographql-client-version"] = version;
         }
       }
 
@@ -103,7 +103,7 @@ export class BatchHttpLink extends ApolloLink {
       };
 
       const queries = operations.map(({ query }) => {
-        if (hasDirectives(['client'], query)) {
+        if (hasDirectives(["client"], query)) {
           return removeClientSetsFromDocument(query);
         }
 
@@ -112,10 +112,10 @@ export class BatchHttpLink extends ApolloLink {
 
       // If we have a query that returned `null` after removing client-only
       // fields, it indicates a query that is using all client-only fields.
-      if (queries.some(query => !query)) {
+      if (queries.some((query) => !query)) {
         return fromError<FetchResult[]>(
           new Error(
-            'BatchHttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or enable the `transformOptions.removeClientFields` option.'
+            "BatchHttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or enable the `transformOptions.removeClientFields` option."
           )
         );
       }
@@ -144,40 +144,42 @@ export class BatchHttpLink extends ApolloLink {
       const options = optsAndBody[0].options;
 
       // There's no spec for using GET with batches.
-      if (options.method === 'GET') {
+      if (options.method === "GET") {
         return fromError<FetchResult[]>(
-          new Error('apollo-link-batch-http does not support GET requests'),
+          new Error("apollo-link-batch-http does not support GET requests")
         );
       }
 
       try {
-        (options as any).body = serializeFetchParameter(loadedBody, 'Payload');
+        (options as any).body = serializeFetchParameter(loadedBody, "Payload");
       } catch (parseError) {
         return fromError<FetchResult[]>(parseError);
       }
 
       let controller: AbortController | undefined;
-      if (!options.signal && typeof AbortController !== 'undefined') {
+      if (!options.signal && typeof AbortController !== "undefined") {
         controller = new AbortController();
         options.signal = controller.signal;
       }
 
-      return new Observable<FetchResult[]>(observer => {
+      return new Observable<FetchResult[]>((observer) => {
         fetcher!(chosenURI, options)
-          .then(response => {
+          .then((response) => {
             // Make the raw response available in the context.
-            operations.forEach(operation => operation.setContext({ response }));
+            operations.forEach((operation) =>
+              operation.setContext({ response })
+            );
             return response;
           })
           .then(parseAndCheckHttpResponse(operations))
-          .then(result => {
+          .then((result) => {
             controller = undefined;
             // we have data and can send it to back up the link chain
             observer.next(result);
             observer.complete();
             return result;
           })
-          .catch(err => {
+          .catch((err) => {
             controller = undefined;
             // if it is a network error, BUT there is graphql result info
             // fire the next observer before calling error

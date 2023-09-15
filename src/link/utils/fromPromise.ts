@@ -1,7 +1,7 @@
-import { Observable } from '../../utilities/index.js';
+import { Observable } from "../../utilities/index.js";
 
 export function fromPromise<T>(promise: Promise<T>): Observable<T> {
-  return new Observable<T>(observer => {
+  return new Observable<T>((observer) => {
     promise
       .then((value: T) => {
         observer.next(value);

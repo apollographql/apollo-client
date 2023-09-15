@@ -43,21 +43,17 @@ function matchesResults<T>(
   // TODO: adding a second observer to the observable will consume the
   // observable. I want to test completion, but the subscribeAndCount API
   // doesn’t have anything like that.
-  subscribeAndCount(
-    reject,
-    observable,
-    (count, result) => {
-      // subscribeAndCount is 1-indexed for some terrible reason.
-      if (0 >= count || count > results.length) {
-        reject(new Error("Unexpected result"));
-      }
-
-      expect(result).toEqual(results[count - 1]);
-      if (count === results.length) {
-        resolve();
-      }
+  subscribeAndCount(reject, observable, (count, result) => {
+    // subscribeAndCount is 1-indexed for some terrible reason.
+    if (0 >= count || count > results.length) {
+      reject(new Error("Unexpected result"));
     }
-  );
+
+    expect(result).toEqual(results[count - 1]);
+    if (count === results.length) {
+      resolve();
+    }
+  });
 }
 
 describe("multipart responses", () => {

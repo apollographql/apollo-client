@@ -19,6 +19,14 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
+  Formatting:
+    docker:
+      - image: cimg/node:20.5.1
+    steps:
+      - checkout
+      - run: npm ci
+      - run: npm run check:format
+
   Tests:
     docker:
       - image: cimg/node:20.5.1
@@ -83,6 +91,7 @@ workflows:
     jobs:
       # - Filesize
       - Tests
+      - Formatting
       - Lint
       - BuildTarball
       - IntegrationTests:

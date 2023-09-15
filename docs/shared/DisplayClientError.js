@@ -152,15 +152,17 @@ function ErrorDetails({ version, messageId, args }) {
       {(loading || errorMessage) && (
         <>
           <MDX.h2>Error message</MDX.h2>
-          <MDX.blockquote>{loading ? 'Loading' : errorMessage}</MDX.blockquote>
+          <MDX.blockquote style={{ lineHeight: "normal", whiteSpace: "pre-wrap" }}>{loading ? 'Loading' : errorMessage}</MDX.blockquote>
         </>
       )}
 
       <MDX.h3>File</MDX.h3>
       <MDX.inlineCode>{loading ? 'Loading' : data.file}</MDX.inlineCode>
 
-      <MDX.h3>Condition</MDX.h3>
-      <MDX.inlineCode>{loading ? 'Loading' : data.condition}</MDX.inlineCode>
+      <div style={{visibility: data?.condition ? 'visible' : 'hidden'}}>
+        <MDX.h3>Condition</MDX.h3>
+        <MDX.inlineCode>{data?.condition || ''}</MDX.inlineCode>
+      </div>
     </div>
   );
 }

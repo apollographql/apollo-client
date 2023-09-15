@@ -6,7 +6,11 @@ import { stringifyForDisplay } from "../common/stringifyForDisplay.js";
 
 function wrap(fn: (msg?: string, ...args: any[]) => void) {
   return function (message: string | number, ...args: any[]) {
-    fn(typeof message === "number" ? getErrorMsg(message) : message, ...args);
+    if (typeof message === "number") {
+      fn(getErrorMsg(message, args));
+    } else {
+      fn(message, ...args);
+    }
   };
 }
 
@@ -110,7 +114,7 @@ function getErrorMsg(message?: string | number, messageArgs: unknown[] = []) {
   return (
     (global[ApolloErrorMessageHandler] &&
       global[ApolloErrorMessageHandler](message, args)) ||
-    `An error occured! For more details, see the full error text at https://go.apollo.dev/c/err#${encodeURIComponent(
+    `An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err#${encodeURIComponent(
       JSON.stringify({
         version,
         message,

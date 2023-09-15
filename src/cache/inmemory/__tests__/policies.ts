@@ -2715,6 +2715,76 @@ describe("type policies", function () {
       });
     });
 
+    it("mergeOptions.readField can read fields from existing and incoming references, even if they have the same identifier", () => {
+      type Person = {
+        __typename: string;
+        id: string;
+        name: string;
+      };
+      const singlePerson: Person = {
+        __typename: "Person",
+        id: "1",
+        name: "Karl Kunz",
+      };
+      const marriedPerson: Person = {
+        __typename: "Person",
+        id: "1",
+        name: "Karl Kunz-Schulze",
+      };
+      const personQuery: TypedDocumentNode<{ person: Person }> = gql`
+        query {
+          person {
+            id
+            name
+          }
+        }
+      `;
+      let lastMerge = {
+        existing: undefined as Reference | undefined,
+        incoming: undefined as Reference | undefined,
+        existingName: undefined as string | undefined,
+        incomingName: undefined as string | undefined,
+      };
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Person: {
+            merge(existing, incoming, { readField }) {
+              lastMerge = {
+                existing,
+                incoming,
+                existingName: existing && readField("name", existing),
+                incomingName: incoming && readField("name", incoming),
+              };
+              return incoming;
+            },
+          },
+        },
+      });
+      {
+        using _spy = spyOnConsole("log");
+        cache.writeQuery({
+          query: personQuery,
+          data: { person: singlePerson },
+        });
+      }
+      expect(lastMerge).toEqual({
+        existing: undefined,
+        incoming: { __ref: "Person:1" },
+        existingName: undefined,
+        incomingName: "Karl Kunz",
+      });
+      cache.writeQuery({
+        query: personQuery,
+        data: { person: marriedPerson },
+      });
+      expect(lastMerge).toEqual({
+        existing: { __ref: "Person:1" },
+        incoming: { __ref: "Person:1" },
+        existingName: "Karl Kunz",
+        incomingName: "Karl Kunz-Schulze",
+      });
+    });
+
     it("readField helper function calls custom read functions", function () {
       using _consoleSpies = spyOnConsole.takeSnapshots("error");
       // Rather than writing ownTime data into the cache, we maintain it

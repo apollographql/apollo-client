@@ -19,19 +19,19 @@ import {
   print,
 } from "../../../utilities/index.js";
 
-export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
+export type ResultFunction<T> = (variables: Record<string, any>) => T;
 
-export type VariableMatcher<V> = (variables: V) => boolean;
+export type VariableMatcher = (variables: Record<string, any>) => boolean;
 
 export interface MockedResponse<
   TData = Record<string, any>,
   TVariables = Record<string, any>,
 > {
   request: GraphQLRequest<TVariables>;
-  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;
+  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
   error?: Error;
   delay?: number;
-  variableMatcher?: VariableMatcher<TVariables>;
+  variableMatcher?: VariableMatcher;
   newData?: ResultFunction<FetchResult>;
 }
 
@@ -171,9 +171,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
               if (response.result) {
                 observer.next(
                   typeof response.result === "function"
-                    ? (response.result as ResultFunction<FetchResult>)(
-                        operation.variables
-                      )
+                    ? response.result(operation.variables)
                     : response.result
                 );
               }

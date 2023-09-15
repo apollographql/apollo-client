@@ -7,7 +7,8 @@ import { itAsync, MockedResponse, MockLink } from "../../core";
 import { MockedProvider } from "../MockedProvider";
 import { useQuery } from "../../../react/hooks";
 import { InMemoryCache } from "../../../cache";
-import { ApolloLink } from "../../../link/core";
+import { ApolloLink, FetchResult } from "../../../link/core";
+import { Observable } from "zen-observable-ts";
 
 const variables = {
   username: "mock_username",
@@ -61,7 +62,7 @@ interface Variables {
 
 let errorThrown = false;
 const errorLink = new ApolloLink((operation, forward) => {
-  let observer = null;
+  let observer: Observable<FetchResult> | null = null;
   try {
     observer = forward(operation);
   } catch (error) {

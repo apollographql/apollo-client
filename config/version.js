@@ -30,11 +30,9 @@ switch (process.argv[2]) {
   }
 
   case "verify": {
-    const { ApolloClient, InMemoryCache } = require(path.join(
-      distRoot,
-      "core",
-      "core.cjs"
-    ));
+    const { ApolloClient, InMemoryCache } = require(
+      path.join(distRoot, "core", "core.cjs")
+    );
 
     // Though this may seem like overkill, verifying that ApolloClient is
     // constructible in Node.js is actually pretty useful, too!

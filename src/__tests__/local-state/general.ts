@@ -17,7 +17,8 @@ import { ApolloLink } from "../../link/core";
 import { Operation } from "../../link/core";
 import { ApolloClient } from "../../core";
 import { ApolloCache, InMemoryCache } from "../../cache";
-import { itAsync, withErrorSpy } from "../../testing";
+import { itAsync } from "../../testing";
+import { spyOnConsole } from "../../testing/internal";
 
 describe("General functionality", () => {
   it("should not impact normal non-@client use", () => {
@@ -1014,10 +1015,9 @@ describe("Combining client and server state/operations", () => {
     }
   );
 
-  withErrorSpy(
-    itAsync,
-    "should handle a simple query with both server and client fields",
-    (resolve, reject) => {
+  it("should handle a simple query with both server and client fields", async () => {
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    await new Promise<void>((resolve, reject) => {
       const query = gql`
         query GetCount {
           count @client
@@ -1050,13 +1050,12 @@ describe("Combining client and server state/operations", () => {
           resolve();
         },
       });
-    }
-  );
+    });
+  });
 
-  withErrorSpy(
-    itAsync,
-    "should support nested querying of both server and client fields",
-    (resolve, reject) => {
+  it("should support nested querying of both server and client fields", async () => {
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    await new Promise<void>((resolve, reject) => {
       const query = gql`
         query GetUser {
           user {
@@ -1116,8 +1115,8 @@ describe("Combining client and server state/operations", () => {
           resolve();
         },
       });
-    }
-  );
+    });
+  });
 
   itAsync(
     "should combine both server and client mutations",

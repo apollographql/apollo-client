@@ -12,7 +12,7 @@ jobs:
 
   Lint:
     docker:
-      - image: cimg/node:20.5.1
+      - image: cimg/node:20.6.1
     steps:
       - checkout
       - run: npm version
@@ -21,7 +21,7 @@ jobs:
 
   Formatting:
     docker:
-      - image: cimg/node:20.5.1
+      - image: cimg/node:20.6.1
     steps:
       - checkout
       - run: npm ci
@@ -29,7 +29,7 @@ jobs:
 
   Tests:
     docker:
-      - image: cimg/node:20.5.1
+      - image: cimg/node:20.6.1
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -47,7 +47,7 @@ jobs:
 
   BuildTarball:
     docker:
-      - image: cimg/node:20.5.1
+      - image: cimg/node:20.6.1
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -64,7 +64,7 @@ jobs:
       framework:
         type: string
     docker:
-      - image: cimg/node:20.5.1
+      - image: cimg/node:20.6.1
     steps:
       - checkout
       - attach_workspace:

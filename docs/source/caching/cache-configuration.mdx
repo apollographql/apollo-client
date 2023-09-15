@@ -234,6 +234,47 @@ This code also has the following drawbacks:
 * It does nothing to protect against undefined object properties.
 * Accidentally using different key fields at different times can cause inconsistencies in the cache.
 
+### Customizing Type Policies
+
+After creating an `InMemoryCache` instance, you can use the `addTypePolicies` method to add or modify type policies.
+
+Here is an example of how to use the `addTypePolicies` method:
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Person: {
+      fields: {
+        name: {
+          read(name = "UNKNOWN NAME") {
+            return name.toUpperCase();;
+          }
+        },
+      },
+    },
+  },
+});
+
+// Add a type policy to the cache.
+cache.policies.addTypePolicies({
+  Person: {
+    fields: {
+      email: {
+        read(email = "unknown@example.com") {
+          return email;
+        },
+      },
+    },
+  },
+});
+```
+
+The code creates an `InMemoryCache` with a custom type policy for the `Person` type. The type policy specifies that if the `name` field is not available in the cache, it should return a default value of "UNKNOWN NAME" and converts it to uppercase.
+
+Then, the code adds an additional type policy to the cache using `cache.policies.addTypePolicies`. This new type policy is related to the `Person` type and its `email` field. The custom read function specifies that if the email field is not available in the cache, it should return a default value of "unknown@example.com".
+
+Overall, the code sets up caching behaviors for the `Person` type, ensuring that default values are provided for the `name` and `email` fields if they are not present in the cache.
+
 ### Disabling normalization
 
 You can instruct the `InMemoryCache` _not_ to normalize objects of a particular type. This can be useful for metrics and other transient data that's identified by a timestamp and never receives updates.

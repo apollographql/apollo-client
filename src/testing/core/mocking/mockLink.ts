@@ -19,19 +19,21 @@ import {
   print,
 } from "../../../utilities/index.js";
 
-export type ResultFunction<T> = (variables: Record<string, any>) => T;
+export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
 
-export type VariableMatcher = (variables: Record<string, any>) => boolean;
+export type VariableMatcher<V = Record<string, any>> = (
+  variables: V
+) => boolean;
 
 export interface MockedResponse<
-  TData = Record<string, any>,
-  TVariables = Record<string, any>,
+  TData extends object = Record<string, any>,
+  TVariables extends object = Record<string, any>,
 > {
   request: GraphQLRequest<TVariables>;
-  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
+  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;
   error?: Error;
   delay?: number;
-  variableMatcher?: VariableMatcher;
+  variableMatcher?: VariableMatcher<TVariables>;
   newData?: ResultFunction<FetchResult>;
 }
 

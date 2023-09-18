@@ -40,10 +40,10 @@ import {
   itAsync,
   subscribeAndCount,
   mockSingleLink,
-  withErrorSpy,
   MockLink,
   wait,
 } from "../testing";
+import { spyOnConsole } from "../testing/internal";
 import { waitFor } from "@testing-library/react";
 
 describe("client", () => {
@@ -2879,10 +2879,9 @@ describe("client", () => {
       .then(resolve, reject);
   });
 
-  withErrorSpy(
-    itAsync,
-    "should warn if server returns wrong data",
-    (resolve, reject) => {
+  it("should warn if server returns wrong data", async () => {
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    await new Promise((resolve, reject) => {
       const query = gql`
         query {
           todos {
@@ -2927,8 +2926,8 @@ describe("client", () => {
           });
         })
         .then(resolve, reject);
-    }
-  );
+    });
+  });
 
   itAsync(
     "runs a query with the connection directive and writes it to the store key defined in the directive",

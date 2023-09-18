@@ -14,7 +14,8 @@ import { Observable } from "../utilities";
 import { ApolloLink } from "../link/core";
 import { HttpLink } from "../link/http";
 import { InMemoryCache } from "../cache";
-import { itAsync, withErrorSpy } from "../testing";
+import { itAsync } from "../testing";
+import { spyOnConsole } from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
 
@@ -803,40 +804,37 @@ describe("ApolloClient", () => {
       });
     });
 
-    withErrorSpy(
-      it,
-      "should warn when the data provided does not match the query shape",
-      () => {
-        const client = new ApolloClient({
-          link: ApolloLink.empty(),
-          cache: new InMemoryCache({
-            // Passing an empty map enables the warning:
-            possibleTypes: {},
-          }),
-        });
+    it("should warn when the data provided does not match the query shape", () => {
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({
+          // Passing an empty map enables the warning:
+          possibleTypes: {},
+        }),
+      });
 
-        client.writeQuery({
-          data: {
-            todos: [
-              {
-                id: "1",
-                name: "Todo 1",
-                __typename: "Todo",
-              },
-            ],
-          },
-          query: gql`
-            query {
-              todos {
-                id
-                name
-                description
-              }
+      client.writeQuery({
+        data: {
+          todos: [
+            {
+              id: "1",
+              name: "Todo 1",
+              __typename: "Todo",
+            },
+          ],
+        },
+        query: gql`
+          query {
+            todos {
+              id
+              name
+              description
             }
-          `,
-        });
-      }
-    );
+          }
+        `,
+      });
+    });
   });
 
   describe("writeFragment", () => {
@@ -1090,30 +1088,27 @@ describe("ApolloClient", () => {
       });
     });
 
-    withErrorSpy(
-      it,
-      "should warn when the data provided does not match the fragment shape",
-      () => {
-        const client = new ApolloClient({
-          link: ApolloLink.empty(),
-          cache: new InMemoryCache({
-            // Passing an empty map enables the warning:
-            possibleTypes: {},
-          }),
-        });
+    it("should warn when the data provided does not match the fragment shape", () => {
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache({
+          // Passing an empty map enables the warning:
+          possibleTypes: {},
+        }),
+      });
 
-        client.writeFragment({
-          data: { __typename: "Bar", i: 10 },
-          id: "bar",
-          fragment: gql`
-            fragment fragmentBar on Bar {
-              i
-              e
-            }
-          `,
-        });
-      }
-    );
+      client.writeFragment({
+        data: { __typename: "Bar", i: 10 },
+        id: "bar",
+        fragment: gql`
+          fragment fragmentBar on Bar {
+            i
+            e
+          }
+        `,
+      });
+    });
 
     describe("change will call observable next", () => {
       const query = gql`

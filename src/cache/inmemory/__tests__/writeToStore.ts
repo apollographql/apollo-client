@@ -23,9 +23,9 @@ import { itAsync } from "../../../testing/core";
 import { StoreWriter } from "../writeToStore";
 import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers";
 import { InMemoryCache } from "../inMemoryCache";
-import { withErrorSpy, withWarningSpy } from "../../../testing";
 import { TypedDocumentNode } from "../../../core";
 import { extractFragmentContext } from "../helpers";
+import { spyOnConsole } from "../../../testing/internal";
 
 const getIdField = ({ id }: { id: string }) => id;
 
@@ -2045,7 +2045,8 @@ describe("writing to the store", () => {
   });
 
   describe('"Cache data maybe lost..." warnings', () => {
-    withWarningSpy(it, "should not warn when scalar fields are updated", () => {
+    it("should not warn when scalar fields are updated", () => {
+      using _consoleSpy = spyOnConsole.takeSnapshots("warn");
       const cache = new InMemoryCache();
 
       const query = gql`
@@ -2099,117 +2100,108 @@ describe("writing to the store", () => {
       }
     `;
 
-    withErrorSpy(
-      it,
-      "should write the result data without validating its shape when a fragment matcher is not provided",
-      () => {
-        const result = {
-          todos: [
-            {
-              id: "1",
-              name: "Todo 1",
-            },
-          ],
-        };
+    it("should write the result data without validating its shape when a fragment matcher is not provided", () => {
+      using _consoleSpy = spyOnConsole.takeSnapshots("error");
+      const result = {
+        todos: [
+          {
+            id: "1",
+            name: "Todo 1",
+          },
+        ],
+      };
 
-        const writer = new StoreWriter(
-          new InMemoryCache({
-            dataIdFromObject: getIdField,
-          })
-        );
+      const writer = new StoreWriter(
+        new InMemoryCache({
+          dataIdFromObject: getIdField,
+        })
+      );
 
-        const newStore = writeQueryToStore({
-          writer,
-          query,
-          result,
-        });
+      const newStore = writeQueryToStore({
+        writer,
+        query,
+        result,
+      });
 
-        expect((newStore as any).lookup("1")).toEqual(result.todos[0]);
-      }
-    );
+      expect((newStore as any).lookup("1")).toEqual(result.todos[0]);
+    });
 
-    withErrorSpy(
-      it,
-      "should warn when it receives the wrong data with non-union fragments",
-      () => {
-        const result = {
-          todos: [
-            {
-              id: "1",
-              name: "Todo 1",
-            },
-          ],
-        };
+    it("should warn when it receives the wrong data with non-union fragments", () => {
+      using _consoleSpy = spyOnConsole.takeSnapshots("error");
+      const result = {
+        todos: [
+          {
+            id: "1",
+            name: "Todo 1",
+          },
+        ],
+      };
 
-        const writer = new StoreWriter(
-          new InMemoryCache({
-            dataIdFromObject: getIdField,
-            possibleTypes: {},
-          })
-        );
+      const writer = new StoreWriter(
+        new InMemoryCache({
+          dataIdFromObject: getIdField,
+          possibleTypes: {},
+        })
+      );
 
-        writeQueryToStore({
-          writer,
-          query,
-          result,
-        });
-      }
-    );
+      writeQueryToStore({
+        writer,
+        query,
+        result,
+      });
+    });
 
-    withErrorSpy(
-      it,
-      "should warn when it receives the wrong data inside a fragment",
-      () => {
-        const queryWithInterface = gql`
-          query {
-            todos {
-              id
-              name
-              description
-              ...TodoFragment
-            }
+    it("should warn when it receives the wrong data inside a fragment", () => {
+      using _consoleSpy = spyOnConsole.takeSnapshots("error");
+      const queryWithInterface = gql`
+        query {
+          todos {
+            id
+            name
+            description
+            ...TodoFragment
           }
+        }
 
-          fragment TodoFragment on Todo {
-            ... on ShoppingCartItem {
-              price
-              __typename
-            }
-            ... on TaskItem {
-              date
-              __typename
-            }
+        fragment TodoFragment on Todo {
+          ... on ShoppingCartItem {
+            price
             __typename
           }
-        `;
+          ... on TaskItem {
+            date
+            __typename
+          }
+          __typename
+        }
+      `;
 
-        const result = {
-          todos: [
-            {
-              id: "1",
-              name: "Todo 1",
-              description: "Description 1",
-              __typename: "ShoppingCartItem",
-            },
-          ],
-        };
+      const result = {
+        todos: [
+          {
+            id: "1",
+            name: "Todo 1",
+            description: "Description 1",
+            __typename: "ShoppingCartItem",
+          },
+        ],
+      };
 
-        const writer = new StoreWriter(
-          new InMemoryCache({
-            dataIdFromObject: getIdField,
-            possibleTypes: {
-              Todo: ["ShoppingCartItem", "TaskItem"],
-            },
-          })
-        );
+      const writer = new StoreWriter(
+        new InMemoryCache({
+          dataIdFromObject: getIdField,
+          possibleTypes: {
+            Todo: ["ShoppingCartItem", "TaskItem"],
+          },
+        })
+      );
 
-        writeQueryToStore({
-          writer,
-          query: queryWithInterface,
-          result,
-        });
-      }
-    );
+      writeQueryToStore({
+        writer,
+        query: queryWithInterface,
+        result,
+      });
+    });
 
     it("should warn if a result is missing __typename when required", () => {
       const result: any = {
@@ -2259,7 +2251,8 @@ describe("writing to the store", () => {
       });
     });
 
-    withErrorSpy(it, "should not warn if a field is defered", () => {
+    it("should not warn if a field is defered", () => {
+      using _consoleSpy = spyOnConsole.takeSnapshots("error");
       const defered = gql`
         query LazyLoad {
           id
@@ -2497,91 +2490,88 @@ describe("writing to the store", () => {
     });
   });
 
-  withErrorSpy(
-    it,
-    "should not keep reference when type of mixed inlined field changes to non-inlined field",
-    () => {
-      const store = defaultNormalizedCacheFactory();
+  it("should not keep reference when type of mixed inlined field changes to non-inlined field", () => {
+    using _consoleSpy = spyOnConsole.takeSnapshots("error");
+    const store = defaultNormalizedCacheFactory();
 
-      const query = gql`
-        query {
-          animals {
-            species {
-              id
-              name
-            }
+    const query = gql`
+      query {
+        animals {
+          species {
+            id
+            name
           }
         }
-      `;
+      }
+    `;
 
-      writeQueryToStore({
-        writer,
-        query,
-        result: {
-          animals: [
-            {
-              __typename: "Animal",
-              species: {
-                __typename: "Cat",
-                name: "cat",
-              },
+    writeQueryToStore({
+      writer,
+      query,
+      result: {
+        animals: [
+          {
+            __typename: "Animal",
+            species: {
+              __typename: "Cat",
+              name: "cat",
             },
-          ],
-        },
-        store,
-      });
+          },
+        ],
+      },
+      store,
+    });
 
-      expect(store.toObject()).toEqual({
-        ROOT_QUERY: {
-          __typename: "Query",
-          animals: [
-            {
-              __typename: "Animal",
-              species: {
-                __typename: "Cat",
-                name: "cat",
-              },
+    expect(store.toObject()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        animals: [
+          {
+            __typename: "Animal",
+            species: {
+              __typename: "Cat",
+              name: "cat",
             },
-          ],
-        },
-      });
+          },
+        ],
+      },
+    });
 
-      writeQueryToStore({
-        writer,
-        query,
-        result: {
-          animals: [
-            {
-              __typename: "Animal",
-              species: {
-                id: "dog-species",
-                __typename: "Dog",
-                name: "dog",
-              },
+    writeQueryToStore({
+      writer,
+      query,
+      result: {
+        animals: [
+          {
+            __typename: "Animal",
+            species: {
+              id: "dog-species",
+              __typename: "Dog",
+              name: "dog",
             },
-          ],
-        },
-        store,
-      });
+          },
+        ],
+      },
+      store,
+    });
 
-      expect(store.toObject()).toEqual({
-        "Dog__dog-species": {
-          id: "dog-species",
-          __typename: "Dog",
-          name: "dog",
-        },
-        ROOT_QUERY: {
-          __typename: "Query",
-          animals: [
-            {
-              __typename: "Animal",
-              species: makeReference("Dog__dog-species"),
-            },
-          ],
-        },
-      });
-    }
-  );
+    expect(store.toObject()).toEqual({
+      "Dog__dog-species": {
+        id: "dog-species",
+        __typename: "Dog",
+        name: "dog",
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        animals: [
+          {
+            __typename: "Animal",
+            species: makeReference("Dog__dog-species"),
+          },
+        ],
+      },
+    });
+  });
 
   it("should not merge { __ref } as StoreObject when mergeObjects used", () => {
     const merges: Array<{

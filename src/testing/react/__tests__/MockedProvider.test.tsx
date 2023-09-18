@@ -176,7 +176,7 @@ describe("General use", () => {
         request: {
           query,
         },
-        variableMatcher: (v: Variables) => v.username === variables.username,
+        variableMatcher: (v) => v.username === variables.username,
         result: { data: { user } },
       };
 

@@ -719,10 +719,10 @@ describe("General use", () => {
     );
 
     render(<Component username="mock_username" />, { wrapper: Wrapper });
-    await waitForLoaded();
-    await refetch();
-    await waitForLoaded();
-    await refetch();
+    for (let i = 0; i < 100; i++) {
+      await waitForLoaded();
+      await refetch();
+    }
     await waitForLoaded();
   });
 

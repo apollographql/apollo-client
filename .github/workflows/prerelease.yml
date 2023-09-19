@@ -65,17 +65,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get package version from package.json
-        id: package-version
-        uses: martinbeentjes/npm-get-version-action@main
-
-      - name: Get npm tag from pre.json
-        id: tag
-        uses: notiz-dev/github-action-json-property@v0.2.0
-        with:
-          path: ".changeset/pre.json"
-          prop_path: "tag"
-
       - name: Publish to npm + GitHub
         id: changesets
         # Only run publish if we're still in pre mode and the last commit was
@@ -84,10 +73,14 @@ jobs:
         uses: changesets/action@v1
         with:
           version: echo "This step should never version"
-          publish: npm run changeset-publish -- --tag next # by default, this will publish to npm and GitHub
+          publish: npm run changeset-publish # by default, this will publish to npm and GitHub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag release with next on npm
+        if: steps.changesets.outcome == 'success'
+        run: npm dist-tag add @apollo/client@${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }} next
 
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success'
@@ -99,7 +92,6 @@ jobs:
           # You can pass in multiple channels to post to by providing
           # a comma-delimited list of channel IDs
           channel-id: "C01PS0CB41G"
-          # For posting a simple plain text message
           payload: |
             {
               "blocks": [
@@ -107,29 +99,8 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "A new version of `@apollo/client` was released :rocket:"
+                    "text": "A new version of `@apollo/client` was released: <https://github.com/apollographql/apollo-client/releases/tag/v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}|v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}> :rocket:"
                   }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Version:*\n`${{ steps.package-version.outputs.current-version}}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Tag:*\n`${{steps.tag.outputs.prop}}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*GitHub release:*\nN/A"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*npm releases:*\n<https://www.npmjs.com/package/@apollo/client?activeTab=versions|link>"
-                    }
-                  ]
                 }
               ]
             }

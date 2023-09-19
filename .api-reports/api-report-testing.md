@@ -882,7 +882,7 @@ interface MockedProviderState {
 }
 
 // @public (undocumented)
-export interface MockedResponse<TData extends object = Record<string, any>, TVariables extends object = Record<string, any>> {
+export interface MockedResponse<TData = Record<string, any>, TVariables = Record<string, any>> {
     // (undocumented)
     delay?: number;
     // (undocumented)

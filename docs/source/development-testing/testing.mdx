@@ -152,12 +152,14 @@ it("renders without error", async () => {
 
 ### Dynamic variables
 
-Sometimes, the exact value of the variables being passed are not known. The `MockedResponse` object takes a `variableMatcher` property that is a function that takes the variables and return a boolean indication if this mock should match the invocation for the provided query.  You cannot specify this parameter and `request.variables` at the same time.
+Sometimes, the exact value of the variables being passed are not known. The `MockedResponse` object takes a `variableMatcher` property that is a function that takes the variables and returns a boolean indication if this mock should match the invocation for the provided query. You cannot specify this parameter and `request.variables` at the same time.
 
 For example, this mock will match all dog queries:
 
-```js
-const dogMock = {
+```ts
+import { MockedResponse } from "@apollo/client/testing";
+
+const dogMock: MockedResponse<Data, Variables> = {
   request: {
     query: GET_DOG_QUERY
   },
@@ -170,8 +172,10 @@ const dogMock = {
 
 This can also be useful for asserting specific variables individually:
 
-```js
-const dogMock = {
+```ts
+import { MockedResponse } from "@apollo/client/testing";
+
+const dogMock: MockedResponse<Data, Variables> = {
   request: {
     query: GET_DOG_QUERY
   },

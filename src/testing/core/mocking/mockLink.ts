@@ -26,8 +26,8 @@ export type VariableMatcher<V = Record<string, any>> = (
 ) => boolean;
 
 export interface MockedResponse<
-  TData extends object = Record<string, any>,
-  TVariables extends object = Record<string, any>,
+  TData = Record<string, any>,
+  TVariables = Record<string, any>,
 > {
   request: GraphQLRequest<TVariables>;
   result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;

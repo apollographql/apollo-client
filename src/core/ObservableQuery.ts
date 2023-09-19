@@ -17,6 +17,7 @@ import {
   fixObservableSubclass,
   getQueryDefinition,
 } from "../utilities/index.js";
+import { requestIdleCallback } from "../utilities/common/requestIdleCallback.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
@@ -204,7 +205,7 @@ export class ObservableQuery<
           //
           // We do this in order to prevent observers piling up within
           // the QueryManager. Notice that we only fully unsubscribe
-          // from the subscription in a setTimeout(..., 0)  call. This call can
+          // from the subscription in an idle callback. This callback can
           // actually be handled by the browser at a much later time. If queries
           // are fired in the meantime, observers that should have been removed
           // from the QueryManager will continue to fire, causing an unnecessary
@@ -214,9 +215,9 @@ export class ObservableQuery<
             this.queryManager.removeQuery(this.queryId);
           }
 
-          setTimeout(() => {
+          requestIdleCallback(() => {
             subscription.unsubscribe();
-          }, 0);
+          });
         },
         error: reject,
       };

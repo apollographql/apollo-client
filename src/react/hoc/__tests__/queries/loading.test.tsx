@@ -12,7 +12,8 @@ import { ApolloProvider } from "../../../context";
 import { InMemoryCache as Cache } from "../../../../cache";
 import { itAsync, mockSingleLink } from "../../../../testing";
 import { graphql } from "../../graphql";
-import { ChildProps } from "../../types";
+import { ChildProps, DataValue } from "../../types";
+import { profile } from "../../../../testing/internal";
 
 describe("[queries] loading", () => {
   // networkStatus / loading
@@ -388,8 +389,6 @@ describe("[queries] loading", () => {
       queryDeduplication: false,
     });
 
-    let count = 0;
-
     const usedFetchPolicies: WatchQueryFetchPolicy[] = [];
     const Container = graphql<{}, Data>(query, {
       options: {
@@ -408,57 +407,65 @@ describe("[queries] loading", () => {
     })(
       class extends React.Component<ChildProps<{}, Data>> {
         render() {
-          ++count;
-          if (count === 1) {
-            expect(this.props.data!.loading).toBe(true);
-            expect(this.props.data!.allPeople).toBeUndefined();
-          } else if (count === 2) {
-            expect(this.props.data!.loading).toBe(false);
-            expect(this.props.data!.allPeople!.people[0].name).toMatch(
-              /Darth Skywalker - /
-            );
-            // Has data
-            setTimeout(() => render(App));
-          } else if (count === 3) {
-            // Loading after remount
-            expect(this.props.data!.loading).toBe(true);
-            expect(this.props.data!.allPeople).toBeUndefined();
-          } else if (count >= 4) {
-            // Fetched data loading after remount
-            expect(this.props.data!.loading).toBe(false);
-            expect(this.props.data!.allPeople!.people[0].name).toMatch(
-              /Darth Skywalker - /
-            );
-          }
+          ProfiledContainer.updateSnapshot(this.props.data!);
           return null;
         }
       }
     );
 
-    const App: React.ReactElement<any> = (
+    const ProfiledContainer = profile<
+      DataValue<{
+        allPeople: {
+          people: {
+            name: string;
+          }[];
+        };
+      }>
+    >({
+      Component: Container,
+    });
+
+    const App = (
       <ApolloProvider client={client}>
-        <Container />
+        <ProfiledContainer />
       </ApolloProvider>
     );
 
     render(App);
 
-    await waitFor(
-      () => {
-        expect(usedFetchPolicies).toEqual([
-          "network-only",
-          "network-only",
-          "cache-first",
-        ]);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(count).toBe(5);
-      },
-      { interval: 1 }
-    );
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(true);
+      expect(snapshot.allPeople).toBeUndefined();
+    }
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(false);
+      expect(snapshot.allPeople?.people[0].name).toMatch(/Darth Skywalker - /);
+    }
+    render(App);
+    // Loading after remount
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      expect(snapshot.loading).toBe(true);
+      expect(snapshot.allPeople).toBeUndefined();
+    }
+    {
+      const { snapshot } = await ProfiledContainer.takeRender();
+      // Fetched data loading after remount
+      expect(snapshot.loading).toBe(false);
+      expect(snapshot.allPeople!.people[0].name).toMatch(/Darth Skywalker - /);
+    }
+
+    await expect(ProfiledContainer).toRenderExactlyTimes(5, {
+      timeout: 100,
+    });
+
+    expect(usedFetchPolicies).toEqual([
+      "network-only",
+      "network-only",
+      "cache-first",
+    ]);
   });
 
   itAsync(

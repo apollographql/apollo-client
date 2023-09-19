@@ -101,7 +101,7 @@ Each mock object defines a `request` field (indicating the shape and variables o
 Alternatively, the `result` field can be a function that returns a mocked response after performing arbitrary logic:
 
 ```jsx
-result: () => {
+result: (variables) => { // `variables` is optional
   // ...arbitrary logic...
 
   return {
@@ -180,6 +180,46 @@ const mocks = [
 </ExpansionPanel>
 
 Passing `Number.POSITIVE_INFINITY` will cause the mock to be reused indefinitely.
+
+### Dynamic variables
+
+Sometimes, the exact value of the variables being passed are not known. The `MockedResponse` object takes a `variableMatcher` property that is a function that takes the variables and returns a boolean indication if this mock should match the invocation for the provided query. You cannot specify this parameter and `request.variables` at the same time.
+
+For example, this mock will match all dog queries:
+
+```ts
+import { MockedResponse } from "@apollo/client/testing";
+
+const dogMock: MockedResponse<Data, Variables> = {
+  request: {
+    query: GET_DOG_QUERY
+  },
+  variableMatcher: (variables) => true,
+  result: {
+    data: { dog: { id: 1, name: 'Buck', breed: 'poodle' } },
+  },
+};
+```
+
+This can also be useful for asserting specific variables individually:
+
+```ts
+import { MockedResponse } from "@apollo/client/testing";
+
+const dogMock: MockedResponse<Data, Variables> = {
+  request: {
+    query: GET_DOG_QUERY
+  },
+  variableMatcher: jest.fn().mockReturnValue(true),
+  result: {
+    data: { dog: { id: 1, name: 'Buck', breed: 'poodle' } },
+  },
+};
+
+expect(variableMatcher).toHaveBeenCalledWith(expect.objectContaining({
+  name: 'Buck'
+}));
+```
 
 ### Setting `addTypename`
 

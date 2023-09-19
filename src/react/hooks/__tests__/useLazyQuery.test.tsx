@@ -1,7 +1,7 @@
 import React from "react";
 import { GraphQLError } from "graphql";
 import gql from "graphql-tag";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, render, renderHook, waitFor } from "@testing-library/react";
 
 import {
   ApolloClient,
@@ -22,6 +22,7 @@ import {
 } from "../../../testing";
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
+import { profileHook } from "../../../testing/internal";
 
 const IS_REACT_18 = React.version.startsWith("18");
 
@@ -745,74 +746,45 @@ describe("useLazyQuery Hook", () => {
       <MockedProvider mocks={mocks}>{children}</MockedProvider>
     );
 
-    const { result } = renderHook(() => useLazyQuery(helloQuery), { wrapper });
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+    const ProfiledHook = profileHook(() => useLazyQuery(helloQuery));
 
-    expect(result.current[1].data).toBe(undefined);
+    render(<ProfiledHook />, { wrapper });
+
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(false);
+      expect(result.data).toBe(undefined);
+    }
 
     await tick();
-    result.current[1].startPolling(10);
+    ProfiledHook.getCurrentSnapshot()[1].startPolling(10);
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(true);
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        if (IS_REACT_18) {
-          expect(result.current[1].data).toEqual({ hello: "world 1" });
-        } else {
-          expect(result.current[1].data).toEqual({ hello: "world 3" });
-        }
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({ hello: "world 1" });
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        if (IS_REACT_18) {
-          expect(result.current[1].data).toEqual({ hello: "world 2" });
-        } else {
-          expect(result.current[1].data).toEqual({ hello: "world 3" });
-        }
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({ hello: "world 2" });
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current[1].data).toEqual({ hello: "world 3" });
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({ hello: "world 3" });
+    }
 
-    result.current[1].stopPolling();
+    ProfiledHook.getCurrentSnapshot()[1].stopPolling();
+
+    expect(ProfiledHook).not.toRerender();
   });
 
   it("should persist previous data when a query is re-run and variable changes", async () => {
@@ -1135,35 +1107,37 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(() => useLazyQuery(helloQuery), {
+    const ProfiledHook = profileHook(() => useLazyQuery(helloQuery));
+
+    render(<ProfiledHook />, {
       wrapper: ({ children }) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
       ),
     });
 
-    const execute = result.current[0];
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBeUndefined();
+    const [execute] = ProfiledHook.getCurrentSnapshot();
+
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(false);
+      expect(result.data).toBeUndefined();
+    }
 
     const executePromise = Promise.resolve().then(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toBeUndefined();
-    expect(result.current[1].error).toBe(undefined);
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(true);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toBe(undefined);
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toBeUndefined();
-    expect(result.current[1].error).toEqual(new Error("error 1"));
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(false);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toEqual(new Error("error 1"));
+    }
 
     await executePromise.then((result) => {
       expect(result.loading).toBe(false);
@@ -1171,25 +1145,21 @@ describe("useLazyQuery Hook", () => {
       expect(result.error!.message).toBe("error 1");
     });
 
-    setTimeout(() => execute());
+    execute();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toBeUndefined();
-    expect(result.current[1].error).toEqual(new Error("error 1"));
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(true);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toEqual(new Error("error 1"));
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].error).toEqual(new Error("error 2"));
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(false);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toEqual(new Error("error 2"));
+    }
   });
 
   it("the promise should not cause an unhandled rejection", async () => {

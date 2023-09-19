@@ -26,6 +26,7 @@ import {
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
+import { profileHook, spyOnConsole } from "../../../testing/internal";
 
 describe("useQuery Hook", () => {
   describe("General use", () => {
@@ -1692,78 +1693,66 @@ describe("useQuery Hook", () => {
         {
           request: { query },
           result: { data: { hello: "world 1" } },
-          delay: 10,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
-          delay: 10,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
-          delay: 10,
         },
       ];
 
       const cache = new InMemoryCache();
-      const { result, rerender } = renderHook(
-        ({ skip }) => useQuery(query, { pollInterval: 10, skip }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
-          initialProps: { skip: undefined } as any,
-        }
+      const ProfiledUseQuery = profileHook(({ skip }: { skip?: boolean }) =>
+        useQuery(query, { pollInterval: 10, skip })
       );
+      const { rerender } = render(<ProfiledUseQuery />, {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks} cache={cache}>
+            {children}
+          </MockedProvider>
+        ),
+      });
+      {
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+      }
+      {
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 1" });
+      }
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      rerender(<ProfiledUseQuery skip />);
+      {
+        const snapshot = await ProfiledUseQuery.takeSnapshot();
+        expect(snapshot.loading).toBe(false);
+        expect(snapshot.data).toEqual(undefined);
+      }
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await expect(ProfiledUseQuery).not.toRerender({ timeout: 100 });
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 1" });
+      rerender(<ProfiledUseQuery skip={false} />);
+      {
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 1" });
+      }
 
-      rerender({ skip: true });
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 2" });
+      }
 
-      await expect(
-        waitFor(
-          () => {
-            expect(result.current.data).toEqual({ hello: "world 1" });
-          },
-          { interval: 1, timeout: 20 }
-        )
-      ).rejects.toThrow();
-
-      rerender({ skip: false });
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 1" });
-
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
-
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
+      {
+        const result = await ProfiledUseQuery.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 3" });
+      }
     });
 
     it("should return data from network when clients default fetch policy set to network-only", async () => {
@@ -3539,7 +3528,7 @@ describe("useQuery Hook", () => {
 
     it("should fetchMore with updateQuery", async () => {
       // TODO: Calling fetchMore with an updateQuery callback is deprecated
-      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      using _warnSpy = spyOnConsole("warn");
 
       const wrapper = ({ children }: any) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -3578,13 +3567,11 @@ describe("useQuery Hook", () => {
       );
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-
-      warnSpy.mockRestore();
     });
 
     it("should fetchMore with updateQuery and notifyOnNetworkStatusChange", async () => {
       // TODO: Calling fetchMore with an updateQuery callback is deprecated
-      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      using _warnSpy = spyOnConsole("warn");
 
       const wrapper = ({ children }: any) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -3635,8 +3622,6 @@ describe("useQuery Hook", () => {
       );
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
-
-      warnSpy.mockRestore();
     });
 
     it("fetchMore with concatPagination", async () => {
@@ -4667,7 +4652,7 @@ describe("useQuery Hook", () => {
 
     // This test was added for issue https://github.com/apollographql/apollo-client/issues/9794
     it("onCompleted can set state without causing react errors", async () => {
-      const errorSpy = jest.spyOn(console, "error");
+      using consoleSpy = spyOnConsole("error");
       const query = gql`
         {
           hello
@@ -4707,8 +4692,7 @@ describe("useQuery Hook", () => {
 
       render(<ParentComponent />);
       await screen.findByText("onCompletedCalled: true");
-      expect(errorSpy).not.toHaveBeenCalled();
-      errorSpy.mockRestore();
+      expect(consoleSpy.error).not.toHaveBeenCalled();
     });
 
     it("onCompleted should not execute on cache writes after initial query execution", async () => {
@@ -4993,9 +4977,7 @@ describe("useQuery Hook", () => {
 
   describe("Partial refetch", () => {
     it("should attempt a refetch when data is missing and partialRefetch is true", async () => {
-      const errorSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      using consoleSpy = spyOnConsole("error");
       const query = gql`
         {
           hello
@@ -5048,9 +5030,8 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      expect(errorSpy).toHaveBeenCalledTimes(1);
-      expect(errorSpy.mock.calls[0][0]).toMatch("Missing field");
-      errorSpy.mockRestore();
+      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
 
       await waitFor(
         () => {
@@ -5079,9 +5060,7 @@ describe("useQuery Hook", () => {
         allPeople: { people: [{ name: "Luke Skywalker" }] },
       };
 
-      const errorSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      using consoleSpy = spyOnConsole("error");
       const link = mockSingleLink(
         { request: { query }, result: { data: {} }, delay: 20 },
         { request: { query }, result: { data }, delay: 20 }
@@ -5120,9 +5099,8 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      expect(errorSpy).toHaveBeenCalledTimes(1);
-      expect(errorSpy.mock.calls[0][0]).toMatch("Missing field");
-      errorSpy.mockRestore();
+      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
 
       await waitFor(
         () => {
@@ -5136,9 +5114,7 @@ describe("useQuery Hook", () => {
     });
 
     it("should attempt a refetch when data is missing, partialRefetch is true and addTypename is false for the cache", async () => {
-      const errorSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      using consoleSpy = spyOnConsole("error");
       const query = gql`
         {
           hello
@@ -5192,9 +5168,8 @@ describe("useQuery Hook", () => {
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toBe(undefined);
 
-      expect(errorSpy).toHaveBeenCalledTimes(1);
-      expect(errorSpy.mock.calls[0][0]).toMatch("Missing field");
-      errorSpy.mockRestore();
+      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
 
       await waitFor(
         () => {
@@ -5661,9 +5636,7 @@ describe("useQuery Hook", () => {
 
   describe("Missing Fields", () => {
     it("should log debug messages about MissingFieldErrors from the cache", async () => {
-      const errorSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      using consoleSpy = spyOnConsole("error");
 
       const carQuery: DocumentNode = gql`
         query cars($id: Int) {
@@ -5717,11 +5690,14 @@ describe("useQuery Hook", () => {
         },
         { interval: 1 }
       );
-      expect(result.current.data).toEqual(carData);
+      const { vine, ...carDataWithoutVine } = carData.cars[0];
+      expect(result.current.data).toEqual({
+        cars: [carDataWithoutVine],
+      });
       expect(result.current.error).toBeUndefined();
 
-      expect(errorSpy).toHaveBeenCalled();
-      expect(errorSpy).toHaveBeenLastCalledWith(
+      expect(consoleSpy.error).toHaveBeenCalled();
+      expect(consoleSpy.error).toHaveBeenLastCalledWith(
         `Missing field '%s' while writing result %o`,
         "vin",
         {
@@ -5732,7 +5708,6 @@ describe("useQuery Hook", () => {
           __typename: "Car",
         }
       );
-      errorSpy.mockRestore();
     });
 
     it("should return partial cache data when `returnPartialData` is true", async () => {
@@ -6011,42 +5986,41 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result } = renderHook(
-        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-        { wrapper }
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { notifyOnNetworkStatusChange: true })
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.previousData).toBe(undefined);
+      render(<ProfiledHook />, { wrapper });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data1);
-      expect(result.current.previousData).toBe(undefined);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+        expect(result.previousData).toBe(undefined);
+      }
 
-      setTimeout(() => result.current.refetch());
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data1);
-      expect(result.current.previousData).toEqual(data1);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data1);
+        expect(result.previousData).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data2);
-      expect(result.current.previousData).toEqual(data1);
+        result.refetch();
+      }
+
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toEqual(data1);
+        expect(result.previousData).toEqual(data1);
+      }
+
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data2);
+        expect(result.previousData).toEqual(data1);
+      }
     });
 
     it("should persist result.previousData across multiple results", async () => {
@@ -8055,17 +8029,18 @@ describe("useQuery Hook", () => {
 
       // We know we are writing partial data to the cache so suppress the console
       // warning.
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-      cache.writeQuery({
-        query,
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            recipient: { __typename: "Person", name: "Cached Alice" },
+      {
+        using _consoleSpy = spyOnConsole("error");
+        cache.writeQuery({
+          query,
+          data: {
+            greeting: {
+              __typename: "Greeting",
+              recipient: { __typename: "Person", name: "Cached Alice" },
+            },
           },
-        },
-      });
-      consoleSpy.mockRestore();
+        });
+      }
 
       const { result } = renderHook(
         () =>

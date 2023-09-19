@@ -848,7 +848,11 @@ export interface MockedResponse<TData = Record<string, any>, TVariables = Record
     // (undocumented)
     request: GraphQLRequest<TVariables>;
     // (undocumented)
-    result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
+    result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;
+    // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    variableMatcher?: VariableMatcher<TVariables>;
 }
 
 // @public (undocumented)
@@ -1194,7 +1198,7 @@ class QueryInfo {
     // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): void;
+    markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): typeof result;
     // (undocumented)
     networkError?: Error | null;
     // (undocumented)
@@ -1455,7 +1459,7 @@ interface Resolvers {
 }
 
 // @public (undocumented)
-export type ResultFunction<T> = () => T;
+export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
 
 // @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
@@ -1580,6 +1584,9 @@ interface UriFunction {
     // (undocumented)
     (operation: Operation): string;
 }
+
+// @public (undocumented)
+type VariableMatcher<V = Record<string, any>> = (variables: V) => boolean;
 
 // @public (undocumented)
 export function wait(ms: number): Promise<void>;

@@ -7,8 +7,8 @@ import { itAsync, MockedResponse, MockLink } from "../../core";
 import { MockedProvider } from "../MockedProvider";
 import { useQuery } from "../../../react/hooks";
 import { InMemoryCache } from "../../../cache";
-import { ApolloLink } from "../../../link/core";
-import { spyOnConsole } from "../../internal";
+import { ApolloLink, FetchResult } from "../../../link/core";
+import { Observable } from "zen-observable-ts";
 
 const variables = {
   username: "mock_username",
@@ -62,7 +62,7 @@ interface Variables {
 
 let errorThrown = false;
 const errorLink = new ApolloLink((operation, forward) => {
-  let observer = null;
+  let observer: Observable<FetchResult> | null = null;
   try {
     observer = forward(operation);
   } catch (error) {
@@ -97,6 +97,100 @@ describe("General use", () => {
       expect(finished).toBe(true);
     }).then(resolve, reject);
   });
+
+  itAsync(
+    "should pass the variables to the result function",
+    async (resolve, reject) => {
+      function Component({ ...variables }: Variables) {
+        useQuery<Data, Variables>(query, { variables });
+        return null;
+      }
+
+      const mock2: MockedResponse<Data, Variables> = {
+        request: {
+          query,
+          variables,
+        },
+        result: jest.fn().mockResolvedValue({ data: { user } }),
+      };
+
+      render(
+        <MockedProvider mocks={[mock2]}>
+          <Component {...variables} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(mock2.result as jest.Mock).toHaveBeenCalledWith(variables);
+      }).then(resolve, reject);
+    }
+  );
+
+  itAsync(
+    "should pass the variables to the variableMatcher",
+    async (resolve, reject) => {
+      function Component({ ...variables }: Variables) {
+        useQuery<Data, Variables>(query, { variables });
+        return null;
+      }
+
+      const mock2: MockedResponse<Data, Variables> = {
+        request: {
+          query,
+        },
+        variableMatcher: jest.fn().mockReturnValue(true),
+        result: { data: { user } },
+      };
+
+      render(
+        <MockedProvider mocks={[mock2]}>
+          <Component {...variables} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(mock2.variableMatcher as jest.Mock).toHaveBeenCalledWith(
+          variables
+        );
+      }).then(resolve, reject);
+    }
+  );
+
+  itAsync(
+    "should use a mock if the variableMatcher returns true",
+    async (resolve, reject) => {
+      let finished = false;
+
+      function Component({ username }: Variables) {
+        const { loading, data } = useQuery<Data, Variables>(query, {
+          variables,
+        });
+        if (!loading) {
+          expect(data!.user).toMatchSnapshot();
+          finished = true;
+        }
+        return null;
+      }
+
+      const mock2: MockedResponse<Data, Variables> = {
+        request: {
+          query,
+        },
+        variableMatcher: (v) => v.username === variables.username,
+        result: { data: { user } },
+      };
+
+      render(
+        <MockedProvider mocks={[mock2]}>
+          <Component {...variables} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
+    }
+  );
 
   itAsync("should allow querying with the typename", (resolve, reject) => {
     let finished = false;
@@ -182,6 +276,41 @@ describe("General use", () => {
       render(
         <MockedProvider showWarnings={false} mocks={mocks}>
           <Component {...variables2} />
+        </MockedProvider>
+      );
+
+      waitFor(() => {
+        expect(finished).toBe(true);
+      }).then(resolve, reject);
+    }
+  );
+
+  itAsync(
+    "should error if the variableMatcher returns false",
+    async (resolve, reject) => {
+      let finished = false;
+      function Component({ ...variables }: Variables) {
+        const { loading, error } = useQuery<Data, Variables>(query, {
+          variables,
+        });
+        if (!loading) {
+          expect(error).toMatchSnapshot();
+          finished = true;
+        }
+        return null;
+      }
+
+      const mock2: MockedResponse<Data, Variables> = {
+        request: {
+          query,
+        },
+        variableMatcher: () => false,
+        result: { data: { user } },
+      };
+
+      render(
+        <MockedProvider showWarnings={false} mocks={[mock2]}>
+          <Component {...variables} />
         </MockedProvider>
       );
 
@@ -522,7 +651,7 @@ describe("General use", () => {
   });
 
   it("shows a warning in the console when there is no matched mock", async () => {
-    using _consoleSpy = spyOnConsole("warn");
+    const consoleSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -562,10 +691,12 @@ describe("General use", () => {
     expect(console.warn).toHaveBeenCalledWith(
       expect.stringContaining("No more mocked responses for the query")
     );
+
+    consoleSpy.mockRestore();
   });
 
   it("silences console warning for unmatched mocks when `showWarnings` is `false`", async () => {
-    using _consoleSpy = spyOnConsole("warn");
+    const consoleSpy = jest.spyOn(console, "warn");
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -602,10 +733,12 @@ describe("General use", () => {
     });
 
     expect(console.warn).not.toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
   });
 
   it("silences console warning for unmatched mocks when passing `showWarnings` to `MockLink` directly", async () => {
-    using _consoleSpy = spyOnConsole("warn");
+    const consoleSpy = jest.spyOn(console, "warn");
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -646,6 +779,8 @@ describe("General use", () => {
     });
 
     expect(console.warn).not.toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
   });
 
   itAsync(

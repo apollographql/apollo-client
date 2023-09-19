@@ -5,6 +5,8 @@
     "@apollo/client": "3.8.3"
   },
   "changesets": [
-    "shaggy-ears-scream.md"
+    "shaggy-ears-scream",
+    "sour-sheep-walk",
+    "tall-otters-wave"
   ]
 }

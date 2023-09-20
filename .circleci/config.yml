@@ -57,7 +57,7 @@ jobs:
       - run: npm version
       - run: npm ci
       - run: npm install -D << parameters.externalPackage >>
-      - run: npm run tsc
+      - run: npm exec tsc
 
   BuildTarball:
     docker:

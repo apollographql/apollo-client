@@ -134,7 +134,6 @@ workflows:
           matrix:
             parameters:
               externalPackage:
-                - "graphql@14"
                 - "graphql@15"
                 - "graphql@16"
                 - "graphql@^17.0.0-alpha"

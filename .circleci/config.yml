@@ -46,6 +46,9 @@ jobs:
           path: reports/junit
 
   TestPeerDepTypes:
+    parameters:
+      externalPackage:
+        type: string
     docker:
       - image: cimg/node:20.6.1
     steps:

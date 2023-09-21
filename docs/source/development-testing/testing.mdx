@@ -150,6 +150,37 @@ it("renders without error", async () => {
 
 </ExpansionPanel>
 
+#### Reusing mocks
+
+By default, a mock is only used once. If you want to reuse a mock for multiple operations, you can set the `maxUsageCount` field to a number indicating how many times the mock should be used:
+
+<ExpansionPanel title="Click to expand 🐶">
+
+```jsx title="dog.test.js"
+import { GET_DOG_QUERY } from "./dog";
+
+const mocks = [
+  {
+    request: {
+      query: GET_DOG_QUERY,
+      variables: {
+        name: "Buck"
+      }
+    },
+    result: {
+      data: {
+        dog: { id: "1", name: "Buck", breed: "bulldog" }
+      }
+    },
+    maxUsageCount: 2, // The mock can be used twice before it's removed, default is 1
+  }
+];
+```
+
+</ExpansionPanel>
+
+Passing `Number.POSITIVE_INFINITY` will cause the mock to be reused indefinitely.
+
 ### Dynamic variables
 
 Sometimes, the exact value of the variables being passed are not known. The `MockedResponse` object takes a `variableMatcher` property that is a function that takes the variables and returns a boolean indication if this mock should match the invocation for the provided query. You cannot specify this parameter and `request.variables` at the same time.

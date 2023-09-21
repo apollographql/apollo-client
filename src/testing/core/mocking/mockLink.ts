@@ -30,6 +30,7 @@ export interface MockedResponse<
   TVariables = Record<string, any>,
 > {
   request: GraphQLRequest<TVariables>;
+  maxUsageCount?: number;
   result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;
   error?: Error;
   delay?: number;
@@ -135,8 +136,11 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
         );
       }
     } else {
-      mockedResponses.splice(responseIndex, 1);
-
+      if (response.maxUsageCount! > 1) {
+        response.maxUsageCount!--;
+      } else {
+        mockedResponses.splice(responseIndex, 1);
+      }
       const { newData } = response;
       if (newData) {
         response.result = newData(operation.variables);
@@ -203,6 +207,14 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
     if (query) {
       newMockedResponse.request.query = query;
     }
+
+    mockedResponse.maxUsageCount = mockedResponse.maxUsageCount ?? 1;
+    invariant(
+      mockedResponse.maxUsageCount > 0,
+      `Mock response maxUsageCount must be greater than 0, %s given`,
+      mockedResponse.maxUsageCount
+    );
+
     this.normalizeVariableMatching(newMockedResponse);
     return newMockedResponse;
   }

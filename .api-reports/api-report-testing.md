@@ -888,6 +888,8 @@ export interface MockedResponse<TData = Record<string, any>, TVariables = Record
     // (undocumented)
     error?: Error;
     // (undocumented)
+    maxUsageCount?: number;
+    // (undocumented)
     newData?: ResultFunction<FetchResult>;
     // (undocumented)
     request: GraphQLRequest<TVariables>;

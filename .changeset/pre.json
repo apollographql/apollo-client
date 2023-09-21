@@ -5,7 +5,9 @@
     "@apollo/client": "3.8.3"
   },
   "changesets": [
+    "pretty-readers-lick",
     "shaggy-ears-scream",
-    "sour-sheep-walk"
+    "sour-sheep-walk",
+    "yellow-flies-repeat"
   ]
 }

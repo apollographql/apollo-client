@@ -314,10 +314,6 @@ interface BackgroundQueryHookOptions<TData = unknown, TVariables extends Operati
     queryKey?: string | number | any[];
     // (undocumented)
     skip?: boolean;
-    // Warning: (ae-forgotten-export) The symbol "SuspenseCache" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    suspenseCache?: SuspenseCache;
 }
 
 // Warning: (ae-forgotten-export) The symbol "BackgroundQueryHookOptions" needs to be exported by the entry point index.d.ts
@@ -1798,27 +1794,6 @@ interface SubscriptionResult<TData = any, TVariables = any> {
     variables?: TVariables;
 }
 
-// Warning: (ae-forgotten-export) The symbol "SuspenseCache_2" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-class SuspenseCache extends SuspenseCache_2 {
-    constructor();
-}
-
-// @public (undocumented)
-class SuspenseCache_2 {
-    // Warning: (ae-forgotten-export) The symbol "SuspenseCacheOptions" needs to be exported by the entry point index.d.ts
-    constructor(options?: SuspenseCacheOptions);
-    // (undocumented)
-    getQueryRef<TData = any>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData>;
-}
-
-// @public (undocumented)
-interface SuspenseCacheOptions {
-    // (undocumented)
-    autoDisposeTimeoutMs?: number;
-}
-
 // @public (undocumented)
 type SuspenseQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
 
@@ -1832,8 +1807,6 @@ interface SuspenseQueryHookOptions<TData = unknown, TVariables extends Operation
     queryKey?: string | number | any[];
     // (undocumented)
     skip?: boolean;
-    // (undocumented)
-    suspenseCache?: SuspenseCache;
 }
 
 // @public (undocumented)

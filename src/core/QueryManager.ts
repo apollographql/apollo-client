@@ -469,9 +469,10 @@ export class QueryManager<TStore> {
       }
     }
 
+    const refetchQueries = mutation.refetchQueries;
     if (
       cacheWrites.length > 0 ||
-      mutation.refetchQueries ||
+      (skipCache ? refetchQueries?.length : refetchQueries) ||
       mutation.update ||
       mutation.onQueryUpdated ||
       mutation.removeOptimistic
@@ -545,7 +546,7 @@ export class QueryManager<TStore> {
           }
         },
 
-        include: mutation.refetchQueries,
+        include: refetchQueries,
 
         // Write the final mutation.result to the root layer of the cache.
         optimistic: false,

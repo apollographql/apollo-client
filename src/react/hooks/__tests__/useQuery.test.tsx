@@ -8236,4 +8236,116 @@ describe.skip("Type Tests", () => {
     // @ts-expect-error
     variables?.nonExistingVariable;
   });
+
+  describe("optional/required options/variables scenarios", () => {
+    test("untyped document node, variables are optional and can be anything", () => {
+      const query = {} as DocumentNode;
+      useQuery(query);
+      useQuery(query, {});
+      useQuery(query, { variables: {} });
+      useQuery(query, { variables: { opt: "opt" } });
+      useQuery(query, { variables: { req: "req" } });
+    });
+    test("typed document node with unspecified TVariables, variables are optional and can be anything", () => {
+      const query = {} as TypedDocumentNode<{ result: string }>;
+      useQuery(query);
+      useQuery(query, {});
+      useQuery(query, { variables: {} });
+      useQuery(query, { variables: { opt: "opt" } });
+      useQuery(query, { variables: { req: "req" } });
+    });
+    test("empty variables are optional", () => {
+      const query = {} as TypedDocumentNode<
+        { result: string },
+        Record<string, never>
+      >;
+      useQuery(query);
+      useQuery(query, {});
+      useQuery(query, { variables: {} });
+      useQuery(query, {
+        variables: {
+          // @ts-expect-error on unknown variable
+          foo: "bar",
+        },
+      });
+    });
+    test("all-optional variables are optional", () => {
+      const query = {} as TypedDocumentNode<
+        { result: string },
+        { opt?: string }
+      >;
+      useQuery(query);
+      useQuery(query, {});
+      useQuery(query, { variables: {} });
+      useQuery(query, { variables: { opt: "opt" } });
+      useQuery(query, {
+        variables: {
+          // @ts-expect-error on unknown variable
+          foo: "bar",
+        },
+      });
+      useQuery(query, {
+        variables: {
+          opt: "opt",
+          // @ts-expect-error on unknown variable
+          foo: "bar",
+        },
+      });
+    });
+    test("non-optional variables are required", () => {
+      const query = {} as TypedDocumentNode<
+        { result: string },
+        { req: string }
+      >;
+      // @ts-expect-error on missing options
+      useQuery(query);
+      useQuery(
+        query,
+        // @ts-expect-error on missing variables
+        {}
+      );
+      useQuery(query, {
+        // @ts-expect-error on empty variables
+        variables: {},
+      });
+      useQuery(query, {
+        variables: {
+          // @ts-expect-error on unknown variable
+          foo: "bar",
+        },
+      });
+      useQuery(query, { variables: { req: "req" } });
+      useQuery(query, {
+        variables: {
+          req: "req",
+          // @ts-expect-error on unknown variable
+          foo: "bar",
+        },
+      });
+    });
+    test("mixed variables are required", () => {
+      const query = {} as TypedDocumentNode<
+        { result: string },
+        { req: string; opt?: string }
+      >;
+      // @ts-expect-error on missing options
+      useQuery(query);
+      // @ts-expect-error on missing variables
+      useQuery(query, {});
+
+      useQuery(query, {
+        // @ts-expect-error on empty variables
+        variables: {},
+      });
+
+      useQuery(query, {
+        // @ts-expect-error on missing required variable
+        variables: {
+          opt: "opt",
+        },
+      });
+      useQuery(query, { variables: { req: "req" } });
+      useQuery(query, { variables: { req: "req", opt: "opt" } });
+    });
+  });
 });

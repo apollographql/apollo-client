@@ -9,7 +9,7 @@ export function Query<
   TVariables extends OperationVariables = OperationVariables,
 >(props: QueryComponentOptions<TData, TVariables>) {
   const { children, query, ...options } = props;
-  const result = useQuery(query, options);
+  const result = useQuery<unknown, OperationVariables>(query, options);
   return result ? children(result as any) : null;
 }
 

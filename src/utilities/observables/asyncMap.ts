@@ -33,20 +33,21 @@ export function asyncMap<V, R>(
             .then(both, both)
             .then(
               (result) => {
-                --activeCallbackCount;
                 next && next.call(observer, result);
-                if (completed) {
-                  handler.complete!();
-                }
               },
               (error) => {
-                --activeCallbackCount;
                 throw error;
               }
             )
             .catch((caught) => {
               error && error.call(observer, caught);
             });
+          promiseQueue.finally(() => {
+            --activeCallbackCount;
+            if (completed) {
+              handler.complete!();
+            }
+          });
         };
       } else {
         return (arg) => delegate && delegate.call(observer, arg);

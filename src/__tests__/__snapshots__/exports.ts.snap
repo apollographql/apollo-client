@@ -395,6 +395,7 @@ Array [
   "canUseSymbol",
   "canUseWeakMap",
   "canUseWeakSet",
+  "canonicalStringify",
   "checkDocument",
   "cloneDeep",
   "compact",

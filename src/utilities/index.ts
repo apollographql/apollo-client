@@ -120,6 +120,7 @@ export * from "./common/makeUniqueId.js";
 export * from "./common/stringifyForDisplay.js";
 export * from "./common/mergeOptions.js";
 export * from "./common/incrementalResult.js";
+export * from "./common/canonicalStringify.js";
 
 export { omitDeep } from "./common/omitDeep.js";
 export { stripTypename } from "./common/stripTypename.js";

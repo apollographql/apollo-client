@@ -28,6 +28,7 @@ import {
   isNonNullObject,
   canUseWeakMap,
   compact,
+  canonicalStringify,
 } from "../../utilities/index.js";
 import type { Cache } from "../core/types/Cache.js";
 import type {
@@ -50,7 +51,7 @@ import type { Policies } from "./policies.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { MissingTree } from "../core/types/common.js";
 import { MissingFieldError } from "../core/types/common.js";
-import { canonicalStringify, ObjectCanon } from "./object-canon.js";
+import { ObjectCanon } from "./object-canon.js";
 
 export type VariableMap = { [name: string]: any };
 

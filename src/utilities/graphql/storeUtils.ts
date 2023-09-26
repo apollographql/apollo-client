@@ -24,6 +24,7 @@ import type {
 import { isNonNullObject } from "../common/objects.js";
 import type { FragmentMap } from "./fragments.js";
 import { getFragmentFromSelection } from "./fragments.js";
+import { canonicalStringify } from "../common/canonicalStringify.js";
 
 export interface Reference {
   readonly __ref: string;
@@ -194,89 +195,61 @@ const KNOWN_DIRECTIVES: string[] = [
   "nonreactive",
 ];
 
-export const getStoreKeyName = Object.assign(
-  function (
-    fieldName: string,
-    args?: Record<string, any> | null,
-    directives?: Directives
-  ): string {
+export function getStoreKeyName(
+  fieldName: string,
+  args?: Record<string, any> | null,
+  directives?: Directives
+): string {
+  if (
+    args &&
+    directives &&
+    directives["connection"] &&
+    directives["connection"]["key"]
+  ) {
     if (
-      args &&
-      directives &&
-      directives["connection"] &&
-      directives["connection"]["key"]
+      directives["connection"]["filter"] &&
+      (directives["connection"]["filter"] as string[]).length > 0
     ) {
-      if (
-        directives["connection"]["filter"] &&
-        (directives["connection"]["filter"] as string[]).length > 0
-      ) {
-        const filterKeys = directives["connection"]["filter"]
-          ? (directives["connection"]["filter"] as string[])
-          : [];
-        filterKeys.sort();
+      const filterKeys = directives["connection"]["filter"]
+        ? (directives["connection"]["filter"] as string[])
+        : [];
+      filterKeys.sort();
 
-        const filteredArgs = {} as { [key: string]: any };
-        filterKeys.forEach((key) => {
-          filteredArgs[key] = args[key];
-        });
-
-        return `${directives["connection"]["key"]}(${stringify(filteredArgs)})`;
-      } else {
-        return directives["connection"]["key"];
-      }
-    }
-
-    let completeFieldName: string = fieldName;
-
-    if (args) {
-      // We can't use `JSON.stringify` here since it's non-deterministic,
-      // and can lead to different store key names being created even though
-      // the `args` object used during creation has the same properties/values.
-      const stringifiedArgs: string = stringify(args);
-      completeFieldName += `(${stringifiedArgs})`;
-    }
-
-    if (directives) {
-      Object.keys(directives).forEach((key) => {
-        if (KNOWN_DIRECTIVES.indexOf(key) !== -1) return;
-        if (directives[key] && Object.keys(directives[key]).length) {
-          completeFieldName += `@${key}(${stringify(directives[key])})`;
-        } else {
-          completeFieldName += `@${key}`;
-        }
+      const filteredArgs = {} as { [key: string]: any };
+      filterKeys.forEach((key) => {
+        filteredArgs[key] = args[key];
       });
+
+      return `${directives["connection"]["key"]}(${canonicalStringify(
+        filteredArgs
+      )})`;
+    } else {
+      return directives["connection"]["key"];
     }
-
-    return completeFieldName;
-  },
-  {
-    setStringify(s: typeof stringify) {
-      const previous = stringify;
-      stringify = s;
-      return previous;
-    },
   }
-);
 
-// Default stable JSON.stringify implementation. Can be updated/replaced with
-// something better by calling getStoreKeyName.setStringify.
-let stringify = function defaultStringify(value: any): string {
-  return JSON.stringify(value, stringifyReplacer);
-};
+  let completeFieldName: string = fieldName;
 
-function stringifyReplacer(_key: string, value: any): any {
-  if (isNonNullObject(value) && !Array.isArray(value)) {
-    value = Object.keys(value)
-      .sort()
-      .reduce(
-        (copy, key) => {
-          copy[key] = value[key];
-          return copy;
-        },
-        {} as Record<string, any>
-      );
+  if (args) {
+    // We can't use `JSON.stringify` here since it's non-deterministic,
+    // and can lead to different store key names being created even though
+    // the `args` object used during creation has the same properties/values.
+    const stringifiedArgs: string = canonicalStringify(args);
+    completeFieldName += `(${stringifiedArgs})`;
   }
-  return value;
+
+  if (directives) {
+    Object.keys(directives).forEach((key) => {
+      if (KNOWN_DIRECTIVES.indexOf(key) !== -1) return;
+      if (directives[key] && Object.keys(directives[key]).length) {
+        completeFieldName += `@${key}(${canonicalStringify(directives[key])})`;
+      } else {
+        completeFieldName += `@${key}`;
+      }
+    });
+  }
+
+  return completeFieldName;
 }
 
 export function argumentsObjectFromField(

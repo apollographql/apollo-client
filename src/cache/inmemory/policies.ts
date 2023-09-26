@@ -20,7 +20,6 @@ import {
   getStoreKeyName,
   isNonNullObject,
   stringifyForDisplay,
-  canonicalStringify,
 } from "../../utilities/index.js";
 import type {
   IdGetter,
@@ -53,8 +52,6 @@ import {
   keyArgsFnFromSpecifier,
   keyFieldsFnFromSpecifier,
 } from "./key-extractor.js";
-
-getStoreKeyName.setStringify(canonicalStringify);
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;

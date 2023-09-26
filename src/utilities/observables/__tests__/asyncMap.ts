@@ -204,9 +204,9 @@ describe("asyncMap", () => {
       await expect(taker.takeError()).resolves.toEqual(new Error("expected"));
       // no more emits
       expect(taker.take()).rejects.toMatch(/timeout/i);
-      // the observer currently keeps running for values `next`ed synchonously
-      // even if the Observable is closed every execution will be wasted
-      expect(lastMapped).toBe(4);
+      // the observer was closed after the error, so we don't expect `mapFn` to
+      // be called for values that will not be emitted
+      expect(lastMapped).toBe(3);
     }
   );
 

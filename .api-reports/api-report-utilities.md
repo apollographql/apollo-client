@@ -1077,7 +1077,11 @@ export function getOperationName(doc: DocumentNode): string | null;
 export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode;
 
 // @public (undocumented)
-export function getStoreKeyName(fieldName: string, args?: Record<string, any> | null, directives?: Directives): string;
+export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | null, directives?: Directives) => string) & {
+    setStringify(s: typeof storeKeyNameStringify): ((value: any) => string) & {
+        reset(): void;
+    };
+};
 
 // @public (undocumented)
 export function getTypenameFromResult(result: Record<string, any>, selectionSet: SelectionSetNode, fragmentMap?: FragmentMap): string | undefined;
@@ -2288,6 +2292,11 @@ type StorageType = Record<string, any>;
 export function storeKeyNameFromField(field: FieldNode, variables?: Object): string;
 
 // @public (undocumented)
+let storeKeyNameStringify: ((value: any) => string) & {
+    reset(): void;
+};
+
+// @public (undocumented)
 export interface StoreObject {
     // (undocumented)
     [storeFieldName: string]: StoreValue;
@@ -2517,6 +2526,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:205:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/utilities/graphql/storeUtils.ts:208:12 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:76:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts
 

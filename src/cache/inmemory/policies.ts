@@ -57,8 +57,6 @@ import {
   keyFieldsFnFromSpecifier,
 } from "./key-extractor.js";
 
-getStoreKeyName.setStringify(canonicalStringify);
-
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
 };
@@ -803,9 +801,16 @@ export class Policies {
     }
 
     if (storeFieldName === void 0) {
-      storeFieldName = fieldSpec.field
-        ? storeKeyNameFromField(fieldSpec.field, fieldSpec.variables)
-        : getStoreKeyName(fieldName, argsFromFieldSpecifier(fieldSpec));
+      let prev = getStoreKeyName.setStringify((v) =>
+        canonicalStringify(v, this.cache)
+      );
+      try {
+        storeFieldName = fieldSpec.field
+          ? storeKeyNameFromField(fieldSpec.field, fieldSpec.variables)
+          : getStoreKeyName(fieldName, argsFromFieldSpecifier(fieldSpec));
+      } finally {
+        getStoreKeyName.setStringify(prev);
+      }
     }
 
     // Returning false from a keyArgs function is like configuring

@@ -27,7 +27,7 @@ export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
 
   const cacheKey: CacheKey = [
     query,
-    canonicalStringify(variables),
+    canonicalStringify(variables, client.cache),
     ...([] as any[]).concat(queryKey),
   ];
   const queryRef = suspenseCache["queryRefs"].lookupArray(cacheKey)?.current;

@@ -141,7 +141,7 @@ export class StoreWriter {
         return merger.merge(existing, incoming) as T;
       },
       variables,
-      varString: canonicalStringify(variables),
+      varString: canonicalStringify(variables, this.cache),
       ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,
       incomingById: new Map(),

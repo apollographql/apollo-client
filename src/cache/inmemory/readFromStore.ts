@@ -256,7 +256,7 @@ export class StoreReader {
         query,
         policies,
         variables,
-        varString: canonicalStringify(variables),
+        varString: canonicalStringify(variables, this.config.cache),
         canonizeResults,
         ...extractFragmentContext(query, this.config.fragments),
       },

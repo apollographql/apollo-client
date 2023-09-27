@@ -138,7 +138,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
               // separation is to include c.callback in the cache key for
               // maybeBroadcastWatch calls. See issue #5733.
               c.callback,
-              canonicalStringify({ optimistic, id, variables })
+              canonicalStringify({ optimistic, id, variables }, this)
             );
           }
         },
@@ -292,7 +292,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // Defaults to false.
     resetResultIdentities?: boolean;
   }) {
-    canonicalStringify.reset();
+    canonicalStringify.reset(this);
     const ids = this.optimisticData.gc();
     if (options && !this.txCount) {
       if (options.resetResultCache) {
@@ -368,7 +368,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   public reset(options?: Cache.ResetOptions): Promise<void> {
     this.init();
 
-    canonicalStringify.reset();
+    canonicalStringify.reset(this);
 
     if (options && options.discardWatches) {
       // Similar to what happens in the unsubscribe function returned by

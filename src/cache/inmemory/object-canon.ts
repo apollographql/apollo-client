@@ -196,34 +196,50 @@ type SortedKeysInfo = {
   json: string;
 };
 
+const defaultStringifyContext: WeakKey = {};
+let stringifyTrie = new Trie(true, getNewStringifyCache);
+function getNewStringifyCache() {
+  return {
+    canon: new ObjectCanon(),
+    cache: new (canUseWeakMap ? WeakMap : Map)(),
+  };
+}
+
 // Since the keys of canonical objects are always created in lexicographically
 // sorted order, we can use the ObjectCanon to implement a fast and stable
 // version of JSON.stringify, which automatically sorts object keys.
 export const canonicalStringify = Object.assign(
-  function (value: any): string {
+  function (
+    value: any,
+    cachingContext:
+      | import("../index.js").ApolloCache<any> // this type is contained in WeakKey, but it's here to show intent
+      // commenting out this next line might be useful to find usages of
+      // `canonicalStringify` without `cachingContext` in our code base
+      | WeakKey = defaultStringifyContext
+  ): string {
+    const { canon, cache } = stringifyTrie.lookup(cachingContext);
     if (isObjectOrArray(value)) {
-      if (stringifyCanon === void 0) {
-        resetCanonicalStringify();
-      }
-      const canonical = stringifyCanon.admit(value);
-      let json = stringifyCache.get(canonical);
+      const canonical = canon.admit(value);
+      let json = cache.get(canonical);
       if (json === void 0) {
-        stringifyCache.set(canonical, (json = JSON.stringify(canonical)));
+        cache.set(canonical, (json = JSON.stringify(canonical)));
       }
       return json;
     }
     return JSON.stringify(value);
   },
   {
-    reset: resetCanonicalStringify,
+    reset(context?: WeakKey) {
+      if (!context) {
+        stringifyTrie = new Trie(true, getNewStringifyCache);
+      } else {
+        // not sure how important this logic is or if we just
+        // want to reset the whole `stringifyTrie` and disregard context
+        const value = stringifyTrie.peek(context);
+        if (value) {
+          Object.assign(value, getNewStringifyCache());
+        }
+      }
+    },
   }
 );
-
-// Can be reset by calling canonicalStringify.reset().
-let stringifyCanon: ObjectCanon;
-let stringifyCache: WeakMap<object, string>;
-
-function resetCanonicalStringify() {
-  stringifyCanon = new ObjectCanon();
-  stringifyCache = new (canUseWeakMap ? WeakMap : Map)();
-}

@@ -1078,9 +1078,7 @@ export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode;
 
 // @public (undocumented)
 export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | null, directives?: Directives) => string) & {
-    setStringify(s: typeof storeKeyNameStringify): ((value: any) => string) & {
-        reset(): void;
-    };
+    setStringify(s: typeof storeKeyNameStringify): (value: any) => string;
 };
 
 // @public (undocumented)
@@ -2292,9 +2290,7 @@ type StorageType = Record<string, any>;
 export function storeKeyNameFromField(field: FieldNode, variables?: Object): string;
 
 // @public (undocumented)
-let storeKeyNameStringify: ((value: any) => string) & {
-    reset(): void;
-};
+let storeKeyNameStringify: (value: any) => string;
 
 // @public (undocumented)
 export interface StoreObject {

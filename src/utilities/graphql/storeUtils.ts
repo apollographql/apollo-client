@@ -198,7 +198,7 @@ const KNOWN_DIRECTIVES: string[] = [
 // Default stable JSON.stringify implementation used by getStoreKeyName. Can be
 // updated/replaced with something better by calling
 // getStoreKeyName.setStringify(newStringifyFunction).
-let storeKeyNameStringify = canonicalStringify;
+let storeKeyNameStringify: (value: any) => string = canonicalStringify;
 
 export const getStoreKeyName = Object.assign(
   function (

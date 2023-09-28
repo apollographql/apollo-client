@@ -1,4 +1,4 @@
-import { canonicalStringify, lookupSortedKeys } from "../canonicalStringify";
+import { canonicalStringify } from "../canonicalStringify";
 
 function forEachPermutation(
   keys: string[],
@@ -85,41 +85,26 @@ describe("canonicalStringify", () => {
     expect(stableStrings.size).toBe(1);
   });
 
-  it("lookupSortedKeys(keys, false) should reuse same sorted array for all permutations", () => {
-    const keys = ["z", "a", "c", "b"];
-    const sorted = lookupSortedKeys(["z", "a", "b", "c"], false);
-    expect(sorted).toEqual(["a", "b", "c", "z"]);
-    forEachPermutation(keys, (permutation) => {
-      expect(lookupSortedKeys(permutation, false)).toBe(sorted);
-    });
-  });
+  it("should not modify keys of custom-prototype objects", () => {
+    class Custom {
+      z = "z";
+      y = "y";
+      x = "x";
+      b = "b";
+      a = "a";
+      c = "c";
+    }
 
-  it("lookupSortedKeys(keys, true) should return same array if already sorted", () => {
-    const keys = ["a", "b", "c", "x", "y", "z"].sort();
-    const sorted = lookupSortedKeys(keys, true);
-    expect(sorted).toBe(keys);
+    const obj = {
+      z: "z",
+      x: "x",
+      y: new Custom(),
+    };
 
-    forEachPermutation(keys, (permutation) => {
-      const sortedTrue = lookupSortedKeys(permutation, true);
-      const sortedFalse = lookupSortedKeys(permutation, false);
+    expect(Object.keys(obj.y)).toEqual(["z", "y", "x", "b", "a", "c"]);
 
-      expect(sortedTrue).toEqual(sorted);
-      expect(sortedFalse).toEqual(sorted);
-
-      const wasPermutationSorted = permutation.every(
-        (key, i) => key === keys[i]
-      );
-
-      if (wasPermutationSorted) {
-        expect(sortedTrue).toBe(permutation);
-        expect(sortedTrue).not.toBe(sorted);
-      } else {
-        expect(sortedTrue).not.toBe(permutation);
-        expect(sortedTrue).toBe(sorted);
-      }
-
-      expect(sortedFalse).not.toBe(permutation);
-      expect(sortedFalse).toBe(sorted);
-    });
+    expect(canonicalStringify(obj)).toBe(
+      '{"x":"x","y":{"z":"z","y":"y","x":"x","b":"b","a":"a","c":"c"},"z":"z"}'
+    );
   });
 });

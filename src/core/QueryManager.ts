@@ -1220,9 +1220,9 @@ export class QueryManager<TStore> {
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
-    networkStatus = NetworkStatus.loading
+    networkStatus = NetworkStatus.loading,
+    query = options.query
   ): ConcastAndInfo<TData> {
-    const { query } = options;
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
 

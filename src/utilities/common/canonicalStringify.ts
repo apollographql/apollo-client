@@ -63,16 +63,16 @@ type SortingTrie = Map<string, SortingTrie> & {
   // The contents of the Map represent the next level(s) of the trie, branching
   // out for each possible next key.
   sorted?: readonly string[];
-}
+};
 
-const sortingTrieRoot: SortingTrie = new Map;
+const sortingTrieRoot: SortingTrie = new Map();
 
 // Sort the given keys using a lookup trie, with an option to return the same
 // (===) array in case it was already sorted, so we can avoid always creating a
 // new object in the replacer function above.
 export function lookupSortedKeys(
   keys: readonly string[],
-  returnKeysIfAlreadySorted: boolean,
+  returnKeysIfAlreadySorted: boolean
 ): readonly string[] {
   let node = sortingTrieRoot;
   let alreadySorted = true;
@@ -81,17 +81,19 @@ export function lookupSortedKeys(
     if (k > 0 && keys[k - 1] > key) {
       alreadySorted = false;
     }
-    node = node.get(key) || node.set(key, new Map).get(key)!;
+    node = node.get(key) || node.set(key, new Map()).get(key)!;
   }
 
   if (alreadySorted) {
     return node.sorted
-      // There may already be a node.sorted array that's equivalent to the
-      // already-sorted keys array, but if keys was already sorted, we want to
-      // return the keys reference as-is when returnKeysIfAlreadySorted is true.
-      // This behavior helps us decide whether we need to create a new object in
-      // the stableObjectReplacer function above.
-      ? (returnKeysIfAlreadySorted ? keys : node.sorted)
+      ? // There may already be a node.sorted array that's equivalent to the
+        // already-sorted keys array, but if keys was already sorted, we want to
+        // return the keys reference as-is when returnKeysIfAlreadySorted is true.
+        // This behavior helps us decide whether we need to create a new object in
+        // the stableObjectReplacer function above.
+        returnKeysIfAlreadySorted
+        ? keys
+        : node.sorted
       : (node.sorted = keys);
   }
 
@@ -109,7 +111,7 @@ export function lookupSortedKeys(
   // be stored as the one true array and returned here. Since we are passing in
   // an array that is definitely already sorted, this call to lookupSortedKeys
   // will never actually have to call .sort(), so this lookup is always linear.
-  return node.sorted || (
-    node.sorted = lookupSortedKeys(keys.slice(0).sort(), false)
+  return (
+    node.sorted || (node.sorted = lookupSortedKeys(keys.slice(0).sort(), false))
   );
 }

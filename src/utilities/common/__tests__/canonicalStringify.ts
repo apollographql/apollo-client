@@ -1,11 +1,8 @@
-import {
-  canonicalStringify,
-  lookupSortedKeys,
-} from "../canonicalStringify";
+import { canonicalStringify, lookupSortedKeys } from "../canonicalStringify";
 
 function forEachPermutation(
   keys: string[],
-  callback: (permutation: string[]) => void,
+  callback: (permutation: string[]) => void
 ) {
   if (keys.length <= 1) {
     callback(keys);
@@ -15,11 +12,7 @@ function forEachPermutation(
   const rest = keys.slice(1);
   forEachPermutation(rest, (permutation) => {
     for (let i = 0; i <= permutation.length; ++i) {
-      callback([
-        ...permutation.slice(0, i),
-        first,
-        ...permutation.slice(i),
-      ]);
+      callback([...permutation.slice(0, i), first, ...permutation.slice(i)]);
     }
   });
 }
@@ -27,10 +20,9 @@ function forEachPermutation(
 function allObjectPermutations<T extends Record<string, any>>(obj: T) {
   const keys = Object.keys(obj);
   const permutations: T[] = [];
-  forEachPermutation(keys, permutation => {
-    const permutationObj =
-      Object.create(Object.getPrototypeOf(obj));
-    permutation.forEach(key => {
+  forEachPermutation(keys, (permutation) => {
+    const permutationObj = Object.create(Object.getPrototypeOf(obj));
+    permutation.forEach((key) => {
       permutationObj[key] = obj[key];
     });
     permutations.push(permutationObj);
@@ -72,7 +64,7 @@ describe("canonicalStringify", () => {
       c: 3,
       a: 1,
       b: 2,
-    }).forEach(obj => {
+    }).forEach((obj) => {
       unstableStrings.add(JSON.stringify(obj));
       stableStrings.add(canonicalStringify(obj));
 
@@ -82,9 +74,9 @@ describe("canonicalStringify", () => {
         z: "z",
         y: ["y", obj, "why"],
         x: "x",
-      }).forEach(parent => {
+      }).forEach((parent) => {
         expect(canonicalStringify(parent)).toBe(
-          '{"x":"x","y":["y",{"a":1,"b":2,"c":3},"why"],"z":"z"}',
+          '{"x":"x","y":["y",{"a":1,"b":2,"c":3},"why"],"z":"z"}'
         );
       });
     });
@@ -97,7 +89,7 @@ describe("canonicalStringify", () => {
     const keys = ["z", "a", "c", "b"];
     const sorted = lookupSortedKeys(["z", "a", "b", "c"], false);
     expect(sorted).toEqual(["a", "b", "c", "z"]);
-    forEachPermutation(keys, permutation => {
+    forEachPermutation(keys, (permutation) => {
       expect(lookupSortedKeys(permutation, false)).toBe(sorted);
     });
   });
@@ -107,15 +99,16 @@ describe("canonicalStringify", () => {
     const sorted = lookupSortedKeys(keys, true);
     expect(sorted).toBe(keys);
 
-    forEachPermutation(keys, permutation => {
+    forEachPermutation(keys, (permutation) => {
       const sortedTrue = lookupSortedKeys(permutation, true);
       const sortedFalse = lookupSortedKeys(permutation, false);
 
       expect(sortedTrue).toEqual(sorted);
       expect(sortedFalse).toEqual(sorted);
 
-      const wasPermutationSorted =
-        permutation.every((key, i) => key === keys[i]);
+      const wasPermutationSorted = permutation.every(
+        (key, i) => key === keys[i]
+      );
 
       if (wasPermutationSorted) {
         expect(sortedTrue).toBe(permutation);

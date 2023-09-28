@@ -24,7 +24,7 @@ export const canonicalStringify = Object.assign(
       // Blowing away the root-level trie map will reclaim all memory stored in
       // the trie, without affecting the logical results of canonicalStringify,
       // but potentially sacrificing performance until the trie is refilled.
-      sortingTrieRoot.next = Object.create(null);
+      sortingTrieRoot.clear();
     },
   }
 );
@@ -57,18 +57,15 @@ function stableObjectReplacer(key: string, value: any) {
   return value;
 }
 
-interface SortingTrie {
+type SortingTrie = Map<string, SortingTrie> & {
+  // If there is an entry in the trie for the sequence of keys leading up to
+  // this node, the node.sorted array will contain those keys in sorted order.
+  // The contents of the Map represent the next level(s) of the trie, branching
+  // out for each possible next key.
   sorted?: readonly string[];
-  next: Record<string, SortingTrie>;
 }
 
-const sortingTrieRoot: SortingTrie = {
-  sorted: [],
-  // Using Object.create(null) is actually important here, since we could
-  // theoretically encounter strings like "__proto__" or "hasOwnProperty", which
-  // would be problematic if Object.prototype is in the prototype chain.
-  next: Object.create(null),
-};
+const sortingTrieRoot: SortingTrie = new Map;
 
 // Sort the given keys using a lookup trie, with an option to return the same
 // (===) array in case it was already sorted, so we can avoid always creating a
@@ -84,9 +81,7 @@ function lookupSortedKeys(
     if (k > 0 && keys[k - 1] > key) {
       alreadySorted = false;
     }
-    node = node.next[key] || (
-      node.next[key] = { next: Object.create(null) }
-    );
+    node = node.get(key) || node.set(key, new Map).get(key)!;
   }
 
   if (alreadySorted) {

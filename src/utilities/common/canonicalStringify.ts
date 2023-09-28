@@ -1,4 +1,20 @@
-// Like JSON.stringify, but with object keys always sorted in the same order.
+/**
+ * Like JSON.stringify, but with object keys always sorted in the same order.
+ *
+ * To achieve performant sorting, this function uses a trie to store the sorted
+ * key names of objects that have already been encountered, bringing "memoized"
+ * sort actions down to O(n) from O(n log n).
+ *
+ * As a drawback, this function will add a little bit more memory for every object
+ * is called with that has different (more, less, a different order) keys than
+ * in the past.
+ *
+ * In a typical application, this should not play a significant role, as
+ * `canonicalStringify` will be called for only a limited number of object shapes,
+ * and the cache will not grow beyond a certain point.
+ * But in some edge cases, this could be a problem, so we provide a `reset` method
+ * that will clear the cache and could be called at intervals from userland.
+ * */
 export const canonicalStringify = Object.assign(
   function canonicalStringify(value: any): string {
     return JSON.stringify(value, stableObjectReplacer);

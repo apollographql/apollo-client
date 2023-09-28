@@ -29,6 +29,8 @@ export const canonicalStringify = Object.assign(
   }
 );
 
+// Values are JSON-serialized arrays of object keys (in any order), and values
+// are sorted arrays of the same keys.
 const sortingMap = new Map<string, readonly string[]>();
 
 // The JSON.stringify function takes an optional second argument called a
@@ -57,7 +59,7 @@ function stableObjectReplacer(key: string, value: any) {
         sortingMap.set(unsortedKey, sortedKeys);
         sortingMap.set(sortedKey, sortedKeys);
       }
-      const sortedObject = Object.create(Object.getPrototypeOf(value));
+      const sortedObject = Object.create(proto);
       // Reassigning the keys in sorted order will cause JSON.stringify to
       // serialize them in sorted order.
       sortedKeys.forEach((key) => {

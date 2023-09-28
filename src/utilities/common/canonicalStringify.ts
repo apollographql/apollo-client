@@ -42,7 +42,7 @@ function stableObjectReplacer(key: string, value: any) {
     // means their prototype is either Object.prototype or null.
     if (proto === Object.prototype || proto === null) {
       const keys = Object.keys(value);
-      const sortedKeys = sortKeys(keys);
+      const sortedKeys = lookupSortedKeys(keys, true);
       if (sortedKeys !== keys) {
         const sorted = Object.create(null);
         // Reassigning the keys in sorted order will cause JSON.stringify to
@@ -64,13 +64,19 @@ interface SortingTrie {
 
 const sortingTrieRoot: SortingTrie = {
   sorted: [],
+  // Using Object.create(null) is actually important here, since we could
+  // theoretically encounter strings like "__proto__" or "hasOwnProperty", which
+  // would be problematic if Object.prototype is in the prototype chain.
   next: Object.create(null),
 };
 
-// Sort the given keys using a lookup trie, and return the same (===) array in
-// case it was already sorted, so we can avoid always creating a new object in
-// the replacer function above.
-function sortKeys(keys: readonly string[]): readonly string[] {
+// Sort the given keys using a lookup trie, with an option to return the same
+// (===) array in case it was already sorted, so we can avoid always creating a
+// new object in the replacer function above.
+function lookupSortedKeys(
+  keys: readonly string[],
+  returnKeysIfAlreadySorted: boolean,
+): readonly string[] {
   let node = sortingTrieRoot;
   let alreadySorted = true;
   for (let k = 0, len = keys.length; k < len; ++k) {
@@ -78,17 +84,37 @@ function sortKeys(keys: readonly string[]): readonly string[] {
     if (k > 0 && keys[k - 1] > key) {
       alreadySorted = false;
     }
-    const next = node.next;
-    node = next[key] || (next[key] = { next: Object.create(null) });
+    node = node.next[key] || (
+      node.next[key] = { next: Object.create(null) }
+    );
   }
+
   if (alreadySorted) {
-    // There may already be a node.sorted array that's equivalent to the
-    // already-sorted keys array, but if keys was already sorted, we always want
-    // to return that array, not node.sorted.
-    return node.sorted ? keys : (node.sorted = keys);
+    return node.sorted
+      // There may already be a node.sorted array that's equivalent to the
+      // already-sorted keys array, but if keys was already sorted, we want to
+      // return the keys reference as-is when returnKeysIfAlreadySorted is true.
+      // This behavior helps us decide whether we need to create a new object in
+      // the stableObjectReplacer function above.
+      ? (returnKeysIfAlreadySorted ? keys : node.sorted)
+      : (node.sorted = keys);
   }
-  // The .slice(0) is necessary so that we do not modify the original keys array
-  // by calling keys.sort(), and also so that we always return a new (!==)
-  // sorted array when keys was not already sorted.
-  return node.sorted || (node.sorted = keys.slice(0).sort());
+
+  // To conserve the total number of sorted arrays we store in the trie, we
+  // always use the same sorted array reference for a given set of strings,
+  // regardless of which permutation of the strings led to this SortingTrie
+  // node. To obtain this one true array, we do a little extra work to look up
+  // the sorted array associated with the sorted permutation, since there will
+  // be one unique path through the trie for the sorted permutation (even if
+  // there were duplicate keys). We can reuse the lookupSortedKeys function to
+  // perform this lookup, but we pass false for returnKeysIfAlreadySorted so it
+  // will return the existing array (if any) rather than the new sorted array we
+  // use to perform the lookup. If there is no existing array associated with
+  // the sorted permutation, the new array produced by keys.slice(0).sort() will
+  // be stored as the one true array and returned here. Since we are passing in
+  // an array that is definitely already sorted, this call to lookupSortedKeys
+  // will never actually have to call .sort(), so this lookup is always linear.
+  return node.sorted || (
+    node.sorted = lookupSortedKeys(keys.slice(0).sort(), false)
+  );
 }

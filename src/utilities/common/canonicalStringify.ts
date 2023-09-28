@@ -70,7 +70,7 @@ const sortingTrieRoot: SortingTrie = new Map;
 // Sort the given keys using a lookup trie, with an option to return the same
 // (===) array in case it was already sorted, so we can avoid always creating a
 // new object in the replacer function above.
-function lookupSortedKeys(
+export function lookupSortedKeys(
   keys: readonly string[],
   returnKeysIfAlreadySorted: boolean,
 ): readonly string[] {

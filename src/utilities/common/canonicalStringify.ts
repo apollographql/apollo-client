@@ -47,7 +47,9 @@ function stableObjectReplacer(key: string, value: any) {
     // prevents needlessly rearranging the indices of arrays.
     if (proto === Object.prototype || proto === null) {
       const keys = Object.keys(value);
-      if (isArraySorted(keys)) return value;
+      // If keys is already sorted, let JSON.stringify serialize the original
+      // value instead of creating a new object with keys in the same order.
+      if (keys.every(everyKeyInOrder)) return value;
       const unsortedKey = JSON.stringify(keys);
       let sortedKeys = sortingMap.get(unsortedKey);
       if (!sortedKeys) {
@@ -71,11 +73,14 @@ function stableObjectReplacer(key: string, value: any) {
   return value;
 }
 
-function isArraySorted(keys: readonly string[]): boolean {
-  for (let k = 1, len = keys.length; k < len; ++k) {
-    if (keys[k - 1] > keys[k]) {
-      return false;
-    }
-  }
-  return true;
+// Since everything that happens in stableObjectReplacer benefits from being as
+// efficient as possible, we use a static function as the callback for
+// keys.every in order to test if the provided keys are already sorted without
+// allocating extra memory for a callback.
+function everyKeyInOrder(
+  key: string,
+  i: number,
+  keys: readonly string[]
+): boolean {
+  return i === 0 || keys[i - 1] <= key;
 }

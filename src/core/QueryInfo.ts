@@ -9,7 +9,6 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
 import type { QueryListener, MethodKeys } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
-import type { ObservableSubscription } from "../utilities/index.js";
 import {
   isNonEmptyArray,
   graphQLResultHasError,
@@ -78,7 +77,6 @@ export class QueryInfo {
   listeners = new Set<QueryListener>();
   document: DocumentNode | null = null;
   lastRequestId = 1;
-  subscriptions = new Set<ObservableSubscription>();
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
@@ -292,8 +290,6 @@ export class QueryInfo {
       // Revert back to the no-op version of cancel inherited from
       // QueryInfo.prototype.
       this.cancel = QueryInfo.prototype.cancel;
-
-      this.subscriptions.forEach((sub) => sub.unsubscribe());
 
       const oq = this.observableQuery;
       if (oq) oq.stopPolling();

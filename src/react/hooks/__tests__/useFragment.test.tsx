@@ -29,7 +29,7 @@ import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
-import { profile } from "../../../testing/internal";
+import { profile, spyOnConsole } from "../../../testing/internal";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -1326,15 +1326,16 @@ describe("useFragment", () => {
       );
 
       // silence the console for the incomplete fragment write
-      const spy = jest.spyOn(console, "error").mockImplementation(() => {});
-      cache.writeFragment({
-        fragment: ItemFragment,
-        data: {
-          __typename: "Item",
-          id: 5,
-        },
-      });
-      spy.mockRestore();
+      {
+        using _spy = spyOnConsole("error");
+        cache.writeFragment({
+          fragment: ItemFragment,
+          data: {
+            __typename: "Item",
+            id: 5,
+          },
+        });
+      }
     });
 
     it("assumes `returnPartialData: true` per default", () => {

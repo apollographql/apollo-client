@@ -2,7 +2,7 @@ import { Observable } from "../../../utilities";
 import { ObservableStream } from "../ObservableStream";
 
 it("allows to step through an observable until completion", async () => {
-  const taker = new ObservableStream(
+  const stream = new ObservableStream(
     new Observable<number>((observer) => {
       observer.next(1);
       observer.next(2);
@@ -10,14 +10,14 @@ it("allows to step through an observable until completion", async () => {
       observer.complete();
     })
   );
-  await expect(taker.takeNext()).resolves.toBe(1);
-  await expect(taker.takeNext()).resolves.toBe(2);
-  await expect(taker.takeNext()).resolves.toBe(3);
-  await expect(taker.takeComplete()).resolves.toBeUndefined();
+  await expect(stream.takeNext()).resolves.toBe(1);
+  await expect(stream.takeNext()).resolves.toBe(2);
+  await expect(stream.takeNext()).resolves.toBe(3);
+  await expect(stream.takeComplete()).resolves.toBeUndefined();
 });
 
 it("allows to step through an observable until error", async () => {
-  const taker = new ObservableStream(
+  const stream = new ObservableStream(
     new Observable<number>((observer) => {
       observer.next(1);
       observer.next(2);
@@ -25,22 +25,22 @@ it("allows to step through an observable until error", async () => {
       observer.error(new Error("expected"));
     })
   );
-  await expect(taker.takeNext()).resolves.toBe(1);
-  await expect(taker.takeNext()).resolves.toBe(2);
-  await expect(taker.takeNext()).resolves.toBe(3);
-  await expect(taker.takeError()).resolves.toEqual(expect.any(Error));
+  await expect(stream.takeNext()).resolves.toBe(1);
+  await expect(stream.takeNext()).resolves.toBe(2);
+  await expect(stream.takeNext()).resolves.toBe(3);
+  await expect(stream.takeError()).resolves.toEqual(expect.any(Error));
 });
 
 it("will time out if no more value is omitted", async () => {
-  const taker = new ObservableStream(
+  const stream = new ObservableStream(
     new Observable<number>((observer) => {
       observer.next(1);
       observer.next(2);
     })
   );
-  await expect(taker.takeNext()).resolves.toBe(1);
-  await expect(taker.takeNext()).resolves.toBe(2);
-  await expect(taker.takeNext()).rejects.toEqual(expect.any(Error));
+  await expect(stream.takeNext()).resolves.toBe(1);
+  await expect(stream.takeNext()).resolves.toBe(2);
+  await expect(stream.takeNext()).rejects.toEqual(expect.any(Error));
 });
 
 it.each([
@@ -51,7 +51,7 @@ it.each([
   ["takeComplete", "next"],
   ["takeComplete", "error"],
 ])("errors when %s receives %s instead", async (expected, gotten) => {
-  const taker = new ObservableStream(
+  const stream = new ObservableStream(
     new Observable<number>((observer) => {
       observer.next(1);
       observer.next(2);
@@ -59,10 +59,10 @@ it.each([
       observer[gotten](3);
     })
   );
-  await expect(taker.takeNext()).resolves.toBe(1);
-  await expect(taker.takeNext()).resolves.toBe(2);
+  await expect(stream.takeNext()).resolves.toBe(1);
+  await expect(stream.takeNext()).resolves.toBe(2);
   // @ts-ignore
-  await expect(taker[expected]()).rejects.toEqual(expect.any(Error));
+  await expect(stream[expected]()).rejects.toEqual(expect.any(Error));
 });
 
 it.each([
@@ -70,7 +70,7 @@ it.each([
   ["takeError", "error"],
   ["takeComplete", "complete"],
 ])("succeeds when %s, receives %s", async (expected, gotten) => {
-  const taker = new ObservableStream(
+  const stream = new ObservableStream(
     new Observable<number>((observer) => {
       observer.next(1);
       observer.next(2);
@@ -78,8 +78,8 @@ it.each([
       observer[gotten](3);
     })
   );
-  await expect(taker.takeNext()).resolves.toBe(1);
-  await expect(taker.takeNext()).resolves.toBe(2);
+  await expect(stream.takeNext()).resolves.toBe(1);
+  await expect(stream.takeNext()).resolves.toBe(2);
   // @ts-ignore this should just not throw
-  await taker[expected]();
+  await stream[expected]();
 });

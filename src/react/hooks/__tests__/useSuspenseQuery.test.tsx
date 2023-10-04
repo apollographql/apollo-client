@@ -940,6 +940,63 @@ describe("useSuspenseQuery", () => {
     jest.useRealTimers();
   });
 
+  // https://github.com/apollographql/apollo-client/issues/11270
+  it("does not leave component suspended if query completes if request takes longer than auto dispose timeout", async () => {
+    try {
+      jest.useFakeTimers();
+      const { query } = useSimpleQueryCase();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+        defaultOptions: {
+          react: {
+            suspense: {
+              autoDisposeTimeoutMs: 10,
+            },
+          },
+        },
+      });
+
+      function App() {
+        const [showGreeting, setShowGreeting] = React.useState(true);
+
+        return (
+          <ApolloProvider client={client}>
+            <Suspense fallback="Loading greeting...">
+              <Greeting />
+            </Suspense>
+          </ApolloProvider>
+        );
+      }
+
+      function Greeting() {
+        const { data } = useSuspenseQuery(query);
+
+        return <span>{data.greeting}</span>;
+      }
+
+      render(<App />);
+
+      // Ensure <Greeting /> suspends immediately
+      expect(screen.getByText("Loading greeting...")).toBeInTheDocument();
+
+      jest.advanceTimersByTime(20);
+
+      link.simulateResult({ result: { data: { greeting: "Hello" } } });
+      link.simulateComplete();
+
+      expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
+
+      // Avoid act warnings for a suspended resource
+      // eslint-disable-next-line testing-library/no-unnecessary-act
+      await act(() => wait(0));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("allows the client to be overridden", async () => {
     const { query } = useSimpleQueryCase();
 

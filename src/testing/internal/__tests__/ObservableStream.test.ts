@@ -1,8 +1,8 @@
 import { Observable } from "../../../utilities";
-import { ObservableTaker } from "../ObservableTaker";
+import { ObservableStream } from "../ObservableStream";
 
 it("allows to step through an observable until completion", async () => {
-  const taker = new ObservableTaker(
+  const taker = new ObservableStream(
     new Observable<number>((observer) => {
       observer.next(1);
       observer.next(2);
@@ -17,7 +17,7 @@ it("allows to step through an observable until completion", async () => {
 });
 
 it("allows to step through an observable until error", async () => {
-  const taker = new ObservableTaker(
+  const taker = new ObservableStream(
     new Observable<number>((observer) => {
       observer.next(1);
       observer.next(2);
@@ -32,7 +32,7 @@ it("allows to step through an observable until error", async () => {
 });
 
 it("will time out if no more value is omitted", async () => {
-  const taker = new ObservableTaker(
+  const taker = new ObservableStream(
     new Observable<number>((observer) => {
       observer.next(1);
       observer.next(2);
@@ -51,7 +51,7 @@ it.each([
   ["takeComplete", "next"],
   ["takeComplete", "error"],
 ])("errors when %s receives %s instead", async (expected, gotten) => {
-  const taker = new ObservableTaker(
+  const taker = new ObservableStream(
     new Observable<number>((observer) => {
       observer.next(1);
       observer.next(2);
@@ -70,7 +70,7 @@ it.each([
   ["takeError", "error"],
   ["takeComplete", "complete"],
 ])("succeeds when %s, receives %s", async (expected, gotten) => {
-  const taker = new ObservableTaker(
+  const taker = new ObservableStream(
     new Observable<number>((observer) => {
       observer.next(1);
       observer.next(2);

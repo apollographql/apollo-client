@@ -1,7 +1,7 @@
 import { Observable } from "../Observable";
 import { asyncMap } from "../asyncMap";
 import { itAsync } from "../../../testing";
-import { ObservableTaker } from "../../../testing/internal";
+import { ObservableStream } from "../../../testing/internal";
 const wait = (delayMs: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, delayMs));
 
@@ -158,12 +158,12 @@ describe("asyncMap", () => {
       }, 10);
     });
     const mapped = asyncMap(observable, mapFn);
-    const taker = new ObservableTaker(mapped);
-    await expect(taker.takeNext()).resolves.toBe(2);
-    await expect(taker.takeNext()).resolves.toBe(4);
-    await expect(taker.takeNext()).resolves.toBe(6);
-    await expect(taker.takeNext()).resolves.toBe(8);
-    await taker.takeComplete();
+    const stream = new ObservableStream(mapped);
+    await expect(stream.takeNext()).resolves.toBe(2);
+    await expect(stream.takeNext()).resolves.toBe(4);
+    await expect(stream.takeNext()).resolves.toBe(6);
+    await expect(stream.takeNext()).resolves.toBe(8);
+    await stream.takeComplete();
   });
 
   test.each([["sync"], ["async"]])(
@@ -198,12 +198,12 @@ describe("asyncMap", () => {
               return n * 2;
             }
       );
-      const taker = new ObservableTaker(mapped);
-      await expect(taker.takeNext()).resolves.toBe(2);
-      await expect(taker.takeNext()).resolves.toBe(4);
-      await expect(taker.takeError()).resolves.toEqual(new Error("expected"));
+      const stream = new ObservableStream(mapped);
+      await expect(stream.takeNext()).resolves.toBe(2);
+      await expect(stream.takeNext()).resolves.toBe(4);
+      await expect(stream.takeError()).resolves.toEqual(new Error("expected"));
       // no more emits
-      expect(taker.take()).rejects.toMatch(/timeout/i);
+      expect(stream.take()).rejects.toMatch(/timeout/i);
       // the observer was closed after the error, so we don't expect `mapFn` to
       // be called for values that will not be emitted
       expect(lastMapped).toBe(3);
@@ -224,13 +224,13 @@ describe("asyncMap", () => {
       }, 10);
     });
     const mapped = asyncMap(observable, (n) => n * 2, catchFn);
-    const taker = new ObservableTaker(mapped);
-    await expect(taker.takeNext()).resolves.toBe(2);
-    await expect(taker.takeNext()).resolves.toBe(4);
-    await expect(taker.takeNext()).resolves.toBe(99);
+    const stream = new ObservableStream(mapped);
+    await expect(stream.takeNext()).resolves.toBe(2);
+    await expect(stream.takeNext()).resolves.toBe(4);
+    await expect(stream.takeNext()).resolves.toBe(99);
     // even after recovery, further `.next` inside the observer will be ignored
     // by the parent Observable itself, so asyncMap cannot do anything about that
-    expect(taker.take()).rejects.toMatch(/timeout/i);
+    expect(stream.take()).rejects.toMatch(/timeout/i);
   });
 
   test.each([
@@ -249,14 +249,14 @@ describe("asyncMap", () => {
       }, 10);
     });
     const mapped = asyncMap(observable, (n) => n * 2, catchFn);
-    const taker = new ObservableTaker(mapped);
-    await expect(taker.takeNext()).resolves.toBe(2);
-    await expect(taker.takeNext()).resolves.toBe(4);
-    await expect(taker.takeError()).resolves.toEqual(
+    const stream = new ObservableStream(mapped);
+    await expect(stream.takeNext()).resolves.toBe(2);
+    await expect(stream.takeNext()).resolves.toBe(4);
+    await expect(stream.takeError()).resolves.toEqual(
       new Error("another error")
     );
     // even after recovery, further `.next` inside the observer will be ignored
     // by the Observable itself, so asyncMap cannot do anything about that
-    expect(taker.take()).rejects.toMatch(/timeout/i);
+    expect(stream.take()).rejects.toMatch(/timeout/i);
   });
 });

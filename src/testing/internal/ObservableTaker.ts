@@ -9,26 +9,25 @@ type ObservableEvent<T> =
   | { type: "complete" };
 
 async function* observableToAsyncEventIterator<T>(observable: Observable<T>) {
-  let resolveNext: undefined | ((value: ObservableEvent<T>) => void);
+  let resolveNext: (value: ObservableEvent<T>) => void;
   const promises: Promise<ObservableEvent<T>>[] = [];
   pushPromise();
 
   function pushPromise() {
     promises.push(
       new Promise<ObservableEvent<T>>((resolve) => {
-        resolveNext = resolve;
+        resolveNext = (event: ObservableEvent<T>) => {
+          resolve(event)
+          pushPromise();
+        };
       })
     );
   }
 
-  function onValue(value: ObservableEvent<T>) {
-    resolveNext!(value);
-    pushPromise();
-  }
   observable.subscribe(
-    (value) => onValue({ type: "next", value }),
-    (error) => onValue({ type: "error", error }),
-    () => onValue({ type: "complete" })
+    (value) => resolveNext({ type: "next", value }),
+    (error) => resolveNext({ type: "error", error }),
+    () => resolveNext({ type: "complete" })
   );
 
   while (true) {

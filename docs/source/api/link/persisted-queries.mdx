@@ -21,13 +21,13 @@ Malicious actors can exploit GraphQL APIs by sending large and complex requests 
 
 ## Implementation steps
 
-Because persisted queries requires you to preregister operations, it has additional implementation steps. 
+Because persisted queries requires you to preregister operations, it has additional implementation steps.
 
 <ClientPQImplementation />
 
 ## 0. Requirements
 
-Persisted queries is currently in [preview](/resources/product-launch-stages#preview) and has the following requirements:
+Using persisted queries for safelisting has the following requirements:
 - Apollo Client Web (v3.7.0+)
 - The [`@apollo/generate-persisted-query-manifest` package](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest)
 - The [`@apollo/persisted-query-lists` package](https://www.npmjs.com/package/@apollo/persisted-query-lists)

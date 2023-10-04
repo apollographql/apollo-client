@@ -728,7 +728,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private fetch(
     options: WatchQueryOptions<TVariables, TData>,
-    newNetworkStatus?: NetworkStatus
+    newNetworkStatus?: NetworkStatus,
+    query?: DocumentNode
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
@@ -736,7 +737,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.queryManager["fetchConcastWithInfo"](
       this.queryId,
       options,
-      newNetworkStatus
+      newNetworkStatus,
+      query
     );
   }
 
@@ -883,20 +885,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
-    // If the transform doesn't change the document, leave `options` alone and
-    // use the original object.
-    const fetchOptions =
-      query === options.query ? options : { ...options, query };
-
-    this.waitForOwnResult &&= skipCacheDataFor(fetchOptions.fetchPolicy);
+    this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
     const finishWaitingForOwnResult = () => {
       if (this.concast === concast) {
         this.waitForOwnResult = false;
       }
     };
 
-    const variables = fetchOptions.variables && { ...fetchOptions.variables };
-    const { concast, fromLink } = this.fetch(fetchOptions, newNetworkStatus);
+    const variables = options.variables && { ...options.variables };
+    const { concast, fromLink } = this.fetch(options, newNetworkStatus, query);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result) => {
         finishWaitingForOwnResult();

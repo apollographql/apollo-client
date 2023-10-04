@@ -167,7 +167,7 @@ describe("asyncMap", () => {
   });
 
   test.each([["sync"], ["async"]])(
-    "[%s] mapFn can convert next to error",
+    "[%s] mapFn notifies the observer with an error when an error is thrown inside the mapFn",
     async (synchronity) => {
       const observable = new Observable<number>((observer) => {
         observer.next(1);
@@ -213,25 +213,28 @@ describe("asyncMap", () => {
   test.each([
     ["sync", () => 99],
     ["async", async () => 99],
-  ])("[%s] catchFn can convert error to next", async (_, catchFn) => {
-    const observable = new Observable<number>((observer) => {
-      observer.next(1);
-      observer.next(2);
-      setTimeout(() => {
-        observer.error(new Error("expected"));
-        // will be ignored by parent Observable since the observer already closed
-        observer.next(4);
-      }, 10);
-    });
-    const mapped = asyncMap(observable, (n) => n * 2, catchFn);
-    const stream = new ObservableStream(mapped);
-    await expect(stream.takeNext()).resolves.toBe(2);
-    await expect(stream.takeNext()).resolves.toBe(4);
-    await expect(stream.takeNext()).resolves.toBe(99);
-    // even after recovery, further `.next` inside the observer will be ignored
-    // by the parent Observable itself, so asyncMap cannot do anything about that
-    expect(stream.take()).rejects.toMatch(/timeout/i);
-  });
+  ])(
+    "[%s] catchFn notifies the observer with a value when `catchFn` returns a value instead of re-throwing",
+    async (_, catchFn) => {
+      const observable = new Observable<number>((observer) => {
+        observer.next(1);
+        observer.next(2);
+        setTimeout(() => {
+          observer.error(new Error("expected"));
+          // will be ignored by parent Observable since the observer already closed
+          observer.next(4);
+        }, 10);
+      });
+      const mapped = asyncMap(observable, (n) => n * 2, catchFn);
+      const stream = new ObservableStream(mapped);
+      await expect(stream.takeNext()).resolves.toBe(2);
+      await expect(stream.takeNext()).resolves.toBe(4);
+      await expect(stream.takeNext()).resolves.toBe(99);
+      // even after recovery, further `.next` inside the observer will be ignored
+      // by the parent Observable itself, so asyncMap cannot do anything about that
+      expect(stream.take()).rejects.toMatch(/timeout/i);
+    }
+  );
 
   test.each([
     // prettier-ignore

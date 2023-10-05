@@ -9,9 +9,6 @@ export function asyncMap<V, R>(
   catchFn?: (error: any) => R | PromiseLike<R>
 ): Observable<R> {
   return new Observable<R>((observer) => {
-    const { next, error, complete } = observer;
-    let activeCallbackCount = 0;
-    let completed = false;
     let promiseQueue = {
       // Normally we would initialize promiseQueue to Promise.resolve(), but
       // in this case, for backwards compatibility, we need to be careful to
@@ -23,44 +20,34 @@ export function asyncMap<V, R>(
 
     function makeCallback(
       examiner: typeof mapFn | typeof catchFn,
-      delegate: typeof next | typeof error
+      key: "next" | "error"
     ): (arg: any) => void {
-      if (examiner) {
-        return (arg) => {
-          ++activeCallbackCount;
-          const both = () => examiner(arg);
-          promiseQueue = promiseQueue
-            .then(both, both)
-            .then(
-              (result) => {
-                --activeCallbackCount;
-                next && next.call(observer, result);
-                if (completed) {
-                  handler.complete!();
-                }
-              },
-              (error) => {
-                --activeCallbackCount;
-                throw error;
-              }
-            )
-            .catch((caught) => {
-              error && error.call(observer, caught);
-            });
-        };
-      } else {
-        return (arg) => delegate && delegate.call(observer, arg);
-      }
+      return (arg) => {
+        if (examiner) {
+          const both = () =>
+            // If the observer is closed, we don't want to continue calling the
+            // mapping function - it's result will be swallowed anyways.
+            observer.closed
+              ? /* will be swallowed */ (0 as any)
+              : examiner(arg);
+
+          promiseQueue = promiseQueue.then(both, both).then(
+            (result) => observer.next(result),
+            (error) => observer.error(error)
+          );
+        } else {
+          observer[key](arg);
+        }
+      };
     }
 
     const handler: Observer<V> = {
-      next: makeCallback(mapFn, next),
-      error: makeCallback(catchFn, error),
+      next: makeCallback(mapFn, "next"),
+      error: makeCallback(catchFn, "error"),
       complete() {
-        completed = true;
-        if (!activeCallbackCount) {
-          complete && complete.call(observer);
-        }
+        // no need to reassign `promiseQueue`, after `observer.complete`,
+        // the observer will be closed and short-circuit everything anyways
+        /*promiseQueue = */ promiseQueue.then(() => observer.complete());
       },
     };
 

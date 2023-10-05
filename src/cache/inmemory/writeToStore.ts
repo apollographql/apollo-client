@@ -25,6 +25,7 @@ import {
   addTypenameToDocument,
   isNonEmptyArray,
   argumentsObjectFromField,
+  canonicalStringify,
 } from "../../utilities/index.js";
 
 import type {
@@ -44,7 +45,6 @@ import type { StoreReader } from "./readFromStore.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { EntityStore } from "./entityStore.js";
 import type { Cache } from "../../core/index.js";
-import { canonicalStringify } from "./object-canon.js";
 import { normalizeReadFieldOptions } from "./policies.js";
 import type { ReadFieldFunction } from "../core/types/common.js";
 

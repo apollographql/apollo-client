@@ -463,6 +463,11 @@ const enum CacheWriteBehavior {
 }
 
 // @public (undocumented)
+export const canonicalStringify: ((value: any) => string) & {
+    reset(): void;
+};
+
+// @public (undocumented)
 type CanReadFunction = (value: StoreValue) => boolean;
 
 // @public (undocumented)
@@ -1073,7 +1078,7 @@ export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode;
 
 // @public (undocumented)
 export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | null, directives?: Directives) => string) & {
-    setStringify(s: typeof stringify): (value: any) => string;
+    setStringify(s: typeof storeKeyNameStringify): (value: any) => string;
 };
 
 // @public (undocumented)
@@ -2285,6 +2290,9 @@ type StorageType = Record<string, any>;
 export function storeKeyNameFromField(field: FieldNode, variables?: Object): string;
 
 // @public (undocumented)
+let storeKeyNameStringify: (value: any) => string;
+
+// @public (undocumented)
 export interface StoreObject {
     // (undocumented)
     [storeFieldName: string]: StoreValue;
@@ -2297,9 +2305,6 @@ type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<string, 
 
 // @public (undocumented)
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
-
-// @public (undocumented)
-let stringify: (value: any) => string;
 
 // @public (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;
@@ -2498,11 +2503,11 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/core/types/DataProxy.ts:141:5 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:63:3 - (ae-forgotten-export) The symbol "TypePolicy" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:168:3 - (ae-forgotten-export) The symbol "FieldReadFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:169:3 - (ae-forgotten-export) The symbol "FieldMergeFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:57:3 - (ae-forgotten-export) The symbol "TypePolicy" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "FieldReadFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:163:3 - (ae-forgotten-export) The symbol "FieldMergeFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:126:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/writeToStore.ts:65:7 - (ae-forgotten-export) The symbol "MergeTree" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:47:3 - (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
@@ -2517,7 +2522,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:205:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/utilities/graphql/storeUtils.ts:202:12 - (ae-forgotten-export) The symbol "stringify" needs to be exported by the entry point index.d.ts
+// src/utilities/graphql/storeUtils.ts:208:12 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:76:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts
 

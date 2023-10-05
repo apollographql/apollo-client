@@ -16,6 +16,7 @@ import {
   addTypenameToDocument,
   isReference,
   DocumentTransform,
+  canonicalStringify,
 } from "../../utilities/index.js";
 import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
 import { StoreReader } from "./readFromStore.js";
@@ -24,7 +25,6 @@ import { EntityStore, supportsResultCaching } from "./entityStore.js";
 import { makeVar, forgetCache, recallCache } from "./reactiveVars.js";
 import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
-import { canonicalStringify } from "./object-canon.js";
 import type { OperationVariables } from "../../core/index.js";
 
 type BroadcastOptions = Pick<

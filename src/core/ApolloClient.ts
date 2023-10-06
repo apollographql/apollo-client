@@ -54,6 +54,7 @@ export type ApolloClientOptions<TCacheShape> = {
   connectToDevTools?: boolean;
   queryDeduplication?: boolean;
   defaultOptions?: DefaultOptions;
+  defaultContext?: Partial<DefaultContext>;
   assumeImmutableResults?: boolean;
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
@@ -150,6 +151,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         __DEV__,
       queryDeduplication = true,
       defaultOptions,
+      defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
       resolvers,
       typeDefs,
@@ -199,6 +201,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       cache: this.cache,
       link: this.link,
       defaultOptions: this.defaultOptions,
+      defaultContext,
       documentTransform,
       queryDeduplication,
       ssrMode,
@@ -691,5 +694,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public setLink(newLink: ApolloLink) {
     this.link = this.queryManager.link = newLink;
+  }
+
+  public get defaultContext() {
+    return this.queryManager.defaultContext;
   }
 }

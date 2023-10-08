@@ -38,6 +38,85 @@ const client = new ApolloClient({
   cache,
 });
 
+itAsync(
+  "executes the subscription with @client directive data",
+  (resolve, reject) => {
+    let renderCount = 0;
+
+    const cacheWithLocal = new Cache({
+      typePolicies: {
+        User: {
+          fields: {
+            test: {
+              read() {
+                return "asdf";
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const clientWithLocal = new ApolloClient({
+      link,
+      cache: cacheWithLocal,
+    });
+
+    const withLocalResults = ["Luke Skywalker", "Han Solo"].map((name) => ({
+      result: { data: { user: { __typename: "User", name, test: "asdf" } } },
+    }));
+
+    const subscriptionWithLocal = gql`
+      subscription UserInfo {
+        user {
+          name
+          test @client
+        }
+      }
+    `;
+
+    const Component = () => (
+      <Subscription subscription={subscriptionWithLocal}>
+        {(result: any) => {
+          const { loading, data, error } = result;
+          switch (renderCount) {
+            case 0:
+              expect(loading).toBe(true);
+              expect(error).toBeUndefined();
+              expect(data).toBeUndefined();
+              break;
+            case 1:
+              expect(loading).toBe(false);
+              expect(data).toEqual(withLocalResults[0].result.data);
+              break;
+            case 2:
+              expect(loading).toBe(false);
+              expect(data).toEqual(withLocalResults[1].result.data);
+              break;
+            default:
+          }
+
+          setTimeout(() => {
+            renderCount <= withLocalResults.length &&
+              link.simulateResult(results[renderCount - 1]);
+          });
+
+          renderCount += 1;
+          return null;
+        }}
+      </Subscription>
+    );
+
+    render(
+      <ApolloProvider client={clientWithLocal}>
+        <Component />
+      </ApolloProvider>
+    );
+
+    waitFor(() => expect(renderCount).toBe(3)).then(resolve, reject);
+  }
+);
+
 itAsync("executes the subscription", (resolve, reject) => {
   let renderCount = 0;
   const Component = () => (

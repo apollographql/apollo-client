@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  secops: apollo/circleci-secops-orb@2.0.0
+
 jobs:
   # Filesize:
   #   docker:
@@ -109,3 +112,12 @@ workflows:
                 - vite
                 - vite-swc
                 # -browser-esm would need a package publish to npm/CDNs
+  security-scans:
+    jobs:
+      - secops/gitleaks:
+          context:
+            - platform-docker-ro
+            - github-orb
+            - secops-oidc
+          git-base-revision: <<#pipeline.git.base_revision>><<pipeline.git.base_revision>><</pipeline.git.base_revision >>
+          git-revision: << pipeline.git.revision >>

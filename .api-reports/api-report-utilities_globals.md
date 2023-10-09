@@ -44,7 +44,7 @@ type WrappedInvariant = {
 
 // Warnings were encountered during analysis:
 //
-// src/utilities/globals/invariantWrappers.ts:58:3 - (ae-forgotten-export) The symbol "LogFunction" needs to be exported by the entry point index.d.ts
+// src/utilities/globals/invariantWrappers.ts:62:3 - (ae-forgotten-export) The symbol "LogFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

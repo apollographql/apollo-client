@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.8.4",
+  "version": "3.8.5",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -108,7 +108,7 @@
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.2",
     "@graphql-tools/schema": "10.0.0",
-    "@microsoft/api-extractor": "7.37.0",
+    "@microsoft/api-extractor": "7.38.0",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@size-limit/esbuild-why": "8.2.6",
     "@size-limit/preset-small-lib": "8.2.6",

@@ -20,7 +20,7 @@ export function loadErrorMessageHandler(...errorCodes: ErrorCodes[]) {
       message = definition.message;
     }
     return args.reduce<string>(
-      (msg, arg) => msg.replace("%s", String(arg)),
+      (msg, arg) => msg.replace(/%[sdfo]/, String(arg)),
       String(message)
     );
   }

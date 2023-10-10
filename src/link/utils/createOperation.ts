@@ -12,7 +12,7 @@ export function createOperation(
       context = { ...context, ...next };
     }
   };
-  const getContext = () => ({ ...context });
+  const getContext = () => context;
 
   Object.defineProperty(operation, "setContext", {
     enumerable: false,

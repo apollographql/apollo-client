@@ -32,6 +32,7 @@ import {
   asyncMap,
   isNonEmptyArray,
   Concast,
+  StoreObject,
   makeUniqueId,
   isDocumentNode,
   isNonNullObject,
@@ -1082,9 +1083,8 @@ export class QueryManager<TStore> {
         query: serverQuery,
         variables,
         operationName: getOperationName(serverQuery) || void 0,
-        context: this.prepareContext({
-          ...context,
-          forceFetch: !deduplication,
+        context: this.prepareContext(context, {
+          forceFetch: !deduplication
         }),
       };
 
@@ -1664,10 +1664,16 @@ export class QueryManager<TStore> {
     return this.queries.get(queryId)!;
   }
 
-  private prepareContext(context = {}) {
-    const newContext = this.localState.prepareContext(context);
+  private prepareContext(context = {}, options?: {}) {
+    const cache = this.localState.getCache()
     return {
-      ...newContext,
+      ...context,
+      ...options,
+      cache,
+      // Getting an entry's cache key is useful for local state resolvers.
+      getCacheKey(obj: StoreObject) {
+        return cache.identify(obj);
+      },
       clientAwareness: this.clientAwareness,
     };
   }

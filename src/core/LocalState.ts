@@ -104,6 +104,10 @@ export class LocalState<TCacheShape> {
     }
   }
 
+  public getCache() {
+    return this.cache
+  }
+
   public addResolvers(resolvers: Resolvers | Resolvers[]) {
     this.resolvers = this.resolvers || {};
     if (Array.isArray(resolvers)) {

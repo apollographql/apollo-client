@@ -137,7 +137,7 @@ function ErrorDetails({ version, messageId, args }) {
   const errorMessage = useMemo(() => {
     return data?.message
       ? args.reduce(
-          (/** @type{string} */ acc, arg) => acc.replace('%s', String(arg)),
+          (/** @type{string} */ acc, arg) => acc.replace(/%[sdfo]/, String(arg)),
           String(data.message)
         )
       : null;

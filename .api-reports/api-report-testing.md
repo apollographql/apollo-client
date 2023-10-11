@@ -1268,8 +1268,6 @@ class QueryInfo {
     // (undocumented)
     stopped: boolean;
     // (undocumented)
-    subscriptions: Set<Subscription>;
-    // (undocumented)
     variables?: Record<string, any>;
 }
 

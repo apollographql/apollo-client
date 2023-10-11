@@ -2039,8 +2039,6 @@ class QueryInfo {
     // (undocumented)
     stopped: boolean;
     // (undocumented)
-    subscriptions: Set<ObservableSubscription>;
-    // (undocumented)
     variables?: Record<string, any>;
 }
 

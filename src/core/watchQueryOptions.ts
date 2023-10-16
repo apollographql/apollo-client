@@ -41,7 +41,7 @@ export type RefetchWritePolicy = "merge" | "overwrite";
 
 /**
  * errorPolicy determines the level of events for errors in the execution result. The options are:
- * - none (default): any errors from the request are treated like runtime errors and the observable is stopped (XXX this is default to lower breaking changes going from AC 1.0 => 2.0)
+ * - none (default): any errors from the request are treated like runtime errors and the observable is stopped
  * - ignore: errors from the request do not stop the observable, but also don't call `next`
  * - all: errors are treated like data and will notify observables
  */

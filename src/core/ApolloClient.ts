@@ -44,21 +44,62 @@ export interface DefaultOptions {
 let hasSuggestedDevtools = false;
 
 export type ApolloClientOptions<TCacheShape> = {
+  /**
+   * The GraphQL endpoint that Apollo Client will connect to. If
+   * `link` is configured, this option is ignored.
+   */
   uri?: string | UriFunction;
   credentials?: string;
   headers?: Record<string, string>;
+  /**
+   * The {@link ApolloLink} over which GraphQL documents will be resolved into a response.
+   */
   link?: ApolloLink;
+  /**
+   * The initial cache to use in the data store.
+   */
   cache: ApolloCache<TCacheShape>;
+  /**
+   * Determines the time interval before we force fetch queries for a
+   * server side render.
+   */
   ssrForceFetchDelay?: number;
+  /**
+   * Determines whether this is being run in Server Side Rendering (SSR) mode.
+   */
   ssrMode?: boolean;
   connectToDevTools?: boolean;
+  /**
+   * If set to false, a query will still be sent to the server even if a query
+   * with identical parameters (query, variables, operationName) is already in flight.
+   */
   queryDeduplication?: boolean;
+  /**
+   * Used to set application wide defaults for the options supplied to `watchQuery`,
+   * `query`, or `mutate`.
+   */
   defaultOptions?: DefaultOptions;
+  /**
+   * When this option is true, the client will assume results
+   * read from the cache are never mutated by application code,
+   * which enables substantial performance optimizations.
+   */
   assumeImmutableResults?: boolean;
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: FragmentMatcher;
+  /**
+   * A custom name that can be used to identify this client, when
+   * using Apollo client awareness features. E.g. "iOS".
+   */
   name?: string;
+  /**
+   * A custom version that can be used to identify this client,
+   * when using Apollo client awareness features. This is the
+   * version of your client, which you may want to increment on
+   * new builds. This is NOT the version of Apollo Client that
+   * you are using.
+   */
   version?: string;
   documentTransform?: DocumentTransform;
 };
@@ -72,7 +113,7 @@ export { mergeOptions };
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
- * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
+ * and mutations) to a GraphQL spec-compliant server over a {@link ApolloLink} instance,
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through {@link Observable} instances.
  */
@@ -93,37 +134,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * Constructs an instance of {@link ApolloClient}.
-   *
-   * @param uri The GraphQL endpoint that Apollo Client will connect to. If
-   *            `link` is configured, this option is ignored.
-   * @param link The {@link ApolloLink} over which GraphQL documents will be resolved into a response.
-   *
-   * @param cache The initial cache to use in the data store.
-   *
-   * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
-   *
-   * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
-   * server side render.
-   *
-   * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
-   * with identical parameters (query, variables, operationName) is already in flight.
-   *
-   * @param defaultOptions Used to set application wide defaults for the
-   *                       options supplied to `watchQuery`, `query`, or
-   *                       `mutate`.
-   *
-   * @param assumeImmutableResults When this option is true, the client will assume results
-   *                               read from the cache are never mutated by application code,
-   *                               which enables substantial performance optimizations.
-   *
-   * @param name A custom name that can be used to identify this client, when
-   *             using Apollo client awareness features. E.g. "iOS".
-   *
-   * @param version A custom version that can be used to identify this client,
-   *                when using Apollo client awareness features. This is the
-   *                version of your client, which you may want to increment on
-   *                new builds. This is NOT the version of Apollo Client that
-   *                you are using.
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     if (!options.cache) {
@@ -339,10 +349,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * This resolves a single query according to the options specified and
-   * returns a {@link Promise} which is either resolved with the resulting data
+   * returns a Promise which is either resolved with the resulting data
    * or rejected with an error.
    *
-   * @param options An object of type {@link QueryOptions} that allows us to
+   * @param options - An object of type {@link QueryOptions} that allows us to
    * describe how this query should be treated e.g. whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
@@ -371,7 +381,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * This resolves a single mutation according to the options specified and returns a
-   * {@link Promise} which is either resolved with the resulting data or rejected with an
+   * Promise which is either resolved with the resulting data or rejected with an
    * error.
    *
    * It takes options as an object with the following keys and values:
@@ -409,7 +419,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
    *
-   * @param optimistic Set to `true` to allow `readQuery` to return
+   * @param optimistic - Set to `true` to allow `readQuery` to return
    * optimistic results. Is `false` by default.
    */
   public readQuery<T = any, TVariables = OperationVariables>(
@@ -430,7 +440,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    *
-   * @param optimistic Set to `true` to allow `readFragment` to return
+   * @param optimistic - Set to `true` to allow `readFragment` to return
    * optimistic results. Is `false` by default.
    */
   public readFragment<T = any, TVariables = OperationVariables>(

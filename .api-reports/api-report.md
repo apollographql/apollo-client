@@ -89,6 +89,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     writeQuery<TData = any, TVariables = any>({ id, data, ...options }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
+// Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
+//
 // @public
 export class ApolloClient<TCacheShape> implements DataProxy {
     // (undocumented)
@@ -126,6 +128,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher): void;
     setResolvers(resolvers: Resolvers | Resolvers[]): void;
     stop(): void;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
     subscribe<T = any, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, T>): Observable<FetchResult<T>>;
     // (undocumented)
     readonly typeDefs: ApolloClientOptions<TCacheShape>["typeDefs"];
@@ -1528,6 +1531,7 @@ export interface MutationHookOptions<TData = any, TVariables = OperationVariable
 // @public (undocumented)
 export interface MutationOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
     // Warning: (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "MutationFetchPolicy"
     fetchPolicy?: MutationFetchPolicy;
     keepRootFields?: boolean;
     mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -2102,6 +2106,8 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
 export { QueryOptions as PureQueryOptions }
 export { QueryOptions }
 
+// Warning: (ae-unresolved-link) The @link reference could not be resolved: The reference is ambiguous because "useBackgroundQuery" has more than one declaration; you need to add a TSDoc member reference selector
+//
 // @public
 export interface QueryReference<TData = unknown> {
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReference" needs to be exported by the entry point index.d.ts

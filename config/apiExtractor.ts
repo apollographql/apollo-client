@@ -2,6 +2,7 @@ import * as path from "path";
 import {
   Extractor,
   ExtractorConfig,
+  ExtractorLogLevel,
   ExtractorResult,
 } from "@microsoft/api-extractor";
 // @ts-ignore
@@ -32,6 +33,22 @@ map((entryPoint: { dirs: string[] }) => {
         reportFileName: `api-report${
           path ? "-" + path.replace("/", "_") : ""
         }.md`,
+      },
+      messages: {
+        ...baseConfig.messages,
+        extractorMessageReporting: {
+          ...baseConfig.messages?.extractorMessageReporting,
+          // partial bundles will give error messages like
+          // The package "@apollo/client" does not have an export "ApolloLink"
+          // so we disable this rule for them
+          "ae-unresolved-link": {
+            logLevel:
+              entryPoint.dirs.length === 0
+                ? ExtractorLogLevel.Warning
+                : ExtractorLogLevel.None,
+            addToApiReportFile: true,
+          },
+        },
       },
     },
     packageJsonFullPath,

@@ -96,9 +96,18 @@ export function getTypenameFromStoreObject(
 
 export const TypeOrFieldNameRegExp = /^[_a-z][_0-9a-z]*/i;
 
+const fieldNameFromStoreNameCache: { [storeFieldName: string]: string } = {};
+
 export function fieldNameFromStoreName(storeFieldName: string): string {
+  if (fieldNameFromStoreNameCache[storeFieldName])
+    return fieldNameFromStoreNameCache[storeFieldName];
+
   const match = storeFieldName.match(TypeOrFieldNameRegExp);
-  return match ? match[0] : storeFieldName;
+  const value = match ? match[0] : storeFieldName;
+
+  fieldNameFromStoreNameCache[storeFieldName] = value;
+
+  return value;
 }
 
 export function selectionSetMatchesResult(

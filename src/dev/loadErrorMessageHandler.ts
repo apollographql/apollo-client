@@ -16,11 +16,11 @@ export function loadErrorMessageHandler(...errorCodes: ErrorCodes[]) {
   function handler(message: string | number, args: unknown[]) {
     if (typeof message === "number") {
       const definition = global[ApolloErrorMessageHandler]![message];
-      if (!message || !definition.message) return;
+      if (!message || !definition?.message) return;
       message = definition.message;
     }
     return args.reduce<string>(
-      (msg, arg) => msg.replace("%s", String(arg)),
+      (msg, arg) => msg.replace(/%[sdfo]/, String(arg)),
       String(message)
     );
   }

@@ -861,6 +861,8 @@ export interface MockedProviderProps<TSerializedCache = {}> {
     childProps?: object;
     // (undocumented)
     children?: any;
+    // (undocumented)
+    connectToDevTools?: boolean;
     // Warning: (ae-forgotten-export) The symbol "DefaultOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

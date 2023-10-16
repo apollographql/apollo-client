@@ -1035,66 +1035,114 @@ it('enables canonical results when canonizeResults is "true"', async () => {
   expect(ProfiledApp).not.toRerender();
 });
 
-// it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
-//   interface Result {
-//     __typename: string;
-//     value: number;
-//   }
+it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
+  interface Result {
+    __typename: string;
+    value: number;
+  }
 
-//   const cache = new InMemoryCache({
-//     canonizeResults: true,
-//     typePolicies: {
-//       Result: {
-//         keyFields: false,
-//       },
-//     },
-//   });
+  interface QueryData {
+    results: Result[];
+  }
 
-//   const query: TypedDocumentNode<{ results: Result[] }> = gql`
-//     query {
-//       results {
-//         value
-//       }
-//     }
-//   `;
+  const cache = new InMemoryCache({
+    canonizeResults: true,
+    typePolicies: {
+      Result: {
+        keyFields: false,
+      },
+    },
+  });
 
-//   const results: Result[] = [
-//     { __typename: 'Result', value: 0 },
-//     { __typename: 'Result', value: 1 },
-//     { __typename: 'Result', value: 1 },
-//     { __typename: 'Result', value: 2 },
-//     { __typename: 'Result', value: 3 },
-//     { __typename: 'Result', value: 5 },
-//   ];
+  const query: TypedDocumentNode<{ results: Result[] }, never> = gql`
+    query {
+      results {
+        value
+      }
+    }
+  `;
 
-//   cache.writeQuery({
-//     query,
-//     data: { results },
-//   });
+  const user = userEvent.setup();
+  const results: Result[] = [
+    { __typename: "Result", value: 0 },
+    { __typename: "Result", value: 1 },
+    { __typename: "Result", value: 1 },
+    { __typename: "Result", value: 2 },
+    { __typename: "Result", value: 3 },
+    { __typename: "Result", value: 5 },
+  ];
 
-//   const { result } = renderHook(
-//     () =>
-//       useInteractiveQuery(query, {
-//         canonizeResults: false,
-//       }),
-//     {
-//       wrapper: ({ children }) => (
-//         <MockedProvider cache={cache}>{children}</MockedProvider>
-//       ),
-//     }
-//   );
+  cache.writeQuery({
+    query,
+    data: { results },
+  });
 
-//   const [queryRef] = result.current;
+  function SuspenseFallback() {
+    return <p>Loading</p>;
+  }
 
-//   const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
-//   const resultSet = new Set(_result.data.results);
-//   const values = Array.from(resultSet).map((item) => item.value);
+  function Parent() {
+    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+      canonizeResults: false,
+    });
 
-//   expect(_result.data).toEqual({ results });
-//   expect(_result.data.results.length).toBe(6);
-//   expect(resultSet.size).toBe(6);
-//   expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-// });
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function Child({ queryRef }: { queryRef: QueryReference<QueryData> }) {
+    const result = useReadQuery(queryRef);
+
+    ProfiledApp.updateSnapshot({ result });
+
+    return null;
+  }
+
+  const ProfiledApp = profile<{
+    result: UseReadQueryResult<QueryData> | null;
+  }>({
+    Component: () => (
+      <MockedProvider cache={cache}>
+        <Parent />
+      </MockedProvider>
+    ),
+    initialSnapshot: {
+      result: null,
+    },
+  });
+
+  render(<ProfiledApp />);
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+    expect(snapshot.result).toEqual(null);
+  }
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    const resultSet = new Set(snapshot.result!.data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(snapshot.result).toEqual({
+      data: { results },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+    expect(resultSet.size).toBe(6);
+    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+  }
+
+  expect(ProfiledApp).not.toRerender();
+});
 
 // // TODO(FIXME): test fails, should return cache data first if it exists
 // it.skip('returns initial cache data followed by network data when the fetch policy is `cache-and-network`', async () => {

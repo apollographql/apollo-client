@@ -671,7 +671,7 @@ it("loads a query when the load query function is called", async () => {
   }
 
   const ProfiledApp = profile<{
-    result: ReturnType<typeof useReadQuery> | null;
+    result: UseReadQueryResult<SimpleQueryData> | null;
     suspenseCount: number;
     parentRenderCount: number;
     childRenderCount: number;
@@ -785,7 +785,7 @@ it("allows the client to be overridden", async () => {
   }
 
   const ProfiledApp = profile<{
-    result: ReturnType<typeof useReadQuery> | null;
+    result: UseReadQueryResult<SimpleQueryData> | null;
   }>({
     Component: () => (
       <ApolloProvider client={globalClient}>
@@ -880,7 +880,7 @@ it("passes context to the link", async () => {
   }
 
   const ProfiledApp = profile<{
-    result: ReturnType<typeof useReadQuery> | null;
+    result: UseReadQueryResult<QueryData> | null;
   }>({
     Component: () => (
       <ApolloProvider client={client}>

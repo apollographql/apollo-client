@@ -99,3 +99,20 @@ test("invariant.log(5, ...), with handlers", () => {
     { a: 1 }
   );
 });
+
+test("base invariant(false, 6, ...), raises fallback", () => {
+  using _ = mockErrorMessageHandler();
+  expect(() => {
+    invariant(false, 6, "hello");
+  }).toThrow(
+    new InvariantError(
+      'An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err#' +
+      encodeURIComponent(
+        JSON.stringify({
+          version: "local",
+          message: 6,
+          args: ["hello"],
+        })
+      )
+    ));
+});

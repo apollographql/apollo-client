@@ -45,60 +45,73 @@ let hasSuggestedDevtools = false;
 
 export type ApolloClientOptions<TCacheShape> = {
   /**
-   * The GraphQL endpoint that Apollo Client will connect to. If
-   * `link` is configured, this option is ignored.
+   * The URI of the GraphQL endpoint that Apollo Client will communicate with.
+   *
+   * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
    */
   uri?: string | UriFunction;
   credentials?: string;
   headers?: Record<string, string>;
   /**
+   * You can provide an {@link ApolloLink} instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
+   *
+   * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
    * The {@link ApolloLink} over which GraphQL documents will be resolved into a response.
    */
   link?: ApolloLink;
   /**
-   * The initial cache to use in the data store.
+   * The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
+   *
+   * For more information, see [Configuring the cache](https://www.apollographql.com/docs/react/caching/cache-configuration/).
    */
   cache: ApolloCache<TCacheShape>;
   /**
-   * Determines the time interval before we force fetch queries for a
-   * server side render.
+   * The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
+   *
+   * @defaultValue `0` (no delay)
    */
   ssrForceFetchDelay?: number;
   /**
-   * Determines whether this is being run in Server Side Rendering (SSR) mode.
+   * When using Apollo Client for [server-side rendering](https://www.apollographql.com/docs/react//performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
+   *
+   * @defaultValue `false`
    */
   ssrMode?: boolean;
+  /**
+   * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to Apollo Client in your production environment. The extension can _always_ connect in a non-production environment.
+   *
+   * The default value is `false`.
+   */
   connectToDevTools?: boolean;
   /**
-   * If set to false, a query will still be sent to the server even if a query
-   * with identical parameters (query, variables, operationName) is already in flight.
+   * If `false`, Apollo Client sends every created query to the server, even if a _completely_ identical query (identical in terms of query string, variable values, and operationName) is already in flight.
+   *
+   * @defaultValue `true`
    */
   queryDeduplication?: boolean;
   /**
-   * Used to set application wide defaults for the options supplied to `watchQuery`,
-   * `query`, or `mutate`.
+   * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
+   *
+   * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
    */
   defaultOptions?: DefaultOptions;
   /**
-   * When this option is true, the client will assume results
-   * read from the cache are never mutated by application code,
-   * which enables substantial performance optimizations.
+   * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
+   *
+   * @defaultValue `false`
    */
   assumeImmutableResults?: boolean;
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: FragmentMatcher;
   /**
-   * A custom name that can be used to identify this client, when
-   * using Apollo client awareness features. E.g. "iOS".
+   * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
    */
   name?: string;
   /**
-   * A custom version that can be used to identify this client,
-   * when using Apollo client awareness features. This is the
-   * version of your client, which you may want to increment on
-   * new builds. This is NOT the version of Apollo Client that
-   * you are using.
+   * A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
+   *
+   * This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
    */
   version?: string;
   documentTransform?: DocumentTransform;

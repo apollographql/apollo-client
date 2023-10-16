@@ -50,6 +50,15 @@ function toPosixPath(p) {
   return p;
 }
 
+const removeComments = minify({
+  compress: false,
+  mangle: false,
+  toplevel: false,
+  format: {
+    comments: "some", // keeps comments with a @license, @copyright or @preserve tag
+  },
+});
+
 function prepareCJS(input, output) {
   return {
     input,
@@ -63,7 +72,7 @@ function prepareCJS(input, output) {
       exports: "named",
       externalLiveBindings: false,
     },
-    plugins: [nodeResolve()],
+    plugins: [nodeResolve(), removeComments],
   };
 }
 
@@ -78,6 +87,9 @@ function prepareCJSMinified(input) {
       minify({
         mangle: {
           toplevel: true,
+        },
+        format: {
+          comments: "some", // keeps comments with a @license, @copyright or @preserve tag
         },
         compress: {
           toplevel: true,
@@ -111,6 +123,7 @@ function prepareBundle({
       externalLiveBindings: false,
     },
     plugins: [
+      removeComments,
       {
         name: "externalize-dependency",
         resolveId(id, parentId) {

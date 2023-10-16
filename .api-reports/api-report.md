@@ -2742,11 +2742,17 @@ export function useQuery<TData = any, TVariables extends OperationVariables = Op
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T;
 
 // @public (undocumented)
-export function useReadQuery<TData>(queryRef: QueryReference<TData>): {
+export function useReadQuery<TData>(queryRef: QueryReference<TData>): UseReadQueryResult<TData>;
+
+// @public (undocumented)
+export interface UseReadQueryResult<TData = unknown> {
+    // (undocumented)
     data: TData;
-    networkStatus: NetworkStatus;
+    // (undocumented)
     error: ApolloError | undefined;
-};
+    // (undocumented)
+    networkStatus: NetworkStatus;
+}
 
 // @public (undocumented)
 export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>): SubscriptionResult<TData, TVariables>;

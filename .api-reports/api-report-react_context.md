@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="react" />
-
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { ExecutionResult } from 'graphql';
@@ -15,8 +13,7 @@ import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
-import * as React_2 from 'react';
-import { ReactNode } from 'react';
+import type * as ReactTypes from 'react';
 import type { Subscriber } from 'zen-observable-ts';
 import type { Subscription } from 'zen-observable-ts';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -214,14 +211,14 @@ type ApolloClientOptions<TCacheShape> = {
 };
 
 // @public (undocumented)
-export const ApolloConsumer: React_2.FC<ApolloConsumerProps>;
+export const ApolloConsumer: ReactTypes.FC<ApolloConsumerProps>;
 
 // @public (undocumented)
 export interface ApolloConsumerProps {
     // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    children: (client: ApolloClient<object>) => React_2.ReactChild | null;
+    children: (client: ApolloClient<object>) => ReactTypes.ReactChild | null;
 }
 
 // @public (undocumented)
@@ -313,12 +310,12 @@ class ApolloLink {
 }
 
 // @public (undocumented)
-export const ApolloProvider: React_2.FC<ApolloProviderProps<any>>;
+export const ApolloProvider: ReactTypes.FC<ApolloProviderProps<any>>;
 
 // @public (undocumented)
 export interface ApolloProviderProps<TCache> {
     // (undocumented)
-    children: React_2.ReactNode | React_2.ReactNode[] | null;
+    children: ReactTypes.ReactNode | ReactTypes.ReactNode[] | null;
     // (undocumented)
     client: ApolloClient<TCache>;
 }
@@ -713,7 +710,7 @@ interface FragmentMap {
 type FragmentMatcher = (rootValue: any, typeCondition: string, context: any) => boolean;
 
 // @public (undocumented)
-export function getApolloContext(): React_2.Context<ApolloContextValue>;
+export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
 
 // @public (undocumented)
 type GraphQLErrors = ReadonlyArray<GraphQLError>;
@@ -1126,7 +1123,7 @@ interface QueryDataOptions<TData = any, TVariables extends OperationVariables = 
     // Warning: (ae-forgotten-export) The symbol "QueryResult" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    children?: (result: QueryResult<TData, TVariables>) => ReactNode;
+    children?: (result: QueryResult<TData, TVariables>) => ReactTypes.ReactNode;
     // (undocumented)
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -1441,11 +1438,11 @@ type RefetchWritePolicy = "merge" | "overwrite";
 // @public (undocumented)
 class RenderPromises {
     // (undocumented)
-    addObservableQueryPromise<TData, TVariables extends OperationVariables>(obsQuery: ObservableQuery<TData, TVariables>): ReactNode;
+    addObservableQueryPromise<TData, TVariables extends OperationVariables>(obsQuery: ObservableQuery<TData, TVariables>): ReactTypes.ReactNode;
     // Warning: (ae-forgotten-export) The symbol "QueryData" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    addQueryPromise(queryInstance: QueryData, finish?: () => React.ReactNode): React.ReactNode;
+    addQueryPromise(queryInstance: QueryData, finish?: () => ReactTypes.ReactNode): ReactTypes.ReactNode;
     // (undocumented)
     consumeAndAwaitPromises(): Promise<any[]>;
     // Warning: (ae-forgotten-export) The symbol "QueryDataOptions" needs to be exported by the entry point index.d.ts

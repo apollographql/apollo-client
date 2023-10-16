@@ -1,4 +1,4 @@
-import type { ReactNode } from "rehackt";
+import type * as ReactTypes from "react";
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -93,7 +93,7 @@ export interface QueryDataOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {
-  children?: (result: QueryResult<TData, TVariables>) => ReactNode;
+  children?: (result: QueryResult<TData, TVariables>) => ReactTypes.ReactNode;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 

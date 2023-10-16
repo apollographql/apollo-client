@@ -20,7 +20,11 @@ import type { DeepPartial } from "../../utilities/index.js";
 import type { CacheKey } from "../cache/types.js";
 
 type LoadQuery<TVariables extends OperationVariables> = (
-  ...args: [TVariables] extends [never] ? [] : [TVariables]
+  // Use variadic args to handle cases where TVariables is type `never`, in
+  // which case we don't want to allow a variables argument. In other
+  // words, we don't want to allow variables to be passed as an argument to this
+  // function if the query does not expect variables in the document.
+  ...args: [TVariables] extends [never] ? [] : [variables: TVariables]
 ) => void;
 
 export type UseInteractiveQueryResult<

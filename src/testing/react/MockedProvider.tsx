@@ -20,6 +20,10 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   children?: any;
   link?: ApolloLink;
   showWarnings?: boolean;
+  /**
+   * If set to true, the MockedProvider will try to connect to the Apollo DevTools.
+   * Defaults to false.
+   */
   connectToDevTools?: boolean;
 }
 

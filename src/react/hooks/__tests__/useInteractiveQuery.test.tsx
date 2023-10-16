@@ -28,6 +28,7 @@ import {
   ApolloQueryResult,
 } from "../../../core";
 import {
+  MockedProvider,
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
@@ -41,17 +42,39 @@ import { useInteractiveQuery } from "../useInteractiveQuery";
 import { useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
 import { InMemoryCache } from "../../../cache";
-import {
-  FetchMoreFunction,
-  RefetchFunction,
-  QueryReference,
-} from "../../../react";
+import { QueryReference } from "../../../react";
 import {
   InteractiveQueryHookOptions,
   InteractiveQueryHookFetchPolicy,
 } from "../../types/types";
+import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import invariant from "ts-invariant";
+import { profile } from "../../../testing/internal";
+
+interface SimpleQueryData {
+  greeting: string;
+}
+
+function useSimpleQueryCase(
+  mockOverrides?: MockedResponse<SimpleQueryData, never>[]
+) {
+  const query: TypedDocumentNode<SimpleQueryData, never> = gql`
+    query GreetingQuery {
+      greeting
+    }
+  `;
+
+  const mocks: MockedResponse<SimpleQueryData, never>[] = mockOverrides || [
+    {
+      request: { query },
+      result: { data: { greeting: "Hello" } },
+      delay: 10,
+    },
+  ];
+
+  return { query, mocks };
+}
 
 function renderIntegrationTest({
   client,
@@ -600,34 +623,117 @@ function renderSuspenseHook<Result, Props>(
 }
 
 describe("useInteractiveQuery", () => {
-  // it('fetches a simple query with minimal config', async () => {
-  //   const query = gql`
-  //     query {
-  //       hello
-  //     }
-  //   `;
-  //   const mocks = [
-  //     {
-  //       request: { query },
-  //       result: { data: { hello: 'world 1' } },
-  //     },
-  //   ];
-  //   const { result } = renderHook(() => useInteractiveQuery(query), {
-  //     wrapper: ({ children }) => (
-  //       <MockedProvider mocks={mocks}>{children}</MockedProvider>
-  //     ),
-  //   });
+  it("loads a query when the load query function is called", async () => {
+    const user = userEvent.setup();
+    const { query, mocks } = useSimpleQueryCase();
 
-  //   const [queryRef, loadQuery] = result.current;
+    function SuspenseFallback() {
+      ProfiledApp.updateSnapshot((snapshot) => ({
+        ...snapshot,
+        suspenseCount: snapshot.suspenseCount + 1,
+      }));
 
-  //   const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+      return <p>Loading</p>;
+    }
 
-  //   expect(_result).toEqual({
-  //     data: { hello: 'world 1' },
-  //     loading: false,
-  //     networkStatus: 7,
-  //   });
-  // });
+    function Parent() {
+      const [queryRef, loadQuery] = useInteractiveQuery(query);
+
+      ProfiledApp.updateSnapshot((snapshot) => ({
+        ...snapshot,
+        parentRenderCount: snapshot.parentRenderCount + 1,
+      }));
+
+      return (
+        <>
+          <button onClick={() => loadQuery()}>Load query</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
+    }
+
+    function Greeting({
+      queryRef,
+    }: {
+      queryRef: QueryReference<SimpleQueryData>;
+    }) {
+      const result = useReadQuery(queryRef);
+
+      ProfiledApp.updateSnapshot((snapshot) => ({
+        ...snapshot,
+        result,
+        childRenderCount: snapshot.childRenderCount + 1,
+      }));
+
+      return <div>{result.data.greeting}</div>;
+    }
+
+    const ProfiledApp = profile<{
+      result: ReturnType<typeof useReadQuery> | null;
+      suspenseCount: number;
+      parentRenderCount: number;
+      childRenderCount: number;
+    }>({
+      Component: () => (
+        <MockedProvider mocks={mocks}>
+          <Parent />
+        </MockedProvider>
+      ),
+      snapshotDOM: true,
+      initialSnapshot: {
+        result: null,
+        suspenseCount: 0,
+        parentRenderCount: 0,
+        childRenderCount: 0,
+      },
+    });
+
+    render(<ProfiledApp />);
+
+    {
+      const { snapshot } = await ProfiledApp.takeRender();
+      expect(snapshot).toEqual({
+        result: null,
+        suspenseCount: 0,
+        parentRenderCount: 1,
+        childRenderCount: 0,
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Load query")));
+
+    {
+      const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+
+      expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+      expect(snapshot).toEqual({
+        result: null,
+        suspenseCount: 1,
+        parentRenderCount: 2,
+        childRenderCount: 0,
+      });
+    }
+
+    {
+      const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+
+      expect(withinDOM().getByText("Hello")).toBeInTheDocument();
+      expect(snapshot).toEqual({
+        result: {
+          data: { greeting: "Hello" },
+          networkStatus: NetworkStatus.ready,
+          error: undefined,
+        },
+        suspenseCount: 1,
+        parentRenderCount: 2,
+        childRenderCount: 1,
+      });
+    }
+
+    expect(ProfiledApp).not.toRerender();
+  });
 
   // it('allows the client to be overridden', async () => {
   //   const query: TypedDocumentNode<SimpleQueryData> = gql`

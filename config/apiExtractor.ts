@@ -51,7 +51,7 @@ map((entryPoint: { dirs: string[] }) => {
     succeededAdditionalChecks = false;
     console.error(
       "❗ %s contains a reference to the `rehackt` package!",
-      reportFileName
+      extractorConfig.reportFilePath
     );
   }
   if (contents.includes('/// <reference types="react" />')) {
@@ -59,7 +59,7 @@ map((entryPoint: { dirs: string[] }) => {
     console.error(
       "❗ %s contains a reference to the global `React` type!/n" +
         'Use `import type * as ReactTypes from "react";` instead',
-      reportFileName
+      extractorConfig.reportFilePath
     );
   }
 

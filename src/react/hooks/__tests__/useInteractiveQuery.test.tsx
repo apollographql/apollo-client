@@ -39,6 +39,7 @@ import {
   DeepPartial,
 } from "../../../utilities";
 import { useInteractiveQuery } from "../useInteractiveQuery";
+import type { UseReadQueryResult } from "../useReadQuery";
 import { useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
 import { InMemoryCache } from "../../../cache";
@@ -921,65 +922,118 @@ it("passes context to the link", async () => {
   expect(ProfiledApp).not.toRerender();
 });
 
-// it('enables canonical results when canonizeResults is "true"', async () => {
-//   interface Result {
-//     __typename: string;
-//     value: number;
-//   }
+it('enables canonical results when canonizeResults is "true"', async () => {
+  interface Result {
+    __typename: string;
+    value: number;
+  }
 
-//   const cache = new InMemoryCache({
-//     typePolicies: {
-//       Result: {
-//         keyFields: false,
-//       },
-//     },
-//   });
+  interface QueryData {
+    results: Result[];
+  }
 
-//   const query: TypedDocumentNode<{ results: Result[] }> = gql`
-//     query {
-//       results {
-//         value
-//       }
-//     }
-//   `;
+  const user = userEvent.setup();
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Result: {
+        keyFields: false,
+      },
+    },
+  });
 
-//   const results: Result[] = [
-//     { __typename: 'Result', value: 0 },
-//     { __typename: 'Result', value: 1 },
-//     { __typename: 'Result', value: 1 },
-//     { __typename: 'Result', value: 2 },
-//     { __typename: 'Result', value: 3 },
-//     { __typename: 'Result', value: 5 },
-//   ];
+  const query: TypedDocumentNode<QueryData, never> = gql`
+    query {
+      results {
+        value
+      }
+    }
+  `;
 
-//   cache.writeQuery({
-//     query,
-//     data: { results },
-//   });
+  const results: Result[] = [
+    { __typename: "Result", value: 0 },
+    { __typename: "Result", value: 1 },
+    { __typename: "Result", value: 1 },
+    { __typename: "Result", value: 2 },
+    { __typename: "Result", value: 3 },
+    { __typename: "Result", value: 5 },
+  ];
 
-//   const { result } = renderHook(
-//     () =>
-//       useInteractiveQuery(query, {
-//         canonizeResults: true,
-//       }),
-//     {
-//       wrapper: ({ children }) => (
-//         <MockedProvider cache={cache}>{children}</MockedProvider>
-//       ),
-//     }
-//   );
+  cache.writeQuery({
+    query,
+    data: { results },
+  });
 
-//   const [queryRef] = result.current;
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink([]),
+  });
 
-//   const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
-//   const resultSet = new Set(_result.data.results);
-//   const values = Array.from(resultSet).map((item) => item.value);
+  function SuspenseFallback() {
+    return <p>Loading</p>;
+  }
 
-//   expect(_result.data).toEqual({ results });
-//   expect(_result.data.results.length).toBe(6);
-//   expect(resultSet.size).toBe(5);
-//   expect(values).toEqual([0, 1, 2, 3, 5]);
-// });
+  function Parent() {
+    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+      canonizeResults: true,
+    });
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function Child({ queryRef }: { queryRef: QueryReference<QueryData> }) {
+    const result = useReadQuery(queryRef);
+
+    ProfiledApp.updateSnapshot({ result });
+
+    return null;
+  }
+
+  const ProfiledApp = profile<{
+    result: UseReadQueryResult<QueryData> | null;
+  }>({
+    Component: () => (
+      <ApolloProvider client={client}>
+        <Parent />
+      </ApolloProvider>
+    ),
+    initialSnapshot: {
+      result: null,
+    },
+  });
+
+  render(<ProfiledApp />);
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+    expect(snapshot.result).toEqual(null);
+  }
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    const resultSet = new Set(snapshot.result!.data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(snapshot.result).toEqual({
+      data: { results },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+    expect(resultSet.size).toBe(5);
+    expect(values).toEqual([0, 1, 2, 3, 5]);
+  }
+
+  expect(ProfiledApp).not.toRerender();
+});
 
 // it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
 //   interface Result {

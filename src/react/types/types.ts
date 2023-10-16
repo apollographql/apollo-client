@@ -20,6 +20,8 @@ import type {
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
+  ErrorPolicy,
+  RefetchWritePolicy,
 } from "../../core/index.js";
 
 /* QueryReference type */
@@ -193,20 +195,60 @@ export type InteractiveQueryHookFetchPolicy = Extract<
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"
 >;
 
-export interface InteractiveQueryHookOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> extends Pick<
-    QueryHookOptions<TData, TVariables>,
-    | "client"
-    | "errorPolicy"
-    | "context"
-    | "canonizeResults"
-    | "returnPartialData"
-    | "refetchWritePolicy"
-  > {
+export interface InteractiveQueryHookOptions {
+  /**
+   * Whether to canonize cache results before returning them. Canonization
+   * takes some extra time, but it speeds up future deep equality comparisons.
+   * Defaults to false.
+   */
+  canonizeResults?: boolean;
+  /**
+   * The instance of {@link ApolloClient} to use to execute the query.
+   *
+   * By default, the instance that's passed down via context is used, but you
+   * can provide a different instance here.
+   */
+  client?: ApolloClient<any>;
+  /**
+   * Context to be passed to link execution chain
+   */
+  context?: DefaultContext;
+  /**
+   * Specifies the {@link ErrorPolicy} to be used for this query
+   */
+  errorPolicy?: ErrorPolicy;
+  /**
+   *
+   * Specifies how the query interacts with the Apollo Client cache during
+   * execution (for example, whether it checks the cache for results before
+   * sending a request to the server).
+   *
+   * For details, see {@link https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy | Setting a fetch policy}.
+   *
+   * The default value is `cache-first`.
+   */
   fetchPolicy?: InteractiveQueryHookFetchPolicy;
+  /**
+   * A unique identifier for the query. Each item in the array must be a stable
+   * identifier to prevent infinite fetches.
+   *
+   * This is useful when using the same query and variables combination in more
+   * than one component, otherwise the components may clobber each other. This
+   * can also be used to force the query to re-evaluate fresh.
+   */
   queryKey?: string | number | any[];
+  /**
+   * Specifies whether a {@link NetworkStatus.refetch} operation should merge
+   * incoming field data with existing data, or overwrite the existing data.
+   * Overwriting is probably preferable, but merging is currently the default
+   * behavior, for backwards compatibility with Apollo Client 3.x.
+   */
+  refetchWritePolicy?: RefetchWritePolicy;
+  /**
+   * Allow returning incomplete data from the cache when a larger query cannot
+   * be fully satisfied by the cache, instead of returning nothing.
+   */
+  returnPartialData?: boolean;
 }
 
 /**

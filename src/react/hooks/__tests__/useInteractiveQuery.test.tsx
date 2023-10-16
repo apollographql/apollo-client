@@ -734,84 +734,192 @@ it("loads a query when the load query function is called", async () => {
   expect(ProfiledApp).not.toRerender();
 });
 
-// it('allows the client to be overridden', async () => {
-//   const query: TypedDocumentNode<SimpleQueryData> = gql`
-//     query UserQuery {
-//       greeting
-//     }
-//   `;
+it("allows the client to be overridden", async () => {
+  const user = userEvent.setup();
+  const { query } = useSimpleQueryCase();
 
-//   const globalClient = new ApolloClient({
-//     link: new ApolloLink(() =>
-//       Observable.of({ data: { greeting: 'global hello' } })
-//     ),
-//     cache: new InMemoryCache(),
-//   });
+  const globalClient = new ApolloClient({
+    link: new ApolloLink(() =>
+      Observable.of({ data: { greeting: "global hello" } })
+    ),
+    cache: new InMemoryCache(),
+  });
 
-//   const localClient = new ApolloClient({
-//     link: new ApolloLink(() =>
-//       Observable.of({ data: { greeting: 'local hello' } })
-//     ),
-//     cache: new InMemoryCache(),
-//   });
+  const localClient = new ApolloClient({
+    link: new ApolloLink(() =>
+      Observable.of({ data: { greeting: "local hello" } })
+    ),
+    cache: new InMemoryCache(),
+  });
 
-//   const { result } = renderSuspenseHook(
-//     () => useInteractiveQuery(query, { client: localClient }),
-//     { client: globalClient }
-//   );
+  function SuspenseFallback() {
+    return <p>Loading</p>;
+  }
 
-//   const [queryRef] = result.current;
+  function Parent() {
+    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+      client: localClient,
+    });
 
-//   const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Greeting queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
 
-//   await waitFor(() => {
-//     expect(_result).toEqual({
-//       data: { greeting: 'local hello' },
-//       loading: false,
-//       networkStatus: NetworkStatus.ready,
-//     });
-//   });
-// });
+  function Greeting({
+    queryRef,
+  }: {
+    queryRef: QueryReference<SimpleQueryData>;
+  }) {
+    const result = useReadQuery(queryRef);
 
-// it('passes context to the link', async () => {
-//   const query = gql`
-//     query ContextQuery {
-//       context
-//     }
-//   `;
+    ProfiledApp.updateSnapshot({ result });
 
-//   const link = new ApolloLink((operation) => {
-//     return new Observable((observer) => {
-//       const { valueA, valueB } = operation.getContext();
+    return <div>{result.data.greeting}</div>;
+  }
 
-//       observer.next({ data: { context: { valueA, valueB } } });
-//       observer.complete();
-//     });
-//   });
+  const ProfiledApp = profile<{
+    result: ReturnType<typeof useReadQuery> | null;
+  }>({
+    Component: () => (
+      <ApolloProvider client={globalClient}>
+        <Parent />
+      </ApolloProvider>
+    ),
+    snapshotDOM: true,
+    initialSnapshot: {
+      result: null,
+    },
+  });
 
-//   const { result } = renderHook(
-//     () =>
-//       useInteractiveQuery(query, {
-//         context: { valueA: 'A', valueB: 'B' },
-//       }),
-//     {
-//       wrapper: ({ children }) => (
-//         <MockedProvider link={link}>{children}</MockedProvider>
-//       ),
-//     }
-//   );
+  render(<ProfiledApp />);
 
-//   const [queryRef] = result.current;
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+    expect(snapshot.result).toEqual(null);
+  }
 
-//   const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+  await act(() => user.click(screen.getByText("Load query")));
 
-//   await waitFor(() => {
-//     expect(_result).toMatchObject({
-//       data: { context: { valueA: 'A', valueB: 'B' } },
-//       networkStatus: NetworkStatus.ready,
-//     });
-//   });
-// });
+  {
+    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+
+    expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+    expect(snapshot.result).toEqual(null);
+  }
+
+  {
+    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+
+    expect(withinDOM().getByText("local hello")).toBeInTheDocument();
+    expect(snapshot.result).toEqual({
+      data: { greeting: "local hello" },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  expect(ProfiledApp).not.toRerender();
+});
+
+it("passes context to the link", async () => {
+  interface QueryData {
+    context: Record<string, any>;
+  }
+
+  const user = userEvent.setup();
+  const query: TypedDocumentNode<QueryData, never> = gql`
+    query ContextQuery {
+      context
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        const { valueA, valueB } = operation.getContext();
+
+        observer.next({ data: { context: { valueA, valueB } } });
+        observer.complete();
+      });
+    }),
+  });
+
+  function SuspenseFallback() {
+    return <p>Loading</p>;
+  }
+
+  function Parent() {
+    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+      context: { valueA: "A", valueB: "B" },
+    });
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function Child({ queryRef }: { queryRef: QueryReference<QueryData> }) {
+    const result = useReadQuery(queryRef);
+
+    ProfiledApp.updateSnapshot({ result });
+
+    return null;
+  }
+
+  const ProfiledApp = profile<{
+    result: ReturnType<typeof useReadQuery> | null;
+  }>({
+    Component: () => (
+      <ApolloProvider client={client}>
+        <Parent />
+      </ApolloProvider>
+    ),
+    snapshotDOM: true,
+    initialSnapshot: {
+      result: null,
+    },
+  });
+
+  render(<ProfiledApp />);
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+    expect(snapshot.result).toEqual(null);
+  }
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+
+    expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+    expect(snapshot.result).toEqual(null);
+  }
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { context: { valueA: "A", valueB: "B" } },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  expect(ProfiledApp).not.toRerender();
+});
 
 // it('enables canonical results when canonizeResults is "true"', async () => {
 //   interface Result {

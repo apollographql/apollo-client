@@ -17,7 +17,6 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
-  "SuspenseCache",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -211,7 +210,6 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
-  "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
 ]
@@ -266,7 +264,6 @@ Array [
   "ApolloConsumer",
   "ApolloProvider",
   "DocumentType",
-  "SuspenseCache",
   "getApolloContext",
   "operationName",
   "parser",

@@ -1,5 +1,5 @@
-import { serializeFetchParameter } from './serializeFetchParameter.js';
-import type { Body } from './selectHttpOptionsAndBody.js';
+import { serializeFetchParameter } from "./serializeFetchParameter.js";
+import type { Body } from "./selectHttpOptionsAndBody.js";
 
 // For GET operations, returns the given URI rewritten with parameters, or a
 // parse error.
@@ -11,35 +11,35 @@ export function rewriteURIForGET(chosenURI: string, body: Body) {
     queryParams.push(`${key}=${encodeURIComponent(value)}`);
   };
 
-  if ('query' in body) {
-    addQueryParam('query', body.query!);
+  if ("query" in body) {
+    addQueryParam("query", body.query!);
   }
   if (body.operationName) {
-    addQueryParam('operationName', body.operationName);
+    addQueryParam("operationName", body.operationName);
   }
   if (body.variables) {
     let serializedVariables;
     try {
       serializedVariables = serializeFetchParameter(
         body.variables,
-        'Variables map',
+        "Variables map"
       );
     } catch (parseError) {
       return { parseError };
     }
-    addQueryParam('variables', serializedVariables);
+    addQueryParam("variables", serializedVariables);
   }
   if (body.extensions) {
     let serializedExtensions;
     try {
       serializedExtensions = serializeFetchParameter(
         body.extensions,
-        'Extensions map',
+        "Extensions map"
       );
     } catch (parseError) {
       return { parseError };
     }
-    addQueryParam('extensions', serializedExtensions);
+    addQueryParam("extensions", serializedExtensions);
   }
 
   // Reconstruct the URI with added query params.
@@ -48,15 +48,15 @@ export function rewriteURIForGET(chosenURI: string, body: Body) {
   //     URL API and take a polyfill (whatwg-url@6) for older browsers that
   //     don't support URLSearchParams. Note that some browsers (and
   //     versions of whatwg-url) support URL but not URLSearchParams!
-  let fragment = '',
+  let fragment = "",
     preFragment = chosenURI;
-  const fragmentStart = chosenURI.indexOf('#');
+  const fragmentStart = chosenURI.indexOf("#");
   if (fragmentStart !== -1) {
     fragment = chosenURI.substr(fragmentStart);
     preFragment = chosenURI.substr(0, fragmentStart);
   }
-  const queryParamsPrefix = preFragment.indexOf('?') === -1 ? '?' : '&';
+  const queryParamsPrefix = preFragment.indexOf("?") === -1 ? "?" : "&";
   const newURI =
-    preFragment + queryParamsPrefix + queryParams.join('&') + fragment;
+    preFragment + queryParamsPrefix + queryParams.join("&") + fragment;
   return { newURI };
 }

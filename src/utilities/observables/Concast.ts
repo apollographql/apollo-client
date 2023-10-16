@@ -1,4 +1,8 @@
-import type { Observer, ObservableSubscription, Subscriber } from "./Observable.js";
+import type {
+  Observer,
+  ObservableSubscription,
+  Subscriber,
+} from "./Observable.js";
 import { Observable } from "./Observable.js";
 import { iterateObserversSafely } from "./iteration.js";
 import { fixObservableSubclass } from "./subclassing.js";
@@ -59,7 +63,7 @@ export class Concast<T> extends Observable<T> {
   // Not only can the individual elements of the iterable be promises, but
   // also the iterable itself can be wrapped in a promise.
   constructor(sources: MaybeAsync<ConcastSourcesIterable<T>> | Subscriber<T>) {
-    super(observer => {
+    super((observer) => {
       this.addObserver(observer);
       return () => this.removeObserver(observer);
     });
@@ -67,7 +71,7 @@ export class Concast<T> extends Observable<T> {
     // Suppress rejection warnings for this.promise, since it's perfectly
     // acceptable to pay no attention to this.promise if you're consuming
     // the results through the normal observable API.
-    this.promise.catch(_ => {});
+    this.promise.catch((_) => {});
 
     // If someone accidentally tries to create a Concast using a subscriber
     // function, recover by creating an Observable from that subscriber and
@@ -77,10 +81,7 @@ export class Concast<T> extends Observable<T> {
     }
 
     if (isPromiseLike(sources)) {
-      sources.then(
-        iterable => this.start(iterable),
-        this.handlers.error,
-      );
+      sources.then((iterable) => this.start(iterable), this.handlers.error);
     } else {
       this.start(sources);
     }
@@ -118,9 +119,7 @@ export class Concast<T> extends Observable<T> {
       // If the subscription is already closed, and the last message was
       // a 'next' message, simulate delivery of the final 'complete'
       // message again.
-      if (this.sub === null &&
-          nextOrError === "next" &&
-          observer.complete) {
+      if (this.sub === null && nextOrError === "next" && observer.complete) {
         observer.complete();
       }
     }
@@ -136,10 +135,7 @@ export class Concast<T> extends Observable<T> {
   }
 
   public removeObserver(observer: Observer<T>) {
-    if (
-      this.observers.delete(observer) &&
-      this.observers.size < 1
-    ) {
+    if (this.observers.delete(observer) && this.observers.size < 1) {
       // In case there are still any listeners in this.nextResultListeners, and
       // no error or completion has been broadcast yet, make sure those
       // observers have a chance to run and then remove themselves from
@@ -200,8 +196,7 @@ export class Concast<T> extends Observable<T> {
         if (!value) {
           if (sub) setTimeout(() => sub.unsubscribe());
           this.sub = null;
-          if (this.latest &&
-              this.latest[0] === "next") {
+          if (this.latest && this.latest[0] === "next") {
             this.resolve(this.latest[1]);
           } else {
             this.resolve();
@@ -215,7 +210,7 @@ export class Concast<T> extends Observable<T> {
           // followed by a 'complete' message (see addObserver).
           iterateObserversSafely(this.observers, "complete");
         } else if (isPromiseLike(value)) {
-          value.then(obs => this.sub = obs.subscribe(this.handlers));
+          value.then((obs) => (this.sub = obs.subscribe(this.handlers)));
         } else {
           this.sub = value.subscribe(this.handlers);
         }
@@ -227,14 +222,14 @@ export class Concast<T> extends Observable<T> {
 
   private notify(
     method: Parameters<NextResultListener>[0],
-    arg?: Parameters<NextResultListener>[1],
+    arg?: Parameters<NextResultListener>[1]
   ) {
     const { nextResultListeners } = this;
     if (nextResultListeners.size) {
       // Replacing this.nextResultListeners first ensures it does not grow while
       // we are iterating over it, potentially leading to infinite loops.
-      this.nextResultListeners = new Set;
-      nextResultListeners.forEach(listener => listener(method, arg));
+      this.nextResultListeners = new Set();
+      nextResultListeners.forEach((listener) => listener(method, arg));
     }
   }
 
@@ -259,12 +254,12 @@ export class Concast<T> extends Observable<T> {
     this.reject(reason);
     this.sources = [];
     this.handlers.complete();
-  }
+  };
 }
 
 type NextResultListener = (
   method: "next" | "error" | "complete",
-  arg?: any,
+  arg?: any
 ) => any;
 
 // Necessary because the Concast constructor has a different signature

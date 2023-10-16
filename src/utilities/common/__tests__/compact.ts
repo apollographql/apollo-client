@@ -39,11 +39,9 @@ describe("compact", () => {
   });
 
   it("should skip over undefined values in later objects", () => {
-    expect(compact(
-      { a: 1, b: 2 },
-      { b: void 0, c: 3 },
-      { a: 4, c: void 0 },
-    )).toEqual({
+    expect(
+      compact({ a: 1, b: 2 }, { b: void 0, c: 3 }, { a: 4, c: void 0 })
+    ).toEqual({
       a: 4,
       b: 2,
       c: 3,

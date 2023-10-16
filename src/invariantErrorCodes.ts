@@ -1,5 +1,5 @@
 export interface ErrorCodes {
-    [key: number]: { file: string, condition?: string, message?: string }
+  [key: number]: { file: string; condition?: string; message?: string };
 }
 
 export const errorCodes: ErrorCodes = {};

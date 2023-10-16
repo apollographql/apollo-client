@@ -1,30 +1,30 @@
-import { invariant, newInvariantError } from '../globals/index.js';
+import { invariant, newInvariantError } from "../globals/index.js";
 
 import type {
   DocumentNode,
   OperationDefinitionNode,
   FragmentDefinitionNode,
   ValueNode,
-} from 'graphql';
+} from "graphql";
 
-import { valueToObjectRepresentation } from './storeUtils.js';
+import { valueToObjectRepresentation } from "./storeUtils.js";
 
 type OperationDefinitionWithName = OperationDefinitionNode & {
-  name: NonNullable<OperationDefinitionNode['name']>;
+  name: NonNullable<OperationDefinitionNode["name"]>;
 };
 
 // Checks the document for errors and throws an exception if there is an error.
 export function checkDocument(doc: DocumentNode) {
   invariant(
-    doc && doc.kind === 'Document',
+    doc && doc.kind === "Document",
     `Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
-string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
+string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
   );
 
   const operations = doc.definitions
-    .filter(d => d.kind !== 'FragmentDefinition')
-    .map(definition => {
-      if (definition.kind !== 'OperationDefinition') {
+    .filter((d) => d.kind !== "FragmentDefinition")
+    .map((definition) => {
+      if (definition.kind !== "OperationDefinition") {
         throw newInvariantError(
           `Schema type definitions not allowed in queries. Found: "%s"`,
           definition.kind
@@ -43,12 +43,12 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
 }
 
 export function getOperationDefinition(
-  doc: DocumentNode,
+  doc: DocumentNode
 ): OperationDefinitionNode | undefined {
   checkDocument(doc);
   return doc.definitions.filter(
     (definition): definition is OperationDefinitionNode =>
-      definition.kind === 'OperationDefinition',
+      definition.kind === "OperationDefinition"
   )[0];
 }
 
@@ -57,7 +57,7 @@ export function getOperationName(doc: DocumentNode): string | null {
     doc.definitions
       .filter(
         (definition): definition is OperationDefinitionWithName =>
-          definition.kind === 'OperationDefinition' && !!definition.name,
+          definition.kind === "OperationDefinition" && !!definition.name
       )
       .map((x) => x.name.value)[0] || null
   );
@@ -65,11 +65,11 @@ export function getOperationName(doc: DocumentNode): string | null {
 
 // Returns the FragmentDefinitions from a particular document as an array
 export function getFragmentDefinitions(
-  doc: DocumentNode,
+  doc: DocumentNode
 ): FragmentDefinitionNode[] {
   return doc.definitions.filter(
     (definition): definition is FragmentDefinitionNode =>
-      definition.kind === 'FragmentDefinition',
+      definition.kind === "FragmentDefinition"
   );
 }
 
@@ -77,32 +77,32 @@ export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
   const queryDef = getOperationDefinition(doc)!;
 
   invariant(
-    queryDef && queryDef.operation === 'query',
-    'Must contain a query definition.',
+    queryDef && queryDef.operation === "query",
+    "Must contain a query definition."
   );
 
   return queryDef;
 }
 
 export function getFragmentDefinition(
-  doc: DocumentNode,
+  doc: DocumentNode
 ): FragmentDefinitionNode {
   invariant(
-    doc.kind === 'Document',
+    doc.kind === "Document",
     `Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
-string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
+string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
   );
 
   invariant(
     doc.definitions.length <= 1,
-    'Fragment must have exactly one definition.',
+    "Fragment must have exactly one definition."
   );
 
   const fragmentDef = doc.definitions[0] as FragmentDefinitionNode;
 
   invariant(
-    fragmentDef.kind === 'FragmentDefinition',
-    'Must be a fragment definition.',
+    fragmentDef.kind === "FragmentDefinition",
+    "Must be a fragment definition."
   );
 
   return fragmentDef as FragmentDefinitionNode;
@@ -114,24 +114,24 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`,
  * If no definitions are found, an error will be thrown.
  */
 export function getMainDefinition(
-  queryDoc: DocumentNode,
+  queryDoc: DocumentNode
 ): OperationDefinitionNode | FragmentDefinitionNode {
   checkDocument(queryDoc);
 
   let fragmentDefinition;
 
   for (let definition of queryDoc.definitions) {
-    if (definition.kind === 'OperationDefinition') {
+    if (definition.kind === "OperationDefinition") {
       const operation = (definition as OperationDefinitionNode).operation;
       if (
-        operation === 'query' ||
-        operation === 'mutation' ||
-        operation === 'subscription'
+        operation === "query" ||
+        operation === "mutation" ||
+        operation === "subscription"
       ) {
         return definition as OperationDefinitionNode;
       }
     }
-    if (definition.kind === 'FragmentDefinition' && !fragmentDefinition) {
+    if (definition.kind === "FragmentDefinition" && !fragmentDefinition) {
       // we do this because we want to allow multiple fragment definitions
       // to precede an operation definition.
       fragmentDefinition = definition as FragmentDefinitionNode;
@@ -143,22 +143,22 @@ export function getMainDefinition(
   }
 
   throw newInvariantError(
-    'Expected a parsed GraphQL query with a query, mutation, subscription, or a fragment.',
+    "Expected a parsed GraphQL query with a query, mutation, subscription, or a fragment."
   );
 }
 
 export function getDefaultValues(
-  definition: OperationDefinitionNode | undefined,
+  definition: OperationDefinitionNode | undefined
 ): Record<string, any> {
   const defaultValues = Object.create(null);
   const defs = definition && definition.variableDefinitions;
   if (defs && defs.length) {
-    defs.forEach(def => {
+    defs.forEach((def) => {
       if (def.defaultValue) {
         valueToObjectRepresentation(
           defaultValues,
           def.variable.name,
-          def.defaultValue as ValueNode,
+          def.defaultValue as ValueNode
         );
       }
     });

@@ -5,6 +5,7 @@ description: Squeeze those last few bytes out of your production build
 
 Two quick configuration changes can help your reduce your bundle size: turning off Apollo Client's development mode and picking a consistent style for your imports.  
 Every byte counts in optimizing your app's performance.
+
 ## Turning off development mode
 
 By default, Apollo Client is in "development mode". That means Apollo Client performs additional checks and the browser console displays warnings.
@@ -25,7 +26,7 @@ Here are some bundler-specific suggestions for configuring your bundler to remov
 export default defineConfig({
   // ...
   define: {
-    'globalThis.__DEV__': JSON.stringify(false),
+    "globalThis.__DEV__": JSON.stringify(false),
   },
 });
 ```
@@ -43,7 +44,7 @@ const nextConfig = {
   webpack(config, { webpack }) {
     config.plugins.push(
       new webpack.DefinePlugin({
-        'globalThis.__DEV__': false,
+        "globalThis.__DEV__": false,
       })
     );
     return config;
@@ -62,12 +63,12 @@ With `create-react-app`, you need to use a third-party package like [`craco`](ht
 <ExpansionPanel title="Click to expand suggested configuration">
 
 ```js title="craco.config.js"
-const webpack = require('webpack');
+const webpack = require("webpack");
 module.exports = {
   webpack: {
     plugins: [
       new webpack.DefinePlugin({
-        'globalThis.__DEV__': false,
+        "globalThis.__DEV__": false,
       }),
     ],
   },
@@ -97,7 +98,7 @@ module.exports = {
 ```js
 config.plugins.push(
   new webpack.DefinePlugin({
-    'globalThis.__DEV__': false,
+    "globalThis.__DEV__": false,
   })
 );
 ```
@@ -120,7 +121,7 @@ export default [
         compress: {
           toplevel: true,
           global_defs: {
-            '@globalThis.__DEV__': 'false',
+            "@globalThis.__DEV__": "false",
           },
         },
       }),
@@ -171,11 +172,11 @@ Apollo Client offers these two styles of imports:
 
 ```js
 // "main entrypoint import" style
-import { ApolloClient, InMemoryCache, useQuery } from '@apollo/client';
+import { ApolloClient, InMemoryCache, useQuery } from "@apollo/client";
 
 // "deep entrypoint import" style
-import { ApolloClient, InMemoryCache } from '@apollo/client/core';
-import { useQuery } from '@apollo/client/react/hooks';
+import { ApolloClient, InMemoryCache } from "@apollo/client/core";
+import { useQuery } from "@apollo/client/react/hooks";
 ```
 
 With many modern bundlers, it should not matter which of these styles you choose.<br />

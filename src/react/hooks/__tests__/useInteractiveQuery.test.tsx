@@ -4213,305 +4213,350 @@ describe("useInteractiveQuery", () => {
         }
       `;
 
-      const [queryRef] = useInteractiveQuery(query);
+      const [queryRef, loadQuery] = useInteractiveQuery(query);
+
       invariant(queryRef);
 
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<unknown>();
+      expectTypeOf(loadQuery).toEqualTypeOf<
+        (variables: OperationVariables) => void
+      >();
     });
 
-    it("disallows wider variables type than specified", () => {
+    it("enforces variables argument to loadQuery function when TVariables is specified", () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      // @ts-expect-error should not allow wider TVariables type
-      useInteractiveQuery(query, { variables: { id: "1", foo: "bar" } });
+      const [, loadQuery] = useInteractiveQuery(query);
+
+      expectTypeOf(loadQuery).toEqualTypeOf<
+        (variables: VariablesCaseVariables) => void
+      >();
+      // @ts-expect-error enforces variables argument when type is specified
+      loadQuery();
+    });
+
+    it("disallows wider variables type", () => {
+      const { query } = useVariablesIntegrationTestCase();
+
+      const [, loadQuery] = useInteractiveQuery(query);
+
+      expectTypeOf(loadQuery).toEqualTypeOf<
+        (variables: VariablesCaseVariables) => void
+      >();
+      // @ts-expect-error does not allow wider TVariables type
+      loadQuery({ id: "1", foo: "bar" });
+    });
+
+    it("does not allow variables argument to loadQuery when TVariables is `never`", () => {
+      const query: TypedDocumentNode<SimpleQueryData, never> = gql`
+        query {
+          greeting
+        }
+      `;
+
+      const [, loadQuery] = useInteractiveQuery(query);
+
+      expectTypeOf(loadQuery).toEqualTypeOf<() => void>();
+      // @ts-expect-error does not allow variables argument when TVariables is `never`
+      loadQuery({});
     });
 
     it("returns TData in default case", () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useInteractiveQuery(query);
-      invariant(inferredQueryRef);
-      const { data: inferred } = useReadQuery(inferredQueryRef);
+      {
+        const [queryRef] = useInteractiveQuery(query);
 
-      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
-      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
+        invariant(queryRef);
 
-      const [explicitQueryRef] = useInteractiveQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query);
+        const { data } = useReadQuery(queryRef);
 
-      invariant(explicitQueryRef);
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
 
-      const { data: explicit } = useReadQuery(explicitQueryRef);
+      {
+        const [queryRef] = useInteractiveQuery<
+          VariablesCaseData,
+          VariablesCaseVariables
+        >(query);
 
-      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
-      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+        invariant(queryRef);
+
+        const { data } = useReadQuery(queryRef);
+
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     });
 
     it('returns TData | undefined with errorPolicy: "ignore"', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useInteractiveQuery(query, {
-        errorPolicy: "ignore",
-      });
-      invariant(inferredQueryRef);
-      const { data: inferred } = useReadQuery(inferredQueryRef);
+      {
+        const [queryRef] = useInteractiveQuery(query, {
+          errorPolicy: "ignore",
+        });
 
-      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+        invariant(queryRef);
 
-      const [explicitQueryRef] = useInteractiveQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
-        errorPolicy: "ignore",
-      });
-      invariant(explicitQueryRef);
+        const { data } = useReadQuery(queryRef);
 
-      const { data: explicit } = useReadQuery(explicitQueryRef);
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+      }
 
-      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+      {
+        const [queryRef] = useInteractiveQuery<
+          VariablesCaseData,
+          VariablesCaseVariables
+        >(query, { errorPolicy: "ignore" });
+
+        invariant(queryRef);
+
+        const { data } = useReadQuery(queryRef);
+
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+      }
     });
 
     it('returns TData | undefined with errorPolicy: "all"', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useInteractiveQuery(query, {
-        errorPolicy: "all",
-      });
-      invariant(inferredQueryRef);
-      const { data: inferred } = useReadQuery(inferredQueryRef);
+      {
+        const [queryRef] = useInteractiveQuery(query, {
+          errorPolicy: "all",
+        });
 
-      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+        invariant(queryRef);
 
-      const [explicitQueryRef] = useInteractiveQuery(query, {
-        errorPolicy: "all",
-      });
-      invariant(explicitQueryRef);
-      const { data: explicit } = useReadQuery(explicitQueryRef);
+        const { data } = useReadQuery(queryRef);
 
-      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
-      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+      }
+
+      {
+        const [queryRef] = useInteractiveQuery<
+          VariablesCaseData,
+          VariablesCaseVariables
+        >(query, { errorPolicy: "all" });
+
+        invariant(queryRef);
+
+        const { data } = useReadQuery(queryRef);
+
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+      }
     });
 
     it('returns TData with errorPolicy: "none"', () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useInteractiveQuery(query, {
-        errorPolicy: "none",
-      });
-      invariant(inferredQueryRef);
-      const { data: inferred } = useReadQuery(inferredQueryRef);
+      {
+        const [queryRef] = useInteractiveQuery(query, {
+          errorPolicy: "none",
+        });
 
-      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
-      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
+        invariant(queryRef);
 
-      const [explicitQueryRef] = useInteractiveQuery(query, {
-        errorPolicy: "none",
-      });
-      invariant(explicitQueryRef);
-      const { data: explicit } = useReadQuery(explicitQueryRef);
+        const { data } = useReadQuery(queryRef);
 
-      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
-      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      {
+        const [queryRef] = useInteractiveQuery<
+          VariablesCaseData,
+          VariablesCaseVariables
+        >(query, { errorPolicy: "none" });
+
+        invariant(queryRef);
+
+        const { data } = useReadQuery(queryRef);
+
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     });
 
     it("returns DeepPartial<TData> with returnPartialData: true", () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useInteractiveQuery(query, {
-        returnPartialData: true,
-      });
-      invariant(inferredQueryRef);
-      const { data: inferred } = useReadQuery(inferredQueryRef);
+      {
+        const [queryRef] = useInteractiveQuery(query, {
+          returnPartialData: true,
+        });
 
-      expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+        invariant(queryRef);
 
-      const [explicitQueryRef] = useInteractiveQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
-        returnPartialData: true,
-      });
-      invariant(explicitQueryRef);
+        const { data } = useReadQuery(queryRef);
 
-      const { data: explicit } = useReadQuery(explicitQueryRef);
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
 
-      expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+      {
+        const [queryRef] = useInteractiveQuery<
+          VariablesCaseData,
+          VariablesCaseVariables
+        >(query, { returnPartialData: true });
+
+        invariant(queryRef);
+
+        const { data } = useReadQuery(queryRef);
+
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
     });
 
     it("returns TData with returnPartialData: false", () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useInteractiveQuery(query, {
-        returnPartialData: false,
-      });
-      invariant(inferredQueryRef);
-      const { data: inferred } = useReadQuery(inferredQueryRef);
+      {
+        const [queryRef] = useInteractiveQuery(query, {
+          returnPartialData: false,
+        });
 
-      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
-      expectTypeOf(inferred).not.toEqualTypeOf<
-        DeepPartial<VariablesCaseData>
-      >();
+        invariant(queryRef);
 
-      const [explicitQueryRef] = useInteractiveQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
-        returnPartialData: false,
-      });
-      invariant(explicitQueryRef);
+        const { data } = useReadQuery(queryRef);
 
-      const { data: explicit } = useReadQuery(explicitQueryRef);
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
 
-      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
-      expectTypeOf(explicit).not.toEqualTypeOf<
-        DeepPartial<VariablesCaseData>
-      >();
+      {
+        const [queryRef] = useInteractiveQuery<
+          VariablesCaseData,
+          VariablesCaseVariables
+        >(query, { returnPartialData: false });
+
+        invariant(queryRef);
+
+        const { data } = useReadQuery(queryRef);
+
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     });
 
     it("returns TData when passing an option that does not affect TData", () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useInteractiveQuery(query, {
-        fetchPolicy: "no-cache",
-      });
-      invariant(inferredQueryRef);
-      const { data: inferred } = useReadQuery(inferredQueryRef);
+      {
+        const [queryRef] = useInteractiveQuery(query, {
+          fetchPolicy: "no-cache",
+        });
 
-      expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
-      expectTypeOf(inferred).not.toEqualTypeOf<
-        DeepPartial<VariablesCaseData>
-      >();
+        invariant(queryRef);
 
-      const [explicitQueryRef] = useInteractiveQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
-        fetchPolicy: "no-cache",
-      });
-      invariant(explicitQueryRef);
+        const { data } = useReadQuery(queryRef);
 
-      const { data: explicit } = useReadQuery(explicitQueryRef);
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
 
-      expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
-      expectTypeOf(explicit).not.toEqualTypeOf<
-        DeepPartial<VariablesCaseData>
-      >();
+      {
+        const [queryRef] = useInteractiveQuery<
+          VariablesCaseData,
+          VariablesCaseVariables
+        >(query, { fetchPolicy: "no-cache" });
+
+        invariant(queryRef);
+
+        const { data } = useReadQuery(queryRef);
+
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     });
 
     it("handles combinations of options", () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredPartialDataIgnoreQueryRef] = useInteractiveQuery(query, {
-        returnPartialData: true,
-        errorPolicy: "ignore",
-      });
-      invariant(inferredPartialDataIgnoreQueryRef);
-      const { data: inferredPartialDataIgnore } = useReadQuery(
-        inferredPartialDataIgnoreQueryRef
-      );
+      {
+        const [queryRef] = useInteractiveQuery(query, {
+          returnPartialData: true,
+          errorPolicy: "ignore",
+        });
 
-      expectTypeOf(inferredPartialDataIgnore).toEqualTypeOf<
-        DeepPartial<VariablesCaseData> | undefined
-      >();
-      expectTypeOf(
-        inferredPartialDataIgnore
-      ).not.toEqualTypeOf<VariablesCaseData>();
+        invariant(queryRef);
 
-      const [explicitPartialDataIgnoreQueryRef] = useInteractiveQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
-        returnPartialData: true,
-        errorPolicy: "ignore",
-      });
-      invariant(explicitPartialDataIgnoreQueryRef);
+        const { data } = useReadQuery(queryRef);
 
-      const { data: explicitPartialDataIgnore } = useReadQuery(
-        explicitPartialDataIgnoreQueryRef
-      );
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<VariablesCaseData> | undefined
+        >();
+      }
 
-      expectTypeOf(explicitPartialDataIgnore).toEqualTypeOf<
-        DeepPartial<VariablesCaseData> | undefined
-      >();
-      expectTypeOf(
-        explicitPartialDataIgnore
-      ).not.toEqualTypeOf<VariablesCaseData>();
+      {
+        const [queryRef] = useInteractiveQuery<
+          VariablesCaseData,
+          VariablesCaseVariables
+        >(query, { returnPartialData: true, errorPolicy: "ignore" });
 
-      const [inferredPartialDataNoneQueryRef] = useInteractiveQuery(query, {
-        returnPartialData: true,
-        errorPolicy: "none",
-      });
-      invariant(inferredPartialDataNoneQueryRef);
+        invariant(queryRef);
 
-      const { data: inferredPartialDataNone } = useReadQuery(
-        inferredPartialDataNoneQueryRef
-      );
+        const { data } = useReadQuery(queryRef);
 
-      expectTypeOf(inferredPartialDataNone).toEqualTypeOf<
-        DeepPartial<VariablesCaseData>
-      >();
-      expectTypeOf(
-        inferredPartialDataNone
-      ).not.toEqualTypeOf<VariablesCaseData>();
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<VariablesCaseData> | undefined
+        >();
+      }
 
-      const [explicitPartialDataNoneQueryRef] = useInteractiveQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
-        returnPartialData: true,
-        errorPolicy: "none",
-      });
-      invariant(explicitPartialDataNoneQueryRef);
+      {
+        const [queryRef] = useInteractiveQuery(query, {
+          returnPartialData: true,
+          errorPolicy: "none",
+        });
 
-      const { data: explicitPartialDataNone } = useReadQuery(
-        explicitPartialDataNoneQueryRef
-      );
+        invariant(queryRef);
 
-      expectTypeOf(explicitPartialDataNone).toEqualTypeOf<
-        DeepPartial<VariablesCaseData>
-      >();
-      expectTypeOf(
-        explicitPartialDataNone
-      ).not.toEqualTypeOf<VariablesCaseData>();
+        const { data } = useReadQuery(queryRef);
+
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
+
+      {
+        const [queryRef] = useInteractiveQuery<
+          VariablesCaseData,
+          VariablesCaseVariables
+        >(query, { returnPartialData: true, errorPolicy: "none" });
+
+        invariant(queryRef);
+
+        const { data } = useReadQuery(queryRef);
+
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
     });
 
     it("returns correct TData type when combined options that do not affect TData", () => {
       const { query } = useVariablesIntegrationTestCase();
 
-      const [inferredQueryRef] = useInteractiveQuery(query, {
-        fetchPolicy: "no-cache",
-        returnPartialData: true,
-        errorPolicy: "none",
-      });
-      invariant(inferredQueryRef);
-      const { data: inferred } = useReadQuery(inferredQueryRef);
+      {
+        const [queryRef] = useInteractiveQuery(query, {
+          fetchPolicy: "no-cache",
+          returnPartialData: true,
+          errorPolicy: "none",
+        });
 
-      expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-      expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+        invariant(queryRef);
 
-      const [explicitQueryRef] = useInteractiveQuery<
-        VariablesCaseData,
-        VariablesCaseVariables
-      >(query, {
-        fetchPolicy: "no-cache",
-        returnPartialData: true,
-        errorPolicy: "none",
-      });
-      invariant(explicitQueryRef);
+        const { data } = useReadQuery(queryRef);
 
-      const { data: explicit } = useReadQuery(explicitQueryRef);
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
 
-      expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-      expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+      {
+        const [queryRef] = useInteractiveQuery<
+          VariablesCaseData,
+          VariablesCaseVariables
+        >(query, {
+          fetchPolicy: "no-cache",
+          returnPartialData: true,
+          errorPolicy: "none",
+        });
+
+        invariant(queryRef);
+
+        const { data } = useReadQuery(queryRef);
+
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
     });
   });
 });

@@ -5,8 +5,18 @@ import { __use } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { invariant } from "../../utilities/globals/index.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
+import type { ApolloError } from "../../errors/index.js";
+import type { NetworkStatus } from "../../core/index.js";
 
-export function useReadQuery<TData>(queryRef: QueryReference<TData>) {
+export interface UseReadQueryResult<TData = unknown> {
+  data: TData;
+  error: ApolloError | undefined;
+  networkStatus: NetworkStatus;
+}
+
+export function useReadQuery<TData>(
+  queryRef: QueryReference<TData>
+): UseReadQueryResult<TData> {
   const internalQueryRef = unwrapQueryRef(queryRef);
   invariant(
     internalQueryRef.promiseCache,

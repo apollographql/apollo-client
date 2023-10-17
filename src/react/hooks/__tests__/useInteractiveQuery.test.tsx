@@ -51,7 +51,7 @@ import {
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import invariant from "ts-invariant";
-import { profile } from "../../../testing/internal";
+import { profile, spyOnConsole } from "../../../testing/internal";
 
 interface SimpleQueryData {
   greeting: string;
@@ -1274,53 +1274,110 @@ it("all data is present in the cache, no network request is made", async () => {
   }
 });
 
-// it('partial data is present in the cache so it is ignored and network request is made', async () => {
-//   const query = gql`
-//     {
-//       hello
-//       foo
-//     }
-//   `;
-//   const cache = new InMemoryCache();
-//   const link = mockSingleLink({
-//     request: { query },
-//     result: { data: { hello: 'from link', foo: 'bar' } },
-//     delay: 20,
-//   });
+it("partial data is present in the cache so it is ignored and network request is made", async () => {
+  const user = userEvent.setup();
+  const query = gql`
+    {
+      hello
+      foo
+    }
+  `;
+  const cache = new InMemoryCache();
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data: { hello: "from link", foo: "bar" } },
+      delay: 20,
+    },
+  ]);
 
-//   const client = new ApolloClient({
-//     link,
-//     cache,
-//   });
+  const client = new ApolloClient({
+    link,
+    cache,
+  });
 
-//   // we expect a "Missing field 'foo' while writing result..." error
-//   // when writing hello to the cache, so we'll silence the console.error
-//   const originalConsoleError = console.error;
-//   console.error = () => {
-//     /* noop */
-//   };
-//   cache.writeQuery({ query, data: { hello: 'from cache' } });
-//   console.error = originalConsoleError;
+  {
+    // we expect a "Missing field 'foo' while writing result..." error
+    // when writing hello to the cache, so we'll silence the console.error
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({ query, data: { hello: "from cache" } });
+  }
 
-//   const { result } = renderHook(
-//     () => useInteractiveQuery(query, { fetchPolicy: 'cache-first' }),
-//     {
-//       wrapper: ({ children }) => (
-//         <ApolloProvider client={client}>{children}</ApolloProvider>
-//       ),
-//     }
-//   );
+  function SuspenseFallback() {
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      suspenseCount: snapshot.suspenseCount + 1,
+    }));
 
-//   const [queryRef] = result.current;
+    return <p>Loading</p>;
+  }
 
-//   const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+  function Parent() {
+    const [queryRef, loadQuery] = useInteractiveQuery(query);
 
-//   expect(_result).toEqual({
-//     data: { foo: 'bar', hello: 'from link' },
-//     loading: false,
-//     networkStatus: 7,
-//   });
-// });
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function Child({ queryRef }: { queryRef: QueryReference<unknown> }) {
+    const result = useReadQuery(queryRef);
+
+    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
+
+    return null;
+  }
+
+  const ProfiledApp = profile<{
+    result: UseReadQueryResult<unknown> | null;
+    suspenseCount: number;
+  }>({
+    Component: () => (
+      <ApolloProvider client={client}>
+        <Parent />
+      </ApolloProvider>
+    ),
+    initialSnapshot: {
+      result: null,
+      suspenseCount: 0,
+    },
+  });
+
+  render(<ProfiledApp />);
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+    expect(snapshot.suspenseCount).toBe(0);
+    expect(snapshot.result).toBe(null);
+  }
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(1);
+    expect(snapshot.result).toBe(null);
+  }
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(1);
+    expect(snapshot.result).toEqual({
+      data: { foo: "bar", hello: "from link" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(ProfiledApp).not.toRerender();
+});
 
 // it('existing data in the cache is ignored', async () => {
 //   const query = gql`

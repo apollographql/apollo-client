@@ -2025,7 +2025,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
 
   const user = userEvent.setup();
 
-  const query: TypedDocumentNode<Data> = gql`
+  const query: TypedDocumentNode<Data, never> = gql`
     query {
       context
     }
@@ -2050,7 +2050,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
 
   function Parent() {
     const [phase, setPhase] = React.useState("initial");
-    const [queryRef, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
       context: { phase },
     });
 
@@ -2058,8 +2058,9 @@ it("applies `context` on next fetch when it changes between renders", async () =
       <>
         <button onClick={() => setPhase("rerender")}>Update context</button>
         <button onClick={() => refetch()}>Refetch</button>
+        <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Context queryRef={queryRef} />
+          {queryRef && <Context queryRef={queryRef} />}
         </Suspense>
       </>
     );
@@ -2080,6 +2081,8 @@ it("applies `context` on next fetch when it changes between renders", async () =
   }
 
   render(<App />);
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   expect(await screen.findByTestId("context")).toHaveTextContent("initial");
 

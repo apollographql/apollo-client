@@ -1185,45 +1185,95 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
 //   });
 // });
 
-// it('all data is present in the cache, no network request is made', async () => {
-//   const query = gql`
-//     {
-//       hello
-//     }
-//   `;
-//   const cache = new InMemoryCache();
-//   const link = mockSingleLink({
-//     request: { query },
-//     result: { data: { hello: 'from link' } },
-//     delay: 20,
-//   });
+it("all data is present in the cache, no network request is made", async () => {
+  const query = gql`
+    query {
+      hello
+    }
+  `;
+  const user = userEvent.setup();
+  const cache = new InMemoryCache();
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data: { hello: "from link" } },
+      delay: 20,
+    },
+  ]);
 
-//   const client = new ApolloClient({
-//     link,
-//     cache,
-//   });
+  const client = new ApolloClient({
+    link,
+    cache,
+  });
 
-//   cache.writeQuery({ query, data: { hello: 'from cache' } });
+  cache.writeQuery({ query, data: { hello: "from cache" } });
 
-//   const { result } = renderHook(
-//     () => useInteractiveQuery(query, { fetchPolicy: 'cache-first' }),
-//     {
-//       wrapper: ({ children }) => (
-//         <ApolloProvider client={client}>{children}</ApolloProvider>
-//       ),
-//     }
-//   );
+  function SuspenseFallback() {
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      suspenseCount: snapshot.suspenseCount + 1,
+    }));
 
-//   const [queryRef] = result.current;
+    return <p>Loading</p>;
+  }
 
-//   const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+  function Parent() {
+    const [queryRef, loadQuery] = useInteractiveQuery(query);
 
-//   expect(_result).toEqual({
-//     data: { hello: 'from cache' },
-//     loading: false,
-//     networkStatus: 7,
-//   });
-// });
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function Child({ queryRef }: { queryRef: QueryReference<unknown> }) {
+    const result = useReadQuery(queryRef);
+
+    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
+
+    return null;
+  }
+
+  const ProfiledApp = profile<{
+    result: UseReadQueryResult<unknown> | null;
+    suspenseCount: number;
+  }>({
+    Component: () => (
+      <ApolloProvider client={client}>
+        <Parent />
+      </ApolloProvider>
+    ),
+    initialSnapshot: {
+      result: null,
+      suspenseCount: 0,
+    },
+  });
+
+  render(<ProfiledApp />);
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+    expect(snapshot.result).toEqual(null);
+  }
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(0);
+    expect(snapshot.result).toEqual({
+      data: { hello: "from cache" },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+});
+
 // it('partial data is present in the cache so it is ignored and network request is made', async () => {
 //   const query = gql`
 //     {

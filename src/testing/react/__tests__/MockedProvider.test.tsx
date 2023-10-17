@@ -1,6 +1,6 @@
 import React from "react";
 import { DocumentNode } from "graphql";
-import { render, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import gql from "graphql-tag";
 
 import { itAsync, MockedResponse, MockLink } from "../../core";
@@ -708,6 +708,70 @@ describe("General use", () => {
       }).then(resolve, reject);
     }
   );
+
+  it("should support loading state testing with delay", async () => {
+    function Component({ username }: Variables) {
+      const { loading, data } = useQuery<Data, Variables>(query, { variables });
+
+      if (loading || data === undefined) return <p>Loading the user ID...</p>;
+
+      return <p>The user ID is '{data.user.id}'</p>;
+    }
+
+    const mocks: ReadonlyArray<MockedResponse> = [
+      {
+        delay: 30, // prevent React from batching the loading state away
+        request: {
+          query,
+          variables,
+        },
+        result: { data: { user } },
+      },
+    ];
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    expect(
+      await screen.findByText("Loading the user ID...")
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("The user ID is 'user_id'")
+    ).toBeInTheDocument();
+  });
+
+  it("should support loading state testing with infinite delay", async () => {
+    function Component({ username }: Variables) {
+      const { loading, data } = useQuery<Data, Variables>(query, { variables });
+
+      if (loading || data === undefined) return <p>Loading the user ID...</p>;
+
+      return <p>The user ID is '{data.user.id}'</p>;
+    }
+
+    const mocks: ReadonlyArray<MockedResponse> = [
+      {
+        delay: Infinity, // keep loading forever.
+        request: {
+          query,
+          variables,
+        },
+      },
+    ];
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    expect(
+      await screen.findByText("Loading the user ID...")
+    ).toBeInTheDocument();
+  });
 });
 
 describe("@client testing", () => {

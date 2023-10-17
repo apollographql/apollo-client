@@ -1936,7 +1936,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
 
   const user = userEvent.setup();
 
-  const query: TypedDocumentNode<Data> = gql`
+  const query: TypedDocumentNode<Data, never> = gql`
     query {
       greeting
     }
@@ -1966,7 +1966,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
 
   function Parent() {
     const [errorPolicy, setErrorPolicy] = React.useState<ErrorPolicy>("none");
-    const [queryRef, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
       errorPolicy,
     });
 
@@ -1976,8 +1976,9 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
           Change error policy
         </button>
         <button onClick={() => refetch()}>Refetch greeting</button>
+        <button onClick={() => loadQuery()}>Load greeting</button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Greeting queryRef={queryRef} />
+          {queryRef && <Greeting queryRef={queryRef} />}
         </Suspense>
       </>
     );
@@ -2004,6 +2005,8 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
   }
 
   render(<App />);
+
+  await act(() => user.click(screen.getByText("Load greeting")));
 
   expect(await screen.findByTestId("greeting")).toHaveTextContent("Hello");
 

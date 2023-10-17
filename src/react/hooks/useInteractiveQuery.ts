@@ -115,6 +115,11 @@ export function useInteractiveQuery<
     queryRef ? new Map([[queryRef.key, queryRef.promise]]) : new Map()
   );
 
+  if (queryRef?.didChangeOptions(watchQueryOptions)) {
+    const promise = queryRef.applyOptions(watchQueryOptions);
+    promiseCache.set(queryRef.key, promise);
+  }
+
   if (queryRef) {
     queryRef.promiseCache = promiseCache;
   }

@@ -5,6 +5,7 @@ import type {
   StoreObject,
   StoreValue,
   isReference,
+  AsStoreObject,
 } from "../../../utilities/index.js";
 
 import type { StorageType } from "../../inmemory/policies.js";
@@ -104,13 +105,12 @@ export type Modifier<T> = (
   details: ModifierDetails
 ) => T | DeleteModifier | InvalidateModifier;
 
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<
-  string,
-  any
->[]
-  ? Readonly<StoreVal> | readonly Reference[]
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<
+  infer Item extends Record<string, any>
+>
+  ? ReadonlyArray<AsStoreObject<Item> | Reference>
   : StoreVal extends Record<string, any>
-  ? StoreVal | Reference
+  ? AsStoreObject<StoreVal> | Reference
   : StoreVal;
 
 export type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<

@@ -732,7 +732,7 @@ it("loads a query when the load query function is called", async () => {
     });
   }
 
-  expect(ProfiledApp).not.toRerender();
+  await expect(ProfiledApp).not.toRerender();
 });
 
 it("allows the client to be overridden", async () => {
@@ -825,7 +825,7 @@ it("allows the client to be overridden", async () => {
     });
   }
 
-  expect(ProfiledApp).not.toRerender();
+  await expect(ProfiledApp).not.toRerender();
 });
 
 it("passes context to the link", async () => {
@@ -919,7 +919,7 @@ it("passes context to the link", async () => {
     });
   }
 
-  expect(ProfiledApp).not.toRerender();
+  await expect(ProfiledApp).not.toRerender();
 });
 
 it('enables canonical results when canonizeResults is "true"', async () => {
@@ -1032,7 +1032,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     expect(values).toEqual([0, 1, 2, 3, 5]);
   }
 
-  expect(ProfiledApp).not.toRerender();
+  await expect(ProfiledApp).not.toRerender();
 });
 
 it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
@@ -1141,7 +1141,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     expect(values).toEqual([0, 1, 1, 2, 3, 5]);
   }
 
-  expect(ProfiledApp).not.toRerender();
+  await expect(ProfiledApp).not.toRerender();
 });
 
 // // TODO(FIXME): test fails, should return cache data first if it exists
@@ -1272,6 +1272,8 @@ it("all data is present in the cache, no network request is made", async () => {
       error: undefined,
     });
   }
+
+  await expect(ProfiledApp).not.toRerender();
 });
 
 it("partial data is present in the cache so it is ignored and network request is made", async () => {

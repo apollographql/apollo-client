@@ -311,6 +311,13 @@ export type ApolloReducerConfig = {
 };
 
 // @public (undocumented)
+type AsStoreObject<T extends {
+    __typename?: string;
+}> = {
+    [K in keyof T]: T[K];
+};
+
+// @public (undocumented)
 export type BackgroundQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
 
 // @public (undocumented)
@@ -2452,8 +2459,10 @@ export interface StoreObject {
     __typename?: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<string, any>[] ? Readonly<StoreVal> | readonly Reference[] : StoreVal extends Record<string, any> ? StoreVal | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<infer Item extends Record<string, any>> ? ReadonlyArray<AsStoreObject<Item> | Reference> : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
@@ -2733,11 +2742,17 @@ export function useQuery<TData = any, TVariables extends OperationVariables = Op
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T;
 
 // @public (undocumented)
-export function useReadQuery<TData>(queryRef: QueryReference<TData>): {
+export function useReadQuery<TData>(queryRef: QueryReference<TData>): UseReadQueryResult<TData>;
+
+// @public (undocumented)
+export interface UseReadQueryResult<TData = unknown> {
+    // (undocumented)
     data: TData;
-    networkStatus: NetworkStatus;
+    // (undocumented)
     error: ApolloError | undefined;
-};
+    // (undocumented)
+    networkStatus: NetworkStatus;
+}
 
 // @public (undocumented)
 export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>): SubscriptionResult<TData, TVariables>;

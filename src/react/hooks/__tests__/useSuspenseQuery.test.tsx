@@ -805,8 +805,12 @@ describe("useSuspenseQuery", () => {
 
     expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
 
-    link.simulateResult({ result: { data: { greeting: "Hello" } } });
-    link.simulateComplete();
+    await act(() => {
+      link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+      // Ensure simulateResult will deliver the result since its wrapped with
+      // setTimeout
+      jest.advanceTimersByTime(10);
+    });
 
     expect(client.getObservableQueries().size).toBe(1);
     expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -817,10 +821,6 @@ describe("useSuspenseQuery", () => {
     expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
     jest.useRealTimers();
-
-    // Avoid act warnings for a suspended resource
-    // eslint-disable-next-line testing-library/no-unnecessary-act
-    await act(() => wait(0));
   });
 
   it("has configurable auto dispose timer if the component never renders again after suspending", async () => {
@@ -871,8 +871,12 @@ describe("useSuspenseQuery", () => {
 
     expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
 
-    link.simulateResult({ result: { data: { greeting: "Hello" } } });
-    link.simulateComplete();
+    await act(() => {
+      link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+      // Ensure simulateResult will deliver the result since its wrapped with
+      // setTimeout
+      jest.advanceTimersByTime(10);
+    });
 
     expect(client.getObservableQueries().size).toBe(1);
     expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -883,10 +887,6 @@ describe("useSuspenseQuery", () => {
     expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
     jest.useRealTimers();
-
-    // Avoid act warnings for a suspended resource
-    // eslint-disable-next-line testing-library/no-unnecessary-act
-    await act(() => wait(0));
   });
 
   it("cancels auto dispose if the component renders before timer finishes", async () => {
@@ -936,6 +936,57 @@ describe("useSuspenseQuery", () => {
 
     expect(client.getObservableQueries().size).toBe(1);
     expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+    jest.useRealTimers();
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/11270
+  it("does not leave component suspended if query completes if request takes longer than auto dispose timeout", async () => {
+    jest.useFakeTimers();
+    const { query } = useSimpleQueryCase();
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      defaultOptions: {
+        react: {
+          suspense: {
+            autoDisposeTimeoutMs: 10,
+          },
+        },
+      },
+    });
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Suspense fallback="Loading greeting...">
+            <Greeting />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function Greeting() {
+      const { data } = useSuspenseQuery(query);
+
+      return <span>{data.greeting}</span>;
+    }
+
+    render(<App />);
+
+    // Ensure <Greeting /> suspends immediately
+    expect(screen.getByText("Loading greeting...")).toBeInTheDocument();
+
+    jest.advanceTimersByTime(20);
+
+    link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+
+    await waitFor(() => {
+      expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Hello")).toBeInTheDocument();
 
     jest.useRealTimers();
   });

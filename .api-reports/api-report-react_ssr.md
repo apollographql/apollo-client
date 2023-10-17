@@ -303,6 +303,13 @@ type ApolloQueryResult<T> = {
 };
 
 // @public (undocumented)
+type AsStoreObject<T extends {
+    __typename?: string;
+}> = {
+    [K in keyof T]: T[K];
+};
+
+// @public (undocumented)
 interface BaseQueryOptions<TVariables extends OperationVariables = OperationVariables> extends Omit<WatchQueryOptions<TVariables>, "query"> {
     // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
     //
@@ -1506,8 +1513,10 @@ interface StoreObject {
     __typename?: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<string, any>[] ? Readonly<StoreVal> | readonly Reference[] : StoreVal extends Record<string, any> ? StoreVal | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<infer Item extends Record<string, any>> ? ReadonlyArray<AsStoreObject<Item> | Reference> : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
@@ -1607,11 +1616,11 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // Warnings were encountered during analysis:
 //
 // src/cache/core/types/DataProxy.ts:141:5 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:95:3 - (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:96:3 - (ae-forgotten-export) The symbol "CanReadFunction" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:97:3 - (ae-forgotten-export) The symbol "isReference" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:98:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:99:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:96:3 - (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:97:3 - (ae-forgotten-export) The symbol "CanReadFunction" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:98:3 - (ae-forgotten-export) The symbol "isReference" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:99:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:100:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:47:3 - (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:112:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts

@@ -123,10 +123,19 @@ export class InternalQueryReference<TData = unknown> {
     // suspended resource does not use this queryRef in the given time. This
     // helps prevent memory leaks when a component has unmounted before the
     // query has finished loading.
-    this.autoDisposeTimeoutId = setTimeout(
-      this.dispose,
-      options.autoDisposeTimeoutMs ?? 30_000
-    );
+    const startDisposeTimer = () => {
+      if (!this.references) {
+        this.autoDisposeTimeoutId = setTimeout(
+          this.dispose,
+          options.autoDisposeTimeoutMs ?? 30_000
+        );
+      }
+    };
+
+    // We wait until the request has settled to ensure we don't dispose of the
+    // query ref before the request finishes, otherwise we would leave the
+    // promise in a pending state rendering the suspense boundary indefinitely.
+    this.promise.then(startDisposeTimer, startDisposeTimer);
   }
 
   get watchQueryOptions() {

@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.9.0-alpha.3
+
+### Patch Changes
+
+- [#11297](https://github.com/apollographql/apollo-client/pull/11297) [`c8c76a522`](https://github.com/apollographql/apollo-client/commit/c8c76a522e593de0d06cff73fde2d9e88152bed6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an explicit return type for the `useReadQuery` hook called `UseReadQueryResult`. Previously the return type of this hook was inferred from the return value.
+
 ## 3.9.0-alpha.2
 
 ### Patch Changes

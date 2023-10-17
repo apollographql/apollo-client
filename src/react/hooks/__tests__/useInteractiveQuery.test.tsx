@@ -1607,7 +1607,7 @@ it("works with startTransition to change variables", async () => {
     }
   `;
 
-  const mocks: MockedResponse<Data, Variables>[] = [
+  const mocks = [
     {
       request: { query, variables: { id: "1" } },
       result: {

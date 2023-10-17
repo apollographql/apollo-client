@@ -127,6 +127,7 @@
     "@types/node-fetch": "2.6.5",
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
+    "@types/relay-runtime": "^14.1.14",
     "@types/use-sync-external-store": "0.0.4",
     "@typescript-eslint/eslint-plugin": "6.7.2",
     "@typescript-eslint/parser": "6.7.2",

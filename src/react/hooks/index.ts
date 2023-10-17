@@ -11,6 +11,7 @@ export type { UseSuspenseQueryResult } from "./useSuspenseQuery.js";
 export { useSuspenseQuery } from "./useSuspenseQuery.js";
 export type { UseBackgroundQueryResult } from "./useBackgroundQuery.js";
 export { useBackgroundQuery } from "./useBackgroundQuery.js";
+export type { UseReadQueryResult } from "./useReadQuery.js";
 export { useReadQuery } from "./useReadQuery.js";
 export { skipToken } from "./constants.js";
 export type { SkipToken } from "./constants.js";

@@ -149,6 +149,7 @@ export interface MergeTree {
 
 export interface ReadMergeModifyContext {
   store: NormalizedCache;
+  query?: DocumentNode;
   variables?: Record<string, any>;
   // A JSON.stringify-serialized version of context.variables.
   varString?: string;

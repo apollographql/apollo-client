@@ -5,6 +5,7 @@ import type {
   FragmentDefinitionNode,
   SelectionSetNode,
   FieldNode,
+  DocumentNode,
 } from "graphql";
 
 import type {
@@ -198,6 +199,8 @@ export interface FieldFunctionOptions<
   // know about other attributes of the field, such as its directives. This
   // option will be null when a string was passed to options.readField.
   field: FieldNode | null;
+
+  query?: DocumentNode;
 
   variables?: TVars;
 
@@ -842,7 +845,10 @@ export class Policies {
 
     const storeFieldName = this.getStoreFieldName(options);
     const fieldName = fieldNameFromStoreName(storeFieldName);
-    const existing = context.store.getFieldValue<V>(
+    const existing = (typeof objectOrReference == "object" &&
+      (objectOrReference as StoreObject)[fieldName] !== undefined) ?
+      (objectOrReference as StoreObject)[fieldName] as SafeReadonly<V> :
+    context.store.getFieldValue<V>(
       objectOrReference,
       storeFieldName
     );
@@ -969,10 +975,10 @@ function makeFieldFunctionOptions(
   const fieldName = fieldNameFromStoreName(storeFieldName);
   const variables = fieldSpec.variables || context.variables;
   const { toReference, canRead } = context.store;
-
   return {
     args: argsFromFieldSpecifier(fieldSpec),
     field: fieldSpec.field || null,
+    query: context.query,
     fieldName,
     storeFieldName,
     variables,

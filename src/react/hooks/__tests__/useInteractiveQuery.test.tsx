@@ -1634,9 +1634,7 @@ it("works with startTransition to change variables", async () => {
   function App() {
     return (
       <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
+        <Parent />
       </ApolloProvider>
     );
   }
@@ -1651,9 +1649,11 @@ it("works with startTransition to change variables", async () => {
     return (
       <div>
         <button onClick={() => loadQuery({ id: "1" })}>Load first todo</button>
-        {queryRef && (
-          <Todo queryRef={queryRef} onChange={(id) => loadQuery({ id })} />
-        )}
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && (
+            <Todo queryRef={queryRef} onChange={(id) => loadQuery({ id })} />
+          )}
+        </Suspense>
       </div>
     );
   }

@@ -1,5 +1,55 @@
 # @apollo/client
 
+## 3.9.0-alpha.2
+
+### Patch Changes
+
+- [#11254](https://github.com/apollographql/apollo-client/pull/11254) [`d08970d34`](https://github.com/apollographql/apollo-client/commit/d08970d348cf4ad6d80c6baf85b4a4cd4034a3bb) Thanks [@benjamn](https://github.com/benjamn)! - Decouple `canonicalStringify` from `ObjectCanon` for better time and memory performance.
+
+## 3.9.0-alpha.1
+
+### Minor Changes
+
+- [#11178](https://github.com/apollographql/apollo-client/pull/11178) [`4d64a6fa2`](https://github.com/apollographql/apollo-client/commit/4d64a6fa2ad5abe6f7f172c164f5e1fc2cb89829) Thanks [@sebakerckhof](https://github.com/sebakerckhof)! - Support re-using of mocks in the MockedProvider
+
+## 3.9.0-alpha.0
+
+### Minor Changes
+
+- [#11202](https://github.com/apollographql/apollo-client/pull/11202) [`7c2bc08b2`](https://github.com/apollographql/apollo-client/commit/7c2bc08b2ab46b9aa181d187a27aec2ad7129599) Thanks [@benjamn](https://github.com/benjamn)! - Prevent `QueryInfo#markResult` mutation of `result.data` and return cache data consistently whether complete or incomplete.
+
+- [#6701](https://github.com/apollographql/apollo-client/pull/6701) [`8d2b4e107`](https://github.com/apollographql/apollo-client/commit/8d2b4e107d7c21563894ced3a65d631183b58fd9) Thanks [@prowe](https://github.com/prowe)! - Ability to dynamically match mocks
+
+  Adds support for a new property `MockedResponse.variableMatcher`: a predicate function that accepts a `variables` param. If `true`, the `variables` will be passed into the `ResultFunction` to help dynamically build a response.
+
+## 3.8.6
+
+### Patch Changes
+
+- [#11291](https://github.com/apollographql/apollo-client/pull/11291) [`2be7eafe3`](https://github.com/apollographql/apollo-client/commit/2be7eafe3c115d56d993dbda64d320550712df1f) Thanks [@ArioA](https://github.com/ArioA)! - Fix a bug that allows to only call `loadErrorMessages` without also calling `loadDevErrorMessages`.
+
+- [#11274](https://github.com/apollographql/apollo-client/pull/11274) [`b29f000f3`](https://github.com/apollographql/apollo-client/commit/b29f000f36f281e256809b5454eaeca2ec4450bf) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Start the query ref auto dispose timeout after the initial promise has settled. This prevents requests that run longer than the timeout duration from keeping the component suspended indefinitely.
+
+- [#11289](https://github.com/apollographql/apollo-client/pull/11289) [`b5894dbf0`](https://github.com/apollographql/apollo-client/commit/b5894dbf0fd5ea5ef1ff20dd896a658ef78c69dc) Thanks [@phryneas](https://github.com/phryneas)! - `MockedProvider`: default `connectToDevTools` to `false` in created `ApolloClient` instance.
+
+  This will prevent the mocked `ApolloClient` instance from trying to connect to the DevTools, which would start a `setTimeout` that might keep running after a test has finished.
+
+- [#11206](https://github.com/apollographql/apollo-client/pull/11206) [`dd2ce7687`](https://github.com/apollographql/apollo-client/commit/dd2ce7687ae9afa399e950a523fc7330284c25fe) Thanks [@phryneas](https://github.com/phryneas)! - `cache.modify`: Less strict types & new dev runtime warnings.
+
+## 3.8.5
+
+### Patch Changes
+
+- [#11266](https://github.com/apollographql/apollo-client/pull/11266) [`5192cf6e1`](https://github.com/apollographql/apollo-client/commit/5192cf6e1e958080bcae09e5967fa6851bd3a78c) Thanks [@phryneas](https://github.com/phryneas)! - Fixes argument handling for invariant log messages.
+
+- [#11235](https://github.com/apollographql/apollo-client/pull/11235) [`6cddaaf65`](https://github.com/apollographql/apollo-client/commit/6cddaaf6543f5c0b1fb04ba47480fb393ba10de7) Thanks [@phryneas](https://github.com/phryneas)! - Fix nextFetchPolicy behaviour with transformed documents by keeping `options` reference stable when passing it through QueryManager.
+
+- [#11252](https://github.com/apollographql/apollo-client/pull/11252) [`327a2abbd`](https://github.com/apollographql/apollo-client/commit/327a2abbd5db87ca27f2ffd1d2f8dccd75868a58) Thanks [@phryneas](https://github.com/phryneas)! - Fixes a race condition in asyncMap that caused issues in React Native when errors were returned in the response payload along with a data property that was null.
+
+- [#11229](https://github.com/apollographql/apollo-client/pull/11229) [`c372bad4e`](https://github.com/apollographql/apollo-client/commit/c372bad4ebd01a4f2e772cd76e873143bf043fe6) Thanks [@phryneas](https://github.com/phryneas)! - Remove (already throwing) SuspenseCache export that should have been removed in 3.8.
+
+- [#11267](https://github.com/apollographql/apollo-client/pull/11267) [`bc055e068`](https://github.com/apollographql/apollo-client/commit/bc055e0683e87b9445e321f73857f4a91b20a9ce) Thanks [@phryneas](https://github.com/phryneas)! - Remove some dead code.
+
 ## 3.8.4
 
 ### Patch Changes

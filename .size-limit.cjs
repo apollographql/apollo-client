@@ -1,7 +1,7 @@
 const checks = [
   {
     path: "dist/apollo-client.min.cjs",
-    limit: "37914",
+    limit: "38010",
   },
   {
     path: "dist/main.cjs",
@@ -10,7 +10,7 @@ const checks = [
   {
     path: "dist/index.js",
     import: "{ ApolloClient, InMemoryCache, HttpLink }",
-    limit: "31947",
+    limit: "32070",
   },
   ...[
     "ApolloProvider",

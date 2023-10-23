@@ -311,6 +311,13 @@ export type ApolloReducerConfig = {
 };
 
 // @public (undocumented)
+type AsStoreObject<T extends {
+    __typename?: string;
+}> = {
+    [K in keyof T]: T[K];
+};
+
+// @public (undocumented)
 export type BackgroundQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
 
 // @public (undocumented)
@@ -2015,7 +2022,7 @@ class QueryInfo {
     // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): void;
+    markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): typeof result;
     // (undocumented)
     networkError?: Error | null;
     // (undocumented)
@@ -2452,8 +2459,10 @@ export interface StoreObject {
     __typename?: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<string, any>[] ? Readonly<StoreVal> | readonly Reference[] : StoreVal extends Record<string, any> ? StoreVal | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<infer Item extends Record<string, any>> ? ReadonlyArray<AsStoreObject<Item> | Reference> : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
@@ -2733,11 +2742,17 @@ export function useQuery<TData = any, TVariables extends OperationVariables = Op
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T;
 
 // @public (undocumented)
-export function useReadQuery<TData>(queryRef: QueryReference<TData>): {
+export function useReadQuery<TData>(queryRef: QueryReference<TData>): UseReadQueryResult<TData>;
+
+// @public (undocumented)
+export interface UseReadQueryResult<TData = unknown> {
+    // (undocumented)
     data: TData;
-    networkStatus: NetworkStatus;
+    // (undocumented)
     error: ApolloError | undefined;
-};
+    // (undocumented)
+    networkStatus: NetworkStatus;
+}
 
 // @public (undocumented)
 export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>): SubscriptionResult<TData, TVariables>;
@@ -2856,9 +2871,9 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:92:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:126:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:112:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts

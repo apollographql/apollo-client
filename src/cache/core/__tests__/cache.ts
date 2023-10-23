@@ -374,7 +374,7 @@ describe.skip("Cache type tests", () => {
           },
           children(field) {
             expectTypeOf(field).toEqualTypeOf<
-              ReadonlyArray<{ anotherObject: false }> | ReadonlyArray<Reference>
+              ReadonlyArray<{ anotherObject: false } | Reference>
             >();
             return field;
           },
@@ -440,7 +440,7 @@ describe.skip("Cache type tests", () => {
         id: "foo",
         fields(field) {
           expectTypeOf(field).toEqualTypeOf<
-            boolean | symbol | readonly OtherChildEntry[] | readonly Reference[]
+            boolean | symbol | ReadonlyArray<OtherChildEntry | Reference>
           >();
           return field;
         },
@@ -477,7 +477,7 @@ describe.skip("Cache type tests", () => {
         id: "foo",
         fields(field) {
           expectTypeOf(field).toEqualTypeOf<
-            boolean | symbol | readonly OtherChildEntry[] | readonly Reference[]
+            boolean | symbol | ReadonlyArray<OtherChildEntry | Reference>
           >();
           return field;
         },

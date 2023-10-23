@@ -1,0 +1,13 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@apollo/client": "3.8.3"
+  },
+  "changesets": [
+    "beige-geese-wink",
+    "shaggy-ears-scream",
+    "sour-sheep-walk",
+    "yellow-flies-repeat"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "commonjs",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declaration": true,
+    "sourceMap": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": false,
+    "types": ["react", "react-dom"],
+    "lib": ["es2018", "dom"]
+  }
+}

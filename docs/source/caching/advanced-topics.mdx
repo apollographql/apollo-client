@@ -237,7 +237,7 @@ Now whenever a query includes the `book` field, the `read` function above execut
 
 ## Pagination utilities
 
-Pagination is a best practice in GraphQL [for several reasons](../pagination/overview). Apollo Client enables fetching and caching paginated results using the [Core pagination API](../pagination/core-api). The API includes a few important utilities, including the [`fetchMore`](../pagination/core-api/#the-fetchmore-function) function and `@connection` directive.
+Pagination is a best practice in GraphQL [for several reasons](../pagination/overview). Apollo Client enables fetching and caching paginated results using the [Core pagination API](../pagination/core-api). The API includes a few important utilities, including the [`fetchMore`](../pagination/core-api/#the-fetchmore-function) function and the `@connection` directive.
 
 ### Incremental loading: `fetchMore`
 
@@ -267,7 +267,7 @@ const query = gql`
 `
 ```
 
-With the above query, even with multiple `fetchMore`s, the results of each feed update always cause the store's `feed` key to be updated with the latest accumulated values. The example also uses the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key. This creates multiple store values that accumulate queries from each type of feed.
+With the above query, even when multiple `fetchMore`s queries are performed, each feed update always results in an update to the store's `feed` key with the latest accumulated values. The example also uses the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key. This creates multiple store values that accumulate queries from each type of feed.
 
 With a stable store key, you can use [`writeQuery`](./cache-interaction/#writequery) to perform a store update that clears out the feed.
 

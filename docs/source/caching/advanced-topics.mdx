@@ -2,7 +2,7 @@
 title: Advanced topics on caching in Apollo Client
 ---
 
-This article describes special cases and considerations when using the Apollo Client cache.
+This article describes special cases and considerations when using the [Apollo Client cache](./overview).
 
 ## Bypassing the cache
 
@@ -97,7 +97,7 @@ function Foo (){
   const client = useApolloClient();
 
   useEffect(() => {
-    const unsubscribe = client.onResetStore(() => 
+    const unsubscribe = client.onResetStore(() =>
       new Promise(()=>setReset(reset + 1))
     );
 
@@ -237,19 +237,25 @@ Now whenever a query includes the `book` field, the `read` function above execut
 
 ## Pagination utilities
 
+Pagination is a best practice in GraphQL [for several reasons](../pagination/overview). Apollo Client enables fetching and caching paginated results using the [Core pagination API](../pagination/core-api). The API includes a few important utilities, including the [`fetchMore`](../pagination/core-api/#the-fetchmore-function) function and `@connection` directive.
+
 ### Incremental loading: `fetchMore`
 
-You can use the `fetchMore` function to update a query's cached result with data returned by a _followup_ query. Most often, `fetchMore` is used to handle infinite-scroll pagination and other situations where you're loading _more_ data when you already have _some_.
+You can use the `fetchMore` function to update a query's cached result with data returned by a _follow-up_ query. Most often, `fetchMore` is used to handle infinite-scroll pagination and other situations where you're loading _more_ data when you already have _some_.
 
 For details, see [The `fetchMore` function](../pagination/core-api/#the-fetchmore-function).
 
 ### The `@connection` directive
 
-Fundamentally, paginated queries are the same as any other query with the exception that calls to `fetchMore` update the same cache key. Because these queries are cached by both the initial query and their parameters, a problem arises when later retrieving or updating paginated queries in the cache. We don't care about pagination arguments such as limits, offsets, or cursors outside of the need to `fetchMore`, nor do we want to provide them simply for accessing cached data.
+The `@connection` directive lets you specify a custom cache key for paginated results. This is useful because of an issue that can arise with paginated queries.
 
-To solve this, you can use the `@connection` directive to specify a custom cache key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
+Fundamentally, paginated queries are the same as other queries except that calls to `fetchMore` update the same cache key. Because these queries are cached by both the initial query and their parameters (which differ for subsequent fetches), a problem arises when retrieving or updating paginated queries in the cache later. Namely, the initial pagination query and subsequent fetches are cached separately.
 
-To use the `@connection` directive, add it to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
+Pagination arguments such as limits, offsets, or cursors outside of `fetchMore` shouldn't be relevant for caching. Nor should you need to provide them to access cached data. The `@connection` directive solves this by letting you set a stable cache key for a field. The `@connection` directive also lets you set filters to specify which arguments should create separate stores in the cache.
+
+#### `@connection` directive usage
+
+To use the `@connection` directive, add it to field you want a custom store key for. The directive requires a `key` parameter to specify the custom store key. You can optionally include the `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
 
 ```js
 const query = gql`
@@ -261,9 +267,9 @@ const query = gql`
 `
 ```
 
-With the above query, even with multiple `fetchMore`s, the results of each feed update will always result in the `feed` key in the store being updated with the latest accumulated values. In this example, we also use the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key, which results in multiple store values that accumulate queries from each type of feed.
+With the above query, even with multiple `fetchMore`s, the results of each feed update always cause the store's `feed` key to be updated with the latest accumulated values. The example also uses the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key. This creates multiple store values that accumulate queries from each type of feed.
 
-Now that we have a stable store key, we can easily use `writeQuery` to perform a store update, in this case clearing out the feed.
+With a stable store key, you can use [`writeQuery`](./cache-interaction/#writequery) to perform a store update that clears out the feed.
 
 ```js
 client.writeQuery({
@@ -283,4 +289,4 @@ client.writeQuery({
 });
 ```
 
-Note that because we are only using the `type` argument in the store key, we don't have to provide `offset` or `limit`.
+> Note: Because this example uses the `type` argument in the store key, it doesn't need to provide `offset` or `limit` arguments.

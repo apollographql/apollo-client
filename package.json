@@ -42,7 +42,7 @@
     "prepdist": "node ./config/prepareDist.js",
     "prepdist:changesets": "ts-node-script config/prepareChangesetsRelease.ts",
     "postprocess-dist": "ts-node-script config/postprocessDist.ts",
-    "extract-api": "ts-node-script config/apiExtractor.ts",
+    "extract-api": "ts-node-script config/apiExtractor.ts --generate apiReport",
     "clean": "rimraf dist coverage lib temp",
     "check:format": "prettier --check .",
     "ci:precheck": "node config/precheck.js",
@@ -59,6 +59,7 @@
     "predeploy": "npm run build",
     "deploy": "cd dist && npm publish --tag next",
     "typedoc": "typedoc src/index.ts --json docs/public/docs.json",
+    "docmodel": "tsc; ts-node-script config/apiExtractor.ts --main-only --generate docModel",
     "changeset-publish": "npm run build && npm run prepdist:changesets && cd dist && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",
     "changeset-version": "changeset version && npm i"

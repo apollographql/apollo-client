@@ -37,14 +37,17 @@
   },
 
   "docModel": {
-    "enabled": false
+    "enabled": false,
+    "apiJsonFilePath": "<projectFolder>/docs/shared/<unscopedPackageName>.api.json",
+    "includeForgottenExports": true
   },
 
   "dtsRollup": {
     "enabled": false
   },
   "tsdocMetadata": {
-    "enabled": false
+    "enabled": false,
+    "tsdocMetadataFilePath": "<projectFolder>/docs/public/tsdoc-metadata.json"
   },
 
   /**
@@ -113,6 +116,11 @@
 
       "ae-missing-release-tag": {
         "logLevel": "none"
+      },
+
+      "ae-unresolved-link": {
+        "logLevel": "warning",
+        "addToApiReportFile": true
       }
     }
 

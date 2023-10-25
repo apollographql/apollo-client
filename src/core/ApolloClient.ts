@@ -43,7 +43,7 @@ export interface DefaultOptions {
 
 let hasSuggestedDevtools = false;
 
-export type ApolloClientOptions<TCacheShape> = {
+export interface ApolloClientOptions<TCacheShape> {
   /**
    * The URI of the GraphQL endpoint that Apollo Client will communicate with.
    *
@@ -115,7 +115,7 @@ export type ApolloClientOptions<TCacheShape> = {
    */
   version?: string;
   documentTransform?: DocumentTransform;
-};
+}
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
 // previously declared and exported from this module, and then reexported from

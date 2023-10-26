@@ -255,7 +255,7 @@ Pagination arguments such as limits, offsets, or cursors outside of `fetchMore` 
 
 #### `@connection` directive usage
 
-To use the `@connection` directive, add it to field you want a custom store key for. The directive requires a `key` parameter to specify the custom store key. You can optionally include the `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
+To use the `@connection` directive, add it to field you want a custom cache key for. The directive requires a `key` parameter to specify the custom cache key. You can optionally include the `filter` parameter, which takes an array of query argument names to include in the generated custom cache key.
 
 ```js
 const query = gql`
@@ -267,9 +267,9 @@ const query = gql`
 `
 ```
 
-With the above query, even when multiple `fetchMore`s queries are performed, each feed update always results in an update to the store's `feed` key with the latest accumulated values. The example also uses the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key. This creates multiple store values that accumulate queries from each type of feed.
+With the above query, even when multiple `fetchMore`s queries are performed, each feed update always results in an update to the cache's `feed` key with the latest accumulated values. The example also uses the `@connection` directive's optional `filter` argument to include the `type` query argument in the cache key. This creates multiple cache values that accumulate queries from each type of feed.
 
-With a stable store key, you can use [`writeQuery`](./cache-interaction/#writequery) to perform a store update that clears out the feed.
+With a stable cache key, you can use [`writeQuery`](./cache-interaction/#writequery) to perform a cache update that clears out the feed.
 
 ```js
 client.writeQuery({
@@ -289,4 +289,4 @@ client.writeQuery({
 });
 ```
 
-> Note: Because this example uses the `type` argument in the store key, it doesn't need to provide `offset` or `limit` arguments.
+> Note: Because this example uses the `type` argument in the cache key, it doesn't need to provide `offset` or `limit` arguments.

@@ -7,6 +7,7 @@
   "mainEntryPointFilePath": "<projectFolder>/dist/index.d.ts",
   "bundledPackages": [],
   "newlineKind": "lf",
+  "enumMemberOrder": "preserve",
 
   /**
    * Set to true when invoking API Extractor's test harness. When `testMode` is true, the `toolVersion` field in the

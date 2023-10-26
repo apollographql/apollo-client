@@ -44,9 +44,11 @@ export interface DefaultOptions {
 let hasSuggestedDevtools = false;
 
 export interface ApolloClientOptions<TCacheShape> {
+  /** TODO: remove test function! */
+  foo?(bar: string, baz?: number): void;
   /**
    * The URI of the GraphQL endpoint that Apollo Client will communicate with.
-   *
+   * 
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
    */
   uri?: string | UriFunction;

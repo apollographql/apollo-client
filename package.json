@@ -181,5 +181,15 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "files": [
+    "LICENSE",
+    "**/*.md",
+    "**/*.cjs",
+    "**/*.cjs.map",
+    "**/*.js",
+    "**/*.js.map",
+    "**/*.d.ts",
+    "**/*.json"
+  ]
 }

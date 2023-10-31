@@ -3,7 +3,6 @@ import {
   Extractor,
   ExtractorConfig,
   ExtractorLogLevel,
-  ExtractorResult,
   IConfigFile,
 } from "@microsoft/api-extractor";
 import { parseArgs } from "node:util";
@@ -53,18 +52,17 @@ map((entryPoint: { dirs: string[] }) => {
   const configObject: IConfigFile = {
     ...(JSON.parse(JSON.stringify(baseConfig)) as IConfigFile),
     mainEntryPointFilePath,
-    apiReport: {
-      enabled: true,
-      ...baseConfig.apiReport,
-      reportFileName: `api-report${
-        path ? "-" + path.replace("/", "_") : ""
-      }.md`,
-    },
   };
 
-  for (const enable of parsed.values.generate as ("apiReport" | "docModel")[]) {
-    configObject[enable]!.enabled = true;
-  }
+  configObject.apiReport!.reportFileName = `api-report${
+    path ? "-" + path.replace("/", "_") : ""
+  }.md`;
+
+  configObject.apiReport!.enabled =
+    parsed.values.generate?.includes("apiReport") || false;
+
+  configObject.docModel!.enabled =
+    parsed.values.generate?.includes("docModel") || false;
 
   if (entryPoint.dirs.length !== 0) {
     configObject.docModel = { enabled: false };
@@ -74,13 +72,13 @@ map((entryPoint: { dirs: string[] }) => {
     ]!.logLevel = ExtractorLogLevel.None;
   }
 
-  const extractorConfig: ExtractorConfig = ExtractorConfig.prepare({
+  const extractorConfig = ExtractorConfig.prepare({
     configObject,
     packageJsonFullPath,
     configObjectFullPath,
   });
 
-  const extractorResult: ExtractorResult = Extractor.invoke(extractorConfig, {
+  const extractorResult = Extractor.invoke(extractorConfig, {
     localBuild: process.env.CI === undefined,
     showVerboseMessages: true,
   });

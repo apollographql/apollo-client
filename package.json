@@ -32,7 +32,7 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": "tsc",
-    "postbuild": "npm run update-version && npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run postprocess-dist && npm run verify-version",
+    "postbuild": "npm run update-version && npm run inline-inherit-doc && npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run postprocess-dist && npm run verify-version",
     "postinstall": "patch-package",
     "update-version": "node config/version.js update",
     "verify-version": "node config/version.js verify",
@@ -48,6 +48,7 @@
     "ci:precheck": "node config/precheck.js",
     "format": "prettier --write .",
     "lint": "eslint 'src/**/*.{[jt]s,[jt]sx}'",
+    "inline-inherit-doc": "ts-node-script config/inlineInheritDoc.ts",
     "test": "jest --config ./config/jest.config.js",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage && npm run test:memory",
@@ -59,7 +60,7 @@
     "predeploy": "npm run build",
     "deploy": "cd dist && npm publish --tag next",
     "typedoc": "typedoc src/index.ts --json docs/public/docs.json",
-    "docmodel": "tsc; ts-node-script config/apiExtractor.ts --main-only --generate docModel",
+    "docmodel": "tsc && npm run inline-inherit-doc && ts-node-script config/apiExtractor.ts --main-only --generate docModel",
     "changeset-publish": "npm run build && npm run prepdist:changesets && cd dist && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",
     "changeset-version": "changeset version && npm i"
@@ -172,6 +173,7 @@
     "ts-api-utils": "1.0.3",
     "ts-jest": "29.1.1",
     "ts-jest-resolver": "2.0.1",
+    "ts-morph": "20.0.0",
     "ts-node": "10.9.1",
     "typedoc": "0.25.0",
     "typescript": "5.2.2",

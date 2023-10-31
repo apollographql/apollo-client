@@ -44,11 +44,9 @@ export interface DefaultOptions {
 let hasSuggestedDevtools = false;
 
 export interface ApolloClientOptions<TCacheShape> {
-  /** TODO: remove test function! */
-  foo?(bar: string, baz?: number): void;
   /**
    * The URI of the GraphQL endpoint that Apollo Client will communicate with.
-   * 
+   *
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
    */
   uri?: string | UriFunction;
@@ -149,6 +147,29 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * Constructs an instance of {@link ApolloClient}.
+   *
+   * @example
+   * ```js
+   * import { ApolloClient, InMemoryCache } from '@apollo/client';
+   *
+   * const cache = new InMemoryCache();
+   *
+   * const client = new ApolloClient({
+   *   // Provide required constructor fields
+   *   cache: cache,
+   *   uri: 'http://localhost:4000/',
+   *
+   *   // Provide some optional constructor fields
+   *   name: 'react-web-client',
+   *   version: '1.3',
+   *   queryDeduplication: false,
+   *   defaultOptions: {
+   *     watchQuery: {
+   *       fetchPolicy: 'cache-and-network',
+   *     },
+   *   },
+   * });
+   * ```
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     if (!options.cache) {

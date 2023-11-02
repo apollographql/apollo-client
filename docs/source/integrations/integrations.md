@@ -32,7 +32,7 @@ An [Ember](http://emberjs.com/) integration is maintained by Josemar Luedke ([@j
 
 ## Web Components
 
-Web components are the browser-built-in component APIs. They are defined in a framework-agnostic way, using either vanilla JS or libraries like [`lit-element`](https://lit-element.polymer-project.org) or [`hybrids`](https://hybrids.js.org).
+Web components are the browser-built-in component APIs. They are defined in a framework-agnostic way, using either vanilla JS or libraries like [Lit](https://lit.dev) or [`hybrids`](https://hybrids.js.org).
 
-- [apollo-elements](https://github.com/apollo-elements/apollo-elements) includes support for `lit-element`, `gluon`, `hybrids`, and `polymer`, as well as providing class mixin functions so you can integrate Apollo into vanilla elements or any other web component library. Apollo Elements is maintained by Benny Powers ([@bennypowers](https://github.com/bennypowers)).
+- [apollo-elements](https://github.com/apollo-elements/apollo-elements) includes support for Lit, `gluon`, `hybrids`, and Polymer, as well as providing class mixin functions so you can integrate Apollo into vanilla elements or any other web component library. Apollo Elements is maintained by Benny Powers ([@bennypowers](https://github.com/bennypowers)).
 - [polymer-apollo](https://github.com/aruntk/polymer-apollo) is a separate [Polymer](https://www.polymer-project.org/) integration maintained by Arun Kumar T K ([@aruntk](https://github.com/aruntk)).

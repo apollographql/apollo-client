@@ -32,6 +32,7 @@ import * as testing from "../testing";
 import * as testingCore from "../testing/core";
 import * as utilities from "../utilities";
 import * as utilitiesGlobals from "../utilities/globals";
+import * as urqlUtilities from "../utilities/subscriptions/urql";
 
 const entryPoints = require("../../config/entryPoints.js");
 
@@ -76,11 +77,17 @@ describe("exports of public entry points", () => {
   check("@apollo/client/testing/core", testingCore);
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
+  check("@apollo/client/utilities/subscriptions/urql", urqlUtilities);
 
   it("completeness", () => {
     const { join } = require("path").posix;
     entryPoints.forEach((info: Record<string, any>) => {
       const id = join("@apollo/client", ...info.dirs);
+      // We don't want to add a devDependency for relay-runtime,
+      // and our API extractor job is already validating its public exports,
+      // so we'll skip the utilities/subscriptions/relay entrypoing here
+      // since it errors on the `relay-runtime` import.
+      if (id === "@apollo/client/utilities/subscriptions/relay") return;
       expect(testedIds).toContain(id);
     });
   });

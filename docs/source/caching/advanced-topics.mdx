@@ -241,21 +241,27 @@ Pagination is a best practice in GraphQL [for several reasons](../pagination/ove
 
 ### Incremental loading: `fetchMore`
 
-You can use the `fetchMore` function to update a query's cached result with data returned by a _follow-up_ query. Most often, `fetchMore` is used to handle infinite-scroll pagination and other situations where you're loading _more_ data when you already have _some_.
+You can use the `fetchMore` function to update a query's cached result with data returned by a _follow-up_ query. Most often, `fetchMore` is used to handle infinite-scroll pagination and other situations where you're loading more data when you already have some.
 
 For details, see [The `fetchMore` function](../pagination/core-api/#the-fetchmore-function).
 
 ### The `@connection` directive
 
-The `@connection` directive lets you specify a custom cache key for paginated results. This is useful because of an issue that can arise with paginated queries.
+The `@connection` directive solves the problem of multiple distinct copies of the same field in the cache. This can happen with paginated queries because the `fetchMore` function sends follow-up queries to fetch additional pages of results using arguments like [`offset`](../pagination/offset-based/) and [`limit`](../pagination/offset-based/). These arguments inadvertently fragment data from different pagination requests across the cache.
 
-Fundamentally, paginated queries are the same as other queries except that calls to `fetchMore` update the same cache key. Because these queries are cached by both the initial query and their parameters (which differ for subsequent fetches), a problem arises when retrieving or updating paginated queries in the cache later. Namely, the initial pagination query and subsequent fetches are cached separately.
+The `@connection` directive lets you unify paginated results by specifying a custom, stable cache key for a field. It also lets you set filters to specify which arguments should create separate stores in the cache.
 
-Pagination arguments such as limits, offsets, or cursors outside of `fetchMore` shouldn't be relevant for caching. Nor should you need to provide them to access cached data. The `@connection` directive solves this by letting you set a stable cache key for a field. The `@connection` directive also lets you set filters to specify which arguments should create separate stores in the cache.
+<Tip>
+
+Starting in Apollo Client v3, setting the [`keyArgs` field policy](../pagination/key-args/#setting-keyargs) is the most straightforward way to resolve fragmented pagination results in the cache. For example, setting [`keyArgs` to `false`](../pagination/key-args/#supported-values-for-keyargs) indicates that no arguments should be included in cache keys, causing all pagination results to be cached together.
+
+The `@connection` directive is useful when you still want to include some distinguishing metadata on a query-by-query, field-by-field basis. This enables you to keep multiple instances of the same field's data separate in the cache if you require it.
+
+</Tip>
 
 #### `@connection` directive usage
 
-To use the `@connection` directive, add it to field you want a custom cache key for. The directive requires a `key` parameter to specify the custom cache key. You can optionally include the `filter` parameter, which takes an array of query argument names to include in the generated custom cache key.
+To use the `@connection` directive, add it to the field you want a custom cache key for. The directive requires a `key` parameter to specify the custom cache key. You can optionally include the `filter` parameter, which takes an array of query argument names to include in the generated custom cache key.
 
 ```js
 const query = gql`
@@ -289,4 +295,8 @@ client.writeQuery({
 });
 ```
 
-> Note: Because this example uses the `type` argument in the cache key, it doesn't need to provide `offset` or `limit` arguments.
+<Note>
+
+Because this example uses the `type` argument in the cache key, it doesn't need to provide `offset` or `limit` arguments.
+
+</Note>

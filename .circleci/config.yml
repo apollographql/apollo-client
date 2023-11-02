@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  secops: apollo/circleci-secops-orb@2.0.0
+  secops: apollo/circleci-secops-orb@2.0.1
 
 jobs:
   # Filesize:
@@ -15,7 +15,7 @@ jobs:
 
   Lint:
     docker:
-      - image: cimg/node:20.8.0
+      - image: cimg/node:21.1.0
     steps:
       - checkout
       - run: npm version
@@ -24,7 +24,7 @@ jobs:
 
   Formatting:
     docker:
-      - image: cimg/node:20.8.0
+      - image: cimg/node:21.1.0
     steps:
       - checkout
       - run: npm ci
@@ -32,7 +32,7 @@ jobs:
 
   Tests:
     docker:
-      - image: cimg/node:20.8.0
+      - image: cimg/node:21.1.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -50,7 +50,7 @@ jobs:
 
   BuildTarball:
     docker:
-      - image: cimg/node:20.8.0
+      - image: cimg/node:21.1.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -67,7 +67,7 @@ jobs:
       framework:
         type: string
     docker:
-      - image: cimg/node:20.8.0
+      - image: cimg/node:21.1.0
     steps:
       - checkout
       - attach_workspace:

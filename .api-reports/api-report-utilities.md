@@ -2298,7 +2298,7 @@ export interface StoreObject {
 }
 
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<infer Item extends Record<string, any>> ? ReadonlyArray<AsStoreObject<Item> | Reference> : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<string, any>> ? StoreVal extends Array<infer Item> ? Item extends Record<string, any> ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;

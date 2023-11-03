@@ -165,25 +165,33 @@ class ApolloClient<TCacheShape> implements DataProxy {
 }
 
 // @public (undocumented)
-type ApolloClientOptions<TCacheShape> = {
-    uri?: string | UriFunction;
-    credentials?: string;
-    headers?: Record<string, string>;
-    link?: ApolloLink;
+interface ApolloClientOptions<TCacheShape> {
+    assumeImmutableResults?: boolean;
     cache: ApolloCache<TCacheShape>;
+    connectToDevTools?: boolean;
+    // (undocumented)
+    credentials?: string;
+    defaultOptions?: DefaultOptions;
+    // (undocumented)
+    documentTransform?: DocumentTransform;
+    // (undocumented)
+    fragmentMatcher?: FragmentMatcher;
+    // (undocumented)
+    headers?: Record<string, string>;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloLink"
+    link?: ApolloLink;
+    name?: string;
+    queryDeduplication?: boolean;
+    // (undocumented)
+    resolvers?: Resolvers | Resolvers[];
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    connectToDevTools?: boolean;
-    queryDeduplication?: boolean;
-    defaultOptions?: DefaultOptions;
-    assumeImmutableResults?: boolean;
-    resolvers?: Resolvers | Resolvers[];
+    // (undocumented)
     typeDefs?: string | string[] | DocumentNode | DocumentNode[];
-    fragmentMatcher?: FragmentMatcher;
-    name?: string;
+    // Warning: (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
+    uri?: string | UriFunction;
     version?: string;
-    documentTransform?: DocumentTransform;
-};
+}
 
 // @public (undocumented)
 class ApolloError extends Error {
@@ -1548,16 +1556,26 @@ interface UriFunction {
 type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
 // @public
-interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends Omit<QueryOptions<TVariables, TData>, "fetchPolicy"> {
+interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> {
+    canonizeResults?: boolean;
+    context?: DefaultContext;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ErrorPolicy"
+    errorPolicy?: ErrorPolicy;
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "FetchPolicy"
     fetchPolicy?: WatchQueryFetchPolicy;
     initialFetchPolicy?: WatchQueryFetchPolicy;
     // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "FetchPolicy"
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+    notifyOnNetworkStatusChange?: boolean;
+    partialRefetch?: boolean;
+    pollInterval?: number;
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     // Warning: (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
     refetchWritePolicy?: RefetchWritePolicy;
+    returnPartialData?: boolean;
+    variables?: TVariables;
 }
 
 // @public (undocumented)
@@ -1585,8 +1603,6 @@ export function withSubscription<TProps extends TGraphQLVariables | {} = {}, TDa
 // src/cache/core/types/common.ts:97:3 - (ae-forgotten-export) The symbol "isReference" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:98:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:99:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:51:3 - (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:57:3 - (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloLink"
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:112:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
@@ -1597,7 +1613,7 @@ export function withSubscription<TProps extends TGraphQLVariables | {} = {}, TDa
 // src/core/types.ts:160:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:205:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:253:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/utilities/graphql/DocumentTransform.ts:122:7 - (ae-forgotten-export) The symbol "DocumentTransformCacheKey" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

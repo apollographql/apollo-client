@@ -135,25 +135,31 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 }
 
 // @public (undocumented)
-export type ApolloClientOptions<TCacheShape> = {
-    uri?: string | UriFunction;
+export interface ApolloClientOptions<TCacheShape> {
+    assumeImmutableResults?: boolean;
+    cache: ApolloCache<TCacheShape>;
+    connectToDevTools?: boolean;
+    // (undocumented)
     credentials?: string;
+    defaultOptions?: DefaultOptions;
+    // (undocumented)
+    documentTransform?: DocumentTransform;
+    // (undocumented)
+    fragmentMatcher?: FragmentMatcher;
+    // (undocumented)
     headers?: Record<string, string>;
     link?: ApolloLink;
-    cache: ApolloCache<TCacheShape>;
+    name?: string;
+    queryDeduplication?: boolean;
+    // (undocumented)
+    resolvers?: Resolvers | Resolvers[];
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    connectToDevTools?: boolean;
-    queryDeduplication?: boolean;
-    defaultOptions?: DefaultOptions;
-    assumeImmutableResults?: boolean;
-    resolvers?: Resolvers | Resolvers[];
+    // (undocumented)
     typeDefs?: string | string[] | DocumentNode | DocumentNode[];
-    fragmentMatcher?: FragmentMatcher;
-    name?: string;
+    uri?: string | UriFunction;
     version?: string;
-    documentTransform?: DocumentTransform;
-};
+}
 
 // @public (undocumented)
 export class ApolloError extends Error {
@@ -2035,13 +2041,22 @@ export interface UriFunction {
 export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
 // @public
-export interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends Omit<QueryOptions<TVariables, TData>, "fetchPolicy"> {
+export interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> {
+    canonizeResults?: boolean;
+    context?: DefaultContext;
+    errorPolicy?: ErrorPolicy;
     fetchPolicy?: WatchQueryFetchPolicy;
     initialFetchPolicy?: WatchQueryFetchPolicy;
     // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+    notifyOnNetworkStatusChange?: boolean;
+    partialRefetch?: boolean;
+    pollInterval?: number;
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     // Warning: (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
     refetchWritePolicy?: RefetchWritePolicy;
+    returnPartialData?: boolean;
+    variables?: TVariables;
 }
 
 // @public (undocumented)
@@ -2081,13 +2096,13 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:126:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:132:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:112:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:116:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:378:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:253:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

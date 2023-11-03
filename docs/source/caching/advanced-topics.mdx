@@ -265,13 +265,37 @@ The `@connection` directive lets you unify paginated results by specifying a cus
 
 <Tip>
 
-Starting in Apollo Client v3, setting the [`keyArgs` field policy](../pagination/key-args/#setting-keyargs) is the most straightforward way to resolve fragmented pagination results in the cache. For example, setting [`keyArgs` to `false`](../pagination/key-args/#supported-values-for-keyargs) indicates that no arguments should be included in cache keys, causing all pagination results to be cached together.
+Starting in Apollo Client v3, setting the [`keyArgs` field policy](../pagination/key-args/#setting-keyargs) is the most straightforward way to resolve fragmented pagination results in the cache. For example, setting [`keyArgs` to `false`](../pagination/key-args/#supported-values-for-keyargs) indicates that no arguments should be included in cache keys, causing all pagination results to be cached together. Additionally, you only have to set your `keyArgs` configuration once, rather than using `@connection` in multiple queries.
 
-The `@connection` directive is useful when you still want to include some distinguishing metadata on a query-by-query, field-by-field basis. This enables you to keep multiple instances of the same field's data separate in the cache if you require it.
+For example, you can use the following [`keyArgs`](../pagination/key-args/#setting-keyargs) configuration for the same effect as the [`@connection` directive usage](#connection-directive-usage) described below.
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["type"]
+        }
+      }
+    }
+  }
+})
+```
+
+With this centralized `keyArg`s configuration, you don't need to include the `@connection` directive in your queries because the `type` argument is adequate for keeping feeds of different types separate in the cache.
+
+The `@connection` directive is useful when you want to store distinct data in the cache on a _query-by-query_, _field-by-field_ basis. See the [advanced usage instructions](#advanced-connection-directive-usage) below for more details.
 
 </Tip>
 
 #### `@connection` directive usage
+
+<Tip>
+
+For the standard `@connection` directive usage described in this section, it's best to configure a [`keyArgs` field policy](../pagination/key-args/#setting-keyargs) as described [above](#the-connection-directive). For an example of storing distinct data on a _query-by-query_ basis, see the [advanced usage instructions](#advanced-connection-directive-usage).
+
+</Tip>
 
 To use the `@connection` directive, add it to the field you want a custom cache key for. The directive requires a `key` parameter to specify the custom cache key. You can optionally include the `filter` parameter, which takes an array of query argument names to include in the generated custom cache key.
 
@@ -312,3 +336,29 @@ client.writeQuery({
 Because this example uses the `type` argument in the cache key, it doesn't need to provide `offset` or `limit` arguments.
 
 </Note>
+
+#### Advanced `@connection` directive usage
+
+The `@connection` directive is useful when using the same field in multiple queries, with no distinguishing arguments (for example, `type`)  that `keyArgs` can use, and you want to keep that field's data separate in the cache.
+
+In the example below, the `@connection` key ensures that `feed` data from `ArticlesFeed` query is stored in the `article-feed` cache key and data from `ProductsFeed` in the `product-feed` cache key.
+
+```js
+const ArticlesFeed = gql`
+  query ArticlesFeed($offset: Int, $limit: Int) {
+    feed(offset: $offset, limit: $limit) @connection(key: "article-feed") {
+      ...FeedEntry
+    }
+  }
+`
+```
+
+```js
+const ProductsFeed = gql`
+  query ProductsFeed($offset: Int, $limit: Int) {
+    feed(offset: $offset, limit: $limit) @connection(key: "product-feed") {
+      ...FeedEntry
+    }
+  }
+`
+```

@@ -20,7 +20,7 @@ export interface Options {
    * An expected set of errors.
    */
   errorCallbacks?: ((error: Error) => any)[];
-};
+}
 
 export type ResultCallback = (result: ApolloQueryResult<any>) => any;
 

@@ -56,7 +56,6 @@ export interface ApolloClientOptions<TCacheShape> {
    * You can provide an {@link ApolloLink} instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
    *
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
-   * The {@link ApolloLink} over which GraphQL documents will be resolved into a response.
    */
   link?: ApolloLink;
   /**

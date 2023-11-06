@@ -602,6 +602,8 @@ export class DocumentTransform {
     // (undocumented)
     static identity(): DocumentTransform;
     // (undocumented)
+    reset(): void;
+    // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;

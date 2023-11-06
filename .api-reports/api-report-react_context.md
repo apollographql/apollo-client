@@ -621,6 +621,8 @@ class DocumentTransform {
     // (undocumented)
     static identity(): DocumentTransform;
     // (undocumented)
+    reset(): void;
+    // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
@@ -1652,7 +1654,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:205:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/utilities/graphql/DocumentTransform.ts:122:7 - (ae-forgotten-export) The symbol "DocumentTransformCacheKey" needs to be exported by the entry point index.d.ts
+// src/utilities/graphql/DocumentTransform.ts:127:7 - (ae-forgotten-export) The symbol "DocumentTransformCacheKey" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

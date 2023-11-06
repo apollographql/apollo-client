@@ -20,7 +20,6 @@ import { Observable } from 'zen-observable-ts';
 import type { Subscription as ObservableSubscription } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 import type { OperationDefinitionNode } from 'graphql';
-import { print as print_3 } from 'graphql';
 import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
 import type { Subscriber } from 'zen-observable-ts';
@@ -1882,7 +1881,9 @@ type PossibleTypesMap = {
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
 // @public (undocumented)
-const print_2: typeof print_3;
+const print_2: ((ast: ASTNode) => string) & {
+    reset(): void;
+};
 export { print_2 as print }
 
 // Warning: (ae-forgotten-export) The symbol "PendingPromise" needs to be exported by the entry point index.d.ts

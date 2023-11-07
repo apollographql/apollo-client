@@ -1,14 +1,25 @@
+import type { ASTNode } from "graphql";
 import { print as origPrint } from "graphql";
 import { canUseWeakMap } from "../common/canUse.js";
 
-const printCache = canUseWeakMap ? new WeakMap() : undefined;
-export const print: typeof origPrint = (ast) => {
-  let result;
-  result = printCache?.get(ast);
+let printCache: undefined | WeakMap<ASTNode, string>;
+// further TODO: replace with `optimism` with a `WeakCache` once those are available
+export const print = Object.assign(
+  (ast: ASTNode) => {
+    let result;
+    result = printCache?.get(ast);
 
-  if (!result) {
-    result = origPrint(ast);
-    printCache?.set(ast, result);
+    if (!result) {
+      result = origPrint(ast);
+      printCache?.set(ast, result);
+    }
+    return result;
+  },
+  {
+    reset() {
+      printCache = canUseWeakMap ? new WeakMap() : undefined;
+    },
   }
-  return result;
-};
+);
+
+print.reset();

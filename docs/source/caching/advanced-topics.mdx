@@ -259,15 +259,23 @@ For details, see [The `fetchMore` function](../pagination/core-api/#the-fetchmor
 
 ### The `@connection` directive
 
-The `@connection` directive solves the problem of multiple distinct copies of the same field in the cache. This can happen with paginated queries because the `fetchMore` function sends follow-up queries to fetch additional pages of results using arguments like [`offset`](../pagination/offset-based/) and [`limit`](../pagination/offset-based/). These arguments inadvertently fragment data from different pagination requests across the cache.
+The `@connection` directive solves the problem of multiple copies of the same field in the cache. This can happen with paginated queries because the `fetchMore` function sends follow-up queries to fetch additional pages of results using arguments like [`offset`](../pagination/offset-based/) and [`limit`](../pagination/offset-based/). These arguments inadvertently fragment data from different pagination requests across the cache.
 
-The `@connection` directive lets you unify paginated results by specifying a custom, stable cache key for a field. It also lets you set filters to specify which arguments should create separate stores in the cache.
+The `@connection` directive lets you unify paginated results by specifying a custom, stable cache key for a field. It also lets you _intentionally_ separate paginated results in the cache by fields that you specify.
 
 <Tip>
 
-Starting in Apollo Client v3, setting the [`keyArgs` field policy](../pagination/key-args/#setting-keyargs) is the most straightforward way to resolve fragmented pagination results in the cache. For example, setting [`keyArgs` to `false`](../pagination/key-args/#supported-values-for-keyargs) indicates that no arguments should be included in cache keys, causing all pagination results to be cached together. Additionally, you only have to set your `keyArgs` configuration once, rather than using `@connection` in multiple queries.
+Starting in Apollo Client v3, setting the [`keyArgs` field policy](../pagination/key-args/#setting-keyargs) is the most straightforward way to resolve fragmented pagination results in the cache. For example, setting [`keyArgs` to `false`](../pagination/key-args/#supported-values-for-keyargs) indicates that no arguments should be included in cache keys, causing all pagination results to be cached together. Additionally, you only have to set your `keyArgs` configuration once, rather than using `@connection` in multiple queries. Refer to the [usage instructions](#connection-directive-usage) below to compare `@connection` and `keyArgs` usage.
 
-For example, you can use the following [`keyArgs`](../pagination/key-args/#setting-keyargs) configuration for the same effect as the [`@connection` directive usage](#connection-directive-usage) described below.
+The `@connection` directive is useful when you want to store distinct data in the cache on a query-by-query, field-by-field basis. See the [advanced usage instructions](#advanced-connection-directive-usage) for more details.
+
+</Tip>
+
+#### `@connection` directive usage
+
+<Tip>
+
+For the standard `@connection` directive usage described in this section, it's best to configure a [`keyArgs` field policy](../pagination/key-args/#setting-keyargs). For example, you can use the following [`keyArgs`](../pagination/key-args/#setting-keyargs) configuration for the same effect as the `@connection` example below.
 
 ```js
 const cache = new InMemoryCache({
@@ -283,17 +291,7 @@ const cache = new InMemoryCache({
 })
 ```
 
-With this centralized `keyArg`s configuration, you don't need to include the `@connection` directive in your queries because the `type` argument is adequate for keeping feeds of different types separate in the cache.
-
-The `@connection` directive is useful when you want to store distinct data in the cache on a _query-by-query_, _field-by-field_ basis. See the [advanced usage instructions](#advanced-connection-directive-usage) below for more details.
-
-</Tip>
-
-#### `@connection` directive usage
-
-<Tip>
-
-For the standard `@connection` directive usage described in this section, it's best to configure a [`keyArgs` field policy](../pagination/key-args/#setting-keyargs) as described [above](#the-connection-directive). For an example of storing distinct data on a _query-by-query_ basis, see the [advanced usage instructions](#advanced-connection-directive-usage).
+With this centralized `keyArg`s configuration, you don't need to include the `@connection` directive in your queries because the `type` argument is adequate for keeping feeds of different types separate in the cache. For an example of storing distinct data on a query-by-query basis, see the [advanced usage instructions](#advanced-connection-directive-usage).
 
 </Tip>
 
@@ -341,24 +339,14 @@ Because this example uses the `type` argument in the cache key, it doesn't need 
 
 The `@connection` directive is useful when using the same field in multiple queries, with no distinguishing arguments (for example, `type`)  that `keyArgs` can use, and you want to keep that field's data separate in the cache.
 
-In the example below, the `@connection` key ensures that `feed` data from `ArticlesFeed` query is stored in the `article-feed` cache key and data from `ProductsFeed` in the `product-feed` cache key.
+For example, Apollo's [Spotify showcase](https://github.com/apollographql/spotify-showcase) uses `@connection` to independently cache lists of playlists. One list is in the left sidebar, where you navigate between playlists. The other appears when you right-click a song to add it to a playlist.
 
-```js
-const ArticlesFeed = gql`
-  query ArticlesFeed($offset: Int, $limit: Int) {
-    feed(offset: $offset, limit: $limit) @connection(key: "article-feed") {
-      ...FeedEntry
-    }
-  }
-`
-```
 
-```js
-const ProductsFeed = gql`
-  query ProductsFeed($offset: Int, $limit: Int) {
-    feed(offset: $offset, limit: $limit) @connection(key: "product-feed") {
-      ...FeedEntry
-    }
-  }
-`
-```
+<img src="../img/spotify-playlists.jpg" class="screenshot" alt="Separately cached playlists in Apollo's Spotify Showcase"></img>
+
+Without caching the playlists separately, loading the next page of data from one list affects the other, negatively impacting the UX.
+
+For code examples, see:
+- [The type policy](https://github.com/apollographql/spotify-showcase/blob/185f7b8a155209e9a099490dbc5d1e3bfba4c32f/client/src/apollo/client.ts#L105-L108)
+- [Playlist sidebar query](https://github.com/apollographql/spotify-showcase/blob/185f7b8a155209e9a099490dbc5d1e3bfba4c32f/client/src/components/LoggedInLayout.tsx#L75)
+- [Add to playlist menu](https://github.com/apollographql/spotify-showcase/blob/185f7b8a155209e9a099490dbc5d1e3bfba4c32f/client/src/components/ContextMenuAction/AddToPlaylist.tsx#L17)

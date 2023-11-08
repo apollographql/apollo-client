@@ -755,6 +755,156 @@ it("loads a query with variables and suspends by passing variables to the loadQu
   await expect(ProfiledApp).not.toRerender();
 });
 
+it("can change variables on a query and resuspend by passing new variables to the loadQuery function", async () => {
+  const user = userEvent.setup();
+  const { query, mocks } = useVariablesQueryCase();
+
+  function SuspenseFallback() {
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      suspenseCount: snapshot.suspenseCount + 1,
+    }));
+
+    return <p>Loading</p>;
+  }
+
+  function Parent() {
+    const [queryRef, loadQuery] = useInteractiveQuery(query);
+
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      parentRenderCount: snapshot.parentRenderCount + 1,
+    }));
+
+    return (
+      <>
+        <button onClick={() => loadQuery({ id: "1" })}>
+          Load 1st character
+        </button>
+        <button onClick={() => loadQuery({ id: "2" })}>
+          Load 2nd character
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function Child({
+    queryRef,
+  }: {
+    queryRef: QueryReference<VariablesCaseData>;
+  }) {
+    const result = useReadQuery(queryRef);
+
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      result,
+      childRenderCount: snapshot.childRenderCount + 1,
+    }));
+
+    return null;
+  }
+
+  const ProfiledApp = profile<{
+    result: UseReadQueryResult<VariablesCaseData> | null;
+    suspenseCount: number;
+    parentRenderCount: number;
+    childRenderCount: number;
+  }>({
+    Component: () => (
+      <MockedProvider mocks={mocks}>
+        <Parent />
+      </MockedProvider>
+    ),
+    snapshotDOM: true,
+    initialSnapshot: {
+      result: null,
+      suspenseCount: 0,
+      parentRenderCount: 0,
+      childRenderCount: 0,
+    },
+  });
+
+  render(<ProfiledApp />);
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot).toEqual({
+      result: null,
+      suspenseCount: 0,
+      parentRenderCount: 1,
+      childRenderCount: 0,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Load 1st character")));
+
+  {
+    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+
+    expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+    expect(snapshot).toEqual({
+      result: null,
+      suspenseCount: 1,
+      parentRenderCount: 2,
+      childRenderCount: 0,
+    });
+  }
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot).toEqual({
+      result: {
+        data: { character: { id: "1", name: "Spider-Man" } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      suspenseCount: 1,
+      parentRenderCount: 2,
+      childRenderCount: 1,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Load 2nd character")));
+
+  {
+    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+
+    expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+    expect(snapshot).toEqual({
+      result: {
+        data: { character: { id: "1", name: "Spider-Man" } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      suspenseCount: 2,
+      parentRenderCount: 3,
+      childRenderCount: 1,
+    });
+  }
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot).toEqual({
+      result: {
+        data: { character: { id: "2", name: "Black Widow" } },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
+      suspenseCount: 2,
+      parentRenderCount: 3,
+      childRenderCount: 2,
+    });
+  }
+
+  await expect(ProfiledApp).not.toRerender();
+});
+
 it("allows the client to be overridden", async () => {
   const user = userEvent.setup();
   const { query } = useSimpleQueryCase();

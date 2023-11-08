@@ -2488,7 +2488,7 @@ it.skip("applies `context` on next fetch when it changes between renders", async
 // NOTE: We only test the `false` -> `true` path here. If the option changes
 // from `true` -> `false`, the data has already been canonized, so it has no
 // effect on the output.
-it.skip("returns canonical results immediately when `canonizeResults` changes from `false` to `true` between renders", async () => {
+it("returns canonical results immediately when `canonizeResults` changes from `false` to `true` between renders", async () => {
   interface Result {
     __typename: string;
     value: number;
@@ -2545,17 +2545,18 @@ it.skip("returns canonical results immediately when `canonizeResults` changes fr
 
   function Parent() {
     const [canonizeResults, setCanonizeResults] = React.useState(false);
-    const [queryRef] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useInteractiveQuery(query, {
       canonizeResults,
     });
 
     return (
       <>
+        <button onClick={() => loadQuery()}>Load query</button>
         <button onClick={() => setCanonizeResults(true)}>
           Canonize results
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Results queryRef={queryRef} />
+          {queryRef && <Results queryRef={queryRef} />}
         </Suspense>
       </>
     );
@@ -2595,6 +2596,8 @@ it.skip("returns canonical results immediately when `canonizeResults` changes fr
       expect(values).toEqual([0, 1, 1, 2, 3, 5]);
     }
   }
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   verifyCanonicalResults(result.current!, false);
 

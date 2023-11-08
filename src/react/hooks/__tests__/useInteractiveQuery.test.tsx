@@ -1788,7 +1788,7 @@ it("works with startTransition to change variables", async () => {
   });
 });
 
-it.skip('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
+it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
   interface Data {
     greeting: {
       __typename: string;
@@ -1825,21 +1825,32 @@ it.skip('does not suspend deferred queries with data in the cache and using a "c
     },
   });
   const client = new ApolloClient({ cache, link });
-  let renders = 0;
-  let suspenseCount = 0;
 
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
+  const ProfiledApp = profile<{
+    result: UseReadQueryResult<unknown> | null;
+    suspenseCount: number;
+  }>({
+    Component: () => {
+      return (
+        <ApolloProvider client={client}>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Parent />
+          </Suspense>
+        </ApolloProvider>
+      );
+    },
+    initialSnapshot: {
+      suspenseCount: 0,
+      result: null,
+    },
+  });
 
   function SuspenseFallback() {
-    suspenseCount++;
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      suspenseCount: snapshot.suspenseCount + 1,
+    }));
+
     return <p>Loading</p>;
   }
 
@@ -1856,34 +1867,42 @@ it.skip('does not suspend deferred queries with data in the cache and using a "c
   }
 
   function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data, networkStatus, error } = useReadQuery(queryRef);
+    const result = useReadQuery(queryRef);
+    const { data, networkStatus, error } = result;
     const { greeting } = data;
-    renders++;
 
-    return (
-      <>
-        <div>Message: {greeting.message}</div>
-        <div>Recipient: {greeting.recipient.name}</div>
-        <div>Network status: {networkStatus}</div>
-        <div>Error: {error ? error.message : "none"}</div>
-      </>
-    );
+    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
+
+    return null;
   }
 
-  render(<App />);
+  render(<ProfiledApp />);
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(0);
+    expect(snapshot.result).toBeNull();
+  }
 
   await act(() => user.click(screen.getByText("Load todo")));
 
-  expect(screen.getByText(/Message/i)).toHaveTextContent(
-    "Message: Hello cached"
-  );
-  expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-    "Recipient: Cached Alice"
-  );
-  expect(screen.getByText(/Network status/i)).toHaveTextContent(
-    "Network status: 1" // loading
-  );
-  expect(screen.getByText(/Error/i)).toHaveTextContent("none");
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(0);
+    expect(snapshot.result).toEqual({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello cached",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
 
   link.simulateResult({
     result: {
@@ -1894,49 +1913,59 @@ it.skip('does not suspend deferred queries with data in the cache and using a "c
     },
   });
 
-  await waitFor(() => {
-    expect(screen.getByText(/Message/i)).toHaveTextContent(
-      "Message: Hello world"
-    );
-  });
-  expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-    "Recipient: Cached Alice"
-  );
-  expect(screen.getByText(/Network status/i)).toHaveTextContent(
-    "Network status: 7" // ready
-  );
-  expect(screen.getByText(/Error/i)).toHaveTextContent("none");
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
 
-  link.simulateResult({
-    result: {
-      incremental: [
-        {
-          data: {
-            recipient: { name: "Alice", __typename: "Person" },
-            __typename: "Greeting",
-          },
-          path: ["greeting"],
+    expect(snapshot.suspenseCount).toBe(0);
+    expect(snapshot.result).toEqual({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Cached Alice" },
         },
-      ],
-      hasNext: false,
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  link.simulateResult(
+    {
+      result: {
+        incremental: [
+          {
+            data: {
+              recipient: { name: "Alice", __typename: "Person" },
+              __typename: "Greeting",
+            },
+            path: ["greeting"],
+          },
+        ],
+        hasNext: false,
+      },
     },
-  });
-
-  await waitFor(() => {
-    expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-      "Recipient: Alice"
-    );
-  });
-  expect(screen.getByText(/Message/i)).toHaveTextContent(
-    "Message: Hello world"
+    true
   );
-  expect(screen.getByText(/Network status/i)).toHaveTextContent(
-    "Network status: 7" // ready
-  );
-  expect(screen.getByText(/Error/i)).toHaveTextContent("none");
 
-  expect(renders).toBe(3);
-  expect(suspenseCount).toBe(0);
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(0);
+    expect(snapshot.result).toEqual({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(ProfiledApp).not.toRerender();
 });
 
 it.skip("reacts to cache updates", async () => {

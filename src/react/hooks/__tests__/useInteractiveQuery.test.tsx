@@ -2746,7 +2746,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
   ]);
 });
 
-it.skip("applies `returnPartialData` on next fetch when it changes between renders", async () => {
+it("applies `returnPartialData` on next fetch when it changes between renders", async () => {
   interface Data {
     character: {
       __typename: "Character";
@@ -2830,17 +2830,18 @@ it.skip("applies `returnPartialData` on next fetch when it changes between rende
   function Parent() {
     const [returnPartialData, setReturnPartialData] = React.useState(false);
 
-    const [queryRef] = useInteractiveQuery(fullQuery, {
+    const [queryRef, loadQuery] = useInteractiveQuery(fullQuery, {
       returnPartialData,
     });
 
     return (
       <>
+        <button onClick={() => loadQuery()}>Load query</button>
         <button onClick={() => setReturnPartialData(true)}>
           Update partial data
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Character queryRef={queryRef} />
+          {queryRef && <Character queryRef={queryRef} />}
         </Suspense>
       </>
     );
@@ -2863,6 +2864,8 @@ it.skip("applies `returnPartialData` on next fetch when it changes between rende
   }
 
   render(<App />);
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   const character = await screen.findByTestId("character");
 

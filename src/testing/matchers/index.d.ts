@@ -16,6 +16,9 @@ interface ApolloCustomMatchers<R = void, T = {}> {
    */
   toMatchDocument(document: DocumentNode): R;
 
+  toHaveRendered(): R;
+  toHaveRenderedTimes(count: number): R;
+
   /**
    * Used to determine if the Suspense cache has a cache entry.
    */

@@ -88,7 +88,9 @@ interface VariablesCaseVariables {
   id: string;
 }
 
-function useVariablesIntegrationTestCase() {
+function useVariablesQueryCase(
+  mockOverrides?: MockedResponse<VariablesCaseData, VariablesCaseVariables>[]
+) {
   const query: TypedDocumentNode<
     VariablesCaseData,
     VariablesCaseVariables
@@ -101,11 +103,15 @@ function useVariablesIntegrationTestCase() {
     }
   `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
-  let mocks = [...CHARACTERS].map((name, index) => ({
-    request: { query, variables: { id: String(index + 1) } },
-    result: { data: { character: { id: String(index + 1), name } } },
-    delay: 20,
-  }));
+
+  const mocks =
+    mockOverrides ??
+    [...CHARACTERS].map((name, index) => ({
+      request: { query, variables: { id: String(index + 1) } },
+      result: { data: { character: { id: String(index + 1), name } } },
+      delay: 20,
+    }));
+
   return { mocks, query };
 }
 
@@ -133,7 +139,7 @@ function renderVariablesIntegrationTest({
   errorPolicy?: ErrorPolicy;
 }) {
   const user = userEvent.setup();
-  let { mocks: _mocks, query } = useVariablesIntegrationTestCase();
+  let { mocks: _mocks, query } = useVariablesQueryCase();
 
   // duplicate mocks with (updated) in the name for refetches
   _mocks = [..._mocks, ..._mocks, ..._mocks].map((mock, index) => {
@@ -4690,7 +4696,7 @@ describe.skip("type tests", () => {
   });
 
   it("enforces variables argument to loadQuery function when TVariables is specified", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     const [, loadQuery] = useInteractiveQuery(query);
 
@@ -4702,7 +4708,7 @@ describe.skip("type tests", () => {
   });
 
   it("disallows wider variables type", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     const [, loadQuery] = useInteractiveQuery(query);
 
@@ -4728,7 +4734,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns TData in default case", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     {
       const [queryRef] = useInteractiveQuery(query);
@@ -4755,7 +4761,7 @@ describe.skip("type tests", () => {
   });
 
   it('returns TData | undefined with errorPolicy: "ignore"', () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     {
       const [queryRef] = useInteractiveQuery(query, {
@@ -4784,7 +4790,7 @@ describe.skip("type tests", () => {
   });
 
   it('returns TData | undefined with errorPolicy: "all"', () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     {
       const [queryRef] = useInteractiveQuery(query, {
@@ -4813,7 +4819,7 @@ describe.skip("type tests", () => {
   });
 
   it('returns TData with errorPolicy: "none"', () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     {
       const [queryRef] = useInteractiveQuery(query, {
@@ -4842,7 +4848,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns DeepPartial<TData> with returnPartialData: true", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     {
       const [queryRef] = useInteractiveQuery(query, {
@@ -4871,7 +4877,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns TData with returnPartialData: false", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     {
       const [queryRef] = useInteractiveQuery(query, {
@@ -4900,7 +4906,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns TData when passing an option that does not affect TData", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     {
       const [queryRef] = useInteractiveQuery(query, {
@@ -4929,7 +4935,7 @@ describe.skip("type tests", () => {
   });
 
   it("handles combinations of options", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     {
       const [queryRef] = useInteractiveQuery(query, {
@@ -4989,7 +4995,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns correct TData type when combined options that do not affect TData", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = useVariablesQueryCase();
 
     {
       const [queryRef] = useInteractiveQuery(query, {

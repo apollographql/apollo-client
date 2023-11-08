@@ -1,4 +1,4 @@
-import type { DependencyList } from "rehackt";
+import type { DependencyList } from "react";
 import * as React from "rehackt";
 import { equal } from "@wry/equality";
 

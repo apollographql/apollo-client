@@ -2606,7 +2606,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
   verifyCanonicalResults(result.current!, true);
 });
 
-it.skip("applies changed `refetchWritePolicy` to next fetch when changing between renders", async () => {
+it("applies changed `refetchWritePolicy` to next fetch when changing between renders", async () => {
   interface Data {
     primes: number[];
   }
@@ -2667,13 +2667,15 @@ it.skip("applies changed `refetchWritePolicy` to next fetch when changing betwee
     const [refetchWritePolicy, setRefetchWritePolicy] =
       React.useState<RefetchWritePolicy>("merge");
 
-    const [queryRef, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
       refetchWritePolicy,
-      variables: { min: 0, max: 12 },
     });
 
     return (
       <>
+        <button onClick={() => loadQuery({ min: 0, max: 12 })}>
+          Load query
+        </button>
         <button onClick={() => setRefetchWritePolicy("overwrite")}>
           Change refetch write policy
         </button>
@@ -2684,7 +2686,7 @@ it.skip("applies changed `refetchWritePolicy` to next fetch when changing betwee
           Refetch last
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Primes queryRef={queryRef} />
+          {queryRef && <Primes queryRef={queryRef} />}
         </Suspense>
       </>
     );
@@ -2706,6 +2708,8 @@ it.skip("applies changed `refetchWritePolicy` to next fetch when changing betwee
 
   render(<App />);
 
+  await act(() => user.click(screen.getByText("Load query")));
+
   const primes = await screen.findByTestId("primes");
 
   expect(primes).toHaveTextContent("2, 3, 5, 7, 11");
@@ -2726,7 +2730,6 @@ it.skip("applies changed `refetchWritePolicy` to next fetch when changing betwee
   ]);
 
   await act(() => user.click(screen.getByText("Change refetch write policy")));
-
   await act(() => user.click(screen.getByText("Refetch last")));
 
   await waitFor(() => {

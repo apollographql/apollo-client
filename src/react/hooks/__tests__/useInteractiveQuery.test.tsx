@@ -1,4 +1,4 @@
-import React, { Fragment, StrictMode, Suspense } from "react";
+import React, { Fragment, StrictMode, Suspense, useState } from "react";
 import {
   act,
   render,
@@ -2238,40 +2238,10 @@ it("reacts to cache updates", async () => {
   await expect(ProfiledApp).not.toRerender();
 });
 
-it.skip("reacts to variables updates", async () => {
-  const { renders, user, loadQueryButton } = renderVariablesIntegrationTest({
-    variables: { id: "1" },
-  });
+it("applies `errorPolicy` on next fetch when it changes between renders", async () => {
+  const { query } = useSimpleQueryCase();
 
-  await act(() => user.click(loadQueryButton));
-
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
-
-  expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
-
-  await act(() => user.click(screen.getByText("Change variables")));
-
-  expect(renders.suspenseCount).toBe(2);
-  expect(screen.getByText("loading")).toBeInTheDocument();
-
-  expect(await screen.findByText("2 - Black Widow")).toBeInTheDocument();
-});
-
-it.skip("applies `errorPolicy` on next fetch when it changes between renders", async () => {
-  interface Data {
-    greeting: string;
-  }
-
-  const user = userEvent.setup();
-
-  const query: TypedDocumentNode<Data, never> = gql`
-    query {
-      greeting
-    }
-  `;
-
-  const mocks = [
+  const mocks: MockedResponse<SimpleQueryData, never>[] = [
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
@@ -2284,17 +2254,19 @@ it.skip("applies `errorPolicy` on next fetch when it changes between renders", a
     },
   ];
 
-  const client = new ApolloClient({
-    link: new MockLink(mocks),
-    cache: new InMemoryCache(),
-  });
+  const user = userEvent.setup();
 
   function SuspenseFallback() {
-    return <div>Loading...</div>;
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      suspenseCount: snapshot.suspenseCount + 1,
+    }));
+
+    return <p>Loading</p>;
   }
 
   function Parent() {
-    const [errorPolicy, setErrorPolicy] = React.useState<ErrorPolicy>("none");
+    const [errorPolicy, setErrorPolicy] = useState<ErrorPolicy>("none");
     const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
       errorPolicy,
     });
@@ -2305,46 +2277,142 @@ it.skip("applies `errorPolicy` on next fetch when it changes between renders", a
           Change error policy
         </button>
         <button onClick={() => refetch()}>Refetch greeting</button>
-        <button onClick={() => loadQuery()}>Load greeting</button>
+        <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Greeting queryRef={queryRef} />}
+          <ErrorBoundary
+            fallback={<div data-testid="error">Error boundary</div>}
+            onError={(error) => {
+              ProfiledApp.updateSnapshot((snapshot) => ({
+                ...snapshot,
+                error,
+                errorBoundaryCount: snapshot.errorBoundaryCount + 1,
+              }));
+            }}
+          >
+            {queryRef && <Child queryRef={queryRef} />}
+          </ErrorBoundary>
         </Suspense>
       </>
     );
   }
 
-  function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data, error } = useReadQuery(queryRef);
+  function Child({ queryRef }: { queryRef: QueryReference<SimpleQueryData> }) {
+    const result = useReadQuery(queryRef);
 
-    return error ? (
-      <div data-testid="error">{error.message}</div>
-    ) : (
-      <div data-testid="greeting">{data.greeting}</div>
-    );
+    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
+
+    return null;
   }
 
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <ErrorBoundary fallback={<div data-testid="error">Error boundary</div>}>
-          <Parent />
-        </ErrorBoundary>
-      </ApolloProvider>
-    );
+  const ProfiledApp = profile<{
+    error: Error | undefined;
+    errorBoundaryCount: number;
+    result: UseReadQueryResult<SimpleQueryData> | null;
+    suspenseCount: number;
+  }>({
+    Component: () => (
+      <MockedProvider mocks={mocks}>
+        <Parent />
+      </MockedProvider>
+    ),
+    initialSnapshot: {
+      error: undefined,
+      errorBoundaryCount: 0,
+      result: null,
+      suspenseCount: 0,
+    },
+  });
+
+  render(<ProfiledApp />);
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot).toEqual({
+      result: null,
+      suspenseCount: 0,
+      error: undefined,
+      errorBoundaryCount: 0,
+    });
   }
 
-  render(<App />);
+  await act(() => user.click(screen.getByText("Load query")));
 
-  await act(() => user.click(screen.getByText("Load greeting")));
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
 
-  expect(await screen.findByTestId("greeting")).toHaveTextContent("Hello");
+    expect(snapshot).toEqual({
+      result: null,
+      suspenseCount: 1,
+      error: undefined,
+      errorBoundaryCount: 0,
+    });
+  }
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot).toEqual({
+      result: {
+        data: { greeting: "Hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+      suspenseCount: 1,
+      error: undefined,
+      errorBoundaryCount: 0,
+    });
+  }
 
   await act(() => user.click(screen.getByText("Change error policy")));
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot).toEqual({
+      result: {
+        data: { greeting: "Hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+      suspenseCount: 1,
+      error: undefined,
+      errorBoundaryCount: 0,
+    });
+  }
+
   await act(() => user.click(screen.getByText("Refetch greeting")));
 
-  // Ensure we aren't rendering the error boundary and instead rendering the
-  // error message in the Greeting component.
-  expect(await screen.findByTestId("error")).toHaveTextContent("oops");
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot).toEqual({
+      result: {
+        data: { greeting: "Hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+      suspenseCount: 2,
+      error: undefined,
+      errorBoundaryCount: 0,
+    });
+  }
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    // Ensure we aren't rendering the error boundary and instead rendering the
+    // error message in the Child component.
+    expect(snapshot).toEqual({
+      result: {
+        data: { greeting: "Hello" },
+        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        networkStatus: NetworkStatus.error,
+      },
+      suspenseCount: 2,
+      error: undefined,
+      errorBoundaryCount: 0,
+    });
+  }
 });
 
 it.skip("applies `context` on next fetch when it changes between renders", async () => {

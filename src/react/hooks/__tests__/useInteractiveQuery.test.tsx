@@ -2889,7 +2889,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   });
 });
 
-it.skip("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {
+it("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {
   interface Data {
     character: {
       __typename: "Character";
@@ -2952,18 +2952,19 @@ it.skip("applies updated `fetchPolicy` on next fetch when it changes between ren
     const [fetchPolicy, setFetchPolicy] =
       React.useState<InteractiveQueryHookFetchPolicy>("cache-first");
 
-    const [queryRef, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
       fetchPolicy,
     });
 
     return (
       <>
+        <button onClick={() => loadQuery()}>Load query</button>
         <button onClick={() => setFetchPolicy("no-cache")}>
           Change fetch policy
         </button>
         <button onClick={() => refetch()}>Refetch</button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Character queryRef={queryRef} />
+          {queryRef && <Character queryRef={queryRef} />}
         </Suspense>
       </>
     );
@@ -2984,6 +2985,8 @@ it.skip("applies updated `fetchPolicy` on next fetch when it changes between ren
   }
 
   render(<App />);
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   const character = await screen.findByTestId("character");
 

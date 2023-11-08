@@ -1580,7 +1580,7 @@ export interface MutationDataOptions<TData = any, TVariables = OperationVariable
 }
 
 // @public (undocumented)
-type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
+export type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
 
 // @public (undocumented)
 export type MutationFunction<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> = (options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>) => Promise<FetchResult<TData>>;
@@ -1599,8 +1599,6 @@ export interface MutationHookOptions<TData = any, TVariables = OperationVariable
 //
 // @public (undocumented)
 export interface MutationOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
-    // Warning: (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     fetchPolicy?: MutationFetchPolicy;
     // (undocumented)
@@ -2334,7 +2332,7 @@ export interface RefetchQueriesResult<TResult> extends Promise<RefetchQueriesPro
 export type RefetchQueryDescriptor = string | DocumentNode;
 
 // @public (undocumented)
-type RefetchWritePolicy = "merge" | "overwrite";
+export type RefetchWritePolicy = "merge" | "overwrite";
 
 // @public (undocumented)
 class RenderPromises {
@@ -2831,8 +2829,6 @@ export interface WatchQueryOptions<TVariables extends OperationVariables = Opera
     //
     // (undocumented)
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    // Warning: (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     refetchWritePolicy?: RefetchWritePolicy;
 }

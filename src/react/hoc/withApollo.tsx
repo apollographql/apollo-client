@@ -1,20 +1,21 @@
 import { invariant } from "../../utilities/globals/index.js";
-import * as React from "react";
+import * as React from "rehackt";
+import type * as ReactTypes from "react";
 import hoistNonReactStatics from "hoist-non-react-statics";
 
 import { ApolloConsumer } from "../context/index.js";
 import type { OperationOption, WithApolloClient } from "./types.js";
 
-function getDisplayName<P>(WrappedComponent: React.ComponentType<P>) {
+function getDisplayName<P>(WrappedComponent: ReactTypes.ComponentType<P>) {
   return WrappedComponent.displayName || WrappedComponent.name || "Component";
 }
 
 export function withApollo<TProps, TResult = any>(
-  WrappedComponent: React.ComponentType<
+  WrappedComponent: ReactTypes.ComponentType<
     WithApolloClient<Omit<TProps, "client">>
   >,
   operationOptions: OperationOption<TProps, TResult> = {}
-): React.ComponentClass<Omit<TProps, "client">> {
+): ReactTypes.ComponentClass<Omit<TProps, "client">> {
   const withDisplayName = `withApollo(${getDisplayName(WrappedComponent)})`;
 
   class WithApollo extends React.Component<Omit<TProps, "client">> {
@@ -39,7 +40,9 @@ export function withApollo<TProps, TResult = any>(
       return this.wrappedInstance;
     }
 
-    setWrappedInstance(ref: React.ComponentType<WithApolloClient<TProps>>) {
+    setWrappedInstance(
+      ref: ReactTypes.ComponentType<WithApolloClient<TProps>>
+    ) {
       this.wrappedInstance = ref;
     }
 

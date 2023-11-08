@@ -1,6 +1,6 @@
 import { invariant } from "../../utilities/globals/index.js";
 
-import * as React from "react";
+import * as React from "rehackt";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { equal } from "@wry/equality";
 

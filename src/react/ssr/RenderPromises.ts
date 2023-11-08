@@ -1,4 +1,5 @@
 import type { DocumentNode } from "graphql";
+import type * as ReactTypes from "react";
 
 import type { ObservableQuery, OperationVariables } from "../../core/index.js";
 import type { QueryDataOptions } from "../types/types.js";
@@ -58,8 +59,8 @@ export class RenderPromises {
 
   public addQueryPromise(
     queryInstance: QueryData,
-    finish?: () => React.ReactNode
-  ): React.ReactNode {
+    finish?: () => ReactTypes.ReactNode
+  ): ReactTypes.ReactNode {
     if (!this.stopped) {
       const info = this.lookupQueryInfo(queryInstance.getOptions());
       if (!info.seen) {

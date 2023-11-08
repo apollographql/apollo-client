@@ -5007,11 +5007,7 @@ describe.skip("fetchMore", () => {
 
 describe.skip("type tests", () => {
   it("returns unknown when TData cannot be inferred", () => {
-    const query = gql`
-      query {
-        hello
-      }
-    `;
+    const query = gql``;
 
     const [queryRef, loadQuery] = useInteractiveQuery(query);
 
@@ -5020,47 +5016,133 @@ describe.skip("type tests", () => {
     const { data } = useReadQuery(queryRef);
 
     expectTypeOf(data).toEqualTypeOf<unknown>();
-    expectTypeOf(loadQuery).toEqualTypeOf<
-      (variables: OperationVariables) => void
-    >();
   });
 
-  it("enforces variables argument to loadQuery function when TVariables is specified", () => {
-    const { query } = useVariablesQueryCase();
+  it("variables are optional and can be anything with an untyped DocumentNode", () => {
+    const query = gql``;
 
     const [, loadQuery] = useInteractiveQuery(query);
 
-    expectTypeOf(loadQuery).toEqualTypeOf<
-      (variables: VariablesCaseVariables) => void
-    >();
-    // @ts-expect-error enforces variables argument when type is specified
     loadQuery();
-  });
-
-  it("disallows wider variables type", () => {
-    const { query } = useVariablesQueryCase();
-
-    const [, loadQuery] = useInteractiveQuery(query);
-
-    expectTypeOf(loadQuery).toEqualTypeOf<
-      (variables: VariablesCaseVariables) => void
-    >();
-    // @ts-expect-error does not allow wider TVariables type
-    loadQuery({ id: "1", foo: "bar" });
-  });
-
-  it("does not allow variables argument to loadQuery when TVariables is `never`", () => {
-    const query: TypedDocumentNode<SimpleQueryData, never> = gql`
-      query {
-        greeting
-      }
-    `;
-
-    const [, loadQuery] = useInteractiveQuery(query);
-
-    expectTypeOf(loadQuery).toEqualTypeOf<() => void>();
-    // @ts-expect-error does not allow variables argument when TVariables is `never`
     loadQuery({});
+    loadQuery({ foo: "bar" });
+    loadQuery({ bar: "baz" });
+  });
+
+  it("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const query: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    const [, loadQuery] = useInteractiveQuery(query);
+
+    loadQuery();
+    loadQuery({});
+    loadQuery({ foo: "bar" });
+    loadQuery({ bar: "baz" });
+  });
+
+  it("variables are optional when TVariables are empty", () => {
+    const query: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    const [, loadQuery] = useInteractiveQuery(query);
+
+    loadQuery();
+    loadQuery({});
+    // @ts-expect-error unknown variable
+    loadQuery({ foo: "bar" });
+  });
+
+  it("does not allow variables when TVariables is `never`", () => {
+    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    const [, loadQuery] = useInteractiveQuery(query);
+
+    loadQuery();
+    // @ts-expect-error no variables argument allowed
+    loadQuery({});
+    // @ts-expect-error no variables argument allowed
+    loadQuery({ foo: "bar" });
+  });
+
+  it("optional variables are optional to loadQuery", () => {
+    const query: TypedDocumentNode<
+      { posts: string[] },
+      { limit?: number }
+    > = gql``;
+
+    const [, loadQuery] = useInteractiveQuery(query);
+
+    loadQuery();
+    loadQuery({});
+    loadQuery({ limit: 10 });
+    loadQuery({
+      // @ts-expect-error unknown variable
+      foo: "bar",
+    });
+    loadQuery({
+      limit: 10,
+      // @ts-expect-error unknown variable
+      foo: "bar",
+    });
+  });
+
+  it("enforces required variables when TVariables includes required variables", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string }
+    > = gql``;
+
+    const [, loadQuery] = useInteractiveQuery(query);
+
+    // @ts-expect-error missing variables argument
+    loadQuery();
+    // @ts-expect-error empty variables
+    loadQuery({});
+    loadQuery({ id: "1" });
+    loadQuery({
+      // @ts-expect-error unknown variable
+      foo: "bar",
+    });
+    loadQuery({
+      id: "1",
+      // @ts-expect-error unknown variable
+      foo: "bar",
+    });
+  });
+
+  it("requires variables with mixed TVariables", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    const [, loadQuery] = useInteractiveQuery(query);
+
+    // @ts-expect-error missing variables argument
+    loadQuery();
+    // @ts-expect-error empty variables
+    loadQuery({});
+    loadQuery({ id: "1" });
+    // @ts-expect-error missing required variable
+    loadQuery({ language: "en" });
+    loadQuery({ id: "1", language: "en" });
+    loadQuery({
+      // @ts-expect-error unknown variable
+      foo: "bar",
+    });
+    loadQuery({
+      id: "1",
+      // @ts-expect-error unknown variable
+      foo: "bar",
+    });
+    loadQuery({
+      id: "1",
+      language: "en",
+      // @ts-expect-error unknown variable
+      foo: "bar",
+    });
   });
 
   it("returns TData in default case", () => {

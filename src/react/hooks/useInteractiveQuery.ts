@@ -19,12 +19,20 @@ import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import type { CacheKey } from "../cache/types.js";
 
+type OnlyRequiredProperties<T> = {
+  [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];
+};
+
 type LoadQuery<TVariables extends OperationVariables> = (
   // Use variadic args to handle cases where TVariables is type `never`, in
   // which case we don't want to allow a variables argument. In other
   // words, we don't want to allow variables to be passed as an argument to this
   // function if the query does not expect variables in the document.
-  ...args: [TVariables] extends [never] ? [] : [variables: TVariables]
+  ...args: [TVariables] extends [never]
+    ? []
+    : {} extends OnlyRequiredProperties<TVariables>
+    ? [variables?: TVariables]
+    : [variables: TVariables]
 ) => void;
 
 export type UseInteractiveQueryResult<

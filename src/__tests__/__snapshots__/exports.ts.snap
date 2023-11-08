@@ -395,6 +395,7 @@ Array [
   "canUseSymbol",
   "canUseWeakMap",
   "canUseWeakSet",
+  "canonicalStringify",
   "checkDocument",
   "cloneDeep",
   "compact",
@@ -475,5 +476,11 @@ Array [
   "invariant",
   "maybe",
   "newInvariantError",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/subscriptions/urql 1`] = `
+Array [
+  "createFetchMultipartSubscription",
 ]
 `;

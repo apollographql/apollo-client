@@ -1,5 +1,125 @@
 # @apollo/client
 
+## 3.9.0-alpha.3
+
+### Minor Changes
+
+- [#11301](https://github.com/apollographql/apollo-client/pull/11301) [`46ab032af`](https://github.com/apollographql/apollo-client/commit/46ab032af83a01f184bfcce5edba4b55dbb2962a) Thanks [@alessbell](https://github.com/alessbell)! - Add multipart subscription network adapters for Relay and urql
+
+  ### Relay
+
+  ```tsx
+  import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/relay";
+  import { Environment, Network, RecordSource, Store } from "relay-runtime";
+
+  const fetchMultipartSubs = createFetchMultipartSubscription(
+    "http://localhost:4000"
+  );
+
+  const network = Network.create(fetchQuery, fetchMultipartSubs);
+
+  export const RelayEnvironment = new Environment({
+    network,
+    store: new Store(new RecordSource()),
+  });
+  ```
+
+  ### Urql
+
+  ```tsx
+  import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/urql";
+  import { Client, fetchExchange, subscriptionExchange } from "@urql/core";
+
+  const url = "http://localhost:4000";
+
+  const multipartSubscriptionForwarder = createFetchMultipartSubscription(url);
+
+  const client = new Client({
+    url,
+    exchanges: [
+      fetchExchange,
+      subscriptionExchange({
+        forwardSubscription: multipartSubscriptionForwarder,
+      }),
+    ],
+  });
+  ```
+
+### Patch Changes
+
+- [#11275](https://github.com/apollographql/apollo-client/pull/11275) [`3862f9ba9`](https://github.com/apollographql/apollo-client/commit/3862f9ba9086394c4cf4c2ecd99e8e0f6cf44885) Thanks [@phryneas](https://github.com/phryneas)! - Add a `defaultContext` option and property on `ApolloClient`, e.g. for keeping track of changing auth tokens or dependency injection.
+
+  This can be used e.g. in authentication scenarios, where a new token might be
+  generated outside of the link chain and should passed into the link chain.
+
+  ```js
+  import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
+  import { setContext } from "@apollo/client/link/context";
+
+  const httpLink = createHttpLink({
+    uri: "/graphql",
+  });
+
+  const authLink = setContext((_, { headers, token }) => {
+    return {
+      headers: {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : "",
+      },
+    };
+  });
+
+  const client = new ApolloClient({
+    link: authLink.concat(httpLink),
+    cache: new InMemoryCache(),
+  });
+
+  // somewhere else in your application
+  function onNewToken(newToken) {
+    // token can now be changed for future requests without need for a global
+    // variable, scoped ref or recreating the client
+    client.defaultContext.token = newToken;
+  }
+  ```
+
+- [#11297](https://github.com/apollographql/apollo-client/pull/11297) [`c8c76a522`](https://github.com/apollographql/apollo-client/commit/c8c76a522e593de0d06cff73fde2d9e88152bed6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an explicit return type for the `useReadQuery` hook called `UseReadQueryResult`. Previously the return type of this hook was inferred from the return value.
+
+## 3.9.0-alpha.2
+
+### Patch Changes
+
+- [#11254](https://github.com/apollographql/apollo-client/pull/11254) [`d08970d34`](https://github.com/apollographql/apollo-client/commit/d08970d348cf4ad6d80c6baf85b4a4cd4034a3bb) Thanks [@benjamn](https://github.com/benjamn)! - Decouple `canonicalStringify` from `ObjectCanon` for better time and memory performance.
+
+## 3.9.0-alpha.1
+
+### Minor Changes
+
+- [#11178](https://github.com/apollographql/apollo-client/pull/11178) [`4d64a6fa2`](https://github.com/apollographql/apollo-client/commit/4d64a6fa2ad5abe6f7f172c164f5e1fc2cb89829) Thanks [@sebakerckhof](https://github.com/sebakerckhof)! - Support re-using of mocks in the MockedProvider
+
+## 3.9.0-alpha.0
+
+### Minor Changes
+
+- [#11202](https://github.com/apollographql/apollo-client/pull/11202) [`7c2bc08b2`](https://github.com/apollographql/apollo-client/commit/7c2bc08b2ab46b9aa181d187a27aec2ad7129599) Thanks [@benjamn](https://github.com/benjamn)! - Prevent `QueryInfo#markResult` mutation of `result.data` and return cache data consistently whether complete or incomplete.
+
+- [#6701](https://github.com/apollographql/apollo-client/pull/6701) [`8d2b4e107`](https://github.com/apollographql/apollo-client/commit/8d2b4e107d7c21563894ced3a65d631183b58fd9) Thanks [@prowe](https://github.com/prowe)! - Ability to dynamically match mocks
+
+  Adds support for a new property `MockedResponse.variableMatcher`: a predicate function that accepts a `variables` param. If `true`, the `variables` will be passed into the `ResultFunction` to help dynamically build a response.
+
+## 3.8.6
+
+### Patch Changes
+
+- [#11291](https://github.com/apollographql/apollo-client/pull/11291) [`2be7eafe3`](https://github.com/apollographql/apollo-client/commit/2be7eafe3c115d56d993dbda64d320550712df1f) Thanks [@ArioA](https://github.com/ArioA)! - Fix a bug that allows to only call `loadErrorMessages` without also calling `loadDevErrorMessages`.
+
+- [#11274](https://github.com/apollographql/apollo-client/pull/11274) [`b29f000f3`](https://github.com/apollographql/apollo-client/commit/b29f000f36f281e256809b5454eaeca2ec4450bf) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Start the query ref auto dispose timeout after the initial promise has settled. This prevents requests that run longer than the timeout duration from keeping the component suspended indefinitely.
+
+- [#11289](https://github.com/apollographql/apollo-client/pull/11289) [`b5894dbf0`](https://github.com/apollographql/apollo-client/commit/b5894dbf0fd5ea5ef1ff20dd896a658ef78c69dc) Thanks [@phryneas](https://github.com/phryneas)! - `MockedProvider`: default `connectToDevTools` to `false` in created `ApolloClient` instance.
+
+  This will prevent the mocked `ApolloClient` instance from trying to connect to the DevTools, which would start a `setTimeout` that might keep running after a test has finished.
+
+- [#11206](https://github.com/apollographql/apollo-client/pull/11206) [`dd2ce7687`](https://github.com/apollographql/apollo-client/commit/dd2ce7687ae9afa399e950a523fc7330284c25fe) Thanks [@phryneas](https://github.com/phryneas)! - `cache.modify`: Less strict types & new dev runtime warnings.
+
 ## 3.8.5
 
 ### Patch Changes

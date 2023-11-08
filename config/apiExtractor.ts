@@ -31,7 +31,7 @@ map((entryPoint: { dirs: string[] }) => {
         enabled: true,
         ...baseConfig.apiReport,
         reportFileName: `api-report${
-          path ? "-" + path.replace("/", "_") : ""
+          path ? "-" + path.replace(/\//g, "_") : ""
         }.md`,
       },
     },

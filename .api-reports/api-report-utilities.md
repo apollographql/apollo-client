@@ -20,7 +20,6 @@ import { Observable } from 'zen-observable-ts';
 import type { Subscription as ObservableSubscription } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 import type { OperationDefinitionNode } from 'graphql';
-import { print as print_3 } from 'graphql';
 import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
 import type { Subscriber } from 'zen-observable-ts';
@@ -119,6 +118,8 @@ class ApolloClient<TCacheShape> implements DataProxy {
     // (undocumented)
     clearStore(): Promise<any[]>;
     // (undocumented)
+    get defaultContext(): Partial<DefaultContext>;
+    // (undocumented)
     defaultOptions: DefaultOptions;
     // (undocumented)
     disableNetworkFetches: boolean;
@@ -212,6 +213,7 @@ type ApolloClientOptions<TCacheShape> = {
     connectToDevTools?: boolean;
     queryDeduplication?: boolean;
     defaultOptions?: DefaultOptions;
+    defaultContext?: Partial<DefaultContext>;
     assumeImmutableResults?: boolean;
     resolvers?: Resolvers | Resolvers[];
     typeDefs?: string | string[] | DocumentNode | DocumentNode[];
@@ -328,6 +330,13 @@ type ApolloReducerConfig = {
 
 // @public (undocumented)
 export function argumentsObjectFromField(field: FieldNode | DirectiveNode, variables?: Record<string, any>): Object | null;
+
+// @public (undocumented)
+export type AsStoreObject<T extends {
+    __typename?: string;
+}> = {
+    [K in keyof T]: T[K];
+};
 
 // @public (undocumented)
 export function asyncMap<V, R>(observable: Observable<V>, mapFn: (value: V) => R | PromiseLike<R>, catchFn?: (error: any) => R | PromiseLike<R>): Observable<R>;
@@ -461,6 +470,11 @@ const enum CacheWriteBehavior {
     // (undocumented)
     OVERWRITE = 1
 }
+
+// @public (undocumented)
+export const canonicalStringify: ((value: any) => string) & {
+    reset(): void;
+};
 
 // @public (undocumented)
 type CanReadFunction = (value: StoreValue) => boolean;
@@ -1073,7 +1087,7 @@ export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode;
 
 // @public (undocumented)
 export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | null, directives?: Directives) => string) & {
-    setStringify(s: typeof stringify): (value: any) => string;
+    setStringify(s: typeof storeKeyNameStringify): (value: any) => string;
 };
 
 // @public (undocumented)
@@ -1867,7 +1881,9 @@ type PossibleTypesMap = {
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
 // @public (undocumented)
-const print_2: typeof print_3;
+const print_2: ((ast: ASTNode) => string) & {
+    reset(): void;
+};
 export { print_2 as print }
 
 // Warning: (ae-forgotten-export) The symbol "PendingPromise" needs to be exported by the entry point index.d.ts
@@ -1905,7 +1921,7 @@ class QueryInfo {
     // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): void;
+    markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): typeof result;
     // (undocumented)
     networkError?: Error | null;
     // (undocumented)
@@ -1937,7 +1953,7 @@ type QueryListener = (queryInfo: QueryInfo) => void;
 
 // @public (undocumented)
 class QueryManager<TStore> {
-    constructor({ cache, link, defaultOptions, documentTransform, queryDeduplication, onBroadcast, ssrMode, clientAwareness, localState, assumeImmutableResults, }: {
+    constructor({ cache, link, defaultOptions, documentTransform, queryDeduplication, onBroadcast, ssrMode, clientAwareness, localState, assumeImmutableResults, defaultContext, }: {
         cache: ApolloCache<TStore>;
         link: ApolloLink;
         defaultOptions?: DefaultOptions;
@@ -1948,6 +1964,7 @@ class QueryManager<TStore> {
         clientAwareness?: Record<string, string>;
         localState?: LocalState<TStore>;
         assumeImmutableResults?: boolean;
+        defaultContext?: Partial<DefaultContext>;
     });
     // (undocumented)
     readonly assumeImmutableResults: boolean;
@@ -1957,6 +1974,8 @@ class QueryManager<TStore> {
     cache: ApolloCache<TStore>;
     // (undocumented)
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
+    // (undocumented)
+    readonly defaultContext: Partial<DefaultContext>;
     // Warning: (ae-forgotten-export) The symbol "DefaultOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2283,6 +2302,9 @@ type StorageType = Record<string, any>;
 export function storeKeyNameFromField(field: FieldNode, variables?: Object): string;
 
 // @public (undocumented)
+let storeKeyNameStringify: (value: any) => string;
+
+// @public (undocumented)
 export interface StoreObject {
     // (undocumented)
     [storeFieldName: string]: StoreValue;
@@ -2291,13 +2313,10 @@ export interface StoreObject {
 }
 
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<string, any>[] ? Readonly<StoreVal> | readonly Reference[] : StoreVal extends Record<string, any> ? StoreVal | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<infer Item extends Record<string, any>> ? ReadonlyArray<AsStoreObject<Item> | Reference> : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
-
-// @public (undocumented)
-let stringify: (value: any) => string;
 
 // @public (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;
@@ -2496,26 +2515,26 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/core/types/DataProxy.ts:141:5 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:63:3 - (ae-forgotten-export) The symbol "TypePolicy" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:168:3 - (ae-forgotten-export) The symbol "FieldReadFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:169:3 - (ae-forgotten-export) The symbol "FieldMergeFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:57:3 - (ae-forgotten-export) The symbol "TypePolicy" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "FieldReadFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:163:3 - (ae-forgotten-export) The symbol "FieldMergeFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:126:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/writeToStore.ts:65:7 - (ae-forgotten-export) The symbol "MergeTree" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:47:3 - (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:112:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:116:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:378:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:119:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:153:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:384:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:158:3 - (ae-forgotten-export) The symbol "ApolloError" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:160:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:205:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/utilities/graphql/storeUtils.ts:202:12 - (ae-forgotten-export) The symbol "stringify" needs to be exported by the entry point index.d.ts
+// src/utilities/graphql/storeUtils.ts:226:12 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:76:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts
 

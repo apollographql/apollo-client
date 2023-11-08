@@ -33,6 +33,7 @@
     "react-dom-17",
     "@testing-library/react-12",
     "@rollup/plugin-node-resolve",
-    "rollup"
+    "rollup",
+    "glob"
   ]
 }

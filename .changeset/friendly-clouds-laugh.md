@@ -2,4 +2,6 @@
 "@apollo/client": minor
 ---
 
-use external package to wrap `React` imports to circumvent non-existing functions in RSC
+To work around issues in React Server Components, especially with bundling for
+the Next.js "edge" runtime we now use an external package to wrap `React` imports
+instead of importing React directly.

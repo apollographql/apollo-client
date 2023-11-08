@@ -76,6 +76,13 @@ export type ApolloReducerConfig = {
 };
 
 // @public (undocumented)
+type AsStoreObject<T extends {
+    __typename?: string;
+}> = {
+    [K in keyof T]: T[K];
+};
+
+// @public (undocumented)
 type BroadcastOptions = Pick<Cache_2.BatchOptions<InMemoryCache>, "optimistic" | "onWatchUpdated">;
 
 // @public (undocumented)
@@ -192,7 +199,7 @@ export const cacheSlot: {
 
 // @public (undocumented)
 export const canonicalStringify: ((value: any) => string) & {
-    reset: typeof resetCanonicalStringify;
+    reset(): void;
 };
 
 // @public (undocumented)
@@ -859,9 +866,6 @@ export interface Reference {
 }
 
 // @public (undocumented)
-function resetCanonicalStringify(): void;
-
-// @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
 // @public (undocumented)
@@ -875,8 +879,10 @@ export interface StoreObject {
     __typename?: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<string, any>[] ? Readonly<StoreVal> | readonly Reference[] : StoreVal extends Record<string, any> ? StoreVal | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<infer Item extends Record<string, any>> ? ReadonlyArray<AsStoreObject<Item> | Reference> : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
@@ -947,10 +953,9 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/inmemory/object-canon.ts:203:32 - (ae-forgotten-export) The symbol "resetCanonicalStringify" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:92:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:126:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

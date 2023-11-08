@@ -57,16 +57,14 @@ interface SimpleQueryData {
   greeting: string;
 }
 
-function useSimpleQueryCase(
-  mockOverrides?: MockedResponse<SimpleQueryData, never>[]
-) {
+function useSimpleQueryCase() {
   const query: TypedDocumentNode<SimpleQueryData, never> = gql`
     query GreetingQuery {
       greeting
     }
   `;
 
-  const mocks: MockedResponse<SimpleQueryData, never>[] = mockOverrides || [
+  const mocks: MockedResponse<SimpleQueryData>[] = [
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
@@ -88,9 +86,7 @@ interface VariablesCaseVariables {
   id: string;
 }
 
-function useVariablesQueryCase(
-  mockOverrides?: MockedResponse<VariablesCaseData, VariablesCaseVariables>[]
-) {
+function useVariablesQueryCase() {
   const query: TypedDocumentNode<
     VariablesCaseData,
     VariablesCaseVariables
@@ -104,13 +100,13 @@ function useVariablesQueryCase(
   `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const mocks =
-    mockOverrides ??
-    [...CHARACTERS].map((name, index) => ({
+  const mocks: MockedResponse<VariablesCaseData>[] = [...CHARACTERS].map(
+    (name, index) => ({
       request: { query, variables: { id: String(index + 1) } },
       result: { data: { character: { id: String(index + 1), name } } },
       delay: 20,
-    }));
+    })
+  );
 
   return { mocks, query };
 }

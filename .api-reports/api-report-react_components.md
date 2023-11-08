@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="react" />
-
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { ExecutionResult } from 'graphql';
@@ -16,6 +14,7 @@ import type { GraphQLErrorExtensions } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 import * as PropTypes from 'prop-types';
+import type * as ReactTypes from 'react';
 import type { Subscriber } from 'zen-observable-ts';
 import type { Subscription as Subscription_2 } from 'zen-observable-ts';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -915,7 +914,7 @@ type Modifiers<T extends Record<string, any> = Record<string, unknown>> = Partia
 }>;
 
 // @public (undocumented)
-export function Mutation<TData = any, TVariables = OperationVariables>(props: MutationComponentOptions<TData, TVariables>): JSX.Element | null;
+export function Mutation<TData = any, TVariables = OperationVariables>(props: MutationComponentOptions<TData, TVariables>): ReactTypes.JSX.Element | null;
 
 // @public (undocumented)
 export namespace Mutation {
@@ -967,7 +966,7 @@ export interface MutationComponentOptions<TData = any, TVariables = OperationVar
     // Warning: (ae-forgotten-export) The symbol "MutationResult" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    children: (mutateFunction: MutationFunction<TData, TVariables, TContext>, result: MutationResult<TData>) => JSX.Element | null;
+    children: (mutateFunction: MutationFunction<TData, TVariables, TContext>, result: MutationResult<TData>) => ReactTypes.JSX.Element | null;
     // (undocumented)
     mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -1205,7 +1204,7 @@ type OperationVariables = Record<string, any>;
 type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
-export function Query<TData = any, TVariables extends OperationVariables = OperationVariables>(props: QueryComponentOptions<TData, TVariables>): JSX.Element | null;
+export function Query<TData = any, TVariables extends OperationVariables = OperationVariables>(props: QueryComponentOptions<TData, TVariables>): ReactTypes.JSX.Element | null;
 
 // @public (undocumented)
 export namespace Query {
@@ -1226,7 +1225,7 @@ export interface QueryComponentOptions<TData = any, TVariables extends Operation
     // Warning: (ae-forgotten-export) The symbol "QueryResult" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    children: (result: QueryResult<TData, TVariables>) => JSX.Element | null;
+    children: (result: QueryResult<TData, TVariables>) => ReactTypes.JSX.Element | null;
     // (undocumented)
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -1615,7 +1614,7 @@ type SubscribeToMoreOptions<TData = any, TSubscriptionVariables = OperationVaria
 };
 
 // @public (undocumented)
-export function Subscription<TData = any, TVariables extends OperationVariables = OperationVariables>(props: SubscriptionComponentOptions<TData, TVariables>): JSX.Element | null;
+export function Subscription<TData = any, TVariables extends OperationVariables = OperationVariables>(props: SubscriptionComponentOptions<TData, TVariables>): ReactTypes.JSX.Element | null;
 
 // @public (undocumented)
 export namespace Subscription {
@@ -1634,7 +1633,7 @@ export interface Subscription<TData, TVariables extends OperationVariables> {
 // @public (undocumented)
 export interface SubscriptionComponentOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseSubscriptionOptions<TData, TVariables> {
     // (undocumented)
-    children?: null | ((result: SubscriptionResult<TData>) => JSX.Element | null);
+    children?: null | ((result: SubscriptionResult<TData>) => ReactTypes.JSX.Element | null);
     // (undocumented)
     subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }

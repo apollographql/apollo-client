@@ -1,4 +1,5 @@
 import type { DocumentNode } from "graphql";
+import type * as ReactTypes from "react";
 
 import { parser, DocumentType } from "../parser/index.js";
 import { withQuery } from "./query-hoc.js";
@@ -22,8 +23,8 @@ export function graphql<
     TChildProps
   > = {}
 ): (
-  WrappedComponent: React.ComponentType<TProps & TChildProps>
-) => React.ComponentClass<TProps> {
+  WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>
+) => ReactTypes.ComponentClass<TProps> {
   switch (parser(document).type) {
     case DocumentType.Mutation:
       return withMutation(document, operationOptions);

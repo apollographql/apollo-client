@@ -1968,38 +1968,104 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   await expect(ProfiledApp).not.toRerender();
 });
 
-it.skip("reacts to cache updates", async () => {
-  const { renders, client, query, loadQueryButton, user } =
-    renderIntegrationTest();
+it("reacts to cache updates", async () => {
+  const { query, mocks } = useSimpleQueryCase();
+  const user = userEvent.setup();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
 
-  await act(() => user.click(loadQueryButton));
+  function SuspenseFallback() {
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      suspenseCount: snapshot.suspenseCount + 1,
+    }));
 
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
+    return <p>Loading</p>;
+  }
 
-  // the parent component re-renders when promise fulfilled
-  expect(await screen.findByText("hello")).toBeInTheDocument();
-  expect(renders.count).toBe(1);
+  function Parent() {
+    const [queryRef, loadQuery] = useInteractiveQuery(query);
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function Child({ queryRef }: { queryRef: QueryReference<SimpleQueryData> }) {
+    const result = useReadQuery(queryRef);
+
+    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
+
+    return null;
+  }
+
+  const ProfiledApp = profile<{
+    result: UseReadQueryResult<SimpleQueryData> | null;
+    suspenseCount: number;
+  }>({
+    Component: () => (
+      <ApolloProvider client={client}>
+        <Parent />
+      </ApolloProvider>
+    ),
+    initialSnapshot: {
+      result: null,
+      suspenseCount: 0,
+    },
+  });
+
+  render(<ProfiledApp />);
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(0);
+    expect(snapshot.result).toBe(null);
+  }
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(1);
+    expect(snapshot.result).toBe(null);
+  }
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(1);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   client.writeQuery({
     query,
-    data: { foo: { bar: "baz" } },
+    data: { greeting: "Updated Hello" },
   });
 
-  // the parent component re-renders when promise fulfilled
-  expect(await screen.findByText("baz")).toBeInTheDocument();
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
 
-  expect(renders.count).toBe(2);
-  expect(renders.suspenseCount).toBe(1);
+    expect(snapshot.suspenseCount).toBe(1);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Updated Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
-  client.writeQuery({
-    query,
-    data: { foo: { bar: "bat" } },
-  });
-
-  expect(await screen.findByText("bat")).toBeInTheDocument();
-
-  expect(renders.suspenseCount).toBe(1);
+  await expect(ProfiledApp).not.toRerender();
 });
 
 it.skip("reacts to variables updates", async () => {

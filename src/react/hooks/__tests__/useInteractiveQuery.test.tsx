@@ -2411,7 +2411,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
   }
 });
 
-it.skip("applies `context` on next fetch when it changes between renders", async () => {
+it("applies `context` on next fetch when it changes between renders", async () => {
   interface Data {
     context: Record<string, any>;
   }

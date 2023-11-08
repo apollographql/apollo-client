@@ -1144,45 +1144,109 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
   await expect(ProfiledApp).not.toRerender();
 });
 
-// TODO(FIXME): test fails, should return cache data first if it exists
-it.skip("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
-  const query = gql`
-    {
+it("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
+  const user = userEvent.setup();
+  const query: TypedDocumentNode<{ hello: string }, never> = gql`
+    query {
       hello
     }
   `;
   const cache = new InMemoryCache();
-  const link = mockSingleLink({
-    request: { query },
-    result: { data: { hello: "from link" } },
-    delay: 20,
-  });
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data: { hello: "from link" } },
+      delay: 20,
+    },
+  ]);
 
-  const client = new ApolloClient({
-    link,
-    cache,
-  });
+  const client = new ApolloClient({ link, cache });
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  const { result } = renderHook(
-    () => useInteractiveQuery(query, { fetchPolicy: "cache-and-network" }),
-    {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    }
-  );
+  function SuspenseFallback() {
+    ProfiledApp.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      suspenseCount: snapshot.suspenseCount + 1,
+    }));
 
-  const [queryRef] = result.current;
+    return <p>Loading</p>;
+  }
 
-  const _result = await queryRef[QUERY_REFERENCE_SYMBOL].promise;
+  function Parent() {
+    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+      fetchPolicy: "cache-and-network",
+    });
 
-  expect(_result).toEqual({
-    data: { hello: "from link" },
-    loading: false,
-    networkStatus: 7,
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function Child({
+    queryRef,
+  }: {
+    queryRef: QueryReference<{ hello: string }>;
+  }) {
+    const result = useReadQuery(queryRef);
+
+    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
+
+    return null;
+  }
+
+  const ProfiledApp = profile<{
+    result: UseReadQueryResult<unknown> | null;
+    suspenseCount: number;
+  }>({
+    Component: () => (
+      <ApolloProvider client={client}>
+        <Parent />
+      </ApolloProvider>
+    ),
+    initialSnapshot: {
+      result: null,
+      suspenseCount: 0,
+    },
   });
+
+  render(<ProfiledApp />);
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+    expect(snapshot.result).toEqual(null);
+  }
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(0);
+    expect(snapshot.result).toEqual({
+      data: { hello: "from cache" },
+      networkStatus: NetworkStatus.loading,
+      error: undefined,
+    });
+  }
+
+  {
+    const { snapshot } = await ProfiledApp.takeRender();
+
+    expect(snapshot.suspenseCount).toBe(0);
+    expect(snapshot.result).toEqual({
+      data: { hello: "from link" },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(ProfiledApp).not.toRerender();
 });
 
 it("all data is present in the cache, no network request is made", async () => {

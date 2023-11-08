@@ -83,7 +83,7 @@ export class DocumentTransform {
   /**
    * Resets the internal cache of this transform, if it has one.
    */
-  reset() {
+  resetCache() {
     this.stableCacheKeys =
       this.stableCacheKeys && new Trie(canUseWeakMap, (key) => ({ key }));
   }

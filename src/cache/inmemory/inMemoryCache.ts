@@ -293,7 +293,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     resetResultIdentities?: boolean;
   }) {
     canonicalStringify.reset();
-    this.addTypenameTransform.reset();
+    this.addTypenameTransform.resetCache();
     const ids = this.optimisticData.gc();
     if (options && !this.txCount) {
       if (options.resetResultCache) {

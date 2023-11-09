@@ -629,7 +629,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query);
 
     ProfiledApp.updateSnapshot((snapshot) => ({
@@ -669,7 +669,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     parentRenderCount: number;
     childRenderCount: number;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     snapshotDOM: true,
     initialSnapshot: {
       result: null,
@@ -736,7 +736,7 @@ it("can change variables on a query and resuspend by passing new variables to th
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query);
 
     ProfiledApp.updateSnapshot((snapshot) => ({
@@ -781,7 +781,7 @@ it("can change variables on a query and resuspend by passing new variables to th
     parentRenderCount: number;
     childRenderCount: number;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     snapshotDOM: true,
     initialSnapshot: {
       result: null,
@@ -890,7 +890,7 @@ it("allows the client to be overridden", async () => {
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
       client: localClient,
     });
@@ -920,7 +920,7 @@ it("allows the client to be overridden", async () => {
   const ProfiledApp = profile<{
     result: UseReadQueryResult<SimpleQueryData> | null;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     snapshotDOM: true,
     initialSnapshot: {
       result: null,
@@ -984,7 +984,7 @@ it("passes context to the link", async () => {
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
       context: { valueA: "A", valueB: "B" },
     });
@@ -1010,7 +1010,7 @@ it("passes context to the link", async () => {
   const ProfiledApp = profile<{
     result: UseReadQueryResult<QueryData> | null;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     snapshotDOM: true,
     initialSnapshot: {
       result: null,
@@ -1095,7 +1095,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
       canonizeResults: true,
     });
@@ -1121,7 +1121,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
   const ProfiledApp = profile<{
     result: UseReadQueryResult<QueryData> | null;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     initialSnapshot: {
       result: null,
     },
@@ -1199,7 +1199,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
       canonizeResults: false,
     });
@@ -1225,7 +1225,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
   const ProfiledApp = profile<{
     result: UseReadQueryResult<QueryData> | null;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     initialSnapshot: {
       result: null,
     },
@@ -1286,7 +1286,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
       fetchPolicy: "cache-and-network",
     });
@@ -1317,7 +1317,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     result: UseReadQueryResult<unknown> | null;
     suspenseCount: number;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
@@ -1389,7 +1389,7 @@ it("all data is present in the cache, no network request is made", async () => {
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query);
 
     return (
@@ -1414,7 +1414,7 @@ it("all data is present in the cache, no network request is made", async () => {
     result: UseReadQueryResult<unknown> | null;
     suspenseCount: number;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
@@ -1481,7 +1481,7 @@ it("partial data is present in the cache so it is ignored and network request is
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query);
 
     return (
@@ -1506,7 +1506,7 @@ it("partial data is present in the cache so it is ignored and network request is
     result: UseReadQueryResult<unknown> | null;
     suspenseCount: number;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
@@ -1575,7 +1575,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
       fetchPolicy: "network-only",
     });
@@ -1602,7 +1602,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
     result: UseReadQueryResult<unknown> | null;
     suspenseCount: number;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
@@ -1668,7 +1668,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
       fetchPolicy: "no-cache",
     });
@@ -1695,7 +1695,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
     result: UseReadQueryResult<unknown> | null;
     suspenseCount: number;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
@@ -1783,15 +1783,11 @@ it("works with startTransition to change variables", async () => {
     cache: new InMemoryCache(),
   });
 
-  function App() {
-    return <Parent />;
-  }
-
   function SuspenseFallback() {
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query);
 
     return (
@@ -2064,7 +2060,7 @@ it("reacts to cache updates", async () => {
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query);
     return (
       <>
@@ -2088,7 +2084,7 @@ it("reacts to cache updates", async () => {
     result: UseReadQueryResult<SimpleQueryData> | null;
     suspenseCount: number;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
@@ -2168,7 +2164,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [errorPolicy, setErrorPolicy] = useState<ErrorPolicy>("none");
     const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
       errorPolicy,
@@ -2213,7 +2209,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     result: UseReadQueryResult<SimpleQueryData> | null;
     suspenseCount: number;
   }>({
-    Component: () => <Parent />,
+    Component: App,
     initialSnapshot: {
       error: undefined,
       errorBoundaryCount: 0,
@@ -2342,7 +2338,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     return <div>Loading...</div>;
   }
 
-  function Parent() {
+  function App() {
     const [phase, setPhase] = React.useState("initial");
     const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
       context: { phase },
@@ -2364,10 +2360,6 @@ it("applies `context` on next fetch when it changes between renders", async () =
     const { data } = useReadQuery(queryRef);
 
     return <div data-testid="context">{data.context.phase}</div>;
-  }
-
-  function App() {
-    return <Parent />;
   }
 
   const { user } = renderWithClient(<App />, { client });
@@ -2438,7 +2430,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     return <div>Loading...</div>;
   }
 
-  function Parent() {
+  function App() {
     const [canonizeResults, setCanonizeResults] = React.useState(false);
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
       canonizeResults,
@@ -2463,10 +2455,6 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     result.current = data;
 
     return null;
-  }
-
-  function App() {
-    return <Parent />;
   }
 
   const { user } = renderWithClient(<App />, { client });
@@ -2552,7 +2540,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     return <div>Loading...</div>;
   }
 
-  function Parent() {
+  function App() {
     const [refetchWritePolicy, setRefetchWritePolicy] =
       React.useState<RefetchWritePolicy>("merge");
 
@@ -2585,10 +2573,6 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     const { data } = useReadQuery(queryRef);
 
     return <span data-testid="primes">{data.primes.join(", ")}</span>;
-  }
-
-  function App() {
-    return <Parent />;
   }
 
   const { user } = renderWithClient(<App />, { client });
@@ -2710,7 +2694,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     return <div>Loading...</div>;
   }
 
-  function Parent() {
+  function App() {
     const [returnPartialData, setReturnPartialData] = React.useState(false);
 
     const [queryRef, loadQuery] = useInteractiveQuery(fullQuery, {
@@ -2736,10 +2720,6 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     return (
       <span data-testid="character">{data.character.name ?? "unknown"}</span>
     );
-  }
-
-  function App() {
-    return <Parent />;
   }
 
   const { user } = renderWithClient(<App />, { client });
@@ -2825,7 +2805,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     return <div>Loading...</div>;
   }
 
-  function Parent() {
+  function App() {
     const [fetchPolicy, setFetchPolicy] =
       React.useState<InteractiveQueryHookFetchPolicy>("cache-first");
 
@@ -2851,10 +2831,6 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     const { data } = useReadQuery(queryRef);
 
     return <span data-testid="character">{data.character.name}</span>;
-  }
-
-  function App() {
-    return <Parent />;
   }
 
   const { user } = renderWithClient(<App />, { client });

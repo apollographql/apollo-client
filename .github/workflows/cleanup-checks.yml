@@ -50,6 +50,13 @@ jobs:
       - name: Update size-limit
         run: npm run update-size-limits
 
+      - name: Commit changes back
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Clean up Prettier, Size-limit, and Api-Extractor"
+          push_options: ""
+          skip_dirty_check: false
+
       # commit & push
       # if there is a "trigger this action" comment in the PR, remove it
 

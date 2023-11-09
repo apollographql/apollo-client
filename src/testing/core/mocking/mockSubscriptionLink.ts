@@ -6,6 +6,9 @@ export interface MockedSubscription {
   request: Operation;
 }
 
+/**
+ * suddenly commented
+ */
 export interface MockedSubscriptionResult {
   result?: FetchResult;
   error?: Error;

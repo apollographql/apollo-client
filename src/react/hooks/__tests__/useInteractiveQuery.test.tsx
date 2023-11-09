@@ -3114,7 +3114,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
   }
 });
 
-it.skip("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {
+it("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {
   type Variables = {
     offset: number;
   };
@@ -3128,7 +3128,6 @@ it.skip("`fetchMore` works with startTransition to allow React to show stale UI 
   interface Data {
     todos: Todo[];
   }
-  const user = userEvent.setup();
 
   const query: TypedDocumentNode<Data, Variables> = gql`
     query TodosQuery($offset: Int!) {
@@ -3140,7 +3139,7 @@ it.skip("`fetchMore` works with startTransition to allow React to show stale UI 
     }
   `;
 
-  const mocks: MockedResponse<Data, Variables>[] = [
+  const mocks: MockedResponse<Data>[] = [
     {
       request: { query, variables: { offset: 0 } },
       result: {
@@ -3188,25 +3187,21 @@ it.skip("`fetchMore` works with startTransition to allow React to show stale UI 
     }),
   });
 
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
-
   function SuspenseFallback() {
     return <p>Loading</p>;
   }
 
-  function Parent() {
-    const [queryRef, { fetchMore }] = useInteractiveQuery(query, {
-      variables: { offset: 0 },
-    });
-    return <Todo fetchMore={fetchMore} queryRef={queryRef} />;
+  function App() {
+    const [queryRef, loadQuery, { fetchMore }] = useInteractiveQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery({ offset: 0 })}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Todo fetchMore={fetchMore} queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
   }
 
   function Todo({
@@ -3243,7 +3238,9 @@ it.skip("`fetchMore` works with startTransition to allow React to show stale UI 
     );
   }
 
-  render(<App />);
+  const { user } = renderWithClient(<App />, { client });
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   expect(screen.getByText("Loading")).toBeInTheDocument();
 

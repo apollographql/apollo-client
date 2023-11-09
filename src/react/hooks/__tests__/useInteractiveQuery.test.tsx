@@ -3031,32 +3031,89 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
   }
 });
 
-it.skip("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
-  const { renders } = renderPaginatedIntegrationTest({
-    fieldPolicies: true,
-  });
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
+it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
+  const { query, link } = usePaginatedQueryCase();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<PaginatedQueryData>();
 
-  const items = await screen.findAllByTestId(/letter/i);
-
-  expect(items).toHaveLength(2);
-  expect(getItemTexts()).toStrictEqual(["A", "B"]);
-
-  const button = screen.getByText("Fetch more");
-  const user = userEvent.setup();
-  await act(() => user.click(button));
-
-  // parent component re-suspends
-  expect(renders.suspenseCount).toBe(2);
-  await waitFor(() => {
-    expect(renders.count).toBe(2);
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: concatPagination(),
+          },
+        },
+      },
+    }),
   });
 
-  const moreItems = await screen.findAllByTestId(/letter/i);
-  expect(moreItems).toHaveLength(4);
-  expect(getItemTexts()).toStrictEqual(["A", "B", "C", "D"]);
+  function App() {
+    const [queryRef, loadQuery, { fetchMore }] = useInteractiveQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <button
+          onClick={() => fetchMore({ variables: { offset: 2, limit: 2 } })}
+        >
+          Fetch more
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user } = renderWithClient(<App />, { client });
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  expect(SuspenseFallback).toHaveRendered();
+
+  {
+    const snapshot = await ReadQueryHook.waitForNextSnapshot();
+
+    expect(snapshot).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Fetch more")));
+
+  expect(SuspenseFallback).toHaveRenderedTimes(2);
+
+  // TODO: Figure out why there is an extra render here.
+  // Perhaps related? https://github.com/apollographql/apollo-client/issues/11315
+  await ReadQueryHook.takeSnapshot();
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+          { letter: "C", position: 3 },
+          { letter: "D", position: 4 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
+
 it.skip("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {
   type Variables = {
     offset: number;

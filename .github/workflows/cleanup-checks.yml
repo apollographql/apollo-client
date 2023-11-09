@@ -1,22 +1,32 @@
 name: Clean up Prettier, Size-limit, and Api-Extractor
 
 on:
-  workflow_dispatch:
-    inputs:
-      prNumber:
-        description: "target PR"
-        required: true
-        type: number
+  pull_request:
+  pull_request_review:
+    types: [submitted]
 
 jobs:
-  cleanup:
-    name: release:next
+  add_cleanup_label:
+    if: |
+      github.repository == 'apollographql/apollo-client' &&
+      github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+      - name: add label
+        uses: actions-ecosystem/action-add-labels@v1
         with:
-          ref: refs/pull/${{ inputs.prNumber }}/merge
+          labels: auto-cleanup
+
+  cleanup:
+    if: |
+      github.repository == 'apollographql/apollo-client' &&
+      contains(github.event.pull_request.labels.*.name, 'auto-cleanup')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Setup Node.js 18.x
         uses: actions/setup-node@v4

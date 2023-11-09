@@ -3279,9 +3279,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
   });
 });
 
-it.skip('honors refetchWritePolicy set to "merge"', async () => {
-  const user = userEvent.setup();
-
+it('honors refetchWritePolicy set to "merge"', async () => {
   const query: TypedDocumentNode<
     { primes: number[] },
     { min: number; max: number }
@@ -3324,89 +3322,65 @@ it.skip('honors refetchWritePolicy set to "merge"', async () => {
     },
   });
 
-  function SuspenseFallback() {
-    return <div>loading</div>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<QueryData>();
 
   const client = new ApolloClient({
     link: new MockLink(mocks),
     cache,
   });
 
-  function Child({
-    refetch,
-    queryRef,
-  }: {
-    refetch: (
-      variables?: Partial<OperationVariables> | undefined
-    ) => Promise<ApolloQueryResult<QueryData>>;
-    queryRef: QueryReference<QueryData>;
-  }) {
-    const { data, error, networkStatus } = useReadQuery(queryRef);
-
-    return (
-      <div>
-        <button
-          onClick={() => {
-            refetch({ min: 12, max: 30 });
-          }}
-        >
-          Refetch
-        </button>
-        <div data-testid="primes">{data?.primes.join(", ")}</div>
-        <div data-testid="network-status">{networkStatus}</div>
-        <div data-testid="error">{error?.message || "undefined"}</div>
-      </div>
-    );
-  }
-
-  function Parent() {
-    const [queryRef, { refetch }] = useInteractiveQuery(query, {
-      variables: { min: 0, max: 12 },
+  function App() {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
       refetchWritePolicy: "merge",
     });
-    return <Child refetch={refetch} queryRef={queryRef} />;
-  }
 
-  function App() {
     return (
-      <ApolloProvider client={client}>
+      <>
+        <button onClick={() => loadQuery({ min: 0, max: 12 })}>
+          Load query
+        </button>
+        <button onClick={() => refetch({ min: 12, max: 30 })}>Refetch</button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
-      </ApolloProvider>
+      </>
     );
   }
 
-  render(<App />);
+  const { user } = renderWithClient(<App />, { client });
 
-  await waitFor(() => {
-    expect(screen.getByTestId("primes")).toHaveTextContent("2, 3, 5, 7, 11");
-  });
-  expect(screen.getByTestId("network-status")).toHaveTextContent(
-    "7" // ready
-  );
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
-  expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: { primes: [2, 3, 5, 7, 11] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+  }
 
   await act(() => user.click(screen.getByText("Refetch")));
 
-  await waitFor(() => {
-    expect(screen.getByTestId("primes")).toHaveTextContent(
-      "2, 3, 5, 7, 11, 13, 17, 19, 23, 29"
-    );
-  });
-  expect(screen.getByTestId("network-status")).toHaveTextContent(
-    "7" // ready
-  );
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
-  expect(mergeParams).toEqual([
-    [undefined, [2, 3, 5, 7, 11]],
-    [
-      [2, 3, 5, 7, 11],
-      [13, 17, 19, 23, 29],
-    ],
-  ]);
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+    ]);
+  }
 });
 
 it.skip('defaults refetchWritePolicy to "overwrite"', async () => {

@@ -1825,13 +1825,8 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     cache,
   });
 
-  const result: { current: Data | null } = {
-    current: null,
-  };
-
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<Data>();
 
   function App() {
     const [canonizeResults, setCanonizeResults] = React.useState(false);
@@ -1846,46 +1841,37 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
           Canonize results
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Results queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Results({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
-
-    result.current = data;
-
-    return null;
-  }
-
   const { user } = renderWithClient(<App />, { client });
-
-  function verifyCanonicalResults(data: Data, canonized: boolean) {
-    const resultSet = new Set(data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
-
-    expect(data).toEqual({ results });
-
-    if (canonized) {
-      expect(data.results.length).toBe(6);
-      expect(resultSet.size).toBe(5);
-      expect(values).toEqual([0, 1, 2, 3, 5]);
-    } else {
-      expect(data.results.length).toBe(6);
-      expect(resultSet.size).toBe(6);
-      expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-    }
-  }
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  verifyCanonicalResults(result.current!, false);
+  {
+    const { data } = await ReadQueryHook.takeSnapshot();
+    const resultSet = new Set(data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(data.results.length).toBe(6);
+    expect(resultSet.size).toBe(6);
+    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+  }
 
   await act(() => user.click(screen.getByText("Canonize results")));
 
-  verifyCanonicalResults(result.current!, true);
+  {
+    const { data } = await ReadQueryHook.takeSnapshot();
+    const resultSet = new Set(data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(data.results.length).toBe(6);
+    expect(resultSet.size).toBe(5);
+    expect(values).toEqual([0, 1, 2, 3, 5]);
+  }
 });
 
 it("applies changed `refetchWritePolicy` to next fetch when changing between renders", async () => {

@@ -100,7 +100,7 @@ Starting in Apollo Client 3.7, fragments can be registered with your `InMemoryCa
 
 Let's look at an example in React.
 
-```js title="index.js" {7-12}
+```jsx title="main.jsx" {7-12}
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
 
@@ -143,7 +143,7 @@ function ToDoList() {
 
 Queries can declare their own local versions of named fragments which will take precendence over ones registered via `createFragmentRegistry`, even if the local fragment is only indirectly referenced by other registered fragments. Take the following example:
 
-```js title="index.js" {7-17}
+```jsx title="main.jsx" {7-17}
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
 

@@ -53,7 +53,7 @@ import {
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import invariant from "ts-invariant";
-import { profile, spyOnConsole } from "../../../testing/internal";
+import { profile, profileHook, spyOnConsole } from "../../../testing/internal";
 
 interface SimpleQueryData {
   greeting: string;
@@ -572,23 +572,17 @@ it("loads a query and suspends when the load query function is called", async ()
         <>
           <button onClick={() => loadQuery()}>Load query</button>
           <Suspense fallback={<SuspenseFallback />}>
-            {queryRef && <Greeting queryRef={queryRef} />}
+            {queryRef && <ReadQueryHook queryRef={queryRef} />}
           </Suspense>
         </>
       );
     },
   });
 
-  const Greeting = profile<
+  const ReadQueryHook = profileHook<
     UseReadQueryResult<SimpleQueryData>,
     { queryRef: QueryReference<SimpleQueryData> }
-  >({
-    Component: ({ queryRef }) => {
-      Greeting.updateSnapshot(useReadQuery(queryRef));
-
-      return null;
-    },
-  });
+  >(({ queryRef }) => useReadQuery(queryRef));
 
   const { user } = renderWithMocks(<App />, { mocks });
 
@@ -597,10 +591,10 @@ it("loads a query and suspends when the load query function is called", async ()
   await act(() => user.click(screen.getByText("Load query")));
 
   expect(SuspenseFallback).toHaveRendered();
-  expect(Greeting).not.toHaveRendered();
+  expect(ReadQueryHook).not.toHaveRendered();
   expect(App).toHaveRenderedTimes(2);
 
-  const { snapshot } = await Greeting.takeRender();
+  const snapshot = await ReadQueryHook.takeSnapshot();
 
   expect(snapshot).toEqual({
     data: { greeting: "Hello" },
@@ -609,7 +603,7 @@ it("loads a query and suspends when the load query function is called", async ()
   });
 
   expect(SuspenseFallback).toHaveRenderedTimes(1);
-  expect(Greeting).toHaveRenderedTimes(1);
+  expect(ReadQueryHook).toHaveRenderedTimes(1);
   expect(App).toHaveRenderedTimes(3);
 });
 

@@ -1709,19 +1709,19 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
 
 it("applies `context` on next fetch when it changes between renders", async () => {
   interface Data {
-    context: Record<string, any>;
+    phase: string;
   }
 
   const query: TypedDocumentNode<Data, never> = gql`
     query {
-      context
+      phase
     }
   `;
 
   const link = new ApolloLink((operation) => {
     return Observable.of({
       data: {
-        context: operation.getContext(),
+        phase: operation.getContext().phase,
       },
     });
   });
@@ -1731,9 +1731,8 @@ it("applies `context` on next fetch when it changes between renders", async () =
     cache: new InMemoryCache(),
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<Data>();
 
   function App() {
     const [phase, setPhase] = React.useState("initial");
@@ -1747,28 +1746,35 @@ it("applies `context` on next fetch when it changes between renders", async () =
         <button onClick={() => refetch()}>Refetch</button>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Context queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
-  }
-
-  function Context({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
-
-    return <div data-testid="context">{data.context.phase}</div>;
   }
 
   const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(await screen.findByTestId("context")).toHaveTextContent("initial");
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot.data).toEqual({
+      phase: "initial",
+    });
+  }
 
   await act(() => user.click(screen.getByText("Update context")));
   await act(() => user.click(screen.getByText("Refetch")));
+  await ReadQueryHook.takeSnapshot();
 
-  expect(await screen.findByTestId("context")).toHaveTextContent("rerender");
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot.data).toEqual({
+      phase: "rerender",
+    });
+  }
 });
 
 // NOTE: We only test the `false` -> `true` path here. If the option changes

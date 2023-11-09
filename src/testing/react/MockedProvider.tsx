@@ -1,12 +1,14 @@
-import * as React from 'react';
+import * as React from "react";
 
-import { ApolloClient, DefaultOptions } from '../../core';
-import { InMemoryCache as Cache } from '../../cache';
-import { ApolloProvider } from '../../react/context';
-import { MockLink, MockedResponse } from '../core';
-import { ApolloLink } from '../../link/core';
-import { Resolvers } from '../../core';
-import { ApolloCache } from '../../cache';
+import type { DefaultOptions } from "../../core/index.js";
+import { ApolloClient } from "../../core/index.js";
+import { InMemoryCache as Cache } from "../../cache/index.js";
+import { ApolloProvider } from "../../react/context/index.js";
+import type { MockedResponse } from "../core/index.js";
+import { MockLink } from "../core/index.js";
+import type { ApolloLink } from "../../link/core/index.js";
+import type { Resolvers } from "../../core/index.js";
+import type { ApolloCache } from "../../cache/index.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
   mocks?: ReadonlyArray<MockedResponse>;
@@ -18,6 +20,11 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   children?: any;
   link?: ApolloLink;
   showWarnings?: boolean;
+  /**
+   * If set to true, the MockedProvider will try to connect to the Apollo DevTools.
+   * Defaults to false.
+   */
+  connectToDevTools?: boolean;
 }
 
 export interface MockedProviderState {
@@ -29,7 +36,7 @@ export class MockedProvider extends React.Component<
   MockedProviderState
 > {
   public static defaultProps: MockedProviderProps = {
-    addTypename: true
+    addTypename: true,
   };
 
   constructor(props: MockedProviderProps) {
@@ -43,25 +50,27 @@ export class MockedProvider extends React.Component<
       resolvers,
       link,
       showWarnings,
+      connectToDevTools = false,
     } = this.props;
     const client = new ApolloClient({
       cache: cache || new Cache({ addTypename }),
       defaultOptions,
-      link: link || new MockLink(
-        mocks || [],
-        addTypename,
-        { showWarnings }
-      ),
+      connectToDevTools,
+      link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
       resolvers,
     });
 
-    this.state = { client };
+    this.state = {
+      client,
+    };
   }
 
   public render() {
     const { children, childProps } = this.props;
+    const { client } = this.state;
+
     return React.isValidElement(children) ? (
-      <ApolloProvider client={this.state.client}>
+      <ApolloProvider client={client}>
         {React.cloneElement(React.Children.only(children), { ...childProps })}
       </ApolloProvider>
     ) : null;

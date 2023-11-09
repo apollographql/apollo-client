@@ -1,10 +1,16 @@
-import { FieldFunctionOptions, InMemoryCache, isReference, makeReference, StoreObject } from '../../../cache';
-import { relayStylePagination, TRelayPageInfo } from '../pagination';
+import {
+  FieldFunctionOptions,
+  InMemoryCache,
+  isReference,
+  makeReference,
+  StoreObject,
+} from "../../../cache";
+import { relayStylePagination, TRelayPageInfo } from "../pagination";
 
-describe('relayStylePagination', () => {
+describe("relayStylePagination", () => {
   const policy = relayStylePagination();
 
-  describe('read', () => {
+  describe("read", () => {
     const fakeEdges = [
       { node: { __ref: "A" }, cursor: "cursorA" },
       { node: { __ref: "B" }, cursor: "cursorB" },
@@ -12,26 +18,28 @@ describe('relayStylePagination', () => {
     ];
 
     const fakeReadOptions = {
-      canRead() { return true },
+      canRead() {
+        return true;
+      },
       readField(key: string, obj: StoreObject) {
         return obj && obj[key];
       },
     } as any as FieldFunctionOptions;
 
     it("should prefer existing.pageInfo.startCursor", () => {
-      const resultWithStartCursor = policy.read!({
-        edges: fakeEdges,
-        pageInfo: {
-          startCursor: "preferredStartCursor",
-          hasPreviousPage: false,
-          hasNextPage: true,
-        } as TRelayPageInfo,
-      }, fakeReadOptions);
+      const resultWithStartCursor = policy.read!(
+        {
+          edges: fakeEdges,
+          pageInfo: {
+            startCursor: "preferredStartCursor",
+            hasPreviousPage: false,
+            hasNextPage: true,
+          } as TRelayPageInfo,
+        },
+        fakeReadOptions
+      );
 
-      expect(
-        resultWithStartCursor &&
-        resultWithStartCursor.pageInfo
-      ).toEqual({
+      expect(resultWithStartCursor && resultWithStartCursor.pageInfo).toEqual({
         startCursor: "preferredStartCursor",
         endCursor: "cursorC",
         hasPreviousPage: false,
@@ -40,19 +48,19 @@ describe('relayStylePagination', () => {
     });
 
     it("should prefer existing.pageInfo.endCursor", () => {
-      const resultWithEndCursor = policy.read!({
-        edges: fakeEdges,
-        pageInfo: {
-          endCursor: "preferredEndCursor",
-          hasPreviousPage: false,
-          hasNextPage: true,
-        } as TRelayPageInfo,
-      }, fakeReadOptions);
+      const resultWithEndCursor = policy.read!(
+        {
+          edges: fakeEdges,
+          pageInfo: {
+            endCursor: "preferredEndCursor",
+            hasPreviousPage: false,
+            hasNextPage: true,
+          } as TRelayPageInfo,
+        },
+        fakeReadOptions
+      );
 
-      expect(
-        resultWithEndCursor &&
-        resultWithEndCursor.pageInfo
-      ).toEqual({
+      expect(resultWithEndCursor && resultWithEndCursor.pageInfo).toEqual({
         startCursor: "cursorA",
         endCursor: "preferredEndCursor",
         hasPreviousPage: false,
@@ -61,20 +69,20 @@ describe('relayStylePagination', () => {
     });
 
     it("should prefer existing.pageInfo.{start,end}Cursor", () => {
-      const resultWithEndCursor = policy.read!({
-        edges: fakeEdges,
-        pageInfo: {
-          startCursor: "preferredStartCursor",
-          endCursor: "preferredEndCursor",
-          hasPreviousPage: false,
-          hasNextPage: true,
+      const resultWithEndCursor = policy.read!(
+        {
+          edges: fakeEdges,
+          pageInfo: {
+            startCursor: "preferredStartCursor",
+            endCursor: "preferredEndCursor",
+            hasPreviousPage: false,
+            hasNextPage: true,
+          },
         },
-      }, fakeReadOptions);
+        fakeReadOptions
+      );
 
-      expect(
-        resultWithEndCursor &&
-        resultWithEndCursor.pageInfo
-      ).toEqual({
+      expect(resultWithEndCursor && resultWithEndCursor.pageInfo).toEqual({
         startCursor: "preferredStartCursor",
         endCursor: "preferredEndCursor",
         hasPreviousPage: false,
@@ -83,45 +91,95 @@ describe('relayStylePagination', () => {
     });
 
     it("should override pageInfo.{start,end}Cursor if empty strings", () => {
-      const resultWithEndCursor = policy.read!({
-        edges: [
-          { node: { __ref: "A" }, cursor: "" },
-          { node: { __ref: "B" }, cursor: "cursorB" },
-          { node: { __ref: "C" }, cursor: "" },
-          { node: { __ref: "D" }, cursor: "cursorD" },
-          { node: { __ref: "E" } },
-        ],
-        pageInfo: {
-          startCursor: "",
-          endCursor: "",
-          hasPreviousPage: false,
-          hasNextPage: true,
+      const resultWithEndCursor = policy.read!(
+        {
+          edges: [
+            { node: { __ref: "A" }, cursor: "" },
+            { node: { __ref: "B" }, cursor: "cursorB" },
+            { node: { __ref: "C" }, cursor: "" },
+            { node: { __ref: "D" }, cursor: "cursorD" },
+            { node: { __ref: "E" } },
+          ],
+          pageInfo: {
+            startCursor: "",
+            endCursor: "",
+            hasPreviousPage: false,
+            hasNextPage: true,
+          },
         },
-      }, fakeReadOptions);
+        fakeReadOptions
+      );
 
-      expect(
-        resultWithEndCursor &&
-        resultWithEndCursor.pageInfo
-      ).toEqual({
+      expect(resultWithEndCursor && resultWithEndCursor.pageInfo).toEqual({
         startCursor: "cursorB",
         endCursor: "cursorD",
         hasPreviousPage: false,
         hasNextPage: true,
       });
     });
+
+    it("should only override pageInfo.endCursor if empty strings with a single cursor", () => {
+      const resultWithEndCursor = policy.read!(
+        {
+          edges: [
+            { node: { __ref: "A" }, cursor: "" },
+            { node: { __ref: "B" }, cursor: "" },
+            { node: { __ref: "C" }, cursor: "" },
+            { node: { __ref: "D" }, cursor: "cursorD" },
+            { node: { __ref: "E" } },
+          ],
+          pageInfo: {
+            startCursor: "",
+            endCursor: "",
+            hasPreviousPage: false,
+            hasNextPage: true,
+          },
+        },
+        fakeReadOptions
+      );
+
+      expect(resultWithEndCursor && resultWithEndCursor.pageInfo).toEqual({
+        startCursor: "",
+        endCursor: "cursorD",
+        hasPreviousPage: false,
+        hasNextPage: true,
+      });
+    });
+
+    it("should only override both pageInfo.{start,end}Cursor if empty strings with a single cursor and single element", () => {
+      const resultWithEndCursor = policy.read!(
+        {
+          edges: [{ node: { __ref: "A" }, cursor: "cursorA" }],
+          pageInfo: {
+            startCursor: "",
+            endCursor: "",
+            hasPreviousPage: false,
+            hasNextPage: true,
+          },
+        },
+        fakeReadOptions
+      );
+
+      expect(resultWithEndCursor && resultWithEndCursor.pageInfo).toEqual({
+        startCursor: "cursorA",
+        endCursor: "cursorA",
+        hasPreviousPage: false,
+        hasNextPage: true,
+      });
+    });
   });
 
-  describe('merge', () => {
+  describe("merge", () => {
     const merge = policy.merge;
     // The merge function should exist, make TS aware
-    if (typeof merge !== 'function') {
-      throw new Error('Expecting merge function');
+    if (typeof merge !== "function") {
+      throw new Error("Expecting merge function");
     }
 
     const options: FieldFunctionOptions = {
       args: null,
-      fieldName: 'fake',
-      storeFieldName: 'fake',
+      fieldName: "fake",
+      storeFieldName: "fake",
       field: null,
       isReference: isReference,
       toReference: () => undefined,
@@ -132,14 +190,14 @@ describe('relayStylePagination', () => {
       mergeObjects: (existing, _incoming) => existing,
     };
 
-    it('should maintain endCursor and startCursor with empty edges', () => {
+    it("should maintain endCursor and startCursor with empty edges", () => {
       const incoming: Parameters<typeof merge>[1] = {
         pageInfo: {
           hasPreviousPage: false,
           hasNextPage: true,
-          startCursor: 'abc',
-          endCursor: 'xyz',
-        }
+          startCursor: "abc",
+          endCursor: "xyz",
+        },
       };
       const result = merge(undefined, incoming, options);
       expect(result).toEqual({
@@ -147,19 +205,19 @@ describe('relayStylePagination', () => {
         pageInfo: {
           hasPreviousPage: false,
           hasNextPage: true,
-          startCursor: 'abc',
-          endCursor: 'xyz'
-        }
+          startCursor: "abc",
+          endCursor: "xyz",
+        },
       });
     });
 
-    it('should maintain existing PageInfo when adding a page', () => {
+    it("should maintain existing PageInfo when adding a page", () => {
       const existingEdges = [
-        { cursor: 'alpha', node: makeReference("fakeAlpha") },
+        { cursor: "alpha", node: makeReference("fakeAlpha") },
       ];
 
       const incomingEdges = [
-        { cursor: 'omega', node: makeReference("fakeOmega") },
+        { cursor: "omega", node: makeReference("fakeOmega") },
       ];
 
       const result = merge(
@@ -168,8 +226,8 @@ describe('relayStylePagination', () => {
           pageInfo: {
             hasPreviousPage: false,
             hasNextPage: true,
-            startCursor: 'alpha',
-            endCursor: 'alpha'
+            startCursor: "alpha",
+            endCursor: "alpha",
           },
         },
         {
@@ -184,28 +242,25 @@ describe('relayStylePagination', () => {
         {
           ...options,
           args: {
-            after: 'alpha',
+            after: "alpha",
           },
-        },
+        }
       );
 
       expect(result).toEqual({
-        edges: [
-          ...existingEdges,
-          ...incomingEdges,
-        ],
+        edges: [...existingEdges, ...incomingEdges],
         pageInfo: {
           hasPreviousPage: false,
           hasNextPage: true,
-          startCursor: 'alpha',
-          endCursor: 'omega',
-        }
+          startCursor: "alpha",
+          endCursor: "omega",
+        },
       });
     });
 
-    it('should preserve existing if incoming is null', () => {
+    it("should preserve existing if incoming is null", () => {
       const existingEdges = [
-        { cursor: 'alpha', node: makeReference("fakeAlpha") },
+        { cursor: "alpha", node: makeReference("fakeAlpha") },
       ];
 
       const fakeExisting = {
@@ -213,8 +268,8 @@ describe('relayStylePagination', () => {
         pageInfo: {
           hasPreviousPage: false,
           hasNextPage: true,
-          startCursor: 'alpha',
-          endCursor: 'alpha'
+          startCursor: "alpha",
+          endCursor: "alpha",
         },
       };
 
@@ -223,53 +278,45 @@ describe('relayStylePagination', () => {
       const fakeOptions = {
         ...options,
         args: {
-          after: 'alpha',
+          after: "alpha",
         },
       };
 
-      const result = merge(
-        fakeExisting,
-        fakeIncoming,
-        fakeOptions,
-      );
+      const result = merge(fakeExisting, fakeIncoming, fakeOptions);
 
       expect(result).toEqual(fakeExisting);
-    })
+    });
 
-    it('should replace existing null with incoming', () => {
+    it("should replace existing null with incoming", () => {
       const incomingEdges = [
-        { cursor: 'alpha', node: makeReference("fakeAlpha") },
+        { cursor: "alpha", node: makeReference("fakeAlpha") },
       ];
       const incoming = {
         edges: incomingEdges,
         pageInfo: {
           hasPreviousPage: false,
           hasNextPage: true,
-          startCursor: 'alpha',
-          endCursor: 'alpha'
+          startCursor: "alpha",
+          endCursor: "alpha",
         },
       };
-      const result = merge(
-        null,
-        incoming,
-        {
-          ...options,
-          args: {
-            after: 'alpha',
-          },
+      const result = merge(null, incoming, {
+        ...options,
+        args: {
+          after: "alpha",
         },
-      );
+      });
 
       expect(result).toEqual(incoming);
-    })
+    });
 
-    it('should maintain extra PageInfo properties', () => {
+    it("should maintain extra PageInfo properties", () => {
       const existingEdges = [
-        { cursor: 'alpha', node: makeReference("fakeAlpha") },
+        { cursor: "alpha", node: makeReference("fakeAlpha") },
       ];
 
       const incomingEdges = [
-        { cursor: 'omega', node: makeReference("fakeOmega") },
+        { cursor: "omega", node: makeReference("fakeOmega") },
       ];
 
       const result = merge(
@@ -278,8 +325,8 @@ describe('relayStylePagination', () => {
           pageInfo: {
             hasPreviousPage: false,
             hasNextPage: true,
-            startCursor: 'alpha',
-            endCursor: 'alpha',
+            startCursor: "alpha",
+            endCursor: "alpha",
             extra: "existing.pageInfo.extra",
           } as TRelayPageInfo,
         },
@@ -296,26 +343,23 @@ describe('relayStylePagination', () => {
         {
           ...options,
           args: {
-            after: 'alpha',
+            after: "alpha",
           },
-        },
+        }
       );
 
       expect(result).toEqual({
-        edges: [
-          ...existingEdges,
-          ...incomingEdges,
-        ],
+        edges: [...existingEdges, ...incomingEdges],
         pageInfo: {
           hasPreviousPage: false,
           hasNextPage: true,
-          startCursor: 'alpha',
-          endCursor: 'omega',
+          startCursor: "alpha",
+          endCursor: "omega",
           // This is the most important line in this test, since it proves
           // incoming.pageInfo.extra was not lost.
           extra: "incoming.pageInfo.extra",
-        }
+        },
       });
     });
-  })
+  });
 });

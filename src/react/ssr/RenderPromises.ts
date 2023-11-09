@@ -1,7 +1,7 @@
-import { DocumentNode } from 'graphql';
+import type { DocumentNode } from "graphql";
 
-import { ObservableQuery, OperationVariables } from '../../core';
-import { QueryDataOptions } from '../types/types';
+import type { ObservableQuery, OperationVariables } from "../../core/index.js";
+import type { QueryDataOptions } from "../types/types.js";
 
 // TODO: A vestigial interface from when hooks were implemented with utility
 // classes, which should be deleted in the future.
@@ -18,7 +18,7 @@ type QueryInfo = {
 function makeDefaultQueryInfo(): QueryInfo {
   return {
     seen: false,
-    observable: null
+    observable: null,
   };
 }
 
@@ -43,7 +43,7 @@ export class RenderPromises {
 
   // Registers the server side rendered observable.
   public registerSSRObservable<TData, TVariables extends OperationVariables>(
-    observable: ObservableQuery<any, TVariables>,
+    observable: ObservableQuery<any, TVariables>
   ) {
     if (this.stopped) return;
     this.lookupQueryInfo(observable.options).observable = observable;
@@ -58,14 +58,14 @@ export class RenderPromises {
 
   public addQueryPromise(
     queryInstance: QueryData,
-    finish?: () => React.ReactNode,
+    finish?: () => React.ReactNode
   ): React.ReactNode {
     if (!this.stopped) {
       const info = this.lookupQueryInfo(queryInstance.getOptions());
       if (!info.seen) {
         this.queryPromises.set(
           queryInstance.getOptions(),
-          new Promise(resolve => {
+          new Promise((resolve) => {
             resolve(queryInstance.fetchData());
           })
         );
@@ -77,30 +77,32 @@ export class RenderPromises {
     return finish ? finish() : null;
   }
 
-  public addObservableQueryPromise<TData, TVariables extends OperationVariables>(
-    obsQuery: ObservableQuery<TData, TVariables>,
-  ) {
+  public addObservableQueryPromise<
+    TData,
+    TVariables extends OperationVariables,
+  >(obsQuery: ObservableQuery<TData, TVariables>) {
     return this.addQueryPromise({
       // The only options which seem to actually be used by the
       // RenderPromises class are query and variables.
       getOptions: () => obsQuery.options,
-      fetchData: () => new Promise<void>((resolve) => {
-        const sub = obsQuery.subscribe({
-          next(result) {
-            if (!result.loading) {
-              resolve()
+      fetchData: () =>
+        new Promise<void>((resolve) => {
+          const sub = obsQuery.subscribe({
+            next(result) {
+              if (!result.loading) {
+                resolve();
+                sub.unsubscribe();
+              }
+            },
+            error() {
+              resolve();
               sub.unsubscribe();
-            }
-          },
-          error() {
-            resolve();
-            sub.unsubscribe();
-          },
-          complete() {
-            resolve();
-          },
-        });
-      }),
+            },
+            complete() {
+              resolve();
+            },
+          });
+        }),
     });
   }
 

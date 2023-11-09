@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2023-05-02**
+**Last updated: 2023-11-07**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -13,26 +13,33 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ---
 
-## [3.8.0](https://github.com/apollographql/apollo-client/milestone/30)
+## [3.9.0](https://github.com/apollographql/apollo-client/milestone/32)
 
-_Approximate Date: 2023-05-12 (Beta), GA TBD after user feedback_
+_Currently in development phase_
 
-Currently in active development and being shipped in a series alpha releases.  React 18 users will get a lot out of this release since it introduces support for Suspense and (for you server-side rendering enthusiasts) `renderToPipeableStream`.  There are also new features added to the core as well.  Here's a brief overview:
+Tentative beta date: Dec 1, 2023
 
-- Add a new hook `useSuspenseQuery` which will provide the core functionality for React 18 `Suspense` capabilities
-- Ability to use `Suspense` with `@defer`
-- Introduce another new hook `useBackgroundQuery` with `Suspense` support
-- Ability to use `Suspense` with  `useFragment`
-- Server-side rendering (SSR) upgrade: support `renderToPipeableStream` for streaming renders
-- Support custom GraphQL document transforms
+Features we plan to tackle:
 
-As we release each new feature we'll be looking for feedback from the community on performance, usage and developer experience of adopting and implementing these new concepts in your applications.  Try it today: `npm i @apollo/client@alpha` and let us know what you think!  Once new feature development is complete we'll move this to beta and then GA once stable.
+- Ability to preload a query outside of a React component that can be used with `useReadQuery` to suspend while loading
+- Introduce a new `useInteractiveQuery`/`useLazyBackgroundQuery` hook (name TBD)
+- Improved testing utilities
+- Optimizing memory usage in SSR scenarios
+
+> NOTE: These are subject to change and are not guaranteed to be part of 3.9 at the time of this writing.
 
 ## Future 3.x releases
 
+## [3.10.0](https://github.com/apollographql/apollo-client/milestone/33)
+
+_Currently in planning phase_
+
+- schema-driven testing utilities
+- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
+
 _Approximate Date: TBD_
 
-The 3.8 release is a major milestone for the project's React support.  Feedback from the community will have a big impact on where we go next, particularly as use cases for React Server Components and other React 18 features emerge.  In addition to new functionality, there is a significant backlog of questions and fixes that we want to categorize and thoughtfully address in upcoming releases.
+The 3.8 release was a major milestone for the project's React support.  Feedback from the community will have a big impact on where we go next, particularly as use cases for React Server Components and other React 18 features emerge.  In addition to new functionality, there is a significant backlog of questions and fixes that we want to categorize and thoughtfully address in upcoming releases.
 
 ## 4.0
 

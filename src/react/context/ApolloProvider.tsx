@@ -1,9 +1,9 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from "../../utilities/globals/index.js";
 
-import * as React from 'react';
+import * as React from "react";
 
-import { ApolloClient } from '../../core';
-import { getApolloContext } from './ApolloContext';
+import type { ApolloClient } from "../../core/index.js";
+import { getApolloContext } from "./ApolloContext.js";
 
 export interface ApolloProviderProps<TCache> {
   client: ApolloClient<TCache>;
@@ -12,28 +12,25 @@ export interface ApolloProviderProps<TCache> {
 
 export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
   client,
-  children
+  children,
 }) => {
   const ApolloContext = getApolloContext();
+  const parentContext = React.useContext(ApolloContext);
+
+  const context = React.useMemo(() => {
+    return {
+      ...parentContext,
+      client: client || parentContext.client,
+    };
+  }, [parentContext, client]);
+
+  invariant(
+    context.client,
+    "ApolloProvider was not passed a client instance. Make " +
+      'sure you pass in your client via the "client" prop.'
+  );
+
   return (
-    <ApolloContext.Consumer>
-      {(context: any = {}) => {
-        if (client && context.client !== client) {
-          context = Object.assign({}, context, { client });
-        }
-
-        invariant(
-          context.client,
-          'ApolloProvider was not passed a client instance. Make ' +
-            'sure you pass in your client via the "client" prop.'
-        );
-
-        return (
-          <ApolloContext.Provider value={context}>
-            {children}
-          </ApolloContext.Provider>
-        );
-      }}
-    </ApolloContext.Consumer>
+    <ApolloContext.Provider value={context}>{children}</ApolloContext.Provider>
   );
 };

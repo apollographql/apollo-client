@@ -9,6 +9,7 @@ Array [
   "ApolloLink",
   "ApolloProvider",
   "Cache",
+  "DocumentTransform",
   "DocumentType",
   "HttpLink",
   "InMemoryCache",
@@ -34,6 +35,7 @@ Array [
   "getApolloContext",
   "gql",
   "isApolloError",
+  "isNetworkRequestSettled",
   "isReference",
   "makeReference",
   "makeVar",
@@ -49,16 +51,20 @@ Array [
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
+  "skipToken",
   "split",
   "throwServerError",
   "toPromise",
   "useApolloClient",
-  "useFragment_experimental",
+  "useBackgroundQuery",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
   "useReactiveVar",
+  "useReadQuery",
   "useSubscription",
+  "useSuspenseQuery",
 ]
 `;
 
@@ -88,6 +94,7 @@ Array [
   "ApolloError",
   "ApolloLink",
   "Cache",
+  "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
   "MissingFieldError",
@@ -111,6 +118,7 @@ Array [
   "fromPromise",
   "gql",
   "isApolloError",
+  "isNetworkRequestSettled",
   "isReference",
   "makeReference",
   "makeVar",
@@ -126,6 +134,14 @@ Array [
   "split",
   "throwServerError",
   "toPromise",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/dev 1`] = `
+Array [
+  "loadDevMessages",
+  "loadErrorMessageHandler",
+  "loadErrorMessages",
 ]
 `;
 
@@ -194,9 +210,15 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
-  "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/remove-typename 1`] = `
+Array [
+  "KEEP",
+  "removeTypenameFromVariables",
 ]
 `;
 
@@ -221,6 +243,7 @@ Array [
 exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",
+  "filterOperationVariables",
   "fromError",
   "fromPromise",
   "throwServerError",
@@ -245,13 +268,17 @@ Array [
   "operationName",
   "parser",
   "resetApolloContext",
+  "skipToken",
   "useApolloClient",
-  "useFragment_experimental",
+  "useBackgroundQuery",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
   "useReactiveVar",
+  "useReadQuery",
   "useSubscription",
+  "useSuspenseQuery",
 ]
 `;
 
@@ -284,13 +311,17 @@ Array [
 
 exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
 Array [
+  "skipToken",
   "useApolloClient",
-  "useFragment_experimental",
+  "useBackgroundQuery",
+  "useFragment",
   "useLazyQuery",
   "useMutation",
   "useQuery",
   "useReactiveVar",
+  "useReadQuery",
   "useSubscription",
+  "useSuspenseQuery",
 ]
 `;
 
@@ -352,6 +383,7 @@ Array [
   "Concast",
   "DEV",
   "DeepMerger",
+  "DocumentTransform",
   "Observable",
   "addTypenameToDocument",
   "argumentsObjectFromField",
@@ -368,6 +400,8 @@ Array [
   "compact",
   "concatPagination",
   "createFragmentMap",
+  "createFulfilledPromise",
+  "createRejectedPromise",
   "fixObservableSubclass",
   "getDefaultValues",
   "getDirectiveNames",
@@ -388,13 +422,22 @@ Array [
   "hasAnyDirectives",
   "hasClientExports",
   "hasDirectives",
+  "isApolloPayloadResult",
   "isArray",
   "isDocumentNode",
+  "isExecutionPatchIncrementalResult",
+  "isExecutionPatchInitialResult",
+  "isExecutionPatchResult",
   "isField",
   "isInlineFragment",
+  "isMutationOperation",
   "isNonEmptyArray",
   "isNonNullObject",
+  "isPlainObject",
+  "isQueryOperation",
   "isReference",
+  "isStatefulPromise",
+  "isSubscriptionOperation",
   "iterateObserversSafely",
   "makeReference",
   "makeUniqueId",
@@ -402,8 +445,11 @@ Array [
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
+  "mergeIncrementalData",
   "mergeOptions",
   "offsetLimitPagination",
+  "omitDeep",
+  "print",
   "relayStylePagination",
   "removeArgumentsFromDocument",
   "removeClientSetsFromDocument",
@@ -414,7 +460,9 @@ Array [
   "shouldInclude",
   "storeKeyNameFromField",
   "stringifyForDisplay",
+  "stripTypename",
   "valueToObjectRepresentation",
+  "wrapPromiseWithState",
 ]
 `;
 
@@ -422,9 +470,10 @@ exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
 Array [
   "DEV",
   "InvariantError",
-  "checkDEV",
+  "__DEV__",
   "global",
   "invariant",
   "maybe",
+  "newInvariantError",
 ]
 `;

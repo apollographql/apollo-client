@@ -1,16 +1,16 @@
-import { invariant } from '../../utilities/globals';
+import { invariant } from "../../utilities/globals/index.js";
 
-import {
+import type {
   DocumentNode,
   DefinitionNode,
   VariableDefinitionNode,
-  OperationDefinitionNode
-} from 'graphql';
+  OperationDefinitionNode,
+} from "graphql";
 
 export enum DocumentType {
   Query,
   Mutation,
-  Subscription
+  Subscription,
 }
 
 export interface IDocumentDefinition {
@@ -25,13 +25,13 @@ export function operationName(type: DocumentType) {
   let name;
   switch (type) {
     case DocumentType.Query:
-      name = 'Query';
+      name = "Query";
       break;
     case DocumentType.Mutation:
-      name = 'Mutation';
+      name = "Mutation";
       break;
     case DocumentType.Subscription:
-      name = 'Subscription';
+      name = "Subscription";
       break;
   }
   return name;
@@ -46,31 +46,32 @@ export function parser(document: DocumentNode): IDocumentDefinition {
 
   invariant(
     !!document && !!document.kind,
-    `Argument of ${document} passed to parser was not a valid GraphQL ` +
+    `Argument of %s passed to parser was not a valid GraphQL ` +
       `DocumentNode. You may need to use 'graphql-tag' or another method ` +
-      `to convert your operation into a document`
+      `to convert your operation into a document`,
+    document
   );
 
-  const fragments: DefinitionNode[] = []
-  const queries: DefinitionNode[] = []
-  const mutations: DefinitionNode[] = []
-  const subscriptions: DefinitionNode[] = []
+  const fragments: DefinitionNode[] = [];
+  const queries: DefinitionNode[] = [];
+  const mutations: DefinitionNode[] = [];
+  const subscriptions: DefinitionNode[] = [];
 
   for (const x of document.definitions) {
-    if (x.kind === 'FragmentDefinition') {
+    if (x.kind === "FragmentDefinition") {
       fragments.push(x);
-      continue
+      continue;
     }
 
-    if (x.kind === 'OperationDefinition') {
+    if (x.kind === "OperationDefinition") {
       switch (x.operation) {
-        case 'query':
+        case "query":
           queries.push(x);
           break;
-        case 'mutation':
+        case "mutation":
           mutations.push(x);
           break;
-        case 'subscription':
+        case "subscription":
           subscriptions.push(x);
           break;
       }
@@ -79,7 +80,9 @@ export function parser(document: DocumentNode): IDocumentDefinition {
 
   invariant(
     !fragments.length ||
-      (queries.length || mutations.length || subscriptions.length),
+      queries.length ||
+      mutations.length ||
+      subscriptions.length,
     `Passing only a fragment to 'graphql' is not yet supported. ` +
       `You must include a query, subscription or mutation as well`
   );
@@ -87,9 +90,13 @@ export function parser(document: DocumentNode): IDocumentDefinition {
   invariant(
     queries.length + mutations.length + subscriptions.length <= 1,
     `react-apollo only supports a query, subscription, or a mutation per HOC. ` +
-      `${document} had ${queries.length} queries, ${subscriptions.length} ` +
-      `subscriptions and ${mutations.length} mutations. ` +
-      `You can use 'compose' to join multiple operation types to a component`
+      `%s had %s queries, %s ` +
+      `subscriptions and %s mutations. ` +
+      `You can use 'compose' to join multiple operation types to a component`,
+    document,
+    queries.length,
+    subscriptions.length,
+    mutations.length
   );
 
   type = queries.length ? DocumentType.Query : DocumentType.Mutation;
@@ -103,18 +110,20 @@ export function parser(document: DocumentNode): IDocumentDefinition {
 
   invariant(
     definitions.length === 1,
-    `react-apollo only supports one definition per HOC. ${document} had ` +
-      `${definitions.length} definitions. ` +
-      `You can use 'compose' to join multiple operation types to a component`
+    `react-apollo only supports one definition per HOC. %s had ` +
+      `%s definitions. ` +
+      `You can use 'compose' to join multiple operation types to a component`,
+    document,
+    definitions.length
   );
 
   const definition = definitions[0] as OperationDefinitionNode;
   variables = definition.variableDefinitions || [];
 
-  if (definition.name && definition.name.kind === 'Name') {
+  if (definition.name && definition.name.kind === "Name") {
     name = definition.name.value;
   } else {
-    name = 'data'; // fallback to using data if no name
+    name = "data"; // fallback to using data if no name
   }
 
   const payload = { name, type, variables };
@@ -128,8 +137,9 @@ export function verifyDocumentType(document: DocumentNode, type: DocumentType) {
   const usedOperationName = operationName(operation.type);
   invariant(
     operation.type === type,
-    `Running a ${requiredOperationName} requires a graphql ` +
-      `${requiredOperationName}, but a ${usedOperationName} was used instead.`
+    `Running a %s requires a graphql ` + `%s, but a %s was used instead.`,
+    requiredOperationName,
+    requiredOperationName,
+    usedOperationName
   );
 }
-

@@ -1,46 +1,42 @@
-import { DocumentNode, GraphQLError } from 'graphql';
+import type { DocumentNode, GraphQLError } from "graphql";
 import { equal } from "@wry/equality";
 
-import { Cache, ApolloCache } from '../cache';
-import { DeepMerger } from "../utilities"
-import { mergeIncrementalData } from '../utilities/common/incrementalResult';
-import { WatchQueryOptions, ErrorPolicy } from './watchQueryOptions';
-import { ObservableQuery, reobserveCacheFirst } from './ObservableQuery';
-import { QueryListener } from './types';
-import { FetchResult } from '../link/core';
+import type { Cache, ApolloCache } from "../cache/index.js";
+import { DeepMerger } from "../utilities/index.js";
+import { mergeIncrementalData } from "../utilities/index.js";
+import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
+import type { ObservableQuery } from "./ObservableQuery.js";
+import { reobserveCacheFirst } from "./ObservableQuery.js";
+import type { QueryListener, MethodKeys } from "./types.js";
+import type { FetchResult } from "../link/core/index.js";
 import {
-  ObservableSubscription,
   isNonEmptyArray,
   graphQLResultHasError,
   canUseWeakMap,
-} from '../utilities';
-import {
-  NetworkStatus,
-  isNetworkRequestInFlight,
-} from './networkStatus';
-import { ApolloError } from '../errors';
-import { QueryManager } from './QueryManager';
+} from "../utilities/index.js";
+import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
+import type { ApolloError } from "../errors/index.js";
+import type { QueryManager } from "./QueryManager.js";
 
-export type QueryStoreValue = Pick<QueryInfo,
-  | "variables"
-  | "networkStatus"
-  | "networkError"
-  | "graphQLErrors"
-  >;
+export type QueryStoreValue = Pick<
+  QueryInfo,
+  "variables" | "networkStatus" | "networkError" | "graphQLErrors"
+>;
 
 export const enum CacheWriteBehavior {
   FORBID,
   OVERWRITE,
   MERGE,
-};
+}
 
-const destructiveMethodCounts = new (
-  canUseWeakMap ? WeakMap : Map
-)<ApolloCache<any>, number>();
+const destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)<
+  ApolloCache<any>,
+  number
+>();
 
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,
-  methodName: keyof ApolloCache<any>,
+  methodName: MethodKeys<ApolloCache<any>>
 ) {
   const original = cache[methodName];
   if (typeof original === "function") {
@@ -51,7 +47,7 @@ function wrapDestructiveCacheMethod(
         // quadrillion evictions, so there's no risk of overflow. To be
         // clear, this is more of a pedantic principle than something
         // that matters in any conceivable practical scenario.
-        (destructiveMethodCounts.get(cache)! + 1) % 1e15,
+        (destructiveMethodCounts.get(cache)! + 1) % 1e15
       );
       return original.apply(this, arguments);
     };
@@ -81,7 +77,6 @@ export class QueryInfo {
   listeners = new Set<QueryListener>();
   document: DocumentNode | null = null;
   lastRequestId = 1;
-  subscriptions = new Set<ObservableSubscription>();
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
@@ -92,9 +87,9 @@ export class QueryInfo {
 
   constructor(
     queryManager: QueryManager<any>,
-    public readonly queryId = queryManager.generateQueryId(),
+    public readonly queryId = queryManager.generateQueryId()
   ) {
-    const cache = this.cache = queryManager.cache;
+    const cache = (this.cache = queryManager.cache);
 
     // Track how often cache.evict is called, since we want eviction to
     // override the feud-stopping logic in the markResult method, by
@@ -111,18 +106,20 @@ export class QueryInfo {
 
   public init(query: {
     document: DocumentNode;
-    variables: Record<string, any> | undefined,
+    variables: Record<string, any> | undefined;
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
-    networkStatus?: NetworkStatus,
+    networkStatus?: NetworkStatus;
     observableQuery?: ObservableQuery<any>;
     lastRequestId?: number;
   }): this {
     let networkStatus = query.networkStatus || NetworkStatus.loading;
-    if (this.variables &&
-        this.networkStatus !== NetworkStatus.loading &&
-        !equal(this.variables, query.variables)) {
+    if (
+      this.variables &&
+      this.networkStatus !== NetworkStatus.loading &&
+      !equal(this.variables, query.variables)
+    ) {
       networkStatus = NetworkStatus.setVariables;
     }
 
@@ -158,14 +155,14 @@ export class QueryInfo {
     this.dirty = false;
   }
 
-  getDiff(variables = this.variables): Cache.DiffResult<any> {
-    const options = this.getDiffOptions(variables);
+  getDiff(): Cache.DiffResult<any> {
+    const options = this.getDiffOptions();
 
     if (this.lastDiff && equal(options, this.lastDiff.options)) {
       return this.lastDiff.diff;
     }
 
-    this.updateWatch(this.variables = variables);
+    this.updateWatch(this.variables);
 
     const oq = this.observableQuery;
     if (oq && oq.options.fetchPolicy === "no-cache") {
@@ -178,18 +175,20 @@ export class QueryInfo {
   }
 
   private lastDiff?: {
-    diff: Cache.DiffResult<any>,
-    options: Cache.DiffOptions,
+    diff: Cache.DiffResult<any>;
+    options: Cache.DiffOptions;
   };
 
   private updateLastDiff(
     diff: Cache.DiffResult<any> | null,
-    options?: Cache.DiffOptions,
+    options?: Cache.DiffOptions
   ) {
-    this.lastDiff = diff ? {
-      diff,
-      options: options || this.getDiffOptions(),
-    } : void 0;
+    this.lastDiff = diff
+      ? {
+          diff,
+          options: options || this.getDiffOptions(),
+        }
+      : void 0;
   }
 
   private getDiffOptions(variables = this.variables): Cache.DiffOptions {
@@ -205,9 +204,7 @@ export class QueryInfo {
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.lastDiff && this.lastDiff.diff;
     this.updateLastDiff(diff);
-    if (!this.dirty &&
-        !equal(oldDiff && oldDiff.result,
-               diff && diff.result)) {
+    if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
       this.dirty = true;
       if (!this.notifyTimeout) {
         this.notifyTimeout = setTimeout(() => this.notify(), 0);
@@ -229,27 +226,29 @@ export class QueryInfo {
 
     if (oq) {
       oq["queryInfo"] = this;
-      this.listeners.add(this.oqListener = () => {
-        const diff = this.getDiff();
-        if (diff.fromOptimisticTransaction) {
-          // If this diff came from an optimistic transaction, deliver the
-          // current cache data to the ObservableQuery, but don't perform a
-          // reobservation, since oq.reobserveCacheFirst might make a network
-          // request, and we never want to trigger network requests in the
-          // middle of optimistic updates.
-          oq["observe"]();
-        } else {
-          // Otherwise, make the ObservableQuery "reobserve" the latest data
-          // using a temporary fetch policy of "cache-first", so complete cache
-          // results have a chance to be delivered without triggering additional
-          // network requests, even when options.fetchPolicy is "network-only"
-          // or "cache-and-network". All other fetch policies are preserved by
-          // this method, and are handled by calling oq.reobserve(). If this
-          // reobservation is spurious, isDifferentFromLastResult still has a
-          // chance to catch it before delivery to ObservableQuery subscribers.
-          reobserveCacheFirst(oq);
-        }
-      });
+      this.listeners.add(
+        (this.oqListener = () => {
+          const diff = this.getDiff();
+          if (diff.fromOptimisticTransaction) {
+            // If this diff came from an optimistic transaction, deliver the
+            // current cache data to the ObservableQuery, but don't perform a
+            // reobservation, since oq.reobserveCacheFirst might make a network
+            // request, and we never want to trigger network requests in the
+            // middle of optimistic updates.
+            oq["observe"]();
+          } else {
+            // Otherwise, make the ObservableQuery "reobserve" the latest data
+            // using a temporary fetch policy of "cache-first", so complete cache
+            // results have a chance to be delivered without triggering additional
+            // network requests, even when options.fetchPolicy is "network-only"
+            // or "cache-and-network". All other fetch policies are preserved by
+            // this method, and are handled by calling oq.reobserve(). If this
+            // reobservation is spurious, isDifferentFromLastResult still has a
+            // chance to catch it before delivery to ObservableQuery subscribers.
+            reobserveCacheFirst(oq);
+          }
+        })
+      );
     } else {
       delete this.oqListener;
     }
@@ -259,7 +258,7 @@ export class QueryInfo {
     cancelNotifyTimeout(this);
 
     if (this.shouldNotify()) {
-      this.listeners.forEach(listener => listener(this));
+      this.listeners.forEach((listener) => listener(this));
     }
 
     this.dirty = false;
@@ -270,11 +269,9 @@ export class QueryInfo {
       return false;
     }
 
-    if (isNetworkRequestInFlight(this.networkStatus) &&
-        this.observableQuery) {
+    if (isNetworkRequestInFlight(this.networkStatus) && this.observableQuery) {
       const { fetchPolicy } = this.observableQuery.options;
-      if (fetchPolicy !== "cache-only" &&
-          fetchPolicy !== "cache-and-network") {
+      if (fetchPolicy !== "cache-only" && fetchPolicy !== "cache-and-network") {
         return false;
       }
     }
@@ -293,8 +290,6 @@ export class QueryInfo {
       // Revert back to the no-op version of cancel inherited from
       // QueryInfo.prototype.
       this.cancel = QueryInfo.prototype.cancel;
-
-      this.subscriptions.forEach(sub => sub.unsubscribe());
 
       const oq = this.observableQuery;
       if (oq) oq.stopPolling();
@@ -319,13 +314,12 @@ export class QueryInfo {
       // we can reuse getDiffOptions here, for consistency.
       ...this.getDiffOptions(variables),
       watcher: this,
-      callback: diff => this.setDiff(diff),
+      callback: (diff) => this.setDiff(diff),
     };
 
-    if (!this.lastWatch ||
-        !equal(watchOptions, this.lastWatch)) {
+    if (!this.lastWatch || !equal(watchOptions, this.lastWatch)) {
       this.cancel();
-      this.cancel = this.cache.watch(this.lastWatch = watchOptions);
+      this.cancel = this.cache.watch((this.lastWatch = watchOptions));
     }
   }
 
@@ -341,7 +335,7 @@ export class QueryInfo {
 
   private shouldWrite(
     result: FetchResult<any>,
-    variables: WatchQueryOptions["variables"],
+    variables: WatchQueryOptions["variables"]
   ) {
     const { lastWrite } = this;
     return !(
@@ -358,11 +352,11 @@ export class QueryInfo {
   public markResult<T>(
     result: FetchResult<T>,
     document: DocumentNode,
-    options: Pick<WatchQueryOptions,
-      | "variables"
-      | "fetchPolicy"
-      | "errorPolicy">,
-    cacheWriteBehavior: CacheWriteBehavior,
+    options: Pick<
+      WatchQueryOptions,
+      "variables" | "fetchPolicy" | "errorPolicy"
+    >,
+    cacheWriteBehavior: CacheWriteBehavior
   ) {
     const merger = new DeepMerger();
     const graphQLErrors = isNonEmptyArray(result.errors)
@@ -373,35 +367,34 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.reset();
 
-    if ('incremental' in result && isNonEmptyArray(result.incremental)) {
+    if ("incremental" in result && isNonEmptyArray(result.incremental)) {
       const mergedData = mergeIncrementalData(this.getDiff().result, result);
       result.data = mergedData;
 
-    // Detect the first chunk of a deferred query and merge it with existing
-    // cache data. This ensures a `cache-first` fetch policy that returns
-    // partial cache data or a `cache-and-network` fetch policy that already
-    // has full data in the cache does not complain when trying to merge the
-    // initial deferred server data with existing cache data.
-    } else if ('hasNext' in result && result.hasNext) {
+      // Detect the first chunk of a deferred query and merge it with existing
+      // cache data. This ensures a `cache-first` fetch policy that returns
+      // partial cache data or a `cache-and-network` fetch policy that already
+      // has full data in the cache does not complain when trying to merge the
+      // initial deferred server data with existing cache data.
+    } else if ("hasNext" in result && result.hasNext) {
       const diff = this.getDiff();
-      result.data = merger.merge(diff.result, result.data)
+      result.data = merger.merge(diff.result, result.data);
     }
 
     this.graphQLErrors = graphQLErrors;
 
-    if (options.fetchPolicy === 'no-cache') {
+    if (options.fetchPolicy === "no-cache") {
       this.updateLastDiff(
         { result: result.data, complete: true },
-        this.getDiffOptions(options.variables),
+        this.getDiffOptions(options.variables)
       );
-
     } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, options.errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
         // back from the cache before the watch callback fires as a result
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
-        this.cache.performTransaction(cache => {
+        this.cache.performTransaction((cache) => {
           if (this.shouldWrite(result, options.variables)) {
             cache.writeQuery({
               query: document,
@@ -448,8 +441,7 @@ export class QueryInfo {
             // mitigate the clobbering somehow, but that would make this
             // particular cache write even less important, and thus
             // skipping it would be even safer than it is today.
-            if (this.lastDiff &&
-                this.lastDiff.diff.complete) {
+            if (this.lastDiff && this.lastDiff.diff.complete) {
               // Reuse data from the last good (complete) diff that we
               // received, when possible.
               result.data = this.lastDiff.diff.result;
@@ -464,8 +456,11 @@ export class QueryInfo {
 
           // In case the QueryManager stops this QueryInfo before its
           // results are delivered, it's important to avoid restarting the
-          // cache watch when markResult is called.
-          if (!this.stopped) {
+          // cache watch when markResult is called. We also avoid updating
+          // the watch if we are writing a result that doesn't match the current
+          // variables to avoid race conditions from broadcasting the wrong
+          // result.
+          if (!this.stopped && equal(this.variables, options.variables)) {
             // Any time we're about to update this.diff, we need to make
             // sure we've started watching the cache.
             this.updateWatch(options.variables);
@@ -489,7 +484,7 @@ export class QueryInfo {
 
   public markReady() {
     this.networkError = null;
-    return this.networkStatus = NetworkStatus.ready;
+    return (this.networkStatus = NetworkStatus.ready);
   }
 
   public markError(error: ApolloError) {
@@ -512,11 +507,9 @@ export class QueryInfo {
 
 export function shouldWriteResult<T>(
   result: FetchResult<T>,
-  errorPolicy: ErrorPolicy = "none",
+  errorPolicy: ErrorPolicy = "none"
 ) {
-  const ignoreErrors =
-    errorPolicy === "ignore" ||
-    errorPolicy === "all";
+  const ignoreErrors = errorPolicy === "ignore" || errorPolicy === "all";
   let writeWithErrors = !graphQLResultHasError(result);
   if (!writeWithErrors && ignoreErrors && result.data) {
     writeWithErrors = true;

@@ -14,22 +14,21 @@ export default function (fileInfo: any, api: any) {
     visitCallExpression(path) {
       this.traverse(path);
       const node = path.node;
-      if (n.Identifier.check(node.callee) &&
-          node.callee.name === "mockSingleLink") {
+      if (
+        n.Identifier.check(node.callee) &&
+        node.callee.name === "mockSingleLink"
+      ) {
         const firstArg = node.arguments[0];
-        if ((n.Identifier.check(firstArg) &&
-             firstArg.name === "reject") ||
-            n.Function.check(firstArg)) {
+        if (
+          (n.Identifier.check(firstArg) && firstArg.name === "reject") ||
+          n.Function.check(firstArg)
+        ) {
           path.get("arguments").shift();
           path.replace(
             b.callExpression(
-              b.memberExpression(
-                node,
-                b.identifier("setOnError"),
-                false,
-              ),
-              [firstArg],
-            ),
+              b.memberExpression(node, b.identifier("setOnError"), false),
+              [firstArg]
+            )
           );
         }
       }

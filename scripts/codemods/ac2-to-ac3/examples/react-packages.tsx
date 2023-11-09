@@ -8,8 +8,4 @@ import {
   renderToStringWithData,
 } from "@apollo/react-ssr";
 
-import {
-  Query,
-  Mutation,
-  Subscription,
-} from "@apollo/react-components";
+import { Query, Mutation, Subscription } from "@apollo/react-components";

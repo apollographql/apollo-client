@@ -584,11 +584,11 @@ it("loads a query and suspends when the load query function is called", async ()
   });
 
   const Greeting = profile<
-    { result: UseReadQueryResult<SimpleQueryData> },
+    UseReadQueryResult<SimpleQueryData>,
     { queryRef: QueryReference<SimpleQueryData> }
   >({
     Component: ({ queryRef }) => {
-      Greeting.updateSnapshot({ result: useReadQuery(queryRef) });
+      Greeting.updateSnapshot(useReadQuery(queryRef));
 
       return null;
     },
@@ -606,7 +606,7 @@ it("loads a query and suspends when the load query function is called", async ()
 
   const { snapshot } = await Greeting.takeRender();
 
-  expect(snapshot.result).toEqual({
+  expect(snapshot).toEqual({
     data: { greeting: "Hello" },
     error: undefined,
     networkStatus: NetworkStatus.ready,
@@ -640,11 +640,11 @@ it("loads a query with variables and suspends by passing variables to the loadQu
   });
 
   const Child = profile<
-    { result: UseReadQueryResult<VariablesCaseData> },
+    UseReadQueryResult<VariablesCaseData>,
     { queryRef: QueryReference<VariablesCaseData> }
   >({
     Component: ({ queryRef }) => {
-      Child.updateSnapshot({ result: useReadQuery(queryRef) });
+      Child.updateSnapshot(useReadQuery(queryRef));
 
       return null;
     },
@@ -663,7 +663,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
   {
     const { snapshot } = await Child.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
       networkStatus: NetworkStatus.ready,
       error: undefined,

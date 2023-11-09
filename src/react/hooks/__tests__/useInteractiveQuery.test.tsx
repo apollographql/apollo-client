@@ -113,36 +113,32 @@ function useVariablesQueryCase() {
   return { mocks, query };
 }
 
-function renderWithUser(ui: React.ReactElement, options?: UserEventOptions) {
-  const user = userEvent.setup(options);
+function renderWithMocks(ui: React.ReactElement, props: MockedProviderProps) {
+  const user = userEvent.setup();
 
-  return { ...render(ui), user };
-}
+  const utils = render(ui, {
+    wrapper: ({ children }) => (
+      <MockedProvider {...props}>{children}</MockedProvider>
+    ),
+  });
 
-function renderWithMocks(
-  ui: React.ReactElement,
-  {
-    userEvent,
-    ...props
-  }: MockedProviderProps & { userEvent?: UserEventOptions }
-) {
-  return renderWithUser(
-    <MockedProvider {...props}>{ui}</MockedProvider>,
-    userEvent
-  );
+  return { ...utils, user };
 }
 
 function renderWithClient(
   ui: React.ReactElement,
-  {
-    client,
-    userEvent,
-  }: { client: ApolloClient<any>; userEvent?: UserEventOptions }
+  options: { client: ApolloClient<any> }
 ) {
-  return renderWithUser(
-    <ApolloProvider client={client}>{ui}</ApolloProvider>,
-    userEvent
-  );
+  const { client } = options;
+  const user = userEvent.setup();
+
+  const utils = render(ui, {
+    wrapper: ({ children }) => (
+      <ApolloProvider client={client}>{children}</ApolloProvider>
+    ),
+  });
+
+  return { ...utils, user };
 }
 
 function renderVariablesIntegrationTest({

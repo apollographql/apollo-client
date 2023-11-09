@@ -8,6 +8,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { Options as UserEventOptions } from "@testing-library/user-event";
 import { ErrorBoundary, ErrorBoundaryProps } from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
@@ -29,6 +30,7 @@ import {
 } from "../../../core";
 import {
   MockedProvider,
+  MockedProviderProps,
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
@@ -109,6 +111,38 @@ function useVariablesQueryCase() {
   );
 
   return { mocks, query };
+}
+
+function renderWithUser(ui: React.ReactElement, options?: UserEventOptions) {
+  const user = userEvent.setup(options);
+
+  return { ...render(ui), user };
+}
+
+function renderWithMocks(
+  ui: React.ReactElement,
+  {
+    userEvent,
+    ...props
+  }: MockedProviderProps & { userEvent?: UserEventOptions }
+) {
+  return renderWithUser(
+    <MockedProvider {...props}>{ui}</MockedProvider>,
+    userEvent
+  );
+}
+
+function renderWithClient(
+  ui: React.ReactElement,
+  {
+    client,
+    userEvent,
+  }: { client: ApolloClient<any>; userEvent?: UserEventOptions }
+) {
+  return renderWithUser(
+    <ApolloProvider client={client}>{ui}</ApolloProvider>,
+    userEvent
+  );
 }
 
 function renderVariablesIntegrationTest({

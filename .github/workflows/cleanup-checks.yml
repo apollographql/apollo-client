@@ -42,7 +42,7 @@ jobs:
       - name: Run Api-Extractor
         run: npm run extract-api
         env:
-          CI: false
+          CI: "false"
 
       - name: Run prettier
         run: npm run format

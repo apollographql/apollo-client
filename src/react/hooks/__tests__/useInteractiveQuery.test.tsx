@@ -2585,57 +2585,67 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
   }
 });
 
-it.skip('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
-  interface QueryData {
-    character: {
-      id: string;
-      name: string;
-    };
-  }
+it('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
+  const { query } = useVariablesQueryCase();
 
-  interface QueryVariables {
-    id: string;
-  }
-  const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
-      }
-    }
-  `;
-  const mocks = [
+  const mocks: MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
         data: { character: { id: "1", name: "Captain Marvel" } },
       },
+      delay: 20,
     },
     {
       request: { query, variables: { id: "1" } },
       result: {
         errors: [new GraphQLError("Something went wrong")],
       },
+      delay: 20,
     },
   ];
 
-  const { renders } = renderVariablesIntegrationTest({
-    variables: { id: "1" },
-    errorPolicy: "all",
-    mocks,
+  const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
+    createDefaultProfiledComponents<VariablesCaseData | undefined>();
+
+  function App() {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
+      errorPolicy: "all",
+    });
+
+    return (
+      <>
+        <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
+        <button onClick={() => refetch()}>Refetch</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ErrorBoundary>
+            {queryRef && <ReadQueryHook queryRef={queryRef} />}
+          </ErrorBoundary>
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user } = renderWithMocks(<App />, { mocks });
+
+  await act(() => user.click(screen.getByText("Load query")));
+  await ReadQueryHook.waitForNextSnapshot();
+  await act(() => user.click(screen.getByText("Refetch")));
+
+  // TODO: Figure out why there is an extra render here.
+  // Perhaps related? https://github.com/apollographql/apollo-client/issues/11315
+  await ReadQueryHook.takeSnapshot();
+  const snapshot = await ReadQueryHook.takeSnapshot();
+
+  expect(snapshot).toEqual({
+    data: { character: { id: "1", name: "Captain Marvel" } },
+    error: new ApolloError({
+      graphQLErrors: [new GraphQLError("Something went wrong")],
+    }),
+    networkStatus: NetworkStatus.error,
   });
-
-  expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
-
-  const button = screen.getByText("Refetch");
-  const user = userEvent.setup();
-  await act(() => user.click(button));
-
-  expect(renders.errorCount).toBe(0);
-  expect(renders.errors).toEqual([]);
-
-  expect(await screen.findByText("Something went wrong")).toBeInTheDocument();
 });
+
 it.skip('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
   interface QueryData {
     character: {

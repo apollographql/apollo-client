@@ -223,6 +223,8 @@ You can provide the `refetchQueries` option either to `useMutation` or to the mu
 
 Note that in an app with tens or hundreds of different queries, it can be challenging to determine exactly which queries to refetch after a particular mutation.
 
+> Only active queries can be refetched using this option. If the query you want to refetch is not used by a component on the current page, you may want to consider modifying your mutation to support updating the cache directly as described below.
+
 ## Updating the cache directly
 
 ### Include modified objects in mutation responses

@@ -68,7 +68,7 @@ export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
     const hint = this.utils.matcherHint("toRerender", "ProfiledComponent", "");
     let pass = true;
     try {
-      await profiled.peekRender({ timeout: 100, ...options });
+      await profiled.waitForNextRender({ timeout: 100, ...options });
     } catch (e) {
       if (e instanceof WaitForRenderTimeoutError) {
         pass = false;

@@ -2080,9 +2080,8 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     cache,
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<Data>();
 
   function App() {
     const [returnPartialData, setReturnPartialData] = React.useState(false);
@@ -2098,17 +2097,9 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
           Update partial data
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Character queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
-    );
-  }
-
-  function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
-
-    return (
-      <span data-testid="character">{data.character.name ?? "unknown"}</span>
     );
   }
 
@@ -2116,11 +2107,20 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  const character = await screen.findByTestId("character");
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-  expect(character).toHaveTextContent("Doctor Strange");
+    expect(snapshot).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   await act(() => user.click(screen.getByText("Update partial data")));
+  await ReadQueryHook.takeSnapshot();
 
   cache.modify({
     id: cache.identify({ __typename: "Character", id: "1" }),
@@ -2129,13 +2129,33 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     },
   });
 
-  await waitFor(() => {
-    expect(character).toHaveTextContent("unknown");
-  });
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-  await waitFor(() => {
-    expect(character).toHaveTextContent("Doctor Strange (refetched)");
-  });
+    expect(snapshot).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "1",
+          name: "Doctor Strange (refetched)",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {

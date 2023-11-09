@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import { unwrapQueryRef } from "../cache/QueryReference.js";
 import type { QueryReference } from "../cache/QueryReference.js";
 import { __use } from "./internal/index.js";

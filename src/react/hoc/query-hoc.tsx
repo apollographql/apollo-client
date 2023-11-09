@@ -1,4 +1,5 @@
-import * as React from "react";
+import * as React from "rehackt";
+import type * as ReactTypes from "react";
 import type { DocumentNode } from "graphql";
 import hoistNonReactStatics from "hoist-non-react-statics";
 
@@ -50,8 +51,8 @@ export function withQuery<
   // allow for advanced referential equality checks
   let lastResultProps: TChildProps | void;
   return (
-    WrappedComponent: React.ComponentType<TProps & TChildProps>
-  ): React.ComponentClass<TProps> => {
+    WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>
+  ): ReactTypes.ComponentClass<TProps> => {
     const graphQLDisplayName = `${alias}(${getDisplayName(WrappedComponent)})`;
     class GraphQL extends GraphQLBase<TProps, TChildProps> {
       static displayName = graphQLDisplayName;

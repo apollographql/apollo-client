@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="react" />
-
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { ExecutionResult } from 'graphql';
@@ -15,9 +13,7 @@ import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
-import * as React_2 from 'react';
-import type { ReactElement } from 'react';
-import { ReactNode } from 'react';
+import type * as ReactTypes from 'react';
 import type { Subscriber } from 'zen-observable-ts';
 import type { Subscription } from 'zen-observable-ts';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -696,7 +692,7 @@ interface FragmentMap {
 type FragmentMatcher = (rootValue: any, typeCondition: string, context: any) => boolean;
 
 // @public (undocumented)
-export function getDataFromTree(tree: React_2.ReactNode, context?: {
+export function getDataFromTree(tree: ReactTypes.ReactNode, context?: {
     [key: string]: any;
 }): Promise<string>;
 
@@ -707,11 +703,11 @@ export function getMarkupFromTree({ tree, context, renderFunction, }: GetMarkupF
 
 // @public (undocumented)
 type GetMarkupFromTreeOptions = {
-    tree: React_2.ReactNode;
+    tree: ReactTypes.ReactNode;
     context?: {
         [key: string]: any;
     };
-    renderFunction?: (tree: React_2.ReactElement<any>) => string | PromiseLike<string>;
+    renderFunction?: (tree: ReactTypes.ReactElement<any>) => string | PromiseLike<string>;
 };
 
 // @public (undocumented)
@@ -1125,7 +1121,7 @@ interface QueryDataOptions<TData = any, TVariables extends OperationVariables = 
     // Warning: (ae-forgotten-export) The symbol "QueryResult" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    children?: (result: QueryResult<TData, TVariables>) => ReactNode;
+    children?: (result: QueryResult<TData, TVariables>) => ReactTypes.ReactNode;
     // (undocumented)
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -1443,11 +1439,11 @@ type RefetchWritePolicy = "merge" | "overwrite";
 // @public (undocumented)
 export class RenderPromises {
     // (undocumented)
-    addObservableQueryPromise<TData, TVariables extends OperationVariables>(obsQuery: ObservableQuery<TData, TVariables>): ReactNode;
+    addObservableQueryPromise<TData, TVariables extends OperationVariables>(obsQuery: ObservableQuery<TData, TVariables>): ReactTypes.ReactNode;
     // Warning: (ae-forgotten-export) The symbol "QueryData" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    addQueryPromise(queryInstance: QueryData, finish?: () => React.ReactNode): React.ReactNode;
+    addQueryPromise(queryInstance: QueryData, finish?: () => ReactTypes.ReactNode): ReactTypes.ReactNode;
     // (undocumented)
     consumeAndAwaitPromises(): Promise<any[]>;
     // Warning: (ae-forgotten-export) The symbol "QueryDataOptions" needs to be exported by the entry point index.d.ts
@@ -1463,7 +1459,7 @@ export class RenderPromises {
 }
 
 // @public (undocumented)
-export function renderToStringWithData(component: ReactElement<any>): Promise<string>;
+export function renderToStringWithData(component: ReactTypes.ReactElement<any>): Promise<string>;
 
 // @public (undocumented)
 type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;

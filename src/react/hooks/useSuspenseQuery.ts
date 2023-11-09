@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import { invariant } from "../../utilities/globals/index.js";
 import type {
   ApolloClient,

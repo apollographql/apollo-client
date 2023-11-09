@@ -1,5 +1,5 @@
 import { invariant } from "../../utilities/globals/index.js";
-import * as React from "react";
+import * as React from "rehackt";
 import type { ApolloClient } from "../../core/index.js";
 import { getApolloContext } from "../context/index.js";
 

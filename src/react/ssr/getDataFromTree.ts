@@ -1,10 +1,11 @@
-import * as React from "react";
+import * as React from "rehackt";
+import type * as ReactTypes from "react";
 import { getApolloContext } from "../context/index.js";
 import { RenderPromises } from "./RenderPromises.js";
 import { renderToStaticMarkup } from "react-dom/server";
 
 export function getDataFromTree(
-  tree: React.ReactNode,
+  tree: ReactTypes.ReactNode,
   context: { [key: string]: any } = {}
 ) {
   return getMarkupFromTree({
@@ -17,10 +18,10 @@ export function getDataFromTree(
 }
 
 export type GetMarkupFromTreeOptions = {
-  tree: React.ReactNode;
+  tree: ReactTypes.ReactNode;
   context?: { [key: string]: any };
   renderFunction?: (
-    tree: React.ReactElement<any>
+    tree: ReactTypes.ReactElement<any>
   ) => string | PromiseLike<string>;
 };
 

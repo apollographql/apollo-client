@@ -6,6 +6,7 @@ import {
 } from "@microsoft/api-extractor";
 // @ts-ignore
 import { map } from "./entryPoints.js";
+import { readFileSync } from "fs";
 
 // Load and parse the api-extractor.json file
 const configObjectFullPath = path.resolve(__dirname, "../api-extractor.json");
@@ -43,13 +44,35 @@ map((entryPoint: { dirs: string[] }) => {
     showVerboseMessages: true,
   });
 
-  if (extractorResult.succeeded) {
+  let succeededAdditionalChecks = true;
+  const contents = readFileSync(extractorConfig.reportFilePath, "utf8");
+
+  if (contents.includes("rehackt")) {
+    succeededAdditionalChecks = false;
+    console.error(
+      "❗ %s contains a reference to the `rehackt` package!",
+      extractorConfig.reportFilePath
+    );
+  }
+  if (contents.includes('/// <reference types="react" />')) {
+    succeededAdditionalChecks = false;
+    console.error(
+      "❗ %s contains a reference to the global `React` type!/n" +
+        'Use `import type * as ReactTypes from "react";` instead',
+      extractorConfig.reportFilePath
+    );
+  }
+
+  if (extractorResult.succeeded && succeededAdditionalChecks) {
     console.log(`✅ API Extractor completed successfully`);
   } else {
     console.error(
       `❗ API Extractor completed with ${extractorResult.errorCount} errors` +
         ` and ${extractorResult.warningCount} warnings`
     );
+    if (!succeededAdditionalChecks) {
+      console.error("Additional checks failed.");
+    }
     process.exitCode = 1;
   }
 });

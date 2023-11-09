@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type {

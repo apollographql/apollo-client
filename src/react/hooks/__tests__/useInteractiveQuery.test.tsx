@@ -527,116 +527,65 @@ function renderSuspenseHook<Result, Props>(
   return { ...view, renders };
 }
 
-it("loads a query when the load query function is called", async () => {
+it("loads a query and suspends when the load query function is called", async () => {
   const user = userEvent.setup();
   const { query, mocks } = useSimpleQueryCase();
 
-  function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
-    }));
+  const SuspenseFallback = profile({
+    Component: () => <p>Loading</p>,
+  });
 
-    return <p>Loading</p>;
-  }
+  const App = profile({
+    Component: () => {
+      const [queryRef, loadQuery] = useInteractiveQuery(query);
 
-  function Parent() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      parentRenderCount: snapshot.parentRenderCount + 1,
-    }));
-
-    return (
-      <>
-        <button onClick={() => loadQuery()}>Load query</button>
-        <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Greeting queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
-  function Greeting({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleQueryData>;
-  }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      result,
-      childRenderCount: snapshot.childRenderCount + 1,
-    }));
-
-    return <div>{result.data.greeting}</div>;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<SimpleQueryData> | null;
-    suspenseCount: number;
-    parentRenderCount: number;
-    childRenderCount: number;
-  }>({
-    Component: () => (
-      <MockedProvider mocks={mocks}>
-        <Parent />
-      </MockedProvider>
-    ),
-    snapshotDOM: true,
-    initialSnapshot: {
-      result: null,
-      suspenseCount: 0,
-      parentRenderCount: 0,
-      childRenderCount: 0,
+      return (
+        <>
+          <button onClick={() => loadQuery()}>Load query</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Greeting queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
     },
   });
 
-  render(<ProfiledApp />);
+  const Greeting = profile<
+    { result: UseReadQueryResult<SimpleQueryData> },
+    { queryRef: QueryReference<SimpleQueryData> }
+  >({
+    Component: ({ queryRef }) => {
+      Greeting.updateSnapshot({ result: useReadQuery(queryRef) });
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-    expect(snapshot).toEqual({
-      result: null,
-      suspenseCount: 0,
-      parentRenderCount: 1,
-      childRenderCount: 0,
-    });
-  }
+      return null;
+    },
+  });
+
+  render(
+    <MockedProvider mocks={mocks}>
+      <App />
+    </MockedProvider>
+  );
+
+  expect(SuspenseFallback).not.toHaveRendered();
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+  expect(SuspenseFallback).toHaveRendered();
+  expect(Greeting).not.toHaveRendered();
+  expect(App).toHaveRenderedTimes(2);
 
-    expect(withinDOM().getByText("Loading")).toBeInTheDocument();
-    expect(snapshot).toEqual({
-      result: null,
-      suspenseCount: 1,
-      parentRenderCount: 2,
-      childRenderCount: 0,
-    });
-  }
+  const { snapshot } = await Greeting.takeRender();
 
-  {
-    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+  expect(snapshot.result).toEqual({
+    data: { greeting: "Hello" },
+    error: undefined,
+    networkStatus: NetworkStatus.ready,
+  });
 
-    expect(withinDOM().getByText("Hello")).toBeInTheDocument();
-    expect(snapshot).toEqual({
-      result: {
-        data: { greeting: "Hello" },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      suspenseCount: 1,
-      parentRenderCount: 2,
-      childRenderCount: 1,
-    });
-  }
-
-  await expect(ProfiledApp).not.toRerender();
+  expect(SuspenseFallback).toHaveRenderedTimes(1);
+  expect(Greeting).toHaveRenderedTimes(1);
+  expect(App).toHaveRenderedTimes(3);
 });
 
 it("loads a query with variables and suspends by passing variables to the loadQuery function", async () => {

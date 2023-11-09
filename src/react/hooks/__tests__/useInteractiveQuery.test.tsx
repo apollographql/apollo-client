@@ -113,6 +113,19 @@ function useVariablesQueryCase() {
   return { mocks, query };
 }
 
+function createDefaultProfiledComponents<TData = unknown>() {
+  const SuspenseFallback = profile({
+    Component: () => <p>Loading</p>,
+  });
+
+  const ReadQueryHook = profileHook<
+    UseReadQueryResult<TData>,
+    { queryRef: QueryReference<TData> }
+  >(({ queryRef }) => useReadQuery(queryRef));
+
+  return { SuspenseFallback, ReadQueryHook };
+}
+
 function renderWithMocks(ui: React.ReactElement, props: MockedProviderProps) {
   const user = userEvent.setup();
 
@@ -560,9 +573,8 @@ function renderSuspenseHook<Result, Props>(
 it("loads a query and suspends when the load query function is called", async () => {
   const { query, mocks } = useSimpleQueryCase();
 
-  const SuspenseFallback = profile({
-    Component: () => <p>Loading</p>,
-  });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<SimpleQueryData>();
 
   const App = profile({
     Component: () => {
@@ -578,11 +590,6 @@ it("loads a query and suspends when the load query function is called", async ()
       );
     },
   });
-
-  const ReadQueryHook = profileHook<
-    UseReadQueryResult<SimpleQueryData>,
-    { queryRef: QueryReference<SimpleQueryData> }
-  >(({ queryRef }) => useReadQuery(queryRef));
 
   const { user } = renderWithMocks(<App />, { mocks });
 
@@ -610,9 +617,8 @@ it("loads a query and suspends when the load query function is called", async ()
 it("loads a query with variables and suspends by passing variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
-  const SuspenseFallback = profile({
-    Component: () => <p>Loading</p>,
-  });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<VariablesCaseData>();
 
   const App = profile({
     Component: () => {
@@ -622,21 +628,10 @@ it("loads a query with variables and suspends by passing variables to the loadQu
         <>
           <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
           <Suspense fallback={<SuspenseFallback />}>
-            {queryRef && <Child queryRef={queryRef} />}
+            {queryRef && <ReadQueryHook queryRef={queryRef} />}
           </Suspense>
         </>
       );
-    },
-  });
-
-  const Child = profile<
-    UseReadQueryResult<VariablesCaseData>,
-    { queryRef: QueryReference<VariablesCaseData> }
-  >({
-    Component: ({ queryRef }) => {
-      Child.updateSnapshot(useReadQuery(queryRef));
-
-      return null;
     },
   });
 
@@ -647,11 +642,11 @@ it("loads a query with variables and suspends by passing variables to the loadQu
   await act(() => user.click(screen.getByText("Load query")));
 
   expect(SuspenseFallback).toHaveRendered();
-  expect(Child).not.toHaveRendered();
+  expect(ReadQueryHook).not.toHaveRendered();
   expect(App).toHaveRenderedTimes(2);
 
   {
-    const { snapshot } = await Child.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
     expect(snapshot).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
@@ -661,7 +656,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
   }
 
   expect(SuspenseFallback).toHaveRenderedTimes(1);
-  expect(Child).toHaveRenderedTimes(1);
+  expect(ReadQueryHook).toHaveRenderedTimes(1);
   expect(App).toHaveRenderedTimes(3);
 
   await expect(App).not.toRerender();
@@ -670,9 +665,8 @@ it("loads a query with variables and suspends by passing variables to the loadQu
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
-  const SuspenseFallback = profile({
-    Component: () => <p>Loading</p>,
-  });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<VariablesCaseData>();
 
   const App = profile({
     Component: () => {
@@ -687,21 +681,10 @@ it("changes variables on a query and resuspends when passing new variables to th
             Load 2nd character
           </button>
           <Suspense fallback={<SuspenseFallback />}>
-            {queryRef && <Child queryRef={queryRef} />}
+            {queryRef && <ReadQueryHook queryRef={queryRef} />}
           </Suspense>
         </>
       );
-    },
-  });
-
-  const Child = profile<
-    UseReadQueryResult<VariablesCaseData>,
-    { queryRef: QueryReference<VariablesCaseData> }
-  >({
-    Component: ({ queryRef }) => {
-      Child.updateSnapshot(useReadQuery(queryRef));
-
-      return null;
     },
   });
 
@@ -712,11 +695,11 @@ it("changes variables on a query and resuspends when passing new variables to th
   await act(() => user.click(screen.getByText("Load 1st character")));
 
   expect(SuspenseFallback).toHaveRendered();
-  expect(Child).not.toHaveRendered();
+  expect(ReadQueryHook).not.toHaveRendered();
   expect(App).toHaveRenderedTimes(2);
 
   {
-    const { snapshot } = await Child.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
     expect(snapshot).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
@@ -730,7 +713,7 @@ it("changes variables on a query and resuspends when passing new variables to th
   expect(SuspenseFallback).toHaveRenderedTimes(2);
 
   {
-    const { snapshot } = await Child.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
     expect(snapshot).toEqual({
       data: { character: { id: "2", name: "Black Widow" } },
@@ -741,7 +724,7 @@ it("changes variables on a query and resuspends when passing new variables to th
 
   expect(SuspenseFallback).toHaveRenderedTimes(2);
   expect(App).toHaveRenderedTimes(5);
-  expect(Child).toHaveRenderedTimes(2);
+  expect(ReadQueryHook).toHaveRenderedTimes(2);
 });
 
 it("allows the client to be overridden", async () => {

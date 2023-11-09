@@ -6,7 +6,7 @@ import type {
 } from "graphql";
 import { visit } from "graphql";
 
-import { wrap } from "optimism";
+import { OptimisticWrapOptions, wrap } from "optimism";
 
 import type { FragmentMap } from "../../utilities/index.js";
 import { getFragmentDefinitions } from "../../utilities/index.js";
@@ -66,7 +66,9 @@ class FragmentRegistry implements FragmentRegistryAPI {
   private invalidate(name: string) {}
 
   public resetCaches() {
-    this.invalidate = (this.lookup = this.cacheUnaryMethod("lookup")).dirty; // This dirty function is bound to the wrapped lookup method.
+    this.invalidate = (this.lookup = this.cacheUnaryMethod("lookup", {
+      makeCacheKey: (arg) => arg,
+    })).dirty; // This dirty function is bound to the wrapped lookup method.
     this.transform = this.cacheUnaryMethod("transform");
     this.findFragmentSpreads = this.cacheUnaryMethod("findFragmentSpreads");
   }
@@ -76,17 +78,12 @@ class FragmentRegistry implements FragmentRegistryAPI {
       FragmentRegistry,
       "lookup" | "transform" | "findFragmentSpreads"
     >,
-  >(name: TName) {
+  >(name: TName, options?: OptimisticWrapOptions<[any]>) {
     const registry = this;
     const originalMethod = FragmentRegistry.prototype[name];
-    return wrap(
-      function () {
-        return originalMethod.apply(registry, arguments);
-      },
-      {
-        makeCacheKey: (arg) => arg,
-      }
-    );
+    return wrap(function () {
+      return originalMethod.apply(registry, arguments);
+    }, options);
   }
 
   public lookup(fragmentName: string): FragmentDefinitionNode | null {

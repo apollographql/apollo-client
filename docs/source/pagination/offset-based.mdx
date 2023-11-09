@@ -27,7 +27,7 @@ Apollo Client provides an `offsetLimitPagination` helper function that you can u
 
 This example uses `offsetLimitPagination` to generate a field policy for `Query.feed`:
 
-```js {2,8} title="index.js"
+```jsx {2,8} title="main.jsx"
 import { InMemoryCache } from "@apollo/client";
 import { offsetLimitPagination } from "@apollo/client/utilities";
 
@@ -87,7 +87,7 @@ In [the example above](#using-with-fetchmore), the GraphQL server returns indivi
 
 Because the `offsetLimitPagination` helper is currently defining your field policy, you combine your `read` function with the helper's result, like so:
 
-```js {8-13} title="index.js"
+```jsx {8-13} title="main.jsx"
 import { InMemoryCache } from "@apollo/client";
 import { offsetLimitPagination } from "@apollo/client/utilities";
 

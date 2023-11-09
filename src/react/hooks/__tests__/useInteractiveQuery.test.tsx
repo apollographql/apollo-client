@@ -2528,25 +2528,9 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
   }
 });
 
-it.skip('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
-  interface QueryData {
-    character: {
-      id: string;
-      name: string;
-    };
-  }
+it('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
+  const { query } = useVariablesQueryCase();
 
-  interface QueryVariables {
-    id: string;
-  }
-  const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
-      }
-    }
-  `;
   const mocks = [
     {
       request: { query, variables: { id: "1" } },
@@ -2562,21 +2546,45 @@ it.skip('ignores errors returned after calling `refetch` when errorPolicy is set
     },
   ];
 
-  const { renders } = renderVariablesIntegrationTest({
-    variables: { id: "1" },
-    errorPolicy: "ignore",
-    mocks,
-  });
+  const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
+    createDefaultProfiledComponents<VariablesCaseData | undefined>();
 
-  expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
+  function App() {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
+      errorPolicy: "ignore",
+    });
 
-  const button = screen.getByText("Refetch");
-  const user = userEvent.setup();
-  await act(() => user.click(button));
+    return (
+      <>
+        <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
+        <button onClick={() => refetch()}>Refetch</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ErrorBoundary>
+            {queryRef && <ReadQueryHook queryRef={queryRef} />}
+          </ErrorBoundary>
+        </Suspense>
+      </>
+    );
+  }
 
-  expect(renders.errorCount).toBe(0);
-  expect(renders.errors).toEqual([]);
+  const { user } = renderWithMocks(<App />, { mocks });
+
+  await act(() => user.click(screen.getByText("Load query")));
+  await ReadQueryHook.takeSnapshot();
+  await act(() => user.click(screen.getByText("Refetch")));
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: { character: { id: "1", name: "Captain Marvel" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(ErrorFallback).not.toHaveRendered();
+  }
 });
+
 it.skip('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
   interface QueryData {
     character: {

@@ -620,108 +620,61 @@ it("loads a query and suspends when the load query function is called", async ()
 it("loads a query with variables and suspends by passing variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
-  function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
-    }));
+  const SuspenseFallback = profile({
+    Component: () => <p>Loading</p>,
+  });
 
-    return <p>Loading</p>;
-  }
+  const App = profile({
+    Component: () => {
+      const [queryRef, loadQuery] = useInteractiveQuery(query);
 
-  function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      parentRenderCount: snapshot.parentRenderCount + 1,
-    }));
-
-    return (
-      <>
-        <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
-        <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Child queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
-  function Child({
-    queryRef,
-  }: {
-    queryRef: QueryReference<VariablesCaseData>;
-  }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      result,
-      childRenderCount: snapshot.childRenderCount + 1,
-    }));
-
-    return null;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<VariablesCaseData> | null;
-    suspenseCount: number;
-    parentRenderCount: number;
-    childRenderCount: number;
-  }>({
-    Component: App,
-    snapshotDOM: true,
-    initialSnapshot: {
-      result: null,
-      suspenseCount: 0,
-      parentRenderCount: 0,
-      childRenderCount: 0,
+      return (
+        <>
+          <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <Child queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
     },
   });
 
-  const { user } = renderWithMocks(<ProfiledApp />, { mocks });
+  const Child = profile<
+    { result: UseReadQueryResult<VariablesCaseData> },
+    { queryRef: QueryReference<VariablesCaseData> }
+  >({
+    Component: ({ queryRef }) => {
+      Child.updateSnapshot({ result: useReadQuery(queryRef) });
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+      return null;
+    },
+  });
 
-    expect(snapshot).toEqual({
-      result: null,
-      suspenseCount: 0,
-      parentRenderCount: 1,
-      childRenderCount: 0,
-    });
-  }
+  const { user } = renderWithMocks(<App />, { mocks });
+
+  expect(SuspenseFallback).not.toHaveRendered();
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+  expect(SuspenseFallback).toHaveRendered();
+  expect(Child).not.toHaveRendered();
+  expect(App).toHaveRenderedTimes(2);
 
-    expect(withinDOM().getByText("Loading")).toBeInTheDocument();
-    expect(snapshot).toEqual({
-      result: null,
-      suspenseCount: 1,
-      parentRenderCount: 2,
-      childRenderCount: 0,
+  {
+    const { snapshot } = await Child.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: "Spider-Man" } },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
     });
   }
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+  expect(SuspenseFallback).toHaveRenderedTimes(1);
+  expect(Child).toHaveRenderedTimes(1);
+  expect(App).toHaveRenderedTimes(3);
 
-    expect(snapshot).toEqual({
-      result: {
-        data: { character: { id: "1", name: "Spider-Man" } },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      suspenseCount: 1,
-      parentRenderCount: 2,
-      childRenderCount: 1,
-    });
-  }
-
-  await expect(ProfiledApp).not.toRerender();
+  await expect(App).not.toRerender();
 });
 
 it("can change variables on a query and resuspend by passing new variables to the loadQuery function", async () => {

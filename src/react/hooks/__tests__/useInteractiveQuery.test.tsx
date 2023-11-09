@@ -2886,34 +2886,74 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
   });
 });
 
-function getItemTexts() {
-  return screen.getAllByTestId(/letter/).map(
-    // eslint-disable-next-line testing-library/no-node-access
-    (li) => li.firstChild!.textContent
-  );
-}
-it.skip("re-suspends when calling `fetchMore` with different variables", async () => {
-  const { renders } = renderPaginatedIntegrationTest();
+it("re-suspends when calling `fetchMore` with different variables", async () => {
+  const { query, client } = usePaginatedQueryCase();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<PaginatedQueryData>();
 
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
+  function App() {
+    const [queryRef, loadQuery, { fetchMore }] = useInteractiveQuery(query);
 
-  const items = await screen.findAllByTestId(/letter/i);
-  expect(items).toHaveLength(2);
-  expect(getItemTexts()).toStrictEqual(["A", "B"]);
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <button
+          onClick={() => fetchMore({ variables: { offset: 2, limit: 2 } })}
+        >
+          Fetch more
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
 
-  const button = screen.getByText("Fetch more");
-  const user = userEvent.setup();
-  await act(() => user.click(button));
+  const { user } = renderWithClient(<App />, { client });
 
-  // parent component re-suspends
-  expect(renders.suspenseCount).toBe(2);
-  await waitFor(() => {
-    expect(renders.count).toBe(2);
-  });
+  await act(() => user.click(screen.getByText("Load query")));
 
-  expect(getItemTexts()).toStrictEqual(["C", "D"]);
+  expect(SuspenseFallback).toHaveRendered();
+
+  {
+    const snapshot = await ReadQueryHook.waitForNextSnapshot();
+
+    expect(snapshot).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Fetch more")));
+
+  expect(SuspenseFallback).toHaveRenderedTimes(2);
+
+  // TODO: Figure out why there is an extra render here.
+  // Perhaps related? https://github.com/apollographql/apollo-client/issues/11315
+  await ReadQueryHook.takeSnapshot();
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: {
+        letters: [
+          { letter: "C", position: 3 },
+          { letter: "D", position: 4 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
+
 it.skip("properly uses `updateQuery` when calling `fetchMore`", async () => {
   const { renders } = renderPaginatedIntegrationTest({
     updateQuery: true,

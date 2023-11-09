@@ -562,7 +562,6 @@ function renderSuspenseHook<Result, Props>(
 }
 
 it("loads a query and suspends when the load query function is called", async () => {
-  const user = userEvent.setup();
   const { query, mocks } = useSimpleQueryCase();
 
   const SuspenseFallback = profile({
@@ -595,11 +594,7 @@ it("loads a query and suspends when the load query function is called", async ()
     },
   });
 
-  render(
-    <MockedProvider mocks={mocks}>
-      <App />
-    </MockedProvider>
-  );
+  const { user } = renderWithMocks(<App />, { mocks });
 
   expect(SuspenseFallback).not.toHaveRendered();
 
@@ -623,7 +618,6 @@ it("loads a query and suspends when the load query function is called", async ()
 });
 
 it("loads a query with variables and suspends by passing variables to the loadQuery function", async () => {
-  const user = userEvent.setup();
   const { query, mocks } = useVariablesQueryCase();
 
   function SuspenseFallback() {
@@ -675,11 +669,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     parentRenderCount: number;
     childRenderCount: number;
   }>({
-    Component: () => (
-      <MockedProvider mocks={mocks}>
-        <Parent />
-      </MockedProvider>
-    ),
+    Component: () => <Parent />,
     snapshotDOM: true,
     initialSnapshot: {
       result: null,
@@ -689,7 +679,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithMocks(<ProfiledApp />, { mocks });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -735,7 +725,6 @@ it("loads a query with variables and suspends by passing variables to the loadQu
 });
 
 it("can change variables on a query and resuspend by passing new variables to the loadQuery function", async () => {
-  const user = userEvent.setup();
   const { query, mocks } = useVariablesQueryCase();
 
   function SuspenseFallback() {
@@ -792,11 +781,7 @@ it("can change variables on a query and resuspend by passing new variables to th
     parentRenderCount: number;
     childRenderCount: number;
   }>({
-    Component: () => (
-      <MockedProvider mocks={mocks}>
-        <Parent />
-      </MockedProvider>
-    ),
+    Component: () => <Parent />,
     snapshotDOM: true,
     initialSnapshot: {
       result: null,
@@ -806,7 +791,7 @@ it("can change variables on a query and resuspend by passing new variables to th
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithMocks(<ProfiledApp />, { mocks });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -885,7 +870,6 @@ it("can change variables on a query and resuspend by passing new variables to th
 });
 
 it("allows the client to be overridden", async () => {
-  const user = userEvent.setup();
   const { query } = useSimpleQueryCase();
 
   const globalClient = new ApolloClient({
@@ -936,18 +920,14 @@ it("allows the client to be overridden", async () => {
   const ProfiledApp = profile<{
     result: UseReadQueryResult<SimpleQueryData> | null;
   }>({
-    Component: () => (
-      <ApolloProvider client={globalClient}>
-        <Parent />
-      </ApolloProvider>
-    ),
+    Component: () => <Parent />,
     snapshotDOM: true,
     initialSnapshot: {
       result: null,
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithClient(<ProfiledApp />, { client: globalClient });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -982,7 +962,6 @@ it("passes context to the link", async () => {
     context: Record<string, any>;
   }
 
-  const user = userEvent.setup();
   const query: TypedDocumentNode<QueryData, never> = gql`
     query ContextQuery {
       context
@@ -1031,18 +1010,14 @@ it("passes context to the link", async () => {
   const ProfiledApp = profile<{
     result: UseReadQueryResult<QueryData> | null;
   }>({
-    Component: () => (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    ),
+    Component: () => <Parent />,
     snapshotDOM: true,
     initialSnapshot: {
       result: null,
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithClient(<ProfiledApp />, { client });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -1081,7 +1056,6 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     results: Result[];
   }
 
-  const user = userEvent.setup();
   const cache = new InMemoryCache({
     typePolicies: {
       Result: {
@@ -1147,17 +1121,13 @@ it('enables canonical results when canonizeResults is "true"', async () => {
   const ProfiledApp = profile<{
     result: UseReadQueryResult<QueryData> | null;
   }>({
-    Component: () => (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    ),
+    Component: () => <Parent />,
     initialSnapshot: {
       result: null,
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithClient(<ProfiledApp />, { client });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -1211,7 +1181,6 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     }
   `;
 
-  const user = userEvent.setup();
   const results: Result[] = [
     { __typename: "Result", value: 0 },
     { __typename: "Result", value: 1 },
@@ -1256,17 +1225,13 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
   const ProfiledApp = profile<{
     result: UseReadQueryResult<QueryData> | null;
   }>({
-    Component: () => (
-      <MockedProvider cache={cache}>
-        <Parent />
-      </MockedProvider>
-    ),
+    Component: () => <Parent />,
     initialSnapshot: {
       result: null,
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithMocks(<ProfiledApp />, { cache });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -1294,7 +1259,6 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
 });
 
 it("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
-  const user = userEvent.setup();
   const query: TypedDocumentNode<{ hello: string }, never> = gql`
     query {
       hello
@@ -1353,18 +1317,14 @@ it("returns initial cache data followed by network data when the fetch policy is
     result: UseReadQueryResult<unknown> | null;
     suspenseCount: number;
   }>({
-    Component: () => (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    ),
+    Component: () => <Parent />,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithClient(<ProfiledApp />, { client });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -1404,7 +1364,6 @@ it("all data is present in the cache, no network request is made", async () => {
       hello
     }
   `;
-  const user = userEvent.setup();
   const cache = new InMemoryCache();
   const link = new MockLink([
     {
@@ -1455,18 +1414,14 @@ it("all data is present in the cache, no network request is made", async () => {
     result: UseReadQueryResult<unknown> | null;
     suspenseCount: number;
   }>({
-    Component: () => (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    ),
+    Component: () => <Parent />,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithClient(<ProfiledApp />, { client });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -1490,7 +1445,6 @@ it("all data is present in the cache, no network request is made", async () => {
 });
 
 it("partial data is present in the cache so it is ignored and network request is made", async () => {
-  const user = userEvent.setup();
   const query = gql`
     {
       hello
@@ -1552,18 +1506,14 @@ it("partial data is present in the cache so it is ignored and network request is
     result: UseReadQueryResult<unknown> | null;
     suspenseCount: number;
   }>({
-    Component: () => (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    ),
+    Component: () => <Parent />,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithClient(<ProfiledApp />, { client });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -1595,7 +1545,6 @@ it("partial data is present in the cache so it is ignored and network request is
 });
 
 it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'", async () => {
-  const user = userEvent.setup();
   const query = gql`
     query {
       hello
@@ -1653,18 +1602,14 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
     result: UseReadQueryResult<unknown> | null;
     suspenseCount: number;
   }>({
-    Component: () => (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    ),
+    Component: () => <Parent />,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithClient(<ProfiledApp />, { client });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -1696,7 +1641,6 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
 });
 
 it("fetches data from the network but does not update the cache when `fetchPolicy` is 'no-cache'", async () => {
-  const user = userEvent.setup();
   const query = gql`
     query {
       hello
@@ -1751,18 +1695,14 @@ it("fetches data from the network but does not update the cache when `fetchPolic
     result: UseReadQueryResult<unknown> | null;
     suspenseCount: number;
   }>({
-    Component: () => (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    ),
+    Component: () => <Parent />,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithClient(<ProfiledApp />, { client });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -1808,7 +1748,6 @@ it("works with startTransition to change variables", async () => {
       completed: boolean;
     };
   }
-  const user = userEvent.setup();
 
   const query: TypedDocumentNode<Data, Variables> = gql`
     query TodoItemQuery($id: ID!) {
@@ -1845,11 +1784,7 @@ it("works with startTransition to change variables", async () => {
   });
 
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
+    return <Parent />;
   }
 
   function SuspenseFallback() {
@@ -1901,7 +1836,7 @@ it("works with startTransition to change variables", async () => {
     );
   }
 
-  render(<App />);
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load first todo")));
 
@@ -1946,8 +1881,6 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     };
   }
 
-  const user = userEvent.setup();
-
   const query: TypedDocumentNode<Data, never> = gql`
     query {
       greeting {
@@ -1981,11 +1914,9 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   }>({
     Component: () => {
       return (
-        <ApolloProvider client={client}>
-          <Suspense fallback={<SuspenseFallback />}>
-            <Parent />
-          </Suspense>
-        </ApolloProvider>
+        <Suspense fallback={<SuspenseFallback />}>
+          <Parent />
+        </Suspense>
       );
     },
     initialSnapshot: {
@@ -2025,7 +1956,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     return null;
   }
 
-  render(<ProfiledApp />);
+  const { user } = renderWithClient(<ProfiledApp />, { client });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -2119,7 +2050,6 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
 
 it("reacts to cache updates", async () => {
   const { query, mocks } = useSimpleQueryCase();
-  const user = userEvent.setup();
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
@@ -2158,18 +2088,14 @@ it("reacts to cache updates", async () => {
     result: UseReadQueryResult<SimpleQueryData> | null;
     suspenseCount: number;
   }>({
-    Component: () => (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    ),
+    Component: () => <Parent />,
     initialSnapshot: {
       result: null,
       suspenseCount: 0,
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithClient(<ProfiledApp />, { client });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -2233,8 +2159,6 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     },
   ];
 
-  const user = userEvent.setup();
-
   function SuspenseFallback() {
     ProfiledApp.updateSnapshot((snapshot) => ({
       ...snapshot,
@@ -2289,11 +2213,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     result: UseReadQueryResult<SimpleQueryData> | null;
     suspenseCount: number;
   }>({
-    Component: () => (
-      <MockedProvider mocks={mocks}>
-        <Parent />
-      </MockedProvider>
-    ),
+    Component: () => <Parent />,
     initialSnapshot: {
       error: undefined,
       errorBoundaryCount: 0,
@@ -2302,7 +2222,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     },
   });
 
-  render(<ProfiledApp />);
+  const { user } = renderWithMocks(<ProfiledApp />, { mocks });
 
   {
     const { snapshot } = await ProfiledApp.takeRender();
@@ -2399,8 +2319,6 @@ it("applies `context` on next fetch when it changes between renders", async () =
     context: Record<string, any>;
   }
 
-  const user = userEvent.setup();
-
   const query: TypedDocumentNode<Data, never> = gql`
     query {
       context
@@ -2449,14 +2367,10 @@ it("applies `context` on next fetch when it changes between renders", async () =
   }
 
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
+    return <Parent />;
   }
 
-  render(<App />);
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2506,8 +2420,6 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     { __typename: "Result", value: 5 },
   ];
 
-  const user = userEvent.setup();
-
   cache.writeQuery({
     query,
     data: { results },
@@ -2554,14 +2466,10 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
   }
 
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
+    return <Parent />;
   }
 
-  render(<App />);
+  const { user } = renderWithClient(<App />, { client });
 
   function verifyCanonicalResults(data: Data, canonized: boolean) {
     const resultSet = new Set(data.results);
@@ -2593,8 +2501,6 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
   interface Data {
     primes: number[];
   }
-
-  const user = userEvent.setup();
 
   const query: TypedDocumentNode<Data, { min: number; max: number }> = gql`
     query GetPrimes($min: number, $max: number) {
@@ -2682,14 +2588,10 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
   }
 
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
+    return <Parent />;
   }
 
-  render(<App />);
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2744,8 +2646,6 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
       id: string;
     };
   }
-
-  const user = userEvent.setup();
 
   const fullQuery: TypedDocumentNode<Data> = gql`
     query {
@@ -2839,14 +2739,10 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   }
 
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
+    return <Parent />;
   }
 
-  render(<App />);
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2880,8 +2776,6 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
       name: string;
     };
   }
-
-  const user = userEvent.setup();
 
   const query: TypedDocumentNode<Data> = gql`
     query {
@@ -2960,14 +2854,10 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
   }
 
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
+    return <Parent />;
   }
 
-  render(<App />);
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 

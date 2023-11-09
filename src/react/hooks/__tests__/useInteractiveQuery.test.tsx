@@ -117,6 +117,52 @@ function useVariablesQueryCase() {
   return { mocks, query };
 }
 
+interface PaginatedQueryData {
+  letters: {
+    letter: string;
+    position: number;
+  }[];
+}
+
+interface PaginatedQueryVariables {
+  limit?: number;
+  offset?: number;
+}
+
+function usePaginatedQueryCase() {
+  const query: TypedDocumentNode<
+    PaginatedQueryData,
+    PaginatedQueryVariables
+  > = gql`
+    query letters($limit: Int, $offset: Int) {
+      letters(limit: $limit) {
+        letter
+        position
+      }
+    }
+  `;
+
+  const data = "ABCDEFG"
+    .split("")
+    .map((letter, index) => ({ letter, position: index + 1 }));
+
+  const link = new ApolloLink((operation) => {
+    const { offset = 0, limit = 2 } = operation.variables;
+    const letters = data.slice(offset, offset + limit);
+
+    return new Observable((observer) => {
+      setTimeout(() => {
+        observer.next({ data: { letters } });
+        observer.complete();
+      }, 10);
+    });
+  });
+
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+  return { query, link, client };
+}
+
 function createDefaultProfiledComponents<TData = unknown>() {
   const SuspenseFallback = profile({
     Component: () => <p>Loading</p>,

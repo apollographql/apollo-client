@@ -1623,7 +1623,7 @@ it("reacts to cache updates", async () => {
 it("applies `errorPolicy` on next fetch when it changes between renders", async () => {
   const { query } = useSimpleQueryCase();
 
-  const mocks: MockedResponse<SimpleQueryData, never>[] = [
+  const mocks: MockedResponse<SimpleQueryData>[] = [
     {
       request: { query },
       result: { data: { greeting: "Hello" } },

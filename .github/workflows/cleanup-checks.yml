@@ -56,14 +56,3 @@ jobs:
           commit_message: "Clean up Prettier, Size-limit, and Api-Extractor"
           push_options: ""
           skip_dirty_check: false
-
-      # commit & push
-      # if there is a "trigger this action" comment in the PR, remove it
-
-      # - name: Create comment
-      #   if: ${{ steps.added-files.outputs.changesets != '' }}
-      #   uses: peter-evans/create-or-update-comment@v3.1.0
-      #   with:
-      #     issue-number: ${{ github.event.issue.number }}
-      #     body: |
-      #       A new release has been made for this PR. You can install it with `npm i @apollo/client@${{ steps.get-version.outputs.version }}`.

@@ -2708,7 +2708,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
   });
 });
 
-it.skip("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {
+it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {
   type Variables = {
     id: string;
   };
@@ -2720,7 +2720,6 @@ it.skip("`refetch` works with startTransition to allow React to show stale UI un
       completed: boolean;
     };
   }
-  const user = userEvent.setup();
 
   const query: TypedDocumentNode<Data, Variables> = gql`
     query TodoItemQuery($id: ID!) {
@@ -2732,7 +2731,7 @@ it.skip("`refetch` works with startTransition to allow React to show stale UI un
     }
   `;
 
-  const mocks: MockedResponse<Data, Variables>[] = [
+  const mocks: MockedResponse<Data>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -2754,26 +2753,24 @@ it.skip("`refetch` works with startTransition to allow React to show stale UI un
     cache: new InMemoryCache(),
   });
 
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
-
   function SuspenseFallback() {
     return <p>Loading</p>;
   }
 
-  function Parent() {
+  function App() {
     const [id, setId] = React.useState("1");
-    const [queryRef, { refetch }] = useInteractiveQuery(query, {
-      variables: { id },
-    });
-    return <Todo refetch={refetch} queryRef={queryRef} onChange={setId} />;
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery({ id })}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && (
+            <Todo refetch={refetch} queryRef={queryRef} onChange={setId} />
+          )}
+        </Suspense>
+      </>
+    );
   }
 
   function Todo({
@@ -2807,10 +2804,11 @@ it.skip("`refetch` works with startTransition to allow React to show stale UI un
     );
   }
 
-  render(<App />);
+  const { user } = renderWithMocks(<App />, { mocks });
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   expect(screen.getByText("Loading")).toBeInTheDocument();
-
   expect(await screen.findByTestId("todo")).toBeInTheDocument();
 
   const todo = screen.getByTestId("todo");
@@ -2841,6 +2839,7 @@ it.skip("`refetch` works with startTransition to allow React to show stale UI un
     expect(todo).toHaveTextContent("Clean room (completed)");
   });
 });
+
 function getItemTexts() {
   return screen.getAllByTestId(/letter/).map(
     // eslint-disable-next-line testing-library/no-node-access

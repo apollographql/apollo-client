@@ -2287,50 +2287,81 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
   });
 });
 
-it.skip("re-suspends when calling `refetch`", async () => {
-  const { renders } = renderVariablesIntegrationTest({
-    variables: { id: "1" },
-  });
+it("re-suspends when calling `refetch`", async () => {
+  const { query } = useVariablesQueryCase();
 
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
+  const mocks: MockedResponse<VariablesCaseData>[] = [
+    {
+      request: { query, variables: { id: "1" } },
+      result: {
+        data: { character: { id: "1", name: "Spider-Man" } },
+      },
+      delay: 20,
+    },
+    // refetch
+    {
+      request: { query, variables: { id: "1" } },
+      result: {
+        data: { character: { id: "1", name: "Spider-Man (updated)" } },
+      },
+      delay: 20,
+    },
+  ];
 
-  expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<VariablesCaseData>();
 
-  const button = screen.getByText("Refetch");
-  const user = userEvent.setup();
-  await act(() => user.click(button));
+  function App() {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
 
-  // parent component re-suspends
-  expect(renders.suspenseCount).toBe(2);
-  expect(renders.count).toBe(2);
+    return (
+      <>
+        <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
+        <button onClick={() => refetch()}>Refetch</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
 
-  expect(
-    await screen.findByText("1 - Spider-Man (updated)")
-  ).toBeInTheDocument();
+  const { user } = renderWithMocks(<App />, { mocks });
+
+  expect(SuspenseFallback).not.toHaveRendered();
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  expect(SuspenseFallback).toHaveRendered();
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: { character: { id: "1", name: "Spider-Man" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Refetch")));
+
+  expect(SuspenseFallback).toHaveRenderedTimes(2);
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: { character: { id: "1", name: "Spider-Man (updated)" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
-it.skip("re-suspends when calling `refetch` with new variables", async () => {
-  interface QueryData {
-    character: {
-      id: string;
-      name: string;
-    };
-  }
+it("re-suspends when calling `refetch` with new variables", async () => {
+  const { query } = useVariablesQueryCase();
 
-  interface QueryVariables {
-    id: string;
-  }
-  const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
-      }
-    }
-  `;
-
-  const mocks = [
+  const mocks: MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -2345,47 +2376,54 @@ it.skip("re-suspends when calling `refetch` with new variables", async () => {
     },
   ];
 
-  const { renders } = renderVariablesIntegrationTest({
-    variables: { id: "1" },
-    mocks,
-  });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<VariablesCaseData>();
 
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
+  function App() {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
 
-  expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
+    return (
+      <>
+        <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
+        <button onClick={() => refetch({ id: "2" })}>Refetch with ID 2</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
 
-  const newVariablesRefetchButton = screen.getByText("Set variables to id: 2");
-  const refetchButton = screen.getByText("Refetch");
-  const user = userEvent.setup();
-  await act(() => user.click(newVariablesRefetchButton));
-  await act(() => user.click(refetchButton));
+  const { user } = renderWithMocks(<App />, { mocks });
 
-  expect(await screen.findByText("2 - Captain America")).toBeInTheDocument();
+  await act(() => user.click(screen.getByText("Load query")));
 
-  // parent component re-suspends
-  expect(renders.suspenseCount).toBe(2);
-  expect(renders.count).toBe(3);
+  expect(SuspenseFallback).toHaveRendered();
 
-  // extra render puts an additional frame into the array
-  expect(renders.frames).toMatchObject([
-    {
-      ...mocks[0].result,
-      networkStatus: NetworkStatus.ready,
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: { character: { id: "1", name: "Captain Marvel" } },
       error: undefined,
-    },
-    {
-      ...mocks[0].result,
       networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Refetch with ID 2")));
+
+  expect(SuspenseFallback).toHaveRenderedTimes(2);
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: { character: { id: "2", name: "Captain America" } },
       error: undefined,
-    },
-    {
-      ...mocks[1].result,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
-    },
-  ]);
+    });
+  }
 });
+
 it.skip("re-suspends multiple times when calling `refetch` multiple times", async () => {
   const { renders } = renderVariablesIntegrationTest({
     variables: { id: "1" },

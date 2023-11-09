@@ -6,56 +6,6 @@ import type {
   ProfiledHook,
 } from "../internal/index.js";
 
-export const toHaveRendered: MatcherFunction = function (
-  profiled: ProfiledComponent<any, any>
-) {
-  const hint = this.utils.matcherHint(
-    "toHaveRendered",
-    "ProfiledComponent",
-    ""
-  );
-  const pass = profiled.currentRenderCount() > 0;
-
-  return {
-    pass,
-    message() {
-      return (
-        hint +
-        `\n\nExpected profiled component to${pass ? " not" : ""} have rendered.`
-      );
-    },
-  };
-};
-
-export const toHaveRenderedTimes: MatcherFunction<[count: number]> = function (
-  profiled: ProfiledComponent<any, any>,
-  count: number
-) {
-  const hint = this.utils.matcherHint(
-    "toHaveRenderedTimes",
-    "ProfiledComponent",
-    "renderCount"
-  );
-  const actualRenderCount = profiled.currentRenderCount();
-  const pass = actualRenderCount === count;
-
-  return {
-    pass,
-    message: () => {
-      return (
-        hint +
-        `\n\nExpected profiled component to${
-          pass ? " not" : ""
-        } have rendered times ${this.utils.printExpected(
-          count
-        )}, but it rendered times ${this.utils.printReceived(
-          actualRenderCount
-        )}.`
-      );
-    },
-  };
-};
-
 export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
   async function (actual, options) {
     const _profiled = actual as

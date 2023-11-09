@@ -9,7 +9,11 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Options as UserEventOptions } from "@testing-library/user-event";
-import { ErrorBoundary, ErrorBoundaryProps } from "react-error-boundary";
+import {
+  ErrorBoundary,
+  ErrorBoundary as ReactErrorBoundary,
+  ErrorBoundaryProps,
+} from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import {
@@ -123,7 +127,31 @@ function createDefaultProfiledComponents<TData = unknown>() {
     { queryRef: QueryReference<TData> }
   >(({ queryRef }) => useReadQuery(queryRef));
 
-  return { SuspenseFallback, ReadQueryHook };
+  const ErrorFallback = profile<{ error: Error | null }, { error: Error }>({
+    Component: ({ error }) => {
+      ErrorFallback.updateSnapshot({ error });
+
+      return <div>Oops</div>;
+    },
+    initialSnapshot: {
+      error: null,
+    },
+  });
+
+  function ErrorBoundary({ children }: { children: React.ReactNode }) {
+    return (
+      <ReactErrorBoundary FallbackComponent={ErrorFallback}>
+        {children}
+      </ReactErrorBoundary>
+    );
+  }
+
+  return {
+    SuspenseFallback,
+    ReadQueryHook,
+    ErrorFallback,
+    ErrorBoundary,
+  };
 }
 
 function renderWithMocks(ui: React.ReactElement, props: MockedProviderProps) {
@@ -1608,7 +1636,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     },
   ];
 
-  const { SuspenseFallback, ReadQueryHook } =
+  const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
     createDefaultProfiledComponents<SimpleQueryData>();
 
   function App() {
@@ -1625,16 +1653,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
         <button onClick={() => refetch()}>Refetch greeting</button>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          <ErrorBoundary
-            fallback={<div data-testid="error">Error boundary</div>}
-            onError={(error) => {
-              ProfiledApp.updateSnapshot((snapshot) => ({
-                ...snapshot,
-                error,
-                errorBoundaryCount: snapshot.errorBoundaryCount + 1,
-              }));
-            }}
-          >
+          <ErrorBoundary>
             {queryRef && <ReadQueryHook queryRef={queryRef} />}
           </ErrorBoundary>
         </Suspense>
@@ -1642,18 +1661,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     );
   }
 
-  const ProfiledApp = profile<{
-    error: Error | undefined;
-    errorBoundaryCount: number;
-  }>({
-    Component: App,
-    initialSnapshot: {
-      error: undefined,
-      errorBoundaryCount: 0,
-    },
-  });
-
-  const { user } = renderWithMocks(<ProfiledApp />, { mocks });
+  const { user } = renderWithMocks(<App />, { mocks });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -1694,22 +1702,9 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     });
   }
 
-  // {
-  //   const { snapshot } = await ProfiledApp.takeRender();
-  //
-  //   // Ensure we aren't rendering the error boundary and instead rendering the
-  //   // error message in the Child component.
-  //   expect(snapshot).toEqual({
-  //     result: {
-  //       data: { greeting: "Hello" },
-  //       error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
-  //       networkStatus: NetworkStatus.error,
-  //     },
-  //     suspenseCount: 2,
-  //     error: undefined,
-  //     errorBoundaryCount: 0,
-  //   });
-  // }
+  // Ensure we aren't rendering the error boundary and instead rendering the
+  // error message in the hook component.
+  expect(ErrorFallback).not.toHaveRendered();
 });
 
 it("applies `context` on next fetch when it changes between renders", async () => {

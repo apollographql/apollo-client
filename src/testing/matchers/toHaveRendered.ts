@@ -1,15 +1,20 @@
 import type { MatcherFunction } from "expect";
-import type { ProfiledComponent } from "../internal/index.js";
+import type { ProfiledComponent, ProfiledHook } from "../internal/index.js";
 
 export const toHaveRendered: MatcherFunction = function (
-  ProfiledComponent: ProfiledComponent<any, any>
+  ProfiledComponent: ProfiledComponent<any, any> | ProfiledHook<any, any>
 ) {
+  if ("ProfiledComponent" in ProfiledComponent) {
+    ProfiledComponent = ProfiledComponent.ProfiledComponent;
+  }
+
+  const pass = ProfiledComponent.currentRenderCount() > 0;
+
   const hint = this.utils.matcherHint(
     "toHaveRendered",
     "ProfiledComponent",
     ""
   );
-  const pass = ProfiledComponent.currentRenderCount() > 0;
 
   return {
     pass,

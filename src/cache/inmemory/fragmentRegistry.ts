@@ -15,6 +15,7 @@ export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;
   lookup(fragmentName: string): FragmentDefinitionNode | null;
   transform<D extends DocumentNode>(document: D): D;
+  resetCaches(): void;
 }
 
 // As long as createFragmentRegistry is not imported or used, the

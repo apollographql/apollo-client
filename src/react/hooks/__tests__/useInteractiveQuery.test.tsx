@@ -2424,38 +2424,52 @@ it("re-suspends when calling `refetch` with new variables", async () => {
   }
 });
 
-it.skip("re-suspends multiple times when calling `refetch` multiple times", async () => {
-  const { renders } = renderVariablesIntegrationTest({
-    variables: { id: "1" },
-  });
+it("re-suspends multiple times when calling `refetch` multiple times", async () => {
+  const { query } = useVariablesQueryCase();
 
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
+  const mocks: MockedResponse<VariablesCaseData>[] = [
+    {
+      request: { query, variables: { id: "1" } },
+      result: {
+        data: { character: { id: "1", name: "Spider-Man" } },
+      },
+      maxUsageCount: 3,
+    },
+  ];
 
-  expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<VariablesCaseData>();
+
+  function App() {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
+        <button onClick={() => refetch()}>Refetch</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user } = renderWithMocks(<App />, { mocks });
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  expect(SuspenseFallback).toHaveRendered();
+  await ReadQueryHook.takeSnapshot();
 
   const button = screen.getByText("Refetch");
-  const user = userEvent.setup();
-  await act(() => user.click(button));
-
-  // parent component re-suspends
-  expect(renders.suspenseCount).toBe(2);
-  expect(renders.count).toBe(2);
-
-  expect(
-    await screen.findByText("1 - Spider-Man (updated)")
-  ).toBeInTheDocument();
 
   await act(() => user.click(button));
+  expect(SuspenseFallback).toHaveRenderedTimes(2);
 
-  // parent component re-suspends
-  expect(renders.suspenseCount).toBe(3);
-  expect(renders.count).toBe(3);
-
-  expect(
-    await screen.findByText("1 - Spider-Man (updated again)")
-  ).toBeInTheDocument();
+  await act(() => user.click(button));
+  expect(SuspenseFallback).toHaveRenderedTimes(3);
 });
+
 it.skip("throws errors when errors are returned after calling `refetch`", async () => {
   const consoleSpy = jest.spyOn(console, "error").mockImplementation();
   interface QueryData {

@@ -798,9 +798,8 @@ it("passes context to the link", async () => {
     }),
   });
 
-  function SuspenseFallback() {
-    return <p>Loading</p>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<QueryData>();
 
   function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
@@ -811,57 +810,23 @@ it("passes context to the link", async () => {
       <>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Child queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Child({ queryRef }: { queryRef: QueryReference<QueryData> }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot({ result });
-
-    return null;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<QueryData> | null;
-  }>({
-    Component: App,
-    snapshotDOM: true,
-    initialSnapshot: {
-      result: null,
-    },
-  });
-
-  const { user } = renderWithClient(<ProfiledApp />, { client });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-    expect(snapshot.result).toEqual(null);
-  }
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+  const snapshot = await ReadQueryHook.takeSnapshot();
 
-    expect(withinDOM().getByText("Loading")).toBeInTheDocument();
-    expect(snapshot.result).toEqual(null);
-  }
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-
-    expect(snapshot.result).toEqual({
-      data: { context: { valueA: "A", valueB: "B" } },
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
-  }
-
-  await expect(ProfiledApp).not.toRerender();
+  expect(snapshot).toEqual({
+    data: { context: { valueA: "A", valueB: "B" } },
+    networkStatus: NetworkStatus.ready,
+    error: undefined,
+  });
 });
 
 it('enables canonical results when canonizeResults is "true"', async () => {
@@ -909,9 +874,8 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     link: new MockLink([]),
   });
 
-  function SuspenseFallback() {
-    return <p>Loading</p>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<QueryData>();
 
   function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
@@ -922,54 +886,28 @@ it('enables canonical results when canonizeResults is "true"', async () => {
       <>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Child queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Child({ queryRef }: { queryRef: QueryReference<QueryData> }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot({ result });
-
-    return null;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<QueryData> | null;
-  }>({
-    Component: App,
-    initialSnapshot: {
-      result: null,
-    },
-  });
-
-  const { user } = renderWithClient(<ProfiledApp />, { client });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-    expect(snapshot.result).toEqual(null);
-  }
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+  const snapshot = await ReadQueryHook.takeSnapshot();
+  const resultSet = new Set(snapshot.data.results);
+  const values = Array.from(resultSet).map((item) => item.value);
 
-    const resultSet = new Set(snapshot.result!.data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
+  expect(snapshot).toEqual({
+    data: { results },
+    networkStatus: NetworkStatus.ready,
+    error: undefined,
+  });
 
-    expect(snapshot.result).toEqual({
-      data: { results },
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
-    expect(resultSet.size).toBe(5);
-    expect(values).toEqual([0, 1, 2, 3, 5]);
-  }
-
-  await expect(ProfiledApp).not.toRerender();
+  expect(resultSet.size).toBe(5);
+  expect(values).toEqual([0, 1, 2, 3, 5]);
 });
 
 it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
@@ -1013,9 +951,8 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     data: { results },
   });
 
-  function SuspenseFallback() {
-    return <p>Loading</p>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<QueryData>();
 
   function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
@@ -1026,54 +963,27 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
       <>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Child queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Child({ queryRef }: { queryRef: QueryReference<QueryData> }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot({ result });
-
-    return null;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<QueryData> | null;
-  }>({
-    Component: App,
-    initialSnapshot: {
-      result: null,
-    },
-  });
-
-  const { user } = renderWithMocks(<ProfiledApp />, { cache });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-    expect(snapshot.result).toEqual(null);
-  }
+  const { user } = renderWithMocks(<App />, { cache });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+  const snapshot = await ReadQueryHook.takeSnapshot();
+  const resultSet = new Set(snapshot.data.results);
+  const values = Array.from(resultSet).map((item) => item.value);
 
-    const resultSet = new Set(snapshot.result!.data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
-
-    expect(snapshot.result).toEqual({
-      data: { results },
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
-    expect(resultSet.size).toBe(6);
-    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-  }
-
-  await expect(ProfiledApp).not.toRerender();
+  expect(snapshot).toEqual({
+    data: { results },
+    networkStatus: NetworkStatus.ready,
+    error: undefined,
+  });
+  expect(resultSet.size).toBe(6);
+  expect(values).toEqual([0, 1, 1, 2, 3, 5]);
 });
 
 it("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
@@ -1095,67 +1005,37 @@ it("returns initial cache data followed by network data when the fetch policy is
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
-    }));
+  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents<{
+    hello: string;
+  }>();
 
-    return <p>Loading</p>;
-  }
+  const App = profile({
+    Component: () => {
+      const [queryRef, loadQuery] = useInteractiveQuery(query, {
+        fetchPolicy: "cache-and-network",
+      });
 
-  function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
-      fetchPolicy: "cache-and-network",
-    });
-
-    return (
-      <>
-        <button onClick={() => loadQuery()}>Load query</button>
-        <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Child queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
-  function Child({
-    queryRef,
-  }: {
-    queryRef: QueryReference<{ hello: string }>;
-  }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
-
-    return null;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<unknown> | null;
-    suspenseCount: number;
-  }>({
-    Component: App,
-    initialSnapshot: {
-      result: null,
-      suspenseCount: 0,
+      return (
+        <>
+          <button onClick={() => loadQuery()}>Load query</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            {queryRef && <ReadQueryHook queryRef={queryRef} />}
+          </Suspense>
+        </>
+      );
     },
   });
 
-  const { user } = renderWithClient(<ProfiledApp />, { client });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-    expect(snapshot.result).toEqual(null);
-  }
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+  expect(SuspenseFallback).not.toHaveRendered();
 
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toEqual({
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
       data: { hello: "from cache" },
       networkStatus: NetworkStatus.loading,
       error: undefined,
@@ -1163,17 +1043,14 @@ it("returns initial cache data followed by network data when the fetch policy is
   }
 
   {
-    const { snapshot } = await ProfiledApp.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toEqual({
+    expect(snapshot).toEqual({
       data: { hello: "from link" },
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
   }
-
-  await expect(ProfiledApp).not.toRerender();
 });
 
 it("all data is present in the cache, no network request is made", async () => {
@@ -1198,14 +1075,7 @@ it("all data is present in the cache, no network request is made", async () => {
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
-    }));
-
-    return <p>Loading</p>;
-  }
+  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
 
   function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query);
@@ -1214,52 +1084,25 @@ it("all data is present in the cache, no network request is made", async () => {
       <>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Child queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Child({ queryRef }: { queryRef: QueryReference<unknown> }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
-
-    return null;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<unknown> | null;
-    suspenseCount: number;
-  }>({
-    Component: App,
-    initialSnapshot: {
-      result: null,
-      suspenseCount: 0,
-    },
-  });
-
-  const { user } = renderWithClient(<ProfiledApp />, { client });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-    expect(snapshot.result).toEqual(null);
-  }
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+  expect(SuspenseFallback).not.toHaveRendered();
 
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toEqual({
-      data: { hello: "from cache" },
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
-  }
+  const snapshot = await ReadQueryHook.takeSnapshot();
 
-  await expect(ProfiledApp).not.toRerender();
+  expect(snapshot).toEqual({
+    data: { hello: "from cache" },
+    networkStatus: NetworkStatus.ready,
+    error: undefined,
+  });
 });
 
 it("partial data is present in the cache so it is ignored and network request is made", async () => {
@@ -1290,14 +1133,7 @@ it("partial data is present in the cache so it is ignored and network request is
     cache.writeQuery({ query, data: { hello: "from cache" } });
   }
 
-  function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
-    }));
-
-    return <p>Loading</p>;
-  }
+  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
 
   function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query);
@@ -1306,60 +1142,25 @@ it("partial data is present in the cache so it is ignored and network request is
       <>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Child queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Child({ queryRef }: { queryRef: QueryReference<unknown> }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
-
-    return null;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<unknown> | null;
-    suspenseCount: number;
-  }>({
-    Component: App,
-    initialSnapshot: {
-      result: null,
-      suspenseCount: 0,
-    },
-  });
-
-  const { user } = renderWithClient(<ProfiledApp />, { client });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toBe(null);
-  }
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+  expect(SuspenseFallback).toHaveRendered();
 
-    expect(snapshot.suspenseCount).toBe(1);
-    expect(snapshot.result).toBe(null);
-  }
+  const snapshot = await ReadQueryHook.takeSnapshot();
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-
-    expect(snapshot.suspenseCount).toBe(1);
-    expect(snapshot.result).toEqual({
-      data: { foo: "bar", hello: "from link" },
-      error: undefined,
-      networkStatus: NetworkStatus.ready,
-    });
-  }
-
-  await expect(ProfiledApp).not.toRerender();
+  expect(snapshot).toEqual({
+    data: { foo: "bar", hello: "from link" },
+    error: undefined,
+    networkStatus: NetworkStatus.ready,
+  });
 });
 
 it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'", async () => {
@@ -1384,14 +1185,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
-    }));
-
-    return <p>Loading</p>;
-  }
+  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
 
   function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
@@ -1402,60 +1196,25 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
       <>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Child queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Child({ queryRef }: { queryRef: QueryReference<unknown> }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
-
-    return null;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<unknown> | null;
-    suspenseCount: number;
-  }>({
-    Component: App,
-    initialSnapshot: {
-      result: null,
-      suspenseCount: 0,
-    },
-  });
-
-  const { user } = renderWithClient(<ProfiledApp />, { client });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toBe(null);
-  }
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+  expect(SuspenseFallback).toHaveRendered();
 
-    expect(snapshot.suspenseCount).toBe(1);
-    expect(snapshot.result).toBe(null);
-  }
+  const snapshot = await ReadQueryHook.takeSnapshot();
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-
-    expect(snapshot.suspenseCount).toBe(1);
-    expect(snapshot.result).toEqual({
-      data: { hello: "from link" },
-      error: undefined,
-      networkStatus: NetworkStatus.ready,
-    });
-  }
-
-  await expect(ProfiledApp).not.toRerender();
+  expect(snapshot).toEqual({
+    data: { hello: "from link" },
+    error: undefined,
+    networkStatus: NetworkStatus.ready,
+  });
 });
 
 it("fetches data from the network but does not update the cache when `fetchPolicy` is 'no-cache'", async () => {
@@ -1477,14 +1236,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
-    }));
-
-    return <p>Loading</p>;
-  }
+  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
 
   function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
@@ -1495,63 +1247,29 @@ it("fetches data from the network but does not update the cache when `fetchPolic
       <>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Child queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Child({ queryRef }: { queryRef: QueryReference<unknown> }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
-
-    return null;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<unknown> | null;
-    suspenseCount: number;
-  }>({
-    Component: App,
-    initialSnapshot: {
-      result: null,
-      suspenseCount: 0,
-    },
-  });
-
-  const { user } = renderWithClient(<ProfiledApp />, { client });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toBe(null);
-  }
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+  expect(SuspenseFallback).toHaveRendered();
 
-    expect(snapshot.suspenseCount).toBe(1);
-    expect(snapshot.result).toBe(null);
-  }
+  const snapshot = await ReadQueryHook.takeSnapshot();
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+  expect(snapshot).toEqual({
+    data: { hello: "from link" },
+    error: undefined,
+    networkStatus: NetworkStatus.ready,
+  });
 
-    expect(snapshot.suspenseCount).toBe(1);
-    expect(snapshot.result).toEqual({
-      data: { hello: "from link" },
-      error: undefined,
-      networkStatus: NetworkStatus.ready,
-    });
-    expect(client.extract()).toEqual({
-      ROOT_QUERY: { __typename: "Query", hello: "from cache" },
-    });
-  }
-
-  await expect(ProfiledApp).not.toRerender();
+  expect(client.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", hello: "from cache" },
+  });
 });
 
 it("works with startTransition to change variables", async () => {
@@ -1699,7 +1417,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     query {
       greeting {
         message
-        ... on Greeting @defer {
+        ... @defer {
           recipient {
             name
           }
@@ -1722,70 +1440,33 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   });
   const client = new ApolloClient({ cache, link });
 
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<unknown> | null;
-    suspenseCount: number;
-  }>({
-    Component: () => {
-      return (
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      );
-    },
-    initialSnapshot: {
-      suspenseCount: 0,
-      result: null,
-    },
-  });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<Data>();
 
-  function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
-    }));
-
-    return <p>Loading</p>;
-  }
-
-  function Parent() {
+  function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
       fetchPolicy: "cache-and-network",
     });
     return (
       <div>
         <button onClick={() => loadQuery()}>Load todo</button>
-        {queryRef && <Todo queryRef={queryRef} />}
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
       </div>
     );
   }
 
-  function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const result = useReadQuery(queryRef);
-    const { data, networkStatus, error } = result;
-    const { greeting } = data;
-
-    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
-
-    return null;
-  }
-
-  const { user } = renderWithClient(<ProfiledApp />, { client });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toBeNull();
-  }
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load todo")));
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
+  expect(SuspenseFallback).not.toHaveRendered();
 
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toEqual({
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -1808,10 +1489,9 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   });
 
   {
-    const { snapshot } = await ProfiledApp.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toEqual({
+    expect(snapshot).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -1843,10 +1523,9 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   );
 
   {
-    const { snapshot } = await ProfiledApp.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toEqual({
+    expect(snapshot).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -1858,8 +1537,6 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
       networkStatus: NetworkStatus.ready,
     });
   }
-
-  await expect(ProfiledApp).not.toRerender();
 });
 
 it("reacts to cache updates", async () => {
@@ -1869,69 +1546,30 @@ it("reacts to cache updates", async () => {
     link: new MockLink(mocks),
   });
 
-  function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
-    }));
-
-    return <p>Loading</p>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<SimpleQueryData>();
 
   function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query);
+
     return (
       <>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Child queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Child({ queryRef }: { queryRef: QueryReference<SimpleQueryData> }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
-
-    return null;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<SimpleQueryData> | null;
-    suspenseCount: number;
-  }>({
-    Component: App,
-    initialSnapshot: {
-      result: null,
-      suspenseCount: 0,
-    },
-  });
-
-  const { user } = renderWithClient(<ProfiledApp />, { client });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-
-    expect(snapshot.suspenseCount).toBe(0);
-    expect(snapshot.result).toBe(null);
-  }
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
   {
-    const { snapshot } = await ProfiledApp.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-    expect(snapshot.suspenseCount).toBe(1);
-    expect(snapshot.result).toBe(null);
-  }
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-
-    expect(snapshot.suspenseCount).toBe(1);
-    expect(snapshot.result).toEqual({
+    expect(snapshot).toEqual({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1944,17 +1582,14 @@ it("reacts to cache updates", async () => {
   });
 
   {
-    const { snapshot } = await ProfiledApp.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-    expect(snapshot.suspenseCount).toBe(1);
-    expect(snapshot.result).toEqual({
+    expect(snapshot).toEqual({
       data: { greeting: "Updated Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
   }
-
-  await expect(ProfiledApp).not.toRerender();
 });
 
 it("applies `errorPolicy` on next fetch when it changes between renders", async () => {
@@ -1973,14 +1608,8 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     },
   ];
 
-  function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
-    }));
-
-    return <p>Loading</p>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<SimpleQueryData>();
 
   function App() {
     const [errorPolicy, setErrorPolicy] = useState<ErrorPolicy>("none");
@@ -2006,126 +1635,81 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
               }));
             }}
           >
-            {queryRef && <Child queryRef={queryRef} />}
+            {queryRef && <ReadQueryHook queryRef={queryRef} />}
           </ErrorBoundary>
         </Suspense>
       </>
     );
   }
 
-  function Child({ queryRef }: { queryRef: QueryReference<SimpleQueryData> }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot((snapshot) => ({ ...snapshot, result }));
-
-    return null;
-  }
-
   const ProfiledApp = profile<{
     error: Error | undefined;
     errorBoundaryCount: number;
-    result: UseReadQueryResult<SimpleQueryData> | null;
-    suspenseCount: number;
   }>({
     Component: App,
     initialSnapshot: {
       error: undefined,
       errorBoundaryCount: 0,
-      result: null,
-      suspenseCount: 0,
     },
   });
 
   const { user } = renderWithMocks(<ProfiledApp />, { mocks });
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-
-    expect(snapshot).toEqual({
-      result: null,
-      suspenseCount: 0,
-      error: undefined,
-      errorBoundaryCount: 0,
-    });
-  }
-
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-
-    expect(snapshot).toEqual({
-      result: null,
-      suspenseCount: 1,
-      error: undefined,
-      errorBoundaryCount: 0,
-    });
-  }
+  expect(SuspenseFallback).toHaveRendered();
 
   {
-    const { snapshot } = await ProfiledApp.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
     expect(snapshot).toEqual({
-      result: {
-        data: { greeting: "Hello" },
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      },
-      suspenseCount: 1,
+      data: { greeting: "Hello" },
       error: undefined,
-      errorBoundaryCount: 0,
+      networkStatus: NetworkStatus.ready,
     });
   }
 
   await act(() => user.click(screen.getByText("Change error policy")));
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-
-    expect(snapshot).toEqual({
-      result: {
-        data: { greeting: "Hello" },
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      },
-      suspenseCount: 1,
-      error: undefined,
-      errorBoundaryCount: 0,
-    });
-  }
-
   await act(() => user.click(screen.getByText("Refetch greeting")));
 
+  expect(SuspenseFallback).toHaveRenderedTimes(2);
+
   {
-    const { snapshot } = await ProfiledApp.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
     expect(snapshot).toEqual({
-      result: {
-        data: { greeting: "Hello" },
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      },
-      suspenseCount: 2,
+      data: { greeting: "Hello" },
       error: undefined,
-      errorBoundaryCount: 0,
+      networkStatus: NetworkStatus.ready,
     });
   }
 
   {
-    const { snapshot } = await ProfiledApp.takeRender();
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-    // Ensure we aren't rendering the error boundary and instead rendering the
-    // error message in the Child component.
     expect(snapshot).toEqual({
-      result: {
-        data: { greeting: "Hello" },
-        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
-        networkStatus: NetworkStatus.error,
-      },
-      suspenseCount: 2,
-      error: undefined,
-      errorBoundaryCount: 0,
+      data: { greeting: "Hello" },
+      error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+      networkStatus: NetworkStatus.error,
     });
   }
+
+  // {
+  //   const { snapshot } = await ProfiledApp.takeRender();
+  //
+  //   // Ensure we aren't rendering the error boundary and instead rendering the
+  //   // error message in the Child component.
+  //   expect(snapshot).toEqual({
+  //     result: {
+  //       data: { greeting: "Hello" },
+  //       error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+  //       networkStatus: NetworkStatus.error,
+  //     },
+  //     suspenseCount: 2,
+  //     error: undefined,
+  //     errorBoundaryCount: 0,
+  //   });
+  // }
 });
 
 it("applies `context` on next fetch when it changes between renders", async () => {

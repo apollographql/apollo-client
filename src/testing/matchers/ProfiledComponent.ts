@@ -76,12 +76,13 @@ export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
         throw e;
       }
     }
+
     return {
       pass,
       message() {
         return (
           hint +
-          ` Expected component to${pass ? " not" : ""} rerender, ` +
+          `\n\nExpected component to${pass ? " not" : ""} rerender, ` +
           `but it did${pass ? "" : " not"}.`
         );
       },

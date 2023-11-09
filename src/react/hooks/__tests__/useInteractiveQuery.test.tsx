@@ -2211,9 +2211,8 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     cache,
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<Data>();
 
   function App() {
     const [fetchPolicy, setFetchPolicy] =
@@ -2231,31 +2230,51 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
         </button>
         <button onClick={() => refetch()}>Refetch</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Character queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
-  }
-
-  function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
-
-    return <span data-testid="character">{data.character.name}</span>;
   }
 
   const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  const character = await screen.findByTestId("character");
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-  expect(character).toHaveTextContent("Doctor Strangecache");
+    expect(snapshot).toEqual({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "1",
+          name: "Doctor Strangecache",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   await act(() => user.click(screen.getByText("Change fetch policy")));
+  await ReadQueryHook.takeSnapshot();
   await act(() => user.click(screen.getByText("Refetch")));
-  await waitFor(() => {
-    expect(character).toHaveTextContent("Doctor Strange");
-  });
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "1",
+          name: "Doctor Strange",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   // Because we switched to a `no-cache` fetch policy, we should not see the
   // newly fetched data in the cache after the fetch occured.

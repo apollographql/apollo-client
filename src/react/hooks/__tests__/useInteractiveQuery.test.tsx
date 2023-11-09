@@ -2470,66 +2470,64 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
   expect(SuspenseFallback).toHaveRenderedTimes(3);
 });
 
-it.skip("throws errors when errors are returned after calling `refetch`", async () => {
-  const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-  interface QueryData {
-    character: {
-      id: string;
-      name: string;
-    };
-  }
+it("throws errors when errors are returned after calling `refetch`", async () => {
+  using _consoleSpy = spyOnConsole("error");
 
-  interface QueryVariables {
-    id: string;
-  }
-  const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
-      }
-    }
-  `;
-  const mocks = [
+  const { query } = useVariablesQueryCase();
+
+  const mocks: MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
         data: { character: { id: "1", name: "Captain Marvel" } },
       },
+      delay: 20,
     },
     {
       request: { query, variables: { id: "1" } },
       result: {
         errors: [new GraphQLError("Something went wrong")],
       },
+      delay: 20,
     },
   ];
-  const { renders } = renderVariablesIntegrationTest({
-    variables: { id: "1" },
-    mocks,
-  });
 
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
+  const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
+    createDefaultProfiledComponents<VariablesCaseData>();
 
-  expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
+  function App() {
+    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
 
-  const button = screen.getByText("Refetch");
-  const user = userEvent.setup();
-  await act(() => user.click(button));
+    return (
+      <>
+        <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
+        <button onClick={() => refetch()}>Refetch</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ErrorBoundary>
+            {queryRef && <ReadQueryHook queryRef={queryRef} />}
+          </ErrorBoundary>
+        </Suspense>
+      </>
+    );
+  }
 
-  await waitFor(() => {
-    expect(renders.errorCount).toBe(1);
-  });
+  const { user } = renderWithMocks(<App />, { mocks });
 
-  expect(renders.errors).toEqual([
-    new ApolloError({
-      graphQLErrors: [new GraphQLError("Something went wrong")],
-    }),
-  ]);
+  await act(() => user.click(screen.getByText("Load query")));
+  await ReadQueryHook.waitForNextSnapshot();
+  await act(() => user.click(screen.getByText("Refetch")));
 
-  consoleSpy.mockRestore();
+  {
+    const { snapshot } = await ErrorFallback.takeRender();
+
+    expect(snapshot.error).toEqual(
+      new ApolloError({
+        graphQLErrors: [new GraphQLError("Something went wrong")],
+      })
+    );
+  }
 });
+
 it.skip('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
   interface QueryData {
     character: {

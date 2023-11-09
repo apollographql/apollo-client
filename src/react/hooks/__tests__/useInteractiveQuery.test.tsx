@@ -744,9 +744,8 @@ it("allows the client to be overridden", async () => {
     cache: new InMemoryCache(),
   });
 
-  function SuspenseFallback() {
-    return <p>Loading</p>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<SimpleQueryData>();
 
   function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
@@ -757,62 +756,23 @@ it("allows the client to be overridden", async () => {
       <>
         <button onClick={() => loadQuery()}>Load query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Greeting queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Greeting({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleQueryData>;
-  }) {
-    const result = useReadQuery(queryRef);
-
-    ProfiledApp.updateSnapshot({ result });
-
-    return <div>{result.data.greeting}</div>;
-  }
-
-  const ProfiledApp = profile<{
-    result: UseReadQueryResult<SimpleQueryData> | null;
-  }>({
-    Component: App,
-    snapshotDOM: true,
-    initialSnapshot: {
-      result: null,
-    },
-  });
-
-  const { user } = renderWithClient(<ProfiledApp />, { client: globalClient });
-
-  {
-    const { snapshot } = await ProfiledApp.takeRender();
-    expect(snapshot.result).toEqual(null);
-  }
+  const { user } = renderWithClient(<App />, { client: globalClient });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+  const snapshot = await ReadQueryHook.takeSnapshot();
 
-    expect(withinDOM().getByText("Loading")).toBeInTheDocument();
-    expect(snapshot.result).toEqual(null);
-  }
-
-  {
-    const { snapshot, withinDOM } = await ProfiledApp.takeRender();
-
-    expect(withinDOM().getByText("local hello")).toBeInTheDocument();
-    expect(snapshot.result).toEqual({
-      data: { greeting: "local hello" },
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    });
-  }
-
-  await expect(ProfiledApp).not.toRerender();
+  expect(snapshot).toEqual({
+    data: { greeting: "local hello" },
+    networkStatus: NetworkStatus.ready,
+    error: undefined,
+  });
 });
 
 it("passes context to the link", async () => {

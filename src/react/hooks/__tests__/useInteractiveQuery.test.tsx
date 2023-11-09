@@ -1925,9 +1925,8 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     cache,
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<Data>();
 
   function App() {
     const [refetchWritePolicy, setRefetchWritePolicy] =
@@ -1952,56 +1951,58 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
           Refetch last
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Primes queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
-  }
-
-  function Primes({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
-
-    return <span data-testid="primes">{data.primes.join(", ")}</span>;
   }
 
   const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  const primes = await screen.findByTestId("primes");
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { primes } = snapshot.data;
 
-  expect(primes).toHaveTextContent("2, 3, 5, 7, 11");
-  expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+    expect(primes).toEqual([2, 3, 5, 7, 11]);
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+  }
 
   await act(() => user.click(screen.getByText("Refetch next")));
 
-  await waitFor(() => {
-    expect(primes).toHaveTextContent("2, 3, 5, 7, 11, 13, 17, 19, 23, 29");
-  });
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { primes } = snapshot.data;
 
-  expect(mergeParams).toEqual([
-    [undefined, [2, 3, 5, 7, 11]],
-    [
-      [2, 3, 5, 7, 11],
-      [13, 17, 19, 23, 29],
-    ],
-  ]);
+    expect(primes).toEqual([2, 3, 5, 7, 11, 13, 17, 19, 23, 29]);
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+    ]);
+  }
 
   await act(() => user.click(screen.getByText("Change refetch write policy")));
+  await ReadQueryHook.takeSnapshot();
   await act(() => user.click(screen.getByText("Refetch last")));
 
-  await waitFor(() => {
-    expect(primes).toHaveTextContent("31, 37, 41, 43, 47");
-  });
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { primes } = snapshot.data;
 
-  expect(mergeParams).toEqual([
-    [undefined, [2, 3, 5, 7, 11]],
-    [
-      [2, 3, 5, 7, 11],
-      [13, 17, 19, 23, 29],
-    ],
-    [undefined, [31, 37, 41, 43, 47]],
-  ]);
+    expect(primes).toEqual([31, 37, 41, 43, 47]);
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+      [undefined, [31, 37, 41, 43, 47]],
+    ]);
+  }
 });
 
 it("applies `returnPartialData` on next fetch when it changes between renders", async () => {

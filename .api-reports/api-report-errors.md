@@ -8,7 +8,7 @@ import type { ExecutionResult } from 'graphql';
 import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
 
-// @public (undocumented)
+// this is broken, fix me!
 export class ApolloError extends Error {
     constructor({ graphQLErrors, protocolErrors, clientErrors, networkError, errorMessage, extraInfo, }: ApolloErrorOptions);
     // (undocumented)

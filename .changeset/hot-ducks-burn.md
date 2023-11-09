@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-Add `reset` method to `DocumentTransform`, hook `InMemoryCache.addTypenameTransform` up to `InMemoryCache.gc`
+Add a `resetCache` method to `DocumentTransform` and hook `InMemoryCache.addTypenameTransform` up to `InMemoryCache.gc`

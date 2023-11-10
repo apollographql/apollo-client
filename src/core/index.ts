@@ -14,6 +14,8 @@ export type {
   SubscriptionOptions,
   FetchPolicy,
   WatchQueryFetchPolicy,
+  MutationFetchPolicy,
+  RefetchWritePolicy,
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,

@@ -169,6 +169,9 @@ We can use the asynchronous `screen.findByText` method to query the DOM elements
 ```jsx
 it("should render dog", async () => {
   const dogMock = {
+    delay: 30 // to prevent React from batching the loading state away
+    // delay: Infinity // if you only want to test the loading state
+
     request: {
       query: GET_DOG_QUERY,
       variables: { name: "Buck" }

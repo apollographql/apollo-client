@@ -39,6 +39,7 @@ export { print } from "./graphql/print.js";
 
 export type {
   StoreObject,
+  AsStoreObject,
   Reference,
   StoreValue,
   Directives,

@@ -21,7 +21,6 @@ import type {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
 } from "../../core/index.js";
-import type { SuspenseCache } from "../cache/index.js";
 
 /* QueryReference type */
 
@@ -134,7 +133,6 @@ export interface SuspenseQueryHookOptions<
     | "refetchWritePolicy"
   > {
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
-  suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
 
   /**
@@ -172,7 +170,6 @@ export interface BackgroundQueryHookOptions<
     | "refetchWritePolicy"
   > {
   fetchPolicy?: BackgroundQueryHookFetchPolicy;
-  suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
 
   /**

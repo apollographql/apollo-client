@@ -272,6 +272,13 @@ export type ApolloReducerConfig = {
 };
 
 // @public (undocumented)
+type AsStoreObject<T extends {
+    __typename?: string;
+}> = {
+    [K in keyof T]: T[K];
+};
+
+// @public (undocumented)
 interface Body_2 {
     // (undocumented)
     extensions?: Record<string, any>;
@@ -1305,14 +1312,12 @@ interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TCon
 }
 
 // @public (undocumented)
-type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
+export type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
 
 // Warning: (ae-forgotten-export) The symbol "MutationBaseOptions" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 export interface MutationOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
-    // Warning: (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     fetchPolicy?: MutationFetchPolicy;
     // (undocumented)
@@ -1662,8 +1667,6 @@ class QueryInfo {
     // (undocumented)
     stopped: boolean;
     // (undocumented)
-    subscriptions: Set<ObservableSubscription>;
-    // (undocumented)
     variables?: Record<string, any>;
 }
 
@@ -1907,7 +1910,7 @@ export interface RefetchQueriesResult<TResult> extends Promise<RefetchQueriesPro
 export type RefetchQueryDescriptor = string | DocumentNode;
 
 // @public (undocumented)
-type RefetchWritePolicy = "merge" | "overwrite";
+export type RefetchWritePolicy = "merge" | "overwrite";
 
 // @public (undocumented)
 export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
@@ -2003,8 +2006,10 @@ export interface StoreObject {
     __typename?: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<string, any>[] ? Readonly<StoreVal> | readonly Reference[] : StoreVal extends Record<string, any> ? StoreVal | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<string, any>> ? StoreVal extends Array<infer Item> ? Item extends Record<string, any> ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
@@ -2135,8 +2140,6 @@ export interface WatchQueryOptions<TVariables extends OperationVariables = Opera
     //
     // (undocumented)
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    // Warning: (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     refetchWritePolicy?: RefetchWritePolicy;
 }

@@ -1,5 +1,48 @@
 # @apollo/client
 
+## 3.8.7
+
+### Patch Changes
+
+- [#11297](https://github.com/apollographql/apollo-client/pull/11297) [`c8c76a522`](https://github.com/apollographql/apollo-client/commit/c8c76a522e593de0d06cff73fde2d9e88152bed6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an explicit return type for the `useReadQuery` hook called `UseReadQueryResult`. Previously the return type of this hook was inferred from the return value.
+
+- [#11337](https://github.com/apollographql/apollo-client/pull/11337) [`bb1da8349`](https://github.com/apollographql/apollo-client/commit/bb1da8349e785c54fb4030f269602c900adf23a0) Thanks [@phryneas](https://github.com/phryneas)! - #11206 used the TypeScript syntax `infer X extends Y` that was introduced in TS 4.8.
+  This caused some problems for some users, so we are rolling back to a more backwars-compatible (albeit slightly less performant) type.
+
+## 3.8.6
+
+### Patch Changes
+
+- [#11291](https://github.com/apollographql/apollo-client/pull/11291) [`2be7eafe3`](https://github.com/apollographql/apollo-client/commit/2be7eafe3c115d56d993dbda64d320550712df1f) Thanks [@ArioA](https://github.com/ArioA)! - Fix a bug that allows to only call `loadErrorMessages` without also calling `loadDevErrorMessages`.
+
+- [#11274](https://github.com/apollographql/apollo-client/pull/11274) [`b29f000f3`](https://github.com/apollographql/apollo-client/commit/b29f000f36f281e256809b5454eaeca2ec4450bf) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Start the query ref auto dispose timeout after the initial promise has settled. This prevents requests that run longer than the timeout duration from keeping the component suspended indefinitely.
+
+- [#11289](https://github.com/apollographql/apollo-client/pull/11289) [`b5894dbf0`](https://github.com/apollographql/apollo-client/commit/b5894dbf0fd5ea5ef1ff20dd896a658ef78c69dc) Thanks [@phryneas](https://github.com/phryneas)! - `MockedProvider`: default `connectToDevTools` to `false` in created `ApolloClient` instance.
+
+  This will prevent the mocked `ApolloClient` instance from trying to connect to the DevTools, which would start a `setTimeout` that might keep running after a test has finished.
+
+- [#11206](https://github.com/apollographql/apollo-client/pull/11206) [`dd2ce7687`](https://github.com/apollographql/apollo-client/commit/dd2ce7687ae9afa399e950a523fc7330284c25fe) Thanks [@phryneas](https://github.com/phryneas)! - `cache.modify`: Less strict types & new dev runtime warnings.
+
+## 3.8.5
+
+### Patch Changes
+
+- [#11266](https://github.com/apollographql/apollo-client/pull/11266) [`5192cf6e1`](https://github.com/apollographql/apollo-client/commit/5192cf6e1e958080bcae09e5967fa6851bd3a78c) Thanks [@phryneas](https://github.com/phryneas)! - Fixes argument handling for invariant log messages.
+
+- [#11235](https://github.com/apollographql/apollo-client/pull/11235) [`6cddaaf65`](https://github.com/apollographql/apollo-client/commit/6cddaaf6543f5c0b1fb04ba47480fb393ba10de7) Thanks [@phryneas](https://github.com/phryneas)! - Fix nextFetchPolicy behaviour with transformed documents by keeping `options` reference stable when passing it through QueryManager.
+
+- [#11252](https://github.com/apollographql/apollo-client/pull/11252) [`327a2abbd`](https://github.com/apollographql/apollo-client/commit/327a2abbd5db87ca27f2ffd1d2f8dccd75868a58) Thanks [@phryneas](https://github.com/phryneas)! - Fixes a race condition in asyncMap that caused issues in React Native when errors were returned in the response payload along with a data property that was null.
+
+- [#11229](https://github.com/apollographql/apollo-client/pull/11229) [`c372bad4e`](https://github.com/apollographql/apollo-client/commit/c372bad4ebd01a4f2e772cd76e873143bf043fe6) Thanks [@phryneas](https://github.com/phryneas)! - Remove (already throwing) SuspenseCache export that should have been removed in 3.8.
+
+- [#11267](https://github.com/apollographql/apollo-client/pull/11267) [`bc055e068`](https://github.com/apollographql/apollo-client/commit/bc055e0683e87b9445e321f73857f4a91b20a9ce) Thanks [@phryneas](https://github.com/phryneas)! - Remove some dead code.
+
+## 3.8.4
+
+### Patch Changes
+
+- [#11195](https://github.com/apollographql/apollo-client/pull/11195) [`9e59b251d`](https://github.com/apollographql/apollo-client/commit/9e59b251d4d63afb83d9821889f87c71c4adde0f) Thanks [@phryneas](https://github.com/phryneas)! - For `invariant.log` etc., error arguments are now serialized correctly in the link to the error page.
+
 ## 3.8.3
 
 ### Patch Changes

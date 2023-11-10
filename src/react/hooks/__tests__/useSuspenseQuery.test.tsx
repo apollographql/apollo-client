@@ -51,7 +51,7 @@ import {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions";
-import { profile } from "../../../testing/internal";
+import { profile, spyOnConsole } from "../../../testing/internal";
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -280,7 +280,7 @@ function wait(delay: number) {
 
 describe("useSuspenseQuery", () => {
   it("validates the GraphQL query as a query", () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const query = gql`
       mutation ShouldThrow {
@@ -297,13 +297,11 @@ describe("useSuspenseQuery", () => {
         "Running a Query requires a graphql Query, but a Mutation was used instead."
       )
     );
-
-    consoleSpy.mockRestore();
   });
 
   it("ensures a valid fetch policy is used", () => {
     const INVALID_FETCH_POLICIES = ["cache-only", "standby"];
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
     const { query } = useSimpleQueryCase();
 
     INVALID_FETCH_POLICIES.forEach((fetchPolicy: any) => {
@@ -319,8 +317,6 @@ describe("useSuspenseQuery", () => {
         )
       );
     });
-
-    consoleSpy.mockRestore();
   });
 
   it("ensures a valid fetch policy is used when defined via global options", () => {
@@ -328,7 +324,7 @@ describe("useSuspenseQuery", () => {
       "cache-only",
       "standby",
     ];
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
     const { query } = useSimpleQueryCase();
 
     INVALID_FETCH_POLICIES.forEach((fetchPolicy) => {
@@ -354,8 +350,6 @@ describe("useSuspenseQuery", () => {
         )
       );
     });
-
-    consoleSpy.mockRestore();
   });
 
   it("suspends a query and returns results", async () => {
@@ -811,8 +805,12 @@ describe("useSuspenseQuery", () => {
 
     expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
 
-    link.simulateResult({ result: { data: { greeting: "Hello" } } });
-    link.simulateComplete();
+    await act(() => {
+      link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+      // Ensure simulateResult will deliver the result since its wrapped with
+      // setTimeout
+      jest.advanceTimersByTime(10);
+    });
 
     expect(client.getObservableQueries().size).toBe(1);
     expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -823,10 +821,6 @@ describe("useSuspenseQuery", () => {
     expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
     jest.useRealTimers();
-
-    // Avoid act warnings for a suspended resource
-    // eslint-disable-next-line testing-library/no-unnecessary-act
-    await act(() => wait(0));
   });
 
   it("has configurable auto dispose timer if the component never renders again after suspending", async () => {
@@ -877,8 +871,12 @@ describe("useSuspenseQuery", () => {
 
     expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
 
-    link.simulateResult({ result: { data: { greeting: "Hello" } } });
-    link.simulateComplete();
+    await act(() => {
+      link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+      // Ensure simulateResult will deliver the result since its wrapped with
+      // setTimeout
+      jest.advanceTimersByTime(10);
+    });
 
     expect(client.getObservableQueries().size).toBe(1);
     expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -889,10 +887,6 @@ describe("useSuspenseQuery", () => {
     expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
     jest.useRealTimers();
-
-    // Avoid act warnings for a suspended resource
-    // eslint-disable-next-line testing-library/no-unnecessary-act
-    await act(() => wait(0));
   });
 
   it("cancels auto dispose if the component renders before timer finishes", async () => {
@@ -942,6 +936,57 @@ describe("useSuspenseQuery", () => {
 
     expect(client.getObservableQueries().size).toBe(1);
     expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+    jest.useRealTimers();
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/11270
+  it("does not leave component suspended if query completes if request takes longer than auto dispose timeout", async () => {
+    jest.useFakeTimers();
+    const { query } = useSimpleQueryCase();
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      defaultOptions: {
+        react: {
+          suspense: {
+            autoDisposeTimeoutMs: 10,
+          },
+        },
+      },
+    });
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Suspense fallback="Loading greeting...">
+            <Greeting />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function Greeting() {
+      const { data } = useSuspenseQuery(query);
+
+      return <span>{data.greeting}</span>;
+    }
+
+    render(<App />);
+
+    // Ensure <Greeting /> suspends immediately
+    expect(screen.getByText("Loading greeting...")).toBeInTheDocument();
+
+    jest.advanceTimersByTime(20);
+
+    link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+
+    await waitFor(() => {
+      expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Hello")).toBeInTheDocument();
 
     jest.useRealTimers();
   });
@@ -2480,7 +2525,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
-    const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+    using _consoleSpy = spyOnConsole("warn");
 
     const fullQuery = gql`
       query {
@@ -2541,12 +2586,10 @@ describe("useSuspenseQuery", () => {
         error: undefined,
       },
     ]);
-
-    consoleSpy.mockRestore();
   });
 
   it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
-    const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+    using consoleSpy = spyOnConsole("warn");
 
     const { query, mocks } = useSimpleQueryCase();
 
@@ -2559,12 +2602,10 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.warn).toHaveBeenCalledWith(
       "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
     );
-
-    consoleSpy.mockRestore();
   });
 
   it('does not suspend when data is in the cache and using a "cache-and-network" fetch policy', async () => {
@@ -3481,7 +3522,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("throws network errors by default", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const { query, mocks } = useErrorCase({
       networkError: new Error("Could not fetch"),
@@ -3502,12 +3543,10 @@ describe("useSuspenseQuery", () => {
     expect(error).toBeInstanceOf(ApolloError);
     expect(error.networkError).toEqual(new Error("Could not fetch"));
     expect(error.graphQLErrors).toEqual([]);
-
-    consoleSpy.mockRestore();
   });
 
   it("throws graphql errors by default", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const { query, mocks } = useErrorCase({
       graphQLErrors: [new GraphQLError("`id` should not be null")],
@@ -3530,13 +3569,11 @@ describe("useSuspenseQuery", () => {
     expect(error.graphQLErrors).toEqual([
       new GraphQLError("`id` should not be null"),
     ]);
-
-    consoleSpy.mockRestore();
   });
 
   it("tears down subscription when throwing an error", async () => {
     jest.useFakeTimers();
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const { query, mocks } = useErrorCase({
       networkError: new Error("Could not fetch"),
@@ -3561,11 +3598,10 @@ describe("useSuspenseQuery", () => {
     expect(client.getObservableQueries().size).toBe(0);
 
     jest.useRealTimers();
-    consoleSpy.mockRestore();
   });
 
   it("tears down subscription when throwing an error on refetch", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const query = gql`
       query UserQuery($id: String!) {
@@ -3616,12 +3652,10 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => expect(renders.errorCount).toBe(1));
 
     expect(client.getObservableQueries().size).toBe(0);
-
-    consoleSpy.mockRestore();
   });
 
   it('throws network errors when errorPolicy is set to "none"', async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const { query, mocks } = useErrorCase({
       networkError: new Error("Could not fetch"),
@@ -3643,12 +3677,10 @@ describe("useSuspenseQuery", () => {
     expect(error).toBeInstanceOf(ApolloError);
     expect(error.networkError).toEqual(new Error("Could not fetch"));
     expect(error.graphQLErrors).toEqual([]);
-
-    consoleSpy.mockRestore();
   });
 
   it('throws graphql errors when errorPolicy is set to "none"', async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const { query, mocks } = useErrorCase({
       graphQLErrors: [new GraphQLError("`id` should not be null")],
@@ -3672,12 +3704,10 @@ describe("useSuspenseQuery", () => {
     expect(error.graphQLErrors).toEqual([
       new GraphQLError("`id` should not be null"),
     ]);
-
-    consoleSpy.mockRestore();
   });
 
   it('handles multiple graphql errors when errorPolicy is set to "none"', async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const graphQLErrors = [
       new GraphQLError("Fool me once"),
@@ -3702,12 +3732,10 @@ describe("useSuspenseQuery", () => {
     expect(error).toBeInstanceOf(ApolloError);
     expect(error!.networkError).toBeNull();
     expect(error!.graphQLErrors).toEqual(graphQLErrors);
-
-    consoleSpy.mockRestore();
   });
 
   it('throws network errors when errorPolicy is set to "ignore"', async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
     const networkError = new Error("Could not fetch");
 
     const { query, mocks } = useErrorCase({ networkError });
@@ -3730,8 +3758,6 @@ describe("useSuspenseQuery", () => {
     expect(error).toBeInstanceOf(ApolloError);
     expect(error!.networkError).toEqual(networkError);
     expect(error!.graphQLErrors).toEqual([]);
-
-    consoleSpy.mockRestore();
   });
 
   it('does not throw or return graphql errors when errorPolicy is set to "ignore"', async () => {
@@ -3877,7 +3903,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it('throws network errors when errorPolicy is set to "all"', async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const networkError = new Error("Could not fetch");
 
@@ -3901,8 +3927,6 @@ describe("useSuspenseQuery", () => {
     expect(error).toBeInstanceOf(ApolloError);
     expect(error!.networkError).toEqual(networkError);
     expect(error!.graphQLErrors).toEqual([]);
-
-    consoleSpy.mockRestore();
   });
 
   it('does not throw and returns graphql errors when errorPolicy is set to "all"', async () => {
@@ -4486,7 +4510,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("throws errors when errors are returned after calling `refetch`", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const query = gql`
       query UserQuery($id: String!) {
@@ -4545,8 +4569,6 @@ describe("useSuspenseQuery", () => {
         error: undefined,
       },
     ]);
-
-    consoleSpy.mockRestore();
   });
 
   it('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
@@ -6938,17 +6960,18 @@ describe("useSuspenseQuery", () => {
 
     // We are intentionally writing partial data to the cache. Supress console
     // warnings to avoid unnecessary noise in the test.
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-    cache.writeQuery({
-      query,
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          recipient: { __typename: "Person", name: "Cached Alice" },
+    {
+      using _consoleSpy = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          greeting: {
+            __typename: "Greeting",
+            recipient: { __typename: "Person", name: "Cached Alice" },
+          },
         },
-      },
-    });
-    consoleSpy.mockRestore();
+      });
+    }
 
     const { result, renders } = renderSuspenseHook(
       () =>
@@ -8406,7 +8429,7 @@ describe("useSuspenseQuery", () => {
   );
 
   it("throws network errors returned by deferred queries", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const query = gql`
       query {
@@ -8442,12 +8465,10 @@ describe("useSuspenseQuery", () => {
     expect(error).toBeInstanceOf(ApolloError);
     expect(error.networkError).toEqual(new Error("Could not fetch"));
     expect(error.graphQLErrors).toEqual([]);
-
-    consoleSpy.mockRestore();
   });
 
   it("throws graphql errors returned by deferred queries", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const query = gql`
       query {
@@ -8487,12 +8508,10 @@ describe("useSuspenseQuery", () => {
     expect(error.graphQLErrors).toEqual([
       new GraphQLError("Could not fetch greeting"),
     ]);
-
-    consoleSpy.mockRestore();
   });
 
   it("throws errors returned by deferred queries that include partial data", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const query = gql`
       query {
@@ -8533,12 +8552,10 @@ describe("useSuspenseQuery", () => {
     expect(error.graphQLErrors).toEqual([
       new GraphQLError("Could not fetch greeting"),
     ]);
-
-    consoleSpy.mockRestore();
   });
 
   it("discards partial data and throws errors returned in incremental chunks", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    using _consoleSpy = spyOnConsole("error");
 
     const query = gql`
       query {
@@ -8670,8 +8687,6 @@ describe("useSuspenseQuery", () => {
         { path: ["hero", "heroFriends", 0, "homeWorld"] }
       ),
     ]);
-
-    consoleSpy.mockRestore();
   });
 
   it("adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`", async () => {

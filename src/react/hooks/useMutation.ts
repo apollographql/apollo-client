@@ -174,7 +174,9 @@ export function useMutation<
 
   const reset = React.useCallback(() => {
     if (ref.current.isMounted) {
-      setResult({ called: false, loading: false, client });
+      const result = { called: false, loading: false, client };
+      Object.assign(ref.current, { mutationId: 0, result });
+      setResult(result);
     }
   }, []);
 

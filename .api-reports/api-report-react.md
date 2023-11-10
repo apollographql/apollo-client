@@ -337,6 +337,13 @@ type ApolloQueryResult<T> = {
     partial?: boolean;
 };
 
+// @public (undocumented)
+type AsStoreObject<T extends {
+    __typename?: string;
+}> = {
+    [K in keyof T]: T[K];
+};
+
 // Warning: (ae-forgotten-export) The symbol "WatchQueryFetchPolicy" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -350,8 +357,6 @@ export interface BackgroundQueryHookOptions<TData = unknown, TVariables extends 
     queryKey?: string | number | any[];
     // (undocumented)
     skip?: boolean;
-    // (undocumented)
-    suspenseCache?: SuspenseCache;
 }
 
 // @public (undocumented)
@@ -1485,8 +1490,6 @@ class QueryInfo {
     // (undocumented)
     stopped: boolean;
     // (undocumented)
-    subscriptions: Set<Subscription>;
-    // (undocumented)
     variables?: Record<string, any>;
 }
 
@@ -1851,8 +1854,10 @@ interface StoreObject {
     __typename?: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<string, any>[] ? Readonly<StoreVal> | readonly Reference[] : StoreVal extends Record<string, any> ? StoreVal | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<string, any>> ? StoreVal extends Array<infer Item> ? Item extends Record<string, any> ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
@@ -1915,27 +1920,6 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
     variables?: TVariables;
 }
 
-// Warning: (ae-forgotten-export) The symbol "SuspenseCache_2" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export class SuspenseCache extends SuspenseCache_2 {
-    constructor();
-}
-
-// @public (undocumented)
-class SuspenseCache_2 {
-    // Warning: (ae-forgotten-export) The symbol "SuspenseCacheOptions" needs to be exported by the entry point index.d.ts
-    constructor(options?: SuspenseCacheOptions);
-    // (undocumented)
-    getQueryRef<TData = any>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData>;
-}
-
-// @public (undocumented)
-interface SuspenseCacheOptions {
-    // (undocumented)
-    autoDisposeTimeoutMs?: number;
-}
-
 // @public (undocumented)
 export type SuspenseQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
 
@@ -1947,8 +1931,6 @@ export interface SuspenseQueryHookOptions<TData = unknown, TVariables extends Op
     queryKey?: string | number | any[];
     // (undocumented)
     skip?: boolean;
-    // (undocumented)
-    suspenseCache?: SuspenseCache;
 }
 
 // @public (undocumented)
@@ -2117,11 +2099,17 @@ export function useQuery<TData = any, TVariables extends OperationVariables = Op
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T;
 
 // @public (undocumented)
-export function useReadQuery<TData>(queryRef: QueryReference<TData>): {
+export function useReadQuery<TData>(queryRef: QueryReference<TData>): UseReadQueryResult<TData>;
+
+// @public (undocumented)
+export interface UseReadQueryResult<TData = unknown> {
+    // (undocumented)
     data: TData;
-    networkStatus: NetworkStatus;
+    // (undocumented)
     error: ApolloError | undefined;
-};
+    // (undocumented)
+    networkStatus: NetworkStatus;
+}
 
 // @public (undocumented)
 export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>): SubscriptionResult<TData, TVariables>;
@@ -2209,11 +2197,11 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // Warnings were encountered during analysis:
 //
 // src/cache/core/types/DataProxy.ts:141:5 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:95:3 - (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:96:3 - (ae-forgotten-export) The symbol "CanReadFunction" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:97:3 - (ae-forgotten-export) The symbol "isReference" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:98:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:99:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:96:3 - (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:97:3 - (ae-forgotten-export) The symbol "CanReadFunction" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:98:3 - (ae-forgotten-export) The symbol "isReference" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:99:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:100:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:47:3 - (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts

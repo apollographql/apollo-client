@@ -53,7 +53,7 @@ import {
 import equal from "@wry/equality";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
-import { profile } from "../../../testing/internal";
+import { profile, spyOnConsole } from "../../../testing/internal";
 
 function renderIntegrationTest({
   client,
@@ -3314,7 +3314,7 @@ describe("useBackgroundQuery", () => {
       ).toBeInTheDocument();
     });
     it("throws errors when errors are returned after calling `refetch`", async () => {
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+      using _consoleSpy = spyOnConsole("error");
       interface QueryData {
         character: {
           id: string;
@@ -3370,8 +3370,6 @@ describe("useBackgroundQuery", () => {
           graphQLErrors: [new GraphQLError("Something went wrong")],
         }),
       ]);
-
-      consoleSpy.mockRestore();
     });
     it('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
       interface QueryData {
@@ -3646,17 +3644,15 @@ describe("useBackgroundQuery", () => {
       // Disable error message shown in the console due to an uncaught error.
       // TODO: need to determine why the error message is logged to the console
       // as an uncaught error since other tests do not require this.
-      const consoleSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      {
+        using _consoleSpy = spyOnConsole("error");
 
-      expect(screen.getByText("Loading")).toBeInTheDocument();
+        expect(screen.getByText("Loading")).toBeInTheDocument();
 
-      expect(
-        await screen.findByText("Oops couldn't fetch")
-      ).toBeInTheDocument();
-
-      consoleSpy.mockRestore();
+        expect(
+          await screen.findByText("Oops couldn't fetch")
+        ).toBeInTheDocument();
+      }
 
       const button = screen.getByText("Retry");
 
@@ -3771,9 +3767,7 @@ describe("useBackgroundQuery", () => {
       // Disable error message shown in the console due to an uncaught error.
       // TODO: need to determine why the error message is logged to the console
       // as an uncaught error since other tests do not require this.
-      const consoleSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      using _consoleSpy = spyOnConsole("error");
 
       expect(screen.getByText("Loading")).toBeInTheDocument();
 
@@ -3794,8 +3788,6 @@ describe("useBackgroundQuery", () => {
       });
 
       expect(screen.queryByText("Loading")).not.toBeInTheDocument();
-
-      consoleSpy.mockRestore();
     });
 
     it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {
@@ -4825,7 +4817,7 @@ describe("useBackgroundQuery", () => {
     });
 
     it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+      using _consoleSpy = spyOnConsole("warn");
       interface Data {
         character: {
           id: string;
@@ -4952,12 +4944,10 @@ describe("useBackgroundQuery", () => {
           error: undefined,
         },
       ]);
-
-      consoleSpy.mockRestore();
     });
 
     it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+      using _consoleSpy = spyOnConsole("warn");
 
       const query: TypedDocumentNode<SimpleQueryData> = gql`
         query UserQuery {
@@ -4984,8 +4974,6 @@ describe("useBackgroundQuery", () => {
       expect(console.warn).toHaveBeenCalledWith(
         "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
       );
-
-      consoleSpy.mockRestore();
     });
 
     it('does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData', async () => {
@@ -5212,17 +5200,18 @@ describe("useBackgroundQuery", () => {
 
       // We are intentionally writing partial data to the cache. Supress console
       // warnings to avoid unnecessary noise in the test.
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-      cache.writeQuery({
-        query,
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            recipient: { __typename: "Person", name: "Cached Alice" },
+      {
+        using _consoleSpy = spyOnConsole("error");
+        cache.writeQuery({
+          query,
+          data: {
+            greeting: {
+              __typename: "Greeting",
+              recipient: { __typename: "Person", name: "Cached Alice" },
+            },
           },
-        },
-      });
-      consoleSpy.mockRestore();
+        });
+      }
 
       interface Renders {
         errors: Error[];

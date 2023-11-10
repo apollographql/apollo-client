@@ -1,6 +1,6 @@
 import React from "react";
 import { DocumentNode } from "graphql";
-import { render, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import gql from "graphql-tag";
 
 import { itAsync, MockedResponse, MockLink } from "../../core";
@@ -8,6 +8,7 @@ import { MockedProvider } from "../MockedProvider";
 import { useQuery } from "../../../react/hooks";
 import { InMemoryCache } from "../../../cache";
 import { ApolloLink } from "../../../link/core";
+import { spyOnConsole } from "../../internal";
 
 const variables = {
   username: "mock_username",
@@ -521,7 +522,7 @@ describe("General use", () => {
   });
 
   it("shows a warning in the console when there is no matched mock", async () => {
-    const consoleSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    using _consoleSpy = spyOnConsole("warn");
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -561,12 +562,10 @@ describe("General use", () => {
     expect(console.warn).toHaveBeenCalledWith(
       expect.stringContaining("No more mocked responses for the query")
     );
-
-    consoleSpy.mockRestore();
   });
 
   it("silences console warning for unmatched mocks when `showWarnings` is `false`", async () => {
-    const consoleSpy = jest.spyOn(console, "warn");
+    using _consoleSpy = spyOnConsole("warn");
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -603,12 +602,10 @@ describe("General use", () => {
     });
 
     expect(console.warn).not.toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
   });
 
   it("silences console warning for unmatched mocks when passing `showWarnings` to `MockLink` directly", async () => {
-    const consoleSpy = jest.spyOn(console, "warn");
+    using _consoleSpy = spyOnConsole("warn");
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading } = useQuery<Data, Variables>(query, { variables });
@@ -649,8 +646,6 @@ describe("General use", () => {
     });
 
     expect(console.warn).not.toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
   });
 
   itAsync(
@@ -713,6 +708,70 @@ describe("General use", () => {
       }).then(resolve, reject);
     }
   );
+
+  it("should support loading state testing with delay", async () => {
+    function Component({ username }: Variables) {
+      const { loading, data } = useQuery<Data, Variables>(query, { variables });
+
+      if (loading || data === undefined) return <p>Loading the user ID...</p>;
+
+      return <p>The user ID is '{data.user.id}'</p>;
+    }
+
+    const mocks: ReadonlyArray<MockedResponse> = [
+      {
+        delay: 30, // prevent React from batching the loading state away
+        request: {
+          query,
+          variables,
+        },
+        result: { data: { user } },
+      },
+    ];
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    expect(
+      await screen.findByText("Loading the user ID...")
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("The user ID is 'user_id'")
+    ).toBeInTheDocument();
+  });
+
+  it("should support loading state testing with infinite delay", async () => {
+    function Component({ username }: Variables) {
+      const { loading, data } = useQuery<Data, Variables>(query, { variables });
+
+      if (loading || data === undefined) return <p>Loading the user ID...</p>;
+
+      return <p>The user ID is '{data.user.id}'</p>;
+    }
+
+    const mocks: ReadonlyArray<MockedResponse> = [
+      {
+        delay: Infinity, // keep loading forever.
+        request: {
+          query,
+          variables,
+        },
+      },
+    ];
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    expect(
+      await screen.findByText("Loading the user ID...")
+    ).toBeInTheDocument();
+  });
 });
 
 describe("@client testing", () => {

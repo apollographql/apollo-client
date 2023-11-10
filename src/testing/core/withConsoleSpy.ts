@@ -14,6 +14,7 @@ function wrapTestFunction(
   };
 }
 
+/** @deprecated This method will be removed in the next major version of Apollo Client */
 export function withErrorSpy<TArgs extends any[], TResult>(
   it: (...args: TArgs) => TResult,
   ...args: TArgs
@@ -22,6 +23,7 @@ export function withErrorSpy<TArgs extends any[], TResult>(
   return it(...args);
 }
 
+/** @deprecated This method will be removed in the next major version of Apollo Client */
 export function withWarningSpy<TArgs extends any[], TResult>(
   it: (...args: TArgs) => TResult,
   ...args: TArgs
@@ -30,6 +32,7 @@ export function withWarningSpy<TArgs extends any[], TResult>(
   return it(...args);
 }
 
+/** @deprecated This method will be removed in the next major version of Apollo Client */
 export function withLogSpy<TArgs extends any[], TResult>(
   it: (...args: TArgs) => TResult,
   ...args: TArgs

@@ -6,7 +6,7 @@ import { StoreReader } from "../readFromStore";
 import { StoreWriter } from "../writeToStore";
 import { InMemoryCache } from "../inMemoryCache";
 import { writeQueryToStore, readQueryFromStore, withError } from "./helpers";
-import { withErrorSpy } from "../../../testing";
+import { spyOnConsole } from "../../../testing/internal";
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === "object" && stack.indexOf(value) < 0) {
@@ -315,39 +315,36 @@ describe("roundtrip", () => {
 
     // XXX this test is weird because it assumes the server returned an incorrect result
     // However, the user may have written this result with client.writeQuery.
-    withErrorSpy(
-      it,
-      "should throw an error on two of the same inline fragment types",
-      () => {
-        expect(() => {
-          storeRoundtrip(
-            gql`
-              query {
-                all_people {
-                  __typename
-                  name
-                  ... on Jedi {
-                    side
-                  }
-                  ... on Jedi {
-                    rank
-                  }
+    it("should throw an error on two of the same inline fragment types", () => {
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
+      expect(() => {
+        storeRoundtrip(
+          gql`
+            query {
+              all_people {
+                __typename
+                name
+                ... on Jedi {
+                  side
+                }
+                ... on Jedi {
+                  rank
                 }
               }
-            `,
-            {
-              all_people: [
-                {
-                  __typename: "Jedi",
-                  name: "Luke Skywalker",
-                  side: "bright",
-                },
-              ],
             }
-          );
-        }).toThrowError(/Can't find field 'rank' /);
-      }
-    );
+          `,
+          {
+            all_people: [
+              {
+                __typename: "Jedi",
+                name: "Luke Skywalker",
+                side: "bright",
+              },
+            ],
+          }
+        );
+      }).toThrowError(/Can't find field 'rank' /);
+    });
 
     it("should resolve fields it can on interface with non matching inline fragments", () => {
       return withError(() => {
@@ -459,43 +456,40 @@ describe("roundtrip", () => {
       });
     });
 
-    withErrorSpy(
-      it,
-      "should throw on error on two of the same spread fragment types",
-      () => {
-        expect(() => {
-          storeRoundtrip(
-            gql`
-              fragment jediSide on Jedi {
-                side
-              }
-
-              fragment jediRank on Jedi {
-                rank
-              }
-
-              query {
-                all_people {
-                  __typename
-                  name
-                  ...jediSide
-                  ...jediRank
-                }
-              }
-            `,
-            {
-              all_people: [
-                {
-                  __typename: "Jedi",
-                  name: "Luke Skywalker",
-                  side: "bright",
-                },
-              ],
+    it("should throw on error on two of the same spread fragment types", () => {
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
+      expect(() => {
+        storeRoundtrip(
+          gql`
+            fragment jediSide on Jedi {
+              side
             }
-          );
-        }).toThrowError(/Can't find field 'rank' /);
-      }
-    );
+
+            fragment jediRank on Jedi {
+              rank
+            }
+
+            query {
+              all_people {
+                __typename
+                name
+                ...jediSide
+                ...jediRank
+              }
+            }
+          `,
+          {
+            all_people: [
+              {
+                __typename: "Jedi",
+                name: "Luke Skywalker",
+                side: "bright",
+              },
+            ],
+          }
+        );
+      }).toThrowError(/Can't find field 'rank' /);
+    });
 
     it("should resolve on @include and @skip with inline fragments", () => {
       storeRoundtrip(

@@ -311,6 +311,13 @@ export type ApolloReducerConfig = {
 };
 
 // @public (undocumented)
+type AsStoreObject<T extends {
+    __typename?: string;
+}> = {
+    [K in keyof T]: T[K];
+};
+
+// @public (undocumented)
 export type BackgroundQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
 
 // @public (undocumented)
@@ -321,8 +328,6 @@ export interface BackgroundQueryHookOptions<TData = unknown, TVariables extends 
     queryKey?: string | number | any[];
     // (undocumented)
     skip?: boolean;
-    // (undocumented)
-    suspenseCache?: SuspenseCache;
 }
 
 // @public (undocumented)
@@ -1571,7 +1576,7 @@ export interface MutationDataOptions<TData = any, TVariables = OperationVariable
 }
 
 // @public (undocumented)
-type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
+export type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
 
 // @public (undocumented)
 export type MutationFunction<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> = (options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>) => Promise<FetchResult<TData>>;
@@ -1590,8 +1595,6 @@ export interface MutationHookOptions<TData = any, TVariables = OperationVariable
 //
 // @public (undocumented)
 export interface MutationOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
-    // Warning: (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     fetchPolicy?: MutationFetchPolicy;
     // (undocumented)
@@ -2037,8 +2040,6 @@ class QueryInfo {
     // (undocumented)
     stopped: boolean;
     // (undocumented)
-    subscriptions: Set<ObservableSubscription>;
-    // (undocumented)
     variables?: Record<string, any>;
 }
 
@@ -2327,7 +2328,7 @@ export interface RefetchQueriesResult<TResult> extends Promise<RefetchQueriesPro
 export type RefetchQueryDescriptor = string | DocumentNode;
 
 // @public (undocumented)
-type RefetchWritePolicy = "merge" | "overwrite";
+export type RefetchWritePolicy = "merge" | "overwrite";
 
 // @public (undocumented)
 class RenderPromises {
@@ -2452,8 +2453,10 @@ export interface StoreObject {
     __typename?: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<string, any>[] ? Readonly<StoreVal> | readonly Reference[] : StoreVal extends Record<string, any> ? StoreVal | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<string, any>> ? StoreVal extends Array<infer Item> ? Item extends Record<string, any> ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
@@ -2525,27 +2528,6 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
     variables?: TVariables;
 }
 
-// Warning: (ae-forgotten-export) The symbol "SuspenseCache_2" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export class SuspenseCache extends SuspenseCache_2 {
-    constructor();
-}
-
-// @public (undocumented)
-class SuspenseCache_2 {
-    // Warning: (ae-forgotten-export) The symbol "SuspenseCacheOptions" needs to be exported by the entry point index.d.ts
-    constructor(options?: SuspenseCacheOptions);
-    // (undocumented)
-    getQueryRef<TData = any>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData>;
-}
-
-// @public (undocumented)
-interface SuspenseCacheOptions {
-    // (undocumented)
-    autoDisposeTimeoutMs?: number;
-}
-
 // @public (undocumented)
 export type SuspenseQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
 
@@ -2557,8 +2539,6 @@ export interface SuspenseQueryHookOptions<TData = unknown, TVariables extends Op
     queryKey?: string | number | any[];
     // (undocumented)
     skip?: boolean;
-    // (undocumented)
-    suspenseCache?: SuspenseCache;
 }
 
 // @public (undocumented)
@@ -2756,11 +2736,17 @@ export function useQuery<TData = any, TVariables extends OperationVariables = Op
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T;
 
 // @public (undocumented)
-export function useReadQuery<TData>(queryRef: QueryReference<TData>): {
+export function useReadQuery<TData>(queryRef: QueryReference<TData>): UseReadQueryResult<TData>;
+
+// @public (undocumented)
+export interface UseReadQueryResult<TData = unknown> {
+    // (undocumented)
     data: TData;
-    networkStatus: NetworkStatus;
+    // (undocumented)
     error: ApolloError | undefined;
-};
+    // (undocumented)
+    networkStatus: NetworkStatus;
+}
 
 // @public (undocumented)
 export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>): SubscriptionResult<TData, TVariables>;
@@ -2839,8 +2825,6 @@ export interface WatchQueryOptions<TVariables extends OperationVariables = Opera
     //
     // (undocumented)
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    // Warning: (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     refetchWritePolicy?: RefetchWritePolicy;
 }

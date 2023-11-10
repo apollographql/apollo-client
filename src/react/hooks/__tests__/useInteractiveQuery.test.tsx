@@ -1,36 +1,25 @@
-import React, { Fragment, StrictMode, Suspense, useState } from "react";
+import React, { Suspense, useState } from "react";
 import {
   act,
   render,
   screen,
   renderHook,
-  RenderHookOptions,
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { Options as UserEventOptions } from "@testing-library/user-event";
-import {
-  ErrorBoundary,
-  ErrorBoundary as ReactErrorBoundary,
-  ErrorBoundaryProps,
-} from "react-error-boundary";
+import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import {
   gql,
   ApolloError,
-  DocumentNode,
   ApolloClient,
   ErrorPolicy,
-  NormalizedCacheObject,
   NetworkStatus,
-  ApolloCache,
   TypedDocumentNode,
   ApolloLink,
   Observable,
-  FetchMoreQueryOptions,
   OperationVariables,
-  ApolloQueryResult,
 } from "../../../core";
 import {
   MockedProvider,
@@ -50,10 +39,7 @@ import { useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
 import { InMemoryCache } from "../../../cache";
 import { QueryReference } from "../../../react";
-import {
-  InteractiveQueryHookOptions,
-  InteractiveQueryHookFetchPolicy,
-} from "../../types/types";
+import { InteractiveQueryHookFetchPolicy } from "../../types/types";
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import invariant from "ts-invariant";
@@ -2235,7 +2221,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     },
   ];
 
-  const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
+  const { SuspenseFallback, ReadQueryHook, ErrorBoundary } =
     createDefaultProfiledComponents<VariablesCaseData | undefined>();
 
   function App() {
@@ -2297,7 +2283,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     },
   ];
 
-  const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
+  const { SuspenseFallback, ReadQueryHook, ErrorBoundary } =
     createDefaultProfiledComponents<VariablesCaseData | undefined>();
 
   function App() {
@@ -2377,11 +2363,6 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
       delay: 10,
     },
   ];
-
-  const client = new ApolloClient({
-    link: new MockLink(mocks),
-    cache: new InMemoryCache(),
-  });
 
   function SuspenseFallback() {
     return <p>Loading</p>;
@@ -3382,7 +3363,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
 });
 
 it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
-  using consoleSpy = spyOnConsole("warn");
+  using _consoleSpy = spyOnConsole("warn");
 
   const query: TypedDocumentNode<SimpleQueryData> = gql`
     query UserQuery {
@@ -3514,7 +3495,7 @@ it('suspends and does not use partial data when changing variables and using a "
   });
 
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<DeepPartial<Data>>();
+    createDefaultProfiledComponents<DeepPartial<VariablesCaseData>>();
 
   function App() {
     const [queryRef, loadQuery] = useInteractiveQuery(query, {
@@ -3721,7 +3702,7 @@ describe.skip("type tests", () => {
   it("returns unknown when TData cannot be inferred", () => {
     const query = gql``;
 
-    const [queryRef, loadQuery] = useInteractiveQuery(query);
+    const [queryRef] = useInteractiveQuery(query);
 
     invariant(queryRef);
 

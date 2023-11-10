@@ -20,6 +20,7 @@ import {
   ApolloLink,
   Observable,
   OperationVariables,
+  RefetchWritePolicy,
 } from "../../../core";
 import {
   MockedProvider,
@@ -41,7 +42,6 @@ import { InMemoryCache } from "../../../cache";
 import { QueryReference } from "../../../react";
 import { InteractiveQueryHookFetchPolicy } from "../../types/types";
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
-import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import invariant from "ts-invariant";
 import { profile, profileHook, spyOnConsole } from "../../../testing/internal";
 

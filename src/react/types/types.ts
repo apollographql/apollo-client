@@ -190,12 +190,12 @@ export interface BackgroundQueryHookOptions<
   skip?: boolean;
 }
 
-export type InteractiveQueryHookFetchPolicy = Extract<
+export type LoadableQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"
 >;
 
-export interface InteractiveQueryHookOptions {
+export interface LoadableQueryHookOptions {
   /**
    * Whether to canonize cache results before returning them. Canonization
    * takes some extra time, but it speeds up future deep equality comparisons.
@@ -227,7 +227,7 @@ export interface InteractiveQueryHookOptions {
    *
    * The default value is `cache-first`.
    */
-  fetchPolicy?: InteractiveQueryHookFetchPolicy;
+  fetchPolicy?: LoadableQueryHookFetchPolicy;
   /**
    * A unique identifier for the query. Each item in the array must be a stable
    * identifier to prevent infinite fetches.

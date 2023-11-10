@@ -35,7 +35,7 @@ const react17TestFileIgnoreList = [
   // React 17
   "src/react/hooks/__tests__/useSuspenseQuery.test.tsx",
   "src/react/hooks/__tests__/useBackgroundQuery.test.tsx",
-  "src/react/hooks/__tests__/useInteractiveQuery.test.tsx",
+  "src/react/hooks/__tests__/useLoadableQuery.test.tsx",
 ];
 
 const tsStandardConfig = {

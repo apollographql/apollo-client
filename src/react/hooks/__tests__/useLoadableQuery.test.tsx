@@ -34,13 +34,13 @@ import {
   offsetLimitPagination,
   DeepPartial,
 } from "../../../utilities";
-import { useInteractiveQuery } from "../useInteractiveQuery";
+import { useLoadableQuery } from "../useLoadableQuery";
 import type { UseReadQueryResult } from "../useReadQuery";
 import { useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
 import { InMemoryCache } from "../../../cache";
+import { LoadableQueryHookFetchPolicy } from "../../types/types";
 import { QueryReference } from "../../../react";
-import { InteractiveQueryHookFetchPolicy } from "../../types/types";
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant from "ts-invariant";
 import { profile, profileHook, spyOnConsole } from "../../../testing/internal";
@@ -222,7 +222,7 @@ it("loads a query and suspends when the load query function is called", async ()
 
   const App = profile({
     Component: () => {
-      const [queryRef, loadQuery] = useInteractiveQuery(query);
+      const [queryRef, loadQuery] = useLoadableQuery(query);
 
       return (
         <>
@@ -266,7 +266,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
 
   const App = profile({
     Component: () => {
-      const [queryRef, loadQuery] = useInteractiveQuery(query);
+      const [queryRef, loadQuery] = useLoadableQuery(query);
 
       return (
         <>
@@ -314,7 +314,7 @@ it("changes variables on a query and resuspends when passing new variables to th
 
   const App = profile({
     Component: () => {
-      const [queryRef, loadQuery] = useInteractiveQuery(query);
+      const [queryRef, loadQuery] = useLoadableQuery(query);
 
       return (
         <>
@@ -392,7 +392,7 @@ it("allows the client to be overridden", async () => {
     createDefaultProfiledComponents<SimpleQueryData>();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useLoadableQuery(query, {
       client: localClient,
     });
 
@@ -446,7 +446,7 @@ it("passes context to the link", async () => {
     createDefaultProfiledComponents<QueryData>();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useLoadableQuery(query, {
       context: { valueA: "A", valueB: "B" },
     });
 
@@ -522,7 +522,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     createDefaultProfiledComponents<QueryData>();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useLoadableQuery(query, {
       canonizeResults: true,
     });
 
@@ -599,7 +599,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     createDefaultProfiledComponents<QueryData>();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useLoadableQuery(query, {
       canonizeResults: false,
     });
 
@@ -655,7 +655,7 @@ it("returns initial cache data followed by network data when the fetch policy is
 
   const App = profile({
     Component: () => {
-      const [queryRef, loadQuery] = useInteractiveQuery(query, {
+      const [queryRef, loadQuery] = useLoadableQuery(query, {
         fetchPolicy: "cache-and-network",
       });
 
@@ -722,7 +722,7 @@ it("all data is present in the cache, no network request is made", async () => {
   const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query);
+    const [queryRef, loadQuery] = useLoadableQuery(query);
 
     return (
       <>
@@ -780,7 +780,7 @@ it("partial data is present in the cache so it is ignored and network request is
   const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query);
+    const [queryRef, loadQuery] = useLoadableQuery(query);
 
     return (
       <>
@@ -832,7 +832,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
   const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useLoadableQuery(query, {
       fetchPolicy: "network-only",
     });
 
@@ -883,7 +883,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
   const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useLoadableQuery(query, {
       fetchPolicy: "no-cache",
     });
 
@@ -968,7 +968,7 @@ it("works with startTransition to change variables", async () => {
   }
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query);
+    const [queryRef, loadQuery] = useLoadableQuery(query);
 
     return (
       <div>
@@ -1088,7 +1088,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     createDefaultProfiledComponents<Data>();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useLoadableQuery(query, {
       fetchPolicy: "cache-and-network",
     });
     return (
@@ -1194,7 +1194,7 @@ it("reacts to cache updates", async () => {
     createDefaultProfiledComponents<SimpleQueryData>();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query);
+    const [queryRef, loadQuery] = useLoadableQuery(query);
 
     return (
       <>
@@ -1257,7 +1257,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
 
   function App() {
     const [errorPolicy, setErrorPolicy] = useState<ErrorPolicy>("none");
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query, {
       errorPolicy,
     });
 
@@ -1352,7 +1352,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
 
   function App() {
     const [phase, setPhase] = React.useState("initial");
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query, {
       context: { phase },
     });
 
@@ -1446,7 +1446,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
 
   function App() {
     const [canonizeResults, setCanonizeResults] = React.useState(false);
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useLoadableQuery(query, {
       canonizeResults,
     });
 
@@ -1548,7 +1548,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     const [refetchWritePolicy, setRefetchWritePolicy] =
       React.useState<RefetchWritePolicy>("merge");
 
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query, {
       refetchWritePolicy,
     });
 
@@ -1702,7 +1702,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   function App() {
     const [returnPartialData, setReturnPartialData] = React.useState(false);
 
-    const [queryRef, loadQuery] = useInteractiveQuery(fullQuery, {
+    const [queryRef, loadQuery] = useLoadableQuery(fullQuery, {
       returnPartialData,
     });
 
@@ -1832,9 +1832,9 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
 
   function App() {
     const [fetchPolicy, setFetchPolicy] =
-      React.useState<InteractiveQueryHookFetchPolicy>("cache-first");
+      React.useState<LoadableQueryHookFetchPolicy>("cache-first");
 
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query, {
       fetchPolicy,
     });
 
@@ -1928,7 +1928,7 @@ it("re-suspends when calling `refetch`", async () => {
     createDefaultProfiledComponents<VariablesCaseData>();
 
   function App() {
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query);
 
     return (
       <>
@@ -1996,7 +1996,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     createDefaultProfiledComponents<VariablesCaseData>();
 
   function App() {
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query);
 
     return (
       <>
@@ -2057,7 +2057,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     createDefaultProfiledComponents<VariablesCaseData>();
 
   function App() {
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query);
 
     return (
       <>
@@ -2112,7 +2112,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     createDefaultProfiledComponents<VariablesCaseData>();
 
   function App() {
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query);
 
     return (
       <>
@@ -2166,7 +2166,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     createDefaultProfiledComponents<VariablesCaseData | undefined>();
 
   function App() {
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query, {
       errorPolicy: "ignore",
     });
 
@@ -2225,7 +2225,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     createDefaultProfiledComponents<VariablesCaseData | undefined>();
 
   function App() {
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query, {
       errorPolicy: "all",
     });
 
@@ -2287,7 +2287,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     createDefaultProfiledComponents<VariablesCaseData | undefined>();
 
   function App() {
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query, {
       errorPolicy: "all",
     });
 
@@ -2370,7 +2370,7 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
 
   function App() {
     const [id, setId] = React.useState("1");
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query);
 
     return (
       <>
@@ -2457,7 +2457,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     createDefaultProfiledComponents<PaginatedQueryData>();
 
   function App() {
-    const [queryRef, loadQuery, { fetchMore }] = useInteractiveQuery(query);
+    const [queryRef, loadQuery, { fetchMore }] = useLoadableQuery(query);
 
     return (
       <>
@@ -2525,7 +2525,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     createDefaultProfiledComponents<PaginatedQueryData>();
 
   function App() {
-    const [queryRef, loadQuery, { fetchMore }] = useInteractiveQuery(query);
+    const [queryRef, loadQuery, { fetchMore }] = useLoadableQuery(query);
 
     return (
       <>
@@ -2615,7 +2615,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
   });
 
   function App() {
-    const [queryRef, loadQuery, { fetchMore }] = useInteractiveQuery(query);
+    const [queryRef, loadQuery, { fetchMore }] = useLoadableQuery(query);
 
     return (
       <>
@@ -2757,7 +2757,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
   }
 
   function App() {
-    const [queryRef, loadQuery, { fetchMore }] = useInteractiveQuery(query);
+    const [queryRef, loadQuery, { fetchMore }] = useLoadableQuery(query);
 
     return (
       <>
@@ -2896,7 +2896,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
   });
 
   function App() {
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query, {
       refetchWritePolicy: "merge",
     });
 
@@ -3000,7 +3000,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
   });
 
   function App() {
-    const [queryRef, loadQuery, { refetch }] = useInteractiveQuery(query);
+    const [queryRef, loadQuery, { refetch }] = useLoadableQuery(query);
 
     return (
       <>
@@ -3092,7 +3092,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
   const client = new ApolloClient({ link: new MockLink(mocks), cache });
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(fullQuery, {
+    const [queryRef, loadQuery] = useLoadableQuery(fullQuery, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
     });
@@ -3159,7 +3159,7 @@ it('suspends and does not use partial data when changing variables and using a "
     createDefaultProfiledComponents<DeepPartial<VariablesCaseData>>();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useLoadableQuery(query, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
     });
@@ -3258,7 +3258,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
   });
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(fullQuery, {
+    const [queryRef, loadQuery] = useLoadableQuery(fullQuery, {
       fetchPolicy: "network-only",
       returnPartialData: true,
     });
@@ -3332,7 +3332,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     createDefaultProfiledComponents<DeepPartial<Data>>();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(fullQuery, {
+    const [queryRef, loadQuery] = useLoadableQuery(fullQuery, {
       fetchPolicy: "no-cache",
       returnPartialData: true,
     });
@@ -3373,7 +3373,7 @@ it('warns when using returnPartialData with a "no-cache" fetch policy', async ()
 
   renderHook(
     () =>
-      useInteractiveQuery(query, {
+      useLoadableQuery(query, {
         fetchPolicy: "no-cache",
         returnPartialData: true,
       }),
@@ -3433,7 +3433,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     createDefaultProfiledComponents<DeepPartial<Data>>();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(fullQuery, {
+    const [queryRef, loadQuery] = useLoadableQuery(fullQuery, {
       fetchPolicy: "cache-and-network",
       returnPartialData: true,
     });
@@ -3498,7 +3498,7 @@ it('suspends and does not use partial data when changing variables and using a "
     createDefaultProfiledComponents<DeepPartial<VariablesCaseData>>();
 
   function App() {
-    const [queryRef, loadQuery] = useInteractiveQuery(query, {
+    const [queryRef, loadQuery] = useLoadableQuery(query, {
       fetchPolicy: "cache-and-network",
       returnPartialData: true,
     });
@@ -3605,7 +3605,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
     createDefaultProfiledComponents<DeepPartial<QueryData>>();
 
   function App() {
-    const [queryRef, loadTodo] = useInteractiveQuery(query, {
+    const [queryRef, loadTodo] = useLoadableQuery(query, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
     });
@@ -3702,7 +3702,7 @@ describe.skip("type tests", () => {
   it("returns unknown when TData cannot be inferred", () => {
     const query = gql``;
 
-    const [queryRef] = useInteractiveQuery(query);
+    const [queryRef] = useLoadableQuery(query);
 
     invariant(queryRef);
 
@@ -3714,7 +3714,7 @@ describe.skip("type tests", () => {
   it("variables are optional and can be anything with an untyped DocumentNode", () => {
     const query = gql``;
 
-    const [, loadQuery] = useInteractiveQuery(query);
+    const [, loadQuery] = useLoadableQuery(query);
 
     loadQuery();
     loadQuery({});
@@ -3725,7 +3725,7 @@ describe.skip("type tests", () => {
   it("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
     const query: TypedDocumentNode<{ greeting: string }> = gql``;
 
-    const [, loadQuery] = useInteractiveQuery(query);
+    const [, loadQuery] = useLoadableQuery(query);
 
     loadQuery();
     loadQuery({});
@@ -3739,7 +3739,7 @@ describe.skip("type tests", () => {
       Record<string, never>
     > = gql``;
 
-    const [, loadQuery] = useInteractiveQuery(query);
+    const [, loadQuery] = useLoadableQuery(query);
 
     loadQuery();
     loadQuery({});
@@ -3750,7 +3750,7 @@ describe.skip("type tests", () => {
   it("does not allow variables when TVariables is `never`", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
-    const [, loadQuery] = useInteractiveQuery(query);
+    const [, loadQuery] = useLoadableQuery(query);
 
     loadQuery();
     // @ts-expect-error no variables argument allowed
@@ -3765,7 +3765,7 @@ describe.skip("type tests", () => {
       { limit?: number }
     > = gql``;
 
-    const [, loadQuery] = useInteractiveQuery(query);
+    const [, loadQuery] = useLoadableQuery(query);
 
     loadQuery();
     loadQuery({});
@@ -3787,7 +3787,7 @@ describe.skip("type tests", () => {
       { id: string }
     > = gql``;
 
-    const [, loadQuery] = useInteractiveQuery(query);
+    const [, loadQuery] = useLoadableQuery(query);
 
     // @ts-expect-error missing variables argument
     loadQuery();
@@ -3811,7 +3811,7 @@ describe.skip("type tests", () => {
       { id: string; language?: string }
     > = gql``;
 
-    const [, loadQuery] = useInteractiveQuery(query);
+    const [, loadQuery] = useLoadableQuery(query);
 
     // @ts-expect-error missing variables argument
     loadQuery();
@@ -3842,7 +3842,7 @@ describe.skip("type tests", () => {
     const { query } = useVariablesQueryCase();
 
     {
-      const [queryRef] = useInteractiveQuery(query);
+      const [queryRef] = useLoadableQuery(query);
 
       invariant(queryRef);
 
@@ -3852,7 +3852,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery<
+      const [queryRef] = useLoadableQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query);
@@ -3869,7 +3869,7 @@ describe.skip("type tests", () => {
     const { query } = useVariablesQueryCase();
 
     {
-      const [queryRef] = useInteractiveQuery(query, {
+      const [queryRef] = useLoadableQuery(query, {
         errorPolicy: "ignore",
       });
 
@@ -3881,7 +3881,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery<
+      const [queryRef] = useLoadableQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, { errorPolicy: "ignore" });
@@ -3898,7 +3898,7 @@ describe.skip("type tests", () => {
     const { query } = useVariablesQueryCase();
 
     {
-      const [queryRef] = useInteractiveQuery(query, {
+      const [queryRef] = useLoadableQuery(query, {
         errorPolicy: "all",
       });
 
@@ -3910,7 +3910,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery<
+      const [queryRef] = useLoadableQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, { errorPolicy: "all" });
@@ -3927,7 +3927,7 @@ describe.skip("type tests", () => {
     const { query } = useVariablesQueryCase();
 
     {
-      const [queryRef] = useInteractiveQuery(query, {
+      const [queryRef] = useLoadableQuery(query, {
         errorPolicy: "none",
       });
 
@@ -3939,7 +3939,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery<
+      const [queryRef] = useLoadableQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, { errorPolicy: "none" });
@@ -3956,7 +3956,7 @@ describe.skip("type tests", () => {
     const { query } = useVariablesQueryCase();
 
     {
-      const [queryRef] = useInteractiveQuery(query, {
+      const [queryRef] = useLoadableQuery(query, {
         returnPartialData: true,
       });
 
@@ -3968,7 +3968,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery<
+      const [queryRef] = useLoadableQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, { returnPartialData: true });
@@ -3985,7 +3985,7 @@ describe.skip("type tests", () => {
     const { query } = useVariablesQueryCase();
 
     {
-      const [queryRef] = useInteractiveQuery(query, {
+      const [queryRef] = useLoadableQuery(query, {
         returnPartialData: false,
       });
 
@@ -3997,7 +3997,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery<
+      const [queryRef] = useLoadableQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, { returnPartialData: false });
@@ -4014,7 +4014,7 @@ describe.skip("type tests", () => {
     const { query } = useVariablesQueryCase();
 
     {
-      const [queryRef] = useInteractiveQuery(query, {
+      const [queryRef] = useLoadableQuery(query, {
         fetchPolicy: "no-cache",
       });
 
@@ -4026,7 +4026,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery<
+      const [queryRef] = useLoadableQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, { fetchPolicy: "no-cache" });
@@ -4043,7 +4043,7 @@ describe.skip("type tests", () => {
     const { query } = useVariablesQueryCase();
 
     {
-      const [queryRef] = useInteractiveQuery(query, {
+      const [queryRef] = useLoadableQuery(query, {
         returnPartialData: true,
         errorPolicy: "ignore",
       });
@@ -4058,7 +4058,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery<
+      const [queryRef] = useLoadableQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, { returnPartialData: true, errorPolicy: "ignore" });
@@ -4073,7 +4073,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery(query, {
+      const [queryRef] = useLoadableQuery(query, {
         returnPartialData: true,
         errorPolicy: "none",
       });
@@ -4086,7 +4086,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery<
+      const [queryRef] = useLoadableQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, { returnPartialData: true, errorPolicy: "none" });
@@ -4103,7 +4103,7 @@ describe.skip("type tests", () => {
     const { query } = useVariablesQueryCase();
 
     {
-      const [queryRef] = useInteractiveQuery(query, {
+      const [queryRef] = useLoadableQuery(query, {
         fetchPolicy: "no-cache",
         returnPartialData: true,
         errorPolicy: "none",
@@ -4117,7 +4117,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [queryRef] = useInteractiveQuery<
+      const [queryRef] = useLoadableQuery<
         VariablesCaseData,
         VariablesCaseVariables
       >(query, {

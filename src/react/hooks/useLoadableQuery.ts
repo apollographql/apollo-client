@@ -10,7 +10,7 @@ import type {
   QueryReference,
   InternalQueryReference,
 } from "../cache/QueryReference.js";
-import type { InteractiveQueryHookOptions } from "../types/types.js";
+import type { LoadableQueryHookOptions } from "../types/types.js";
 import { __use } from "./internal/index.js";
 import { getSuspenseCache } from "../cache/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
@@ -35,7 +35,7 @@ type LoadQuery<TVariables extends OperationVariables> = (
     : [variables: TVariables]
 ) => void;
 
-export type UseInteractiveQueryResult<
+export type UseLoadableQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = [
@@ -47,14 +47,14 @@ export type UseInteractiveQueryResult<
   },
 ];
 
-export function useInteractiveQuery<
+export function useLoadableQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends InteractiveQueryHookOptions,
+  TOptions extends LoadableQueryHookOptions,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: InteractiveQueryHookOptions & TOptions
-): UseInteractiveQueryResult<
+  options?: LoadableQueryHookOptions & TOptions
+): UseLoadableQueryResult<
   TOptions["errorPolicy"] extends "ignore" | "all"
     ? TOptions["returnPartialData"] extends true
       ? DeepPartial<TData> | undefined
@@ -65,52 +65,52 @@ export function useInteractiveQuery<
   TVariables
 >;
 
-export function useInteractiveQuery<
+export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: InteractiveQueryHookOptions & {
+  options: LoadableQueryHookOptions & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
   }
-): UseInteractiveQueryResult<DeepPartial<TData> | undefined, TVariables>;
+): UseLoadableQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
-export function useInteractiveQuery<
+export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: InteractiveQueryHookOptions & {
+  options: LoadableQueryHookOptions & {
     errorPolicy: "ignore" | "all";
   }
-): UseInteractiveQueryResult<TData | undefined, TVariables>;
+): UseLoadableQueryResult<TData | undefined, TVariables>;
 
-export function useInteractiveQuery<
+export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: InteractiveQueryHookOptions & {
+  options: LoadableQueryHookOptions & {
     returnPartialData: true;
   }
-): UseInteractiveQueryResult<DeepPartial<TData>, TVariables>;
+): UseLoadableQueryResult<DeepPartial<TData>, TVariables>;
 
-export function useInteractiveQuery<
+export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: InteractiveQueryHookOptions
-): UseInteractiveQueryResult<TData, TVariables>;
+  options?: LoadableQueryHookOptions
+): UseLoadableQueryResult<TData, TVariables>;
 
-export function useInteractiveQuery<
+export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: InteractiveQueryHookOptions = Object.create(null)
-): UseInteractiveQueryResult<TData> {
+  options: LoadableQueryHookOptions = Object.create(null)
+): UseLoadableQueryResult<TData> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });

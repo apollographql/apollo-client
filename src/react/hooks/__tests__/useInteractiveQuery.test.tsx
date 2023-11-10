@@ -3556,8 +3556,9 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
   });
 });
 
-it.skip('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
-  const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
+  using _consoleSpy = spyOnConsole("warn");
+
   interface Data {
     character: {
       id: string;
@@ -3588,25 +3589,6 @@ it.skip('suspends when partial data is in the cache and using a "no-cache" fetch
     },
   ];
 
-  interface Renders {
-    errors: Error[];
-    errorCount: number;
-    suspenseCount: number;
-    count: number;
-    frames: {
-      data: DeepPartial<Data>;
-      networkStatus: NetworkStatus;
-      error: ApolloError | undefined;
-    }[];
-  }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-    frames: [],
-  };
-
   const cache = new InMemoryCache();
 
   cache.writeQuery({
@@ -3614,74 +3596,38 @@ it.skip('suspends when partial data is in the cache and using a "no-cache" fetch
     data: { character: { id: "1" } },
   });
 
-  const client = new ApolloClient({
-    link: new MockLink(mocks),
-    cache,
-  });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<DeepPartial<Data>>();
 
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
-
-  function SuspenseFallback() {
-    renders.suspenseCount++;
-    return <p>Loading</p>;
-  }
-
-  function Parent() {
-    const [queryRef] = useInteractiveQuery(fullQuery, {
+    const [queryRef, loadQuery] = useInteractiveQuery(fullQuery, {
       fetchPolicy: "no-cache",
       returnPartialData: true,
     });
 
-    return <Todo queryRef={queryRef} />;
-  }
-
-  function Todo({ queryRef }: { queryRef: QueryReference<DeepPartial<Data>> }) {
-    const { data, networkStatus, error } = useReadQuery(queryRef);
-    renders.frames.push({ data, networkStatus, error });
-    renders.count++;
     return (
       <>
-        <div data-testid="character-id">{data.character?.id}</div>
-        <div data-testid="character-name">{data.character?.name}</div>
-        <div data-testid="network-status">{networkStatus}</div>
-        <div data-testid="error">{error?.message || "undefined"}</div>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
       </>
     );
   }
 
-  render(<App />);
+  const { user } = renderWithMocks(<App />, { mocks, cache });
 
-  expect(renders.suspenseCount).toBe(1);
+  await act(() => user.click(screen.getByText("Load query")));
 
-  await waitFor(() => {
-    expect(screen.getByTestId("character-name")).toHaveTextContent(
-      "Doctor Strange"
-    );
+  expect(SuspenseFallback).toHaveRendered();
+
+  const snapshot = await ReadQueryHook.takeSnapshot();
+
+  expect(snapshot).toEqual({
+    data: { character: { id: "1", name: "Doctor Strange" } },
+    error: undefined,
+    networkStatus: NetworkStatus.ready,
   });
-  expect(screen.getByTestId("character-id")).toHaveTextContent("1");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
-
-  expect(renders.count).toBe(1);
-  expect(renders.suspenseCount).toBe(1);
-
-  expect(renders.frames).toMatchObject([
-    {
-      ...mocks[0].result,
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    },
-  ]);
-
-  consoleSpy.mockRestore();
 });
 
 it.skip('warns when using returnPartialData with a "no-cache" fetch policy', async () => {

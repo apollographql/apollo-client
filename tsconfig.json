@@ -16,9 +16,9 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "outDir": "./dist",
-    "lib": ["es2015", "esnext.asynciterable", "dom", "ES2021.WeakRef"],
-    "types": ["node", "jest", "./global.d.ts"],
+    "lib": ["es2015", "esnext.asynciterable", "dom"],
     "jsx": "react"
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/__tests__/**/*"]
 }

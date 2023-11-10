@@ -2,12 +2,17 @@ import type {
   ApolloClient,
   DocumentNode,
   OperationVariables,
-} from "./src/core/index.js";
+} from "../../core/index.js";
 import {
   NextRenderOptions,
   ProfiledComponent,
   ProfiledHook,
-} from "./src/testing/internal/index.js";
+} from "../internal/index.js";
+
+declare class WeakRef<T extends WeakKey> {
+  constructor(target: T);
+  deref(): T | undefined;
+}
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**

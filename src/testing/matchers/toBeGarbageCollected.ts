@@ -32,13 +32,6 @@ export const toBeGarbageCollected: MatcherFunction<[weakRef: WeakRef<any>]> =
       }),
     ]).finally(() => clearInterval(interval));
 
-    // for (let i = 0; i < 100; i++) {
-    //   global.gc!();
-    //   pass = actual.deref() === undefined;
-    //   if (pass) break;
-    //   await new Promise((resolve) => setTimeout(resolve, 1));
-    // }
-
     return {
       pass,
       message: () => {

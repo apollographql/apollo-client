@@ -1262,6 +1262,29 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
 }
 
 // @public (undocumented)
+export type InteractiveQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
+
+// @public (undocumented)
+export interface InteractiveQueryHookOptions {
+    // (undocumented)
+    canonizeResults?: boolean;
+    // (undocumented)
+    client?: ApolloClient<any>;
+    // (undocumented)
+    context?: DefaultContext;
+    // (undocumented)
+    errorPolicy?: ErrorPolicy;
+    // (undocumented)
+    fetchPolicy?: InteractiveQueryHookFetchPolicy;
+    // (undocumented)
+    queryKey?: string | number | any[];
+    // (undocumented)
+    refetchWritePolicy?: RefetchWritePolicy;
+    // (undocumented)
+    returnPartialData?: boolean;
+}
+
+// @public (undocumented)
 class InternalQueryReference<TData = unknown> {
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReferenceOptions" needs to be exported by the entry point index.d.ts
     constructor(observable: ObservableQuery<TData>, options: InternalQueryReferenceOptions);

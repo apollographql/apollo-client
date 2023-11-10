@@ -1262,29 +1262,6 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
 }
 
 // @public (undocumented)
-export type InteractiveQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
-
-// @public (undocumented)
-export interface InteractiveQueryHookOptions {
-    // (undocumented)
-    canonizeResults?: boolean;
-    // (undocumented)
-    client?: ApolloClient<any>;
-    // (undocumented)
-    context?: DefaultContext;
-    // (undocumented)
-    errorPolicy?: ErrorPolicy;
-    // (undocumented)
-    fetchPolicy?: InteractiveQueryHookFetchPolicy;
-    // (undocumented)
-    queryKey?: string | number | any[];
-    // (undocumented)
-    refetchWritePolicy?: RefetchWritePolicy;
-    // (undocumented)
-    returnPartialData?: boolean;
-}
-
-// @public (undocumented)
 class InternalQueryReference<TData = unknown> {
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReferenceOptions" needs to be exported by the entry point index.d.ts
     constructor(observable: ObservableQuery<TData>, options: InternalQueryReferenceOptions);
@@ -1446,6 +1423,34 @@ export type LazyQueryResultTuple<TData, TVariables extends OperationVariables> =
 
 // @public (undocumented)
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
+
+// @public (undocumented)
+export type LoadableQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
+
+// @public (undocumented)
+export interface LoadableQueryHookOptions {
+    // (undocumented)
+    canonizeResults?: boolean;
+    // (undocumented)
+    client?: ApolloClient<any>;
+    // (undocumented)
+    context?: DefaultContext;
+    // (undocumented)
+    errorPolicy?: ErrorPolicy;
+    // (undocumented)
+    fetchPolicy?: LoadableQueryHookFetchPolicy;
+    // (undocumented)
+    queryKey?: string | number | any[];
+    // (undocumented)
+    refetchWritePolicy?: RefetchWritePolicy;
+    // (undocumented)
+    returnPartialData?: boolean;
+}
+
+// Warning: (ae-forgotten-export) The symbol "OnlyRequiredProperties" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type LoadQuery<TVariables extends OperationVariables> = (...args: [TVariables] extends [never] ? [] : {} extends OnlyRequiredProperties<TVariables> ? [variables?: TVariables] : [variables: TVariables]) => void;
 
 // @public (undocumented)
 class LocalState<TCacheShape> {
@@ -1871,6 +1876,11 @@ export interface OnDataOptions<TData = any> {
     // (undocumented)
     data: SubscriptionResult<TData>;
 }
+
+// @public (undocumented)
+type OnlyRequiredProperties<T> = {
+    [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];
+};
 
 // @public (undocumented)
 export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => boolean | TResult;
@@ -2762,6 +2772,40 @@ export type UseFragmentResult<TData> = {
 
 // @public (undocumented)
 export function useLazyQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>): LazyQueryResultTuple<TData, TVariables>;
+
+// @public (undocumented)
+export function useLoadableQuery<TData, TVariables extends OperationVariables, TOptions extends LoadableQueryHookOptions>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: LoadableQueryHookOptions & TOptions): UseLoadableQueryResult<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData, TVariables>;
+
+// @public (undocumented)
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: LoadableQueryHookOptions & {
+    returnPartialData: true;
+    errorPolicy: "ignore" | "all";
+}): UseLoadableQueryResult<DeepPartial<TData> | undefined, TVariables>;
+
+// @public (undocumented)
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: LoadableQueryHookOptions & {
+    errorPolicy: "ignore" | "all";
+}): UseLoadableQueryResult<TData | undefined, TVariables>;
+
+// @public (undocumented)
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: LoadableQueryHookOptions & {
+    returnPartialData: true;
+}): UseLoadableQueryResult<DeepPartial<TData>, TVariables>;
+
+// @public (undocumented)
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: LoadableQueryHookOptions): UseLoadableQueryResult<TData, TVariables>;
+
+// Warning: (ae-forgotten-export) The symbol "LoadQuery" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = [
+QueryReference<TData> | null,
+LoadQuery<TVariables>,
+    {
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    refetch: RefetchFunction<TData, TVariables>;
+}
+];
 
 // @public (undocumented)
 export function useMutation<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>>(mutation: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: MutationHookOptions<NoInfer<TData>, NoInfer<TVariables>, TContext, TCache>): MutationTuple<TData, TVariables, TContext, TCache>;

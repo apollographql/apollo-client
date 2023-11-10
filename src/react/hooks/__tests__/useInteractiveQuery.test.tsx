@@ -3743,7 +3743,9 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
   }
 });
 
-it.skip('suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+it('suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+  const { query, mocks } = useVariablesQueryCase();
+
   const partialQuery = gql`
     query ($id: ID!) {
       character(id: $id) {
@@ -3760,42 +3762,65 @@ it.skip('suspends and does not use partial data when changing variables and usin
     variables: { id: "1" },
   });
 
-  const { renders, mocks, rerender } = renderVariablesIntegrationTest({
-    variables: { id: "1" },
-    cache,
-    options: {
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<DeepPartial<Data>>();
+
+  function App() {
+    const [queryRef, loadQuery] = useInteractiveQuery(query, {
       fetchPolicy: "cache-and-network",
       returnPartialData: true,
-    },
-  });
+    });
 
-  expect(renders.suspenseCount).toBe(0);
+    return (
+      <>
+        <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
+        <button onClick={() => loadQuery({ id: "2" })}>Change variables</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
 
-  expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
+  const { user } = renderWithMocks(<App />, { mocks, cache });
 
-  rerender({ variables: { id: "2" } });
+  await act(() => user.click(screen.getByText("Load query")));
 
-  expect(await screen.findByText("2 - Black Widow")).toBeInTheDocument();
+  expect(SuspenseFallback).not.toHaveRendered();
 
-  expect(renders.count).toBe(3);
-  expect(renders.suspenseCount).toBe(1);
-  expect(renders.frames).toMatchObject([
-    {
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
       data: { character: { id: "1" } },
+      error: undefined,
       networkStatus: NetworkStatus.loading,
+    });
+  }
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: { character: { id: "1", name: "Spider-Man" } },
       error: undefined,
-    },
-    {
-      ...mocks[0].result,
       networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Change variables")));
+
+  expect(SuspenseFallback).toHaveRendered();
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: { character: { id: "2", name: "Black Widow" } },
       error: undefined,
-    },
-    {
-      ...mocks[1].result,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
-    },
-  ]);
+    });
+  }
 });
 
 it.skip('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {

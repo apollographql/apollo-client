@@ -3823,7 +3823,7 @@ it('suspends and does not use partial data when changing variables and using a "
   }
 });
 
-it.skip('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
+it('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
   interface QueryData {
     greeting: {
       __typename: string;
@@ -3834,8 +3834,6 @@ it.skip('does not suspend deferred queries with partial data in the cache and us
       };
     };
   }
-
-  const user = userEvent.setup();
 
   const query: TypedDocumentNode<QueryData, never> = gql`
     query {
@@ -3853,60 +3851,28 @@ it.skip('does not suspend deferred queries with partial data in the cache and us
   const link = new MockSubscriptionLink();
   const cache = new InMemoryCache();
 
-  // We are intentionally writing partial data to the cache. Supress console
-  // warnings to avoid unnecessary noise in the test.
-  const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-  cache.writeQuery({
-    query,
-    data: {
-      greeting: {
-        __typename: "Greeting",
-        recipient: { __typename: "Person", name: "Cached Alice" },
+  {
+    // We are intentionally writing partial data to the cache. Supress console
+    // warnings to avoid unnecessary noise in the test.
+    using _consoleSpy = spyOnConsole("error");
+
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
       },
-    },
-  });
-  consoleSpy.mockRestore();
-
-  interface Renders {
-    errors: Error[];
-    errorCount: number;
-    suspenseCount: number;
-    count: number;
-    frames: {
-      data: DeepPartial<QueryData>;
-      networkStatus: NetworkStatus;
-      error: ApolloError | undefined;
-    }[];
+    });
   }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-    frames: [],
-  };
 
-  const client = new ApolloClient({
-    link,
-    cache,
-  });
+  const client = new ApolloClient({ link, cache });
+
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<DeepPartial<QueryData>>();
 
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
-
-  function SuspenseFallback() {
-    renders.suspenseCount++;
-    return <p>Loading</p>;
-  }
-
-  function Parent() {
     const [queryRef, loadTodo] = useInteractiveQuery(query, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
@@ -3915,39 +3881,33 @@ it.skip('does not suspend deferred queries with partial data in the cache and us
     return (
       <div>
         <button onClick={() => loadTodo()}>Load todo</button>
-        {queryRef && <Todo queryRef={queryRef} />}
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
       </div>
     );
   }
 
-  function Todo({
-    queryRef,
-  }: {
-    queryRef: QueryReference<DeepPartial<QueryData>>;
-  }) {
-    const { data, networkStatus, error } = useReadQuery(queryRef);
-    renders.frames.push({ data, networkStatus, error });
-    renders.count++;
-    return (
-      <>
-        <div data-testid="message">{data.greeting?.message}</div>
-        <div data-testid="recipient">{data.greeting?.recipient?.name}</div>
-        <div data-testid="network-status">{networkStatus}</div>
-        <div data-testid="error">{error?.message || "undefined"}</div>
-      </>
-    );
-  }
-
-  render(<App />);
+  const { user } = renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load todo")));
 
-  expect(renders.suspenseCount).toBe(0);
-  expect(screen.getByTestId("recipient")).toHaveTextContent("Cached Alice");
-  // message is not present yet, since it's missing in partial data
-  expect(screen.getByTestId("message")).toHaveTextContent("");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("1"); // loading
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
+  expect(SuspenseFallback).not.toHaveRendered();
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
 
   link.simulateResult({
     result: {
@@ -3958,12 +3918,21 @@ it.skip('does not suspend deferred queries with partial data in the cache and us
     },
   });
 
-  await waitFor(() => {
-    expect(screen.getByTestId("message")).toHaveTextContent("Hello world");
-  });
-  expect(screen.getByTestId("recipient")).toHaveTextContent("Cached Alice");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   link.simulateResult({
     result: {
@@ -3980,38 +3949,10 @@ it.skip('does not suspend deferred queries with partial data in the cache and us
     },
   });
 
-  await waitFor(() => {
-    expect(screen.getByTestId("recipient").textContent).toEqual("Alice");
-  });
-  expect(screen.getByTestId("message")).toHaveTextContent("Hello world");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-  expect(renders.count).toBe(3);
-  expect(renders.suspenseCount).toBe(0);
-  expect(renders.frames).toMatchObject([
-    {
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          recipient: { __typename: "Person", name: "Cached Alice" },
-        },
-      },
-      networkStatus: NetworkStatus.loading,
-      error: undefined,
-    },
-    {
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          message: "Hello world",
-          recipient: { __typename: "Person", name: "Cached Alice" },
-        },
-      },
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
-    },
-    {
+    expect(snapshot).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -4019,10 +3960,10 @@ it.skip('does not suspend deferred queries with partial data in the cache and us
           recipient: { __typename: "Person", name: "Alice" },
         },
       },
-      networkStatus: NetworkStatus.ready,
       error: undefined,
-    },
-  ]);
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 describe.skip("type tests", () => {

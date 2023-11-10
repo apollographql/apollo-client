@@ -3630,36 +3630,32 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
   });
 });
 
-it.skip('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
-  const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
+  using consoleSpy = spyOnConsole("warn");
 
   const query: TypedDocumentNode<SimpleQueryData> = gql`
     query UserQuery {
       greeting
     }
   `;
-  const mocks = [
-    {
-      request: { query },
-      result: { data: { greeting: "Hello" } },
-    },
-  ];
 
-  renderSuspenseHook(
+  renderHook(
     () =>
       useInteractiveQuery(query, {
         fetchPolicy: "no-cache",
         returnPartialData: true,
       }),
-    { mocks }
+    {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={[]}>{children}</MockedProvider>
+      ),
+    }
   );
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
     "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
   );
-
-  consoleSpy.mockRestore();
 });
 
 it.skip('does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData', async () => {

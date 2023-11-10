@@ -2,12 +2,12 @@ import type {
   ApolloClient,
   DocumentNode,
   OperationVariables,
-} from "../../core/index.js";
+} from "./src/core/index.js";
 import {
   NextRenderOptions,
   ProfiledComponent,
   ProfiledHook,
-} from "../internal/index.js";
+} from "./src/testing/internal/index.js";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -38,6 +38,10 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     | ProfiledHook<any, any>
     ? (count: number, options?: NextRenderOptions) => Promise<R>
     : { error: "matcher needs to be called on a ProfiledComponent instance" };
+
+  toBeGarbageCollected: T extends WeakRef<any>
+    ? () => Promise<R>
+    : { error: "matcher needs to be called on a WeakRef instance" };
 }
 
 declare global {

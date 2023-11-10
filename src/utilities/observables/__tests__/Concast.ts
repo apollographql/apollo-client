@@ -1,5 +1,5 @@
 import { itAsync } from "../../../testing/core";
-import { Observable } from "../Observable";
+import { Observable, Observer } from "../Observable";
 import { Concast, ConcastSourcesIterable } from "../Concast";
 
 describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
@@ -187,4 +187,107 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       sub.unsubscribe();
     });
   });
+
+  it("resolving all sources of a concast frees all observer references on `this.observers`", async () => {
+    const { promise, resolve } = deferred<Observable<number>>();
+    const observers: Observer<any>[] = [{ next() {} }];
+    const observerRefs = observers.map((observer) => new WeakRef(observer));
+
+    const concast = new Concast<number>([Observable.of(1, 2), promise]);
+
+    concast.subscribe(observers[0]);
+    delete observers[0];
+
+    expect(concast["observers"].size).toBe(1);
+
+    resolve(Observable.of(3, 4));
+
+    await expect(concast.promise).resolves.toBe(4);
+
+    await expect(observerRefs[0]).toBeGarbageCollected();
+  });
+
+  it.failing("rejecting a source-wrapping promise of a concast frees all observer references on `this.observers`", async () => {
+    const { promise, reject } = deferred<Observable<number>>();
+    const observers: Observer<any>[] = [{ next() {}, error() {} }];
+    const observerRefs = observers.map((observer) => new WeakRef(observer));
+
+    const concast = new Concast<number>([
+      Observable.of(1, 2),
+      promise,
+      Observable.of(3, 5),
+    ]);
+
+    concast.subscribe(observers[0]);
+    delete observers[0];
+
+    expect(concast["observers"].size).toBe(1);
+
+    reject("error");
+    await expect(concast.promise).rejects.toBe("error");
+    await expect(observerRefs[0]).toBeGarbageCollected();
+  });
+
+  it("rejecting a source of a concast frees all observer references on `this.observers`", async () => {
+    const observers: Observer<any>[] = [{ next() {}, error() {} }];
+    const observerRefs = observers.map((observer) => new WeakRef(observer));
+
+    let observer!: Observer<number>;
+    const observable = new Observable<number>((o) => {
+      observer = o;
+    });
+
+    const concast = new Concast<number>([
+      Observable.of(1, 2),
+      observable,
+      Observable.of(3, 5),
+    ]);
+
+    concast.subscribe(observers[0]);
+    delete observers[0];
+
+    expect(concast["observers"].size).toBe(1);
+
+    await Promise.resolve();
+    observer.error!("error");
+    await expect(concast.promise).rejects.toBe("error");
+    await expect(observerRefs[0]).toBeGarbageCollected();
+  });
+
+  it("after subscribing to an already-resolved concast, the reference is freed up again", async () => {
+    const concast = new Concast<number>([Observable.of(1, 2)]);
+    await expect(concast.promise).resolves.toBe(2);
+    await Promise.resolve();
+
+    const observers: Observer<any>[] = [{ next() {}, error() {} }];
+    const observerRefs = observers.map((observer) => new WeakRef(observer));
+
+    concast.subscribe(observers[0]);
+    delete observers[0];
+
+    await expect(observerRefs[0]).toBeGarbageCollected();
+  });
+
+  it.failing("after subscribing to an already-rejected concast, the reference is freed up again", async () => {
+    const concast = new Concast<number>([Promise.reject("error")]);
+    await expect(concast.promise).rejects.toBe("error");
+    await Promise.resolve();
+
+    const observers: Observer<any>[] = [{ next() {}, error() {} }];
+    const observerRefs = observers.map((observer) => new WeakRef(observer));
+
+    concast.subscribe(observers[0]);
+    delete observers[0];
+
+    await expect(observerRefs[0]).toBeGarbageCollected();
+  });
 });
+
+function deferred<X>() {
+  let resolve!: (v: X) => void, reject!: (e: any) => void;
+  const promise = new Promise<X>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { resolve, reject, promise };
+}

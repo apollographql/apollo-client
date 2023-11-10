@@ -11,7 +11,7 @@ import {
   WatchQueryOptions,
 } from "../../core";
 
-import { InMemoryCache } from "../../cache";
+import { InMemoryCache, isReference } from "../../cache";
 import { Observable, Observer } from "../../utilities";
 import { ApolloLink } from "../../link/core";
 import { itAsync } from "../../testing";
@@ -747,10 +747,13 @@ describe("Writing cache data from resolvers", () => {
                 },
               },
             });
-            cache.modify({
+            cache.modify<{ field: { field2: number } }>({
               id: "Object:uniqueId",
               fields: {
-                field(value: { field2: number }) {
+                field(value) {
+                  if (isReference(value)) {
+                    fail("Should not be a reference");
+                  }
                   expect(value.field2).toBe(1);
                   return { ...value, field2: 2 };
                 },

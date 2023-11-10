@@ -178,7 +178,11 @@ export function useSuspenseQuery<
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
-  const watchQueryOptions = useWatchQueryOptions({ client, query, options });
+  const watchQueryOptions = useWatchQueryOptions<any, any>({
+    client,
+    query,
+    options,
+  });
   const { fetchPolicy, variables } = watchQueryOptions;
   const { queryKey = [] } = options;
 
@@ -236,8 +240,8 @@ export function useSuspenseQuery<
 
   const result = fetchPolicy === "standby" ? skipResult : __use(promise);
 
-  const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
-    (options) => {
+  const fetchMore = React.useCallback(
+    ((options) => {
       const promise = queryRef.fetchMore(options);
 
       setPromiseCache((previousPromiseCache) =>
@@ -245,7 +249,10 @@ export function useSuspenseQuery<
       );
 
       return promise;
-    },
+    }) satisfies FetchMoreFunction<
+      unknown,
+      OperationVariables
+    > as FetchMoreFunction<TData | undefined, TVariables>,
     [queryRef]
   );
 
@@ -262,13 +269,17 @@ export function useSuspenseQuery<
     [queryRef]
   );
 
-  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-    React.useCallback(
-      (options) => queryRef.observable.subscribeToMore(options),
-      [queryRef]
-    );
+  const subscribeToMore: SubscribeToMoreFunction<
+    TData | undefined,
+    TVariables
+  > = React.useCallback(
+    (options) => queryRef.observable.subscribeToMore(options),
+    [queryRef]
+  );
 
-  return React.useMemo(() => {
+  return React.useMemo<
+    UseSuspenseQueryResult<TData | undefined, TVariables>
+  >(() => {
     return {
       client,
       data: result.data,

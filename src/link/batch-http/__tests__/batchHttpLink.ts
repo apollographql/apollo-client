@@ -35,10 +35,11 @@ function makeCallback<TArgs extends any[]>(
 ) {
   return function () {
     try {
+      // @ts-expect-error
       callback.apply(this, arguments);
       resolve();
     } catch (error) {
-      reject(error);
+      reject(error as Error);
     }
   } as typeof callback;
 }
@@ -472,7 +473,7 @@ describe("SharedHttpTest", () => {
 
           after();
         } catch (e) {
-          reject(e);
+          reject(e as Error);
         }
       },
     });

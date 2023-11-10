@@ -45,7 +45,7 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
 }
 
 export class MockLink extends ApolloLink {
-  public operation: Operation;
+  public operation!: Operation;
   public addTypename: Boolean = true;
   public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};

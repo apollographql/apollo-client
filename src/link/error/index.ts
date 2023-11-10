@@ -84,7 +84,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
           },
         });
       } catch (e) {
-        errorHandler({ networkError: e, operation, forward });
+        errorHandler({ networkError: e as Error, operation, forward });
         observer.error(e);
       }
 

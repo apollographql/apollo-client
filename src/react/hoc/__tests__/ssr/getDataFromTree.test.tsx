@@ -945,6 +945,7 @@ describe("SSR", () => {
         </div>
       );
 
+      // @ts-expect-error
       const WrappedElement = withQuery(withMutation(Element));
 
       const app = (

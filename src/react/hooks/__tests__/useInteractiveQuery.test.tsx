@@ -3658,7 +3658,7 @@ it('warns when using returnPartialData with a "no-cache" fetch policy', async ()
   );
 });
 
-it.skip('does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData', async () => {
+it('does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData', async () => {
   interface Data {
     character: {
       id: string;
@@ -3686,27 +3686,9 @@ it.skip('does not suspend when partial data is in the cache and using a "cache-a
     {
       request: { query: fullQuery },
       result: { data: { character: { id: "1", name: "Doctor Strange" } } },
+      delay: 20,
     },
   ];
-
-  interface Renders {
-    errors: Error[];
-    errorCount: number;
-    suspenseCount: number;
-    count: number;
-    frames: {
-      data: DeepPartial<Data>;
-      networkStatus: NetworkStatus;
-      error: ApolloError | undefined;
-    }[];
-  }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-    frames: [],
-  };
 
   const cache = new InMemoryCache();
 
@@ -3715,82 +3697,50 @@ it.skip('does not suspend when partial data is in the cache and using a "cache-a
     data: { character: { id: "1" } },
   });
 
-  const client = new ApolloClient({
-    link: new MockLink(mocks),
-    cache,
-  });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents<DeepPartial<Data>>();
 
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
-
-  function SuspenseFallback() {
-    renders.suspenseCount++;
-    return <p>Loading</p>;
-  }
-
-  function Parent() {
-    const [queryRef] = useInteractiveQuery(fullQuery, {
+    const [queryRef, loadQuery] = useInteractiveQuery(fullQuery, {
       fetchPolicy: "cache-and-network",
       returnPartialData: true,
     });
 
-    return <Todo queryRef={queryRef} />;
-  }
-
-  function Todo({ queryRef }: { queryRef: QueryReference<DeepPartial<Data>> }) {
-    const { data, networkStatus, error } = useReadQuery(queryRef);
-    renders.frames.push({ data, networkStatus, error });
-    renders.count++;
     return (
       <>
-        <div data-testid="character-id">{data.character?.id}</div>
-        <div data-testid="character-name">{data.character?.name}</div>
-        <div data-testid="network-status">{networkStatus}</div>
-        <div data-testid="error">{error?.message || "undefined"}</div>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
       </>
     );
   }
 
-  render(<App />);
+  const { user } = renderWithMocks(<App />, { mocks, cache });
 
-  expect(renders.suspenseCount).toBe(0);
-  expect(screen.getByTestId("character-id")).toHaveTextContent("1");
-  // name is not present yet, since it's missing in partial data
-  expect(screen.getByTestId("character-name")).toHaveTextContent("");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("1"); // loading
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
+  await act(() => user.click(screen.getByText("Load query")));
 
-  await waitFor(() => {
-    expect(screen.getByTestId("character-name")).toHaveTextContent(
-      "Doctor Strange"
-    );
-  });
-  expect(screen.getByTestId("character-id")).toHaveTextContent("1");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
+  expect(SuspenseFallback).not.toHaveRendered();
 
-  expect(renders.count).toBe(2);
-  expect(renders.suspenseCount).toBe(0);
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
 
-  expect(renders.frames).toMatchObject([
-    {
+    expect(snapshot).toEqual({
       data: { character: { id: "1" } },
+      error: undefined,
       networkStatus: NetworkStatus.loading,
+    });
+  }
+
+  {
+    const snapshot = await ReadQueryHook.takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: { character: { id: "1", name: "Doctor Strange" } },
       error: undefined,
-    },
-    {
-      ...mocks[0].result,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
-    },
-  ]);
+    });
+  }
 });
 
 it.skip('suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData', async () => {

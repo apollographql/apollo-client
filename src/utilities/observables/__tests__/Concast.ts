@@ -207,7 +207,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     await expect(observerRefs[0]).toBeGarbageCollected();
   });
 
-  it.failing("rejecting a source-wrapping promise of a concast frees all observer references on `this.observers`", async () => {
+  it("rejecting a source-wrapping promise of a concast frees all observer references on `this.observers`", async () => {
     const { promise, reject } = deferred<Observable<number>>();
     const observers: Observer<any>[] = [{ next() {}, error() {} }];
     const observerRefs = observers.map((observer) => new WeakRef(observer));
@@ -268,7 +268,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     await expect(observerRefs[0]).toBeGarbageCollected();
   });
 
-  it.failing("after subscribing to an already-rejected concast, the reference is freed up again", async () => {
+  it("after subscribing to an already-rejected concast, the reference is freed up again", async () => {
     const concast = new Concast<number>([Promise.reject("error")]);
     await expect(concast.promise).rejects.toBe("error");
     await Promise.resolve();

@@ -212,11 +212,7 @@ export class Concast<T> extends Observable<T> {
         } else if (isPromiseLike(value)) {
           value.then(
             (obs) => (this.sub = obs.subscribe(this.handlers)),
-            () => {
-              // add error handler here to silence unhandled promise rejection
-              // so the tests can run at all, but do not fix yet
-              // to show the memory leak
-            }
+            this.handlers.error
           );
         } else {
           this.sub = value.subscribe(this.handlers);

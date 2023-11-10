@@ -1,5 +1,8 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2015", "esnext.asynciterable", "dom", "ES2021.WeakRef"],
+  },
   "include": ["src/**/__tests__/**/*.ts", "src/**/__tests__/**/*.tsx"],
   "exclude": []
 }

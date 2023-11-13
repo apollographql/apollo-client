@@ -211,6 +211,8 @@ const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
 });
 ```
 
+> You can only refetch _active_ queries. Active queries are those used by components on the current page. If the data you want to update is not fetched by a component on the current page, it's best to [update your cache directly](#updating-the-cache-directly).
+
 Each element in the `refetchQueries` array is one of the following:
 
 * A `DocumentNode` object parsed with the `gql` function
@@ -222,8 +224,6 @@ Each included query is executed with its most recently provided set of variables
 You can provide the `refetchQueries` option either to `useMutation` or to the mutate function. For details, see [Option precedence](#option-precedence).
 
 Note that in an app with tens or hundreds of different queries, it can be challenging to determine exactly which queries to refetch after a particular mutation.
-
-> Only active queries can be refetched using this option. If the query you want to refetch is not used by a component on the current page, you may want to consider modifying your mutation to support updating the cache directly as described below.
 
 ## Updating the cache directly
 

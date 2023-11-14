@@ -23,13 +23,14 @@ import {
   MockSubscriptionLink,
   mockSingleLink,
   subscribeAndCount,
+  MockedResponse,
 } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
-import { spyOnConsole } from "../../../testing/internal";
+import { profileHook, spyOnConsole } from "../../../testing/internal";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -718,6 +719,90 @@ describe("useMutation Hook", () => {
         },
         { interval: 1 }
       );
+    });
+
+    it("resetting while a mutation is running: ensure that the result doesn't end up in the hook", async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: "Low",
+          description: "Get milk!",
+          __typename: "Todo",
+        },
+      };
+
+      const mocks: MockedResponse[] = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: "Low",
+              description: "Get milk.",
+            },
+          },
+          result: {
+            data: CREATE_TODO_DATA,
+          },
+          delay: 20,
+        },
+      ];
+
+      const ProfiledHook = profileHook(() =>
+        useMutation<
+          { createTodo: Todo },
+          { priority: string; description: string }
+        >(CREATE_TODO_MUTATION)
+      );
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
+
+      let createTodo: Awaited<ReturnType<typeof ProfiledHook.takeSnapshot>>[0];
+      let reset: Awaited<
+        ReturnType<typeof ProfiledHook.takeSnapshot>
+      >[1]["reset"];
+
+      {
+        const [mutate, result] = await ProfiledHook.takeSnapshot();
+        createTodo = mutate;
+        reset = result.reset;
+        //initial value
+        expect(result.data).toBe(undefined);
+        expect(result.loading).toBe(false);
+        expect(result.called).toBe(false);
+      }
+
+      let fetchResult: any;
+      act(() => {
+        fetchResult = createTodo({
+          variables: { priority: "Low", description: "Get milk." },
+        });
+      });
+
+      {
+        const [, result] = await ProfiledHook.takeSnapshot();
+        // started loading
+        expect(result.data).toBe(undefined);
+        expect(result.loading).toBe(true);
+        expect(result.called).toBe(true);
+      }
+
+      act(() => reset());
+
+      {
+        const [, result] = await ProfiledHook.takeSnapshot();
+        // reset to initial value
+        expect(result.data).toBe(undefined);
+        expect(result.loading).toBe(false);
+        expect(result.called).toBe(false);
+      }
+
+      expect(await fetchResult).toEqual({ data: CREATE_TODO_DATA });
+
+      await expect(ProfiledHook).not.toRerender();
     });
   });
 

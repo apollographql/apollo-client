@@ -6,6 +6,7 @@ import type {
 } from "graphql";
 import { visit } from "graphql";
 
+import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
 import type { FragmentMap } from "../../utilities/index.js";
@@ -29,24 +30,22 @@ export function createFragmentRegistry(
   return new FragmentRegistry(...fragments);
 }
 
-const { forEach: arrayLikeForEach } = Array.prototype;
-
 class FragmentRegistry implements FragmentRegistryAPI {
   private registry: FragmentMap = Object.create(null);
 
-  // Call static method FragmentRegistry.from(...) instead of invoking the
+  // Call `createFragmentRegistry` instead of invoking the
   // FragmentRegistry constructor directly. This reserves the constructor for
   // future configuration of the FragmentRegistry.
   constructor(...fragments: DocumentNode[]) {
     this.resetCaches();
     if (fragments.length) {
-      this.register.apply(this, fragments);
+      this.register(...fragments);
     }
   }
 
-  public register(): this {
+  public register(...fragments: DocumentNode[]): this {
     const definitions = new Map<string, FragmentDefinitionNode>();
-    arrayLikeForEach.call(arguments, (doc: DocumentNode) => {
+    fragments.forEach((doc: DocumentNode) => {
       getFragmentDefinitions(doc).forEach((node) => {
         definitions.set(node.name.value, node);
       });
@@ -66,27 +65,15 @@ class FragmentRegistry implements FragmentRegistryAPI {
   private invalidate(name: string) {}
 
   public resetCaches() {
-    this.invalidate = (this.lookup = this.cacheUnaryMethod("lookup")).dirty; // This dirty function is bound to the wrapped lookup method.
-    this.transform = this.cacheUnaryMethod("transform");
-    this.findFragmentSpreads = this.cacheUnaryMethod("findFragmentSpreads");
+    this.invalidate = (this.lookup = this.cacheUnaryMethod(this.lookup)).dirty; // This dirty function is bound to the wrapped lookup method.
+    this.transform = this.cacheUnaryMethod(this.transform);
+    this.findFragmentSpreads = this.cacheUnaryMethod(this.findFragmentSpreads);
   }
 
-  private cacheUnaryMethod<
-    TName extends keyof Pick<
-      FragmentRegistry,
-      "lookup" | "transform" | "findFragmentSpreads"
-    >,
-  >(name: TName) {
-    const registry = this;
-    const originalMethod = FragmentRegistry.prototype[name];
-    return wrap(
-      function () {
-        return originalMethod.apply(registry, arguments);
-      },
-      {
-        makeCacheKey: (arg) => arg,
-      }
-    );
+  private cacheUnaryMethod<F extends (arg: any) => any>(originalMethod: F) {
+    return wrap<Parameters<F>, ReturnType<F>>(originalMethod.bind(this), {
+      makeCacheKey: (arg) => arg,
+    }) as OptimisticWrapperFunction<Parameters<F>, ReturnType<F>> & F;
   }
 
   public lookup(fragmentName: string): FragmentDefinitionNode | null {

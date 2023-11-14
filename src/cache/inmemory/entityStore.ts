@@ -593,7 +593,7 @@ class CacheGroup {
 
   // Used by the EntityStore#makeCacheKey method to compute cache keys
   // specific to this CacheGroup.
-  public keyMaker: Trie<object>;
+  public keyMaker!: Trie<object>;
 
   constructor(
     public readonly caching: boolean,
@@ -800,7 +800,11 @@ class Layer extends EntityStore {
   public getStorage(): StorageType {
     let p: EntityStore = this.parent;
     while ((p as Layer).parent) p = (p as Layer).parent;
-    return p.getStorage.apply(p, arguments);
+    return p.getStorage.apply(
+      p,
+      // @ts-expect-error
+      arguments
+    );
   }
 }
 
@@ -823,20 +827,20 @@ class Stump extends Layer {
     return this;
   }
 
-  public merge() {
+  public merge(older: string | StoreObject, newer: string | StoreObject) {
     // We never want to write any data into the Stump, so we forward any merge
     // calls to the Root instead. Another option here would be to throw an
     // exception, but the toReference(object, true) function can sometimes
     // trigger Stump writes (which used to be Root writes, before the Stump
     // concept was introduced).
-    return this.parent.merge.apply(this.parent, arguments);
+    return this.parent.merge(older, newer);
   }
 }
 
 function storeObjectReconciler(
   existingObject: StoreObject,
   incomingObject: StoreObject,
-  property: string
+  property: string | number
 ): StoreValue {
   const existingValue = existingObject[property];
   const incomingValue = incomingObject[property];

@@ -12,6 +12,7 @@ import type {
 import type {
   ApolloCache,
   DefaultContext,
+  MutationOptions,
   OperationVariables,
 } from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
@@ -87,10 +88,10 @@ export function useMutation<
       }
 
       const mutationId = ++ref.current.mutationId;
-      const clientOptions = mergeOptions(baseOptions, executeOptions as any);
+      const clientOptions = mergeOptions(baseOptions, executeOptions);
 
       return client
-        .mutate(clientOptions)
+        .mutate(clientOptions as MutationOptions<TData, OperationVariables>)
         .then((response) => {
           const { data, errors } = response;
           const error =
@@ -102,7 +103,10 @@ export function useMutation<
             executeOptions.onError || ref.current.options?.onError;
 
           if (error && onError) {
-            onError(error, clientOptions);
+            onError(
+              error,
+              clientOptions as MutationOptions<TData, OperationVariables>
+            );
           }
 
           if (
@@ -126,7 +130,10 @@ export function useMutation<
             executeOptions.onCompleted || ref.current.options?.onCompleted;
 
           if (!error) {
-            onCompleted?.(response.data!, clientOptions);
+            onCompleted?.(
+              response.data!,
+              clientOptions as MutationOptions<TData, OperationVariables>
+            );
           }
 
           return response;
@@ -150,7 +157,10 @@ export function useMutation<
             executeOptions.onError || ref.current.options?.onError;
 
           if (onError) {
-            onError(error, clientOptions);
+            onError(
+              error,
+              clientOptions as MutationOptions<TData, OperationVariables>
+            );
 
             // TODO(brian): why are we returning this here???
             return { data: void 0, errors: error };
@@ -164,7 +174,9 @@ export function useMutation<
 
   const reset = React.useCallback(() => {
     if (ref.current.isMounted) {
-      setResult({ called: false, loading: false, client });
+      const result = { called: false, loading: false, client };
+      Object.assign(ref.current, { mutationId: 0, result });
+      setResult(result);
     }
   }, []);
 

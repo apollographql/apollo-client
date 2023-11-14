@@ -11,7 +11,7 @@ import type { ObservableSubscription } from "../../utilities/index.js";
  * @param errorCallbacks an expected set of errors
  */
 export type Options = {
-  observable: ObservableQuery<any>;
+  observable: ObservableQuery<any, any>;
   shouldResolve?: boolean;
   wait?: number;
   errorCallbacks?: ((error: Error) => any)[];

@@ -925,7 +925,7 @@ interface MockedSubscriptionResult {
 
 // @public (undocumented)
 export class MockLink extends ApolloLink {
-    constructor(mockedResponses: ReadonlyArray<MockedResponse>, addTypename?: Boolean, options?: MockLinkOptions);
+    constructor(mockedResponses: ReadonlyArray<MockedResponse<any, any>>, addTypename?: Boolean, options?: MockLinkOptions);
     // (undocumented)
     addMockedResponse(mockedResponse: MockedResponse): void;
     // (undocumented)

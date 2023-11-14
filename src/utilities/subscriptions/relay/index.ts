@@ -33,7 +33,7 @@ export function createFetchMultipartSubscription(
       try {
         options.body = serializeFetchParameter(body, "Payload");
       } catch (parseError) {
-        sink.error(parseError);
+        sink.error(parseError as Error);
       }
 
       const currentFetch = preferredFetch || maybe(() => fetch) || backupFetch;

@@ -64,6 +64,7 @@ function terminatingCheck<TArgs extends any[]>(
 ) {
   return function () {
     try {
+      // @ts-expect-error
       callback.apply(this, arguments);
       resolve();
     } catch (error) {

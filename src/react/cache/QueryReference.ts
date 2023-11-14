@@ -73,7 +73,7 @@ export class InternalQueryReference<TData = unknown> {
 
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
-  private autoDisposeTimeoutId: NodeJS.Timeout;
+  private autoDisposeTimeoutId?: NodeJS.Timeout;
   private status: "idle" | "loading" = "loading";
 
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;

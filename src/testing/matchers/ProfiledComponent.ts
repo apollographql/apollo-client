@@ -6,10 +6,10 @@ import type {
   ProfiledHook,
 } from "../internal/index.js";
 export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
-  async function (
-    _profiled: ProfiledComponent<any, any> | ProfiledHook<any, any>,
-    options?: NextRenderOptions
-  ) {
+  async function (actual, options) {
+    const _profiled = actual as
+      | ProfiledComponent<any, any>
+      | ProfiledHook<any, any>;
     const profiled =
       "ProfiledComponent" in _profiled
         ? _profiled.ProfiledComponent
@@ -42,11 +42,10 @@ const failed = {};
 
 export const toRenderExactlyTimes: MatcherFunction<
   [times: number, options?: NextRenderOptions]
-> = async function (
-  _profiled: ProfiledComponent<any, any> | ProfiledHook<any, any>,
-  times: number,
-  optionsPerRender?: NextRenderOptions
-) {
+> = async function (actual, times, optionsPerRender) {
+  const _profiled = actual as
+    | ProfiledComponent<any, any>
+    | ProfiledHook<any, any>;
   const profiled =
     "ProfiledComponent" in _profiled ? _profiled.ProfiledComponent : _profiled;
   const options = { timeout: 100, ...optionsPerRender };

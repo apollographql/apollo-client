@@ -57,7 +57,7 @@ export class MockLink extends ApolloLink {
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
-    mockedResponses: ReadonlyArray<MockedResponse>,
+    mockedResponses: ReadonlyArray<MockedResponse<any, any>>,
     addTypename: Boolean = true,
     options: MockLinkOptions = Object.create(null)
   ) {

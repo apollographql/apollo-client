@@ -87,6 +87,7 @@ export function withMutation<
 
         return (
           <Mutation ignoreResults {...opts} mutation={document}>
+            {/* @ts-expect-error */}
             {(
               mutate: MutationFunction<TData, TGraphQLVariables>,
               { data, ...r }: MutationResult<TData>

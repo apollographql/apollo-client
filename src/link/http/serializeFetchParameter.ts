@@ -9,7 +9,7 @@ export const serializeFetchParameter = (p: any, label: string) => {
   let serialized;
   try {
     serialized = JSON.stringify(p);
-  } catch (e) {
+  } catch (e: any) {
     const parseError = newInvariantError(
       `Network request failed. %s is not serializable: %s`,
       label,

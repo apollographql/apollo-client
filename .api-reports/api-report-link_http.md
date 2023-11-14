@@ -180,8 +180,6 @@ export class HttpLink extends ApolloLink {
     constructor(options?: HttpOptions);
     // (undocumented)
     options: HttpOptions;
-    // (undocumented)
-    requester: RequestHandler;
 }
 
 // @public (undocumented)
@@ -279,7 +277,7 @@ type RequestHandler = (operation: Operation, forward: NextLink) => Observable<Fe
 //
 // @public (undocumented)
 export function rewriteURIForGET(chosenURI: string, body: Body_2): {
-    parseError: any;
+    parseError: unknown;
     newURI?: undefined;
 } | {
     newURI: string;

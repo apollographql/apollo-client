@@ -75,6 +75,7 @@ export function useLazyQuery<
           // Only the first time populating execOptionsRef.current matters here.
           internalState.forceUpdateState();
         }
+        // @ts-expect-error this is just too generic to type
         return method.apply(this, arguments);
       };
     }

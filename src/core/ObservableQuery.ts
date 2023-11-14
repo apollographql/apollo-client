@@ -35,6 +35,7 @@ import type { QueryInfo } from "./QueryInfo.js";
 import type { MissingFieldError } from "../cache/index.js";
 import type { MissingTree } from "../cache/core/types/common.js";
 import { equalByQuery } from "./equalByQuery.js";
+import type { TODO } from "../utilities/types/TODO.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -924,8 +925,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ) {
-    return this.reobserveAsConcast(newOptions, newNetworkStatus).promise;
+  ): Promise<ApolloQueryResult<TData>> {
+    return this.reobserveAsConcast(newOptions, newNetworkStatus)
+      .promise as TODO;
   }
 
   public resubscribeAfterError(
@@ -1048,14 +1050,18 @@ export function reobserveCacheFirst<TData, TVars extends OperationVariables>(
       fetchPolicy: "cache-first",
       // Use a temporary nextFetchPolicy function that replaces itself with the
       // previous nextFetchPolicy value and returns the original fetchPolicy.
-      nextFetchPolicy(this: WatchQueryOptions<TVars, TData>) {
+      nextFetchPolicy(
+        this: WatchQueryOptions<TVars, TData>,
+        currentFetchPolicy: WatchQueryFetchPolicy,
+        context: NextFetchPolicyContext<TData, TVars>
+      ) {
         // Replace this nextFetchPolicy function in the options object with the
         // original this.options.nextFetchPolicy value.
         this.nextFetchPolicy = nextFetchPolicy;
         // If the original nextFetchPolicy value was a function, give it a
         // chance to decide what happens here.
-        if (typeof nextFetchPolicy === "function") {
-          return nextFetchPolicy.apply(this, arguments);
+        if (typeof this.nextFetchPolicy === "function") {
+          return this.nextFetchPolicy(currentFetchPolicy, context);
         }
         // Otherwise go back to the original this.options.fetchPolicy.
         return fetchPolicy!;

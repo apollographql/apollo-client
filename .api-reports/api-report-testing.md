@@ -880,7 +880,7 @@ export interface MockedProviderProps<TSerializedCache = {}> {
     // (undocumented)
     link?: ApolloLink;
     // (undocumented)
-    mocks?: ReadonlyArray<MockedResponse>;
+    mocks?: ReadonlyArray<MockedResponse<any, any>>;
     // (undocumented)
     resolvers?: Resolvers;
     // (undocumented)

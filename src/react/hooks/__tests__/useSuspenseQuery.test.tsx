@@ -3600,7 +3600,7 @@ describe("useSuspenseQuery", () => {
     jest.useRealTimers();
   });
 
-  it("xxx tears down subscription when throwing an error on refetch", async () => {
+  it("tears down subscription when throwing an error on refetch", async () => {
     using _consoleSpy = spyOnConsole("error");
 
     const query = gql`

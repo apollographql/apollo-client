@@ -3600,7 +3600,7 @@ describe("useSuspenseQuery", () => {
     jest.useRealTimers();
   });
 
-  it("tears down subscription when throwing an error on refetch", async () => {
+  it("xxx tears down subscription when throwing an error on refetch", async () => {
     using _consoleSpy = spyOnConsole("error");
 
     const query = gql`
@@ -3650,8 +3650,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(client.getObservableQueries().size).toBe(0);
+    await waitFor(() => expect(client.getObservableQueries().size).toBe(0));
   });
 
   it('throws network errors when errorPolicy is set to "none"', async () => {

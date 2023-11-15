@@ -196,29 +196,25 @@ export function useSuspenseQuery<
     client.watchQuery(watchQueryOptions)
   );
 
-  const [promiseCache, setPromiseCache] = React.useState(
-    () => new Map([[queryRef.key, queryRef.promise]])
-  );
+  let [current, setPromise] = React.useState<
+    [CacheKey, Promise<ApolloQueryResult<any>>]
+  >([queryRef.key, queryRef.promise]);
 
-  let promise = promiseCache.get(queryRef.key);
+  let promise = current[0] === queryRef.key ? current[1] : undefined;
 
   if (queryRef.didChangeOptions(watchQueryOptions)) {
-    promise = queryRef.applyOptions(watchQueryOptions);
-    promiseCache.set(queryRef.key, promise);
+    current[1] = promise = queryRef.applyOptions(watchQueryOptions);
   }
 
   if (!promise) {
-    promise = queryRef.promise;
-    promiseCache.set(queryRef.key, promise);
+    current[1] = promise = queryRef.promise;
   }
 
   React.useEffect(() => {
     const dispose = queryRef.retain();
 
     const removeListener = queryRef.listen((promise) => {
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, promise)
-      );
+      setPromise([queryRef.key, promise]);
     });
 
     return () => {
@@ -239,14 +235,10 @@ export function useSuspenseQuery<
   }, [queryRef.result]);
 
   const result = fetchPolicy === "standby" ? skipResult : __use(promise);
-
   const fetchMore = React.useCallback(
     ((options) => {
       const promise = queryRef.fetchMore(options);
-
-      setPromiseCache((previousPromiseCache) =>
-        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setPromise([queryRef.key, queryRef.promise]);
 
       return promise;
     }) satisfies FetchMoreFunction<
@@ -259,10 +251,7 @@ export function useSuspenseQuery<
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {
       const promise = queryRef.refetch(variables);
-
-      setPromiseCache((previousPromiseCache) =>
-        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setPromise([queryRef.key, queryRef.promise]);
 
       return promise;
     },

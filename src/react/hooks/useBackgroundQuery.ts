@@ -7,7 +7,11 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { wrapQueryRef } from "../cache/QueryReference.js";
+import {
+  unwrapQueryRef,
+  updateWrappedQueryRef,
+  wrapQueryRef,
+} from "../cache/QueryReference.js";
 import type { QueryReference } from "../cache/QueryReference.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { __use } from "./internal/index.js";
@@ -202,13 +206,16 @@ export function useBackgroundQuery<
     client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
   );
 
-  const [promiseCache, setPromiseCache] = React.useState(
-    () => new Map([[queryRef.key, queryRef.promise]])
-  );
-
+  const [wrapped, setWrappedQueryRef] = React.useState({
+    current: wrapQueryRef(queryRef, queryRef.promise),
+  });
+  if (unwrapQueryRef(wrapped.current)[0] !== queryRef) {
+    wrapped.current = wrapQueryRef(queryRef, queryRef.promise);
+  }
+  let wrappedQueryRef = wrapped.current;
   if (queryRef.didChangeOptions(watchQueryOptions)) {
     const promise = queryRef.applyOptions(watchQueryOptions);
-    promiseCache.set(queryRef.key, promise);
+    updateWrappedQueryRef(wrappedQueryRef, promise);
   }
 
   React.useEffect(() => queryRef.retain(), [queryRef]);
@@ -217,9 +224,7 @@ export function useBackgroundQuery<
     (options) => {
       const promise = queryRef.fetchMore(options as FetchMoreQueryOptions<any>);
 
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setWrappedQueryRef({ current: wrapQueryRef(queryRef, queryRef.promise) });
 
       return promise;
     },
@@ -230,19 +235,10 @@ export function useBackgroundQuery<
     (variables) => {
       const promise = queryRef.refetch(variables);
 
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setWrappedQueryRef({ current: wrapQueryRef(queryRef, queryRef.promise) });
 
       return promise;
     },
-    [queryRef]
-  );
-
-  queryRef.promiseCache = promiseCache;
-
-  const wrappedQueryRef = React.useMemo(
-    () => wrapQueryRef(queryRef),
     [queryRef]
   );
 

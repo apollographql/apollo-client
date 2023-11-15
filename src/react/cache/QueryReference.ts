@@ -22,6 +22,7 @@ type FetchMoreOptions<TData> = Parameters<
 >[0];
 
 const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
+const PROMISE_SYMBOL: unique symbol = Symbol();
 /**
  * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
  * A child component reading the `QueryReference` via {@link useReadQuery} will
@@ -29,6 +30,7 @@ const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
  */
 export interface QueryReference<TData = unknown> {
   [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+  [PROMISE_SYMBOL]: Promise<ApolloQueryResult<TData>>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -38,15 +40,26 @@ interface InternalQueryReferenceOptions {
 }
 
 export function wrapQueryRef<TData>(
-  internalQueryRef: InternalQueryReference<TData>
+  internalQueryRef: InternalQueryReference<TData>,
+  promise: Promise<ApolloQueryResult<TData>>
 ): QueryReference<TData> {
-  return { [QUERY_REFERENCE_SYMBOL]: internalQueryRef };
+  return {
+    [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
+    [PROMISE_SYMBOL]: promise,
+  };
 }
 
 export function unwrapQueryRef<TData>(
   queryRef: QueryReference<TData>
-): InternalQueryReference<TData> {
-  return queryRef[QUERY_REFERENCE_SYMBOL];
+): [InternalQueryReference<TData>, () => Promise<ApolloQueryResult<TData>>] {
+  return [queryRef[QUERY_REFERENCE_SYMBOL], () => queryRef[PROMISE_SYMBOL]];
+}
+
+export function updateWrappedQueryRef<TData>(
+  queryRef: QueryReference<TData>,
+  promise: Promise<ApolloQueryResult<TData>>
+) {
+  queryRef[PROMISE_SYMBOL] = promise;
 }
 
 const OBSERVED_CHANGED_OPTIONS = [
@@ -69,6 +82,7 @@ export class InternalQueryReference<TData = unknown> {
   public readonly observable: ObservableQuery<TData>;
 
   public promiseCache?: Map<CacheKey, Promise<ApolloQueryResult<TData>>>;
+  public lastObservedPromise?: Promise<ApolloQueryResult<TData>>;
   public promise: Promise<ApolloQueryResult<TData>>;
 
   private subscription: ObservableSubscription;

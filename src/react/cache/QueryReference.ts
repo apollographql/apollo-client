@@ -16,7 +16,7 @@ import {
   createFulfilledPromise,
   createRejectedPromise,
 } from "../../utilities/index.js";
-import type { CacheKey } from "./types.js";
+import type { CacheKey, QueryKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
 import { withSequence, wrapPromiseWithState } from "../../utilities/index.js";
 
@@ -86,7 +86,7 @@ type ObservedOptions = Pick<
 
 export class InternalQueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
-  public readonly key: CacheKey;
+  public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
 
   public promise: QueryRefPromise<TData>;
@@ -112,7 +112,6 @@ export class InternalQueryReference<TData = unknown> {
     // Don't save this result as last result to prevent delivery of last result
     // when first subscribing
     this.result = observable.getCurrentResult(false);
-    this.key = options.key;
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;

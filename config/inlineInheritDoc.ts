@@ -1,3 +1,28 @@
+/**
+ * This CLI tool will inline docblocks specified with `@inheritDoc` on build.
+ *
+ *
+ * E.g. a in a dockblock like this:
+ * ```js
+ * /** {@inheritDoc @apollo/client!QueryOptions#query:member} *\/
+ * ```
+ *
+ * the annotation (everything from `{` to `}`) will be replaced with the docblock
+ * of the `QueryOptions.query` member function.
+ *
+ * We need this here for situations where inheritance is not possible for `docModel`
+ * generation (`interface Foo extends Omit<Bar, 'baz'> {}` is too complicated a
+ * type for it to parse) and we want to flatten types - or going forward, for
+ * generally flattening types without repeating docs everywhere.
+ *
+ * You can get these "canonical ids" by running
+ * ```sh
+ * yarn docmodel
+ * ```
+ * and looking at the generated [`client.api.json`](../docs/shared/client.api.json) file.
+ */
+/** End file docs */
+
 // @ts-ignore
 import { Project, ts, printNode, Node } from "ts-morph";
 import { ApiModel, ApiDocumentedItem } from "@microsoft/api-extractor-model";

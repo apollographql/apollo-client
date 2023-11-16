@@ -7,15 +7,23 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { isNetworkRequestSettled } from "../../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
+import type {
+  ObservableSubscription,
+  PromiseWithState,
+  WithSequence,
+} from "../../utilities/index.js";
 import {
   createFulfilledPromise,
   createRejectedPromise,
 } from "../../utilities/index.js";
 import type { CacheKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
+import { withSequence, wrapPromiseWithState } from "../../utilities/index.js";
 
-type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
+type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>> &
+  WithSequence;
+
+type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
 type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>["fetchMore"]
@@ -30,7 +38,7 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
  */
 export interface QueryReference<TData = unknown> {
   [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-  [PROMISE_SYMBOL]: Promise<ApolloQueryResult<TData>>;
+  [PROMISE_SYMBOL]: QueryRefPromise<TData>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -41,7 +49,7 @@ interface InternalQueryReferenceOptions {
 
 export function wrapQueryRef<TData>(
   internalQueryRef: InternalQueryReference<TData>,
-  promise: Promise<ApolloQueryResult<TData>>
+  promise: QueryRefPromise<TData>
 ): QueryReference<TData> {
   return {
     [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
@@ -51,13 +59,13 @@ export function wrapQueryRef<TData>(
 
 export function unwrapQueryRef<TData>(
   queryRef: QueryReference<TData>
-): [InternalQueryReference<TData>, () => Promise<ApolloQueryResult<TData>>] {
+): [InternalQueryReference<TData>, () => QueryRefPromise<TData>] {
   return [queryRef[QUERY_REFERENCE_SYMBOL], () => queryRef[PROMISE_SYMBOL]];
 }
 
 export function updateWrappedQueryRef<TData>(
   queryRef: QueryReference<TData>,
-  promise: Promise<ApolloQueryResult<TData>>
+  promise: QueryRefPromise<TData>
 ) {
   queryRef[PROMISE_SYMBOL] = promise;
 }
@@ -81,9 +89,7 @@ export class InternalQueryReference<TData = unknown> {
   public readonly key: CacheKey;
   public readonly observable: ObservableQuery<TData>;
 
-  public promiseCache?: Map<CacheKey, Promise<ApolloQueryResult<TData>>>;
-  public lastObservedPromise?: Promise<ApolloQueryResult<TData>>;
-  public promise: Promise<ApolloQueryResult<TData>>;
+  public promise: QueryRefPromise<TData>;
 
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
@@ -120,10 +126,14 @@ export class InternalQueryReference<TData = unknown> {
       this.promise = createFulfilledPromise(this.result);
       this.status = "idle";
     } else {
-      this.promise = new Promise((resolve, reject) => {
-        this.resolve = resolve;
-        this.reject = reject;
-      });
+      this.promise = withSequence(
+        wrapPromiseWithState(
+          new Promise((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+          })
+        )
+      );
     }
 
     this.subscription = observable
@@ -284,23 +294,27 @@ export class InternalQueryReference<TData = unknown> {
         break;
       }
       case "idle": {
-        this.promise = createRejectedPromise(error);
+        this.promise = createRejectedPromise<ApolloQueryResult<TData>>(error);
         this.deliver(this.promise);
       }
     }
   }
 
-  private deliver(promise: Promise<ApolloQueryResult<TData>>) {
+  private deliver(promise: QueryRefPromise<TData>) {
     this.listeners.forEach((listener) => listener(promise));
   }
 
   private initiateFetch(returnedPromise: Promise<ApolloQueryResult<TData>>) {
     this.status = "loading";
 
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
+    this.promise = withSequence(
+      wrapPromiseWithState(
+        new Promise((resolve, reject) => {
+          this.resolve = resolve;
+          this.reject = reject;
+        })
+      )
+    );
 
     this.promise.catch(() => {});
 

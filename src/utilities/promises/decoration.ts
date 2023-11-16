@@ -12,22 +12,46 @@ export interface RejectedPromise<TValue> extends Promise<TValue> {
   reason: unknown;
 }
 
+export interface WithSequence {
+  [sequence]: number;
+}
+
+export function secondIfNewerFulfilledOrFirst<TValue>(
+  first: PromiseWithState<TValue> & WithSequence,
+  second: PromiseWithState<TValue> & WithSequence
+): PromiseWithState<TValue> & WithSequence {
+  return second.status === "fulfilled" && second[sequence] > first[sequence]
+    ? second
+    : first;
+}
+
+let current = 0;
+const sequence = Symbol("sequence");
+
 export type PromiseWithState<TValue> =
   | PendingPromise<TValue>
   | FulfilledPromise<TValue>
   | RejectedPromise<TValue>;
 
+export function withSequence<T extends Promise<any>>(
+  promise: T
+): T & WithSequence {
+  return Object.assign(promise, { [sequence]: current++ });
+}
+
 export function createFulfilledPromise<TValue>(value: TValue) {
-  const promise = Promise.resolve(value) as FulfilledPromise<TValue>;
+  const promise = Promise.resolve(value) as FulfilledPromise<TValue> &
+    WithSequence;
 
   promise.status = "fulfilled";
   promise.value = value;
 
-  return promise;
+  return withSequence(promise);
 }
 
 export function createRejectedPromise<TValue = unknown>(reason: unknown) {
-  const promise = Promise.reject(reason) as RejectedPromise<TValue>;
+  const promise = Promise.reject(reason) as RejectedPromise<TValue> &
+    WithSequence;
 
   // prevent potential edge cases leaking unhandled error rejections
   promise.catch(() => {});
@@ -35,7 +59,7 @@ export function createRejectedPromise<TValue = unknown>(reason: unknown) {
   promise.status = "rejected";
   promise.reason = reason;
 
-  return promise;
+  return withSequence(promise);
 }
 
 export function isStatefulPromise<TValue>(

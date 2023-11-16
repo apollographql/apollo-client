@@ -98,11 +98,13 @@ export type {
 } from "./observables/Observable.js";
 export { Observable } from "./observables/Observable.js";
 
+export type { PromiseWithState, WithSequence } from "./promises/decoration.js";
 export {
   isStatefulPromise,
   createFulfilledPromise,
   createRejectedPromise,
   wrapPromiseWithState,
+  withSequence,
 } from "./promises/decoration.js";
 
 export * from "./common/mergeDeep.js";

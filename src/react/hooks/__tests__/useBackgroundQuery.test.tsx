@@ -3185,12 +3185,8 @@ describe("useBackgroundQuery", () => {
       await act(() => user.click(button));
 
       {
-        // parent component re-suspends
-        const { snapshot } = await ProfiledApp.takeRender();
-        expect(snapshot.suspenseCount).toBe(2);
-      }
-      {
         const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(1);
         // @jerelmiller can you please verify that this is still in the spirit of the test?
         // This seems to have moved onto the next render - or before the test skipped one.
         expect(snapshot.count).toBe(2);
@@ -3258,8 +3254,8 @@ describe("useBackgroundQuery", () => {
         await screen.findByText("2 - Captain America")
       ).toBeInTheDocument();
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
+      // parent component didn't re-suspend
+      expect(renders.suspenseCount).toBe(1);
       expect(renders.count).toBe(3);
 
       // extra render puts an additional frame into the array
@@ -3295,8 +3291,8 @@ describe("useBackgroundQuery", () => {
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
+      // parent component didn't re-suspend
+      expect(renders.suspenseCount).toBe(1);
       expect(renders.count).toBe(2);
 
       expect(
@@ -3306,7 +3302,7 @@ describe("useBackgroundQuery", () => {
       await act(() => user.click(button));
 
       // parent component re-suspends
-      expect(renders.suspenseCount).toBe(3);
+      expect(renders.suspenseCount).toBe(1);
       expect(renders.count).toBe(3);
 
       expect(

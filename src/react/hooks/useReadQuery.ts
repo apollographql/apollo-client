@@ -9,6 +9,7 @@ import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
 import type { NetworkStatus } from "../../core/index.js";
+import { secondIfNewerFulfilledOrFirst } from "../../utilities/promises/decoration.js";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**
@@ -40,9 +41,7 @@ export function useReadQuery<TData>(
 ): UseReadQueryResult<TData> {
   const [internalQueryRef, getPromise] = unwrapQueryRef(queryRef);
 
-  console.log(internalQueryRef);
-
-  const promise = useSyncExternalStore(
+  let promise = useSyncExternalStore(
     React.useCallback(
       (forceUpdate) => {
         return internalQueryRef.listen((promise) => {
@@ -55,6 +54,7 @@ export function useReadQuery<TData>(
     getPromise,
     getPromise
   );
+  promise = secondIfNewerFulfilledOrFirst(promise, internalQueryRef.promise);
 
   const result = __use(promise);
 

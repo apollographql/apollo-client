@@ -210,7 +210,7 @@ export function useBackgroundQuery<
     current: wrapQueryRef(queryRef, queryRef.promise),
   });
   if (unwrapQueryRef(wrapped.current)[0] !== queryRef) {
-    wrapped.current = wrapQueryRef(queryRef, queryRef.promise);
+    setWrappedQueryRef({ current: wrapQueryRef(queryRef, queryRef.promise) });
   }
   let wrappedQueryRef = wrapped.current;
   if (queryRef.didChangeOptions(watchQueryOptions)) {

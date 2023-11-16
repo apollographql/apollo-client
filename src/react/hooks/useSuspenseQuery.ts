@@ -200,14 +200,14 @@ export function useSuspenseQuery<
     [CacheKey, Promise<ApolloQueryResult<any>>]
   >([queryRef.key, queryRef.promise]);
 
-  let promise = current[0] === queryRef.key ? current[1] : undefined;
+  if (current[0] !== queryRef.key) {
+    current[0] = queryRef.key;
+    current[1] = queryRef.promise;
+  }
+  let promise = current[1];
 
   if (queryRef.didChangeOptions(watchQueryOptions)) {
     current[1] = promise = queryRef.applyOptions(watchQueryOptions);
-  }
-
-  if (!promise) {
-    current[1] = promise = queryRef.promise;
   }
 
   React.useEffect(() => {

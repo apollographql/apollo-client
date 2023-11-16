@@ -25,7 +25,7 @@ import { getSuspenseCache } from "../cache/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
-import type { CacheKey } from "../cache/types.js";
+import type { CacheKey, QueryKey } from "../cache/types.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -197,7 +197,7 @@ export function useSuspenseQuery<
   );
 
   let [current, setPromise] = React.useState<
-    [CacheKey, Promise<ApolloQueryResult<any>>]
+    [QueryKey, Promise<ApolloQueryResult<any>>]
   >([queryRef.key, queryRef.promise]);
 
   if (current[0] !== queryRef.key) {

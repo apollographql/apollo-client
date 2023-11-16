@@ -12,7 +12,7 @@ import {
   createFulfilledPromise,
   createRejectedPromise,
 } from "../../utilities/index.js";
-import type { CacheKey } from "./types.js";
+import type { CacheKey, QueryKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
 
 type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
@@ -65,10 +65,10 @@ type ObservedOptions = Pick<
 
 export class InternalQueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
-  public readonly key: CacheKey;
+  public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
 
-  public promiseCache?: Map<CacheKey, Promise<ApolloQueryResult<TData>>>;
+  public promiseCache?: Map<QueryKey, Promise<ApolloQueryResult<TData>>>;
   public promise: Promise<ApolloQueryResult<TData>>;
 
   private subscription: ObservableSubscription;
@@ -92,7 +92,6 @@ export class InternalQueryReference<TData = unknown> {
     // Don't save this result as last result to prevent delivery of last result
     // when first subscribing
     this.result = observable.getCurrentResult(false);
-    this.key = options.key;
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;

@@ -40,7 +40,7 @@ map((entryPoint: { dirs: string[] }) => {
   });
 
   const extractorResult: ExtractorResult = Extractor.invoke(extractorConfig, {
-    localBuild: process.env.CI === undefined,
+    localBuild: process.env.CI === undefined || process.env.CI === "false",
     showVerboseMessages: true,
   });
 

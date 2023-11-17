@@ -219,7 +219,7 @@ describe("happy path", () => {
         reject("should have thrown an error");
       } catch (error) {
         expect(
-          error.message.indexOf(
+          (error as Error).message.indexOf(
             'Missing/invalid "sha256" or "generateHash" function'
           )
         ).toBe(0);
@@ -238,7 +238,7 @@ describe("happy path", () => {
           reject("should have thrown an error");
         } catch (error) {
           expect(
-            error.message.indexOf(
+            (error as Error).message.indexOf(
               'Missing/invalid "sha256" or "generateHash" function'
             )
           ).toBe(0);
@@ -569,6 +569,7 @@ describe("failure path", () => {
               status,
             });
           }
+          // @ts-expect-error
           return global.fetch.apply(null, args);
         };
         const link = createPersistedQuery({ sha256 }).concat(
@@ -623,6 +624,7 @@ describe("failure path", () => {
             status,
           });
         }
+        // @ts-expect-error
         return global.fetch.apply(null, args);
       };
       const link = createPersistedQuery({ sha256 }).concat(
@@ -662,6 +664,7 @@ describe("failure path", () => {
               status,
             });
           }
+          // @ts-expect-error
           return global.fetch.apply(null, args);
         };
 

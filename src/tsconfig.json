@@ -1,0 +1,14 @@
+// `tsconfig.json` for the editor only
+// this config includes additional files (e.g. tests) that
+// we don't want to see hooked up to the main build
+// it can also add a few more types for that purpose
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["es2015", "esnext.asynciterable", "dom"],
+    "types": ["jest", "node", "./testing/matchers/index.d.ts"]
+  },
+  "extends": "../tsconfig.json",
+  "include": ["./**/*.ts", "./**/*.tsx"],
+  "exclude": []
+}

@@ -34,18 +34,18 @@ type BroadcastOptions = Pick<
 >;
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data: EntityStore;
-  private optimisticData: EntityStore;
+  private data!: EntityStore;
+  private optimisticData!: EntityStore;
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
 
-  private storeReader: StoreReader;
-  private storeWriter: StoreWriter;
+  private storeReader!: StoreReader;
+  private storeWriter!: StoreWriter;
   private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
-  private maybeBroadcastWatch: OptimisticWrapperFunction<
+  private maybeBroadcastWatch!: OptimisticWrapperFunction<
     [Cache.WatchOptions, BroadcastOptions?],
     any,
     [Cache.WatchOptions]
@@ -296,6 +296,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     canonicalStringify.reset();
     print.reset();
     this.addTypenameTransform.resetCache();
+    this.config.fragments?.resetCaches();
     const ids = this.optimisticData.gc();
     if (options && !this.txCount) {
       if (options.resetResultCache) {

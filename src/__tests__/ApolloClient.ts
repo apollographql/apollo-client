@@ -4,7 +4,6 @@ import {
   ApolloClient,
   ApolloError,
   DefaultOptions,
-  FetchPolicy,
   QueryOptions,
   makeReference,
 } from "../core";
@@ -2126,8 +2125,8 @@ describe("ApolloClient", () => {
           }
         `;
 
-        ["network-only", "cache-and-network"].forEach(
-          (fetchPolicy: FetchPolicy) => {
+        (["network-only", "cache-and-network"] as const).forEach(
+          (fetchPolicy) => {
             const observable = client.watchQuery({
               query,
               fetchPolicy,
@@ -2156,13 +2155,15 @@ describe("ApolloClient", () => {
           }
         `;
 
-        [
-          "cache-first",
-          "cache-and-network",
-          "network-only",
-          "cache-only",
-          "no-cache",
-        ].forEach((fetchPolicy: FetchPolicy) => {
+        (
+          [
+            "cache-first",
+            "cache-and-network",
+            "network-only",
+            "cache-only",
+            "no-cache",
+          ] as const
+        ).forEach((fetchPolicy) => {
           const observable = client.watchQuery({
             query,
             fetchPolicy,

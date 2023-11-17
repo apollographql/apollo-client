@@ -1,7 +1,8 @@
+const limits = require("./.size-limits.json");
+
 const checks = [
   {
     path: "dist/apollo-client.min.cjs",
-    limit: "37975",
   },
   {
     path: "dist/main.cjs",
@@ -10,7 +11,6 @@ const checks = [
   {
     path: "dist/index.js",
     import: "{ ApolloClient, InMemoryCache, HttpLink }",
-    limit: "32019",
   },
   ...[
     "ApolloProvider",
@@ -53,7 +53,7 @@ const checks = [
     value.path == "dist/apollo-client.min.cjs"
       ? value
       : [
-          { ...value, limit: undefined },
+          value,
           {
             ...value,
             name: `${value.name} (production)`,
@@ -65,6 +65,10 @@ const checks = [
             },
           },
         ]
-  );
+  )
+  .map((value) => {
+    value.limit = limits[value.name];
+    return value;
+  });
 
 module.exports = checks;

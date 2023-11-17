@@ -535,7 +535,7 @@ function firstMissing(tree: MissingTree): string | undefined {
       return value;
     });
   } catch (result) {
-    return result;
+    return result as string;
   }
 }
 

@@ -74,6 +74,7 @@ import {
 import type { ApolloErrorOptions } from "../errors/index.js";
 import { PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
 import { print } from "../utilities/index.js";
+import type { TODO } from "../utilities/types/TODO.js";
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -479,7 +480,7 @@ export class QueryManager<TStore> {
       const results: any[] = [];
 
       this.refetchQueries({
-        updateCache: (cache: TCache) => {
+        updateCache: (cache) => {
           if (!skipCache) {
             cacheWrites.forEach((write) => cache.write(write));
           }
@@ -526,7 +527,7 @@ export class QueryManager<TStore> {
             // either a SingleExecutionResult or the final ExecutionPatchResult,
             // call the update function.
             if (isFinalResult) {
-              update(cache, result, {
+              update(cache as TCache, result, {
                 context: mutation.context,
                 variables: mutation.variables,
               });
@@ -617,7 +618,7 @@ export class QueryManager<TStore> {
     networkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<TData>> {
     return this.fetchConcastWithInfo(queryId, options, networkStatus).concast
-      .promise;
+      .promise as TODO;
   }
 
   public getQueryStore() {

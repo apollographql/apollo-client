@@ -4035,6 +4035,7 @@ describe("ReactiveVar and makeVar", () => {
     let broadcastCount = 0;
     cache["broadcastWatches"] = function () {
       ++broadcastCount;
+      // @ts-expect-error
       return broadcast.apply(this, arguments);
     };
 

@@ -106,9 +106,13 @@ export type Modifier<T> = (
 ) => T | DeleteModifier | InvalidateModifier;
 
 type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<
-  infer Item extends Record<string, any>
+  Record<string, any>
 >
-  ? ReadonlyArray<AsStoreObject<Item> | Reference>
+  ? StoreVal extends Array<infer Item>
+    ? Item extends Record<string, any>
+      ? ReadonlyArray<AsStoreObject<Item> | Reference>
+      : never
+    : never
   : StoreVal extends Record<string, any>
   ? AsStoreObject<StoreVal> | Reference
   : StoreVal;

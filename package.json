@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.9.0-alpha.3",
+  "version": "3.9.0-alpha.4",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -61,7 +61,8 @@
     "typedoc": "typedoc src/index.ts --json docs/public/docs.json",
     "changeset-publish": "npm run build && npm run prepdist:changesets && cd dist && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",
-    "changeset-version": "changeset version && npm i"
+    "changeset-version": "changeset version && npm i",
+    "update-size-limits": "size-limit --json | jq '. | map(select(.sizeLimit) | { key: .name, value: .size}) | from_entries' | tee .new-size-limits.json; mv .new-size-limits.json .size-limits.json"
   },
   "engines": {
     "npm": "^7.20.3 || ^8.0.0 || ^9.0.0 || ^10.0.0"
@@ -96,6 +97,7 @@
     "hoist-non-react-statics": "^3.3.2",
     "optimism": "^0.17.5",
     "prop-types": "^15.7.2",
+    "rehackt": "0.0.3",
     "response-iterator": "^0.2.6",
     "symbol-observable": "^4.0.0",
     "ts-invariant": "^0.10.3",
@@ -108,7 +110,7 @@
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.2",
     "@graphql-tools/schema": "10.0.0",
-    "@microsoft/api-extractor": "7.38.0",
+    "@microsoft/api-extractor": "7.38.2",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@size-limit/esbuild-why": "8.2.6",
     "@size-limit/preset-small-lib": "8.2.6",
@@ -121,11 +123,11 @@
     "@types/fetch-mock": "7.3.7",
     "@types/glob": "8.1.0",
     "@types/hoist-non-react-statics": "3.3.4",
-    "@types/jest": "29.5.6",
+    "@types/jest": "29.5.7",
     "@types/lodash": "4.14.200",
-    "@types/node": "20.8.9",
-    "@types/node-fetch": "2.6.7",
-    "@types/react": "18.2.33",
+    "@types/node": "20.8.10",
+    "@types/node-fetch": "2.6.8",
+    "@types/react": "18.2.35",
     "@types/react-dom": "18.2.14",
     "@types/relay-runtime": "14.1.14",
     "@types/use-sync-external-store": "0.0.5",

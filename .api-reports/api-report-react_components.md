@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="react" />
-
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { ExecutionResult } from 'graphql';
@@ -16,6 +14,7 @@ import type { GraphQLErrorExtensions } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 import * as PropTypes from 'prop-types';
+import type * as ReactTypes from 'react';
 import type { Subscriber } from 'zen-observable-ts';
 import type { Subscription as Subscription_2 } from 'zen-observable-ts';
 import { Trie } from '@wry/trie';
@@ -374,7 +373,7 @@ namespace Cache_2 {
     // (undocumented)
     interface BatchOptions<TCache extends ApolloCache<any>, TUpdateResult = void> {
         // (undocumented)
-        onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => any;
+        onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff?: Cache_2.DiffResult<any> | undefined) => any;
         // (undocumented)
         optimistic?: string | boolean;
         // (undocumented)
@@ -495,7 +494,7 @@ class Concast<T> extends Observable<T> {
     // (undocumented)
     cancel: (reason: any) => void;
     // (undocumented)
-    readonly promise: Promise<T>;
+    readonly promise: Promise<T | undefined>;
     // (undocumented)
     removeObserver(observer: Observer<T>): void;
 }
@@ -636,6 +635,8 @@ class DocumentTransform {
     } | undefined;
     // (undocumented)
     static identity(): DocumentTransform;
+    // (undocumented)
+    resetCache(): void;
     // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform;
     // (undocumented)
@@ -823,15 +824,13 @@ class LocalState<TCacheShape> {
     // Warning: (ae-forgotten-export) The symbol "LocalStateOptions" needs to be exported by the entry point index.d.ts
     constructor({ cache, client, resolvers, fragmentMatcher, }: LocalStateOptions<TCacheShape>);
     // (undocumented)
-    addExportedVariables(document: DocumentNode, variables?: OperationVariables, context?: {}): Promise<{
-        [x: string]: any;
-    }>;
+    addExportedVariables<TVars extends OperationVariables>(document: DocumentNode, variables?: TVars, context?: {}): Promise<TVars>;
     // (undocumented)
     addResolvers(resolvers: Resolvers | Resolvers[]): void;
     // (undocumented)
     clientQuery(document: DocumentNode): DocumentNode | null;
     // (undocumented)
-    getFragmentMatcher(): FragmentMatcher;
+    getFragmentMatcher(): FragmentMatcher | undefined;
     // (undocumented)
     getResolvers(): Resolvers;
     // (undocumented)
@@ -916,7 +915,7 @@ type Modifiers<T extends Record<string, any> = Record<string, unknown>> = Partia
 }>;
 
 // @public (undocumented)
-export function Mutation<TData = any, TVariables = OperationVariables>(props: MutationComponentOptions<TData, TVariables>): JSX.Element | null;
+export function Mutation<TData = any, TVariables = OperationVariables>(props: MutationComponentOptions<TData, TVariables>): ReactTypes.JSX.Element | null;
 
 // @public (undocumented)
 export namespace Mutation {
@@ -968,7 +967,7 @@ export interface MutationComponentOptions<TData = any, TVariables = OperationVar
     // Warning: (ae-forgotten-export) The symbol "MutationResult" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    children: (mutateFunction: MutationFunction<TData, TVariables, TContext>, result: MutationResult<TData>) => JSX.Element | null;
+    children: (mutateFunction: MutationFunction<TData, TVariables, TContext>, result: MutationResult<TData>) => ReactTypes.JSX.Element | null;
     // (undocumented)
     mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -1206,7 +1205,7 @@ type OperationVariables = Record<string, any>;
 type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
-export function Query<TData = any, TVariables extends OperationVariables = OperationVariables>(props: QueryComponentOptions<TData, TVariables>): JSX.Element | null;
+export function Query<TData = any, TVariables extends OperationVariables = OperationVariables>(props: QueryComponentOptions<TData, TVariables>): ReactTypes.JSX.Element | null;
 
 // @public (undocumented)
 export namespace Query {
@@ -1227,7 +1226,7 @@ export interface QueryComponentOptions<TData = any, TVariables extends Operation
     // Warning: (ae-forgotten-export) The symbol "QueryResult" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    children: (result: QueryResult<TData, TVariables>) => JSX.Element | null;
+    children: (result: QueryResult<TData, TVariables>) => ReactTypes.JSX.Element | null;
     // (undocumented)
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -1260,7 +1259,7 @@ class QueryInfo {
         document: DocumentNode;
         variables: Record<string, any> | undefined;
         networkStatus?: NetworkStatus;
-        observableQuery?: ObservableQuery<any>;
+        observableQuery?: ObservableQuery<any, any>;
         lastRequestId?: number;
     }): this;
     // (undocumented)
@@ -1284,7 +1283,7 @@ class QueryInfo {
     // (undocumented)
     notify(): void;
     // (undocumented)
-    readonly observableQuery: ObservableQuery<any> | null;
+    readonly observableQuery: ObservableQuery<any, any> | null;
     // (undocumented)
     readonly queryId: string;
     // (undocumented)
@@ -1294,7 +1293,7 @@ class QueryInfo {
     // (undocumented)
     setDiff(diff: Cache_2.DiffResult<any> | null): void;
     // (undocumented)
-    setObservableQuery(oq: ObservableQuery<any> | null): void;
+    setObservableQuery(oq: ObservableQuery<any, any> | null): void;
     // (undocumented)
     stop(): void;
     // (undocumented)
@@ -1603,7 +1602,7 @@ interface StoreObject {
 // Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<infer Item extends Record<string, any>> ? ReadonlyArray<AsStoreObject<Item> | Reference> : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<string, any>> ? StoreVal extends Array<infer Item> ? Item extends Record<string, any> ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
@@ -1618,7 +1617,7 @@ type SubscribeToMoreOptions<TData = any, TSubscriptionVariables = OperationVaria
 };
 
 // @public (undocumented)
-export function Subscription<TData = any, TVariables extends OperationVariables = OperationVariables>(props: SubscriptionComponentOptions<TData, TVariables>): JSX.Element | null;
+export function Subscription<TData = any, TVariables extends OperationVariables = OperationVariables>(props: SubscriptionComponentOptions<TData, TVariables>): ReactTypes.JSX.Element | null;
 
 // @public (undocumented)
 export namespace Subscription {
@@ -1637,7 +1636,7 @@ export interface Subscription<TData, TVariables extends OperationVariables> {
 // @public (undocumented)
 export interface SubscriptionComponentOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseSubscriptionOptions<TData, TVariables> {
     // (undocumented)
-    children?: null | ((result: SubscriptionResult<TData>) => JSX.Element | null);
+    children?: null | ((result: SubscriptionResult<TData>) => ReactTypes.JSX.Element | null);
     // (undocumented)
     subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -1747,8 +1746,8 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/cache/core/types/common.ts:100:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:47:3 - (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:112:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:120:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:154:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:385:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
@@ -1757,7 +1756,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:205:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/utilities/graphql/DocumentTransform.ts:122:7 - (ae-forgotten-export) The symbol "DocumentTransformCacheKey" needs to be exported by the entry point index.d.ts
+// src/utilities/graphql/DocumentTransform.ts:130:7 - (ae-forgotten-export) The symbol "DocumentTransformCacheKey" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

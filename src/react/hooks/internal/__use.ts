@@ -1,5 +1,5 @@
 import { wrapPromiseWithState } from "../../../utilities/index.js";
-import * as React from "react";
+import * as React from "rehackt";
 
 type Use = <T>(promise: Promise<T>) => T;
 // Prevent webpack from complaining about our feature detection of the

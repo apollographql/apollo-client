@@ -1,4 +1,5 @@
 import * as PropTypes from "prop-types";
+import type * as ReactTypes from "react";
 
 import type { OperationVariables } from "../../core/index.js";
 import type { SubscriptionComponentOptions } from "./types.js";
@@ -7,7 +8,9 @@ import { useSubscription } from "../hooks/index.js";
 export function Subscription<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
->(props: SubscriptionComponentOptions<TData, TVariables>) {
+>(
+  props: SubscriptionComponentOptions<TData, TVariables>
+): ReactTypes.JSX.Element | null {
   const result = useSubscription(props.subscription, props);
   return props.children && result ? props.children(result) : null;
 }

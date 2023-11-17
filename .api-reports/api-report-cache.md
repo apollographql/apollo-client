@@ -90,7 +90,7 @@ namespace Cache_2 {
     // (undocumented)
     interface BatchOptions<TCache extends ApolloCache<any>, TUpdateResult = void> {
         // (undocumented)
-        onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => any;
+        onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff?: Cache_2.DiffResult<any> | undefined) => any;
         // (undocumented)
         optimistic?: string | boolean;
         // (undocumented)
@@ -488,6 +488,8 @@ export interface FragmentRegistryAPI {
     // (undocumented)
     register(...fragments: DocumentNode[]): this;
     // (undocumented)
+    resetCaches(): void;
+    // (undocumented)
     transform<D extends DocumentNode>(document: D): D;
 }
 
@@ -882,7 +884,7 @@ export interface StoreObject {
 // Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<infer Item extends Record<string, any>> ? ReadonlyArray<AsStoreObject<Item> | Reference> : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<string, any>> ? StoreVal extends Array<infer Item> ? Item extends Record<string, any> ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
@@ -891,7 +893,7 @@ export type StoreValue = number | string | string[] | Reference | Reference[] | 
 class Stump extends Layer {
     constructor(root: EntityStore.Root);
     // (undocumented)
-    merge(): any;
+    merge(older: string | StoreObject, newer: string | StoreObject): void;
     // (undocumented)
     removeLayer(): this;
 }

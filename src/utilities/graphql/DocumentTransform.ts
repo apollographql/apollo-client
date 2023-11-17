@@ -80,6 +80,14 @@ export class DocumentTransform {
     }
   }
 
+  /**
+   * Resets the internal cache of this transform, if it has one.
+   */
+  resetCache() {
+    this.stableCacheKeys =
+      this.stableCacheKeys && new Trie(canUseWeakMap, (key) => ({ key }));
+  }
+
   transformDocument(document: DocumentNode) {
     // If a user passes an already transformed result back to this function,
     // immediately return it.

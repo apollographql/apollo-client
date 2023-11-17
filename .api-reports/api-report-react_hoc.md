@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="react" />
-
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { ExecutionResult } from 'graphql';
@@ -15,7 +13,7 @@ import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
-import * as React_2 from 'react';
+import type * as ReactTypes from 'react';
 import type { Subscriber } from 'zen-observable-ts';
 import type { Subscription } from 'zen-observable-ts';
 import { Trie } from '@wry/trie';
@@ -342,7 +340,7 @@ namespace Cache_2 {
     // (undocumented)
     interface BatchOptions<TCache extends ApolloCache<any>, TUpdateResult = void> {
         // (undocumented)
-        onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => any;
+        onWatchUpdated?: (this: TCache, watch: Cache_2.WatchOptions, diff: Cache_2.DiffResult<any>, lastDiff?: Cache_2.DiffResult<any> | undefined) => any;
         // (undocumented)
         optimistic?: string | boolean;
         // (undocumented)
@@ -472,7 +470,7 @@ class Concast<T> extends Observable<T> {
     // (undocumented)
     cancel: (reason: any) => void;
     // (undocumented)
-    readonly promise: Promise<T>;
+    readonly promise: Promise<T | undefined>;
     // (undocumented)
     removeObserver(observer: Observer<T>): void;
 }
@@ -623,6 +621,8 @@ class DocumentTransform {
     // (undocumented)
     static identity(): DocumentTransform;
     // (undocumented)
+    resetCache(): void;
+    // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
@@ -734,7 +734,7 @@ interface FragmentMap {
 type FragmentMatcher = (rootValue: any, typeCondition: string, context: any) => boolean;
 
 // @public (undocumented)
-export function graphql<TProps extends TGraphQLVariables | {} = {}, TData extends object = {}, TGraphQLVariables extends OperationVariables = {}, TChildProps extends object = Partial<DataProps<TData, TGraphQLVariables>> & Partial<MutateProps<TData, TGraphQLVariables>>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: React.ComponentType<TProps & TChildProps>) => React.ComponentClass<TProps>;
+export function graphql<TProps extends TGraphQLVariables | {} = {}, TData extends object = {}, TGraphQLVariables extends OperationVariables = {}, TChildProps extends object = Partial<DataProps<TData, TGraphQLVariables>> & Partial<MutateProps<TData, TGraphQLVariables>>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>) => ReactTypes.ComponentClass<TProps>;
 
 // @public (undocumented)
 type GraphQLErrors = ReadonlyArray<GraphQLError>;
@@ -821,15 +821,13 @@ class LocalState<TCacheShape> {
     // Warning: (ae-forgotten-export) The symbol "LocalStateOptions" needs to be exported by the entry point index.d.ts
     constructor({ cache, client, resolvers, fragmentMatcher, }: LocalStateOptions<TCacheShape>);
     // (undocumented)
-    addExportedVariables(document: DocumentNode, variables?: OperationVariables, context?: {}): Promise<{
-        [x: string]: any;
-    }>;
+    addExportedVariables<TVars extends OperationVariables>(document: DocumentNode, variables?: TVars, context?: {}): Promise<TVars>;
     // (undocumented)
     addResolvers(resolvers: Resolvers | Resolvers[]): void;
     // (undocumented)
     clientQuery(document: DocumentNode): DocumentNode | null;
     // (undocumented)
-    getFragmentMatcher(): FragmentMatcher;
+    getFragmentMatcher(): FragmentMatcher | undefined;
     // (undocumented)
     getResolvers(): Resolvers;
     // (undocumented)
@@ -1238,7 +1236,7 @@ class QueryInfo {
         document: DocumentNode;
         variables: Record<string, any> | undefined;
         networkStatus?: NetworkStatus;
-        observableQuery?: ObservableQuery<any>;
+        observableQuery?: ObservableQuery<any, any>;
         lastRequestId?: number;
     }): this;
     // (undocumented)
@@ -1262,7 +1260,7 @@ class QueryInfo {
     // (undocumented)
     notify(): void;
     // (undocumented)
-    readonly observableQuery: ObservableQuery<any> | null;
+    readonly observableQuery: ObservableQuery<any, any> | null;
     // (undocumented)
     readonly queryId: string;
     // (undocumented)
@@ -1272,7 +1270,7 @@ class QueryInfo {
     // (undocumented)
     setDiff(diff: Cache_2.DiffResult<any> | null): void;
     // (undocumented)
-    setObservableQuery(oq: ObservableQuery<any> | null): void;
+    setObservableQuery(oq: ObservableQuery<any, any> | null): void;
     // (undocumented)
     stop(): void;
     // (undocumented)
@@ -1559,7 +1557,7 @@ interface StoreObject {
 // Warning: (ae-forgotten-export) The symbol "AsStoreObject" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<infer Item extends Record<string, any>> ? ReadonlyArray<AsStoreObject<Item> | Reference> : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
+type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<string, any>> ? StoreVal extends Array<infer Item> ? Item extends Record<string, any> ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 // @public (undocumented)
 type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
@@ -1663,7 +1661,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 }
 
 // @public (undocumented)
-export function withApollo<TProps, TResult = any>(WrappedComponent: React_2.ComponentType<WithApolloClient<Omit<TProps, "client">>>, operationOptions?: OperationOption<TProps, TResult>): React_2.ComponentClass<Omit<TProps, "client">>;
+export function withApollo<TProps, TResult = any>(WrappedComponent: ReactTypes.ComponentType<WithApolloClient<Omit<TProps, "client">>>, operationOptions?: OperationOption<TProps, TResult>): ReactTypes.ComponentClass<Omit<TProps, "client">>;
 
 // @public (undocumented)
 export type WithApolloClient<P> = P & {
@@ -1671,13 +1669,13 @@ export type WithApolloClient<P> = P & {
 };
 
 // @public (undocumented)
-export function withMutation<TProps extends TGraphQLVariables | {} = {}, TData extends Record<string, any> = {}, TGraphQLVariables extends OperationVariables = {}, TChildProps = MutateProps<TData, TGraphQLVariables>, TContext extends Record<string, any> = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: React_2.ComponentType<TProps & TChildProps>) => React_2.ComponentClass<TProps>;
+export function withMutation<TProps extends TGraphQLVariables | {} = {}, TData extends Record<string, any> = {}, TGraphQLVariables extends OperationVariables = {}, TChildProps = MutateProps<TData, TGraphQLVariables>, TContext extends Record<string, any> = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>) => ReactTypes.ComponentClass<TProps>;
 
 // @public (undocumented)
-export function withQuery<TProps extends TGraphQLVariables | Record<string, any> = Record<string, any>, TData extends object = {}, TGraphQLVariables extends object = {}, TChildProps extends object = DataProps<TData, TGraphQLVariables>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: React_2.ComponentType<TProps & TChildProps>) => React_2.ComponentClass<TProps>;
+export function withQuery<TProps extends TGraphQLVariables | Record<string, any> = Record<string, any>, TData extends object = {}, TGraphQLVariables extends object = {}, TChildProps extends object = DataProps<TData, TGraphQLVariables>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>) => ReactTypes.ComponentClass<TProps>;
 
 // @public (undocumented)
-export function withSubscription<TProps extends TGraphQLVariables | {} = {}, TData extends object = {}, TGraphQLVariables extends object = {}, TChildProps extends object = DataProps<TData, TGraphQLVariables>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: React_2.ComponentType<TProps & TChildProps>) => React_2.ComponentClass<TProps>;
+export function withSubscription<TProps extends TGraphQLVariables | {} = {}, TData extends object = {}, TGraphQLVariables extends object = {}, TChildProps extends object = DataProps<TData, TGraphQLVariables>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>) => ReactTypes.ComponentClass<TProps>;
 
 // Warnings were encountered during analysis:
 //
@@ -1689,8 +1687,8 @@ export function withSubscription<TProps extends TGraphQLVariables | {} = {}, TDa
 // src/cache/core/types/common.ts:100:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:47:3 - (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:112:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:120:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:154:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:385:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
@@ -1699,7 +1697,7 @@ export function withSubscription<TProps extends TGraphQLVariables | {} = {}, TDa
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:205:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/utilities/graphql/DocumentTransform.ts:122:7 - (ae-forgotten-export) The symbol "DocumentTransformCacheKey" needs to be exported by the entry point index.d.ts
+// src/utilities/graphql/DocumentTransform.ts:130:7 - (ae-forgotten-export) The symbol "DocumentTransformCacheKey" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

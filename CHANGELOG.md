@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 3.9.0-alpha.4
+
+### Minor Changes
+
+- [#11175](https://github.com/apollographql/apollo-client/pull/11175) [`d6d14911c`](https://github.com/apollographql/apollo-client/commit/d6d14911c40782cd6d69167b6f6169c890091ccb) Thanks [@phryneas](https://github.com/phryneas)! - To work around issues in React Server Components, especially with bundling for
+  the Next.js "edge" runtime we now use an external package to wrap `react` imports
+  instead of importing React directly.
+
+### Patch Changes
+
+- [#11343](https://github.com/apollographql/apollo-client/pull/11343) [`776631de4`](https://github.com/apollographql/apollo-client/commit/776631de4500d56252f6f5fdaf29a81c41dfbdc7) Thanks [@phryneas](https://github.com/phryneas)! - Add `reset` method to `print`, hook up to `InMemoryCache.gc`
+
 ## 3.9.0-alpha.3
 
 ### Minor Changes
@@ -105,6 +117,14 @@
 - [#6701](https://github.com/apollographql/apollo-client/pull/6701) [`8d2b4e107`](https://github.com/apollographql/apollo-client/commit/8d2b4e107d7c21563894ced3a65d631183b58fd9) Thanks [@prowe](https://github.com/prowe)! - Ability to dynamically match mocks
 
   Adds support for a new property `MockedResponse.variableMatcher`: a predicate function that accepts a `variables` param. If `true`, the `variables` will be passed into the `ResultFunction` to help dynamically build a response.
+## 3.8.7
+
+### Patch Changes
+
+- [#11297](https://github.com/apollographql/apollo-client/pull/11297) [`c8c76a522`](https://github.com/apollographql/apollo-client/commit/c8c76a522e593de0d06cff73fde2d9e88152bed6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an explicit return type for the `useReadQuery` hook called `UseReadQueryResult`. Previously the return type of this hook was inferred from the return value.
+
+- [#11337](https://github.com/apollographql/apollo-client/pull/11337) [`bb1da8349`](https://github.com/apollographql/apollo-client/commit/bb1da8349e785c54fb4030f269602c900adf23a0) Thanks [@phryneas](https://github.com/phryneas)! - #11206 used the TypeScript syntax `infer X extends Y` that was introduced in TS 4.8.
+  This caused some problems for some users, so we are rolling back to a more backwars-compatible (albeit slightly less performant) type.
 
 ## 3.8.6
 

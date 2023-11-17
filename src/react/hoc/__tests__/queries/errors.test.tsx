@@ -105,7 +105,7 @@ describe("[queries] errors", () => {
 
     try {
       unmount();
-    } catch (e) {
+    } catch (e: any) {
       throw new Error(e);
     }
   });
@@ -220,6 +220,7 @@ describe("[queries] errors", () => {
         "setVar",
         1
       )(
+        // @ts-expect-error
         graphql<Props, Data, Vars>(query)(
           class extends React.Component<ChildProps<Props, Data, Vars>> {
             componentDidUpdate() {

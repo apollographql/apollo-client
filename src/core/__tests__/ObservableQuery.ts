@@ -46,7 +46,8 @@ export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   >(
     original: T
   ) =>
-    jest.fn<ReturnType<T>, Parameters<T>>(function () {
+    jest.fn<ReturnType<T>, Parameters<T>>(function (): ReturnType<T> {
+      // @ts-expect-error
       return original.apply(queryManager, arguments);
     });
 
@@ -2740,7 +2741,7 @@ describe("ObservableQuery", () => {
             throw new Error("not reached");
           } catch (error) {
             expect(error).toBeInstanceOf(TypeError);
-            expect(error.message).toMatch(
+            expect((error as Error).message).toMatch(
               /Cannot assign to read only property 'value'/
             );
           }

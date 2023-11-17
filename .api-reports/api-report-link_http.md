@@ -11,7 +11,6 @@ import type { GraphQLError } from 'graphql';
 import { InvariantError } from 'ts-invariant';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
-import { print as print_3 } from 'graphql';
 
 // @public (undocumented)
 class ApolloLink {
@@ -181,8 +180,6 @@ export class HttpLink extends ApolloLink {
     constructor(options?: HttpOptions);
     // (undocumented)
     options: HttpOptions;
-    // (undocumented)
-    requester: RequestHandler;
 }
 
 // @public (undocumented)
@@ -261,7 +258,9 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]): 
 type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
-const print_2: typeof print_3;
+const print_2: ((ast: ASTNode) => string) & {
+    reset(): void;
+};
 
 // @public (undocumented)
 interface Printer {
@@ -278,7 +277,7 @@ type RequestHandler = (operation: Operation, forward: NextLink) => Observable<Fe
 //
 // @public (undocumented)
 export function rewriteURIForGET(chosenURI: string, body: Body_2): {
-    parseError: any;
+    parseError: unknown;
     newURI?: undefined;
 } | {
     newURI: string;

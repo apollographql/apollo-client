@@ -1893,6 +1893,12 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]): 
 export function parser(document: DocumentNode): IDocumentDefinition;
 
 // @public (undocumented)
+export namespace parser {
+    var // (undocumented)
+    resetCache: () => void;
+}
+
+// @public (undocumented)
 export type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)

@@ -1398,6 +1398,12 @@ type OperationVariables = Record<string, any>;
 export function parser(document: DocumentNode): IDocumentDefinition;
 
 // @public (undocumented)
+export namespace parser {
+    var // (undocumented)
+    resetCache: () => void;
+}
+
+// @public (undocumented)
 type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)

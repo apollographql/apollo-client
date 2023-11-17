@@ -3,7 +3,6 @@ const limits = require("./.size-limits.json");
 const checks = [
   {
     path: "dist/apollo-client.min.cjs",
-    limit: "38033",
   },
   {
     path: "dist/main.cjs",
@@ -12,7 +11,6 @@ const checks = [
   {
     path: "dist/index.js",
     import: "{ ApolloClient, InMemoryCache, HttpLink }",
-    limit: "32106",
   },
   ...[
     "ApolloProvider",

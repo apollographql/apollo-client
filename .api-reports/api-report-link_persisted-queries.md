@@ -58,7 +58,7 @@ interface BaseOptions {
 //
 // @public (undocumented)
 export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => ApolloLink & {
-    resetCache: () => void;
+    resetHashCache: () => void;
 };
 
 // @public (undocumented)

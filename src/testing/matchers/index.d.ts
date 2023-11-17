@@ -9,6 +9,11 @@ import {
   ProfiledHook,
 } from "../internal/index.js";
 
+declare class WeakRef<T extends WeakKey> {
+  constructor(target: T);
+  deref(): T | undefined;
+}
+
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
    * Used to determine if two GraphQL query documents are equal to each other by
@@ -38,6 +43,10 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     | ProfiledHook<any, any>
     ? (count: number, options?: NextRenderOptions) => Promise<R>
     : { error: "matcher needs to be called on a ProfiledComponent instance" };
+
+  toBeGarbageCollected: T extends WeakRef<any>
+    ? () => Promise<R>
+    : { error: "matcher needs to be called on a WeakRef instance" };
 }
 
 declare global {

@@ -4,5 +4,5 @@
 
 `parse` function: improve memory management
 * use LRU `WeakCache` instead of `Map` to keep a limited number of hash results
-* hash cache is initiated lazily, only when needed
+* cache is initiated lazily, only when needed
 * expose `parse.resetCache()` method

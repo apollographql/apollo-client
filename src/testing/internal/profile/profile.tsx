@@ -23,14 +23,14 @@ export interface NextRenderOptions {
 export interface ProfiledComponent<Props, Snapshot>
   extends React.FC<Props>,
     ProfiledComponentFields<Props, Snapshot>,
-    ProfiledComponenOnlyFields<Props, Snapshot> {}
+    ProfiledComponentOnlyFields<Props, Snapshot> {}
 
 interface UpdateSnapshot<Snapshot> {
   (newSnapshot: Snapshot): void;
   (updateSnapshot: (lastSnapshot: Readonly<Snapshot>) => Snapshot): void;
 }
 
-interface ProfiledComponenOnlyFields<Props, Snapshot> {
+interface ProfiledComponentOnlyFields<Props, Snapshot> {
   updateSnapshot: UpdateSnapshot<Snapshot>;
 }
 interface ProfiledComponentFields<Props, Snapshot> {
@@ -172,7 +172,7 @@ export function profile<
     ),
     {
       updateSnapshot,
-    } satisfies ProfiledComponenOnlyFields<Props, Snapshot>,
+    } satisfies ProfiledComponentOnlyFields<Props, Snapshot>,
     {
       renders: new Array<
         | Render<Snapshot>

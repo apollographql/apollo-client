@@ -63,13 +63,6 @@ interface ProfiledComponentFields<Props, Snapshot> {
    */
   getCurrentRender(): Render<Snapshot>;
   /**
-   * Iterates the renders until the render count is reached.
-   */
-  takeUntilRenderCount(
-    count: number,
-    optionsPerRender?: NextRenderOptions
-  ): Promise<void>;
-  /**
    * Waits for the next render to happen.
    * Does not advance the render iterator.
    */
@@ -228,14 +221,6 @@ export function profile<
         }
         return render;
       },
-      async takeUntilRenderCount(
-        count: number,
-        optionsPerRender?: NextRenderOptions
-      ) {
-        while (Profiled.renders.length < count) {
-          await Profiled.takeRender(optionsPerRender);
-        }
-      },
       waitForNextRender({
         timeout = 1000,
         // capture the stack trace here so its stack trace is as close to the calling code as possible
@@ -336,7 +321,6 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
       getCurrentSnapshot() {
         return ProfiledComponent.getCurrentRender().snapshot;
       },
-      takeUntilSnapshotCount: ProfiledComponent.takeUntilRenderCount,
       async waitForNextSnapshot(options) {
         return (await ProfiledComponent.waitForNextRender(options)).snapshot;
       },

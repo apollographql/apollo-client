@@ -196,11 +196,10 @@ export function profile<
           }
           return render;
         }
-        const render = Profiled.waitForNextRender({
+        return Profiled.waitForNextRender({
           [_stackTrace]: captureStackTrace(Profiled.peekRender),
           ...options,
         });
-        return render;
       },
       async takeRender(options: NextRenderOptions = {}) {
         let error: unknown = undefined;

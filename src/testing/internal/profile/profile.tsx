@@ -30,7 +30,19 @@ interface UpdateSnapshot<Snapshot> {
   (updateSnapshot: (lastSnapshot: Readonly<Snapshot>) => Snapshot): void;
 }
 
+interface SetSnapshot<Snapshot> {
+  (partialSnapshot: Partial<Snapshot>): void;
+  (
+    updatePartialSnapshot: (
+      lastSnapshot: Readonly<Snapshot>
+    ) => Partial<Snapshot>
+  ): void;
+}
+
 interface ProfiledComponentOnlyFields<Props, Snapshot> {
+  // Allows for partial updating of the snapshot by shallow merging the results
+  setSnapshot: SetSnapshot<Snapshot>;
+  // Performs a full replacement of the snapshot
   updateSnapshot: UpdateSnapshot<Snapshot>;
 }
 interface ProfiledComponentFields<Props, Snapshot> {
@@ -111,6 +123,16 @@ export function profile<
       snapshotRef.current = snap;
     }
   };
+
+  const setSnapshot: SetSnapshot<Snapshot> = (partialSnapshot) => {
+    updateSnapshot((snapshot) => ({
+      ...snapshot,
+      ...(typeof partialSnapshot === "function"
+        ? partialSnapshot(snapshot)
+        : partialSnapshot),
+    }));
+  };
+
   const profilerOnRender: React.ProfilerOnRenderCallback = (
     id,
     phase,
@@ -172,6 +194,7 @@ export function profile<
     ),
     {
       updateSnapshot,
+      setSnapshot,
     } satisfies ProfiledComponentOnlyFields<Props, Snapshot>,
     {
       renders: new Array<

@@ -488,7 +488,7 @@ describe("GraphQL Subscriptions", () => {
 
       client.subscribe(options).subscribe({
         next() {
-          expect(link.operation.getContext().someVar).toEqual(
+          expect(link.operation?.getContext().someVar).toEqual(
             options.context.someVar
           );
           resolve();

@@ -203,7 +203,7 @@ export function profile<
         return render;
       },
       async takeRender(options: NextRenderOptions = {}) {
-        let error: { message?: string } | undefined = undefined;
+        let error: unknown = undefined;
         try {
           return await Profiled.peekRender({
             [_stackTrace]: captureStackTrace(Profiled.takeRender),

@@ -1610,7 +1610,7 @@ describe("QueryManager", () => {
     });
   });
 
-  const getIdField = ({ id }: { id: string }) => id;
+  const getIdField = (obj: any) => obj.id;
 
   itAsync(
     "runs a mutation with object parameters and puts the result in the store",

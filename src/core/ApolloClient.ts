@@ -86,7 +86,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readonly typeDefs: ApolloClientOptions<TCacheShape>["typeDefs"];
 
   private queryManager: QueryManager<TCacheShape>;
-  private devToolsHookCb: Function;
+  private devToolsHookCb?: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
   private localState: LocalState<TCacheShape>;
@@ -592,7 +592,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   >(
     options: RefetchQueriesOptions<TCache, TResult>
   ): RefetchQueriesResult<TResult> {
-    const map = this.queryManager.refetchQueries(options);
+    const map = this.queryManager.refetchQueries(
+      options as RefetchQueriesOptions<ApolloCache<TCacheShape>, TResult>
+    );
     const queries: ObservableQuery<any>[] = [];
     const results: InternalRefetchQueriesResult<TResult>[] = [];
 

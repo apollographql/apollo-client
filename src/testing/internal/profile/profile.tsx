@@ -183,11 +183,7 @@ export function profile<
       },
       async peekRender(options: NextRenderOptions = {}) {
         if (iteratorPosition < Profiled.renders.length) {
-          const render = Profiled.renders[iteratorPosition];
-          if (render.phase === "snapshotError") {
-            throw render.error;
-          }
-          return render;
+          return this.getCurrentRender();
         }
         return Profiled.waitForNextRender({
           [_stackTrace]: captureStackTrace(Profiled.peekRender),

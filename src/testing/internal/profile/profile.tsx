@@ -221,7 +221,12 @@ export function profile<
         if (!currentRender) {
           throw new Error("Has not been rendered yet!");
         }
-        return currentRender;
+
+        const render = Profiled.renders[iteratorPosition];
+        if (render.phase === "snapshotError") {
+          throw render.error;
+        }
+        return render;
       },
       async takeUntilRenderCount(
         count: number,

@@ -9,6 +9,8 @@ import { itAsync, MockSubscriptionLink } from "../../../testing/core";
 import { QueryManager } from "../../QueryManager";
 import { GraphQLError } from "graphql";
 
+import { ObservableStream } from "../../../testing/internal/ObservableStream";
+
 describe("mutiple results", () => {
   itAsync("allows multiple query results from link", (resolve, reject) => {
     const query = gql`
@@ -349,6 +351,185 @@ describe("mutiple results", () => {
 
       // fire off first result
       link.simulateResult({ result: { data: initialData } });
+    }
+  );
+
+  /**
+   * This test showcases a bug that is caused here:
+   * https://github.com/apollographql/apollo-client/blob/ae5091a21f0feff1486503071ea8dc002cf1be41/src/core/QueryInfo.ts#L375-L383
+   */
+  it.each([["cache-first"], ["no-cache"]] as const)(
+    "incorrectly merges deleted rows when receiving a deferred payload",
+    async (fetchPolicy) => {
+      const query = gql`
+        query Characters {
+          characters {
+            __typename
+            id
+            uppercase
+            ... @defer {
+              lowercase
+            }
+          }
+        }
+      `;
+
+      const initialResult = {
+        data: {
+          characters: [
+            { __typename: "Character", id: 1, uppercase: "A", lowercase: "a" },
+            { __typename: "Character", id: 2, uppercase: "B", lowercase: "b" },
+            { __typename: "Character", id: 3, uppercase: "C", lowercase: "c" },
+          ],
+        },
+      };
+
+      const laterResultFirstPart = {
+        hasNext: true,
+        data: {
+          characters: [
+            { __typename: "Character", id: 2, uppercase: "B" },
+            { __typename: "Character", id: 3, uppercase: "C" },
+          ],
+        },
+      };
+
+      const laterResultIncrementalPart = {
+        hasNext: false,
+        incremental: [
+          {
+            data: { lowercase: "b" },
+            path: ["characters", 0],
+          },
+          {
+            data: { lowercase: "c" },
+            path: ["characters", 1],
+          },
+        ],
+      };
+
+      const link = new MockSubscriptionLink();
+      const queryManager = new QueryManager({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      });
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables: {},
+        fetchPolicy,
+      });
+
+      const stream = new ObservableStream(observable);
+
+      link.simulateResult({ result: initialResult });
+
+      {
+        const value = await stream.takeNext();
+        expect(value).toStrictEqual({
+          data: {
+            characters: [
+              {
+                __typename: "Character",
+                id: 1,
+                uppercase: "A",
+                lowercase: "a",
+              },
+              {
+                __typename: "Character",
+                id: 2,
+                uppercase: "B",
+                lowercase: "b",
+              },
+              {
+                __typename: "Character",
+                id: 3,
+                uppercase: "C",
+                lowercase: "c",
+              },
+            ],
+          },
+          loading: false,
+          networkStatus: 7,
+        });
+      }
+
+      observable.refetch();
+      link.simulateResult({ result: laterResultFirstPart });
+      {
+        const value = await stream.takeNext();
+        expect(value).toStrictEqual({
+          data: {
+            characters: [
+              {
+                __typename: "Character",
+                id: 2,
+                uppercase: "B",
+                // the deferred `lowercase` should not be merged in here
+                lowercase: "a",
+              },
+              {
+                __typename: "Character",
+                id: 3,
+                uppercase: "C",
+                // the deferred `lowercase` should not be merged in here
+                lowercase: "b",
+              },
+              // this next row should not be there
+              {
+                __typename: "Character",
+                id: 3,
+                uppercase: "C",
+                // this is also wrong
+                lowercase: fetchPolicy === "no-cache" ? "c" : "b",
+              },
+            ],
+          },
+          loading: false,
+          networkStatus: 7,
+        });
+      }
+
+      link.simulateResult({ result: laterResultIncrementalPart });
+      {
+        const value = await stream.takeNext();
+        // why do we pop down to `undefined` here?
+        expect(value).toStrictEqual({
+          data: undefined,
+          loading: false,
+          networkStatus: 7,
+        });
+      }
+      {
+        const value = await stream.takeNext();
+        expect(value).toStrictEqual({
+          data: {
+            characters: [
+              {
+                __typename: "Character",
+                id: 2,
+                uppercase: "B",
+                lowercase: "b",
+              },
+              {
+                __typename: "Character",
+                id: 3,
+                uppercase: "C",
+                lowercase: "c",
+              },
+              // this next row should not be there
+              {
+                __typename: "Character",
+                id: 3,
+                uppercase: "C",
+                lowercase: "c",
+              },
+            ],
+          },
+          loading: false,
+          networkStatus: 7,
+        });
+      }
     }
   );
 });

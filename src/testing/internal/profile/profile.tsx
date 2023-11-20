@@ -54,9 +54,9 @@ interface ProfiledComponentFields<Props, Snapshot> {
    */
   takeRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
   /**
-   * Returns the current render count.
+   * Returns the total number of renders.
    */
-  currentRenderCount(): number;
+  totalRenderCount(): number;
   /**
    * Returns the current render.
    * @throws {Error} if no render has happened yet
@@ -185,7 +185,7 @@ export function profile<
         | Render<Snapshot>
         | { phase: "snapshotError"; count: number; error: unknown }
       >(),
-      currentRenderCount() {
+      totalRenderCount() {
         return Profiled.renders.length;
       },
       async peekRender(options: NextRenderOptions = {}) {
@@ -326,7 +326,7 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
     },
     {
       renders: ProfiledComponent.renders,
-      currentSnapshotCount: ProfiledComponent.currentRenderCount,
+      totalSnapshotCount: ProfiledComponent.totalRenderCount,
       async peekSnapshot(options) {
         return (await ProfiledComponent.peekRender(options)).snapshot;
       },

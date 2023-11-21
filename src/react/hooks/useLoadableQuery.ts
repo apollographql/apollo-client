@@ -1,8 +1,10 @@
 import * as React from "rehackt";
 import type {
   DocumentNode,
+  FetchMoreQueryOptions,
   OperationVariables,
   TypedDocumentNode,
+  WatchQueryOptions,
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { wrapQueryRef } from "../cache/QueryReference.js";
@@ -142,7 +144,9 @@ export function useLoadableQuery<
         );
       }
 
-      const promise = queryRef.fetchMore(options);
+      const promise = queryRef.fetchMore(
+        options as FetchMoreQueryOptions<TVariables, TData>
+      );
 
       setPromiseCache((promiseCache) =>
         new Map(promiseCache).set(queryRef.key, queryRef.promise)
@@ -183,7 +187,10 @@ export function useLoadableQuery<
       ];
 
       const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-        client.watchQuery({ ...watchQueryOptions, variables })
+        client.watchQuery({
+          ...watchQueryOptions,
+          variables,
+        } as WatchQueryOptions<any, any>)
       );
 
       promiseCache.set(queryRef.key, queryRef.promise);

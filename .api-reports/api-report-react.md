@@ -2153,8 +2153,8 @@ export function useLoadableQuery<TData = unknown, TVariables extends OperationVa
 //
 // @public (undocumented)
 export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = [
-QueryReference<TData> | null,
 LoadQuery<TVariables>,
+QueryReference<TData> | null,
     {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;

@@ -9,7 +9,6 @@ import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
 import type { NetworkStatus } from "../../core/index.js";
-import { secondIfNewerFulfilledOrFirst } from "../../utilities/promises/decoration.js";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**

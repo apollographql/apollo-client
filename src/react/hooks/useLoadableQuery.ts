@@ -39,8 +39,8 @@ export type UseLoadableQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = [
-  QueryReference<TData> | null,
   LoadQuery<TVariables>,
+  QueryReference<TData> | null,
   {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
@@ -194,8 +194,8 @@ export function useLoadableQuery<
 
   return React.useMemo(() => {
     return [
-      queryRef && wrapQueryRef(queryRef),
       loadQuery,
+      queryRef && wrapQueryRef(queryRef),
       { fetchMore, refetch },
     ];
   }, [queryRef, loadQuery, fetchMore, refetch]);

@@ -23,15 +23,27 @@ export interface NextRenderOptions {
 export interface ProfiledComponent<Props, Snapshot>
   extends React.FC<Props>,
     ProfiledComponentFields<Props, Snapshot>,
-    ProfiledComponenOnlyFields<Props, Snapshot> {}
+    ProfiledComponentOnlyFields<Props, Snapshot> {}
 
-interface UpdateSnapshot<Snapshot> {
+interface ReplaceSnapshot<Snapshot> {
   (newSnapshot: Snapshot): void;
   (updateSnapshot: (lastSnapshot: Readonly<Snapshot>) => Snapshot): void;
 }
 
-interface ProfiledComponenOnlyFields<Props, Snapshot> {
-  updateSnapshot: UpdateSnapshot<Snapshot>;
+interface MergeSnapshot<Snapshot> {
+  (partialSnapshot: Partial<Snapshot>): void;
+  (
+    updatePartialSnapshot: (
+      lastSnapshot: Readonly<Snapshot>
+    ) => Partial<Snapshot>
+  ): void;
+}
+
+interface ProfiledComponentOnlyFields<Props, Snapshot> {
+  // Allows for partial updating of the snapshot by shallow merging the results
+  mergeSnapshot: MergeSnapshot<Snapshot>;
+  // Performs a full replacement of the snapshot
+  replaceSnapshot: ReplaceSnapshot<Snapshot>;
 }
 interface ProfiledComponentFields<Props, Snapshot> {
   /**
@@ -54,21 +66,14 @@ interface ProfiledComponentFields<Props, Snapshot> {
    */
   takeRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
   /**
-   * Returns the current render count.
+   * Returns the total number of renders.
    */
-  currentRenderCount(): number;
+  totalRenderCount(): number;
   /**
    * Returns the current render.
    * @throws {Error} if no render has happened yet
    */
   getCurrentRender(): Render<Snapshot>;
-  /**
-   * Iterates the renders until the render count is reached.
-   */
-  takeUntilRenderCount(
-    count: number,
-    optionsPerRender?: NextRenderOptions
-  ): Promise<void>;
   /**
    * Waits for the next render to happen.
    * Does not advance the render iterator.
@@ -90,18 +95,18 @@ export function profile<
   onRender?: (
     info: BaseRender & {
       snapshot: Snapshot;
-      updateSnapshot: UpdateSnapshot<Snapshot>;
+      replaceSnapshot: ReplaceSnapshot<Snapshot>;
+      mergeSnapshot: MergeSnapshot<Snapshot>;
     }
   ) => void;
   snapshotDOM?: boolean;
   initialSnapshot?: Snapshot;
 }) {
-  let currentRender: Render<Snapshot> | undefined;
   let nextRender: Promise<Render<Snapshot>> | undefined;
   let resolveNextRender: ((render: Render<Snapshot>) => void) | undefined;
   let rejectNextRender: ((error: unknown) => void) | undefined;
   const snapshotRef = { current: initialSnapshot };
-  const updateSnapshot: UpdateSnapshot<Snapshot> = (snap) => {
+  const replaceSnapshot: ReplaceSnapshot<Snapshot> = (snap) => {
     if (typeof snap === "function") {
       if (!initialSnapshot) {
         throw new Error(
@@ -118,6 +123,16 @@ export function profile<
       snapshotRef.current = snap;
     }
   };
+
+  const mergeSnapshot: MergeSnapshot<Snapshot> = (partialSnapshot) => {
+    replaceSnapshot((snapshot) => ({
+      ...snapshot,
+      ...(typeof partialSnapshot === "function"
+        ? partialSnapshot(snapshot)
+        : partialSnapshot),
+    }));
+  };
+
   const profilerOnRender: React.ProfilerOnRenderCallback = (
     id,
     phase,
@@ -145,7 +160,8 @@ export function profile<
        */
       onRender?.({
         ...baseRender,
-        updateSnapshot,
+        replaceSnapshot,
+        mergeSnapshot,
         snapshot: snapshotRef.current!,
       });
 
@@ -154,8 +170,6 @@ export function profile<
         ? window.document.body.innerHTML
         : undefined;
       const render = new RenderInstance(baseRender, snapshot, domSnapshot);
-      // eslint-disable-next-line testing-library/render-result-naming-convention
-      currentRender = render;
       Profiled.renders.push(render);
       resolveNextRender?.(render);
     } catch (error) {
@@ -178,29 +192,31 @@ export function profile<
       </React.Profiler>
     ),
     {
-      updateSnapshot,
-    } satisfies ProfiledComponenOnlyFields<Props, Snapshot>,
+      replaceSnapshot,
+      mergeSnapshot,
+    } satisfies ProfiledComponentOnlyFields<Props, Snapshot>,
     {
       renders: new Array<
         | Render<Snapshot>
         | { phase: "snapshotError"; count: number; error: unknown }
       >(),
-      currentRenderCount() {
+      totalRenderCount() {
         return Profiled.renders.length;
       },
       async peekRender(options: NextRenderOptions = {}) {
         if (iteratorPosition < Profiled.renders.length) {
           const render = Profiled.renders[iteratorPosition];
+
           if (render.phase === "snapshotError") {
             throw render.error;
           }
+
           return render;
         }
-        const render = Profiled.waitForNextRender({
+        return Profiled.waitForNextRender({
           [_stackTrace]: captureStackTrace(Profiled.peekRender),
           ...options,
         });
-        return render;
       },
       async takeRender(options: NextRenderOptions = {}) {
         let error: unknown = undefined;
@@ -219,18 +235,25 @@ export function profile<
         }
       },
       getCurrentRender() {
-        if (!currentRender) {
-          throw new Error("Has not been rendered yet!");
+        // The "current" render should point at the same render that the most
+        // recent `takeRender` call returned, so we need to get the "previous"
+        // iterator position, otherwise `takeRender` advances the iterator
+        // to the next render. This means we need to call `takeRender` at least
+        // once before we can get a current render.
+        const currentPosition = iteratorPosition - 1;
+
+        if (currentPosition < 0) {
+          throw new Error(
+            "No current render available. You need to call `takeRender` before you can get the current render."
+          );
         }
-        return currentRender;
-      },
-      async takeUntilRenderCount(
-        count: number,
-        optionsPerRender?: NextRenderOptions
-      ) {
-        while (Profiled.renders.length < count) {
-          await Profiled.takeRender(optionsPerRender);
+
+        const render = Profiled.renders[currentPosition];
+
+        if (render.phase === "snapshotError") {
+          throw render.error;
         }
+        return render;
       },
       waitForNextRender({
         timeout = 1000,
@@ -306,7 +329,7 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
 ): ProfiledHook<Props, ReturnValue> {
   let returnValue: ReturnValue;
   const Component = (props: Props) => {
-    ProfiledComponent.updateSnapshot(renderCallback(props));
+    ProfiledComponent.replaceSnapshot(renderCallback(props));
     return null;
   };
   const ProfiledComponent = profile<ReturnValue, Props>({
@@ -322,7 +345,7 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
     },
     {
       renders: ProfiledComponent.renders,
-      currentSnapshotCount: ProfiledComponent.currentRenderCount,
+      totalSnapshotCount: ProfiledComponent.totalRenderCount,
       async peekSnapshot(options) {
         return (await ProfiledComponent.peekRender(options)).snapshot;
       },
@@ -332,7 +355,6 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
       getCurrentSnapshot() {
         return ProfiledComponent.getCurrentRender().snapshot;
       },
-      takeUntilSnapshotCount: ProfiledComponent.takeUntilRenderCount,
       async waitForNextSnapshot(options) {
         return (await ProfiledComponent.waitForNextRender(options)).snapshot;
       },

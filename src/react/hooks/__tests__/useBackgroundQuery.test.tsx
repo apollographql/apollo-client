@@ -335,7 +335,7 @@ function renderVariablesIntegrationTest({
   const ProfiledApp = profile<Renders, ComponentProps<typeof App>>({
     Component: App,
     snapshotDOM: true,
-    onRender: ({ updateSnapshot }) => updateSnapshot(cloneDeep(renders)),
+    onRender: ({ replaceSnapshot }) => replaceSnapshot(cloneDeep(renders)),
   });
 
   const { ...rest } = render(
@@ -434,7 +434,7 @@ function renderPaginatedIntegrationTest({
   }
 
   function SuspenseFallback() {
-    ProfiledApp.setSnapshot(({ suspenseCount }) => ({
+    ProfiledApp.mergeSnapshot(({ suspenseCount }) => ({
       suspenseCount: suspenseCount + 1,
     }));
     return <div>loading</div>;
@@ -449,7 +449,7 @@ function renderPaginatedIntegrationTest({
   }) {
     const { data, error } = useReadQuery(queryRef);
     // count renders in the child component
-    ProfiledApp.setSnapshot(({ count }) => ({
+    ProfiledApp.mergeSnapshot(({ count }) => ({
       count: count + 1,
     }));
     return (
@@ -502,7 +502,7 @@ function renderPaginatedIntegrationTest({
         <ErrorBoundary
           fallback={<div>Error</div>}
           onError={(error) => {
-            ProfiledApp.setSnapshot(({ errorCount, errors }) => ({
+            ProfiledApp.mergeSnapshot(({ errorCount, errors }) => ({
               errorCount: errorCount + 1,
               errors: errors.concat(error),
             }));

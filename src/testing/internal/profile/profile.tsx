@@ -25,12 +25,12 @@ export interface ProfiledComponent<Props, Snapshot>
     ProfiledComponentFields<Props, Snapshot>,
     ProfiledComponentOnlyFields<Props, Snapshot> {}
 
-interface UpdateSnapshot<Snapshot> {
+interface ReplaceSnapshot<Snapshot> {
   (newSnapshot: Snapshot): void;
   (updateSnapshot: (lastSnapshot: Readonly<Snapshot>) => Snapshot): void;
 }
 
-interface SetSnapshot<Snapshot> {
+interface MergeSnapshot<Snapshot> {
   (partialSnapshot: Partial<Snapshot>): void;
   (
     updatePartialSnapshot: (
@@ -41,9 +41,9 @@ interface SetSnapshot<Snapshot> {
 
 interface ProfiledComponentOnlyFields<Props, Snapshot> {
   // Allows for partial updating of the snapshot by shallow merging the results
-  setSnapshot: SetSnapshot<Snapshot>;
+  mergeSnapshot: MergeSnapshot<Snapshot>;
   // Performs a full replacement of the snapshot
-  updateSnapshot: UpdateSnapshot<Snapshot>;
+  replaceSnapshot: ReplaceSnapshot<Snapshot>;
 }
 interface ProfiledComponentFields<Props, Snapshot> {
   /**
@@ -95,7 +95,8 @@ export function profile<
   onRender?: (
     info: BaseRender & {
       snapshot: Snapshot;
-      updateSnapshot: UpdateSnapshot<Snapshot>;
+      replaceSnapshot: ReplaceSnapshot<Snapshot>;
+      mergeSnapshot: MergeSnapshot<Snapshot>;
     }
   ) => void;
   snapshotDOM?: boolean;
@@ -105,7 +106,7 @@ export function profile<
   let resolveNextRender: ((render: Render<Snapshot>) => void) | undefined;
   let rejectNextRender: ((error: unknown) => void) | undefined;
   const snapshotRef = { current: initialSnapshot };
-  const updateSnapshot: UpdateSnapshot<Snapshot> = (snap) => {
+  const replaceSnapshot: ReplaceSnapshot<Snapshot> = (snap) => {
     if (typeof snap === "function") {
       if (!initialSnapshot) {
         throw new Error(
@@ -123,8 +124,8 @@ export function profile<
     }
   };
 
-  const setSnapshot: SetSnapshot<Snapshot> = (partialSnapshot) => {
-    updateSnapshot((snapshot) => ({
+  const mergeSnapshot: MergeSnapshot<Snapshot> = (partialSnapshot) => {
+    replaceSnapshot((snapshot) => ({
       ...snapshot,
       ...(typeof partialSnapshot === "function"
         ? partialSnapshot(snapshot)
@@ -159,7 +160,8 @@ export function profile<
        */
       onRender?.({
         ...baseRender,
-        updateSnapshot,
+        replaceSnapshot,
+        mergeSnapshot,
         snapshot: snapshotRef.current!,
       });
 
@@ -190,8 +192,8 @@ export function profile<
       </React.Profiler>
     ),
     {
-      updateSnapshot,
-      setSnapshot,
+      replaceSnapshot,
+      mergeSnapshot,
     } satisfies ProfiledComponentOnlyFields<Props, Snapshot>,
     {
       renders: new Array<
@@ -327,7 +329,7 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
 ): ProfiledHook<Props, ReturnValue> {
   let returnValue: ReturnValue;
   const Component = (props: Props) => {
-    ProfiledComponent.updateSnapshot(renderCallback(props));
+    ProfiledComponent.replaceSnapshot(renderCallback(props));
     return null;
   };
   const ProfiledComponent = profile<ReturnValue, Props>({

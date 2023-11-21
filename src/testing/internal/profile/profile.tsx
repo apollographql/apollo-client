@@ -1,5 +1,6 @@
 import * as React from "react";
-
+import type { Draft } from "immer";
+import { produce } from "immer";
 import { TextEncoder, TextDecoder } from "util";
 
 global.TextEncoder ??= TextEncoder;
@@ -27,21 +28,10 @@ export interface ProfiledComponent<Props, Snapshot>
 
 interface UpdateSnapshot<Snapshot> {
   (newSnapshot: Snapshot): void;
-  (updateSnapshot: (lastSnapshot: Readonly<Snapshot>) => Snapshot): void;
-}
-
-interface SetSnapshot<Snapshot> {
-  (partialSnapshot: Partial<Snapshot>): void;
-  (
-    updatePartialSnapshot: (
-      lastSnapshot: Readonly<Snapshot>
-    ) => Partial<Snapshot>
-  ): void;
+  (updateSnapshot: (draft: Draft<Snapshot>) => Snapshot | void): void;
 }
 
 interface ProfiledComponentOnlyFields<Props, Snapshot> {
-  // Allows for partial updating of the snapshot by shallow merging the results
-  setSnapshot: SetSnapshot<Snapshot>;
   // Performs a full replacement of the snapshot
   updateSnapshot: UpdateSnapshot<Snapshot>;
 }
@@ -112,24 +102,14 @@ export function profile<
           "Cannot use a function to update the snapshot if no initial snapshot was provided."
         );
       }
-      snapshotRef.current = snap(
-        typeof snapshotRef.current === "object"
-          ? // "cheap best effort" to prevent accidental mutation of the last snapshot
-            { ...snapshotRef.current! }
-          : snapshotRef.current!
+      snapshotRef.current = produce<Snapshot>(
+        snapshotRef.current!,
+        snap as any
       );
     } else {
-      snapshotRef.current = snap;
+      // move the snapshot through `produce` to autofreeze it
+      snapshotRef.current = produce<Snapshot>(snap, (x) => x);
     }
-  };
-
-  const setSnapshot: SetSnapshot<Snapshot> = (partialSnapshot) => {
-    updateSnapshot((snapshot) => ({
-      ...snapshot,
-      ...(typeof partialSnapshot === "function"
-        ? partialSnapshot(snapshot)
-        : partialSnapshot),
-    }));
   };
 
   const profilerOnRender: React.ProfilerOnRenderCallback = (
@@ -191,7 +171,6 @@ export function profile<
     ),
     {
       updateSnapshot,
-      setSnapshot,
     } satisfies ProfiledComponentOnlyFields<Props, Snapshot>,
     {
       renders: new Array<

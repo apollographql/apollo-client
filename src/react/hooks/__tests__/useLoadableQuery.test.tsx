@@ -42,7 +42,7 @@ import { InMemoryCache } from "../../../cache";
 import { LoadableQueryHookFetchPolicy } from "../../types/types";
 import { QueryReference } from "../../../react";
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
-import invariant from "ts-invariant";
+import invariant, { InvariantError } from "ts-invariant";
 import { profile, profileHook, spyOnConsole } from "../../../testing/internal";
 
 interface SimpleQueryData {
@@ -3705,6 +3705,74 @@ it('does not suspend deferred queries with partial data in the cache and using a
       networkStatus: NetworkStatus.ready,
     });
   }
+});
+
+it("throws when calling loadQuery on first render", async () => {
+  using _consoleSpy = spyOnConsole("error");
+  const { query, mocks } = useSimpleQueryCase();
+
+  function App() {
+    const [loadQuery] = useLoadableQuery(query);
+
+    loadQuery();
+
+    return null;
+  }
+
+  expect(() => renderWithMocks(<App />, { mocks })).toThrow(
+    new InvariantError(
+      "useLoadableQuery: loadQuery should not be called during render. To load a query during render, use `useBackgroundQuery`."
+    )
+  );
+});
+
+it("throws when calling loadQuery on subsequent render", async () => {
+  using _consoleSpy = spyOnConsole("error");
+  const { query, mocks } = useSimpleQueryCase();
+
+  let error!: Error;
+
+  function App() {
+    const [count, setCount] = useState(0);
+    const [loadQuery] = useLoadableQuery(query);
+
+    if (count === 1) {
+      loadQuery();
+    }
+
+    return <button onClick={() => setCount(1)}>Load query in render</button>;
+  }
+
+  const { user } = renderWithMocks(
+    <ReactErrorBoundary onError={(e) => (error = e)} fallback={<div>Oops</div>}>
+      <App />
+    </ReactErrorBoundary>,
+    { mocks }
+  );
+
+  await act(() => user.click(screen.getByText("Load query in render")));
+
+  expect(error).toEqual(
+    new InvariantError(
+      "useLoadableQuery: loadQuery should not be called during render. To load a query during render, use `useBackgroundQuery`."
+    )
+  );
+});
+
+it("allows loadQuery to be called in useEffect on first render", async () => {
+  const { query, mocks } = useSimpleQueryCase();
+
+  function App() {
+    const [loadQuery] = useLoadableQuery(query);
+
+    React.useEffect(() => {
+      loadQuery();
+    }, []);
+
+    return null;
+  }
+
+  expect(() => renderWithMocks(<App />, { mocks })).not.toThrow();
 });
 
 describe.skip("type tests", () => {

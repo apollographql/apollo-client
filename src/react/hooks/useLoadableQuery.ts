@@ -20,6 +20,9 @@ import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import type { CacheKey } from "../cache/types.js";
+import { invariant } from "../../utilities/globals/index.js";
+
+let RenderDispatcher: unknown = null;
 
 type OnlyRequiredProperties<T> = {
   [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];
@@ -113,6 +116,7 @@ export function useLoadableQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: LoadableQueryHookOptions = Object.create(null)
 ): UseLoadableQueryResult<TData, TVariables> {
+  RenderDispatcher = getRenderDispatcher();
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
@@ -178,6 +182,11 @@ export function useLoadableQuery<
 
   const loadQuery: LoadQuery<TVariables> = React.useCallback(
     (...args) => {
+      invariant(
+        getRenderDispatcher() !== RenderDispatcher,
+        "useLoadableQuery: loadQuery should not be called during render. To load a query during render, use `useBackgroundQuery`."
+      );
+
       const [variables] = args;
 
       const cacheKey: CacheKey = [
@@ -206,4 +215,9 @@ export function useLoadableQuery<
       { fetchMore, refetch },
     ];
   }, [queryRef, loadQuery, fetchMore, refetch]);
+}
+
+function getRenderDispatcher() {
+  return (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+    ?.ReactCurrentDispatcher?.current;
 }

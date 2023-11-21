@@ -110,7 +110,7 @@ export function useLoadableQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: LoadableQueryHookOptions = Object.create(null)
-): UseLoadableQueryResult<TData> {
+): UseLoadableQueryResult<TData, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });

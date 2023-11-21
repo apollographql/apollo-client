@@ -39,7 +39,10 @@ export interface UseReadQueryResult<TData = unknown> {
 export function useReadQuery<TData>(
   queryRef: QueryReference<TData>
 ): UseReadQueryResult<TData> {
-  const [internalQueryRef, getPromise] = unwrapQueryRef(queryRef);
+  const [internalQueryRef, getPromise] = React.useMemo(
+    () => unwrapQueryRef(queryRef),
+    [queryRef]
+  );
 
   let promise = useSyncExternalStore(
     React.useCallback(
@@ -54,7 +57,6 @@ export function useReadQuery<TData>(
     getPromise,
     getPromise
   );
-  promise = secondIfNewerFulfilledOrFirst(promise, internalQueryRef.promise);
 
   const result = __use(promise);
 

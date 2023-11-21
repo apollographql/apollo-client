@@ -19,6 +19,7 @@ import {
 import type { CacheKey, QueryKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
 import { withSequence, wrapPromiseWithState } from "../../utilities/index.js";
+import { secondIfNewerFulfilledOrFirst } from "../../utilities/promises/decoration.js";
 
 type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>> &
   WithSequence;
@@ -37,7 +38,7 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
  * suspend until the promise resolves.
  */
 export interface QueryReference<TData = unknown> {
-  [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+  readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
 }
 
@@ -60,7 +61,15 @@ export function wrapQueryRef<TData>(
 export function unwrapQueryRef<TData>(
   queryRef: QueryReference<TData>
 ): [InternalQueryReference<TData>, () => QueryRefPromise<TData>] {
-  return [queryRef[QUERY_REFERENCE_SYMBOL], () => queryRef[PROMISE_SYMBOL]];
+  const reference = queryRef[QUERY_REFERENCE_SYMBOL];
+  return [
+    reference,
+    () =>
+      secondIfNewerFulfilledOrFirst(
+        queryRef[PROMISE_SYMBOL],
+        reference.promise
+      ),
+  ];
 }
 
 export function updateWrappedQueryRef<TData>(

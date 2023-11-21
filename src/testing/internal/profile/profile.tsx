@@ -245,7 +245,7 @@ export function profile<
 
         if (currentPosition < 0) {
           throw new Error(
-            "No render has occurred yet. You may need to call `takeRender` before you can get the current render."
+            "No current render available. You need to call `takeRender` before you can get the current render."
           );
         }
 

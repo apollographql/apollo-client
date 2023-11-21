@@ -5,7 +5,7 @@ export interface Options {
   /**
    * The ObservableQuery to subscribe to.
    */
-  observable: ObservableQuery<any>;
+  observable: ObservableQuery<any, any>;
   /**
    * Should we resolve after seeing all our callbacks? [default: true]
    * (use this if you are racing the promise against another)

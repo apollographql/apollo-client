@@ -25,9 +25,14 @@ import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers";
 import { InMemoryCache } from "../inMemoryCache";
 import { TypedDocumentNode } from "../../../core";
 import { extractFragmentContext } from "../helpers";
+import { KeyFieldsFunction } from "../policies";
+import { invariant } from "../../../utilities/globals";
 import { spyOnConsole } from "../../../testing/internal";
 
-const getIdField = ({ id }: { id: string }) => id;
+const getIdField: KeyFieldsFunction = ({ id }) => {
+  invariant(typeof id === "string", "id is not a string");
+  return id;
+};
 
 describe("writing to the store", () => {
   const cache = new InMemoryCache({
@@ -1293,19 +1298,17 @@ describe("writing to the store", () => {
     }
 
     testData.forEach((data) => {
-      data.mutation.definitions.forEach(
-        (definition: OperationDefinitionNode) => {
-          if (isOperationDefinition(definition)) {
-            definition.selectionSet.selections.forEach((selection) => {
-              if (isField(selection)) {
-                expect(
-                  storeKeyNameFromField(selection, data.variables)
-                ).toEqual(data.expected);
-              }
-            });
-          }
+      data.mutation.definitions.forEach((definition) => {
+        if (isOperationDefinition(definition)) {
+          definition.selectionSet.selections.forEach((selection) => {
+            if (isField(selection)) {
+              expect(storeKeyNameFromField(selection, data.variables)).toEqual(
+                data.expected
+              );
+            }
+          });
         }
-      );
+      });
     });
   });
 
@@ -1357,7 +1360,7 @@ describe("writing to the store", () => {
       return value.kind === "OperationDefinition";
     }
 
-    mutation.definitions.map((def: OperationDefinitionNode) => {
+    mutation.definitions.map((def) => {
       if (isOperationDefinition(def)) {
         const writer = new StoreWriter(
           new InMemoryCache({

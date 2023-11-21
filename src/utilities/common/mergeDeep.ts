@@ -72,7 +72,7 @@ const defaultReconciler: ReconcilerFunction<any[]> = function (
 
 export class DeepMerger<TContextArgs extends any[]> {
   constructor(
-    private reconciler: ReconcilerFunction<TContextArgs> = defaultReconciler
+    private reconciler: ReconcilerFunction<TContextArgs> = defaultReconciler as any as ReconcilerFunction<TContextArgs>
   ) {}
 
   public merge(target: any, source: any, ...context: TContextArgs): any {

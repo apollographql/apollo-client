@@ -8,8 +8,10 @@ import { itAsync, mockSingleLink, mockObservableLink } from "../testing";
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions
-    .filter((x) => x.kind === "OperationDefinition")
-    .some((x: OperationDefinitionNode) => x.operation === "subscription");
+    .filter(
+      (x): x is OperationDefinitionNode => x.kind === "OperationDefinition"
+    )
+    .some((x) => x.operation === "subscription");
 
 describe("subscribeToMore", () => {
   const query = gql`

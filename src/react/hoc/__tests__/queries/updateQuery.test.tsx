@@ -143,7 +143,7 @@ describe("[queries] updateQuery", () => {
             ).toBeTruthy();
             try {
               this.props.data!.updateQuery((p) => p);
-            } catch (e) {
+            } catch (e: any) {
               // TODO: branch never hit in test
               expect(e.toString()).toMatch(
                 /ObservableQuery with this id doesn't exist:/

@@ -235,7 +235,7 @@ describe("optimistic mutation results", () => {
             await promise;
           } catch (err) {
             expect(err).toBeInstanceOf(Error);
-            expect(err.message).toBe("forbidden (test error)");
+            expect((err as Error).message).toBe("forbidden (test error)");
 
             const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore["TodoList5"] as any).todos.length).toBe(3);
@@ -489,7 +489,7 @@ describe("optimistic mutation results", () => {
             await promise;
           } catch (err) {
             expect(err).toBeInstanceOf(Error);
-            expect(err.message).toBe("forbidden (test error)");
+            expect((err as Error).message).toBe("forbidden (test error)");
 
             const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore["TodoList5"] as any).todos.length).toBe(3);
@@ -2019,11 +2019,12 @@ describe("optimistic mutation results", () => {
       const wrapReject = <TArgs extends any[], TResult>(
         fn: (...args: TArgs) => TResult
       ): typeof fn => {
-        return function () {
+        return function (this: unknown, ...args: TArgs) {
           try {
-            return fn.apply(this, arguments);
+            return fn.apply(this, args);
           } catch (e) {
             reject(e);
+            throw e;
           }
         };
       };

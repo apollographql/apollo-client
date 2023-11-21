@@ -1904,7 +1904,7 @@ describe("reading from the store", () => {
           );
           expect(value.__ref).toBe('Deity:{"name":"Zeus"}');
           // Interim ruler Apollo takes over for real.
-          return toReference(apolloRulerResult.ruler);
+          return toReference(apolloRulerResult.ruler)!;
         },
       },
     });

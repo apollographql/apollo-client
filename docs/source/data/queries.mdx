@@ -155,7 +155,7 @@ function DogPhoto({ breed }) {
   return (
     <div>
       <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
-      <button onClick={() => refetch({ breed: 'new_dog_breed' })}>
+      <button onClick={() => refetch()}>
         Refetch new breed!
       </button>
     </div>
@@ -211,7 +211,7 @@ function DogPhoto({ breed }) {
   return (
     <div>
       <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
-      <button onClick={() => refetch({ breed: 'new_dog_breed' })}>
+      <button onClick={() => refetch()}>
         Refetch!
       </button>
     </div>

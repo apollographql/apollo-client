@@ -33,10 +33,10 @@ try {
   // https://github.com/apollographql/react-apollo/issues/2442#issuecomment-426489517
   testMap.set(frozen, frozen).delete(frozen);
 } catch {
-  const wrap = (method: <T>(obj: T) => T): typeof method => {
+  const wrap = <M extends <T>(obj: T) => T>(method: M): M => {
     return (
       method &&
-      ((obj) => {
+      (((obj) => {
         try {
           // If .set succeeds, also call .delete to avoid leaking memory.
           testMap.set(obj, obj).delete(obj);
@@ -45,7 +45,7 @@ try {
           // by this return-from-finally statement:
           return method.call(Object, obj);
         }
-      })
+      }) as M)
     );
   };
   Object.freeze = wrap(Object.freeze);

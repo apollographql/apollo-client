@@ -257,6 +257,51 @@ export abstract class EntityStore implements NormalizedCache {
               changedFields[storeFieldName] = newValue;
               needToMerge = true;
               fieldValue = newValue;
+
+              if (__DEV__) {
+                const checkReference = (ref: Reference) => {
+                  if (this.lookup(ref.__ref) === undefined) {
+                    invariant.warn(
+                      "cache.modify: You are trying to write a Reference that is not part of the store: %o\n" +
+                        "Please make sure to set the `mergeIntoStore` parameter to `true` when creating a Reference that is not part of the store yet:\n" +
+                        "`toReference(object, true)`",
+                      ref
+                    );
+                    return true;
+                  }
+                };
+                if (isReference(newValue)) {
+                  checkReference(newValue);
+                } else if (Array.isArray(newValue)) {
+                  // Warn about writing "mixed" arrays of Reference and non-Reference objects
+                  let seenReference: boolean = false;
+                  let someNonReference: unknown;
+                  for (const value of newValue) {
+                    if (isReference(value)) {
+                      seenReference = true;
+                      if (checkReference(value)) break;
+                    } else {
+                      // Do not warn on primitive values, since those could never be represented
+                      // by a reference. This is a valid (albeit uncommon) use case.
+                      if (typeof value === "object" && !!value) {
+                        const [id] = this.policies.identify(value);
+                        // check if object could even be referenced, otherwise we are not interested in it for this warning
+                        if (id) {
+                          someNonReference = value;
+                        }
+                      }
+                    }
+                    if (seenReference && someNonReference !== undefined) {
+                      invariant.warn(
+                        "cache.modify: Writing an array with a mix of both References and Objects will not result in the Objects being normalized correctly.\n" +
+                          "Please convert the object instance %o to a Reference before writing it to the cache by calling `toReference(object, true)`.",
+                        someNonReference
+                      );
+                      break;
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -548,7 +593,7 @@ class CacheGroup {
 
   // Used by the EntityStore#makeCacheKey method to compute cache keys
   // specific to this CacheGroup.
-  public keyMaker: Trie<object>;
+  public keyMaker!: Trie<object>;
 
   constructor(
     public readonly caching: boolean,
@@ -755,7 +800,11 @@ class Layer extends EntityStore {
   public getStorage(): StorageType {
     let p: EntityStore = this.parent;
     while ((p as Layer).parent) p = (p as Layer).parent;
-    return p.getStorage.apply(p, arguments);
+    return p.getStorage.apply(
+      p,
+      // @ts-expect-error
+      arguments
+    );
   }
 }
 
@@ -778,20 +827,20 @@ class Stump extends Layer {
     return this;
   }
 
-  public merge() {
+  public merge(older: string | StoreObject, newer: string | StoreObject) {
     // We never want to write any data into the Stump, so we forward any merge
     // calls to the Root instead. Another option here would be to throw an
     // exception, but the toReference(object, true) function can sometimes
     // trigger Stump writes (which used to be Root writes, before the Stump
     // concept was introduced).
-    return this.parent.merge.apply(this.parent, arguments);
+    return this.parent.merge(older, newer);
   }
 }
 
 function storeObjectReconciler(
   existingObject: StoreObject,
   incomingObject: StoreObject,
-  property: string
+  property: string | number
 ): StoreValue {
   const existingValue = existingObject[property];
   const incomingValue = incomingObject[property];

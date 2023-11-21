@@ -16,8 +16,22 @@ interface ApolloCustomMatchers<R = void, T = {}> {
    */
   toMatchDocument(document: DocumentNode): R;
 
-  toHaveRendered(): R;
-  toHaveRenderedTimes(count: number): R;
+  /**
+   * Used to determine if a profiled component has rendered or not.
+   */
+  toHaveRendered: T extends ProfiledComponent<any, any> | ProfiledHook<any, any>
+    ? () => R
+    : { error: "matcher needs to be called on a ProfiledComponent instance" };
+
+  /**
+   * Used to determine if a profiled component has rendered a specific amount
+   * of times or not.
+   */
+  toHaveRenderedTimes: T extends
+    | ProfiledComponent<any, any>
+    | ProfiledHook<any, any>
+    ? (count: number) => R
+    : { error: "matcher needs to be called on a ProfiledComponent instance" };
 
   /**
    * Used to determine if the Suspense cache has a cache entry.

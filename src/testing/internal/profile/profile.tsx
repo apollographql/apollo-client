@@ -206,7 +206,13 @@ export function profile<
       },
       async peekRender(options: NextRenderOptions = {}) {
         if (iteratorPosition < Profiled.renders.length) {
-          return this.getCurrentRender();
+          const render = Profiled.renders[iteratorPosition];
+
+          if (render.phase === "snapshotError") {
+            throw render.error;
+          }
+
+          return render;
         }
         return Profiled.waitForNextRender({
           [_stackTrace]: captureStackTrace(Profiled.peekRender),
@@ -230,11 +236,21 @@ export function profile<
         }
       },
       getCurrentRender() {
-        if (!currentRender) {
-          throw new Error("Has not been rendered yet!");
+        // The "current" render should point at the same render that the most
+        // recent `takeRender` call returned, so we need to get the "previous"
+        // iterator position, otherwise `takeRender` advances the iterator
+        // to the next render. This means we need to call `takeRender` at least
+        // once before we can get a current render.
+        const currentPosition = iteratorPosition - 1;
+
+        if (currentPosition < 0) {
+          throw new Error(
+            "No render has occurred yet. You may need to call `takeRender` before you can get the current render."
+          );
         }
 
-        const render = Profiled.renders[iteratorPosition];
+        const render = Profiled.renders[currentPosition];
+
         if (render.phase === "snapshotError") {
           throw render.error;
         }

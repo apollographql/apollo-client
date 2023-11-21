@@ -19,7 +19,6 @@ export type {
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
-  RefetchWritePolicy,
 } from "./watchQueryOptions.js";
 export { NetworkStatus, isNetworkRequestSettled } from "./networkStatus.js";
 export * from "./types.js";

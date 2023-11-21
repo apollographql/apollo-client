@@ -254,7 +254,7 @@ export type ApolloReducerConfig = {
     addTypename?: boolean;
 };
 
-// @public (undocumented)
+// @public
 type AsStoreObject<T extends {
     __typename?: string;
 }> = {
@@ -1262,7 +1262,6 @@ export type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cach
 //
 // @public (undocumented)
 export interface MutationOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
-    // (undocumented)
     fetchPolicy?: MutationFetchPolicy;
     keepRootFields?: boolean;
     mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -2053,7 +2052,10 @@ export interface WatchQueryOptions<TVariables extends OperationVariables = Opera
     initialFetchPolicy?: WatchQueryFetchPolicy;
     // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    // (undocumented)
+    notifyOnNetworkStatusChange?: boolean;
+    partialRefetch?: boolean;
+    pollInterval?: number;
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
     variables?: TVariables;
@@ -2096,13 +2098,13 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:126:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:132:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:117:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:150:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:379:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:253:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

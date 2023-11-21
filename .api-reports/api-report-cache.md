@@ -73,7 +73,7 @@ export type ApolloReducerConfig = {
     addTypename?: boolean;
 };
 
-// @public (undocumented)
+// @public
 type AsStoreObject<T extends {
     __typename?: string;
 }> = {

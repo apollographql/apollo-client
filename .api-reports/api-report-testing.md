@@ -279,7 +279,7 @@ type ApolloQueryResult<T> = {
     partial?: boolean;
 };
 
-// @public (undocumented)
+// @public
 type AsStoreObject<T extends {
     __typename?: string;
 }> = {
@@ -827,7 +827,6 @@ export interface MockedProviderProps<TSerializedCache = {}> {
     childProps?: object;
     // (undocumented)
     children?: any;
-    // (undocumented)
     connectToDevTools?: boolean;
     // Warning: (ae-forgotten-export) The symbol "DefaultOptions" needs to be exported by the entry point index.d.ts
     //
@@ -1603,7 +1602,6 @@ export function withWarningSpy<TArgs extends any[], TResult>(it: (...args: TArgs
 // src/cache/core/types/common.ts:98:3 - (ae-forgotten-export) The symbol "isReference" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:99:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:100:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:47:3 - (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts

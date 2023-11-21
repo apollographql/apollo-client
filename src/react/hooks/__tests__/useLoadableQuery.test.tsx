@@ -754,6 +754,8 @@ it("all data is present in the cache, no network request is made", async () => {
     networkStatus: NetworkStatus.ready,
     error: undefined,
   });
+
+  expect(ReadQueryHook).not.toRerender();
 });
 
 it("partial data is present in the cache so it is ignored and network request is made", async () => {

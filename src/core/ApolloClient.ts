@@ -77,9 +77,9 @@ export interface ApolloClientOptions<TCacheShape> {
    */
   ssrMode?: boolean;
   /**
-   * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to Apollo Client in your production environment. The extension can _always_ connect in a non-production environment.
+   * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to Apollo Client.
    *
-   * The default value is `false`.
+   * The default value is `false` in production and `true` in development (if there is a `window` object).
    */
   connectToDevTools?: boolean;
   /**

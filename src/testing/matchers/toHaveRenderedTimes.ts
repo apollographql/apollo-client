@@ -2,14 +2,18 @@ import type { MatcherFunction } from "expect";
 import type { ProfiledComponent, ProfiledHook } from "../internal/index.js";
 
 export const toHaveRenderedTimes: MatcherFunction<[count: number]> = function (
-  ProfiledComponent: ProfiledComponent<any, any> | ProfiledHook<any, any>,
-  count: number
+  actual,
+  count
 ) {
+  let ProfiledComponent = actual as
+    | ProfiledComponent<any, any>
+    | ProfiledHook<any, any>;
+
   if ("ProfiledComponent" in ProfiledComponent) {
     ProfiledComponent = ProfiledComponent.ProfiledComponent;
   }
 
-  const actualRenderCount = ProfiledComponent.currentRenderCount();
+  const actualRenderCount = ProfiledComponent.totalRenderCount();
   const pass = actualRenderCount === count;
 
   const hint = this.utils.matcherHint(

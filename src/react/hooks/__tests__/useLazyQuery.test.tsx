@@ -1115,7 +1115,7 @@ describe("useLazyQuery Hook", () => {
       ),
     });
 
-    const [execute] = ProfiledHook.getCurrentSnapshot();
+    const [execute] = await ProfiledHook.peekSnapshot();
 
     {
       const [, result] = await ProfiledHook.takeSnapshot();

@@ -407,7 +407,7 @@ describe("[queries] loading", () => {
     })(
       class extends React.Component<ChildProps<{}, Data>> {
         render() {
-          ProfiledContainer.updateSnapshot(this.props.data!);
+          ProfiledContainer.replaceSnapshot(this.props.data!);
           return null;
         }
       }

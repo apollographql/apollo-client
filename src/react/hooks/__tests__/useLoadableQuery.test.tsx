@@ -151,16 +151,18 @@ function usePaginatedQueryCase() {
 
 function createDefaultProfiledComponents<TData = unknown>() {
   const SuspenseFallback = profile({
-    Component: () => <p>Loading</p>,
+    Component: function SuspenseFallback() {
+      return <p>Loading</p>;
+    },
   });
 
   const ReadQueryHook = profileHook<
     UseReadQueryResult<TData>,
     { queryRef: QueryReference<TData> }
-  >(({ queryRef }) => useReadQuery(queryRef));
+  >(({ queryRef }) => useReadQuery(queryRef), { displayName: "UseReadQuery" });
 
   const ErrorFallback = profile<{ error: Error | null }, { error: Error }>({
-    Component: ({ error }) => {
+    Component: function Fallback({ error }) {
       ErrorFallback.replaceSnapshot({ error });
 
       return <div>Oops</div>;
@@ -265,7 +267,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     createDefaultProfiledComponents<VariablesCaseData>();
 
   const App = profile({
-    Component: () => {
+    Component: function App() {
       const [loadQuery, queryRef] = useLoadableQuery(query);
 
       return (
@@ -281,13 +283,22 @@ it("loads a query with variables and suspends by passing variables to the loadQu
 
   const { user } = renderWithMocks(<App />, { mocks });
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  {
+    const { renderedComponents } = await App.takeRender();
+    expect(renderedComponents).toStrictEqual(["App"]);
+  }
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).toHaveRendered();
-  expect(ReadQueryHook).not.toHaveRendered();
-  expect(App).toHaveRenderedTimes(2);
+  {
+    const { renderedComponents } = await App.takeRender();
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+  }
+
+  {
+    const { renderedComponents } = await App.takeRender();
+    expect(renderedComponents).toStrictEqual(["UseReadQuery"]);
+  }
 
   {
     const snapshot = await ReadQueryHook.takeSnapshot();
@@ -298,10 +309,6 @@ it("loads a query with variables and suspends by passing variables to the loadQu
       error: undefined,
     });
   }
-
-  expect(SuspenseFallback).toHaveRenderedTimes(1);
-  expect(ReadQueryHook).toHaveRenderedTimes(1);
-  expect(App).toHaveRenderedTimes(3);
 
   await expect(App).not.toRerender();
 });

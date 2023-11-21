@@ -62,6 +62,8 @@ export interface Render<Snapshot> extends BaseRender {
    * ```
    */
   withinDOM: () => SyncScreen;
+
+  renderedComponents: string[];
 }
 
 /** @internal */
@@ -77,7 +79,8 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
   constructor(
     baseRender: BaseRender,
     public snapshot: Snapshot,
-    private stringifiedDOM: string | undefined
+    private stringifiedDOM: string | undefined,
+    public renderedComponents: string[]
   ) {
     this.id = baseRender.id;
     this.phase = baseRender.phase;

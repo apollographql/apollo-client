@@ -138,7 +138,7 @@ function processComments() {
             return getCommentFor(canonicalReference) || "";
           }
         );
-        if (oldText != newText) {
+        if (oldText !== newText) {
           docsNode.replaceWithText(newText);
         }
       }

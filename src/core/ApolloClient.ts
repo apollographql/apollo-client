@@ -125,7 +125,7 @@ export { mergeOptions };
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
- * and mutations) to a GraphQL spec-compliant server over a {@link ApolloLink} instance,
+ * and mutations) to a GraphQL spec-compliant server over an {@link ApolloLink} instance,
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through {@link Observable} instances.
  */
@@ -384,7 +384,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * This resolves a single query according to the options specified and
-   * returns a Promise which is either resolved with the resulting data
+   * returns a `Promise` which is either resolved with the resulting data
    * or rejected with an error.
    *
    * @param options - An object of type {@link QueryOptions} that allows us to

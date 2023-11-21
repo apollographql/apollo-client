@@ -435,11 +435,16 @@ function wrapComponentWithTracking<Props>(
       super(props);
     }
     componentDidMount() {
-      super.componentDidMount?.apply(this, arguments);
+      super.componentDidMount?.apply(this);
       ctx!.renderedComponents.push(Component.displayName || Component.name);
     }
     componentDidUpdate() {
-      super.componentDidUpdate?.apply(this, arguments);
+      super.componentDidUpdate?.apply(
+        this,
+        arguments as unknown as Parameters<
+          NonNullable<React.Component<Props>["componentDidUpdate"]>
+        >
+      );
       ctx!.renderedComponents.push(Component.displayName || Component.name);
     }
   }

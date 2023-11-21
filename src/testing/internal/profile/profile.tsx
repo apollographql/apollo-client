@@ -81,6 +81,13 @@ interface ProfiledComponentFields<Props, Snapshot> {
   waitForNextRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
 }
 
+interface ProfilerContextValue {
+  renderedComponents: string[];
+}
+const ProfilerContext = React.createContext<ProfilerContextValue | undefined>(
+  undefined
+);
+
 /** @internal */
 export function profile<
   Snapshot extends ValidSnapshot = void,
@@ -133,6 +140,10 @@ export function profile<
     }));
   };
 
+  const profilerContext: ProfilerContextValue = {
+    renderedComponents: [],
+  };
+
   const profilerOnRender: React.ProfilerOnRenderCallback = (
     id,
     phase,
@@ -169,7 +180,13 @@ export function profile<
       const domSnapshot = snapshotDOM
         ? window.document.body.innerHTML
         : undefined;
-      const render = new RenderInstance(baseRender, snapshot, domSnapshot);
+      const render = new RenderInstance(
+        baseRender,
+        snapshot,
+        domSnapshot,
+        profilerContext.renderedComponents
+      );
+      profilerContext.renderedComponents = [];
       Profiled.renders.push(render);
       resolveNextRender?.(render);
     } catch (error) {
@@ -184,13 +201,20 @@ export function profile<
     }
   };
 
+  const Wrapped = wrapComponentWithTracking(Component);
+
   let iteratorPosition = 0;
   const Profiled: ProfiledComponent<Props, Snapshot> = Object.assign(
-    (props: Props) => (
-      <React.Profiler id="test" onRender={profilerOnRender}>
-        <Component {...(props as any)} />
-      </React.Profiler>
-    ),
+    (props: Props) => {
+      const parentContext = React.useContext(ProfilerContext);
+      return (
+        <ProfilerContext.Provider value={parentContext || profilerContext}>
+          <React.Profiler id="test" onRender={profilerOnRender}>
+            <Wrapped {...(props as any)} />
+          </React.Profiler>
+        </ProfilerContext.Provider>
+      );
+    },
     {
       replaceSnapshot,
       mergeSnapshot,
@@ -325,15 +349,17 @@ export interface ProfiledHook<Props, ReturnValue>
 
 /** @internal */
 export function profileHook<ReturnValue extends ValidSnapshot, Props>(
-  renderCallback: (props: Props) => ReturnValue
+  renderCallback: (props: Props) => ReturnValue,
+  { displayName = renderCallback.name || "ProfiledHook" } = {}
 ): ProfiledHook<Props, ReturnValue> {
   let returnValue: ReturnValue;
-  const Component = (props: Props) => {
+  const ProfiledHook = (props: Props) => {
     ProfiledComponent.replaceSnapshot(renderCallback(props));
     return null;
   };
+  ProfiledHook.displayName = displayName;
   const ProfiledComponent = profile<ReturnValue, Props>({
-    Component,
+    Component: ProfiledHook,
     onRender: () => returnValue,
   });
   return Object.assign(
@@ -360,4 +386,65 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
       },
     } satisfies ProfiledHookFields<Props, ReturnValue>
   );
+}
+
+function isReactClass<Props>(
+  Component: React.ComponentType<Props>
+): Component is React.ComponentClass<Props> {
+  let proto = Component;
+  while (proto && proto !== Object) {
+    if (proto === React.Component) return true;
+    proto = Object.getPrototypeOf(proto);
+  }
+  return false;
+}
+
+function getCurrentComponentName() {
+  const owner: React.ComponentType | undefined = (React as any)
+    .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentOwner
+    ?.current?.elementType;
+  if (owner) return owner?.displayName || owner?.name;
+
+  try {
+    throw new Error();
+  } catch (e) {
+    return (e as Error).stack?.split("\n")[1].split(":")[0] || "";
+  }
+}
+
+export function useTrackComponentRender(name = getCurrentComponentName()) {
+  const ctx = React.useContext(ProfilerContext);
+  React.useLayoutEffect(() => {
+    ctx?.renderedComponents.unshift(name);
+  });
+}
+
+function wrapComponentWithTracking<Props>(
+  Component: React.ComponentType<Props>
+) {
+  if (!isReactClass(Component)) {
+    return function ComponentWithTracking(props: Props) {
+      useTrackComponentRender(Component.displayName || Component.name);
+      return Component(props);
+    };
+  }
+
+  let ctx: ProfilerContextValue;
+  class WrapperClass extends (Component as React.ComponentClass<Props, any>) {
+    constructor(props: Props) {
+      super(props);
+    }
+    componentDidMount() {
+      super.componentDidMount?.apply(this, arguments);
+      ctx!.renderedComponents.push(Component.displayName || Component.name);
+    }
+    componentDidUpdate() {
+      super.componentDidUpdate?.apply(this, arguments);
+      ctx!.renderedComponents.push(Component.displayName || Component.name);
+    }
+  }
+  return (props: any) => {
+    ctx = React.useContext(ProfilerContext)!;
+    return <WrapperClass {...props} />;
+  };
 }

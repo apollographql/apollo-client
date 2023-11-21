@@ -434,8 +434,8 @@ function renderPaginatedIntegrationTest({
   }
 
   function SuspenseFallback() {
-    ProfiledApp.setSnapshot((snapshot) => ({
-      suspenseCount: snapshot.suspenseCount + 1,
+    ProfiledApp.setSnapshot(({ suspenseCount }) => ({
+      suspenseCount: suspenseCount + 1,
     }));
     return <div>loading</div>;
   }
@@ -449,8 +449,8 @@ function renderPaginatedIntegrationTest({
   }) {
     const { data, error } = useReadQuery(queryRef);
     // count renders in the child component
-    ProfiledApp.setSnapshot((snapshot) => ({
-      count: snapshot.count + 1,
+    ProfiledApp.setSnapshot(({ count }) => ({
+      count: count + 1,
     }));
     return (
       <div>
@@ -502,9 +502,9 @@ function renderPaginatedIntegrationTest({
         <ErrorBoundary
           fallback={<div>Error</div>}
           onError={(error) => {
-            ProfiledApp.setSnapshot((snapshot) => ({
-              errorCount: snapshot.errorCount + 1,
-              errors: snapshot.errors.concat(error),
+            ProfiledApp.setSnapshot(({ errorCount, errors }) => ({
+              errorCount: errorCount + 1,
+              errors: errors.concat(error),
             }));
           }}
         >

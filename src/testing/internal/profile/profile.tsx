@@ -101,7 +101,6 @@ export function profile<
   snapshotDOM?: boolean;
   initialSnapshot?: Snapshot;
 }) {
-  let currentRender: Render<Snapshot> | undefined;
   let nextRender: Promise<Render<Snapshot>> | undefined;
   let resolveNextRender: ((render: Render<Snapshot>) => void) | undefined;
   let rejectNextRender: ((error: unknown) => void) | undefined;
@@ -169,8 +168,6 @@ export function profile<
         ? window.document.body.innerHTML
         : undefined;
       const render = new RenderInstance(baseRender, snapshot, domSnapshot);
-      // eslint-disable-next-line testing-library/render-result-naming-convention
-      currentRender = render;
       Profiled.renders.push(render);
       resolveNextRender?.(render);
     } catch (error) {

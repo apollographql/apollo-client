@@ -3145,7 +3145,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
   expect(SuspenseFallback).not.toHaveRendered();
 });
 
-it('suspends and does not use partial data when changing variables and using a "cache-first" fetch policy with returnPartialData', async () => {
+it('suspends and does not use partial data from other variables in the cache when changing variables and using a "cache-first" fetch policy with returnPartialData: true', async () => {
   const { query, mocks } = useVariablesQueryCase();
 
   const partialQuery = gql`

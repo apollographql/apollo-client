@@ -29,7 +29,7 @@ import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
-import { profile, spyOnConsole } from "../../../testing/internal";
+import { createTestProfiler, spyOnConsole } from "../../../testing/internal";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -1481,7 +1481,7 @@ describe("has the same timing as `useQuery`", () => {
       return complete ? JSON.stringify(fragmentData) : "loading";
     }
 
-    const ProfiledComponent = profile({
+    const ProfiledComponent = createTestProfiler({
       Component,
       initialSnapshot: {
         queryData: undefined as any,
@@ -1569,7 +1569,7 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify({ item: data })}</>;
     }
 
-    const ProfiledParent = profile({
+    const ProfiledParent = createTestProfiler({
       Component: Parent,
       snapshotDOM: true,
       onRender() {
@@ -1664,7 +1664,7 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify(data)}</>;
     }
 
-    const ProfiledParent = profile({
+    const ProfiledParent = createTestProfiler({
       Component: Parent,
       onRender() {
         const parent = screen.getByTestId("parent");

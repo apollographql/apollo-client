@@ -94,7 +94,7 @@ const ProfilerContext = React.createContext<ProfilerContextValue | undefined>(
 );
 
 /** @internal */
-export function profile<Snapshot extends ValidSnapshot = void>({
+export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
   onRender,
   snapshotDOM = false,
   initialSnapshot,
@@ -361,7 +361,7 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
     return null;
   };
   ProfiledHook.displayName = displayName;
-  const ProfiledComponent = profile<ReturnValue, Props>({
+  const ProfiledComponent = createTestProfiler<ReturnValue, Props>({
     Component: ProfiledHook,
     onRender: () => returnValue,
   });

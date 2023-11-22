@@ -4,7 +4,7 @@ export type {
   ProfiledHook,
 } from "./profile.js";
 export {
-  profile,
+  createTestProfiler,
   profileHook,
   useTrackComponentRender,
   WaitForRenderTimeoutError,

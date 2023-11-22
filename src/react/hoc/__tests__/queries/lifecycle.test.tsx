@@ -10,7 +10,7 @@ import { mockSingleLink } from "../../../../testing";
 import { Query as QueryComponent } from "../../../components";
 import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
-import { profile } from "../../../../testing/internal";
+import { createTestProfiler } from "../../../../testing/internal";
 
 describe("[queries] lifecycle", () => {
   // lifecycle
@@ -58,7 +58,7 @@ describe("[queries] lifecycle", () => {
       }
     );
 
-    const ProfiledApp = profile<DataValue<Data, Vars>, Vars>({
+    const ProfiledApp = createTestProfiler<DataValue<Data, Vars>, Vars>({
       Component: Container,
     });
 

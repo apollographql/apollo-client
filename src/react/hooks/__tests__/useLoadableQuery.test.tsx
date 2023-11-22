@@ -45,7 +45,7 @@ import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
   ProfiledComponent,
-  profile,
+  createTestProfiler,
   spyOnConsole,
   useTrackComponentRender,
 } from "../../../testing/internal";
@@ -174,7 +174,10 @@ function createDefaultProfiledComponents<
     return null;
   }
 
-  const ErrorFallback = profile<{ error: Error | null }, { error: Error }>({
+  const ErrorFallback = createTestProfiler<
+    { error: Error | null },
+    { error: Error }
+  >({
     Component: function Fallback({ error }) {
       ErrorFallback.replaceSnapshot({ error });
 
@@ -232,7 +235,7 @@ function renderWithClient(
 it("loads a query and suspends when the load query function is called", async () => {
   const { query, mocks } = useSimpleQueryCase();
 
-  const Profiler = profile({
+  const Profiler = createTestProfiler({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleQueryData> | null,
     },
@@ -295,7 +298,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents<VariablesCaseData>();
 
-  const App = profile({
+  const App = createTestProfiler({
     Component: function App() {
       const [loadQuery, queryRef] = useLoadableQuery(query);
 
@@ -348,7 +351,7 @@ it("changes variables on a query and resuspends when passing new variables to th
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents<VariablesCaseData>();
 
-  const App = profile({
+  const App = createTestProfiler({
     Component: () => {
       const [loadQuery, queryRef] = useLoadableQuery(query);
 
@@ -689,7 +692,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     hello: string;
   }>();
 
-  const App = profile({
+  const App = createTestProfiler({
     Component: () => {
       const [loadQuery, queryRef] = useLoadableQuery(query, {
         fetchPolicy: "cache-and-network",

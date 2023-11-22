@@ -53,7 +53,7 @@ import {
 import equal from "@wry/equality";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
-import { profile, spyOnConsole } from "../../../testing/internal";
+import { createTestProfiler, spyOnConsole } from "../../../testing/internal";
 
 function renderIntegrationTest({
   client,
@@ -332,7 +332,7 @@ function renderVariablesIntegrationTest({
     );
   }
 
-  const ProfiledApp = profile<Renders, ComponentProps<typeof App>>({
+  const ProfiledApp = createTestProfiler<Renders, ComponentProps<typeof App>>({
     Component: App,
     snapshotDOM: true,
     onRender: ({ replaceSnapshot }) => replaceSnapshot(cloneDeep(renders)),
@@ -516,7 +516,7 @@ function renderPaginatedIntegrationTest({
     );
   }
 
-  const ProfiledApp = profile({
+  const ProfiledApp = createTestProfiler({
     Component: App,
     snapshotDOM: true,
     initialSnapshot: {
@@ -3895,7 +3895,7 @@ describe("useBackgroundQuery", () => {
         );
       }
 
-      const ProfiledApp = profile({ Component: App, snapshotDOM: true });
+      const ProfiledApp = createTestProfiler({ Component: App, snapshotDOM: true });
 
       render(<ProfiledApp />);
 
@@ -4193,7 +4193,7 @@ describe("useBackgroundQuery", () => {
         );
       }
 
-      const ProfiledApp = profile({ Component: App, snapshotDOM: true });
+      const ProfiledApp = createTestProfiler({ Component: App, snapshotDOM: true });
       render(<ProfiledApp />);
 
       {

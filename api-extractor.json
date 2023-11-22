@@ -39,7 +39,7 @@
 
   "docModel": {
     "enabled": false,
-    "apiJsonFilePath": "<projectFolder>/docs/shared/<unscopedPackageName>.api.json",
+    "apiJsonFilePath": "<projectFolder>/docs/public/<unscopedPackageName>.api.json",
     "includeForgottenExports": true
   },
 

@@ -73,4 +73,3 @@ esbuild-why-*.html
 
 .yalc
 yalc.lock
-docs/shared/client.api.json

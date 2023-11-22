@@ -1,6 +1,9 @@
 [build]
   publish = "docs/public"
-  command = "npm run typedoc"
+  command = """\
+  npm run typedoc
+  npm run docmodel
+  """
 
 [build.environment]
   NODE_VERSION = "18"
@@ -13,7 +16,7 @@
   npm run docmodel
   cd ../
   rm -rf monodocs
-  git clone https://github.com/apollographql/docs --branch pr/apidoc --single-branch monodocs
+  git clone https://github.com/apollographql/docs --branch main --single-branch monodocs
   cd monodocs
   npm i
   cp -r ../docs local

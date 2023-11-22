@@ -5,7 +5,7 @@ export const toHaveRenderedTimes: MatcherFunction<[count: number]> = function (
   actual,
   count
 ) {
-  let ProfiledComponent = actual as Profiler<any, any> | ProfiledHook<any, any>;
+  let ProfiledComponent = actual as Profiler<any> | ProfiledHook<any, any>;
 
   if ("ProfiledComponent" in ProfiledComponent) {
     ProfiledComponent = ProfiledComponent.ProfiledComponent;

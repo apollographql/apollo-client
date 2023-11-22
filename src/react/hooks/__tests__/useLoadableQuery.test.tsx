@@ -351,43 +351,60 @@ it("loads a query with variables and suspends by passing variables to the loadQu
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
-  const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<VariablesCaseData>();
-
-  const App = createTestProfiler({
-    Component: () => {
-      const [loadQuery, queryRef] = useLoadableQuery(query);
-
-      return (
-        <>
-          <button onClick={() => loadQuery({ id: "1" })}>
-            Load 1st character
-          </button>
-          <button onClick={() => loadQuery({ id: "2" })}>
-            Load 2nd character
-          </button>
-          <Suspense fallback={<SuspenseFallback />}>
-            {queryRef && <ReadQueryHook queryRef={queryRef} />}
-          </Suspense>
-        </>
-      );
+  const Profiler = createTestProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<VariablesCaseData> | null,
     },
   });
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  const App = () => {
+    useTrackRender();
+    const [loadQuery, queryRef] = useLoadableQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery({ id: "1" })}>
+          Load 1st character
+        </button>
+        <button onClick={() => loadQuery({ id: "2" })}>
+          Load 2nd character
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  };
+
+  const { user } = renderWithMocks(
+    <Profiler>
+      <App />
+    </Profiler>,
+    { mocks }
+  );
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+  }
 
   await act(() => user.click(screen.getByText("Load 1st character")));
 
-  expect(SuspenseFallback).toHaveRendered();
-  expect(ReadQueryHook).not.toHaveRendered();
-  expect(App).toHaveRenderedTimes(2);
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -396,21 +413,24 @@ it("changes variables on a query and resuspends when passing new variables to th
 
   await act(() => user.click(screen.getByText("Load 2nd character")));
 
-  expect(SuspenseFallback).toHaveRenderedTimes(2);
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: { character: { id: "2", name: "Black Widow" } },
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
   }
 
-  expect(SuspenseFallback).toHaveRenderedTimes(2);
-  expect(App).toHaveRenderedTimes(5);
-  expect(ReadQueryHook).toHaveRenderedTimes(2);
+  await expect(Profiler).not.toRerender();
 });
 
 it("allows the client to be overridden", async () => {

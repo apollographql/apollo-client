@@ -163,13 +163,9 @@ interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultC
 
 // @public (undocumented)
 export namespace WebSocketLink {
-    // (undocumented)
     export interface WebSocketParams {
-        // (undocumented)
         options?: ClientOptions;
-        // (undocumented)
         uri: string;
-        // (undocumented)
         webSocketImpl?: any;
     }
 }
@@ -183,13 +179,9 @@ export class WebSocketLink extends ApolloLink {
     request(operation: Operation): Observable<FetchResult> | null;
 }
 
-// (undocumented)
 export interface WebSocketParams {
-    // (undocumented)
     options?: ClientOptions;
-    // (undocumented)
     uri: string;
-    // (undocumented)
     webSocketImpl?: any;
 }
 

@@ -27,7 +27,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     abstract diff<T>(query: Cache_2.DiffOptions): Cache_2.DiffResult<T>;
     // (undocumented)
     abstract evict(options: Cache_2.EvictOptions): boolean;
-    // (undocumented)
     abstract extract(optimistic?: boolean): TSerialized;
     // (undocumented)
     gc(): string[];
@@ -49,7 +48,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     abstract removeOptimistic(id: string): void;
     // (undocumented)
     abstract reset(options?: Cache_2.ResetOptions): Promise<void>;
-    // (undocumented)
     abstract restore(serializedState: TSerialized): ApolloCache<TSerialized>;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
@@ -75,7 +73,7 @@ export type ApolloReducerConfig = {
     addTypename?: boolean;
 };
 
-// @public (undocumented)
+// @public
 type AsStoreObject<T extends {
     __typename?: string;
 }> = {
@@ -219,40 +217,27 @@ export namespace DataProxy {
     };
     // (undocumented)
     export interface Fragment<TVariables, TData> {
-        // (undocumented)
         fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
-        // (undocumented)
         fragmentName?: string;
-        // (undocumented)
         id?: string;
-        // (undocumented)
         variables?: TVariables;
     }
     // (undocumented)
     export interface Query<TVariables, TData> {
-        // (undocumented)
         id?: string;
-        // (undocumented)
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-        // (undocumented)
         variables?: TVariables;
     }
     // (undocumented)
     export interface ReadFragmentOptions<TData, TVariables> extends Fragment<TVariables, TData> {
-        // (undocumented)
         canonizeResults?: boolean;
-        // (undocumented)
         optimistic?: boolean;
-        // (undocumented)
         returnPartialData?: boolean;
     }
     // (undocumented)
     export interface ReadQueryOptions<TData, TVariables> extends Query<TVariables, TData> {
-        // (undocumented)
         canonizeResults?: boolean;
-        // (undocumented)
         optimistic?: boolean;
-        // (undocumented)
         returnPartialData?: boolean;
     }
     // (undocumented)
@@ -266,11 +251,8 @@ export namespace DataProxy {
     }
     // (undocumented)
     export interface WriteOptions<TData> {
-        // (undocumented)
         broadcast?: boolean;
-        // (undocumented)
         data: TData;
-        // (undocumented)
         overwrite?: boolean;
     }
     // (undocumented)
@@ -278,15 +260,11 @@ export namespace DataProxy {
     }
 }
 
-// @public (undocumented)
+// @public
 export interface DataProxy {
-    // (undocumented)
     readFragment<FragmentType, TVariables = any>(options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): FragmentType | null;
-    // (undocumented)
     readQuery<QueryType, TVariables = any>(options: DataProxy.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): QueryType | null;
-    // (undocumented)
     writeFragment<TData = any, TVariables = any>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    // (undocumented)
     writeQuery<TData = any, TVariables = any>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
@@ -472,7 +450,7 @@ type FieldValueGetter = EntityStore["getFieldValue"];
 // @public (undocumented)
 type FlavorableWriteContext = Pick<WriteContext, "clientOnly" | "deferred" | "flavors">;
 
-// @public (undocumented)
+// @public
 interface FragmentMap {
     // (undocumented)
     [fragmentName: string]: FragmentDefinitionNode;
@@ -706,7 +684,7 @@ export type Modifiers<T extends Record<string, any> = Record<string, unknown>> =
     [FieldName in keyof T]: Modifier<StoreObjectValueMaybeReference<Exclude<T[FieldName], undefined>>>;
 }>;
 
-// @public (undocumented)
+// @public
 export interface NormalizedCache {
     // (undocumented)
     canRead: CanReadFunction;
@@ -732,17 +710,14 @@ export interface NormalizedCache {
     modify<Entity extends Record<string, any>>(dataId: string, fields: Modifiers<Entity> | AllFieldsModifier<Entity>): boolean;
     // (undocumented)
     release(rootId: string): number;
-    // (undocumented)
     replace(newData: NormalizedCacheObject): void;
-    // (undocumented)
     retain(rootId: string): number;
-    // (undocumented)
     toObject(): NormalizedCacheObject;
     // (undocumented)
     toReference: ToReferenceFunction;
 }
 
-// @public (undocumented)
+// @public
 export interface NormalizedCacheObject {
     // (undocumented)
     [dataId: string]: StoreObject | undefined;
@@ -960,7 +935,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:126:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:132:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

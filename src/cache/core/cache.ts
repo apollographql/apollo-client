@@ -126,11 +126,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   }
 
   // DataProxy API
-  /**
-   *
-   * @param options
-   * @param optimistic
-   */
   public readQuery<QueryType, TVariables = any>(
     options: Cache.ReadQueryOptions<QueryType, TVariables>,
     optimistic = !!options.optimistic

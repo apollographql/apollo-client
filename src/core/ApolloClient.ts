@@ -43,25 +43,78 @@ export interface DefaultOptions {
 
 let hasSuggestedDevtools = false;
 
-export type ApolloClientOptions<TCacheShape> = {
+export interface ApolloClientOptions<TCacheShape> {
+  /**
+   * The URI of the GraphQL endpoint that Apollo Client will communicate with.
+   *
+   * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
+   */
   uri?: string | UriFunction;
   credentials?: string;
   headers?: Record<string, string>;
+  /**
+   * You can provide an {@link ApolloLink} instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
+   *
+   * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
+   */
   link?: ApolloLink;
+  /**
+   * The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
+   *
+   * For more information, see [Configuring the cache](https://www.apollographql.com/docs/react/caching/cache-configuration/).
+   */
   cache: ApolloCache<TCacheShape>;
+  /**
+   * The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
+   *
+   * @defaultValue `0` (no delay)
+   */
   ssrForceFetchDelay?: number;
+  /**
+   * When using Apollo Client for [server-side rendering](https://www.apollographql.com/docs/react//performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
+   *
+   * @defaultValue `false`
+   */
   ssrMode?: boolean;
+  /**
+   * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to Apollo Client.
+   *
+   * The default value is `false` in production and `true` in development (if there is a `window` object).
+   */
   connectToDevTools?: boolean;
+  /**
+   * If `false`, Apollo Client sends every created query to the server, even if a _completely_ identical query (identical in terms of query string, variable values, and operationName) is already in flight.
+   *
+   * @defaultValue `true`
+   */
   queryDeduplication?: boolean;
+  /**
+   * Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
+   *
+   * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
+   */
   defaultOptions?: DefaultOptions;
+  /**
+   * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
+   *
+   * @defaultValue `false`
+   */
   assumeImmutableResults?: boolean;
   resolvers?: Resolvers | Resolvers[];
   typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: FragmentMatcher;
+  /**
+   * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
+   */
   name?: string;
+  /**
+   * A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
+   *
+   * This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
+   */
   version?: string;
   documentTransform?: DocumentTransform;
-};
+}
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
 // previously declared and exported from this module, and then reexported from
@@ -72,7 +125,7 @@ export { mergeOptions };
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
- * and mutations) to a GraphQL spec-compliant server over a {@link NetworkInterface} instance,
+ * and mutations) to a GraphQL spec-compliant server over an {@link ApolloLink} instance,
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through {@link Observable} instances.
  */
@@ -94,36 +147,28 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * Constructs an instance of {@link ApolloClient}.
    *
-   * @param uri The GraphQL endpoint that Apollo Client will connect to. If
-   *            `link` is configured, this option is ignored.
-   * @param link The {@link ApolloLink} over which GraphQL documents will be resolved into a response.
+   * @example
+   * ```js
+   * import { ApolloClient, InMemoryCache } from '@apollo/client';
    *
-   * @param cache The initial cache to use in the data store.
+   * const cache = new InMemoryCache();
    *
-   * @param ssrMode Determines whether this is being run in Server Side Rendering (SSR) mode.
+   * const client = new ApolloClient({
+   *   // Provide required constructor fields
+   *   cache: cache,
+   *   uri: 'http://localhost:4000/',
    *
-   * @param ssrForceFetchDelay Determines the time interval before we force fetch queries for a
-   * server side render.
-   *
-   * @param queryDeduplication If set to false, a query will still be sent to the server even if a query
-   * with identical parameters (query, variables, operationName) is already in flight.
-   *
-   * @param defaultOptions Used to set application wide defaults for the
-   *                       options supplied to `watchQuery`, `query`, or
-   *                       `mutate`.
-   *
-   * @param assumeImmutableResults When this option is true, the client will assume results
-   *                               read from the cache are never mutated by application code,
-   *                               which enables substantial performance optimizations.
-   *
-   * @param name A custom name that can be used to identify this client, when
-   *             using Apollo client awareness features. E.g. "iOS".
-   *
-   * @param version A custom version that can be used to identify this client,
-   *                when using Apollo client awareness features. This is the
-   *                version of your client, which you may want to increment on
-   *                new builds. This is NOT the version of Apollo Client that
-   *                you are using.
+   *   // Provide some optional constructor fields
+   *   name: 'react-web-client',
+   *   version: '1.3',
+   *   queryDeduplication: false,
+   *   defaultOptions: {
+   *     watchQuery: {
+   *       fetchPolicy: 'cache-and-network',
+   *     },
+   *   },
+   * });
+   * ```
    */
   constructor(options: ApolloClientOptions<TCacheShape>) {
     if (!options.cache) {
@@ -339,10 +384,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * This resolves a single query according to the options specified and
-   * returns a {@link Promise} which is either resolved with the resulting data
+   * returns a `Promise` which is either resolved with the resulting data
    * or rejected with an error.
    *
-   * @param options An object of type {@link QueryOptions} that allows us to
+   * @param options - An object of type {@link QueryOptions} that allows us to
    * describe how this query should be treated e.g. whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
@@ -371,7 +416,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * This resolves a single mutation according to the options specified and returns a
-   * {@link Promise} which is either resolved with the resulting data or rejected with an
+   * Promise which is either resolved with the resulting data or rejected with an
    * error.
    *
    * It takes options as an object with the following keys and values:
@@ -409,7 +454,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * the root query. To start at a specific id returned by `dataIdFromObject`
    * use `readFragment`.
    *
-   * @param optimistic Set to `true` to allow `readQuery` to return
+   * @param optimistic - Set to `true` to allow `readQuery` to return
    * optimistic results. Is `false` by default.
    */
   public readQuery<T = any, TVariables = OperationVariables>(
@@ -430,7 +475,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    *
-   * @param optimistic Set to `true` to allow `readFragment` to return
+   * @param optimistic - Set to `true` to allow `readFragment` to return
    * optimistic results. Is `false` by default.
    */
   public readFragment<T = any, TVariables = OperationVariables>(

@@ -41,7 +41,7 @@ export type RefetchWritePolicy = "merge" | "overwrite";
 
 /**
  * errorPolicy determines the level of events for errors in the execution result. The options are:
- * - none (default): any errors from the request are treated like runtime errors and the observable is stopped (XXX this is default to lower breaking changes going from AC 1.0 => 2.0)
+ * - none (default): any errors from the request are treated like runtime errors and the observable is stopped
  * - ignore: errors from the request do not stop the observable, but also don't call `next`
  * - all: errors are treated like data and will notify observables
  */
@@ -118,7 +118,7 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
 export interface WatchQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
   TData = any,
-> extends Omit<QueryOptions<TVariables, TData>, "fetchPolicy"> {
+> {
   /**
    * Specifies the {@link FetchPolicy} to be used for this query.
    */
@@ -149,6 +149,33 @@ export interface WatchQueryOptions<
    * behavior, for backwards compatibility with Apollo Client 3.x.
    */
   refetchWritePolicy?: RefetchWritePolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#query:member} */
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
+  variables?: TVariables;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#context:member} */
+  context?: DefaultContext;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#pollInterval:member} */
+  pollInterval?: number;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#notifyOnNetworkStatusChange:member} */
+  notifyOnNetworkStatusChange?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#returnPartialData:member} */
+  returnPartialData?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#partialRefetch:member} */
+  partialRefetch?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#canonizeResults:member} */
+  canonizeResults?: boolean;
 }
 
 export interface NextFetchPolicyContext<

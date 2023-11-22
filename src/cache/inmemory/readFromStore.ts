@@ -227,9 +227,6 @@ export class StoreReader {
   /**
    * Given a store and a query, return as much of the result as possible and
    * identify if any data was missing from the store.
-   * @param  {DocumentNode} query A parsed GraphQL query document
-   * @param  {Store} store The Apollo Client store object
-   * @return {result: Object, complete: [boolean]}
    */
   public diffQueryAgainstStore<T>({
     store,

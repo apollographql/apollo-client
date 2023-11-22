@@ -364,7 +364,7 @@ export class ObservableQuery<
    * Update the variables of this observable query, and fetch the new results.
    * This method should be preferred over `setVariables` in most use cases.
    *
-   * @param variables: The new set of variables. If there are missing variables,
+   * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
   public refetch(
@@ -614,9 +614,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * Note: the promise will return null immediately if the query is not active
    * (there are no subscribers).
    *
-   * @private
-   *
-   * @param variables: The new set of variables. If there are missing variables,
+   * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
   public setVariables(

@@ -108,7 +108,7 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
   ) => void;
   snapshotDOM?: boolean;
   initialSnapshot?: Snapshot;
-}) {
+} = {}) {
   let nextRender: Promise<Render<Snapshot>> | undefined;
   let resolveNextRender: ((render: Render<Snapshot>) => void) | undefined;
   let rejectNextRender: ((error: unknown) => void) | undefined;

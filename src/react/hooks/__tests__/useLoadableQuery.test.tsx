@@ -724,7 +724,8 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
 });
 
 it("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
-  const query: TypedDocumentNode<{ hello: string }, never> = gql`
+  type QueryData = { hello: string };
+  const query: TypedDocumentNode<QueryData, never> = gql`
     query {
       hello
     }
@@ -742,37 +743,44 @@ it("returns initial cache data followed by network data when the fetch policy is
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents<{
-    hello: string;
-  }>();
+  const Profiler = createDefaultProfiler<QueryData>();
 
-  const App = createTestProfiler({
-    Component: () => {
-      const [loadQuery, queryRef] = useLoadableQuery(query, {
-        fetchPolicy: "cache-and-network",
-      });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
 
-      return (
-        <>
-          <button onClick={() => loadQuery()}>Load query</button>
-          <Suspense fallback={<SuspenseFallback />}>
-            {queryRef && <ReadQueryHook queryRef={queryRef} />}
-          </Suspense>
-        </>
-      );
-    },
-  });
+  function App() {
+    useTrackRender();
+    const [loadQuery, queryRef] = useLoadableQuery(query, {
+      fetchPolicy: "cache-and-network",
+    });
 
-  const { user } = renderWithClient(<App />, { client });
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user } = renderWithClient(
+    <Profiler>
+      <App />
+    </Profiler>,
+    { client }
+  );
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: { hello: "from cache" },
       networkStatus: NetworkStatus.loading,
       error: undefined,
@@ -780,9 +788,10 @@ it("returns initial cache data followed by network data when the fetch policy is
   }
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: { hello: "from link" },
       networkStatus: NetworkStatus.ready,
       error: undefined,

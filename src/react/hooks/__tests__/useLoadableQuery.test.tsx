@@ -187,6 +187,7 @@ function createDefaultProfiledComponents<
   }
 
   function ErrorFallback({ error }: { error: Error }) {
+    useTrackRender();
     profiler.mergeSnapshot({ error } as Partial<Snapshot>);
 
     return <div>Oops</div>;
@@ -2233,8 +2234,10 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     },
   ];
 
+  const Profiler = createDefaultProfiler<VariablesCaseData>();
+
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
-    createDefaultProfiledComponents<VariablesCaseData>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query);
@@ -2252,15 +2255,39 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  const { user } = renderWithMocks(
+    <Profiler>
+      <App />
+    </Profiler>,
+    { mocks }
+  );
 
   await act(() => user.click(screen.getByText("Load query")));
-  await ReadQueryHook.waitForNextSnapshot();
-  await act(() => user.click(screen.getByText("Refetch")));
+
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
 
   {
-    const { snapshot } = await ErrorFallback.takeRender();
+    const { snapshot } = await Profiler.takeRender();
 
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: "Captain Marvel" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Refetch")));
+
+  // Refetch
+  await Profiler.takeRender();
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ErrorFallback]);
     expect(snapshot.error).toEqual(
       new ApolloError({
         graphQLErrors: [new GraphQLError("Something went wrong")],

@@ -20,6 +20,8 @@ import type {
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
+  RefetchWritePolicy,
+  ErrorPolicy,
 } from "../../core/index.js";
 
 /* QueryReference type */
@@ -40,6 +42,11 @@ export interface BaseQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends Omit<WatchQueryOptions<TVariables>, "query"> {
   ssr?: boolean;
+  /**
+   * The instance of `ApolloClient` to use to execute the query.
+   *
+   * By default, the instance that's passed down via context is used, but you can provide a different instance here.
+   */
   client?: ApolloClient<any>;
   context?: DefaultContext;
 }
@@ -122,17 +129,32 @@ export type SuspenseQueryHookFetchPolicy = Extract<
 export interface SuspenseQueryHookOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-> extends Pick<
-    QueryHookOptions<TData, TVariables>,
-    | "client"
-    | "variables"
-    | "errorPolicy"
-    | "context"
-    | "canonizeResults"
-    | "returnPartialData"
-    | "refetchWritePolicy"
-  > {
+> {
+  /** {@inheritDoc @apollo/client!BaseQueryOptions#client:member} */
+  client?: ApolloClient<any>;
+  /** {@inheritDoc @apollo/client!QueryOptions#context:member} */
+  context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
+  variables?: TVariables;
+  /** {@inheritDoc @apollo/client!QueryOptions#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptions#canonizeResults:member} */
+  canonizeResults?: boolean;
+  /** {@inheritDoc @apollo/client!QueryOptions#returnPartialData:member} */
+  returnPartialData?: boolean;
+  /** {@inheritdoc @apollo/client!WatchQueryOptions#refetchWritePolicy:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+  /**
+   * Watched queries must opt into overwriting existing data on refetch, by passing `refetchWritePolicy: "overwrite"` in their `WatchQueryOptions`.
+   *
+   * The default value is `"overwrite"`.
+   */
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
+  /**
+   * A unique identifier for the query. Each item in the array must be a stable identifier to prevent infinite fetches.
+   *
+   * This is useful when using the same query and variables combination in more than one component, otherwise the components may clobber each other. This can also be used to force the query to re-evaluate fresh.
+   */
   queryKey?: string | number | any[];
 
   /**

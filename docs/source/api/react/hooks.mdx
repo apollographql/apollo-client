@@ -11,7 +11,6 @@ import SubscriptionOptions3 from '../../../shared/subscription-options.mdx';
 import SubscriptionResult3 from '../../../shared/subscription-result.mdx';
 import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
 import UseFragmentResult from '../../../shared/useFragment-result.mdx';
-import UseSuspenseQueryOptions from '../../../shared/useSuspenseQuery-options.mdx';
 import UseBackgroundQueryOptions from '../../../shared/useBackgroundQuery-options.mdx';
 import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx';
 import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
@@ -521,7 +520,10 @@ function useSuspenseQuery<TData, TVariables>(
 
 Instead of passing a `SuspenseQueryHookOptions` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
 
-<UseSuspenseQueryOptions />
+<InterfaceDetails
+  canonicalReference="@apollo/client!SuspenseQueryHookOptions:interface"
+  customPropertyOrder={["variables", "errorPolicy", "skip"]}
+/>
 
 ### Result
 

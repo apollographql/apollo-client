@@ -450,8 +450,14 @@ it("allows the client to be overridden", async () => {
     cache: new InMemoryCache(),
   });
 
+  const Profiler = createTestProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleQueryData> | null,
+    },
+  });
+
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<SimpleQueryData>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [loadQuery, queryRef] = useLoadableQuery(query, {
@@ -468,13 +474,23 @@ it("allows the client to be overridden", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client: globalClient });
+  const { user } = renderWithClient(
+    <Profiler>
+      <App />
+    </Profiler>,
+    { client: globalClient }
+  );
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  const snapshot = await ReadQueryHook.takeSnapshot();
+  // initial
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
 
-  expect(snapshot).toEqual({
+  const { snapshot } = await Profiler.takeRender();
+
+  expect(snapshot.result).toEqual({
     data: { greeting: "local hello" },
     networkStatus: NetworkStatus.ready,
     error: undefined,

@@ -2179,10 +2179,13 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     },
   ];
 
+  const Profiler = createDefaultProfiler<VariablesCaseData>();
+
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<VariablesCaseData>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query);
 
     return (
@@ -2196,20 +2199,52 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  const { user } = renderWithMocks(
+    <Profiler>
+      <App />
+    </Profiler>,
+    { mocks }
+  );
+
+  // initial render
+  await Profiler.takeRender();
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).toHaveRendered();
-  await ReadQueryHook.takeSnapshot();
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  // initial result
+  await Profiler.takeRender();
 
   const button = screen.getByText("Refetch");
 
   await act(() => user.click(button));
-  expect(SuspenseFallback).toHaveRenderedTimes(2);
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  // refetch result
+  await Profiler.takeRender();
 
   await act(() => user.click(button));
-  expect(SuspenseFallback).toHaveRenderedTimes(3);
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  // refetch result
+  await Profiler.takeRender();
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("throws errors when errors are returned after calling `refetch`", async () => {

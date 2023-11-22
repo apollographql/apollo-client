@@ -290,54 +290,60 @@ it("loads a query and suspends when the load query function is called", async ()
 it("loads a query with variables and suspends by passing variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
-  const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<VariablesCaseData>();
-
-  const App = createTestProfiler({
-    Component: function App() {
-      const [loadQuery, queryRef] = useLoadableQuery(query);
-
-      return (
-        <>
-          <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
-          <Suspense fallback={<SuspenseFallback />}>
-            {queryRef && <ReadQueryHook queryRef={queryRef} />}
-          </Suspense>
-        </>
-      );
+  const Profiler = createTestProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<VariablesCaseData> | null,
     },
   });
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
+
+  function App() {
+    useTrackComponentRender();
+    const [loadQuery, queryRef] = useLoadableQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery({ id: "1" })}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user } = renderWithMocks(
+    <Profiler>
+      <App />
+    </Profiler>,
+    { mocks }
+  );
 
   {
-    const { renderedComponents } = await App.takeRender();
+    const { renderedComponents } = await Profiler.takeRender();
     expect(renderedComponents).toStrictEqual(["App"]);
   }
 
   await act(() => user.click(screen.getByText("Load query")));
 
   {
-    const { renderedComponents } = await App.takeRender();
+    const { renderedComponents } = await Profiler.takeRender();
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { renderedComponents } = await App.takeRender();
-    expect(renderedComponents).toStrictEqual(["UseReadQuery"]);
-  }
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  {
-    const snapshot = await ReadQueryHook.takeSnapshot();
-
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
+    expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
   }
 
-  await expect(App).not.toRerender();
+  await expect(Profiler).not.toRerender();
 });
 
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {

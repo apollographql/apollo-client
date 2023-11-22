@@ -263,7 +263,7 @@ it("loads a query and suspends when the load query function is called", async ()
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual(["App"]);
+    expect(renderedComponents).toStrictEqual([App]);
   }
 
   await act(() => user.click(screen.getByText("Load query")));
@@ -271,7 +271,7 @@ it("loads a query and suspends when the load query function is called", async ()
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
@@ -283,7 +283,7 @@ it("loads a query and suspends when the load query function is called", async ()
       networkStatus: NetworkStatus.ready,
     });
 
-    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
   }
 });
 
@@ -322,20 +322,20 @@ it("loads a query with variables and suspends by passing variables to the loadQu
 
   {
     const { renderedComponents } = await Profiler.takeRender();
-    expect(renderedComponents).toStrictEqual(["App"]);
+    expect(renderedComponents).toStrictEqual([App]);
   }
 
   await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { renderedComponents } = await Profiler.takeRender();
-    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
       networkStatus: NetworkStatus.ready,

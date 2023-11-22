@@ -87,7 +87,7 @@ interface ProfiledComponentFields<Snapshot> {
 }
 
 interface ProfilerContextValue {
-  renderedComponents: string[];
+  renderedComponents: React.ComponentType[];
 }
 const ProfilerContext = React.createContext<ProfilerContextValue | undefined>(
   undefined
@@ -388,22 +388,17 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
   );
 }
 
-function getCurrentComponentName() {
+export function useTrackComponentRender() {
   const owner: React.ComponentType | undefined = (React as any)
     .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentOwner
     ?.current?.elementType;
-  if (owner) return owner?.displayName || owner?.name;
 
-  try {
-    throw new Error();
-  } catch (e) {
-    return (e as Error).stack?.split("\n")[1].split(":")[0] || "";
+  if (!owner) {
+    throw new Error("useTrackComponentRender: Unable to determine hook owner");
   }
-}
 
-export function useTrackComponentRender(name = getCurrentComponentName()) {
   const ctx = React.useContext(ProfilerContext);
   React.useLayoutEffect(() => {
-    ctx?.renderedComponents.unshift(name);
+    ctx?.renderedComponents.unshift(owner);
   });
 }

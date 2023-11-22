@@ -504,8 +504,14 @@ it("passes context to the link", async () => {
     }),
   });
 
+  const Profiler = createTestProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<QueryData> | null,
+    },
+  });
+
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<QueryData>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [loadQuery, queryRef] = useLoadableQuery(query, {
@@ -522,13 +528,23 @@ it("passes context to the link", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(
+    <Profiler>
+      <App />
+    </Profiler>,
+    { client }
+  );
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  const snapshot = await ReadQueryHook.takeSnapshot();
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
 
-  expect(snapshot).toEqual({
+  const { snapshot } = await Profiler.takeRender();
+
+  expect(snapshot.result).toEqual({
     data: { context: { valueA: "A", valueB: "B" } },
     networkStatus: NetworkStatus.ready,
     error: undefined,

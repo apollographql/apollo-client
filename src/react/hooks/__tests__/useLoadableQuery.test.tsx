@@ -601,8 +601,10 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     link: new MockLink([]),
   });
 
+  const Profiler = createDefaultProfiler<QueryData>();
+
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<QueryData>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [loadQuery, queryRef] = useLoadableQuery(query, {
@@ -619,15 +621,23 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(
+    <Profiler>
+      <App />
+    </Profiler>,
+    { client }
+  );
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  const snapshot = await ReadQueryHook.takeSnapshot();
-  const resultSet = new Set(snapshot.data.results);
+  // initial render
+  await Profiler.takeRender();
+
+  const { snapshot } = await Profiler.takeRender();
+  const resultSet = new Set(snapshot.result?.data.results);
   const values = Array.from(resultSet).map((item) => item.value);
 
-  expect(snapshot).toEqual({
+  expect(snapshot.result).toEqual({
     data: { results },
     networkStatus: NetworkStatus.ready,
     error: undefined,

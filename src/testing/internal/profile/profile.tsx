@@ -334,44 +334,45 @@ type ProfiledHookFields<ReturnValue> =
 export interface ProfiledHook<Props, ReturnValue>
   extends React.FC<Props>,
     ProfiledHookFields<ReturnValue> {
-  ProfiledComponent: Profiler<ReturnValue>;
+  Profiler: Profiler<ReturnValue>;
 }
 
 /** @internal */
 export function profileHook<ReturnValue extends ValidSnapshot, Props>(
-  renderCallback: (props: Props) => ReturnValue,
-  { displayName = renderCallback.name || "ProfiledHook" } = {}
+  renderCallback: (props: Props) => ReturnValue
 ): ProfiledHook<Props, ReturnValue> {
-  let returnValue: ReturnValue;
+  const Profiler = createTestProfiler<ReturnValue>();
+
   const ProfiledHook = (props: Props) => {
-    ProfiledComponent.replaceSnapshot(renderCallback(props));
+    Profiler.replaceSnapshot(renderCallback(props));
     return null;
   };
-  ProfiledHook.displayName = displayName;
-  const ProfiledComponent = createTestProfiler<ReturnValue>({
-    onRender: () => returnValue,
-  });
+
   return Object.assign(
-    function ProfiledHook(props: Props) {
-      return <ProfiledComponent {...(props as any)} />;
+    function App(props: Props) {
+      return (
+        <Profiler>
+          <ProfiledHook {...(props as any)} />
+        </Profiler>
+      );
     },
     {
-      ProfiledComponent,
+      Profiler,
     },
     {
-      renders: ProfiledComponent.renders,
-      totalSnapshotCount: ProfiledComponent.totalRenderCount,
+      renders: Profiler.renders,
+      totalSnapshotCount: Profiler.totalRenderCount,
       async peekSnapshot(options) {
-        return (await ProfiledComponent.peekRender(options)).snapshot;
+        return (await Profiler.peekRender(options)).snapshot;
       },
       async takeSnapshot(options) {
-        return (await ProfiledComponent.takeRender(options)).snapshot;
+        return (await Profiler.takeRender(options)).snapshot;
       },
       getCurrentSnapshot() {
-        return ProfiledComponent.getCurrentRender().snapshot;
+        return Profiler.getCurrentRender().snapshot;
       },
       async waitForNextSnapshot(options) {
-        return (await ProfiledComponent.waitForNextRender(options)).snapshot;
+        return (await Profiler.waitForNextRender(options)).snapshot;
       },
     } satisfies ProfiledHookFields<ReturnValue>
   );

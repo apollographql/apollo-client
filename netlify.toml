@@ -1,9 +1,6 @@
 [build]
   publish = "docs/public"
-  command = """\
-  npm run typedoc
-  npm run docmodel
-  """
+  command = "npm run typedoc; npm run docmodel"
 
 [build.environment]
   NODE_VERSION = "18"

@@ -1,31 +1,33 @@
 import * as React from "react";
 
-export interface RenderContextValue {
+export interface ProfilerContextValue {
   renderedComponents: React.ComponentType[];
 }
 
-const RenderContext = React.createContext<RenderContextValue | undefined>(
+const ProfilerContext = React.createContext<ProfilerContextValue | undefined>(
   undefined
 );
 
-export function RenderContextProvider({
+export function ProfilerContextProvider({
   children,
   value,
 }: {
   children: React.ReactNode;
-  value: RenderContextValue;
+  value: ProfilerContextValue;
 }) {
-  const parentContext = useRenderContext();
+  const parentContext = useProfilerContext();
 
   if (parentContext) {
     throw new Error("Profilers should not be nested in the same tree");
   }
 
   return (
-    <RenderContext.Provider value={value}>{children}</RenderContext.Provider>
+    <ProfilerContext.Provider value={value}>
+      {children}
+    </ProfilerContext.Provider>
   );
 }
 
-export function useRenderContext() {
-  return React.useContext(RenderContext);
+export function useProfilerContext() {
+  return React.useContext(ProfilerContext);
 }

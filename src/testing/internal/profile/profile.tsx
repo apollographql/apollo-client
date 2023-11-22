@@ -8,8 +8,8 @@ global.TextDecoder ??= TextDecoder;
 import type { Render, BaseRender } from "./Render.js";
 import { RenderInstance } from "./Render.js";
 import { applyStackTrace, captureStackTrace } from "./traces.js";
-import type { RenderContextValue } from "./context.js";
-import { RenderContextProvider, useRenderContext } from "./context.js";
+import type { ProfilerContextValue } from "./context.js";
+import { ProfilerContextProvider, useProfilerContext } from "./context.js";
 
 type ValidSnapshot = void | (object & { /* not a function */ call?: never });
 
@@ -135,7 +135,7 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
     }));
   };
 
-  const renderContext: RenderContextValue = {
+  const profilerContext: ProfilerContextValue = {
     renderedComponents: [],
   };
 
@@ -179,9 +179,9 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
         baseRender,
         snapshot,
         domSnapshot,
-        renderContext.renderedComponents
+        profilerContext.renderedComponents
       );
-      renderContext.renderedComponents = [];
+      profilerContext.renderedComponents = [];
       Profiler.renders.push(render);
       resolveNextRender?.(render);
     } catch (error) {
@@ -200,11 +200,11 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
   const Profiler: Profiler<Snapshot> = Object.assign(
     ({ children }: ProfilerProps) => {
       return (
-        <RenderContextProvider value={renderContext}>
+        <ProfilerContextProvider value={profilerContext}>
           <React.Profiler id="test" onRender={profilerOnRender}>
             {children}
           </React.Profiler>
-        </RenderContextProvider>
+        </ProfilerContextProvider>
       );
     },
     {
@@ -387,7 +387,7 @@ export function useTrackRender() {
     throw new Error("useTrackComponentRender: Unable to determine hook owner");
   }
 
-  const ctx = useRenderContext();
+  const ctx = useProfilerContext();
 
   if (!ctx) {
     throw new Error(

@@ -175,9 +175,12 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
       const domSnapshot = snapshotDOM
         ? window.document.body.innerHTML
         : undefined;
-      const render = new RenderInstance(baseRender, snapshot, domSnapshot, {
-        ...renderContext,
-      });
+      const render = new RenderInstance(
+        baseRender,
+        snapshot,
+        domSnapshot,
+        renderContext.renderedComponents
+      );
       renderContext.renderedComponents = [];
       Profiler.renders.push(render);
       resolveNextRender?.(render);

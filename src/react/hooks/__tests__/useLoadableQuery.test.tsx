@@ -262,21 +262,21 @@ it("loads a query and suspends when the load query function is called", async ()
   );
 
   {
-    const { context } = await Profiler.takeRender();
+    const { renderedComponents } = await Profiler.takeRender();
 
-    expect(context.renderedComponents).toStrictEqual([App]);
+    expect(renderedComponents).toStrictEqual([App]);
   }
 
   await act(() => user.click(screen.getByText("Load query")));
 
   {
-    const { context } = await Profiler.takeRender();
+    const { renderedComponents } = await Profiler.takeRender();
 
-    expect(context.renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot, context } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -284,7 +284,7 @@ it("loads a query and suspends when the load query function is called", async ()
       networkStatus: NetworkStatus.ready,
     });
 
-    expect(context.renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
   }
 });
 
@@ -322,21 +322,23 @@ it("loads a query with variables and suspends by passing variables to the loadQu
   );
 
   {
-    const { context } = await Profiler.takeRender();
-    expect(context.renderedComponents).toStrictEqual([App]);
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
   }
 
   await act(() => user.click(screen.getByText("Load query")));
 
   {
-    const { context } = await Profiler.takeRender();
-    expect(context.renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot, context } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(context.renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
       networkStatus: NetworkStatus.ready,

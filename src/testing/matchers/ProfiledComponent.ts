@@ -8,15 +8,12 @@ import type {
 
 export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
   async function (actual, options) {
-    const _profiled = actual as Profiler<any, any> | ProfiledHook<any, any>;
-    const profiled =
-      "ProfiledComponent" in _profiled
-        ? _profiled.ProfiledComponent
-        : _profiled;
+    const _profiler = actual as Profiler<any> | ProfiledHook<any, any>;
+    const profiler = "Profiler" in _profiler ? _profiler.Profiler : _profiler;
     const hint = this.utils.matcherHint("toRerender", "ProfiledComponent", "");
     let pass = true;
     try {
-      await profiled.peekRender({ timeout: 100, ...options });
+      await profiler.peekRender({ timeout: 100, ...options });
     } catch (e) {
       if (e instanceof WaitForRenderTimeoutError) {
         pass = false;
@@ -43,26 +40,25 @@ const failed = {};
 export const toRenderExactlyTimes: MatcherFunction<
   [times: number, options?: NextRenderOptions]
 > = async function (actual, times, optionsPerRender) {
-  const _profiled = actual as Profiler<any, any> | ProfiledHook<any, any>;
-  const profiled =
-    "ProfiledComponent" in _profiled ? _profiled.ProfiledComponent : _profiled;
+  const _profiler = actual as Profiler<any> | ProfiledHook<any, any>;
+  const profiler = "Profiler" in _profiler ? _profiler.Profiler : _profiler;
   const options = { timeout: 100, ...optionsPerRender };
   const hint = this.utils.matcherHint("toRenderExactlyTimes");
   let pass = true;
   try {
-    if (profiled.totalRenderCount() > times) {
+    if (profiler.totalRenderCount() > times) {
       throw failed;
     }
     try {
-      while (profiled.totalRenderCount() < times) {
-        await profiled.waitForNextRender(options);
+      while (profiler.totalRenderCount() < times) {
+        await profiler.waitForNextRender(options);
       }
     } catch (e) {
       // timeouts here should just fail the test, rethrow other errors
       throw e instanceof WaitForRenderTimeoutError ? failed : e;
     }
     try {
-      await profiled.waitForNextRender(options);
+      await profiler.waitForNextRender(options);
     } catch (e) {
       // we are expecting a timeout here, so swallow that error, rethrow others
       if (!(e instanceof WaitForRenderTimeoutError)) {
@@ -82,7 +78,7 @@ export const toRenderExactlyTimes: MatcherFunction<
       return (
         hint +
         ` Expected component to${pass ? " not" : ""} render exactly ${times}.` +
-        ` It rendered ${profiled.totalRenderCount()} times.`
+        ` It rendered ${profiler.totalRenderCount()} times.`
       );
     },
   };

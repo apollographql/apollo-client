@@ -385,7 +385,13 @@ export function useTrackComponentRender() {
 
   const ctx = useRenderContext();
 
+  if (!ctx) {
+    throw new Error(
+      "useTrackComponentRender: A Profiler must be created and rendered to track component renders"
+    );
+  }
+
   React.useLayoutEffect(() => {
-    ctx?.renderedComponents.unshift(owner);
+    ctx.renderedComponents.unshift(owner);
   });
 }

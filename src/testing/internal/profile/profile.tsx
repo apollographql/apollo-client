@@ -20,10 +20,15 @@ export interface NextRenderOptions {
 }
 
 /** @internal */
-export interface ProfiledComponent<Props, Snapshot>
-  extends React.FC<Props>,
-    ProfiledComponentFields<Props, Snapshot>,
-    ProfiledComponentOnlyFields<Props, Snapshot> {}
+interface ProfilerProps {
+  children: React.ReactNode;
+}
+
+/** @internal */
+export interface ProfiledComponent<Snapshot>
+  extends React.FC<ProfilerProps>,
+    ProfiledComponentFields<Snapshot>,
+    ProfiledComponentOnlyFields<Snapshot> {}
 
 interface ReplaceSnapshot<Snapshot> {
   (newSnapshot: Snapshot): void;
@@ -39,13 +44,13 @@ interface MergeSnapshot<Snapshot> {
   ): void;
 }
 
-interface ProfiledComponentOnlyFields<Props, Snapshot> {
+interface ProfiledComponentOnlyFields<Snapshot> {
   // Allows for partial updating of the snapshot by shallow merging the results
   mergeSnapshot: MergeSnapshot<Snapshot>;
   // Performs a full replacement of the snapshot
   replaceSnapshot: ReplaceSnapshot<Snapshot>;
 }
-interface ProfiledComponentFields<Props, Snapshot> {
+interface ProfiledComponentFields<Snapshot> {
   /**
    * An array of all renders that have happened so far.
    * Errors thrown during component render will be captured here, too.
@@ -89,16 +94,11 @@ const ProfilerContext = React.createContext<ProfilerContextValue | undefined>(
 );
 
 /** @internal */
-export function profile<
-  Snapshot extends ValidSnapshot = void,
-  Props = Record<string, never>,
->({
-  Component,
+export function profile<Snapshot extends ValidSnapshot = void>({
   onRender,
   snapshotDOM = false,
   initialSnapshot,
 }: {
-  Component: React.ComponentType<Props>;
   onRender?: (
     info: BaseRender & {
       snapshot: Snapshot;
@@ -201,16 +201,19 @@ export function profile<
     }
   };
 
-  const Wrapped = wrapComponentWithTracking(Component);
-
   let iteratorPosition = 0;
-  const Profiled: ProfiledComponent<Props, Snapshot> = Object.assign(
-    (props: Props) => {
+  const Profiled: ProfiledComponent<Snapshot> = Object.assign(
+    ({ children }: ProfilerProps) => {
       const parentContext = React.useContext(ProfilerContext);
+
+      if (parentContext) {
+        throw new Error("Should not nest profiled components.");
+      }
+
       return (
-        <ProfilerContext.Provider value={parentContext || profilerContext}>
+        <ProfilerContext.Provider value={profilerContext}>
           <React.Profiler id="test" onRender={profilerOnRender}>
-            <Wrapped {...(props as any)} />
+            {children}
           </React.Profiler>
         </ProfilerContext.Provider>
       );
@@ -218,7 +221,7 @@ export function profile<
     {
       replaceSnapshot,
       mergeSnapshot,
-    } satisfies ProfiledComponentOnlyFields<Props, Snapshot>,
+    } satisfies ProfiledComponentOnlyFields<Snapshot>,
     {
       renders: new Array<
         | Render<Snapshot>
@@ -305,7 +308,7 @@ export function profile<
         }
         return nextRender;
       },
-    } satisfies ProfiledComponentFields<Props, Snapshot>
+    } satisfies ProfiledComponentFields<Snapshot>
   );
   return Profiled;
 }

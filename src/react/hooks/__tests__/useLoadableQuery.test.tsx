@@ -43,7 +43,12 @@ import { LoadableQueryHookFetchPolicy } from "../../types/types";
 import { QueryReference } from "../../../react";
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
-import { profile, profileHook, spyOnConsole } from "../../../testing/internal";
+import {
+  ProfiledComponent,
+  profile,
+  spyOnConsole,
+  useTrackComponentRender,
+} from "../../../testing/internal";
 
 interface SimpleQueryData {
   greeting: string;
@@ -149,17 +154,25 @@ function usePaginatedQueryCase() {
   return { query, link, client };
 }
 
-function createDefaultProfiledComponents<TData = unknown>() {
-  const SuspenseFallback = profile({
-    Component: function SuspenseFallback() {
-      return <p>Loading</p>;
-    },
-  });
+function createDefaultProfiledComponents<
+  Snapshot extends { result: UseReadQueryResult<any> | null },
+  TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null
+    ? TData
+    : unknown,
+>(profiler: ProfiledComponent<Snapshot>) {
+  function SuspenseFallback() {
+    useTrackComponentRender();
+    return <p>Loading</p>;
+  }
 
-  const ReadQueryHook = profileHook<
-    UseReadQueryResult<TData>,
-    { queryRef: QueryReference<TData> }
-  >(({ queryRef }) => useReadQuery(queryRef), { displayName: "UseReadQuery" });
+  function ReadQueryHook({ queryRef }: { queryRef: QueryReference<TData> }) {
+    useTrackComponentRender();
+    profiler.mergeSnapshot({
+      result: useReadQuery(queryRef),
+    } as Partial<Snapshot>);
+
+    return null;
+  }
 
   const ErrorFallback = profile<{ error: Error | null }, { error: Error }>({
     Component: function Fallback({ error }) {
@@ -219,45 +232,61 @@ function renderWithClient(
 it("loads a query and suspends when the load query function is called", async () => {
   const { query, mocks } = useSimpleQueryCase();
 
-  const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<SimpleQueryData>();
-
-  const App = profile({
-    Component: () => {
-      const [loadQuery, queryRef] = useLoadableQuery(query);
-
-      return (
-        <>
-          <button onClick={() => loadQuery()}>Load query</button>
-          <Suspense fallback={<SuspenseFallback />}>
-            {queryRef && <ReadQueryHook queryRef={queryRef} />}
-          </Suspense>
-        </>
-      );
+  const Profiler = profile({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleQueryData> | null,
     },
   });
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  function App() {
+    useTrackComponentRender();
+    const [loadQuery, queryRef] = useLoadableQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user } = renderWithMocks(
+    <Profiler>
+      <App />
+    </Profiler>,
+    { mocks }
+  );
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App"]);
+  }
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).toHaveRendered();
-  expect(ReadQueryHook).not.toHaveRendered();
-  expect(App).toHaveRenderedTimes(2);
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  const snapshot = await ReadQueryHook.takeSnapshot();
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+  }
 
-  expect(snapshot).toEqual({
-    data: { greeting: "Hello" },
-    error: undefined,
-    networkStatus: NetworkStatus.ready,
-  });
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  expect(SuspenseFallback).toHaveRenderedTimes(1);
-  expect(ReadQueryHook).toHaveRenderedTimes(1);
-  expect(App).toHaveRenderedTimes(3);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
+  }
 });
 
 it("loads a query with variables and suspends by passing variables to the loadQuery function", async () => {

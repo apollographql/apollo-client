@@ -391,17 +391,6 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
   );
 }
 
-function isReactClass<Props>(
-  Component: React.ComponentType<Props>
-): Component is React.ComponentClass<Props> {
-  let proto = Component;
-  while (proto && proto !== Object) {
-    if (proto === React.Component) return true;
-    proto = Object.getPrototypeOf(proto);
-  }
-  return false;
-}
-
 function getCurrentComponentName() {
   const owner: React.ComponentType | undefined = (React as any)
     .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentOwner
@@ -420,39 +409,4 @@ export function useTrackComponentRender(name = getCurrentComponentName()) {
   React.useLayoutEffect(() => {
     ctx?.renderedComponents.unshift(name);
   });
-}
-
-function wrapComponentWithTracking<Props>(
-  Component: React.ComponentType<Props>
-) {
-  if (!isReactClass(Component)) {
-    return function ComponentWithTracking(props: Props) {
-      useTrackComponentRender(Component.displayName || Component.name);
-      return Component(props);
-    };
-  }
-
-  let ctx: ProfilerContextValue;
-  class WrapperClass extends (Component as React.ComponentClass<Props, any>) {
-    constructor(props: Props) {
-      super(props);
-    }
-    componentDidMount() {
-      super.componentDidMount?.apply(this);
-      ctx!.renderedComponents.push(Component.displayName || Component.name);
-    }
-    componentDidUpdate() {
-      super.componentDidUpdate?.apply(
-        this,
-        arguments as unknown as Parameters<
-          NonNullable<React.Component<Props>["componentDidUpdate"]>
-        >
-      );
-      ctx!.renderedComponents.push(Component.displayName || Component.name);
-    }
-  }
-  return (props: any) => {
-    ctx = React.useContext(ProfilerContext)!;
-    return <WrapperClass {...props} />;
-  };
 }

@@ -25,7 +25,7 @@ interface ProfilerProps {
 }
 
 /** @internal */
-export interface ProfiledComponent<Snapshot>
+export interface Profiler<Snapshot>
   extends React.FC<ProfilerProps>,
     ProfiledComponentFields<Snapshot>,
     ProfiledComponentOnlyFields<Snapshot> {}
@@ -159,7 +159,7 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
       baseDuration,
       startTime,
       commitTime,
-      count: Profiled.renders.length + 1,
+      count: Profiler.renders.length + 1,
     };
     try {
       /*
@@ -187,12 +187,12 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
         profilerContext.renderedComponents
       );
       profilerContext.renderedComponents = [];
-      Profiled.renders.push(render);
+      Profiler.renders.push(render);
       resolveNextRender?.(render);
     } catch (error) {
-      Profiled.renders.push({
+      Profiler.renders.push({
         phase: "snapshotError",
-        count: Profiled.renders.length,
+        count: Profiler.renders.length,
         error,
       });
       rejectNextRender?.(error);
@@ -202,7 +202,7 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
   };
 
   let iteratorPosition = 0;
-  const Profiled: ProfiledComponent<Snapshot> = Object.assign(
+  const Profiler: Profiler<Snapshot> = Object.assign(
     ({ children }: ProfilerProps) => {
       const parentContext = React.useContext(ProfilerContext);
 
@@ -228,11 +228,11 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
         | { phase: "snapshotError"; count: number; error: unknown }
       >(),
       totalRenderCount() {
-        return Profiled.renders.length;
+        return Profiler.renders.length;
       },
       async peekRender(options: NextRenderOptions = {}) {
-        if (iteratorPosition < Profiled.renders.length) {
-          const render = Profiled.renders[iteratorPosition];
+        if (iteratorPosition < Profiler.renders.length) {
+          const render = Profiler.renders[iteratorPosition];
 
           if (render.phase === "snapshotError") {
             throw render.error;
@@ -240,16 +240,16 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
 
           return render;
         }
-        return Profiled.waitForNextRender({
-          [_stackTrace]: captureStackTrace(Profiled.peekRender),
+        return Profiler.waitForNextRender({
+          [_stackTrace]: captureStackTrace(Profiler.peekRender),
           ...options,
         });
       },
       async takeRender(options: NextRenderOptions = {}) {
         let error: unknown = undefined;
         try {
-          return await Profiled.peekRender({
-            [_stackTrace]: captureStackTrace(Profiled.takeRender),
+          return await Profiler.peekRender({
+            [_stackTrace]: captureStackTrace(Profiler.takeRender),
             ...options,
           });
         } catch (e) {
@@ -275,7 +275,7 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
           );
         }
 
-        const render = Profiled.renders[currentPosition];
+        const render = Profiler.renders[currentPosition];
 
         if (render.phase === "snapshotError") {
           throw render.error;
@@ -286,7 +286,7 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
         timeout = 1000,
         // capture the stack trace here so its stack trace is as close to the calling code as possible
         [_stackTrace]: stackTrace = captureStackTrace(
-          Profiled.waitForNextRender
+          Profiler.waitForNextRender
         ),
       }: NextRenderOptions = {}) {
         if (!nextRender) {
@@ -310,7 +310,7 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
       },
     } satisfies ProfiledComponentFields<Snapshot>
   );
-  return Profiled;
+  return Profiler;
 }
 
 /** @internal */
@@ -347,7 +347,7 @@ type ProfiledHookFields<Props, ReturnValue> = ProfiledComponentFields<
 export interface ProfiledHook<Props, ReturnValue>
   extends React.FC<Props>,
     ProfiledHookFields<Props, ReturnValue> {
-  ProfiledComponent: ProfiledComponent<Props, ReturnValue>;
+  ProfiledComponent: Profiler<Props, ReturnValue>;
 }
 
 /** @internal */

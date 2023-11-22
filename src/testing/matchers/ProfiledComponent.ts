@@ -2,15 +2,13 @@ import type { MatcherFunction } from "expect";
 import { WaitForRenderTimeoutError } from "../internal/index.js";
 import type {
   NextRenderOptions,
-  ProfiledComponent,
+  Profiler,
   ProfiledHook,
 } from "../internal/index.js";
 
 export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
   async function (actual, options) {
-    const _profiled = actual as
-      | ProfiledComponent<any, any>
-      | ProfiledHook<any, any>;
+    const _profiled = actual as Profiler<any, any> | ProfiledHook<any, any>;
     const profiled =
       "ProfiledComponent" in _profiled
         ? _profiled.ProfiledComponent
@@ -45,9 +43,7 @@ const failed = {};
 export const toRenderExactlyTimes: MatcherFunction<
   [times: number, options?: NextRenderOptions]
 > = async function (actual, times, optionsPerRender) {
-  const _profiled = actual as
-    | ProfiledComponent<any, any>
-    | ProfiledHook<any, any>;
+  const _profiled = actual as Profiler<any, any> | ProfiledHook<any, any>;
   const profiled =
     "ProfiledComponent" in _profiled ? _profiled.ProfiledComponent : _profiled;
   const options = { timeout: 100, ...optionsPerRender };

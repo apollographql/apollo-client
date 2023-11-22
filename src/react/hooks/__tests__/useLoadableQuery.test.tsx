@@ -44,7 +44,7 @@ import { QueryReference } from "../../../react";
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
-  ProfiledComponent,
+  Profiler,
   createTestProfiler,
   spyOnConsole,
   useTrackComponentRender,
@@ -162,7 +162,7 @@ function createDefaultProfiledComponents<
   TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null
     ? TData
     : unknown,
->(profiler: ProfiledComponent<Snapshot>) {
+>(profiler: Profiler<Snapshot>) {
   function SuspenseFallback() {
     useTrackComponentRender();
     return <p>Loading</p>;

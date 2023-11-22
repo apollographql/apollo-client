@@ -1,8 +1,4 @@
-export type {
-  NextRenderOptions,
-  ProfiledComponent,
-  ProfiledHook,
-} from "./profile.js";
+export type { NextRenderOptions, Profiler, ProfiledHook } from "./profile.js";
 export {
   createTestProfiler,
   profileHook,

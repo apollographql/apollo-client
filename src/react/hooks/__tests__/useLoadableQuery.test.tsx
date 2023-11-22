@@ -154,6 +154,15 @@ function usePaginatedQueryCase() {
   return { query, link, client };
 }
 
+function createDefaultProfiler<TData>() {
+  return createTestProfiler({
+    initialSnapshot: {
+      error: null as Error | null,
+      result: null as UseReadQueryResult<TData> | null,
+    },
+  });
+}
+
 function createDefaultProfiledComponents<
   Snapshot extends {
     result: UseReadQueryResult<any> | null;
@@ -230,11 +239,7 @@ function renderWithClient(
 it("loads a query and suspends when the load query function is called", async () => {
   const { query, mocks } = useSimpleQueryCase();
 
-  const Profiler = createTestProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleQueryData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<SimpleQueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(Profiler);
@@ -290,11 +295,7 @@ it("loads a query and suspends when the load query function is called", async ()
 it("loads a query with variables and suspends by passing variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
-  const Profiler = createTestProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<VariablesCaseData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(Profiler);
@@ -351,11 +352,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
-  const Profiler = createTestProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<VariablesCaseData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(Profiler);
@@ -450,11 +447,7 @@ it("allows the client to be overridden", async () => {
     cache: new InMemoryCache(),
   });
 
-  const Profiler = createTestProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleQueryData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<SimpleQueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(Profiler);
@@ -520,11 +513,7 @@ it("passes context to the link", async () => {
     }),
   });
 
-  const Profiler = createTestProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<QueryData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<QueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(Profiler);

@@ -155,7 +155,10 @@ function usePaginatedQueryCase() {
 }
 
 function createDefaultProfiledComponents<
-  Snapshot extends { result: UseReadQueryResult<any> | null },
+  Snapshot extends {
+    result: UseReadQueryResult<any> | null;
+    error?: Error | null;
+  },
   TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null
     ? TData
     : unknown,
@@ -174,19 +177,11 @@ function createDefaultProfiledComponents<
     return null;
   }
 
-  const ErrorFallback = createTestProfiler<
-    { error: Error | null },
-    { error: Error }
-  >({
-    Component: function Fallback({ error }) {
-      ErrorFallback.replaceSnapshot({ error });
+  function ErrorFallback({ error }: { error: Error }) {
+    profiler.mergeSnapshot({ error } as Partial<Snapshot>);
 
-      return <div>Oops</div>;
-    },
-    initialSnapshot: {
-      error: null,
-    },
-  });
+    return <div>Oops</div>;
+  }
 
   function ErrorBoundary({ children }: { children: React.ReactNode }) {
     return (

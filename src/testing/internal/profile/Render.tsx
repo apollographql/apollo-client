@@ -12,6 +12,7 @@ As we only use this file in our internal tests, we can safely ignore it.
 import { within, screen } from "@testing-library/dom";
 import { JSDOM, VirtualConsole } from "jsdom";
 import { applyStackTrace, captureStackTrace } from "./traces.js";
+import type { RenderContextValue } from "./context.js";
 
 /** @internal */
 export interface BaseRender {
@@ -63,7 +64,7 @@ export interface Render<Snapshot> extends BaseRender {
    */
   withinDOM: () => SyncScreen;
 
-  renderedComponents: React.ComponentType[];
+  context: RenderContextValue;
 }
 
 /** @internal */
@@ -80,7 +81,7 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
     baseRender: BaseRender,
     public snapshot: Snapshot,
     private stringifiedDOM: string | undefined,
-    public renderedComponents: React.ComponentType[]
+    public context: RenderContextValue
   ) {
     this.id = baseRender.id;
     this.phase = baseRender.phase;
@@ -89,6 +90,7 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
     this.startTime = baseRender.startTime;
     this.commitTime = baseRender.commitTime;
     this.count = baseRender.count;
+    this.context = { ...context };
   }
 
   private _domSnapshot: HTMLElement | undefined;

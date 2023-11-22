@@ -8,6 +8,8 @@ global.TextDecoder ??= TextDecoder;
 import type { Render, BaseRender } from "./Render.js";
 import { RenderInstance } from "./Render.js";
 import { applyStackTrace, captureStackTrace } from "./traces.js";
+import type { RenderContextValue } from "./context.js";
+import { RenderContextProvider, useRenderContext } from "./context.js";
 
 type ValidSnapshot = void | (object & { /* not a function */ call?: never });
 
@@ -86,13 +88,6 @@ interface ProfiledComponentFields<Snapshot> {
   waitForNextRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
 }
 
-interface ProfilerContextValue {
-  renderedComponents: React.ComponentType[];
-}
-const ProfilerContext = React.createContext<ProfilerContextValue | undefined>(
-  undefined
-);
-
 /** @internal */
 export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
   onRender,
@@ -140,7 +135,7 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
     }));
   };
 
-  const profilerContext: ProfilerContextValue = {
+  const renderContext: RenderContextValue = {
     renderedComponents: [],
   };
 
@@ -184,9 +179,9 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
         baseRender,
         snapshot,
         domSnapshot,
-        profilerContext.renderedComponents
+        renderContext
       );
-      profilerContext.renderedComponents = [];
+      renderContext.renderedComponents = [];
       Profiler.renders.push(render);
       resolveNextRender?.(render);
     } catch (error) {
@@ -204,18 +199,12 @@ export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
   let iteratorPosition = 0;
   const Profiler: Profiler<Snapshot> = Object.assign(
     ({ children }: ProfilerProps) => {
-      const parentContext = React.useContext(ProfilerContext);
-
-      if (parentContext) {
-        throw new Error("Should not nest profiled components.");
-      }
-
       return (
-        <ProfilerContext.Provider value={profilerContext}>
+        <RenderContextProvider value={renderContext}>
           <React.Profiler id="test" onRender={profilerOnRender}>
             {children}
           </React.Profiler>
-        </ProfilerContext.Provider>
+        </RenderContextProvider>
       );
     },
     {
@@ -397,7 +386,8 @@ export function useTrackComponentRender() {
     throw new Error("useTrackComponentRender: Unable to determine hook owner");
   }
 
-  const ctx = React.useContext(ProfilerContext);
+  const ctx = useRenderContext();
+
   React.useLayoutEffect(() => {
     ctx?.renderedComponents.unshift(owner);
   });

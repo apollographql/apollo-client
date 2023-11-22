@@ -2,7 +2,7 @@ export type { NextRenderOptions, Profiler, ProfiledHook } from "./profile.js";
 export {
   createTestProfiler,
   profileHook,
-  useTrackComponentRender,
+  useTrackRender,
   WaitForRenderTimeoutError,
 } from "./profile.js";
 

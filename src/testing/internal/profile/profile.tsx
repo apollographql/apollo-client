@@ -374,7 +374,7 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
   );
 }
 
-export function useTrackComponentRender() {
+export function useTrackRender() {
   const owner: React.ComponentType | undefined = (React as any)
     .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentOwner
     ?.current?.elementType;

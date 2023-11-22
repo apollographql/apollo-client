@@ -48,7 +48,7 @@ import {
   Profiler,
   createTestProfiler,
   spyOnConsole,
-  useTrackComponentRender,
+  useTrackRender,
 } from "../../../testing/internal";
 
 interface SimpleQueryData {
@@ -165,12 +165,12 @@ function createDefaultProfiledComponents<
     : unknown,
 >(profiler: Profiler<Snapshot>) {
   function SuspenseFallback() {
-    useTrackComponentRender();
+    useTrackRender();
     return <p>Loading</p>;
   }
 
   function ReadQueryHook({ queryRef }: { queryRef: QueryReference<TData> }) {
-    useTrackComponentRender();
+    useTrackRender();
     profiler.mergeSnapshot({
       result: useReadQuery(queryRef),
     } as Partial<Snapshot>);
@@ -241,7 +241,7 @@ it("loads a query and suspends when the load query function is called", async ()
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackComponentRender();
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(query);
 
     return (
@@ -301,7 +301,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackComponentRender();
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(query);
 
     return (

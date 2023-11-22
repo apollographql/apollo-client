@@ -1286,10 +1286,17 @@ it("reacts to cache updates", async () => {
     link: new MockLink(mocks),
   });
 
+  const Profiler = createTestProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleQueryData> | null,
+    },
+  });
+
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<SimpleQueryData>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(query);
 
     return (
@@ -1302,14 +1309,25 @@ it("reacts to cache updates", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(
+    <Profiler>
+      <App />
+    </Profiler>,
+    { client }
+  );
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1322,14 +1340,17 @@ it("reacts to cache updates", async () => {
   });
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: { greeting: "Updated Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("applies `errorPolicy` on next fetch when it changes between renders", async () => {

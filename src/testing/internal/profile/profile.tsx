@@ -332,22 +332,20 @@ type ResultReplaceRenderWithSnapshot<T> = T extends (
   ? (...args: Args) => Promise<Snapshot>
   : T;
 
-type ProfiledHookFields<Props, ReturnValue> = ProfiledComponentFields<
-  Props,
-  ReturnValue
-> extends infer PC
-  ? {
-      [K in keyof PC as StringReplaceRenderWithSnapshot<
-        K & string
-      >]: ResultReplaceRenderWithSnapshot<PC[K]>;
-    }
-  : never;
+type ProfiledHookFields<ReturnValue> =
+  ProfiledComponentFields<ReturnValue> extends infer PC
+    ? {
+        [K in keyof PC as StringReplaceRenderWithSnapshot<
+          K & string
+        >]: ResultReplaceRenderWithSnapshot<PC[K]>;
+      }
+    : never;
 
 /** @internal */
 export interface ProfiledHook<Props, ReturnValue>
   extends React.FC<Props>,
-    ProfiledHookFields<Props, ReturnValue> {
-  ProfiledComponent: Profiler<Props, ReturnValue>;
+    ProfiledHookFields<ReturnValue> {
+  ProfiledComponent: Profiler<ReturnValue>;
 }
 
 /** @internal */
@@ -361,8 +359,7 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
     return null;
   };
   ProfiledHook.displayName = displayName;
-  const ProfiledComponent = createTestProfiler<ReturnValue, Props>({
-    Component: ProfiledHook,
+  const ProfiledComponent = createTestProfiler<ReturnValue>({
     onRender: () => returnValue,
   });
   return Object.assign(
@@ -387,7 +384,7 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
       async waitForNextSnapshot(options) {
         return (await ProfiledComponent.waitForNextRender(options)).snapshot;
       },
-    } satisfies ProfiledHookFields<Props, ReturnValue>
+    } satisfies ProfiledHookFields<ReturnValue>
   );
 }
 

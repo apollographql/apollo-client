@@ -3800,10 +3800,12 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     data: { character: { id: "1" } },
   });
 
+  const Profiler = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<DeepPartial<Data>>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(fullQuery, {
       fetchPolicy: "cache-and-network",
       returnPartialData: true,
@@ -3819,16 +3821,22 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, cache });
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    cache,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: { character: { id: "1" } },
       error: undefined,
       networkStatus: NetworkStatus.loading,
@@ -3836,9 +3844,9 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
   }
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Doctor Strange" } },
       error: undefined,
       networkStatus: NetworkStatus.ready,

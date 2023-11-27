@@ -3993,10 +3993,12 @@ it('does not suspend deferred queries with partial data in the cache and using a
 
   const client = new ApolloClient({ link, cache });
 
+  const Profiler = createDefaultProfiler<DeepPartial<QueryData>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<DeepPartial<QueryData>>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadTodo, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
@@ -4012,16 +4014,21 @@ it('does not suspend deferred queries with partial data in the cache and using a
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load todo")));
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -4043,9 +4050,10 @@ it('does not suspend deferred queries with partial data in the cache and using a
   });
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -4058,25 +4066,29 @@ it('does not suspend deferred queries with partial data in the cache and using a
     });
   }
 
-  link.simulateResult({
-    result: {
-      incremental: [
-        {
-          data: {
-            __typename: "Greeting",
-            recipient: { name: "Alice", __typename: "Person" },
+  link.simulateResult(
+    {
+      result: {
+        incremental: [
+          {
+            data: {
+              __typename: "Greeting",
+              recipient: { name: "Alice", __typename: "Person" },
+            },
+            path: ["greeting"],
           },
-          path: ["greeting"],
-        },
-      ],
-      hasNext: false,
+        ],
+        hasNext: false,
+      },
     },
-  });
+    true
+  );
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -4088,6 +4100,8 @@ it('does not suspend deferred queries with partial data in the cache and using a
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("throws when calling loadQuery on first render", async () => {

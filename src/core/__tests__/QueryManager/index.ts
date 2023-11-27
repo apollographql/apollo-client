@@ -6181,36 +6181,39 @@ describe("QueryManager", () => {
     });
 
     it.each([
-      ["query", {method: "query", option: "query"}],
-      ["mutation", {method:"mutate", option: "mutation"}],
-      ["subscription", {method:"subscribe", option: "query"}]
-    ]as const)("`defaultContext` will be applied to the context of a %s", async (_, {method, option}) => {
-      let context: any;
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new ApolloLink(
-          (operation) =>
-            new Observable((observer) => {
-              ({ cache: _, ...context } = operation.getContext());
-              observer.complete();
-            })
-        ),
-        defaultContext: {
-          foo: "bar",
-        },
-      });
+      ["query", { method: "query", option: "query" }],
+      ["mutation", { method: "mutate", option: "mutation" }],
+      ["subscription", { method: "subscribe", option: "query" }],
+    ] as const)(
+      "`defaultContext` will be applied to the context of a %s",
+      async (_, { method, option }) => {
+        let context: any;
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: new ApolloLink(
+            (operation) =>
+              new Observable((observer) => {
+                ({ cache: _, ...context } = operation.getContext());
+                observer.complete();
+              })
+          ),
+          defaultContext: {
+            foo: "bar",
+          },
+        });
 
-      // @ts-ignore a bit too generic for TS
-      client[method]({
-        [option]: gql`
-          query {
-            foo
-          }
-        `,
-      });
+        // @ts-ignore a bit too generic for TS
+        client[method]({
+          [option]: gql`
+            query {
+              foo
+            }
+          `,
+        });
 
-      expect(context.foo).toBe("bar");
-    });
+        expect(context.foo).toBe("bar");
+      }
+    );
 
     it("`ApolloClient.defaultContext` can be modified and changes will show up in future queries", async () => {
       let context: any;

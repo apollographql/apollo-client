@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-`documentTransform`: use `WeakCache` instead of directly storing data on the `Trie`
+`documentTransform`: use `optimism` and `WeakCache` instead of directly storing data on the `Trie`

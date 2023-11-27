@@ -3,7 +3,8 @@ import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
 import { checkDocument } from "./getFromAST.js";
 import { invariant } from "../globals/index.js";
 import type { DocumentNode } from "graphql";
-import { WeakCache } from "@wry/caches";
+// import { WeakCache } from "@wry/caches";
+import { wrap } from "optimism";
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 
@@ -22,22 +23,11 @@ function identity(document: DocumentNode) {
 
 export class DocumentTransform {
   private readonly transform: TransformFn;
+  private cached: boolean;
 
   private readonly resultCache = canUseWeakSet
     ? new WeakSet<DocumentNode>()
     : new Set<DocumentNode>();
-
-  private stableCacheKeys: Trie<WeakKey> | undefined;
-  private transformCache:
-    | WeakCache<
-        WeakKey,
-        {
-          /** @deprecated this property had to be removed to prevent a potential memory leak */
-          key?: never;
-          value?: DocumentNode;
-        }
-      >
-    | undefined;
 
   // This default implementation of getCacheKey can be overridden by providing
   // options.getCacheKey to the DocumentTransform constructor. In general, a
@@ -83,19 +73,40 @@ export class DocumentTransform {
       // Override default `getCacheKey` function, which returns [document].
       this.getCacheKey = options.getCacheKey;
     }
+    this.cached = options.cache !== false;
 
-    this.resetCache(options.cache !== false);
+    this.resetCache();
   }
 
   /**
    * Resets the internal cache of this transform, if it has one.
    */
-  resetCache(enableCaching?: boolean) {
-    if (this.stableCacheKeys || enableCaching) {
-      this.stableCacheKeys = new Trie(canUseWeakMap);
-      this.transformCache =
-        new WeakCache(/** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */);
+  resetCache() {
+    if (this.cached) {
+      const stableCacheKeys = new Trie(canUseWeakMap);
+      this.performWork = wrap(
+        DocumentTransform.prototype.performWork.bind(this),
+        {
+          makeCacheKey: (document) => {
+            const cacheKeys = this.getCacheKey(document);
+            if (cacheKeys) {
+              invariant(
+                Array.isArray(cacheKeys),
+                "`getCacheKey` must return an array or undefined"
+              );
+              return stableCacheKeys.lookupArray(cacheKeys);
+            }
+          },
+          // max: /** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */,
+          // Cache: WeakCache // TODO: waiting for an optimism release that allows this
+        }
+      );
     }
+  }
+
+  private performWork(document: DocumentNode) {
+    checkDocument(document);
+    return this.transform(document);
   }
 
   transformDocument(document: DocumentNode) {
@@ -105,21 +116,9 @@ export class DocumentTransform {
       return document;
     }
 
-    const cacheEntry = this.getStableCacheEntry(document);
-
-    if (cacheEntry && cacheEntry.value) {
-      return cacheEntry.value;
-    }
-
-    checkDocument(document);
-
-    const transformedDocument = this.transform(document);
+    const transformedDocument = this.performWork(document);
 
     this.resultCache.add(transformedDocument);
-
-    if (cacheEntry) {
-      cacheEntry.value = transformedDocument;
-    }
 
     return transformedDocument;
   }
@@ -134,24 +133,5 @@ export class DocumentTransform {
       // Reasonably assume both transforms handle their own caching
       { cache: false }
     );
-  }
-
-  getStableCacheEntry(document: DocumentNode) {
-    if (!this.stableCacheKeys) return;
-    const cacheKeys = this.getCacheKey(document);
-    if (cacheKeys) {
-      invariant(
-        Array.isArray(cacheKeys),
-        "`getCacheKey` must return an array or undefined"
-      );
-      const key = this.stableCacheKeys.lookupArray(cacheKeys);
-      let value;
-      // if `stableCacheKeys` is set, `transformCache` must be set as well
-      this.transformCache!.set(
-        key,
-        (value = this.transformCache!.get(key) || {})
-      );
-      return value;
-    }
   }
 }

@@ -3,6 +3,7 @@ import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
 import { checkDocument } from "./getFromAST.js";
 import { invariant } from "../globals/index.js";
 import type { DocumentNode } from "graphql";
+import { WeakCache } from "@wry/caches";
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 
@@ -26,8 +27,16 @@ export class DocumentTransform {
     ? new WeakSet<DocumentNode>()
     : new Set<DocumentNode>();
 
-  private stableCacheKeys:
-    | Trie<{ key: DocumentTransformCacheKey; value?: DocumentNode }>
+  private stableCacheKeys: Trie<WeakKey> | undefined;
+  private transformCache:
+    | WeakCache<
+        WeakKey,
+        {
+          /** @deprecated this property had to be removed to prevent a potential memory leak */
+          key?: never;
+          value?: DocumentNode;
+        }
+      >
     | undefined;
 
   // This default implementation of getCacheKey can be overridden by providing
@@ -75,17 +84,18 @@ export class DocumentTransform {
       this.getCacheKey = options.getCacheKey;
     }
 
-    if (options.cache !== false) {
-      this.stableCacheKeys = new Trie(canUseWeakMap, (key) => ({ key }));
-    }
+    this.resetCache(options.cache !== false);
   }
 
   /**
    * Resets the internal cache of this transform, if it has one.
    */
-  resetCache() {
-    this.stableCacheKeys =
-      this.stableCacheKeys && new Trie(canUseWeakMap, (key) => ({ key }));
+  resetCache(enableCaching?: boolean) {
+    if (this.stableCacheKeys || enableCaching) {
+      this.stableCacheKeys = new Trie(canUseWeakMap);
+      this.transformCache =
+        new WeakCache(/** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */);
+    }
   }
 
   transformDocument(document: DocumentNode) {
@@ -134,7 +144,14 @@ export class DocumentTransform {
         Array.isArray(cacheKeys),
         "`getCacheKey` must return an array or undefined"
       );
-      return this.stableCacheKeys.lookupArray(cacheKeys);
+      const key = this.stableCacheKeys.lookupArray(cacheKeys);
+      let value;
+      // if `stableCacheKeys` is set, `transformCache` must be set as well
+      this.transformCache!.set(
+        key,
+        (value = this.transformCache!.get(key) || {})
+      );
+      return value;
     }
   }
 }

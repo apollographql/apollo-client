@@ -745,7 +745,7 @@ export class DocumentTransform {
     concat(otherTransform: DocumentTransform): DocumentTransform;
     // (undocumented)
     getStableCacheEntry(document: DocumentNode): {
-        key: DocumentTransformCacheKey;
+        key?: undefined;
         value?: DocumentNode | undefined;
     } | undefined;
     // (undocumented)

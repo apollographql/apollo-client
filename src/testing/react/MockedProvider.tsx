@@ -69,11 +69,11 @@ export class MockedProvider extends React.Component<
     const { children, childProps } = this.props;
     const { client } = this.state;
 
-    return React.isValidElement(children) ? (
-      <ApolloProvider client={client}>
-        {React.cloneElement(React.Children.only(children), { ...childProps })}
-      </ApolloProvider>
-    ) : null;
+    return React.isValidElement(children) ?
+        <ApolloProvider client={client}>
+          {React.cloneElement(React.Children.only(children), { ...childProps })}
+        </ApolloProvider>
+      : null;
   }
 
   public componentWillUnmount() {

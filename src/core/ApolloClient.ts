@@ -206,9 +206,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     let { link } = options;
 
     if (!link) {
-      link = uri
-        ? new HttpLink({ uri, credentials, headers })
-        : ApolloLink.empty();
+      link =
+        uri ? new HttpLink({ uri, credentials, headers }) : ApolloLink.empty();
     }
 
     this.link = link;
@@ -253,8 +252,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       },
       localState: this.localState,
       assumeImmutableResults,
-      onBroadcast: connectToDevTools
-        ? () => {
+      onBroadcast:
+        connectToDevTools ?
+          () => {
             if (this.devToolsHookCb) {
               this.devToolsHookCb({
                 action: {},

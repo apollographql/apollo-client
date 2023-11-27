@@ -53,9 +53,9 @@ export class SchemaLink extends ApolloLink {
     return new Observable<FetchResult>((observer) => {
       new Promise<SchemaLink.ResolverContext>((resolve) =>
         resolve(
-          typeof this.context === "function"
-            ? this.context(operation)
-            : this.context
+          typeof this.context === "function" ?
+            this.context(operation)
+          : this.context
         )
       )
         .then((context) => {

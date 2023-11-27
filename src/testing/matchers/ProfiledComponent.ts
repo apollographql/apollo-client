@@ -11,9 +11,9 @@ export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
       | ProfiledComponent<any, any>
       | ProfiledHook<any, any>;
     const profiled =
-      "ProfiledComponent" in _profiled
-        ? _profiled.ProfiledComponent
-        : _profiled;
+      "ProfiledComponent" in _profiled ?
+        _profiled.ProfiledComponent
+      : _profiled;
     const hint = this.utils.matcherHint("toRerender");
     let pass = true;
     try {

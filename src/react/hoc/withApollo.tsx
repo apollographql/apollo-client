@@ -49,9 +49,8 @@ export function withApollo<TProps, TResult = any>(
           {(client) => {
             const props = Object.assign({}, this.props, {
               client,
-              ref: operationOptions.withRef
-                ? this.setWrappedInstance
-                : undefined,
+              ref:
+                operationOptions.withRef ? this.setWrappedInstance : undefined,
             });
             return <WrappedComponent {...props} />;
           }}

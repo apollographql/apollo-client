@@ -103,8 +103,8 @@ export default function transformer(file, api) {
 
   function renameDefaultSpecifier(moduleImport, name) {
     function replacer(path) {
-      return path.value.local.name === name
-        ? j.importSpecifier(j.identifier(name))
+      return path.value.local.name === name ?
+          j.importSpecifier(j.identifier(name))
         : j.importSpecifier(j.identifier(name), path.value.local);
     }
 

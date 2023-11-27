@@ -1231,29 +1231,29 @@ describe("useFragment", () => {
         from: { __typename: "Query" },
       });
 
-      return complete ? (
-        <>
-          <select
-            onChange={(e) => {
-              setCurrentItem(parseInt(e.currentTarget.value));
-            }}
-          >
-            {data.list.map((item) => (
-              <option key={item.id} value={item.id}>
-                Select item {item.id}
-              </option>
-            ))}
-          </select>
-          <div>
-            <Item id={currentItem} />
-          </div>
-          <ol>
-            {data.list.map((item) => (
-              <Item key={item.id} id={item.id} />
-            ))}
-          </ol>
-        </>
-      ) : null;
+      return complete ?
+          <>
+            <select
+              onChange={(e) => {
+                setCurrentItem(parseInt(e.currentTarget.value));
+              }}
+            >
+              {data.list.map((item) => (
+                <option key={item.id} value={item.id}>
+                  Select item {item.id}
+                </option>
+              ))}
+            </select>
+            <div>
+              <Item id={currentItem} />
+            </div>
+            <ol>
+              {data.list.map((item) => (
+                <Item key={item.id} id={item.id} />
+              ))}
+            </ol>
+          </>
+        : null;
     }
 
     function Item({ id }: { id: number }) {

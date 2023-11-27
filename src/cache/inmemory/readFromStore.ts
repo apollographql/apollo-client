@@ -383,9 +383,9 @@ export class StoreReader {
           if (!addTypenameToDocument.added(selection)) {
             missing = missingMerger.merge(missing, {
               [resultName]: `Can't find field '${selection.name.value}' on ${
-                isReference(objectOrReference)
-                  ? objectOrReference.__ref + " object"
-                  : "object " + JSON.stringify(objectOrReference, null, 2)
+                isReference(objectOrReference) ?
+                  objectOrReference.__ref + " object"
+                : "object " + JSON.stringify(objectOrReference, null, 2)
               }`,
             });
           }
@@ -443,11 +443,12 @@ export class StoreReader {
 
     const result = mergeDeepArray(objectsToMerge);
     const finalResult: ExecResult = { result, missing };
-    const frozen = context.canonizeResults
-      ? this.canon.admit(finalResult)
-      : // Since this.canon is normally responsible for freezing results (only in
+    const frozen =
+      context.canonizeResults ?
+        this.canon.admit(finalResult)
+        // Since this.canon is normally responsible for freezing results (only in
         // development), freeze them manually if canonization is disabled.
-        maybeDeepFreeze(finalResult);
+      : maybeDeepFreeze(finalResult);
 
     // Store this result with its selection set so that we can quickly
     // recognize it again in the StoreReader#isFresh method.

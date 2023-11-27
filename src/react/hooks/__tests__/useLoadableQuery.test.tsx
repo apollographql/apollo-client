@@ -3684,10 +3684,12 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     data: { character: { id: "1" } },
   });
 
+  const Profiler = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<DeepPartial<Data>>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(fullQuery, {
       fetchPolicy: "no-cache",
       returnPartialData: true,
@@ -3703,19 +3705,32 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, cache });
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    cache,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).toHaveRendered();
+  // initial load
+  await Profiler.takeRender();
 
-  const snapshot = await ReadQueryHook.takeSnapshot();
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  expect(snapshot).toEqual({
-    data: { character: { id: "1", name: "Doctor Strange" } },
-    error: undefined,
-    networkStatus: NetworkStatus.ready,
-  });
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: "Doctor Strange" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {

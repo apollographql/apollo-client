@@ -57,6 +57,7 @@ db.json
 docs.json
 *.log
 docs/public/*
+docs/shared/client.api.json
 .idea/
 
 junit.xml

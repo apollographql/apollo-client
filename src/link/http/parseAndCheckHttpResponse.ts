@@ -29,8 +29,9 @@ export async function readMultipartBody<
   // https://www.rfc-editor.org/rfc/rfc9110.html#name-parameters
   // e.g. multipart/mixed;boundary="graphql";deferSpec=20220824
   // if no boundary is specified, default to -
-  const boundaryVal = contentType?.includes(delimiter)
-    ? contentType
+  const boundaryVal =
+    contentType?.includes(delimiter) ?
+      contentType
         ?.substring(contentType?.indexOf(delimiter) + delimiter.length)
         .replace(/['"]/g, "")
         .replace(/\;(.*)/gm, "")
@@ -222,9 +223,9 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
             response,
             result,
             `Server response was missing for query '${
-              Array.isArray(operations)
-                ? operations.map((op) => op.operationName)
-                : operations.operationName
+              Array.isArray(operations) ?
+                operations.map((op) => op.operationName)
+              : operations.operationName
             }'.`
           );
         }

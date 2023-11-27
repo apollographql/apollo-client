@@ -131,7 +131,9 @@ function renderIntegrationTest({
       <ApolloProvider client={_client}>
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
-            {variables ? <ParentWithVariables /> : <Parent />}
+            {variables ?
+              <ParentWithVariables />
+            : <Parent />}
           </Suspense>
         </ErrorBoundary>
       </ApolloProvider>
@@ -206,11 +208,11 @@ function renderVariablesIntegrationTest({
             character: {
               ...result.data.character,
               name:
-                index > 3
-                  ? index > 7
-                    ? `${result.data.character.name} (updated again)`
-                    : `${result.data.character.name} (updated)`
-                  : result.data.character.name,
+                index > 3 ?
+                  index > 7 ?
+                    `${result.data.character.name} (updated again)`
+                  : `${result.data.character.name} (updated)`
+                : result.data.character.name,
             },
           },
         },
@@ -272,7 +274,9 @@ function renderVariablesIntegrationTest({
 
     return (
       <div>
-        {error ? <div>{error.message}</div> : null}
+        {error ?
+          <div>{error.message}</div>
+        : null}
         <button
           onClick={() => {
             refetch(variables);
@@ -452,7 +456,9 @@ function renderPaginatedIntegrationTest({
     }));
     return (
       <div>
-        {error ? <div>{error.message}</div> : null}
+        {error ?
+          <div>{error.message}</div>
+        : null}
         <button
           onClick={() => {
             const fetchMoreOpts: FetchMoreQueryOptions<Variables, QueryData> & {
@@ -2407,11 +2413,9 @@ describe("useBackgroundQuery", () => {
     function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data, error } = useReadQuery(queryRef);
 
-      return error ? (
-        <div data-testid="error">{error.message}</div>
-      ) : (
-        <div data-testid="greeting">{data.greeting}</div>
-      );
+      return error ?
+          <div data-testid="error">{error.message}</div>
+        : <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -3118,11 +3122,9 @@ describe("useBackgroundQuery", () => {
     function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data, error } = useReadQuery(queryRef);
 
-      return error ? (
-        <div data-testid="error">{error.message}</div>
-      ) : (
-        <span data-testid="character">{data.character.name}</span>
-      );
+      return error ?
+          <div data-testid="error">{error.message}</div>
+        : <span data-testid="character">{data.character.name}</span>;
     }
 
     function App() {

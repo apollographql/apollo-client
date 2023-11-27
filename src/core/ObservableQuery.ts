@@ -167,9 +167,9 @@ export class ObservableQuery<
     const {
       fetchPolicy = defaultFetchPolicy,
       // Make sure we don't store "standby" as the initialFetchPolicy.
-      initialFetchPolicy = fetchPolicy === "standby"
-        ? defaultFetchPolicy
-        : fetchPolicy,
+      initialFetchPolicy = fetchPolicy === "standby" ? defaultFetchPolicy : (
+        fetchPolicy
+      ),
     } = options;
 
     this.options = {
@@ -317,9 +317,9 @@ export class ObservableQuery<
       return true;
     }
 
-    const resultIsDifferent = this.queryManager.getDocumentInfo(this.query)
-      .hasNonreactiveDirective
-      ? !equalByQuery(this.query, this.last.result, newResult, this.variables)
+    const resultIsDifferent =
+      this.queryManager.getDocumentInfo(this.query).hasNonreactiveDirective ?
+        !equalByQuery(this.query, this.last.result, newResult, this.variables)
       : !equal(this.last.result, newResult);
 
     return (
@@ -427,17 +427,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   ): Promise<ApolloQueryResult<TFetchData>> {
     const combinedOptions = {
-      ...(fetchMoreOptions.query
-        ? fetchMoreOptions
-        : {
-            ...this.options,
-            query: this.options.query,
-            ...fetchMoreOptions,
-            variables: {
-              ...this.options.variables,
-              ...fetchMoreOptions.variables,
-            },
-          }),
+      ...(fetchMoreOptions.query ? fetchMoreOptions : (
+        {
+          ...this.options,
+          query: this.options.query,
+          ...fetchMoreOptions,
+          variables: {
+            ...this.options.variables,
+            ...fetchMoreOptions.variables,
+          },
+        }
+      )),
       // The fetchMore request goes immediately to the network and does
       // not automatically write its result to the cache (hence no-cache
       // instead of network-only), because we allow the caller of
@@ -455,8 +455,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // pagination. We will however run the transforms on the original document
     // as well as the document passed in `fetchMoreOptions` to ensure the cache
     // uses the most up-to-date document which may rely on runtime conditionals.
-    this.lastQuery = fetchMoreOptions.query
-      ? this.transformDocument(this.options.query)
+    this.lastQuery =
+      fetchMoreOptions.query ?
+        this.transformDocument(this.options.query)
       : combinedOptions.query;
 
     // Simulate a loading result for the original query with
@@ -783,9 +784,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               // no-cache are both useful for when the user wants to control whether or not the
               // polled results are written to the cache.
               fetchPolicy:
-                this.options.initialFetchPolicy === "no-cache"
-                  ? "no-cache"
-                  : "network-only",
+                this.options.initialFetchPolicy === "no-cache" ?
+                  "no-cache"
+                : "network-only",
             },
             NetworkStatus.poll
           ).then(poll, poll);
@@ -816,8 +817,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       error = void 0;
     }
     return (this.last = {
-      result: this.queryManager.assumeImmutableResults
-        ? newResult
+      result:
+        this.queryManager.assumeImmutableResults ?
+          newResult
         : cloneDeep(newResult),
       variables,
       ...(error ? { error } : null),
@@ -847,8 +849,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const oldFetchPolicy = this.options.fetchPolicy;
 
     const mergedOptions = compact(this.options, newOptions || {});
-    const options = useDisposableConcast
-      ? // Disposable Concast fetches receive a shallow copy of this.options
+    const options =
+      useDisposableConcast ?
+        // Disposable Concast fetches receive a shallow copy of this.options
         // (merged with newOptions), leaving this.options unmodified.
         mergedOptions
       : assign(this.options, mergedOptions);

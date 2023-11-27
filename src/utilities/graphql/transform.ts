@@ -79,11 +79,13 @@ function isEmpty(
 }
 
 function nullIfDocIsEmpty(doc: DocumentNode) {
-  return isEmpty(
-    getOperationDefinition(doc) || getFragmentDefinition(doc),
-    createFragmentMap(getFragmentDefinitions(doc))
-  )
-    ? null
+  return (
+      isEmpty(
+        getOperationDefinition(doc) || getFragmentDefinition(doc),
+        createFragmentMap(getFragmentDefinitions(doc))
+      )
+    ) ?
+      null
     : doc;
 }
 
@@ -598,8 +600,9 @@ export function removeArgumentsFromDocument(
           return {
             ...node,
             // Remove matching top level variables definitions.
-            variableDefinitions: node.variableDefinitions
-              ? node.variableDefinitions.filter(
+            variableDefinitions:
+              node.variableDefinitions ?
+                node.variableDefinitions.filter(
                   (varDef) =>
                     !config.some(
                       (arg) => arg.name === varDef.variable.name.value

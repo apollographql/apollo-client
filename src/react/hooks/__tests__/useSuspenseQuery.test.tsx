@@ -5783,12 +5783,12 @@ describe("useSuspenseQuery", () => {
 
       const todo = data?.todo;
 
-      return todo ? (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      ) : null;
+      return todo ?
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        : null;
     }
 
     render(<App />);
@@ -5883,12 +5883,12 @@ describe("useSuspenseQuery", () => {
 
       const todo = data?.todo;
 
-      return todo ? (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      ) : null;
+      return todo ?
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        : null;
     }
 
     render(<App />);

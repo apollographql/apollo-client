@@ -55,9 +55,9 @@ export default function App() {
 function Main() {
   const { data } = useQuery(QUERY);
 
-  return data ? (
-    <ul>{data?.products.map(({ id, title }) => <li key={id}>{title}</li>)}</ul>
-  ) : (
-    <>loading</>
-  );
+  return data ?
+      <ul>
+        {data?.products.map(({ id, title }) => <li key={id}>{title}</li>)}
+      </ul>
+    : <>loading</>;
 }

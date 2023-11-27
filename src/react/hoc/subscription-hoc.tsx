@@ -79,9 +79,8 @@ export function withSubscription<
       render() {
         let props = this.props;
         const shouldSkip = mapPropsToSkip(props);
-        const opts = shouldSkip
-          ? Object.create(null)
-          : mapPropsToOptions(props);
+        const opts =
+          shouldSkip ? Object.create(null) : mapPropsToOptions(props);
 
         if (!shouldSkip && !opts.variables && operation.variables.length > 0) {
           opts.variables = calculateVariablesFromProps(operation, props);

@@ -961,9 +961,12 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
+  const Profiler = createDefaultProfiler();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "network-only",
     });
@@ -978,19 +981,31 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
 
-  const snapshot = await ReadQueryHook.takeSnapshot();
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  expect(snapshot).toEqual({
-    data: { hello: "from link" },
-    error: undefined,
-    networkStatus: NetworkStatus.ready,
-  });
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { hello: "from link" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it("fetches data from the network but does not update the cache when `fetchPolicy` is 'no-cache'", async () => {

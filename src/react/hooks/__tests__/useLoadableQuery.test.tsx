@@ -248,7 +248,7 @@ function renderWithClient(
   return { ...utils, user };
 }
 
-it.only("loads a query and suspends when the load query function is called", async () => {
+it("loads a query and suspends when the load query function is called", async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const Profiler = createDefaultProfiler<SimpleQueryData>();
@@ -270,12 +270,10 @@ it.only("loads a query and suspends when the load query function is called", asy
     );
   }
 
-  const { user } = renderWithMocks(
-    <Profiler>
-      <App />
-    </Profiler>,
-    { mocks }
-  );
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -326,12 +324,10 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     );
   }
 
-  const { user } = renderWithMocks(
-    <Profiler>
-      <App />
-    </Profiler>,
-    { mocks }
-  );
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -388,12 +384,10 @@ it("changes variables on a query and resuspends when passing new variables to th
     );
   };
 
-  const { user } = renderWithMocks(
-    <Profiler>
-      <App />
-    </Profiler>,
-    { mocks }
-  );
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -479,12 +473,10 @@ it("allows the client to be overridden", async () => {
     );
   }
 
-  const { user } = renderWithClient(
-    <Profiler>
-      <App />
-    </Profiler>,
-    { client: globalClient }
-  );
+  const { user } = renderWithClient(<App />, {
+    client: globalClient,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -545,12 +537,10 @@ it("passes context to the link", async () => {
     );
   }
 
-  const { user } = renderWithClient(
-    <Profiler>
-      <App />
-    </Profiler>,
-    { client }
-  );
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -633,12 +623,10 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     );
   }
 
-  const { user } = renderWithClient(
-    <Profiler>
-      <App />
-    </Profiler>,
-    { client }
-  );
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -776,12 +764,10 @@ it("returns initial cache data followed by network data when the fetch policy is
     );
   }
 
-  const { user } = renderWithClient(
-    <Profiler>
-      <App />
-    </Profiler>,
-    { client }
-  );
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2210,12 +2196,10 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     );
   }
 
-  const { user } = renderWithMocks(
-    <Profiler>
-      <App />
-    </Profiler>,
-    { mocks }
-  );
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   // initial render
   await Profiler.takeRender();
@@ -2301,12 +2285,10 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     );
   }
 
-  const { user } = renderWithMocks(
-    <Profiler>
-      <App />
-    </Profiler>,
-    { mocks }
-  );
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 

@@ -2517,8 +2517,10 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     },
   ];
 
-  const { SuspenseFallback, ReadQueryHook, ErrorBoundary } =
-    createDefaultProfiledComponents<VariablesCaseData | undefined>();
+  const Profiler = createDefaultProfiler<VariablesCaseData | undefined>();
+
+  const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
@@ -2538,24 +2540,48 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
-  await ReadQueryHook.waitForNextSnapshot();
+
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: "Captain Marvel" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
   await act(() => user.click(screen.getByText("Refetch")));
 
-  // TODO: Figure out why there is an extra render here.
-  // Perhaps related? https://github.com/apollographql/apollo-client/issues/11315
-  await ReadQueryHook.takeSnapshot();
-  const snapshot = await ReadQueryHook.takeSnapshot();
+  // refetch
+  await Profiler.takeRender();
 
-  expect(snapshot).toEqual({
-    data: { character: { id: "1", name: null } },
-    error: new ApolloError({
-      graphQLErrors: [new GraphQLError("Something went wrong")],
-    }),
-    networkStatus: NetworkStatus.error,
-  });
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).not.toContain(ErrorFallback);
+    expect(snapshot.error).toBeNull();
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: null } },
+      error: new ApolloError({
+        graphQLErrors: [new GraphQLError("Something went wrong")],
+      }),
+      networkStatus: NetworkStatus.error,
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {

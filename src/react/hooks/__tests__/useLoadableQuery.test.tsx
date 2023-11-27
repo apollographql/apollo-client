@@ -1027,9 +1027,12 @@ it("fetches data from the network but does not update the cache when `fetchPolic
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
+  const Profiler = createDefaultProfiler();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "no-cache",
     });
@@ -1044,19 +1047,31 @@ it("fetches data from the network but does not update the cache when `fetchPolic
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
 
-  const snapshot = await ReadQueryHook.takeSnapshot();
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  expect(snapshot).toEqual({
-    data: { hello: "from link" },
-    error: undefined,
-    networkStatus: NetworkStatus.ready,
-  });
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { hello: "from link" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   expect(client.extract()).toEqual({
     ROOT_QUERY: { __typename: "Query", hello: "from cache" },

@@ -60,7 +60,7 @@
     "predeploy": "npm run build",
     "deploy": "cd dist && npm publish --tag next",
     "typedoc": "typedoc src/index.ts --json docs/public/docs.json",
-    "docmodel": "tsc && npm run inline-inherit-doc && ts-node-script config/apiExtractor.ts --main-only --generate docModel && cp docs/public/client.api.json docs/shared/client.api.json",
+    "docmodel": "tsc && npm run inline-inherit-doc && ts-node-script config/apiExtractor.ts --main-only --generate docModel",
     "changeset-publish": "npm run build && npm run prepdist:changesets && cd dist && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",
     "changeset-version": "changeset version && npm i",

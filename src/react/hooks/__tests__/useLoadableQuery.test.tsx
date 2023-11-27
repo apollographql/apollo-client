@@ -826,9 +826,12 @@ it("all data is present in the cache, no network request is made", async () => {
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
-  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents();
+  const Profiler = createDefaultProfiler();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(query);
 
     return (
@@ -841,21 +844,26 @@ it("all data is present in the cache, no network request is made", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
 
-  const snapshot = await ReadQueryHook.takeSnapshot();
+  const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  expect(snapshot).toEqual({
+  expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+  expect(snapshot.result).toEqual({
     data: { hello: "from cache" },
     networkStatus: NetworkStatus.ready,
     error: undefined,
   });
 
-  expect(ReadQueryHook).not.toRerender();
+  await expect(Profiler).not.toRerender();
 });
 
 it("partial data is present in the cache so it is ignored and network request is made", async () => {

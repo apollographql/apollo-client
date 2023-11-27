@@ -1246,10 +1246,12 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   });
   const client = new ApolloClient({ cache, link });
 
+  const Profiler = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<Data>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "cache-and-network",
     });
@@ -1263,16 +1265,22 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load todo")));
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+
+    expect(snapshot.result).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -1295,9 +1303,10 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   });
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -1329,9 +1338,10 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   );
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -1343,6 +1353,8 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("reacts to cache updates", async () => {

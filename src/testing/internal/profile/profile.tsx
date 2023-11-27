@@ -88,8 +88,57 @@ interface ProfiledComponentFields<Snapshot> {
   waitForNextRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
 }
 
+export interface ProfiledComponent<Snapshot extends ValidSnapshot, Props = {}>
+  extends React.FC<Props>,
+    ProfiledComponentFields<Snapshot>,
+    ProfiledComponentOnlyFields<Snapshot> {}
+
 /** @internal */
-export function createProfiler<Snapshot extends ValidSnapshot = void>({
+export function profile<Snapshot extends ValidSnapshot = void, Props = {}>({
+  Component,
+  ...options
+}: {
+  onRender?: (
+    info: BaseRender & {
+      snapshot: Snapshot;
+      replaceSnapshot: ReplaceSnapshot<Snapshot>;
+      mergeSnapshot: MergeSnapshot<Snapshot>;
+    }
+  ) => void;
+  Component: React.ComponentType<Props>;
+  snapshotDOM?: boolean;
+  initialSnapshot?: Snapshot;
+}): ProfiledComponent<Snapshot, Props> {
+  const Profiler = createProfiler(options);
+
+  return Object.assign(
+    function ProfiledComponent(props: Props) {
+      return (
+        <Profiler>
+          <Component {...(props as any)} />
+        </Profiler>
+      );
+    },
+    {
+      mergeSnapshot: Profiler.mergeSnapshot,
+      replaceSnapshot: Profiler.replaceSnapshot,
+      getCurrentRender: Profiler.getCurrentRender,
+      peekRender: Profiler.peekRender,
+      takeRender: Profiler.takeRender,
+      totalRenderCount: Profiler.totalRenderCount,
+      waitForNextRender: Profiler.waitForNextRender,
+      get renders() {
+        return Profiler.renders;
+      },
+    }
+  );
+}
+
+/** @internal */
+export function createProfiler<
+  Snapshot extends ValidSnapshot = void,
+  Props = {},
+>({
   onRender,
   snapshotDOM = false,
   initialSnapshot,

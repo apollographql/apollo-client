@@ -1,6 +1,12 @@
-export type { NextRenderOptions, Profiler, ProfiledHook } from "./profile.js";
+export type {
+  NextRenderOptions,
+  Profiler,
+  ProfiledComponent,
+  ProfiledHook,
+} from "./profile.js";
 export {
   createProfiler,
+  profile,
   profileHook,
   useTrackRender,
   WaitForRenderTimeoutError,

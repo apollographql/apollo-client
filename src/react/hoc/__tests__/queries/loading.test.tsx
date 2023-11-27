@@ -13,7 +13,7 @@ import { InMemoryCache as Cache } from "../../../../cache";
 import { itAsync, mockSingleLink } from "../../../../testing";
 import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
-import { createTestProfiler } from "../../../../testing/internal";
+import { createProfiler } from "../../../../testing/internal";
 
 describe("[queries] loading", () => {
   // networkStatus / loading
@@ -413,7 +413,7 @@ describe("[queries] loading", () => {
       }
     );
 
-    const ProfiledContainer = createTestProfiler<
+    const ProfiledContainer = createProfiler<
       DataValue<{
         allPeople: {
           people: {

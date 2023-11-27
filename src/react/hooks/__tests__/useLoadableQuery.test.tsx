@@ -45,7 +45,7 @@ import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
   Profiler,
-  createTestProfiler,
+  createProfiler,
   spyOnConsole,
   useTrackRender,
 } from "../../../testing/internal";
@@ -155,7 +155,7 @@ function usePaginatedQueryCase() {
 }
 
 function createDefaultProfiler<TData>() {
-  return createTestProfiler({
+  return createProfiler({
     initialSnapshot: {
       error: null as Error | null,
       result: null as UseReadQueryResult<TData> | null,
@@ -1295,7 +1295,7 @@ it("reacts to cache updates", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createTestProfiler({
+  const Profiler = createProfiler({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleQueryData> | null,
     },

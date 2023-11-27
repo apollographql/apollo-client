@@ -11,7 +11,7 @@ import { ApolloProvider } from "../../../context";
 import { itAsync, MockedProvider, mockSingleLink } from "../../../../testing";
 import { Query } from "../../Query";
 import { QueryResult } from "../../../types/types";
-import { createTestProfiler } from "../../../../testing/internal";
+import { createProfiler } from "../../../../testing/internal";
 
 const allPeopleQuery: DocumentNode = gql`
   query people {
@@ -1498,7 +1498,7 @@ describe("Query component", () => {
       );
     }
 
-    const ProfiledContainer = createTestProfiler<QueryResult>({
+    const ProfiledContainer = createProfiler<QueryResult>({
       Component: Container,
     });
 

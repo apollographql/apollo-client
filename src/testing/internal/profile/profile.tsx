@@ -89,7 +89,7 @@ interface ProfiledComponentFields<Snapshot> {
 }
 
 /** @internal */
-export function createTestProfiler<Snapshot extends ValidSnapshot = void>({
+export function createProfiler<Snapshot extends ValidSnapshot = void>({
   onRender,
   snapshotDOM = false,
   initialSnapshot,
@@ -341,7 +341,7 @@ export interface ProfiledHook<Props, ReturnValue>
 export function profileHook<ReturnValue extends ValidSnapshot, Props>(
   renderCallback: (props: Props) => ReturnValue
 ): ProfiledHook<Props, ReturnValue> {
-  const Profiler = createTestProfiler<ReturnValue>();
+  const Profiler = createProfiler<ReturnValue>();
 
   const ProfiledHook = (props: Props) => {
     Profiler.replaceSnapshot(renderCallback(props));

@@ -51,7 +51,7 @@ import {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions";
-import { createTestProfiler, spyOnConsole } from "../../../testing/internal";
+import { createProfiler, spyOnConsole } from "../../../testing/internal";
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -371,7 +371,7 @@ describe("useSuspenseQuery", () => {
       );
     };
 
-    const ProfiledApp = createTestProfiler<
+    const ProfiledApp = createProfiler<
       UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
     >({
       Component: App,
@@ -9613,7 +9613,7 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    const ProfiledApp = createTestProfiler({
+    const ProfiledApp = createProfiler({
       Component: App,
       snapshotDOM: true,
     });

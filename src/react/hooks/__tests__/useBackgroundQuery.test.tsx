@@ -154,17 +154,15 @@ interface VariablesCaseVariables {
 }
 
 function useVariablesIntegrationTestCase() {
-  const query: TypedDocumentNode<
-    VariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
+  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+    gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
       }
-    }
-  `;
+    `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
   let mocks = [...CHARACTERS].map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },

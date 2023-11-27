@@ -46,8 +46,8 @@ export function defaultDataIdFromObject(
       context.keyObject = !isNullish(id)
         ? { id }
         : !isNullish(_id)
-        ? { _id }
-        : void 0;
+          ? { _id }
+          : void 0;
     }
 
     // If there is no object.id, fall back to object._id.

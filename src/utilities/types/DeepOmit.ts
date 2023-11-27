@@ -26,7 +26,7 @@ export type DeepOmit<T, K> = T extends DeepOmitPrimitive
         ? TP extends DeepOmitPrimitive
           ? TP
           : TP extends any[]
-          ? DeepOmitArray<TP, K>
-          : DeepOmit<TP, K>
+            ? DeepOmitArray<TP, K>
+            : DeepOmit<TP, K>
         : never;
     };

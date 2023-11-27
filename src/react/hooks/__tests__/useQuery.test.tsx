@@ -6412,8 +6412,8 @@ describe("useQuery Hook", () => {
                   gender === "all"
                     ? peopleData
                     : gender
-                    ? peopleData.filter((person) => person.gender === gender)
-                    : peopleData,
+                      ? peopleData.filter((person) => person.gender === gender)
+                      : peopleData,
               },
             });
             observer.complete();

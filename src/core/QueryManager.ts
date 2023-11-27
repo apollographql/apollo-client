@@ -1568,11 +1568,11 @@ export class QueryManager<TStore> {
       fetchPolicy === "no-cache"
         ? CacheWriteBehavior.FORBID
         : // Watched queries must opt into overwriting existing data on refetch,
-        // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
-        networkStatus === NetworkStatus.refetch &&
-          refetchWritePolicy !== "merge"
-        ? CacheWriteBehavior.OVERWRITE
-        : CacheWriteBehavior.MERGE;
+          // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
+          networkStatus === NetworkStatus.refetch &&
+            refetchWritePolicy !== "merge"
+          ? CacheWriteBehavior.OVERWRITE
+          : CacheWriteBehavior.MERGE;
 
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {

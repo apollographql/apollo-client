@@ -750,8 +750,8 @@ function mergeMergeTrees(
   const map = needToMergeMaps
     ? new Map()
     : left.map.size
-    ? left.map
-    : right.map;
+      ? left.map
+      : right.map;
 
   const merged = { info, map };
 

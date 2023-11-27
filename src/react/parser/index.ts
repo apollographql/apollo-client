@@ -105,8 +105,8 @@ export function parser(document: DocumentNode): IDocumentDefinition {
   const definitions = queries.length
     ? queries
     : mutations.length
-    ? mutations
-    : subscriptions;
+      ? mutations
+      : subscriptions;
 
   invariant(
     definitions.length === 1,

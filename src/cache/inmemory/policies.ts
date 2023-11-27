@@ -175,8 +175,8 @@ function argsFromFieldSpecifier(spec: FieldSpecifier) {
   return spec.args !== void 0
     ? spec.args
     : spec.field
-    ? argumentsObjectFromField(spec.field, spec.variables)
-    : null;
+      ? argumentsObjectFromField(spec.field, spec.variables)
+      : null;
 }
 
 export interface FieldFunctionOptions<
@@ -454,14 +454,14 @@ export class Policies {
         typeof merge === "function"
           ? merge
           : // Pass merge:true as a shorthand for a merge implementation
-          // that returns options.mergeObjects(existing, incoming).
-          merge === true
-          ? mergeTrueFn
-          : // Pass merge:false to make incoming always replace existing
-          // without any warnings about data clobbering.
-          merge === false
-          ? mergeFalseFn
-          : existing.merge;
+            // that returns options.mergeObjects(existing, incoming).
+            merge === true
+            ? mergeTrueFn
+            : // Pass merge:false to make incoming always replace existing
+              // without any warnings about data clobbering.
+              merge === false
+              ? mergeFalseFn
+              : existing.merge;
     }
 
     // Type policies can define merge functions, as an alternative to
@@ -473,14 +473,14 @@ export class Policies {
       keyFields === false
         ? nullKeyFieldsFn
         : // Pass an array of strings to use those fields to compute a
-        // composite ID for objects of this typename.
-        isArray(keyFields)
-        ? keyFieldsFnFromSpecifier(keyFields)
-        : // Pass a function to take full control over identification.
-        typeof keyFields === "function"
-        ? keyFields
-        : // Leave existing.keyFn unchanged if above cases fail.
-          existing.keyFn;
+          // composite ID for objects of this typename.
+          isArray(keyFields)
+          ? keyFieldsFnFromSpecifier(keyFields)
+          : // Pass a function to take full control over identification.
+            typeof keyFields === "function"
+            ? keyFields
+            : // Leave existing.keyFn unchanged if above cases fail.
+              existing.keyFn;
 
     if (fields) {
       Object.keys(fields).forEach((fieldName) => {
@@ -498,14 +498,14 @@ export class Policies {
             keyArgs === false
               ? simpleKeyArgsFn
               : // Pass an array of strings to use named arguments to
-              // compute a composite identity for the field.
-              isArray(keyArgs)
-              ? keyArgsFnFromSpecifier(keyArgs)
-              : // Pass a function to take full control over field identity.
-              typeof keyArgs === "function"
-              ? keyArgs
-              : // Leave existing.keyFn unchanged if above cases fail.
-                existing.keyFn;
+                // compute a composite identity for the field.
+                isArray(keyArgs)
+                ? keyArgsFnFromSpecifier(keyArgs)
+                : // Pass a function to take full control over field identity.
+                  typeof keyArgs === "function"
+                  ? keyArgs
+                  : // Leave existing.keyFn unchanged if above cases fail.
+                    existing.keyFn;
 
           if (typeof read === "function") {
             existing.read = read;

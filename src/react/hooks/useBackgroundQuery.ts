@@ -47,8 +47,8 @@ export function useBackgroundQuery<
             ? DeepPartial<TData> | undefined
             : TData | undefined
           : TOptions["returnPartialData"] extends true
-          ? DeepPartial<TData>
-          : TData
+            ? DeepPartial<TData>
+            : TData
       >
     | (TOptions["skip"] extends boolean ? undefined : never)
   ),

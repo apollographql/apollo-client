@@ -14,8 +14,8 @@ export function captureStackTrace(callingFunction?: string | (() => {})) {
     typeof callingFunction === "string"
       ? callingFunction
       : callingFunction
-      ? callingFunction.name
-      : undefined;
+        ? callingFunction.name
+        : undefined;
 
   if (callerName && stack.includes(callerName)) {
     const lines = stack.split("\n");

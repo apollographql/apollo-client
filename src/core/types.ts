@@ -77,21 +77,21 @@ export type RefetchQueriesPromiseResults<TResult> =
   IsStrictlyAny<TResult> extends true
     ? any[]
     : // If the onQueryUpdated function passed to client.refetchQueries returns true
-    // or false, that means either to refetch the query (true) or to skip the
-    // query (false). Since refetching produces an ApolloQueryResult<any>, and
-    // skipping produces nothing, the fully-resolved array of all results produced
-    // will be an ApolloQueryResult<any>[], when TResult extends boolean.
-    TResult extends boolean
-    ? ApolloQueryResult<any>[]
-    : // If onQueryUpdated returns a PromiseLike<U>, that thenable will be passed as
-    // an array element to Promise.all, so we infer/unwrap the array type U here.
-    TResult extends PromiseLike<infer U>
-    ? U[]
-    : // All other onQueryUpdated results end up in the final Promise.all array as
-      // themselves, with their original TResult type. Note that TResult will
-      // default to ApolloQueryResult<any> if no onQueryUpdated function is passed
-      // to client.refetchQueries.
-      TResult[];
+      // or false, that means either to refetch the query (true) or to skip the
+      // query (false). Since refetching produces an ApolloQueryResult<any>, and
+      // skipping produces nothing, the fully-resolved array of all results produced
+      // will be an ApolloQueryResult<any>[], when TResult extends boolean.
+      TResult extends boolean
+      ? ApolloQueryResult<any>[]
+      : // If onQueryUpdated returns a PromiseLike<U>, that thenable will be passed as
+        // an array element to Promise.all, so we infer/unwrap the array type U here.
+        TResult extends PromiseLike<infer U>
+        ? U[]
+        : // All other onQueryUpdated results end up in the final Promise.all array as
+          // themselves, with their original TResult type. Note that TResult will
+          // default to ApolloQueryResult<any> if no onQueryUpdated function is passed
+          // to client.refetchQueries.
+          TResult[];
 
 // The result of client.refetchQueries is thenable/awaitable, if you just want
 // an array of fully resolved results, but you can also access the raw results

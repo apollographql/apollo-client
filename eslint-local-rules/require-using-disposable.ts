@@ -58,6 +58,6 @@ function parts(type: ts.Type): ts.Type[] {
   return type.isUnion()
     ? utils.unionTypeParts(type).flatMap(parts)
     : type.isIntersection()
-    ? utils.intersectionTypeParts(type).flatMap(parts)
-    : [type];
+      ? utils.intersectionTypeParts(type).flatMap(parts)
+      : [type];
 }

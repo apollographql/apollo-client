@@ -302,8 +302,8 @@ type ResultReplaceRenderWithSnapshot<T> = T extends (
 ) => Render<infer Snapshot>
   ? (...args: Args) => Snapshot
   : T extends (...args: infer Args) => Promise<Render<infer Snapshot>>
-  ? (...args: Args) => Promise<Snapshot>
-  : T;
+    ? (...args: Args) => Promise<Snapshot>
+    : T;
 
 type ProfiledHookFields<Props, ReturnValue> = ProfiledComponentFields<
   Props,

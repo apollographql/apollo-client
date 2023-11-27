@@ -114,8 +114,8 @@ type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<
       : never
     : never
   : StoreVal extends Record<string, any>
-  ? AsStoreObject<StoreVal> | Reference
-  : StoreVal;
+    ? AsStoreObject<StoreVal> | Reference
+    : StoreVal;
 
 export type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<
   Entity[keyof Entity] extends infer Value

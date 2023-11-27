@@ -76,12 +76,12 @@ export function useSuspenseQuery<
       ? DeepPartial<TData> | undefined
       : TData | undefined
     : TOptions["returnPartialData"] extends true
-    ? TOptions["skip"] extends boolean
-      ? DeepPartial<TData> | undefined
-      : DeepPartial<TData>
-    : TOptions["skip"] extends boolean
-    ? TData | undefined
-    : TData,
+      ? TOptions["skip"] extends boolean
+        ? DeepPartial<TData> | undefined
+        : DeepPartial<TData>
+      : TOptions["skip"] extends boolean
+        ? TData | undefined
+        : TData,
   TVariables
 >;
 

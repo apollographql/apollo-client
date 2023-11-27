@@ -5,6 +5,7 @@ import {
   screen,
   renderHook,
   waitFor,
+  RenderOptions,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
@@ -209,12 +210,20 @@ function createDefaultProfiledComponents<
   };
 }
 
-function renderWithMocks(ui: React.ReactElement, props: MockedProviderProps) {
+function renderWithMocks(
+  ui: React.ReactElement,
+  {
+    wrapper: Wrapper = React.Fragment,
+    ...props
+  }: MockedProviderProps & { wrapper?: RenderOptions["wrapper"] }
+) {
   const user = userEvent.setup();
 
   const utils = render(ui, {
     wrapper: ({ children }) => (
-      <MockedProvider {...props}>{children}</MockedProvider>
+      <MockedProvider {...props}>
+        <Wrapper>{children}</Wrapper>
+      </MockedProvider>
     ),
   });
 
@@ -223,21 +232,23 @@ function renderWithMocks(ui: React.ReactElement, props: MockedProviderProps) {
 
 function renderWithClient(
   ui: React.ReactElement,
-  options: { client: ApolloClient<any> }
+  options: { client: ApolloClient<any>; wrapper?: RenderOptions["wrapper"] }
 ) {
-  const { client } = options;
+  const { client, wrapper: Wrapper = React.Fragment } = options;
   const user = userEvent.setup();
 
   const utils = render(ui, {
     wrapper: ({ children }) => (
-      <ApolloProvider client={client}>{children}</ApolloProvider>
+      <ApolloProvider client={client}>
+        <Wrapper>{children}</Wrapper>
+      </ApolloProvider>
     ),
   });
 
   return { ...utils, user };
 }
 
-it("loads a query and suspends when the load query function is called", async () => {
+it.only("loads a query and suspends when the load query function is called", async () => {
   const { query, mocks } = useSimpleQueryCase();
 
   const Profiler = createDefaultProfiler<SimpleQueryData>();

@@ -688,8 +688,9 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     data: { results },
   });
 
+  const Profiler = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<QueryData>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [loadQuery, queryRef] = useLoadableQuery(query, {
@@ -706,15 +707,21 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     );
   }
 
-  const { user } = renderWithMocks(<App />, { cache });
+  const { user } = renderWithMocks(<App />, {
+    cache,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  const snapshot = await ReadQueryHook.takeSnapshot();
-  const resultSet = new Set(snapshot.data.results);
+  // initial render
+  await Profiler.takeRender();
+
+  const { snapshot } = await Profiler.takeRender();
+  const resultSet = new Set(snapshot.result!.data.results);
   const values = Array.from(resultSet).map((item) => item.value);
 
-  expect(snapshot).toEqual({
+  expect(snapshot.result).toEqual({
     data: { results },
     networkStatus: NetworkStatus.ready,
     error: undefined,

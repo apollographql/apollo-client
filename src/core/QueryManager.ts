@@ -8,7 +8,6 @@ import { equal } from "@wry/equality";
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
 import {
-  compact,
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
@@ -1161,9 +1160,7 @@ export class QueryManager<TStore> {
     return asyncMap(
       this.getObservableFromLink(
         linkDocument,
-        // explicitly a shallow merge so any class instances etc. a user might
-        // put in here will not be merged into each other.
-        compact(this.defaultContext, options.context),
+        options.context,
         options.variables
       ),
 
@@ -1676,6 +1673,7 @@ export class QueryManager<TStore> {
   private prepareContext(context = {}) {
     const newContext = this.localState.prepareContext(context);
     return {
+      ...this.defaultContext,
       ...newContext,
       clientAwareness: this.clientAwareness,
     };

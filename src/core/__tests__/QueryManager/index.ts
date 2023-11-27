@@ -6180,7 +6180,11 @@ describe("QueryManager", () => {
       }).toThrowError(/Cannot set property defaultContext/);
     });
 
-    it("`defaultContext` will be applied to the context of a query", async () => {
+    it.each([
+      ["query", {method: "query", option: "query"}],
+      ["mutation", {method:"mutate", option: "mutation"}],
+      ["subscription", {method:"subscribe", option: "query"}]
+    ]as const)("`defaultContext` will be applied to the context of a %s", async (_, {method, option}) => {
       let context: any;
       const client = new ApolloClient({
         cache: new InMemoryCache(),
@@ -6196,8 +6200,9 @@ describe("QueryManager", () => {
         },
       });
 
-      await client.query({
-        query: gql`
+      // @ts-ignore a bit too generic for TS
+      client[method]({
+        [option]: gql`
           query {
             foo
           }

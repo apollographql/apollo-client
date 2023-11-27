@@ -30,8 +30,12 @@ const checks = [
       config.name || config.import
         ? `import ${config.import} from "${config.path}"`
         : config.path,
+    // newer versions of size-limit changed to brotli as a default
+    // we'll stay on gzip for now, so results are easier to compare
+    gzip: true,
     ignore: [
       ...(config.ignore || []),
+      "rehackt",
       "react",
       "react-dom",
       "@graphql-typed-document-node/core",

@@ -588,7 +588,7 @@ class DocumentTransform {
     // (undocumented)
     static identity(): DocumentTransform;
     // (undocumented)
-    resetCache(): void;
+    resetCache(enableCaching?: boolean): void;
     // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform;
     // (undocumented)

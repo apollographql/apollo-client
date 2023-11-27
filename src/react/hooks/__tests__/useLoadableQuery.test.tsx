@@ -3171,8 +3171,9 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     },
   });
 
+  const Profiler = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<QueryData>();
+    createDefaultProfiledComponents(Profiler);
 
   const client = new ApolloClient({
     link: new MockLink(mocks),
@@ -3197,14 +3198,22 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
       data: { primes: [2, 3, 5, 7, 11] },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -3214,10 +3223,13 @@ it('honors refetchWritePolicy set to "merge"', async () => {
 
   await act(() => user.click(screen.getByText("Refetch")));
 
-  {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+  // refetch
+  await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -3230,6 +3242,8 @@ it('honors refetchWritePolicy set to "merge"', async () => {
       ],
     ]);
   }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it('defaults refetchWritePolicy to "overwrite"', async () => {

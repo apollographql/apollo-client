@@ -2342,8 +2342,10 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     },
   ];
 
+  const Profiler = createDefaultProfiler<VariablesCaseData | undefined>();
+
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
-    createDefaultProfiledComponents<VariablesCaseData | undefined>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
@@ -2363,22 +2365,48 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
+
+  // initial render
+  await Profiler.takeRender();
 
   await act(() => user.click(screen.getByText("Load query")));
-  await ReadQueryHook.takeSnapshot();
-  await act(() => user.click(screen.getByText("Refetch")));
+
+  // load query
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot.result).toStrictEqual({
       data: { character: { id: "1", name: "Captain Marvel" } },
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
-    expect(ErrorFallback).not.toHaveRendered();
   }
+
+  await act(() => user.click(screen.getByText("Refetch")));
+
+  // refetch
+  await Profiler.takeRender();
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(snapshot.error).toBeNull();
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: "Captain Marvel" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+
+    expect(renderedComponents).not.toContain(ErrorFallback);
+  }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {

@@ -63,7 +63,7 @@ export interface Render<Snapshot> extends BaseRender {
    */
   withinDOM: () => SyncScreen;
 
-  renderedComponents: React.ComponentType[];
+  renderedComponents: Array<string | React.ComponentType>;
 }
 
 /** @internal */
@@ -80,7 +80,7 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
     baseRender: BaseRender,
     public snapshot: Snapshot,
     private stringifiedDOM: string | undefined,
-    public renderedComponents: React.ComponentType[]
+    public renderedComponents: Array<string | React.ComponentType>
   ) {
     this.id = baseRender.id;
     this.phase = baseRender.phase;

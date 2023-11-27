@@ -2876,8 +2876,9 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
 
 it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
   const { query, link } = usePaginatedQueryCase();
+  const Profiler = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<PaginatedQueryData>();
+    createDefaultProfiledComponents(Profiler);
 
   const client = new ApolloClient({
     link,
@@ -2910,16 +2911,22 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.waitForNextSnapshot();
+    const { snapshot } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot.result).toEqual({
       data: {
         letters: [
           { letter: "A", position: 1 },
@@ -2933,16 +2940,13 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
 
   await act(() => user.click(screen.getByText("Fetch more")));
 
-  expect(SuspenseFallback).toHaveRenderedTimes(2);
-
-  // TODO: Figure out why there is an extra render here.
-  // Perhaps related? https://github.com/apollographql/apollo-client/issues/11315
-  await ReadQueryHook.takeSnapshot();
+  // fetch more
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot.result).toEqual({
       data: {
         letters: [
           { letter: "A", position: 1 },
@@ -2955,6 +2959,8 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {

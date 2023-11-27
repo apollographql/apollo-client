@@ -1,7 +1,7 @@
 import * as React from "react";
 
 export interface ProfilerContextValue {
-  renderedComponents: React.ComponentType[];
+  renderedComponents: Array<React.ComponentType | string>;
 }
 
 const ProfilerContext = React.createContext<ProfilerContextValue | undefined>(

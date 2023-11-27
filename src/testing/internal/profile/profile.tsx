@@ -427,13 +427,18 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
   );
 }
 
-export function useTrackRender() {
-  const owner: React.ComponentType | undefined = (React as any)
-    .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentOwner
-    ?.current?.elementType;
+function resolveHookOwner(): React.ComponentType | undefined {
+  return (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+    ?.ReactCurrentOwner?.current?.elementType;
+}
 
-  if (!owner) {
-    throw new Error("useTrackComponentRender: Unable to determine hook owner");
+export function useTrackRender({ name }: { name?: string } = {}) {
+  const component = name || resolveHookOwner();
+
+  if (!component) {
+    throw new Error(
+      "useTrackRender: Unable to determine component. Please ensure the hook is called inside a rendered component or provide a `name` option."
+    );
   }
 
   const ctx = useProfilerContext();
@@ -445,6 +450,6 @@ export function useTrackRender() {
   }
 
   React.useLayoutEffect(() => {
-    ctx.renderedComponents.unshift(owner);
+    ctx.renderedComponents.unshift(component);
   });
 }

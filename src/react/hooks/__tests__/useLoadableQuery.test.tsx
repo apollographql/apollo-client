@@ -2713,10 +2713,13 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
 
 it("re-suspends when calling `fetchMore` with different variables", async () => {
   const { query, client } = usePaginatedQueryCase();
+
+  const Profiler = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<PaginatedQueryData>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef, { fetchMore }] = useLoadableQuery(query);
 
     return (
@@ -2734,16 +2737,22 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.waitForNextSnapshot();
+    const { snapshot } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot.result).toEqual({
       data: {
         letters: [
           { letter: "A", position: 1 },
@@ -2757,16 +2766,17 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
 
   await act(() => user.click(screen.getByText("Fetch more")));
 
-  expect(SuspenseFallback).toHaveRenderedTimes(2);
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  // TODO: Figure out why there is an extra render here.
-  // Perhaps related? https://github.com/apollographql/apollo-client/issues/11315
-  await ReadQueryHook.takeSnapshot();
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: {
         letters: [
           { letter: "C", position: 3 },
@@ -2777,6 +2787,8 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("properly uses `updateQuery` when calling `fetchMore`", async () => {

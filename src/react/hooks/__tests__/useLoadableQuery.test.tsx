@@ -1447,8 +1447,9 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     },
   ];
 
+  const Profiler = createDefaultProfiler<SimpleQueryData>();
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
-    createDefaultProfiledComponents<SimpleQueryData>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [errorPolicy, setErrorPolicy] = useState<ErrorPolicy>("none");
@@ -1472,16 +1473,22 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1491,31 +1498,23 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
   await act(() => user.click(screen.getByText("Change error policy")));
   await act(() => user.click(screen.getByText("Refetch greeting")));
 
-  expect(SuspenseFallback).toHaveRenderedTimes(2);
+  // change error policy
+  await Profiler.takeRender();
+  // refetch
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
-      data: { greeting: "Hello" },
-      error: undefined,
-      networkStatus: NetworkStatus.ready,
-    });
-  }
-
-  {
-    const snapshot = await ReadQueryHook.takeSnapshot();
-
-    expect(snapshot).toEqual({
+    // Ensure we aren't rendering the error boundary and instead rendering the
+    // error message in the hook component.
+    expect(renderedComponents).not.toContain(ErrorFallback);
+    expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
       error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
       networkStatus: NetworkStatus.error,
     });
   }
-
-  // Ensure we aren't rendering the error boundary and instead rendering the
-  // error message in the hook component.
-  expect(ErrorFallback).not.toHaveRendered();
 });
 
 it("applies `context` on next fetch when it changes between renders", async () => {

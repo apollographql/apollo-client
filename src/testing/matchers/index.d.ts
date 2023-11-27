@@ -5,7 +5,7 @@ import type {
 } from "../../core/index.js";
 import {
   NextRenderOptions,
-  ProfiledComponent,
+  Profiler,
   ProfiledHook,
 } from "../internal/index.js";
 
@@ -19,7 +19,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   /**
    * Used to determine if a profiled component has rendered or not.
    */
-  toHaveRendered: T extends ProfiledComponent<any, any> | ProfiledHook<any, any>
+  toHaveRendered: T extends Profiler<any, any> | ProfiledHook<any, any>
     ? () => R
     : { error: "matcher needs to be called on a ProfiledComponent instance" };
 
@@ -27,9 +27,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
    * Used to determine if a profiled component has rendered a specific amount
    * of times or not.
    */
-  toHaveRenderedTimes: T extends
-    | ProfiledComponent<any, any>
-    | ProfiledHook<any, any>
+  toHaveRenderedTimes: T extends Profiler<any, any> | ProfiledHook<any, any>
     ? (count: number) => R
     : { error: "matcher needs to be called on a ProfiledComponent instance" };
 
@@ -46,13 +44,11 @@ interface ApolloCustomMatchers<R = void, T = {}> {
       ) => R
     : { error: "matcher needs to be called on an ApolloClient instance" };
 
-  toRerender: T extends ProfiledComponent<any, any> | ProfiledHook<any, any>
+  toRerender: T extends Profiler<any, any> | ProfiledHook<any, any>
     ? (options?: NextRenderOptions) => Promise<R>
     : { error: "matcher needs to be called on a ProfiledComponent instance" };
 
-  toRenderExactlyTimes: T extends
-    | ProfiledComponent<any, any>
-    | ProfiledHook<any, any>
+  toRenderExactlyTimes: T extends Profiler<any, any> | ProfiledHook<any, any>
     ? (count: number, options?: NextRenderOptions) => Promise<R>
     : { error: "matcher needs to be called on a ProfiledComponent instance" };
 }

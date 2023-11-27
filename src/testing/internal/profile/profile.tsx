@@ -8,6 +8,8 @@ global.TextDecoder ??= TextDecoder;
 import type { Render, BaseRender } from "./Render.js";
 import { RenderInstance } from "./Render.js";
 import { applyStackTrace, captureStackTrace } from "./traces.js";
+import type { ProfilerContextValue } from "./context.js";
+import { ProfilerContextProvider, useProfilerContext } from "./context.js";
 
 type ValidSnapshot = void | (object & { /* not a function */ call?: never });
 
@@ -20,10 +22,15 @@ export interface NextRenderOptions {
 }
 
 /** @internal */
-export interface ProfiledComponent<Props, Snapshot>
-  extends React.FC<Props>,
-    ProfiledComponentFields<Props, Snapshot>,
-    ProfiledComponentOnlyFields<Props, Snapshot> {}
+interface ProfilerProps {
+  children: React.ReactNode;
+}
+
+/** @internal */
+export interface Profiler<Snapshot>
+  extends React.FC<ProfilerProps>,
+    ProfiledComponentFields<Snapshot>,
+    ProfiledComponentOnlyFields<Snapshot> {}
 
 interface ReplaceSnapshot<Snapshot> {
   (newSnapshot: Snapshot): void;
@@ -39,13 +46,13 @@ interface MergeSnapshot<Snapshot> {
   ): void;
 }
 
-interface ProfiledComponentOnlyFields<Props, Snapshot> {
+interface ProfiledComponentOnlyFields<Snapshot> {
   // Allows for partial updating of the snapshot by shallow merging the results
   mergeSnapshot: MergeSnapshot<Snapshot>;
   // Performs a full replacement of the snapshot
   replaceSnapshot: ReplaceSnapshot<Snapshot>;
 }
-interface ProfiledComponentFields<Props, Snapshot> {
+interface ProfiledComponentFields<Snapshot> {
   /**
    * An array of all renders that have happened so far.
    * Errors thrown during component render will be captured here, too.
@@ -81,24 +88,61 @@ interface ProfiledComponentFields<Props, Snapshot> {
   waitForNextRender(options?: NextRenderOptions): Promise<Render<Snapshot>>;
 }
 
-interface ProfilerContextValue {
-  renderedComponents: string[];
-}
-const ProfilerContext = React.createContext<ProfilerContextValue | undefined>(
-  undefined
-);
+export interface ProfiledComponent<Snapshot extends ValidSnapshot, Props = {}>
+  extends React.FC<Props>,
+    ProfiledComponentFields<Snapshot>,
+    ProfiledComponentOnlyFields<Snapshot> {}
 
 /** @internal */
-export function profile<
-  Snapshot extends ValidSnapshot = void,
-  Props = Record<string, never>,
->({
+export function profile<Snapshot extends ValidSnapshot = void, Props = {}>({
   Component,
+  ...options
+}: {
+  onRender?: (
+    info: BaseRender & {
+      snapshot: Snapshot;
+      replaceSnapshot: ReplaceSnapshot<Snapshot>;
+      mergeSnapshot: MergeSnapshot<Snapshot>;
+    }
+  ) => void;
+  Component: React.ComponentType<Props>;
+  snapshotDOM?: boolean;
+  initialSnapshot?: Snapshot;
+}): ProfiledComponent<Snapshot, Props> {
+  const Profiler = createProfiler(options);
+
+  return Object.assign(
+    function ProfiledComponent(props: Props) {
+      return (
+        <Profiler>
+          <Component {...(props as any)} />
+        </Profiler>
+      );
+    },
+    {
+      mergeSnapshot: Profiler.mergeSnapshot,
+      replaceSnapshot: Profiler.replaceSnapshot,
+      getCurrentRender: Profiler.getCurrentRender,
+      peekRender: Profiler.peekRender,
+      takeRender: Profiler.takeRender,
+      totalRenderCount: Profiler.totalRenderCount,
+      waitForNextRender: Profiler.waitForNextRender,
+      get renders() {
+        return Profiler.renders;
+      },
+    }
+  );
+}
+
+/** @internal */
+export function createProfiler<
+  Snapshot extends ValidSnapshot = void,
+  Props = {},
+>({
   onRender,
   snapshotDOM = false,
   initialSnapshot,
 }: {
-  Component: React.ComponentType<Props>;
   onRender?: (
     info: BaseRender & {
       snapshot: Snapshot;
@@ -108,7 +152,7 @@ export function profile<
   ) => void;
   snapshotDOM?: boolean;
   initialSnapshot?: Snapshot;
-}) {
+} = {}) {
   let nextRender: Promise<Render<Snapshot>> | undefined;
   let resolveNextRender: ((render: Render<Snapshot>) => void) | undefined;
   let rejectNextRender: ((error: unknown) => void) | undefined;
@@ -159,7 +203,7 @@ export function profile<
       baseDuration,
       startTime,
       commitTime,
-      count: Profiled.renders.length + 1,
+      count: Profiler.renders.length + 1,
     };
     try {
       /*
@@ -187,12 +231,12 @@ export function profile<
         profilerContext.renderedComponents
       );
       profilerContext.renderedComponents = [];
-      Profiled.renders.push(render);
+      Profiler.renders.push(render);
       resolveNextRender?.(render);
     } catch (error) {
-      Profiled.renders.push({
+      Profiler.renders.push({
         phase: "snapshotError",
-        count: Profiled.renders.length,
+        count: Profiler.renders.length,
         error,
       });
       rejectNextRender?.(error);
@@ -201,35 +245,32 @@ export function profile<
     }
   };
 
-  const Wrapped = wrapComponentWithTracking(Component);
-
   let iteratorPosition = 0;
-  const Profiled: ProfiledComponent<Props, Snapshot> = Object.assign(
-    (props: Props) => {
-      const parentContext = React.useContext(ProfilerContext);
+  const Profiler: Profiler<Snapshot> = Object.assign(
+    ({ children }: ProfilerProps) => {
       return (
-        <ProfilerContext.Provider value={parentContext || profilerContext}>
+        <ProfilerContextProvider value={profilerContext}>
           <React.Profiler id="test" onRender={profilerOnRender}>
-            <Wrapped {...(props as any)} />
+            {children}
           </React.Profiler>
-        </ProfilerContext.Provider>
+        </ProfilerContextProvider>
       );
     },
     {
       replaceSnapshot,
       mergeSnapshot,
-    } satisfies ProfiledComponentOnlyFields<Props, Snapshot>,
+    } satisfies ProfiledComponentOnlyFields<Snapshot>,
     {
       renders: new Array<
         | Render<Snapshot>
         | { phase: "snapshotError"; count: number; error: unknown }
       >(),
       totalRenderCount() {
-        return Profiled.renders.length;
+        return Profiler.renders.length;
       },
       async peekRender(options: NextRenderOptions = {}) {
-        if (iteratorPosition < Profiled.renders.length) {
-          const render = Profiled.renders[iteratorPosition];
+        if (iteratorPosition < Profiler.renders.length) {
+          const render = Profiler.renders[iteratorPosition];
 
           if (render.phase === "snapshotError") {
             throw render.error;
@@ -237,16 +278,16 @@ export function profile<
 
           return render;
         }
-        return Profiled.waitForNextRender({
-          [_stackTrace]: captureStackTrace(Profiled.peekRender),
+        return Profiler.waitForNextRender({
+          [_stackTrace]: captureStackTrace(Profiler.peekRender),
           ...options,
         });
       },
       async takeRender(options: NextRenderOptions = {}) {
         let error: unknown = undefined;
         try {
-          return await Profiled.peekRender({
-            [_stackTrace]: captureStackTrace(Profiled.takeRender),
+          return await Profiler.peekRender({
+            [_stackTrace]: captureStackTrace(Profiler.takeRender),
             ...options,
           });
         } catch (e) {
@@ -272,7 +313,7 @@ export function profile<
           );
         }
 
-        const render = Profiled.renders[currentPosition];
+        const render = Profiler.renders[currentPosition];
 
         if (render.phase === "snapshotError") {
           throw render.error;
@@ -283,7 +324,7 @@ export function profile<
         timeout = 1000,
         // capture the stack trace here so its stack trace is as close to the calling code as possible
         [_stackTrace]: stackTrace = captureStackTrace(
-          Profiled.waitForNextRender
+          Profiler.waitForNextRender
         ),
       }: NextRenderOptions = {}) {
         if (!nextRender) {
@@ -305,9 +346,9 @@ export function profile<
         }
         return nextRender;
       },
-    } satisfies ProfiledComponentFields<Props, Snapshot>
+    } satisfies ProfiledComponentFields<Snapshot>
   );
-  return Profiled;
+  return Profiler;
 }
 
 /** @internal */
@@ -329,127 +370,81 @@ type ResultReplaceRenderWithSnapshot<T> = T extends (
   ? (...args: Args) => Promise<Snapshot>
   : T;
 
-type ProfiledHookFields<Props, ReturnValue> = ProfiledComponentFields<
-  Props,
-  ReturnValue
-> extends infer PC
-  ? {
-      [K in keyof PC as StringReplaceRenderWithSnapshot<
-        K & string
-      >]: ResultReplaceRenderWithSnapshot<PC[K]>;
-    }
-  : never;
+type ProfiledHookFields<ReturnValue> =
+  ProfiledComponentFields<ReturnValue> extends infer PC
+    ? {
+        [K in keyof PC as StringReplaceRenderWithSnapshot<
+          K & string
+        >]: ResultReplaceRenderWithSnapshot<PC[K]>;
+      }
+    : never;
 
 /** @internal */
 export interface ProfiledHook<Props, ReturnValue>
   extends React.FC<Props>,
-    ProfiledHookFields<Props, ReturnValue> {
-  ProfiledComponent: ProfiledComponent<Props, ReturnValue>;
+    ProfiledHookFields<ReturnValue> {
+  Profiler: Profiler<ReturnValue>;
 }
 
 /** @internal */
 export function profileHook<ReturnValue extends ValidSnapshot, Props>(
-  renderCallback: (props: Props) => ReturnValue,
-  { displayName = renderCallback.name || "ProfiledHook" } = {}
+  renderCallback: (props: Props) => ReturnValue
 ): ProfiledHook<Props, ReturnValue> {
-  let returnValue: ReturnValue;
+  const Profiler = createProfiler<ReturnValue>();
+
   const ProfiledHook = (props: Props) => {
-    ProfiledComponent.replaceSnapshot(renderCallback(props));
+    Profiler.replaceSnapshot(renderCallback(props));
     return null;
   };
-  ProfiledHook.displayName = displayName;
-  const ProfiledComponent = profile<ReturnValue, Props>({
-    Component: ProfiledHook,
-    onRender: () => returnValue,
-  });
+
   return Object.assign(
-    function ProfiledHook(props: Props) {
-      return <ProfiledComponent {...(props as any)} />;
+    function App(props: Props) {
+      return (
+        <Profiler>
+          <ProfiledHook {...(props as any)} />
+        </Profiler>
+      );
     },
     {
-      ProfiledComponent,
+      Profiler,
     },
     {
-      renders: ProfiledComponent.renders,
-      totalSnapshotCount: ProfiledComponent.totalRenderCount,
+      renders: Profiler.renders,
+      totalSnapshotCount: Profiler.totalRenderCount,
       async peekSnapshot(options) {
-        return (await ProfiledComponent.peekRender(options)).snapshot;
+        return (await Profiler.peekRender(options)).snapshot;
       },
       async takeSnapshot(options) {
-        return (await ProfiledComponent.takeRender(options)).snapshot;
+        return (await Profiler.takeRender(options)).snapshot;
       },
       getCurrentSnapshot() {
-        return ProfiledComponent.getCurrentRender().snapshot;
+        return Profiler.getCurrentRender().snapshot;
       },
       async waitForNextSnapshot(options) {
-        return (await ProfiledComponent.waitForNextRender(options)).snapshot;
+        return (await Profiler.waitForNextRender(options)).snapshot;
       },
-    } satisfies ProfiledHookFields<Props, ReturnValue>
+    } satisfies ProfiledHookFields<ReturnValue>
   );
 }
 
-function isReactClass<Props>(
-  Component: React.ComponentType<Props>
-): Component is React.ComponentClass<Props> {
-  let proto = Component;
-  while (proto && proto !== Object) {
-    if (proto === React.Component) return true;
-    proto = Object.getPrototypeOf(proto);
-  }
-  return false;
-}
-
-function getCurrentComponentName() {
+export function useTrackRender() {
   const owner: React.ComponentType | undefined = (React as any)
     .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentOwner
     ?.current?.elementType;
-  if (owner) return owner?.displayName || owner?.name;
 
-  try {
-    throw new Error();
-  } catch (e) {
-    return (e as Error).stack?.split("\n")[1].split(":")[0] || "";
+  if (!owner) {
+    throw new Error("useTrackComponentRender: Unable to determine hook owner");
   }
-}
 
-export function useTrackComponentRender(name = getCurrentComponentName()) {
-  const ctx = React.useContext(ProfilerContext);
+  const ctx = useProfilerContext();
+
+  if (!ctx) {
+    throw new Error(
+      "useTrackComponentRender: A Profiler must be created and rendered to track component renders"
+    );
+  }
+
   React.useLayoutEffect(() => {
-    ctx?.renderedComponents.unshift(name);
+    ctx.renderedComponents.unshift(owner);
   });
-}
-
-function wrapComponentWithTracking<Props>(
-  Component: React.ComponentType<Props>
-) {
-  if (!isReactClass(Component)) {
-    return function ComponentWithTracking(props: Props) {
-      useTrackComponentRender(Component.displayName || Component.name);
-      return Component(props);
-    };
-  }
-
-  let ctx: ProfilerContextValue;
-  class WrapperClass extends (Component as React.ComponentClass<Props, any>) {
-    constructor(props: Props) {
-      super(props);
-    }
-    componentDidMount() {
-      super.componentDidMount?.apply(this);
-      ctx!.renderedComponents.push(Component.displayName || Component.name);
-    }
-    componentDidUpdate() {
-      super.componentDidUpdate?.apply(
-        this,
-        arguments as unknown as Parameters<
-          NonNullable<React.Component<Props>["componentDidUpdate"]>
-        >
-      );
-      ctx!.renderedComponents.push(Component.displayName || Component.name);
-    }
-  }
-  return (props: any) => {
-    ctx = React.useContext(ProfilerContext)!;
-    return <WrapperClass {...props} />;
-  };
 }

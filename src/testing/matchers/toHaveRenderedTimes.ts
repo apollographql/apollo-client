@@ -1,13 +1,11 @@
 import type { MatcherFunction } from "expect";
-import type { ProfiledComponent, ProfiledHook } from "../internal/index.js";
+import type { Profiler, ProfiledHook } from "../internal/index.js";
 
 export const toHaveRenderedTimes: MatcherFunction<[count: number]> = function (
   actual,
   count
 ) {
-  let ProfiledComponent = actual as
-    | ProfiledComponent<any, any>
-    | ProfiledHook<any, any>;
+  let ProfiledComponent = actual as Profiler<any> | ProfiledHook<any, any>;
 
   if ("ProfiledComponent" in ProfiledComponent) {
     ProfiledComponent = ProfiledComponent.ProfiledComponent;

@@ -3389,8 +3389,9 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     },
   ];
 
+  const Profiler = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<DeepPartial<Data>>();
+    createDefaultProfiledComponents(Profiler);
 
   const cache = new InMemoryCache();
 
@@ -3402,6 +3403,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
   const client = new ApolloClient({ link: new MockLink(mocks), cache });
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(fullQuery, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
@@ -3417,33 +3419,41 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  // initial load
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot.result).toEqual({
       data: { character: { id: "1" } },
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
   }
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Doctor Strange" } },
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
   }
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  await expect(Profiler).not.toRerender();
 });
 
 it('suspends and does not use partial data from other variables in the cache when changing variables and using a "cache-first" fetch policy with returnPartialData: true', async () => {

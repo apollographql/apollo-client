@@ -3873,10 +3873,12 @@ it('suspends and does not use partial data when changing variables and using a "
     variables: { id: "1" },
   });
 
+  const Profiler = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<DeepPartial<VariablesCaseData>>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "cache-and-network",
       returnPartialData: true,
@@ -3893,16 +3895,22 @@ it('suspends and does not use partial data when changing variables and using a "
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks, cache });
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    cache,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).not.toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: { character: { id: "1" } },
       error: undefined,
       networkStatus: NetworkStatus.loading,
@@ -3910,9 +3918,10 @@ it('suspends and does not use partial data when changing variables and using a "
   }
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -3921,12 +3930,16 @@ it('suspends and does not use partial data when changing variables and using a "
 
   await act(() => user.click(screen.getByText("Change variables")));
 
-  expect(SuspenseFallback).toHaveRendered();
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot.result).toEqual({
       data: { character: { id: "2", name: "Black Widow" } },
       error: undefined,
       networkStatus: NetworkStatus.ready,

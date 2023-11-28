@@ -137,7 +137,7 @@ export function useLoadableQuery<
     queryRef.promiseCache = promiseCache;
   }
 
-  const failDuringRender = useRenderGuard();
+  const calledDuringRender = useRenderGuard();
 
   React.useEffect(() => queryRef?.retain(), [queryRef]);
 
@@ -183,12 +183,10 @@ export function useLoadableQuery<
 
   const loadQuery: LoadQueryFunction<TVariables> = React.useCallback(
     (...args) => {
-      failDuringRender(() => {
-        invariant(
-          false,
-          "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
-        );
-      });
+      invariant(
+        !calledDuringRender(),
+        "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
+      );
 
       const [variables] = args;
 
@@ -214,7 +212,7 @@ export function useLoadableQuery<
       suspenseCache,
       watchQueryOptions,
       promiseCache,
-      failDuringRender,
+      calledDuringRender,
     ]
   );
 

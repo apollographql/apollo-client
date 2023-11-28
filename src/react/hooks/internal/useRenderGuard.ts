@@ -14,15 +14,9 @@ https://github.com/facebook/relay/blob/8651fbca19adbfbb79af7a3bc40834d105fd7747/
 export function useRenderGuard() {
   RenderDispatcher = getRenderDispatcher();
 
-  // We use a callback argument here instead of the failure string so that the
-  // call site can provide a custom failure message while allowing for static
-  // message extraction on the `invariant` function.
-  return React.useCallback((onFailure: () => void) => {
-    if (
-      RenderDispatcher !== null &&
-      RenderDispatcher === getRenderDispatcher()
-    ) {
-      onFailure();
-    }
+  return React.useCallback(() => {
+    return (
+      RenderDispatcher !== null && RenderDispatcher === getRenderDispatcher()
+    );
   }, []);
 }

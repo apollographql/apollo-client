@@ -13,7 +13,7 @@ import type {
   InternalQueryReference,
 } from "../cache/QueryReference.js";
 import type { LoadableQueryHookOptions } from "../types/types.js";
-import { __use } from "./internal/index.js";
+import { __use, useRenderGuard } from "./internal/index.js";
 import { getSuspenseCache } from "../cache/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
@@ -24,8 +24,6 @@ import type {
 } from "../../utilities/index.js";
 import type { CacheKey } from "../cache/types.js";
 import { invariant } from "../../utilities/globals/index.js";
-
-let RenderDispatcher: unknown = null;
 
 export type LoadQueryFunction<TVariables extends OperationVariables> = (
   // Use variadic args to handle cases where TVariables is type `never`, in
@@ -115,7 +113,6 @@ export function useLoadableQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: LoadableQueryHookOptions = Object.create(null)
 ): UseLoadableQueryResult<TData, TVariables> {
-  RenderDispatcher = getRenderDispatcher();
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
@@ -136,6 +133,8 @@ export function useLoadableQuery<
   if (queryRef) {
     queryRef.promiseCache = promiseCache;
   }
+
+  const failDuringRender = useRenderGuard();
 
   React.useEffect(() => queryRef?.retain(), [queryRef]);
 
@@ -181,10 +180,12 @@ export function useLoadableQuery<
 
   const loadQuery: LoadQueryFunction<TVariables> = React.useCallback(
     (...args) => {
-      invariant(
-        getRenderDispatcher() !== RenderDispatcher,
-        "useLoadableQuery: loadQuery should not be called during render. To load a query during render, use `useBackgroundQuery`."
-      );
+      failDuringRender(() => {
+        invariant(
+          false,
+          "useLoadableQuery: loadQuery should not be called during render. To load a query during render, use `useBackgroundQuery`."
+        );
+      });
 
       const [variables] = args;
 
@@ -204,7 +205,14 @@ export function useLoadableQuery<
       promiseCache.set(queryRef.key, queryRef.promise);
       setQueryRef(queryRef);
     },
-    [query, queryKey, suspenseCache, watchQueryOptions, promiseCache]
+    [
+      query,
+      queryKey,
+      suspenseCache,
+      watchQueryOptions,
+      promiseCache,
+      failDuringRender,
+    ]
   );
 
   return React.useMemo(() => {
@@ -214,9 +222,4 @@ export function useLoadableQuery<
       { fetchMore, refetch },
     ];
   }, [queryRef, loadQuery, fetchMore, refetch]);
-}
-
-function getRenderDispatcher() {
-  return (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-    ?.ReactCurrentDispatcher?.current;
 }

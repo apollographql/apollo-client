@@ -284,6 +284,14 @@ export function createProfiler<
         });
       },
       async takeRender(options: NextRenderOptions = {}) {
+        // In many cases we do not control the resolution of the suspended
+        // promise which results in noisy tests when using this utility. Instead,
+        // we disable act warnings when using this utility.
+        //
+        // https://github.com/reactwg/react-18/discussions/102
+        const prevActEnv = (globalThis as any).IS_REACT_ACT_ENVIRONMENT;
+        (globalThis as any).IS_REACT_ACT_ENVIRONMENT = false;
+
         let error: unknown = undefined;
         try {
           return await Profiler.peekRender({
@@ -297,6 +305,7 @@ export function createProfiler<
           if (!(error && error instanceof WaitForRenderTimeoutError)) {
             iteratorPosition++;
           }
+          (globalThis as any).IS_REACT_ACT_ENVIRONMENT = prevActEnv;
         }
       },
       getCurrentRender() {

@@ -1541,8 +1541,9 @@ it("applies `context` on next fetch when it changes between renders", async () =
     cache: new InMemoryCache(),
   });
 
+  const Profiler = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<Data>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [phase, setPhase] = React.useState("initial");
@@ -1562,26 +1563,38 @@ it("applies `context` on next fetch when it changes between renders", async () =
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
 
-    expect(snapshot.data).toEqual({
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result!.data).toEqual({
       phase: "initial",
     });
   }
 
   await act(() => user.click(screen.getByText("Update context")));
   await act(() => user.click(screen.getByText("Refetch")));
-  await ReadQueryHook.takeSnapshot();
+
+  // update context
+  await Profiler.takeRender();
+  // refetch
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot } = await Profiler.takeRender();
 
-    expect(snapshot.data).toEqual({
+    expect(snapshot.result!.data).toEqual({
       phase: "rerender",
     });
   }

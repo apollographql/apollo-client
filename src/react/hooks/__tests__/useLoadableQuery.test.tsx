@@ -2181,10 +2181,12 @@ it("re-suspends when calling `refetch`", async () => {
     },
   ];
 
+  const Profiler = createDefaultProfiler<VariablesCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<VariablesCaseData>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query);
 
     return (
@@ -2198,18 +2200,26 @@ it("re-suspends when calling `refetch`", async () => {
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks });
-
-  expect(SuspenseFallback).not.toHaveRendered();
+  const { user } = renderWithMocks(<App />, {
+    mocks,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  expect(SuspenseFallback).toHaveRendered();
+  // initial render
+  await Profiler.takeRender();
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -2218,17 +2228,23 @@ it("re-suspends when calling `refetch`", async () => {
 
   await act(() => user.click(screen.getByText("Refetch")));
 
-  expect(SuspenseFallback).toHaveRenderedTimes(2);
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man (updated)" } },
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("re-suspends when calling `refetch` with new variables", async () => {

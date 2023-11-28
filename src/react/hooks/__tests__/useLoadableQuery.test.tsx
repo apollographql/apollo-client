@@ -49,7 +49,7 @@ import {
   Profiler,
   createProfiler,
   spyOnConsole,
-  useTrackRender,
+  useTrackRenders,
 } from "../../../testing/internal";
 
 interface SimpleQueryData {
@@ -175,12 +175,12 @@ function createDefaultProfiledComponents<
     : unknown,
 >(profiler: Profiler<Snapshot>) {
   function SuspenseFallback() {
-    useTrackRender();
+    useTrackRenders();
     return <p>Loading</p>;
   }
 
   function ReadQueryHook({ queryRef }: { queryRef: QueryReference<TData> }) {
-    useTrackRender();
+    useTrackRenders();
     profiler.mergeSnapshot({
       result: useReadQuery(queryRef),
     } as Partial<Snapshot>);
@@ -189,7 +189,7 @@ function createDefaultProfiledComponents<
   }
 
   function ErrorFallback({ error }: { error: Error }) {
-    useTrackRender();
+    useTrackRenders();
     profiler.mergeSnapshot({ error } as Partial<Snapshot>);
 
     return <div>Oops</div>;
@@ -258,7 +258,7 @@ it("loads a query and suspends when the load query function is called", async ()
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query);
 
     return (
@@ -309,7 +309,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query);
 
     return (
@@ -361,7 +361,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     createDefaultProfiledComponents(Profiler);
 
   const App = () => {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query);
 
     return (
@@ -441,7 +441,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef, { reset }] = useLoadableQuery(query);
 
     // Resetting the result allows us to detect when ReadQueryHook is unmounted
@@ -805,7 +805,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "cache-and-network",
     });
@@ -877,7 +877,7 @@ it("all data is present in the cache, no network request is made", async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query);
 
     return (
@@ -942,7 +942,7 @@ it("partial data is present in the cache so it is ignored and network request is
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query);
 
     return (
@@ -1006,7 +1006,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "network-only",
     });
@@ -1069,7 +1069,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "no-cache",
     });
@@ -1285,7 +1285,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "cache-and-network",
     });
@@ -1405,7 +1405,7 @@ it("reacts to cache updates", async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query);
 
     return (
@@ -1952,7 +1952,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [returnPartialData, setReturnPartialData] = React.useState(false);
 
     const [loadQuery, queryRef] = useLoadableQuery(fullQuery, {
@@ -2199,7 +2199,7 @@ it("re-suspends when calling `refetch`", async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query);
 
     return (
@@ -2280,7 +2280,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query);
 
     return (
@@ -2357,7 +2357,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query);
 
     return (
@@ -2879,7 +2879,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef, { fetchMore }] = useLoadableQuery(query);
 
     return (
@@ -3548,7 +3548,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
   const client = new ApolloClient({ link: new MockLink(mocks), cache });
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(fullQuery, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
@@ -3622,7 +3622,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
@@ -3740,7 +3740,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
   });
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(fullQuery, {
       fetchPolicy: "network-only",
       returnPartialData: true,
@@ -3831,7 +3831,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(fullQuery, {
       fetchPolicy: "no-cache",
       returnPartialData: true,
@@ -3947,7 +3947,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(fullQuery, {
       fetchPolicy: "cache-and-network",
       returnPartialData: true,
@@ -4020,7 +4020,7 @@ it('suspends and does not use partial data when changing variables and using a "
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "cache-and-network",
       returnPartialData: true,
@@ -4140,7 +4140,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
     createDefaultProfiledComponents(Profiler);
 
   function App() {
-    useTrackRender();
+    useTrackRenders();
     const [loadTodo, queryRef] = useLoadableQuery(query, {
       fetchPolicy: "cache-first",
       returnPartialData: true,

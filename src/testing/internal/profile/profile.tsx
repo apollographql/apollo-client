@@ -439,7 +439,7 @@ function resolveHookOwner(): React.ComponentType | undefined {
     ?.ReactCurrentOwner?.current?.elementType;
 }
 
-export function useTrackRender({ name }: { name?: string } = {}) {
+export function useTrackRenders({ name }: { name?: string } = {}) {
   const component = name || resolveHookOwner();
 
   if (!component) {

@@ -8,7 +8,7 @@ export {
   createProfiler,
   profile,
   profileHook,
-  useTrackRender,
+  useTrackRenders,
   WaitForRenderTimeoutError,
 } from "./profile.js";
 

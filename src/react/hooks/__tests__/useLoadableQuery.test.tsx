@@ -1757,8 +1757,9 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     cache,
   });
 
+  const Profiler = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<Data>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [refetchWritePolicy, setRefetchWritePolicy] =
@@ -1789,13 +1790,21 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
+
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
-    const { primes } = snapshot.data;
+    const { snapshot } = await Profiler.takeRender();
+    const { primes } = snapshot.result!.data;
 
     expect(primes).toEqual([2, 3, 5, 7, 11]);
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
@@ -1803,9 +1812,12 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
 
   await act(() => user.click(screen.getByText("Refetch next")));
 
+  // refetch next
+  await Profiler.takeRender();
+
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
-    const { primes } = snapshot.data;
+    const { snapshot } = await Profiler.takeRender();
+    const { primes } = snapshot.result!.data;
 
     expect(primes).toEqual([2, 3, 5, 7, 11, 13, 17, 19, 23, 29]);
     expect(mergeParams).toEqual([
@@ -1818,12 +1830,16 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
   }
 
   await act(() => user.click(screen.getByText("Change refetch write policy")));
-  await ReadQueryHook.takeSnapshot();
   await act(() => user.click(screen.getByText("Refetch last")));
 
+  // change refetchWritePolicy
+  await Profiler.takeRender();
+  // refetch last
+  await Profiler.takeRender();
+
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
-    const { primes } = snapshot.data;
+    const { snapshot } = await Profiler.takeRender();
+    const { primes } = snapshot.result!.data;
 
     expect(primes).toEqual([31, 37, 41, 43, 47]);
     expect(mergeParams).toEqual([

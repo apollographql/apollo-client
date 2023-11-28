@@ -271,10 +271,7 @@ it("loads a query and suspends when the load query function is called", async ()
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -325,10 +322,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -385,10 +379,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     );
   };
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -468,10 +459,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -545,7 +533,7 @@ it("allows the client to be overridden", async () => {
 
   const { user } = renderWithClient(<App />, {
     client: globalClient,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+    wrapper: Profiler,
   });
 
   await act(() => user.click(screen.getByText("Load query")));
@@ -607,10 +595,7 @@ it("passes context to the link", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -693,10 +678,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -777,10 +759,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    cache,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { cache, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -841,10 +820,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -914,10 +890,7 @@ it("all data is present in the cache, no network request is made", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -982,10 +955,7 @@ it("partial data is present in the cache so it is ignored and network request is
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -1051,10 +1021,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -1117,10 +1084,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -1335,10 +1299,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load todo")));
 
@@ -1543,10 +1504,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -1633,10 +1591,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -1741,10 +1696,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -1860,10 +1812,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2023,10 +1972,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2169,10 +2115,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2270,10 +2213,7 @@ it("re-suspends when calling `refetch`", async () => {
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2354,10 +2294,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2434,10 +2371,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   // initial render
   await Profiler.takeRender();
@@ -2523,10 +2457,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2603,10 +2534,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   // initial render
   await Profiler.takeRender();
@@ -2690,10 +2618,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2778,10 +2703,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     );
   }
 
-  const { user } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -2975,10 +2897,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3060,10 +2979,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3149,10 +3065,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3436,10 +3349,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3552,10 +3462,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3657,10 +3564,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3738,7 +3642,7 @@ it('suspends and does not use partial data from other variables in the cache whe
   const { user } = renderWithMocks(<App />, {
     mocks,
     cache,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+    wrapper: Profiler,
   });
 
   await act(() => user.click(screen.getByText("Load query")));
@@ -3855,7 +3759,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
   const { user } = renderWithMocks(<App />, {
     mocks,
     cache,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+    wrapper: Profiler,
   });
 
   await act(() => user.click(screen.getByText("Load query")));
@@ -3946,7 +3850,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
   const { user } = renderWithMocks(<App />, {
     mocks,
     cache,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+    wrapper: Profiler,
   });
 
   await act(() => user.click(screen.getByText("Load query")));
@@ -4062,7 +3966,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
   const { user } = renderWithMocks(<App />, {
     mocks,
     cache,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+    wrapper: Profiler,
   });
 
   await act(() => user.click(screen.getByText("Load query")));
@@ -4136,7 +4040,7 @@ it('suspends and does not use partial data when changing variables and using a "
   const { user } = renderWithMocks(<App />, {
     mocks,
     cache,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+    wrapper: Profiler,
   });
 
   await act(() => user.click(screen.getByText("Load query")));
@@ -4252,10 +4156,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
     );
   }
 
-  const { user } = renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load todo")));
 

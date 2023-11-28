@@ -18,15 +18,14 @@ import { getSuspenseCache } from "../cache/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
-import type { DeepPartial } from "../../utilities/index.js";
+import type {
+  DeepPartial,
+  OnlyRequiredProperties,
+} from "../../utilities/index.js";
 import type { CacheKey } from "../cache/types.js";
 import { invariant } from "../../utilities/globals/index.js";
 
 let RenderDispatcher: unknown = null;
-
-type OnlyRequiredProperties<T> = {
-  [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];
-};
 
 type LoadQuery<TVariables extends OperationVariables> = (
   // Use variadic args to handle cases where TVariables is type `never`, in

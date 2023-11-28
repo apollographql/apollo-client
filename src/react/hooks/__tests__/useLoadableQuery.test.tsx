@@ -4286,7 +4286,7 @@ it("throws when calling loadQuery on first render", async () => {
 
   expect(() => renderWithMocks(<App />, { mocks })).toThrow(
     new InvariantError(
-      "useLoadableQuery: loadQuery should not be called during render. To load a query during render, use `useBackgroundQuery`."
+      "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
     )
   );
 });
@@ -4319,7 +4319,7 @@ it("throws when calling loadQuery on subsequent render", async () => {
 
   expect(error).toEqual(
     new InvariantError(
-      "useLoadableQuery: loadQuery should not be called during render. To load a query during render, use `useBackgroundQuery`."
+      "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
     )
   );
 });

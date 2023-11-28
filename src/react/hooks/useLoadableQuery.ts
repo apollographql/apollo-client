@@ -183,7 +183,7 @@ export function useLoadableQuery<
       failDuringRender(() => {
         invariant(
           false,
-          "useLoadableQuery: loadQuery should not be called during render. To load a query during render, use `useBackgroundQuery`."
+          "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
         );
       });
 

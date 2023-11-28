@@ -1804,6 +1804,11 @@ export function offsetLimitPagination<T = Reference>(keyArgs?: KeyArgs): FieldPo
 export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
 
 // @public (undocumented)
+export type OnlyRequiredProperties<T> = {
+    [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];
+};
+
+// @public (undocumented)
 type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => boolean | TResult;
 
 // @public (undocumented)

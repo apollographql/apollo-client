@@ -6,12 +6,14 @@ Introduces a new `useLoadableQuery` hook. This hook works similarly to `useBackg
 
 ```tsx
 function App() {
-  const [queryRef, loadQuery, { refetch, fetchMore }] = useLoadableQuery(query, options)
+  const [loadQuery, queryRef, { refetch, fetchMore, reset }] = useLoadableQuery(query, options)
 
   return (
     <>
       <button onClick={() => loadQuery(variables)>Load query</button>
-      {queryRef && <Child queryRef={queryRef} />}
+      <Suspense fallback={<SuspenseFallback />}>
+        {queryRef && <Child queryRef={queryRef} />}
+      </Suspense>
     </>
   );
 }

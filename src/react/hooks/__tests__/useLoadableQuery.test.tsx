@@ -2073,8 +2073,9 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     cache,
   });
 
+  const Profiler = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<Data>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [fetchPolicy, setFetchPolicy] =
@@ -2098,14 +2099,20 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+  // initial render
+  await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
       data: {
         character: {
           __typename: "Character",
@@ -2119,13 +2126,17 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
   }
 
   await act(() => user.click(screen.getByText("Change fetch policy")));
-  await ReadQueryHook.takeSnapshot();
   await act(() => user.click(screen.getByText("Refetch")));
 
-  {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+  // change fetch policy
+  await Profiler.takeRender();
+  // refetch
+  await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
       data: {
         character: {
           __typename: "Character",

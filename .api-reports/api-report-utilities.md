@@ -2539,9 +2539,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:120:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:154:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:385:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:119:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:153:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:384:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:158:3 - (ae-forgotten-export) The symbol "ApolloError" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:160:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts

@@ -97,8 +97,8 @@ export class DocumentTransform {
               return stableCacheKeys.lookupArray(cacheKeys);
             }
           },
-          /** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */
-          cache: new WeakCache<any, any>(1000, (entry) => entry.dispose()),
+          max: 1000 /** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */,
+          cache: WeakCache<any, any>,
         }
       );
     }

@@ -96,7 +96,7 @@
     "@wry/trie": "^0.4.3",
     "graphql-tag": "^2.12.6",
     "hoist-non-react-statics": "^3.3.2",
-    "optimism": "^0.18.0-pre.0",
+    "optimism": "^0.18.0-pre.1",
     "prop-types": "^15.7.2",
     "rehackt": "0.0.3",
     "response-iterator": "^0.2.6",

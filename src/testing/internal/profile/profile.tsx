@@ -136,10 +136,7 @@ export function profile<Snapshot extends ValidSnapshot = void, Props = {}>({
 }
 
 /** @internal */
-export function createProfiler<
-  Snapshot extends ValidSnapshot = void,
-  Props = {},
->({
+export function createProfiler<Snapshot extends ValidSnapshot = void>({
   onRender,
   snapshotDOM = false,
   initialSnapshot,

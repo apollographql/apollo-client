@@ -29,6 +29,7 @@ import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
+  wait,
 } from "../../../testing";
 import {
   concatPagination,
@@ -434,6 +435,75 @@ it("changes variables on a query and resuspends when passing new variables to th
   }
 
   await expect(Profiler).not.toRerender();
+});
+
+it("resets the `queryRef` to null and disposes of it when calling the `reset` function", async () => {
+  const { query, mocks } = useSimpleQueryCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleQueryData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
+
+  function App() {
+    useTrackRender();
+    const [loadQuery, queryRef, { reset }] = useLoadableQuery(query);
+
+    // Resetting the result allows us to detect when ReadQueryHook is unmounted
+    // since it won't render and overwrite the `null`
+    Profiler.mergeSnapshot({ result: null });
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <button onClick={() => reset()}>Reset query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Reset query")));
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toBeNull();
+  }
+
+  // Since dispose is called in a setTimeout, we need to wait a tick before
+  // checking to see if the query ref was properly disposed
+  await wait(0);
+
+  expect(client.getObservableQueries().size).toBe(0);
 });
 
 it("allows the client to be overridden", async () => {

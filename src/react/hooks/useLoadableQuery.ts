@@ -37,6 +37,8 @@ export type LoadQueryFunction<TVariables extends OperationVariables> = (
     : [variables: TVariables]
 ) => void;
 
+type ResetFunction = () => void;
+
 export type UseLoadableQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -46,6 +48,7 @@ export type UseLoadableQueryResult<
   {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
+    reset: ResetFunction;
   },
 ];
 
@@ -215,11 +218,15 @@ export function useLoadableQuery<
     ]
   );
 
+  const reset: ResetFunction = React.useCallback(() => {
+    setQueryRef(null);
+  }, [queryRef]);
+
   return React.useMemo(() => {
     return [
       loadQuery,
       queryRef && wrapQueryRef(queryRef),
-      { fetchMore, refetch },
+      { fetchMore, refetch, reset },
     ];
-  }, [queryRef, loadQuery, fetchMore, refetch]);
+  }, [queryRef, loadQuery, fetchMore, refetch, reset]);
 }

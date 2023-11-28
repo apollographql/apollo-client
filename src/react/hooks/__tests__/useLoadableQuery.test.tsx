@@ -1928,10 +1928,12 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     cache,
   });
 
+  const Profiler = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<Data>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRender();
     const [returnPartialData, setReturnPartialData] = React.useState(false);
 
     const [loadQuery, queryRef] = useLoadableQuery(fullQuery, {
@@ -1951,14 +1953,22 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
-  {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+  // initial render
+  await Profiler.takeRender();
+  // load query
+  await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
       data: {
         character: { __typename: "Character", id: "1", name: "Doctor Strange" },
       },
@@ -1968,7 +1978,9 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   }
 
   await act(() => user.click(screen.getByText("Update partial data")));
-  await ReadQueryHook.takeSnapshot();
+
+  // update partial data
+  await Profiler.takeRender();
 
   cache.modify({
     id: cache.identify({ __typename: "Character", id: "1" }),
@@ -1978,9 +1990,10 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   });
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: {
         character: { __typename: "Character", id: "1" },
       },
@@ -1990,9 +2003,10 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   }
 
   {
-    const snapshot = await ReadQueryHook.takeSnapshot();
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: {
         character: {
           __typename: "Character",

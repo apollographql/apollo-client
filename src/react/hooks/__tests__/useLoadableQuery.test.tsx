@@ -1648,8 +1648,9 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     cache,
   });
 
+  const Profiler = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents<Data>();
+    createDefaultProfiledComponents(Profiler);
 
   function App() {
     const [canonizeResults, setCanonizeResults] = React.useState(false);
@@ -1670,12 +1671,19 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
+  });
 
   await act(() => user.click(screen.getByText("Load query")));
 
+  // initial render
+  await Profiler.takeRender();
+
   {
-    const { data } = await ReadQueryHook.takeSnapshot();
+    const { snapshot } = await Profiler.takeRender();
+    const { data } = snapshot.result!;
     const resultSet = new Set(data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -1687,7 +1695,8 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
   await act(() => user.click(screen.getByText("Canonize results")));
 
   {
-    const { data } = await ReadQueryHook.takeSnapshot();
+    const { snapshot } = await Profiler.takeRender();
+    const { data } = snapshot.result!;
     const resultSet = new Set(data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 

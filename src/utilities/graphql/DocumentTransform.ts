@@ -3,7 +3,7 @@ import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
 import { checkDocument } from "./getFromAST.js";
 import { invariant } from "../globals/index.js";
 import type { DocumentNode } from "graphql";
-// import { WeakCache } from "@wry/caches";
+import { WeakCache } from "@wry/caches";
 import { wrap } from "optimism";
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
@@ -83,7 +83,7 @@ export class DocumentTransform {
    */
   resetCache() {
     if (this.cached) {
-      const stableCacheKeys = new Trie(canUseWeakMap);
+      const stableCacheKeys = new Trie<WeakKey>(canUseWeakMap);
       this.performWork = wrap(
         DocumentTransform.prototype.performWork.bind(this),
         {
@@ -97,8 +97,8 @@ export class DocumentTransform {
               return stableCacheKeys.lookupArray(cacheKeys);
             }
           },
-          // max: /** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */,
-          // Cache: WeakCache // TODO: waiting for an optimism release that allows this
+          /** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */
+          cache: new WeakCache<any, any>(1000, (entry) => entry.dispose()),
         }
       );
     }

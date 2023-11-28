@@ -11,7 +11,10 @@ export type { UseSuspenseQueryResult } from "./useSuspenseQuery.js";
 export { useSuspenseQuery } from "./useSuspenseQuery.js";
 export type { UseBackgroundQueryResult } from "./useBackgroundQuery.js";
 export { useBackgroundQuery } from "./useBackgroundQuery.js";
-export type { UseLoadableQueryResult } from "./useLoadableQuery.js";
+export type {
+  LoadQueryFunction,
+  UseLoadableQueryResult,
+} from "./useLoadableQuery.js";
 export { useLoadableQuery } from "./useLoadableQuery.js";
 export type { UseReadQueryResult } from "./useReadQuery.js";
 export { useReadQuery } from "./useReadQuery.js";

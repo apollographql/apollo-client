@@ -27,7 +27,7 @@ import { invariant } from "../../utilities/globals/index.js";
 
 let RenderDispatcher: unknown = null;
 
-type LoadQuery<TVariables extends OperationVariables> = (
+export type LoadQueryFunction<TVariables extends OperationVariables> = (
   // Use variadic args to handle cases where TVariables is type `never`, in
   // which case we don't want to allow a variables argument. In other
   // words, we don't want to allow variables to be passed as an argument to this
@@ -43,7 +43,7 @@ export type UseLoadableQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = [
-  LoadQuery<TVariables>,
+  LoadQueryFunction<TVariables>,
   QueryReference<TData> | null,
   {
     fetchMore: FetchMoreFunction<TData, TVariables>;
@@ -179,7 +179,7 @@ export function useLoadableQuery<
     [queryRef]
   );
 
-  const loadQuery: LoadQuery<TVariables> = React.useCallback(
+  const loadQuery: LoadQueryFunction<TVariables> = React.useCallback(
     (...args) => {
       invariant(
         getRenderDispatcher() !== RenderDispatcher,

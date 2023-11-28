@@ -461,11 +461,10 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -536,11 +535,10 @@ it("allows the client to be overridden", async () => {
     wrapper: Profiler,
   });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
-  // initial
+  // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   const { snapshot } = await Profiler.takeRender();
@@ -597,11 +595,10 @@ it("passes context to the link", async () => {
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   const { snapshot } = await Profiler.takeRender();
@@ -680,10 +677,10 @@ it('enables canonical results when canonizeResults is "true"', async () => {
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   const { snapshot } = await Profiler.takeRender();
   const resultSet = new Set(snapshot.result?.data.results);
@@ -761,10 +758,10 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
 
   const { user } = renderWithMocks(<App />, { cache, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   const { snapshot } = await Profiler.takeRender();
   const resultSet = new Set(snapshot.result!.data.results);
@@ -822,10 +819,10 @@ it("returns initial cache data followed by network data when the fetch policy is
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -892,10 +889,10 @@ it("all data is present in the cache, no network request is made", async () => {
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   const { snapshot, renderedComponents } = await Profiler.takeRender();
 
@@ -957,10 +954,10 @@ it("partial data is present in the cache so it is ignored and network request is
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1023,10 +1020,10 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1086,10 +1083,10 @@ it("fetches data from the network but does not update the cache when `fetchPolic
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1301,10 +1298,10 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load todo")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load todo")));
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -1420,11 +1417,10 @@ it("reacts to cache updates", async () => {
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -1501,11 +1497,10 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
 
   const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -1519,11 +1514,9 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
   }
 
   await act(() => user.click(screen.getByText("Change error policy")));
-  await act(() => user.click(screen.getByText("Refetch greeting")));
-
-  // change error policy
   await Profiler.takeRender();
-  // refetch
+
+  await act(() => user.click(screen.getByText("Refetch greeting")));
   await Profiler.takeRender();
 
   {
@@ -1588,11 +1581,10 @@ it("applies `context` on next fetch when it changes between renders", async () =
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -1604,11 +1596,9 @@ it("applies `context` on next fetch when it changes between renders", async () =
   }
 
   await act(() => user.click(screen.getByText("Update context")));
-  await act(() => user.click(screen.getByText("Refetch")));
-
-  // update context
   await Profiler.takeRender();
-  // refetch
+
+  await act(() => user.click(screen.getByText("Refetch")));
   await Profiler.takeRender();
 
   {
@@ -1693,10 +1683,10 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { snapshot } = await Profiler.takeRender();
@@ -1809,11 +1799,10 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -1825,8 +1814,6 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
   }
 
   await act(() => user.click(screen.getByText("Refetch next")));
-
-  // refetch next
   await Profiler.takeRender();
 
   {
@@ -1844,11 +1831,9 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
   }
 
   await act(() => user.click(screen.getByText("Change refetch write policy")));
-  await act(() => user.click(screen.getByText("Refetch last")));
-
-  // change refetchWritePolicy
   await Profiler.takeRender();
-  // refetch last
+
+  await act(() => user.click(screen.getByText("Refetch last")));
   await Profiler.takeRender();
 
   {
@@ -1969,11 +1954,10 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -1989,8 +1973,6 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   }
 
   await act(() => user.click(screen.getByText("Update partial data")));
-
-  // update partial data
   await Profiler.takeRender();
 
   cache.modify({
@@ -2112,10 +2094,10 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { snapshot } = await Profiler.takeRender();
@@ -2134,11 +2116,9 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
   }
 
   await act(() => user.click(screen.getByText("Change fetch policy")));
-  await act(() => user.click(screen.getByText("Refetch")));
-
-  // change fetch policy
   await Profiler.takeRender();
-  // refetch
+
+  await act(() => user.click(screen.getByText("Refetch")));
   await Profiler.takeRender();
 
   {
@@ -2210,10 +2190,10 @@ it("re-suspends when calling `refetch`", async () => {
 
   const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -2291,10 +2271,10 @@ it("re-suspends when calling `refetch` with new variables", async () => {
 
   const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -2379,8 +2359,15 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
-  // initial result
-  await Profiler.takeRender();
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: "Spider-Man" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   const button = screen.getByText("Refetch");
 
@@ -2392,8 +2379,15 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
-  // refetch result
-  await Profiler.takeRender();
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: "Spider-Man" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   await act(() => user.click(button));
 
@@ -2403,8 +2397,15 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
-  // refetch result
-  await Profiler.takeRender();
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: "Spider-Man" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   await expect(Profiler).not.toRerender();
 });
@@ -2454,11 +2455,10 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
 
   const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -2472,8 +2472,6 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
   }
 
   await act(() => user.click(screen.getByText("Refetch")));
-
-  // Refetch
   await Profiler.takeRender();
 
   {
@@ -2535,8 +2533,6 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
   await Profiler.takeRender();
 
   await act(() => user.click(screen.getByText("Load query")));
-
-  // load query
   await Profiler.takeRender();
 
   {
@@ -2550,8 +2546,6 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
   }
 
   await act(() => user.click(screen.getByText("Refetch")));
-
-  // refetch
   await Profiler.takeRender();
 
   {
@@ -2615,11 +2609,10 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
 
   const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -2633,8 +2626,6 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
   }
 
   await act(() => user.click(screen.getByText("Refetch")));
-
-  // refetch
   await Profiler.takeRender();
 
   {
@@ -2700,11 +2691,10 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
 
   const { user } = renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -2718,8 +2708,6 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
   }
 
   await act(() => user.click(screen.getByText("Refetch")));
-
-  // refetch
   await Profiler.takeRender();
 
   {
@@ -2894,11 +2882,10 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -2976,11 +2963,10 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -2999,8 +2985,6 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
   }
 
   await act(() => user.click(screen.getByText("Fetch more")));
-
-  // fetch more
   await Profiler.takeRender();
 
   {
@@ -3062,11 +3046,10 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -3085,8 +3068,6 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
   }
 
   await act(() => user.click(screen.getByText("Fetch more")));
-
-  // fetch more
   await Profiler.takeRender();
 
   {
@@ -3346,11 +3327,10 @@ it('honors refetchWritePolicy set to "merge"', async () => {
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -3365,8 +3345,6 @@ it('honors refetchWritePolicy set to "merge"', async () => {
   }
 
   await act(() => user.click(screen.getByText("Refetch")));
-
-  // refetch
   await Profiler.takeRender();
 
   {
@@ -3459,11 +3437,10 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial load
   await Profiler.takeRender();
-  // load query
+
+  await act(() => user.click(screen.getByText("Load query")));
   await Profiler.takeRender();
 
   {
@@ -3478,8 +3455,6 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
   }
 
   await act(() => user.click(screen.getByText("Refetch")));
-
-  // refetch
   await Profiler.takeRender();
 
   {
@@ -3561,10 +3536,10 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial load
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -3640,10 +3615,10 @@ it('suspends and does not use partial data from other variables in the cache whe
     wrapper: Profiler,
   });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -3757,10 +3732,10 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     wrapper: Profiler,
   });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -3848,10 +3823,10 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     wrapper: Profiler,
   });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial load
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -3964,10 +3939,10 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     wrapper: Profiler,
   });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -4038,10 +4013,10 @@ it('suspends and does not use partial data when changing variables and using a "
     wrapper: Profiler,
   });
 
-  await act(() => user.click(screen.getByText("Load query")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -4153,10 +4128,10 @@ it('does not suspend deferred queries with partial data in the cache and using a
 
   const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
-  await act(() => user.click(screen.getByText("Load todo")));
-
   // initial render
   await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load todo")));
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();

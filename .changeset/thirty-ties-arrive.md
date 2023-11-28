@@ -10,7 +10,7 @@ function App() {
 
   return (
     <>
-      <button onClick={() => loadQuery(variables)>Load query</button>
+      <button onClick={() => loadQuery(variables)}>Load query</button>
       <Suspense fallback={<SuspenseFallback />}>
         {queryRef && <Child queryRef={queryRef} />}
       </Suspense>

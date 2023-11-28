@@ -3,7 +3,6 @@ const limits = require("./.size-limits.json");
 const checks = [
   {
     path: "dist/apollo-client.min.cjs",
-    limit: "38410",
   },
   {
     path: "dist/main.cjs",

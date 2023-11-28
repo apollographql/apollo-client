@@ -1418,12 +1418,7 @@ it("reacts to cache updates", async () => {
     );
   }
 
-  const { user } = renderWithClient(
-    <Profiler>
-      <App />
-    </Profiler>,
-    { client }
-  );
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   await act(() => user.click(screen.getByText("Load query")));
 

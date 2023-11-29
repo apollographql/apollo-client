@@ -52,7 +52,7 @@ describe("[queries] lifecycle", () => {
     })(
       class extends React.Component<ChildProps<Vars, Data, Vars>> {
         render() {
-          ProfiledApp.updateSnapshot(this.props.data!);
+          ProfiledApp.replaceSnapshot(this.props.data!);
           return null;
         }
       }

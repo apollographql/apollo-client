@@ -35,6 +35,12 @@ export function operationName(type: DocumentType_2): string;
 export function parser(document: DocumentNode): IDocumentDefinition;
 
 // @public (undocumented)
+export namespace parser {
+    var // (undocumented)
+    resetCache: () => void;
+}
+
+// @public (undocumented)
 export function verifyDocumentType(document: DocumentNode, type: DocumentType_2): void;
 
 // (No @packageDocumentation comment for this package)

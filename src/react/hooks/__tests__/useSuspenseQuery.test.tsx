@@ -357,7 +357,7 @@ describe("useSuspenseQuery", () => {
 
     const Component = () => {
       const result = useSuspenseQuery(query);
-      ProfiledApp.updateSnapshot(result);
+      ProfiledApp.replaceSnapshot(result);
       return <div>{result.data.greeting}</div>;
     };
 

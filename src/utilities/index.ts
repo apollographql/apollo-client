@@ -129,3 +129,4 @@ export { stripTypename } from "./common/stripTypename.js";
 export * from "./types/IsStrictlyAny.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
 export type { DeepPartial } from "./types/DeepPartial.js";
+export type { OnlyRequiredProperties } from "./types/OnlyRequiredProperties.js";

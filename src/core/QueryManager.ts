@@ -183,6 +183,15 @@ export class QueryManager<TStore> {
     if ((this.onBroadcast = onBroadcast)) {
       this.mutationStore = Object.create(null);
     }
+
+    // TODO: remove before we release 3.9
+    Object.defineProperty(this.inFlightLinkObservables, "get", {
+      value: () => {
+        throw new Error(
+          "This version of Apollo Client requires at least @apollo/experimental-nextjs-app-support version 0.5.2."
+        );
+      },
+    });
   }
 
   /**

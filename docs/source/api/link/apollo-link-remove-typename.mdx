@@ -14,6 +14,50 @@ import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename
 const removeTypenameLink = removeTypenameFromVariables();
 ```
 
+Use this link before your [terminating link](https://www.apollographql.com/docs/react/api/link/introduction#the-terminating-link)
+to ensure `__typename` fields are removed from variables for all operations.
+
+```ts
+import { from } from '@apollo/client';
+
+const link = from([removeTypenameLink, httpLink]);
+
+const client = new ApolloClient({
+  link,
+  // ... other options
+});
+```
+
+If you're using [directional composition](https://www.apollographql.com/docs/react/api/link/introduction#directional-composition), 
+for example to [send a subcription to a websocket connection](https://www.apollographql.com/docs/react/data/subscriptions#3-split-communication-by-operation-recommended),
+place this link before the split link to ensure `__typename` is removed from variables for all operations.
+
+```ts
+import { from, split } from '@apollo/client';
+import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename';
+
+const removeTypenameLink = removeTypenameFromVariables();
+
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === 'OperationDefinition' &&
+      definition.operation === 'subscription'
+    );
+  },
+  wsLink,
+  httpLink,
+);
+
+const link = from([removeTypenameLink, splitLink]);
+
+const client = new ApolloClient({
+  link,
+  // ... other options
+});
+```
+
 ## Remove `__typename` from all variables
 
 As an example, take the following query. Apollo Client automatically adds `__typename` fields for each field selection set.
@@ -194,4 +238,3 @@ Determines which input types should retain `__typename`. This maps the input typ
 
 </tbody>
 </table>
-

@@ -8,7 +8,8 @@ export const print = Object.assign(
     let result = printCache.get(ast);
 
     if (!result) {
-      printCache.set(ast, (result = origPrint(ast)));
+      result = origPrint(ast);
+      printCache.set(ast, result);
     }
     return result;
   },

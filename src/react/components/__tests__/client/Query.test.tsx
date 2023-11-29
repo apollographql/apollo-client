@@ -1491,7 +1491,7 @@ describe("Query component", () => {
       return (
         <AllPeopleQuery2 query={query} notifyOnNetworkStatusChange={true}>
           {(r: any) => {
-            ProfiledContainer.updateSnapshot(r);
+            ProfiledContainer.replaceSnapshot(r);
             return null;
           }}
         </AllPeopleQuery2>

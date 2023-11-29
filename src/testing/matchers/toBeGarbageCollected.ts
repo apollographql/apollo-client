@@ -19,10 +19,13 @@ export const toBeGarbageCollected: MatcherFunction<[weakRef: WeakRef<any>]> =
 
     let pass = false;
     let interval: NodeJS.Timeout | undefined;
+    let timeout: NodeJS.Timeout | undefined;
     await Promise.race([
-      new Promise<void>((resolve) => setTimeout(resolve, 1000)),
       new Promise<void>((resolve) => {
-        setInterval(() => {
+        timeout = setTimeout(resolve, 1000);
+      }),
+      new Promise<void>((resolve) => {
+        interval = setInterval(() => {
           global.gc!();
           pass = actual.deref() === undefined;
           if (pass) {
@@ -30,7 +33,10 @@ export const toBeGarbageCollected: MatcherFunction<[weakRef: WeakRef<any>]> =
           }
         }, 1);
       }),
-    ]).finally(() => clearInterval(interval));
+    ]);
+
+    clearInterval(interval);
+    clearTimeout(timeout);
 
     return {
       pass,

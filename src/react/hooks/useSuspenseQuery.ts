@@ -31,14 +31,46 @@ export interface UseSuspenseQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
+  /**
+   * The instance of Apollo Client that executed the query.
+   *
+   * Can be useful for manually executing followup queries or writing data to
+   * the cache.
+   */
   client: ApolloClient<any>;
+  /**
+   * An object containing the result of your GraphQL query after it completes.
+   *
+   * This value might be `undefined` if a query results in one or more errors
+   * (depending on the query's `errorPolicy`).
+   */
   data: TData;
+  /**
+   * If the query produces one or more errors, this object contains either an
+   * array of `graphQLErrors` or a single `networkError`. Otherwise, this value
+   * is `undefined`.
+   *
+   * This property can be ignored when using the default `errorPolicy` or an
+   * `errorPolicy` of `none`. The hook will throw the error instead of setting
+   * this property.
+   */
   error: ApolloError | undefined;
   /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
+  /**
+   * A number indicating the current network state of the query's associated
+   * request. [See possible values](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4).
+   */
   networkStatus: NetworkStatus;
   /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
   refetch: RefetchFunction<TData, TVariables>;
+  /**
+   * A function that enables you to execute a [subscription](https://www.apollographql.com/docs/react/data/subscriptions/),
+   * usually to subscribe to specific fields that were included in the query.
+   *
+   * This function returns another function that you can call to terminate the
+   * subscription.
+   */
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 

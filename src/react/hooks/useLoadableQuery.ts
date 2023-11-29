@@ -46,7 +46,9 @@ export type UseLoadableQueryResult<
   LoadQueryFunction<TVariables>,
   QueryReference<TData> | null,
   {
+    /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
     fetchMore: FetchMoreFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
     refetch: RefetchFunction<TData, TVariables>;
     reset: ResetFunction;
   },

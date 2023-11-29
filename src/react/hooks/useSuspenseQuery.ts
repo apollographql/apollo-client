@@ -34,8 +34,10 @@ export interface UseSuspenseQueryResult<
   client: ApolloClient<any>;
   data: TData;
   error: ApolloError | undefined;
+  /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
   networkStatus: NetworkStatus;
+  /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
   refetch: RefetchFunction<TData, TVariables>;
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }

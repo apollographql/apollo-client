@@ -412,6 +412,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve(reobserveOptions, NetworkStatus.refetch);
   }
 
+  /**
+   * A function that helps you fetch the next set of results for a [paginated
+   * list field](https://www.apollographql.com/docs/react/pagination/core-api/).
+   *
+   * @param fetchMoreOptions - Options that are shallow merged with existing
+   * options to determine how to fetch the result. Pass an `updateQuery` option
+   * to instruct Apollo Client with how to write the value to the cache.
+   */
   public fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,

@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.8.8
+
+### Patch Changes
+
+- [#11200](https://github.com/apollographql/apollo-client/pull/11200) [`ae5091a21`](https://github.com/apollographql/apollo-client/commit/ae5091a21f0feff1486503071ea8dc002cf1be41) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Enable `strict` in tsconfig for the entire project.
+
+- [#11332](https://github.com/apollographql/apollo-client/pull/11332) [`291aea56b`](https://github.com/apollographql/apollo-client/commit/291aea56bfaed3987a98be7fe4e6160114b62d2d) Thanks [@asvishnyakov](https://github.com/asvishnyakov)! - Add missed reexports of MutationFetchPolicy and RefetchWritePolicy to @apollo/client/core
+
+- [#10931](https://github.com/apollographql/apollo-client/pull/10931) [`e5acf910e`](https://github.com/apollographql/apollo-client/commit/e5acf910e39752b453540b6751046d1c19b66350) Thanks [@phryneas](https://github.com/phryneas)! - `useMutation`: also reset internal state on reset
+
 ## 3.8.7
 
 ### Patch Changes

@@ -1,6 +1,5 @@
 import type { OptimisticDependencyFunction } from "optimism";
-import { dep } from "optimism";
-import { Slot } from "@wry/context";
+import { dep, Slot } from "optimism";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { ApolloCache } from "../../core/index.js";
 

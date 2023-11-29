@@ -1067,7 +1067,7 @@ export class QueryManager<TStore> {
   // Use protected instead of private field so
   // @apollo/experimental-nextjs-app-support can access type info.
   protected inFlightLinkObservables = new Trie<{
-    observable?: Concast<FetchResult<any>>;
+    observable?: Observable<FetchResult<any>>;
   }>(false);
 
   private getObservableFromLink<T = any>(
@@ -1107,11 +1107,12 @@ export class QueryManager<TStore> {
 
         observable = entry.observable;
         if (!observable) {
-          observable = entry.observable = new Concast([
+          const concast = new Concast([
             execute(link, operation) as Observable<FetchResult<T>>,
           ]);
+          observable = entry.observable = concast;
 
-          entry.observable.beforeNext(() => {
+          concast.beforeNext(() => {
             inFlightLinkObservables.remove(printedServerQuery, varJson);
           });
         }

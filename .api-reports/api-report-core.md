@@ -670,6 +670,12 @@ abstract class EntityStore implements NormalizedCache {
     // (undocumented)
     protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject | undefined;
     // (undocumented)
+    makeCacheKey(document: DocumentNode, callback: Cache_2.WatchCallback<any>, details: string): object;
+    // (undocumented)
+    makeCacheKey(selectionSet: SelectionSetNode, parent: string | StoreObject, varString: string | undefined, canonizeResults: boolean): object;
+    // (undocumented)
+    makeCacheKey(field: FieldNode, array: readonly any[], varString: string | undefined): object;
+    // (undocumented)
     makeCacheKey(...args: any[]): object;
     // (undocumented)
     merge(older: string | StoreObject, newer: StoreObject | string): void;
@@ -2195,9 +2201,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:126:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:120:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:154:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:385:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:119:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:153:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:384:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 

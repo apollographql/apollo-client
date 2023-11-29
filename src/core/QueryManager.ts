@@ -4,6 +4,7 @@ import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 import { equal } from "@wry/equality";
+import { WeakCache } from "@wry/caches";
 
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
@@ -27,7 +28,6 @@ import {
   hasClientExports,
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
-  canUseWeakMap,
   Observable,
   asyncMap,
   isNonEmptyArray,
@@ -651,10 +651,10 @@ export class QueryManager<TStore> {
     return this.documentTransform.transformDocument(document);
   }
 
-  private transformCache = new (canUseWeakMap ? WeakMap : Map)<
+  private transformCache = new WeakCache<
     DocumentNode,
     TransformCacheEntry
-  >();
+  >(/** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */);
 
   public getDocumentInfo(document: DocumentNode) {
     const { transformCache } = this;

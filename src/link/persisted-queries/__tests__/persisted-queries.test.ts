@@ -66,7 +66,7 @@ const giveUpResponse = JSON.stringify({ errors: giveUpErrors });
 const giveUpResponseWithCode = JSON.stringify({ errors: giveUpErrorsWithCode });
 const multiResponse = JSON.stringify({ errors: multipleErrors });
 
-export function sha256(data: string) {
+function sha256(data: string) {
   const hash = crypto.createHash("sha256");
   hash.update(data);
   return hash.digest("hex");

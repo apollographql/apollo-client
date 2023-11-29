@@ -4,6 +4,7 @@ import * as ReactDOM from "react-dom/server";
 import gql from "graphql-tag";
 import { print } from "graphql";
 import fetchMock from "fetch-mock";
+import crypto from "crypto";
 
 import { ApolloProvider } from "../../../react/context";
 import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache";
@@ -12,7 +13,12 @@ import { createHttpLink } from "../../http/createHttpLink";
 import { graphql } from "../../../react/hoc/graphql";
 import { getDataFromTree } from "../../../react/ssr/getDataFromTree";
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from "..";
-import { sha256 } from "./persisted-queries.test";
+
+function sha256(data: string) {
+  const hash = crypto.createHash("sha256");
+  hash.update(data);
+  return hash.digest("hex");
+}
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint

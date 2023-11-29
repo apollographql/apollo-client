@@ -2092,6 +2092,200 @@ describe("useQuery Hook", () => {
       unmount();
       result.current.stopPolling();
     });
+
+    describe("should prevent fetches when `skipPollAttempt` returns `false`", () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+      });
+
+      afterEach(() => {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
+      });
+
+      it("when defined as a global default option", async () => {
+        const skipPollAttempt = jest.fn().mockImplementation(() => false);
+
+        const query = gql`
+          {
+            hello
+          }
+        `;
+        const link = mockSingleLink(
+          {
+            request: { query },
+            result: { data: { hello: "world 1" } },
+          },
+          {
+            request: { query },
+            result: { data: { hello: "world 2" } },
+          },
+          {
+            request: { query },
+            result: { data: { hello: "world 3" } },
+          }
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+          defaultOptions: {
+            watchQuery: {
+              skipPollAttempt,
+            },
+          },
+        });
+
+        const wrapper = ({ children }: any) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        );
+
+        const { result } = renderHook(
+          () => useQuery(query, { pollInterval: 10 }),
+          { wrapper }
+        );
+
+        expect(result.current.loading).toBe(true);
+        expect(result.current.data).toBe(undefined);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 1" });
+          },
+          { interval: 1 }
+        );
+
+        expect(result.current.loading).toBe(false);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 2" });
+          },
+          { interval: 1 }
+        );
+
+        skipPollAttempt.mockImplementation(() => true);
+        expect(result.current.loading).toBe(false);
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        skipPollAttempt.mockImplementation(() => false);
+        expect(result.current.loading).toBe(false);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 3" });
+          },
+          { interval: 1 }
+        );
+      });
+
+      it("when defined for a single query", async () => {
+        const skipPollAttempt = jest.fn().mockImplementation(() => false);
+
+        const query = gql`
+          {
+            hello
+          }
+        `;
+        const mocks = [
+          {
+            request: { query },
+            result: { data: { hello: "world 1" } },
+          },
+          {
+            request: { query },
+            result: { data: { hello: "world 2" } },
+          },
+          {
+            request: { query },
+            result: { data: { hello: "world 3" } },
+          },
+        ];
+
+        const cache = new InMemoryCache();
+        const wrapper = ({ children }: any) => (
+          <MockedProvider mocks={mocks} cache={cache}>
+            {children}
+          </MockedProvider>
+        );
+
+        const { result } = renderHook(
+          () =>
+            useQuery(query, {
+              pollInterval: 10,
+              skipPollAttempt,
+            }),
+          { wrapper }
+        );
+
+        expect(result.current.loading).toBe(true);
+        expect(result.current.data).toBe(undefined);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 1" });
+          },
+          { interval: 1 }
+        );
+
+        expect(result.current.loading).toBe(false);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 2" });
+          },
+          { interval: 1 }
+        );
+
+        skipPollAttempt.mockImplementation(() => true);
+        expect(result.current.loading).toBe(false);
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        skipPollAttempt.mockImplementation(() => false);
+        expect(result.current.loading).toBe(false);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 3" });
+          },
+          { interval: 1 }
+        );
+      });
+    });
   });
 
   describe("Error handling", () => {

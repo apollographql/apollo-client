@@ -36,6 +36,7 @@ const checks = [
       "react",
       "react-dom",
       "@graphql-typed-document-node/core",
+      "@wry/caches",
       "@wry/context",
       "@wry/equality",
       "@wry/trie",

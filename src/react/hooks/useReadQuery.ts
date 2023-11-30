@@ -43,7 +43,7 @@ export function useReadQuery<TData>(
     [queryRef]
   );
 
-  let promise = useSyncExternalStore(
+  const promise = useSyncExternalStore(
     React.useCallback(
       (forceUpdate) => {
         return internalQueryRef.listen((promise) => {

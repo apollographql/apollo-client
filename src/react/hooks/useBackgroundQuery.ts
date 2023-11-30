@@ -206,13 +206,12 @@ export function useBackgroundQuery<
     client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
   );
 
-  const [wrapped, setWrappedQueryRef] = React.useState(
+  const [wrappedQueryRef, setWrappedQueryRef] = React.useState(
     wrapQueryRef(queryRef, queryRef.promise)
   );
-  if (unwrapQueryRef(wrapped)[0] !== queryRef) {
+  if (unwrapQueryRef(wrappedQueryRef)[0] !== queryRef) {
     setWrappedQueryRef(wrapQueryRef(queryRef, queryRef.promise));
   }
-  let wrappedQueryRef = wrapped;
   if (queryRef.didChangeOptions(watchQueryOptions)) {
     const promise = queryRef.applyOptions(watchQueryOptions);
     updateWrappedQueryRef(wrappedQueryRef, promise);

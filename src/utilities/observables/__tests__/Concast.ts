@@ -218,6 +218,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     const concast = new Concast<number>([
       Observable.of(1, 2),
       promise,
+      // just to ensure this also works if the cancelling source is not the last source
       Observable.of(3, 5),
     ]);
 

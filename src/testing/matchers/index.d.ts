@@ -10,11 +10,6 @@ import {
   ProfiledHook,
 } from "../internal/index.js";
 
-declare class WeakRef<T extends WeakKey> {
-  constructor(target: T);
-  deref(): T | undefined;
-}
-
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
    * Used to determine if two GraphQL query documents are equal to each other by

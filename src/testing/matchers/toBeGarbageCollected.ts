@@ -1,10 +1,5 @@
 import type { MatcherFunction } from "expect";
 
-declare class WeakRef<T extends WeakKey> {
-  constructor(target: T);
-  deref(): T | undefined;
-}
-
 export const toBeGarbageCollected: MatcherFunction<[weakRef: WeakRef<any>]> =
   async function (actual) {
     const hint = this.utils.matcherHint("toBeGarbageCollected");

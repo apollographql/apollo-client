@@ -209,8 +209,11 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
 
   it("rejecting a source-wrapping promise of a concast frees all observer references on `this.observers`", async () => {
     const { promise, reject } = deferred<Observable<number>>();
-    const observers: Observer<any>[] = [{ next() {}, error() {} }];
-    const observerRefs = observers.map((observer) => new WeakRef(observer));
+    let subscribingObserver: Observer<any> | undefined = {
+      next() {},
+      error() {},
+    };
+    const subscribingObserverRef = new WeakRef(subscribingObserver);
 
     const concast = new Concast<number>([
       Observable.of(1, 2),
@@ -218,40 +221,43 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       Observable.of(3, 5),
     ]);
 
-    concast.subscribe(observers[0]);
-    delete observers[0];
+    concast.subscribe(subscribingObserver);
 
     expect(concast["observers"].size).toBe(1);
 
     reject("error");
     await expect(concast.promise).rejects.toBe("error");
-    await expect(observerRefs[0]).toBeGarbageCollected();
+    subscribingObserver = undefined;
+    await expect(subscribingObserverRef).toBeGarbageCollected();
   });
 
   it("rejecting a source of a concast frees all observer references on `this.observers`", async () => {
-    const observers: Observer<any>[] = [{ next() {}, error() {} }];
-    const observerRefs = observers.map((observer) => new WeakRef(observer));
+    let subscribingObserver: Observer<any> | undefined = {
+      next() {},
+      error() {},
+    };
+    const subscribingObserverRef = new WeakRef(subscribingObserver);
 
-    let observer!: Observer<number>;
-    const observable = new Observable<number>((o) => {
-      observer = o;
+    let sourceObserver!: Observer<number>;
+    const sourceObservable = new Observable<number>((o) => {
+      sourceObserver = o;
     });
 
     const concast = new Concast<number>([
       Observable.of(1, 2),
-      observable,
+      sourceObservable,
       Observable.of(3, 5),
     ]);
 
-    concast.subscribe(observers[0]);
-    delete observers[0];
+    concast.subscribe(subscribingObserver);
 
     expect(concast["observers"].size).toBe(1);
 
     await Promise.resolve();
-    observer.error!("error");
+    sourceObserver.error!("error");
     await expect(concast.promise).rejects.toBe("error");
-    await expect(observerRefs[0]).toBeGarbageCollected();
+    subscribingObserver = undefined;
+    await expect(subscribingObserverRef).toBeGarbageCollected();
   });
 
   it("after subscribing to an already-resolved concast, the reference is freed up again", async () => {
@@ -259,13 +265,13 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     await expect(concast.promise).resolves.toBe(2);
     await Promise.resolve();
 
-    const observers: Observer<any>[] = [{ next() {}, error() {} }];
-    const observerRefs = observers.map((observer) => new WeakRef(observer));
+    let sourceObserver: Observer<any> | undefined = { next() {}, error() {} };
+    const sourceObserverRef = new WeakRef(sourceObserver);
 
-    concast.subscribe(observers[0]);
-    delete observers[0];
+    concast.subscribe(sourceObserver);
 
-    await expect(observerRefs[0]).toBeGarbageCollected();
+    sourceObserver = undefined;
+    await expect(sourceObserverRef).toBeGarbageCollected();
   });
 
   it("after subscribing to an already-rejected concast, the reference is freed up again", async () => {
@@ -273,18 +279,19 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     await expect(concast.promise).rejects.toBe("error");
     await Promise.resolve();
 
-    const observers: Observer<any>[] = [{ next() {}, error() {} }];
-    const observerRefs = observers.map((observer) => new WeakRef(observer));
+    let sourceObserver: Observer<any> | undefined = { next() {}, error() {} };
+    const sourceObserverRef = new WeakRef(sourceObserver);
 
-    concast.subscribe(observers[0]);
-    delete observers[0];
+    concast.subscribe(sourceObserver);
 
-    await expect(observerRefs[0]).toBeGarbageCollected();
+    sourceObserver = undefined;
+    await expect(sourceObserverRef).toBeGarbageCollected();
   });
 });
 
 function deferred<X>() {
-  let resolve!: (v: X) => void, reject!: (e: any) => void;
+  let resolve!: (v: X) => void;
+  let reject!: (e: any) => void;
   const promise = new Promise<X>((res, rej) => {
     resolve = res;
     reject = rej;

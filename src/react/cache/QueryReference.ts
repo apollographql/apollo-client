@@ -32,6 +32,15 @@ type FetchMoreOptions<TData> = Parameters<
 
 const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 const PROMISE_SYMBOL: unique symbol = Symbol();
+
+function createSequencedFulfilledPromise<TValue>(value: TValue) {
+  return withSequence(createFulfilledPromise(value));
+}
+
+function createSequencedRejectedPromise<TValue = unknown>(reason: unknown) {
+  return withSequence(createRejectedPromise<TValue>(reason));
+}
+
 /**
  * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
  * A child component reading the `QueryReference` via {@link useReadQuery} will
@@ -131,7 +140,7 @@ export class InternalQueryReference<TData = unknown> {
       (this.result.data &&
         (!this.result.partial || this.watchQueryOptions.returnPartialData))
     ) {
-      this.promise = createFulfilledPromise(this.result);
+      this.promise = createSequencedFulfilledPromise(this.result);
       this.status = "idle";
     } else {
       this.promise = withSequence(
@@ -221,7 +230,7 @@ export class InternalQueryReference<TData = unknown> {
 
       if (currentCanonizeResults !== watchQueryOptions.canonizeResults) {
         this.result = { ...this.result, ...this.observable.getCurrentResult() };
-        this.promise = createFulfilledPromise(this.result);
+        this.promise = createSequencedFulfilledPromise(this.result);
       }
     }
 
@@ -281,7 +290,7 @@ export class InternalQueryReference<TData = unknown> {
         }
 
         this.result = result;
-        this.promise = createFulfilledPromise(result);
+        this.promise = createSequencedFulfilledPromise(result);
         this.deliver(this.promise);
         break;
       }
@@ -302,7 +311,8 @@ export class InternalQueryReference<TData = unknown> {
         break;
       }
       case "idle": {
-        this.promise = createRejectedPromise<ApolloQueryResult<TData>>(error);
+        this.promise =
+          createSequencedRejectedPromise<ApolloQueryResult<TData>>(error);
         this.deliver(this.promise);
       }
     }

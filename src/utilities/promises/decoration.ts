@@ -40,18 +40,16 @@ export function withSequence<T extends Promise<any>>(
 }
 
 export function createFulfilledPromise<TValue>(value: TValue) {
-  const promise = Promise.resolve(value) as FulfilledPromise<TValue> &
-    WithSequence;
+  const promise = Promise.resolve(value) as FulfilledPromise<TValue>;
 
   promise.status = "fulfilled";
   promise.value = value;
 
-  return withSequence(promise);
+  return promise;
 }
 
 export function createRejectedPromise<TValue = unknown>(reason: unknown) {
-  const promise = Promise.reject(reason) as RejectedPromise<TValue> &
-    WithSequence;
+  const promise = Promise.reject(reason) as RejectedPromise<TValue>;
 
   // prevent potential edge cases leaking unhandled error rejections
   promise.catch(() => {});
@@ -59,7 +57,7 @@ export function createRejectedPromise<TValue = unknown>(reason: unknown) {
   promise.status = "rejected";
   promise.reason = reason;
 
-  return withSequence(promise);
+  return promise;
 }
 
 export function isStatefulPromise<TValue>(

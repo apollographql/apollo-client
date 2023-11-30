@@ -200,6 +200,7 @@ export function useSuspenseQuery<
     [QueryKey, Promise<ApolloQueryResult<any>>]
   >([queryRef.key, queryRef.promise]);
 
+  // This saves us a re-execution of the render function when a variable changed.
   if (current[0] !== queryRef.key) {
     current[0] = queryRef.key;
     current[1] = queryRef.promise;

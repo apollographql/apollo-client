@@ -216,6 +216,7 @@ function renderVariablesIntegrationTest({
             },
           },
         },
+        delay: 200,
       };
     }
   );
@@ -3185,8 +3186,12 @@ describe("useBackgroundQuery", () => {
       await act(() => user.click(button));
 
       {
+        // parent component re-suspends
+        const { snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(2);
+      }
+      {
         const { snapshot, withinDOM } = await ProfiledApp.takeRender();
-        expect(snapshot.suspenseCount).toBe(1);
         // @jerelmiller can you please verify that this is still in the spirit of the test?
         // This seems to have moved onto the next render - or before the test skipped one.
         expect(snapshot.count).toBe(2);
@@ -3291,9 +3296,9 @@ describe("useBackgroundQuery", () => {
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component didn't re-suspend
-      expect(renders.suspenseCount).toBe(1);
-      expect(renders.count).toBe(2);
+      // parent component re-suspends
+      expect(renders.suspenseCount).toBe(2);
+      expect(renders.count).toBe(1);
 
       expect(
         await screen.findByText("1 - Spider-Man (updated)")
@@ -3302,12 +3307,14 @@ describe("useBackgroundQuery", () => {
       await act(() => user.click(button));
 
       // parent component re-suspends
-      expect(renders.suspenseCount).toBe(1);
-      expect(renders.count).toBe(3);
+      expect(renders.suspenseCount).toBe(3);
+      expect(renders.count).toBe(2);
 
       expect(
         await screen.findByText("1 - Spider-Man (updated again)")
       ).toBeInTheDocument();
+
+      expect(renders.count).toBe(3);
     });
     it("throws errors when errors are returned after calling `refetch`", async () => {
       using _consoleSpy = spyOnConsole("error");

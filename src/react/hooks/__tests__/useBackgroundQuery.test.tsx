@@ -3228,12 +3228,14 @@ describe("useBackgroundQuery", () => {
           result: {
             data: { character: { id: "1", name: "Captain Marvel" } },
           },
+          delay: 200,
         },
         {
           request: { query, variables: { id: "2" } },
           result: {
             data: { character: { id: "2", name: "Captain America" } },
           },
+          delay: 200,
         },
       ];
 
@@ -3259,8 +3261,8 @@ describe("useBackgroundQuery", () => {
         await screen.findByText("2 - Captain America")
       ).toBeInTheDocument();
 
-      // parent component didn't re-suspend
-      expect(renders.suspenseCount).toBe(1);
+      // parent component re-suspends
+      expect(renders.suspenseCount).toBe(2);
       expect(renders.count).toBe(3);
 
       // extra render puts an additional frame into the array

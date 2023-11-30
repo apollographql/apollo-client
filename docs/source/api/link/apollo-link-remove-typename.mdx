@@ -6,7 +6,57 @@ minVersion: 3.8.0
 
 ## Overview
 
-When reusing data from a query as an argument to another GraphQL operation, `__typename` fields can cause errors. To avoid this, you can use the `removeTypenameFromVariables` link to automatically remove `__typename` fields from variables in operations. You can import and instantiate it like so:
+When reusing data from a query as an argument to another GraphQL operation, `__typename` fields can cause errors. To avoid this, you can use the `removeTypenameFromVariables` link to automatically remove `__typename` fields from variables in operations. 
+
+## Remove `__typename` from all variables
+
+As an example, take the following query. Apollo Client automatically adds `__typename` fields for each field selection set.
+
+```ts
+const query = gql`
+  query DashboardQuery($id: ID!) {
+    dashboard(id: $id) {
+      id
+      name
+    }
+  }
+`;
+
+const { data } = await client.query({ query, variables: { id: 1 }});
+// {
+//   "dashboard": {
+//     "__typename": "Dashboard",
+//     "id": 1,
+//     "name": "My Dashboard"
+//   }
+// }
+```
+
+Now let's update this dashboard by sending a mutation to our server. We'll use the `dashboard` returned from the previous query as input to our mutation.
+
+```ts
+const mutation = gql`
+  mutation UpdateDashboardMutation($dashboard: DashboardInput!) {
+    updateDashboard(dashboard: $dashboard) {
+      id
+      name
+    }
+  }
+`;
+
+await client.mutate({
+  mutation,
+  variables: {
+    dashboard: { ...data.dashboard, name: 'My Updated Dashboard' }
+  }
+});
+```
+
+Without the use of the `removeTypenameFromVariables` link, the server will return an error because `data.dashboard` still contains the `__typename` field.
+
+## Usage
+
+You can import and instantiate it like so:
 
 ```ts
 import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename';
@@ -57,52 +107,6 @@ const client = new ApolloClient({
   // ... other options
 });
 ```
-
-## Remove `__typename` from all variables
-
-As an example, take the following query. Apollo Client automatically adds `__typename` fields for each field selection set.
-
-```ts
-const query = gql`
-  query DashboardQuery($id: ID!) {
-    dashboard(id: $id) {
-      id
-      name
-    }
-  }
-`;
-
-const { data } = await client.query({ query, variables: { id: 1 }});
-// {
-//   "dashboard": {
-//     "__typename": "Dashboard",
-//     "id": 1,
-//     "name": "My Dashboard"
-//   }
-// }
-```
-
-Now let's update this dashboard by sending a mutation to our server. We'll use the `dashboard` returned from the previous query as input to our mutation.
-
-```ts
-const mutation = gql`
-  mutation UpdateDashboardMutation($dashboard: DashboardInput!) {
-    updateDashboard(dashboard: $dashboard) {
-      id
-      name
-    }
-  }
-`;
-
-await client.mutate({
-  mutation,
-  variables: {
-    dashboard: { ...data.dashboard, name: 'My Updated Dashboard' }
-  }
-});
-```
-
-Without the use of the `removeTypenameFromVariables` link, the server will return an error because `data.dashboard` still contains the `__typename` field.
 
 ## Keep `__typename` in JSON scalars
 

@@ -1,3 +1,4 @@
+import { WeakCache } from "@wry/caches";
 import { invariant } from "../../utilities/globals/index.js";
 
 import type {
@@ -19,7 +20,16 @@ export interface IDocumentDefinition {
   variables: ReadonlyArray<VariableDefinitionNode>;
 }
 
-const cache = new Map();
+let cache:
+  | undefined
+  | WeakCache<
+      DocumentNode,
+      {
+        name: string;
+        type: DocumentType;
+        variables: readonly VariableDefinitionNode[];
+      }
+    >;
 
 export function operationName(type: DocumentType) {
   let name;
@@ -39,6 +49,10 @@ export function operationName(type: DocumentType) {
 
 // This parser is mostly used to safety check incoming documents.
 export function parser(document: DocumentNode): IDocumentDefinition {
+  if (!cache) {
+    cache =
+      new WeakCache(/** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */);
+  }
   const cached = cache.get(document);
   if (cached) return cached;
 
@@ -130,6 +144,10 @@ export function parser(document: DocumentNode): IDocumentDefinition {
   cache.set(document, payload);
   return payload;
 }
+
+parser.resetCache = () => {
+  cache = undefined;
+};
 
 export function verifyDocumentType(document: DocumentNode, type: DocumentType) {
   const operation = parser(document);

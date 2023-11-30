@@ -14,7 +14,7 @@ import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename
 const removeTypenameLink = removeTypenameFromVariables();
 ```
 
-Use this link before your [terminating link](https://www.apollographql.com/docs/react/api/link/introduction#the-terminating-link)
+Include `removeTypeNameLink`  anywhere in your [link chain](./introduction/#your-first-link-chain) before your [terminating link](./introduction#the-terminating-link)
 to remove `__typename` fields from variables for all operations.
 
 ```ts

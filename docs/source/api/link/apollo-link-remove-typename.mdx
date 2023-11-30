@@ -29,7 +29,7 @@ const client = new ApolloClient({
 ```
 
 If you're using [directional composition](./link/introduction#directional-composition), 
-for example to [send a subcription to a websocket connection](https://www.apollographql.com/docs/react/data/subscriptions#3-split-communication-by-operation-recommended),
+for example, to [send a subscription to a websocket connection](../data/subscriptions#3-split-communication-by-operation-recommended),
 place `removeTypenameLink` before `splitLink` to remove `__typename` from variables for all operations.
 
 ```ts

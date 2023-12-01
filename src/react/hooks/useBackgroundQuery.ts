@@ -207,10 +207,10 @@ export function useBackgroundQuery<
   );
 
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(
-    wrapQueryRef(queryRef, queryRef.promise)
+    wrapQueryRef(queryRef)
   );
   if (unwrapQueryRef(wrappedQueryRef)[0] !== queryRef) {
-    setWrappedQueryRef(wrapQueryRef(queryRef, queryRef.promise));
+    setWrappedQueryRef(wrapQueryRef(queryRef));
   }
   if (queryRef.didChangeOptions(watchQueryOptions)) {
     const promise = queryRef.applyOptions(watchQueryOptions);
@@ -223,7 +223,7 @@ export function useBackgroundQuery<
     (options) => {
       const promise = queryRef.fetchMore(options as FetchMoreQueryOptions<any>);
 
-      setWrappedQueryRef(wrapQueryRef(queryRef, queryRef.promise));
+      setWrappedQueryRef(wrapQueryRef(queryRef));
 
       return promise;
     },
@@ -234,7 +234,7 @@ export function useBackgroundQuery<
     (variables) => {
       const promise = queryRef.refetch(variables);
 
-      setWrappedQueryRef(wrapQueryRef(queryRef, queryRef.promise));
+      setWrappedQueryRef(wrapQueryRef(queryRef));
 
       return promise;
     },

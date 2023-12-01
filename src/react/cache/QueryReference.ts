@@ -47,12 +47,11 @@ interface InternalQueryReferenceOptions {
 }
 
 export function wrapQueryRef<TData>(
-  internalQueryRef: InternalQueryReference<TData>,
-  promise: QueryRefPromise<TData>
+  internalQueryRef: InternalQueryReference<TData>
 ): QueryReference<TData> {
   return {
     [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
-    [PROMISE_SYMBOL]: promise,
+    [PROMISE_SYMBOL]: internalQueryRef.promise,
   };
 }
 

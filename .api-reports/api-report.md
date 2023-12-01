@@ -1078,6 +1078,14 @@ export function fromError<T>(errorValue: any): Observable<T>;
 export function fromPromise<T>(promise: Promise<T>): Observable<T>;
 
 // @public (undocumented)
+interface FulfilledPromise<TValue> extends Promise<TValue> {
+    // (undocumented)
+    status: "fulfilled";
+    // (undocumented)
+    value: TValue;
+}
+
+// @public (undocumented)
 export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
 
 export { gql }
@@ -1266,7 +1274,7 @@ class InternalQueryReference<TData = unknown> {
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReferenceOptions" needs to be exported by the entry point index.d.ts
     constructor(observable: ObservableQuery<TData>, options: InternalQueryReferenceOptions);
     // (undocumented)
-    applyOptions(watchQueryOptions: ObservedOptions): Promise<ApolloQueryResult<TData>>;
+    applyOptions(watchQueryOptions: ObservedOptions): QueryRefPromise<TData>;
     // Warning: (ae-forgotten-export) The symbol "ObservedOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1275,20 +1283,20 @@ class InternalQueryReference<TData = unknown> {
     //
     // (undocumented)
     fetchMore(options: FetchMoreOptions_2<TData>): Promise<ApolloQueryResult<TData>>;
-    // Warning: (ae-forgotten-export) The symbol "CacheKey" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "QueryKey" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    readonly key: CacheKey;
+    readonly key: QueryKey;
     // Warning: (ae-forgotten-export) The symbol "Listener" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     listen(listener: Listener<TData>): () => void;
     // (undocumented)
     readonly observable: ObservableQuery<TData>;
+    // Warning: (ae-forgotten-export) The symbol "QueryRefPromise" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    promise: Promise<ApolloQueryResult<TData>>;
-    // (undocumented)
-    promiseCache?: Map<CacheKey, Promise<ApolloQueryResult<TData>>>;
+    promise: QueryRefPromise<TData>;
     // (undocumented)
     refetch(variables: OperationVariables | undefined): Promise<ApolloQueryResult<TData>>;
     // (undocumented)
@@ -1303,6 +1311,8 @@ class InternalQueryReference<TData = unknown> {
 interface InternalQueryReferenceOptions {
     // (undocumented)
     autoDisposeTimeoutMs?: number;
+    // Warning: (ae-forgotten-export) The symbol "CacheKey" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     key: CacheKey;
     // (undocumented)
@@ -1422,7 +1432,7 @@ export type LazyQueryResult<TData, TVariables extends OperationVariables> = Quer
 export type LazyQueryResultTuple<TData, TVariables extends OperationVariables> = [LazyQueryExecFunction<TData, TVariables>, QueryResult<TData, TVariables>];
 
 // @public (undocumented)
-type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
+type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
 // @public (undocumented)
 export type LoadableQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
@@ -1941,6 +1951,12 @@ export namespace parser {
 export type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
+interface PendingPromise<TValue> extends Promise<TValue> {
+    // (undocumented)
+    status: "pending";
+}
+
+// @public (undocumented)
 class Policies {
     constructor(config: {
         cache: InMemoryCache;
@@ -2002,6 +2018,16 @@ interface Printer {
     // (undocumented)
     (node: ASTNode, originalPrint: typeof print_2): string;
 }
+
+// @public (undocumented)
+const PROMISE_SYMBOL: unique symbol;
+
+// Warning: (ae-forgotten-export) The symbol "PendingPromise" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "FulfilledPromise" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "RejectedPromise" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type PromiseWithState<TValue> = PendingPromise<TValue> | FulfilledPromise<TValue> | RejectedPromise<TValue>;
 
 // @public (undocumented)
 const QUERY_REFERENCE_SYMBOL: unique symbol;
@@ -2091,6 +2117,12 @@ class QueryInfo {
     stopped: boolean;
     // (undocumented)
     variables?: Record<string, any>;
+}
+
+// @public (undocumented)
+interface QueryKey {
+    // (undocumented)
+    __queryKey?: string;
 }
 
 // @public (undocumented)
@@ -2250,11 +2282,18 @@ export { QueryOptions }
 
 // @public (undocumented)
 export interface QueryReference<TData = unknown> {
+    // (undocumented)
+    [PROMISE_SYMBOL]: QueryRefPromise<TData>;
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReference" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+    readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
 }
+
+// Warning: (ae-forgotten-export) The symbol "PromiseWithState" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
 
 // @public (undocumented)
 export interface QueryResult<TData = any, TVariables extends OperationVariables = OperationVariables> extends ObservableQueryFields<TData, TVariables> {
@@ -2382,6 +2421,14 @@ export type RefetchQueryDescriptor = string | DocumentNode;
 
 // @public (undocumented)
 export type RefetchWritePolicy = "merge" | "overwrite";
+
+// @public (undocumented)
+interface RejectedPromise<TValue> extends Promise<TValue> {
+    // (undocumented)
+    reason: unknown;
+    // (undocumented)
+    status: "rejected";
+}
 
 // @public (undocumented)
 class RenderPromises {
@@ -2963,8 +3010,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/QueryManager.ts:384:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:191:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:26:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:27:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:31:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:51:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

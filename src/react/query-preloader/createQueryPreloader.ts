@@ -44,6 +44,7 @@ export type PreloadQueryOptions<
   errorPolicy?: ErrorPolicy;
   fetchPolicy?: PreloadQueryFetchPolicy;
   queryKey?: string | number | any[];
+  returnPartialData?: boolean;
   refetchWritePolicy?: RefetchWritePolicy;
 } & VariablesOption<TVariables>;
 

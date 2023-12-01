@@ -48,7 +48,7 @@
     "ci:precheck": "node config/precheck.js",
     "format": "prettier --write .",
     "lint": "eslint 'src/**/*.{[jt]s,[jt]sx}'",
-    "test": "jest --config ./config/jest.config.js",
+    "test": "node --expose-gc ./node_modules/jest/bin/jest.js --config ./config/jest.config.js",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage && npm run test:memory",
     "test:watch": "jest --config ./config/jest.config.js --watch",

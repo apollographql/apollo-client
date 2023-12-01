@@ -6,7 +6,7 @@
 
 import { InvariantError } from 'ts-invariant';
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 const DEV: boolean;
 export { DEV }
 export { DEV as __DEV__ }
@@ -30,7 +30,7 @@ type LogFunction = {
 // @public (undocumented)
 export function maybe<T>(thunk: () => T): T | undefined;
 
-// @public (undocumented)
+// @public
 export function newInvariantError(message?: string | number, ...optionalParams: unknown[]): InvariantError;
 
 // @public (undocumented)

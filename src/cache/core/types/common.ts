@@ -105,22 +105,20 @@ export type Modifier<T> = (
   details: ModifierDetails
 ) => T | DeleteModifier | InvalidateModifier;
 
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<
-  Record<string, any>
->
-  ? StoreVal extends Array<infer Item>
-    ? Item extends Record<string, any>
-      ? ReadonlyArray<AsStoreObject<Item> | Reference>
+type StoreObjectValueMaybeReference<StoreVal> =
+  StoreVal extends Array<Record<string, any>> ?
+    StoreVal extends Array<infer Item> ?
+      Item extends Record<string, any> ?
+        ReadonlyArray<AsStoreObject<Item> | Reference>
       : never
     : never
-  : StoreVal extends Record<string, any>
-  ? AsStoreObject<StoreVal> | Reference
+  : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference
   : StoreVal;
 
 export type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<
-  Entity[keyof Entity] extends infer Value
-    ? StoreObjectValueMaybeReference<Exclude<Value, undefined>>
-    : never
+  Entity[keyof Entity] extends infer Value ?
+    StoreObjectValueMaybeReference<Exclude<Value, undefined>>
+  : never
 >;
 
 export type Modifiers<T extends Record<string, any> = Record<string, unknown>> =

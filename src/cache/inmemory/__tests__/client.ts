@@ -90,11 +90,9 @@ describe("InMemoryCache tests exercising ApolloClient", () => {
           // will remain as a raw string rather than being converted to a Date by
           // the read function.
           const expectedDateAfterResult =
-            fetchPolicy === "cache-only"
-              ? new Date(dateFromCache)
-              : fetchPolicy === "no-cache"
-              ? dateFromNetwork
-              : new Date(dateFromNetwork);
+            fetchPolicy === "cache-only" ? new Date(dateFromCache)
+            : fetchPolicy === "no-cache" ? dateFromNetwork
+            : new Date(dateFromNetwork);
 
           if (adjustedCount === 1) {
             expect(result.loading).toBe(true);
@@ -108,11 +106,11 @@ describe("InMemoryCache tests exercising ApolloClient", () => {
               // The no-cache fetch policy does return extraneous fields from the
               // raw network result that were not requested in the query, since
               // the cache is not consulted.
-              ...(fetchPolicy === "no-cache"
-                ? {
-                    ignored: "irrelevant to the subscribed query",
-                  }
-                : null),
+              ...(fetchPolicy === "no-cache" ?
+                {
+                  ignored: "irrelevant to the subscribed query",
+                }
+              : null),
             });
 
             if (fetchPolicy === "no-cache") {
@@ -145,12 +143,12 @@ describe("InMemoryCache tests exercising ApolloClient", () => {
                 // network, so it never ends up writing the date field into the
                 // cache explicitly, though Query.date can still be synthesized by
                 // the read function.
-                ...(fetchPolicy === "cache-only"
-                  ? null
-                  : {
-                      // Make sure this field is stored internally as a raw string.
-                      date: dateFromNetwork,
-                    }),
+                ...(fetchPolicy === "cache-only" ? null : (
+                  {
+                    // Make sure this field is stored internally as a raw string.
+                    date: dateFromNetwork,
+                  }
+                )),
                 // Written explicitly with cache.writeQuery above.
                 missing: "not missing anymore",
                 // The ignored field is never written to the cache, because it is

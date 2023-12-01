@@ -25,9 +25,8 @@ export class DocumentTransform {
   private readonly transform: TransformFn;
   private cached: boolean;
 
-  private readonly resultCache = canUseWeakSet
-    ? new WeakSet<DocumentNode>()
-    : new Set<DocumentNode>();
+  private readonly resultCache =
+    canUseWeakSet ? new WeakSet<DocumentNode>() : new Set<DocumentNode>();
 
   // This default implementation of getCacheKey can be overridden by providing
   // options.getCacheKey to the DocumentTransform constructor. In general, a

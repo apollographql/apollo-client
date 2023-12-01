@@ -552,8 +552,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
   private toApolloError(
     result: ApolloQueryResult<TData>
   ): ApolloError | undefined {
-    return isNonEmptyArray(result.errors)
-      ? new ApolloError({ graphQLErrors: result.errors })
+    return isNonEmptyArray(result.errors) ?
+        new ApolloError({ graphQLErrors: result.errors })
       : result.error;
   }
 

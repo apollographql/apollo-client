@@ -3,9 +3,12 @@ import { promises as fs } from "fs";
 
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { terser as minify } from "rollup-plugin-terser";
+import cleanup from "rollup-plugin-cleanup";
 
 const entryPoints = require("./entryPoints");
 const distDir = "./dist";
+
+const removeComments = cleanup({});
 
 function isExternal(id, parentId, entryPointsAreExternal = true) {
   let posixId = toPosixPath(id);
@@ -63,7 +66,7 @@ function prepareCJS(input, output) {
       exports: "named",
       externalLiveBindings: false,
     },
-    plugins: [nodeResolve()],
+    plugins: [nodeResolve(), removeComments],
   };
 }
 
@@ -78,6 +81,9 @@ function prepareCJSMinified(input) {
       minify({
         mangle: {
           toplevel: true,
+        },
+        format: {
+          comments: "some", // keeps comments with a @license, @copyright or @preserve tag
         },
         compress: {
           toplevel: true,
@@ -111,6 +117,7 @@ function prepareBundle({
       externalLiveBindings: false,
     },
     plugins: [
+      removeComments,
       {
         name: "externalize-dependency",
         resolveId(id, parentId) {

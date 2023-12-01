@@ -1,5 +1,5 @@
 import React from "react";
-import { render, cleanup } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import gql from "graphql-tag";
 
 import { ApolloProvider } from "../../../context/ApolloProvider";
@@ -21,8 +21,6 @@ const expectedData = {
 };
 
 describe("graphql(mutation) lifecycle", () => {
-  afterEach(cleanup);
-
   itAsync(
     "allows falsy values in the mapped variables from props",
     (resolve, reject) => {

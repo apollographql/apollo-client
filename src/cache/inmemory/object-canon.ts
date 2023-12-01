@@ -8,8 +8,8 @@ import { isArray } from "./helpers.js";
 
 function shallowCopy<T>(value: T): T {
   if (isObjectOrArray(value)) {
-    return isArray(value)
-      ? (value.slice(0) as any as T)
+    return isArray(value) ?
+        (value.slice(0) as any as T)
       : { __proto__: Object.getPrototypeOf(value), ...value };
   }
   return value;

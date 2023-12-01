@@ -86,17 +86,15 @@ interface VariablesCaseVariables {
 }
 
 function useVariablesQueryCase() {
-  const query: TypedDocumentNode<
-    VariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
+  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+    gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
       }
-    }
-  `;
+    `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
   const mocks: MockedResponse<VariablesCaseData>[] = [...CHARACTERS].map(
@@ -123,17 +121,15 @@ interface PaginatedQueryVariables {
 }
 
 function usePaginatedQueryCase() {
-  const query: TypedDocumentNode<
-    PaginatedQueryData,
-    PaginatedQueryVariables
-  > = gql`
-    query letters($limit: Int, $offset: Int) {
-      letters(limit: $limit) {
-        letter
-        position
+  const query: TypedDocumentNode<PaginatedQueryData, PaginatedQueryVariables> =
+    gql`
+      query letters($limit: Int, $offset: Int) {
+        letters(limit: $limit) {
+          letter
+          position
+        }
       }
-    }
-  `;
+    `;
 
   const data = "ABCDEFG"
     .split("")
@@ -170,9 +166,9 @@ function createDefaultProfiledComponents<
     result: UseReadQueryResult<any> | null;
     error?: Error | null;
   },
-  TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null
-    ? TData
-    : unknown,
+  TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null ?
+    TData
+  : unknown,
 >(profiler: Profiler<Snapshot>) {
   function SuspenseFallback() {
     useTrackRenders();
@@ -4343,10 +4339,8 @@ describe.skip("type tests", () => {
   });
 
   it("optional variables are optional to loadQuery", () => {
-    const query: TypedDocumentNode<
-      { posts: string[] },
-      { limit?: number }
-    > = gql``;
+    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
 
     const [loadQuery] = useLoadableQuery(query);
 
@@ -4365,10 +4359,8 @@ describe.skip("type tests", () => {
   });
 
   it("enforces required variables when TVariables includes required variables", () => {
-    const query: TypedDocumentNode<
-      { character: string },
-      { id: string }
-    > = gql``;
+    const query: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
 
     const [loadQuery] = useLoadableQuery(query);
 

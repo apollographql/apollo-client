@@ -497,16 +497,24 @@ it("allows the client to be overridden", async () => {
   const { query } = useSimpleQueryCase();
 
   const globalClient = new ApolloClient({
-    link: new ApolloLink(() =>
-      Observable.of({ data: { greeting: "global hello" } })
-    ),
+    link: new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: "global hello" } },
+        delay: 10,
+      },
+    ]),
     cache: new InMemoryCache(),
   });
 
   const localClient = new ApolloClient({
-    link: new ApolloLink(() =>
-      Observable.of({ data: { greeting: "local hello" } })
-    ),
+    link: new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: "local hello" } },
+        delay: 10,
+      },
+    ]),
     cache: new InMemoryCache(),
   });
 
@@ -566,9 +574,10 @@ it("passes context to the link", async () => {
     link: new ApolloLink((operation) => {
       return new Observable((observer) => {
         const { valueA, valueB } = operation.getContext();
-
+        setTimeout(() => {
         observer.next({ data: { context: { valueA, valueB } } });
         observer.complete();
+        }, 10);
       });
     }),
   });
@@ -1460,12 +1469,14 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
+      delay: 10,
     },
     {
       request: { query },
       result: {
         errors: [new GraphQLError("oops")],
       },
+      delay: 10,
     },
   ];
 
@@ -1545,10 +1556,15 @@ it("applies `context` on next fetch when it changes between renders", async () =
   `;
 
   const link = new ApolloLink((operation) => {
-    return Observable.of({
+    return new Observable((subscriber) => {
+      setTimeout(() => {
+        subscriber.next({
       data: {
         phase: operation.getContext().phase,
       },
+        });
+        subscriber.complete();
+      }, 10);
     });
   });
 
@@ -1728,6 +1744,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     {
       request: { query, variables: { min: 0, max: 12 } },
       result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 10,
     },
     {
       request: { query, variables: { min: 12, max: 30 } },
@@ -1899,6 +1916,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
           },
         },
       },
+      delay: 10,
     },
     {
       request: { query: fullQuery },
@@ -2241,12 +2259,14 @@ it("re-suspends when calling `refetch` with new variables", async () => {
       result: {
         data: { character: { id: "1", name: "Captain Marvel" } },
       },
+      delay: 10,
     },
     {
       request: { query, variables: { id: "2" } },
       result: {
         data: { character: { id: "2", name: "Captain America" } },
       },
+      delay: 10,
     },
   ];
 
@@ -2323,6 +2343,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
         data: { character: { id: "1", name: "Spider-Man" } },
       },
       maxUsageCount: 3,
+      delay: 10,
     },
   ];
 
@@ -2495,12 +2516,14 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
       result: {
         data: { character: { id: "1", name: "Captain Marvel" } },
       },
+      delay: 10,
     },
     {
       request: { query, variables: { id: "1" } },
       result: {
         errors: [new GraphQLError("Something went wrong")],
       },
+      delay: 10,
     },
   ];
 
@@ -3273,6 +3296,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     {
       request: { query, variables: { min: 0, max: 12 } },
       result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 10,
     },
     {
       request: { query, variables: { min: 12, max: 30 } },
@@ -3385,6 +3409,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     {
       request: { query, variables: { min: 0, max: 12 } },
       result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 10,
     },
     {
       request: { query, variables: { min: 12, max: 30 } },
@@ -3695,6 +3720,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     {
       request: { query: fullQuery },
       result: { data: { character: { id: "1", name: "Doctor Strange" } } },
+      delay: 10,
     },
   ];
 
@@ -3786,6 +3812,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     {
       request: { query: fullQuery },
       result: { data: { character: { id: "1", name: "Doctor Strange" } } },
+      delay: 10,
     },
   ];
 

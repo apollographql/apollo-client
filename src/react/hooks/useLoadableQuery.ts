@@ -30,11 +30,9 @@ export type LoadQueryFunction<TVariables extends OperationVariables> = (
   // which case we don't want to allow a variables argument. In other
   // words, we don't want to allow variables to be passed as an argument to this
   // function if the query does not expect variables in the document.
-  ...args: [TVariables] extends [never]
-    ? []
-    : {} extends OnlyRequiredProperties<TVariables>
-    ? [variables?: TVariables]
-    : [variables: TVariables]
+  ...args: [TVariables] extends [never] ? []
+  : {} extends OnlyRequiredProperties<TVariables> ? [variables?: TVariables]
+  : [variables: TVariables]
 ) => void;
 
 type ResetFunction = () => void;
@@ -60,13 +58,12 @@ export function useLoadableQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LoadableQueryHookOptions & TOptions
 ): UseLoadableQueryResult<
-  TOptions["errorPolicy"] extends "ignore" | "all"
-    ? TOptions["returnPartialData"] extends true
-      ? DeepPartial<TData> | undefined
-      : TData | undefined
-    : TOptions["returnPartialData"] extends true
-    ? DeepPartial<TData>
-    : TData,
+  TOptions["errorPolicy"] extends "ignore" | "all" ?
+    TOptions["returnPartialData"] extends true ?
+      DeepPartial<TData> | undefined
+    : TData | undefined
+  : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
+  : TData,
   TVariables
 >;
 

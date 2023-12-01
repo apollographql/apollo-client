@@ -177,9 +177,9 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
             } else {
               if (response.result) {
                 observer.next(
-                  typeof response.result === "function"
-                    ? response.result(operation.variables)
-                    : response.result
+                  typeof response.result === "function" ?
+                    response.result(operation.variables)
+                  : response.result
                 );
               }
               observer.complete();

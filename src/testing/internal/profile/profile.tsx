@@ -219,9 +219,8 @@ export function createProfiler<Snapshot extends ValidSnapshot = void>({
       });
 
       const snapshot = snapshotRef.current as Snapshot;
-      const domSnapshot = snapshotDOM
-        ? window.document.body.innerHTML
-        : undefined;
+      const domSnapshot =
+        snapshotDOM ? window.document.body.innerHTML : undefined;
       const render = new RenderInstance(
         baseRender,
         snapshot,
@@ -374,13 +373,13 @@ type ResultReplaceRenderWithSnapshot<T> =
   : T;
 
 type ProfiledHookFields<ReturnValue> =
-  ProfiledComponentFields<ReturnValue> extends infer PC
-    ? {
-        [K in keyof PC as StringReplaceRenderWithSnapshot<
-          K & string
-        >]: ResultReplaceRenderWithSnapshot<PC[K]>;
-      }
-    : never;
+  ProfiledComponentFields<ReturnValue> extends infer PC ?
+    {
+      [K in keyof PC as StringReplaceRenderWithSnapshot<
+        K & string
+      >]: ResultReplaceRenderWithSnapshot<PC[K]>;
+    }
+  : never;
 
 /** @internal */
 export interface ProfiledHook<Props, ReturnValue>

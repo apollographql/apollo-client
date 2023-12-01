@@ -133,10 +133,6 @@ export function useLoadableQuery<
     promiseCache.set(queryRef.key, promise);
   }
 
-  if (queryRef) {
-    queryRef.promiseCache = promiseCache;
-  }
-
   const calledDuringRender = useRenderGuard();
 
   React.useEffect(() => queryRef?.retain(), [queryRef]);

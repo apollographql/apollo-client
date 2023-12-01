@@ -15,7 +15,7 @@ import {
   createFulfilledPromise,
   createRejectedPromise,
 } from "../../utilities/index.js";
-import type { CacheKey, QueryKey } from "./types.js";
+import type { QueryKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
 import { wrapPromiseWithState } from "../../utilities/index.js";
 
@@ -41,7 +41,6 @@ export interface QueryReference<TData = unknown> {
 }
 
 interface InternalQueryReferenceOptions {
-  key: CacheKey;
   onDispose?: () => void;
   autoDisposeTimeoutMs?: number;
 }

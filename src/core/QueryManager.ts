@@ -169,8 +169,9 @@ export class QueryManager<TStore> {
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = assumeImmutableResults;
-    this.documentTransform = documentTransform
-      ? defaultDocumentTransform
+    this.documentTransform =
+      documentTransform ?
+        defaultDocumentTransform
           .concat(documentTransform)
           // The custom document transform may add new fragment spreads or new
           // field selections, so we want to give the cache a chance to run
@@ -366,11 +367,11 @@ export class QueryManager<TStore> {
           self.broadcastQueries();
 
           reject(
-            err instanceof ApolloError
-              ? err
-              : new ApolloError({
-                  networkError: err,
-                })
+            err instanceof ApolloError ? err : (
+              new ApolloError({
+                networkError: err,
+              })
+            )
           );
         },
       });
@@ -608,9 +609,9 @@ export class QueryManager<TStore> {
     }
   ) {
     const data =
-      typeof optimisticResponse === "function"
-        ? optimisticResponse(mutation.variables)
-        : optimisticResponse;
+      typeof optimisticResponse === "function" ?
+        optimisticResponse(mutation.variables)
+      : optimisticResponse;
 
     return this.cache.recordOptimisticTransaction((cache) => {
       try {
@@ -930,9 +931,9 @@ export class QueryManager<TStore> {
       queryNamesAndDocs.forEach((included, nameOrDoc) => {
         if (!included) {
           invariant.warn(
-            typeof nameOrDoc === "string"
-              ? `Unknown query named "%s" requested in refetchQueries options.include array`
-              : `Unknown query %s requested in refetchQueries options.include array`,
+            typeof nameOrDoc === "string" ?
+              `Unknown query named "%s" requested in refetchQueries options.include array`
+            : `Unknown query %s requested in refetchQueries options.include array`,
             nameOrDoc
           );
         }
@@ -1213,9 +1214,10 @@ export class QueryManager<TStore> {
       },
 
       (networkError) => {
-        const error = isApolloError(networkError)
-          ? networkError
-          : new ApolloError({ networkError });
+        const error =
+          isApolloError(networkError) ? networkError : (
+            new ApolloError({ networkError })
+          );
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
@@ -1577,14 +1579,15 @@ export class QueryManager<TStore> {
     };
 
     const cacheWriteBehavior =
-      fetchPolicy === "no-cache"
-        ? CacheWriteBehavior.FORBID
-        : // Watched queries must opt into overwriting existing data on refetch,
+      fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID
+        // Watched queries must opt into overwriting existing data on refetch,
         // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
+      : (
         networkStatus === NetworkStatus.refetch &&
-          refetchWritePolicy !== "merge"
-        ? CacheWriteBehavior.OVERWRITE
-        : CacheWriteBehavior.MERGE;
+        refetchWritePolicy !== "merge"
+      ) ?
+        CacheWriteBehavior.OVERWRITE
+      : CacheWriteBehavior.MERGE;
 
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {

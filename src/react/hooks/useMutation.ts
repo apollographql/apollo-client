@@ -95,9 +95,9 @@ export function useMutation<
         .then((response) => {
           const { data, errors } = response;
           const error =
-            errors && errors.length > 0
-              ? new ApolloError({ graphQLErrors: errors })
-              : void 0;
+            errors && errors.length > 0 ?
+              new ApolloError({ graphQLErrors: errors })
+            : void 0;
 
           const onError =
             executeOptions.onError || ref.current.options?.onError;

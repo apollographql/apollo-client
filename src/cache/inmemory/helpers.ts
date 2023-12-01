@@ -43,10 +43,9 @@ export function defaultDataIdFromObject(
 ): string | undefined {
   if (typeof __typename === "string") {
     if (context) {
-      context.keyObject = !isNullish(id)
-        ? { id }
-        : !isNullish(_id)
-        ? { _id }
+      context.keyObject =
+        !isNullish(id) ? { id }
+        : !isNullish(_id) ? { _id }
         : void 0;
     }
 
@@ -57,9 +56,9 @@ export function defaultDataIdFromObject(
 
     if (!isNullish(id)) {
       return `${__typename}:${
-        typeof id === "number" || typeof id === "string"
-          ? id
-          : JSON.stringify(id)
+        typeof id === "number" || typeof id === "string" ?
+          id
+        : JSON.stringify(id)
       }`;
     }
   }
@@ -89,8 +88,8 @@ export function getTypenameFromStoreObject(
   store: NormalizedCache,
   objectOrReference: StoreObject | Reference
 ): string | undefined {
-  return isReference(objectOrReference)
-    ? (store.get(objectOrReference.__ref, "__typename") as string)
+  return isReference(objectOrReference) ?
+      (store.get(objectOrReference.__ref, "__typename") as string)
     : objectOrReference && objectOrReference.__typename;
 }
 
@@ -107,8 +106,8 @@ export function selectionSetMatchesResult(
   variables?: Record<string, any>
 ): boolean {
   if (isNonNullObject(result)) {
-    return isArray(result)
-      ? result.every((item) =>
+    return isArray(result) ?
+        result.every((item) =>
           selectionSetMatchesResult(selectionSet, item, variables)
         )
       : selectionSet.selections.every((field) => {

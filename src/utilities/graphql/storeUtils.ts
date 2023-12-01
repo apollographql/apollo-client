@@ -234,8 +234,9 @@ export const getStoreKeyName = Object.assign(
         directives["connection"]["filter"] &&
         (directives["connection"]["filter"] as string[]).length > 0
       ) {
-        const filterKeys = directives["connection"]["filter"]
-          ? (directives["connection"]["filter"] as string[])
+        const filterKeys =
+          directives["connection"]["filter"] ?
+            (directives["connection"]["filter"] as string[])
           : [];
         filterKeys.sort();
 

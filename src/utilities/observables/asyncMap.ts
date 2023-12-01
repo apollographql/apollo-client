@@ -27,9 +27,9 @@ export function asyncMap<V, R>(
           const both = () =>
             // If the observer is closed, we don't want to continue calling the
             // mapping function - it's result will be swallowed anyways.
-            observer.closed
-              ? /* will be swallowed */ (0 as any)
-              : examiner(arg);
+            observer.closed ?
+              /* will be swallowed */ (0 as any)
+            : examiner(arg);
 
           promiseQueue = promiseQueue.then(both, both).then(
             (result) => observer.next(result),

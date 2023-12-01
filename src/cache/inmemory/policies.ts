@@ -166,11 +166,11 @@ export type FieldPolicy<
 export type StorageType = Record<string, any>;
 
 function argsFromFieldSpecifier(spec: FieldSpecifier) {
-  return spec.args !== void 0
-    ? spec.args
-    : spec.field
-    ? argumentsObjectFromField(spec.field, spec.variables)
-    : null;
+  return (
+    spec.args !== void 0 ? spec.args
+    : spec.field ? argumentsObjectFromField(spec.field, spec.variables)
+    : null
+  );
 }
 
 export interface FieldFunctionOptions<
@@ -445,17 +445,14 @@ export class Policies {
       merge?: FieldMergeFunction | boolean
     ) {
       existing.merge =
-        typeof merge === "function"
-          ? merge
-          : // Pass merge:true as a shorthand for a merge implementation
+        typeof merge === "function" ? merge
+          // Pass merge:true as a shorthand for a merge implementation
           // that returns options.mergeObjects(existing, incoming).
-          merge === true
-          ? mergeTrueFn
-          : // Pass merge:false to make incoming always replace existing
+        : merge === true ? mergeTrueFn
+          // Pass merge:false to make incoming always replace existing
           // without any warnings about data clobbering.
-          merge === false
-          ? mergeFalseFn
-          : existing.merge;
+        : merge === false ? mergeFalseFn
+        : existing.merge;
     }
 
     // Type policies can define merge functions, as an alternative to
@@ -464,17 +461,14 @@ export class Policies {
 
     existing.keyFn =
       // Pass false to disable normalization for this typename.
-      keyFields === false
-        ? nullKeyFieldsFn
-        : // Pass an array of strings to use those fields to compute a
+      keyFields === false ? nullKeyFieldsFn
+        // Pass an array of strings to use those fields to compute a
         // composite ID for objects of this typename.
-        isArray(keyFields)
-        ? keyFieldsFnFromSpecifier(keyFields)
-        : // Pass a function to take full control over identification.
-        typeof keyFields === "function"
-        ? keyFields
-        : // Leave existing.keyFn unchanged if above cases fail.
-          existing.keyFn;
+      : isArray(keyFields) ? keyFieldsFnFromSpecifier(keyFields)
+        // Pass a function to take full control over identification.
+      : typeof keyFields === "function" ? keyFields
+        // Leave existing.keyFn unchanged if above cases fail.
+      : existing.keyFn;
 
     if (fields) {
       Object.keys(fields).forEach((fieldName) => {
@@ -489,17 +483,14 @@ export class Policies {
           existing.keyFn =
             // Pass false to disable argument-based differentiation of
             // field identities.
-            keyArgs === false
-              ? simpleKeyArgsFn
-              : // Pass an array of strings to use named arguments to
+            keyArgs === false ? simpleKeyArgsFn
+              // Pass an array of strings to use named arguments to
               // compute a composite identity for the field.
-              isArray(keyArgs)
-              ? keyArgsFnFromSpecifier(keyArgs)
-              : // Pass a function to take full control over field identity.
-              typeof keyArgs === "function"
-              ? keyArgs
-              : // Leave existing.keyFn unchanged if above cases fail.
-                existing.keyFn;
+            : isArray(keyArgs) ? keyArgsFnFromSpecifier(keyArgs)
+              // Pass a function to take full control over field identity.
+            : typeof keyArgs === "function" ? keyArgs
+              // Leave existing.keyFn unchanged if above cases fail.
+            : existing.keyFn;
 
           if (typeof read === "function") {
             existing.read = read;
@@ -797,8 +788,9 @@ export class Policies {
     }
 
     if (storeFieldName === void 0) {
-      storeFieldName = fieldSpec.field
-        ? storeKeyNameFromField(fieldSpec.field, fieldSpec.variables)
+      storeFieldName =
+        fieldSpec.field ?
+          storeKeyNameFromField(fieldSpec.field, fieldSpec.variables)
         : getStoreKeyName(fieldName, argsFromFieldSpecifier(fieldSpec));
     }
 
@@ -811,8 +803,7 @@ export class Policies {
     // Make sure custom field names start with the actual field.name.value
     // of the field, so we can always figure out which properties of a
     // StoreObject correspond to which original field names.
-    return fieldName === fieldNameFromStoreName(storeFieldName)
-      ? storeFieldName
+    return fieldName === fieldNameFromStoreName(storeFieldName) ? storeFieldName
       : fieldName + ":" + storeFieldName;
   }
 
@@ -850,9 +841,9 @@ export class Policies {
         options,
         context,
         context.store.getStorage(
-          isReference(objectOrReference)
-            ? objectOrReference.__ref
-            : objectOrReference,
+          isReference(objectOrReference) ?
+            objectOrReference.__ref
+          : objectOrReference,
           storeFieldName
         )
       );

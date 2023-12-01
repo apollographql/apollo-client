@@ -3,228 +3,62 @@ title: class ApolloClient
 description: API reference
 order: 11
 api_reference: true
+api_doc:
+  - "@apollo/client!ApolloClient:class"
+  - "@apollo/client!DefaultOptions:interface"
 ---
 
 The `ApolloClient` class encapsulates Apollo's core client-side API. It backs all available view-layer integrations (React, iOS, and so on).
 
 ## The `ApolloClient` constructor
 
-<TypescriptApiBox name="ApolloClient.constructor" />
+<DocBlock canonicalReference={"@apollo/client!ApolloClient:constructor(1)"} />
 
-Takes an `ApolloClientOptions` parameter that supports the [fields listed below](#options).
+Takes an `ApolloClientOptions` parameter that supports the [fields listed below](#ApolloClientOptions).
 
 Returns an initialized `ApolloClient` object.
 
 #### Example
 
-```js
-import { ApolloClient, InMemoryCache } from '@apollo/client';
-
-const cache = new InMemoryCache();
-
-const client = new ApolloClient({
-  // Provide required constructor fields
-  cache: cache,
-  uri: 'http://localhost:4000/',
-
-  // Provide some optional constructor fields
-  name: 'react-web-client',
-  version: '1.3',
-  queryDeduplication: false,
-  defaultOptions: {
-    watchQuery: {
-      fetchPolicy: 'cache-and-network',
-    },
-  },
-});
-```
-
-#### Options
-
-<table class="field-table">
-  <thead>
-    <tr>
-      <th>Name /<br/>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-
-<tbody>
-
-<tr class="required">
-<td>
-
-###### `uri`
-
-`String`
-</td>
-<td>
-
-The URI of the GraphQL endpoint that Apollo Client will communicate with.
-
-One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
-</td>
-</tr>
-
-
-<tr class="required">
-<td>
-
-###### `link`
-
-`ApolloLink`
-</td>
-<td>
-
-You can provide an Apollo Link instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](../../networking/advanced-http-networking/).
-
-One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
-</td>
-</tr>
-
-
-<tr class="required">
-<td>
-
-###### `cache`
-
-`ApolloCache` (usually `InMemoryCache`)
-</td>
-<td>
-
-**Required.** The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
-
-For more information, see [Configuring the cache](../../caching/cache-configuration/).
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `name`
-
-`String`
-</td>
-<td>
-
-A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](/apollo-server/monitoring/metrics/#identifying-distinct-clients) feature.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `version`
-
-`String`
-</td>
-<td>
-
-A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server and Apollo Studio use this property as part of the [client awareness](/apollo-server/monitoring/metrics/#identifying-distinct-clients) feature.
-
-This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `ssrMode`
-
-`Boolean`
-</td>
-<td>
-
-When using Apollo Client for [server-side rendering](../../performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
-
-The default value is `false`.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `ssrForceFetchDelay`
-
-`Number`
-</td>
-<td>
-
-The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
-
-The default value is `0` (no delay).
-</td>
-</tr>
-
-<tr>
-<td>
-
-###### `connectToDevTools`
-
-`Boolean`
-</td>
-<td>
-
-If `true`, the [Apollo Client Devtools](../../development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to Apollo Client in your production environment. The extension can _always_ connect in a non-production environment.
-
-The default value is `false`.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `queryDeduplication`
-
-`Boolean`
-</td>
-<td>
-
-If `false`, Apollo Client sends every created query to the server, even if a _completely_ identical query (identical in terms of query string, variable values, and operationName) is already in flight.
-
-The default value is `true`.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `defaultOptions`
-
-`Object`
-</td>
-<td>
-
-Provide this object to set application-wide default values for options you can provide to the `watchQuery`, `query`, and `mutate` functions. See below for an example object.
-
-See the [example object below](#example-defaultoptions-object).
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `assumeImmutableResults`
-
-`Boolean`
-</td>
-<td>
-
-If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
-
-The default value is `false`.
-</td>
-</tr>
-
-</tbody>
-</table>
+<DocPiece example canonicalReference="@apollo/client!ApolloClient:constructor(1)" />
+
+For more information on the `defaultOptions` object, see the [Default Options](#DefaultOptions) section below.
+
+## Functions
+
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#watchQuery:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#query:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#mutate:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#subscribe:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#readQuery:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#readFragment:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#writeQuery:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#writeFragment:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#resetStore:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#onResetStore:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#clearStore:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#onClearStore:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#stop:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#reFetchObservableQueries:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#refetchQueries:member(1)" />
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#getObservableQueries:member(1)" />
+
+## Types
+
+<InterfaceDetails
+canonicalReference="@apollo/client!ApolloClientOptions:interface"
+customPropertyOrder={[
+  "cache",
+  "link",
+  "uri",
+  "connectToDevTools",
+  "defaultOptions",
+  "name",
+  "version",
+]}
+ />
+
+<InterfaceDetails canonicalReference="@apollo/client!DefaultOptions:interface" />
 
 ##### Example `defaultOptions` object
 
@@ -248,27 +82,3 @@ You can override any default option you specify in this object by providing a
 different value for the same option in individual function calls.
 
 > **Note:** The `useQuery` hook uses Apollo Client's `watchQuery` function. To set `defaultOptions` when using the `useQuery` hook, make sure to set them under the `defaultOptions.watchQuery` property.
-
-## Functions
-
-<TypescriptApiBox name="ApolloClient.watchQuery" />
-<TypescriptApiBox name="ApolloClient.query" />
-<TypescriptApiBox name="ApolloClient.mutate" />
-<TypescriptApiBox name="ApolloClient.subscribe" />
-<TypescriptApiBox name="ApolloClient.readQuery" />
-<TypescriptApiBox name="ApolloClient.readFragment" />
-<TypescriptApiBox name="ApolloClient.writeQuery" />
-<TypescriptApiBox name="ApolloClient.writeFragment" />
-<TypescriptApiBox name="ApolloClient.resetStore" />
-<TypescriptApiBox name="ApolloClient.onResetStore" />
-<TypescriptApiBox name="ApolloClient.clearStore" />
-<TypescriptApiBox name="ApolloClient.onClearStore" />
-<TypescriptApiBox name="ApolloClient.stop" />
-<TypescriptApiBox name="ApolloClient.reFetchObservableQueries" />
-<TypescriptApiBox name="ApolloClient.refetchQueries" />
-<TypescriptApiBox name="ApolloClient.getObservableQueries" />
-
-## Types
-
-<TypescriptApiBox name="ApolloClientOptions" />
-<TypescriptApiBox name="DefaultOptions" />

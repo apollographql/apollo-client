@@ -22,9 +22,8 @@ function identity(document: DocumentNode) {
 export class DocumentTransform {
   private readonly transform: TransformFn;
 
-  private readonly resultCache = canUseWeakSet
-    ? new WeakSet<DocumentNode>()
-    : new Set<DocumentNode>();
+  private readonly resultCache =
+    canUseWeakSet ? new WeakSet<DocumentNode>() : new Set<DocumentNode>();
 
   private stableCacheKeys:
     | Trie<{ key: DocumentTransformCacheKey; value?: DocumentNode }>

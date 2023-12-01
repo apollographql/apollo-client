@@ -186,9 +186,8 @@ export const createPersistedQueryLink = (
             response,
             networkError,
             operation,
-            graphQLErrors: isNonEmptyArray(graphQLErrors)
-              ? graphQLErrors
-              : void 0,
+            graphQLErrors:
+              isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
             meta: processErrors(graphQLErrors),
           };
 

@@ -1477,12 +1477,12 @@ describe("reading from the store", () => {
           fields: {
             ruler(ruler, { canRead, toReference }) {
               // If the throne is empty, promote Apollo!
-              return canRead(ruler)
-                ? ruler
-                : toReference({
+              return canRead(ruler) ? ruler : (
+                  toReference({
                     __typename: "Deity",
                     name: "Apollo",
-                  });
+                  })
+                );
             },
           },
         },
@@ -1654,8 +1654,8 @@ describe("reading from the store", () => {
           ...diffWithoutDevouredSons.result.ruler,
           children: diffWithoutDevouredSons.result.ruler.children.map(
             (child) => {
-              return child.name === "Zeus"
-                ? {
+              return child.name === "Zeus" ?
+                  {
                     ...child,
                     children: childrenOfZeus
                       // Remove empty child.children arrays.

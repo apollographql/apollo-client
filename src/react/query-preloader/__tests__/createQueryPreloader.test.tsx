@@ -14,9 +14,11 @@ import { QueryReference } from "../../cache/QueryReference";
 import { DeepPartial } from "../../../utilities";
 import {
   SimpleCaseData,
+  VariablesCaseData,
   createProfiler,
   useSimpleCase,
   useTrackRenders,
+  useVariablesCase,
 } from "../../../testing/internal";
 import { ApolloProvider } from "../../context";
 import { RenderOptions, render } from "@testing-library/react";
@@ -90,6 +92,61 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
 
     expect(snapshot.result).toEqual({
       data: { greeting: "hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  dispose();
+});
+
+test("loads a query with variables and suspends when passed to useReadQuery", async () => {
+  const { query, mocks } = useVariablesCase();
+  const client = createDefaultClient(mocks);
+  const preloadQuery = createQueryPreloader(client);
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<VariablesCaseData> | null,
+    },
+  });
+
+  const [queryRef, { dispose }] = preloadQuery(query, {
+    variables: { id: "1" },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
+
+  function App() {
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook />
+      </Suspense>
+    );
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: "Spider-Man" } },
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });

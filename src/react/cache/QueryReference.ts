@@ -10,7 +10,6 @@ import { isNetworkRequestSettled } from "../../core/index.js";
 import type {
   ObservableSubscription,
   PromiseWithState,
-  WithSequence,
 } from "../../utilities/index.js";
 import {
   createFulfilledPromise,
@@ -18,11 +17,9 @@ import {
 } from "../../utilities/index.js";
 import type { CacheKey, QueryKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
-import { withSequence, wrapPromiseWithState } from "../../utilities/index.js";
-import { secondIfNewerFulfilledOrFirst } from "../../utilities/promises/decoration.js";
+import { wrapPromiseWithState } from "../../utilities/index.js";
 
-type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>> &
-  WithSequence;
+type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
 
 type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
@@ -32,14 +29,6 @@ type FetchMoreOptions<TData> = Parameters<
 
 const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 const PROMISE_SYMBOL: unique symbol = Symbol();
-
-function createSequencedFulfilledPromise<TValue>(value: TValue) {
-  return withSequence(createFulfilledPromise(value));
-}
-
-function createSequencedRejectedPromise<TValue = unknown>(reason: unknown) {
-  return withSequence(createRejectedPromise<TValue>(reason));
-}
 
 /**
  * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
@@ -70,14 +59,17 @@ export function wrapQueryRef<TData>(
 export function unwrapQueryRef<TData>(
   queryRef: QueryReference<TData>
 ): [InternalQueryReference<TData>, () => QueryRefPromise<TData>] {
-  const reference = queryRef[QUERY_REFERENCE_SYMBOL];
+  const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
+
   return [
-    reference,
+    internalQueryRef,
     () =>
-      secondIfNewerFulfilledOrFirst(
-        queryRef[PROMISE_SYMBOL],
-        reference.promise
-      ),
+      // There is a chance the query ref's promise has been updated in the time
+      // the original promise had been suspended. In that case, we want to use
+      // it instead of the older promise which may contain outdated data.
+      internalQueryRef.promise.status === "fulfilled"
+        ? internalQueryRef.promise
+        : queryRef[PROMISE_SYMBOL],
   ];
 }
 
@@ -140,16 +132,14 @@ export class InternalQueryReference<TData = unknown> {
       (this.result.data &&
         (!this.result.partial || this.watchQueryOptions.returnPartialData))
     ) {
-      this.promise = createSequencedFulfilledPromise(this.result);
+      this.promise = createFulfilledPromise(this.result);
       this.status = "idle";
     } else {
-      this.promise = withSequence(
-        wrapPromiseWithState(
-          new Promise((resolve, reject) => {
-            this.resolve = resolve;
-            this.reject = reject;
-          })
-        )
+      this.promise = wrapPromiseWithState(
+        new Promise((resolve, reject) => {
+          this.resolve = resolve;
+          this.reject = reject;
+        })
       );
     }
 
@@ -230,7 +220,7 @@ export class InternalQueryReference<TData = unknown> {
 
       if (currentCanonizeResults !== watchQueryOptions.canonizeResults) {
         this.result = { ...this.result, ...this.observable.getCurrentResult() };
-        this.promise = createSequencedFulfilledPromise(this.result);
+        this.promise = createFulfilledPromise(this.result);
       }
     }
 
@@ -290,7 +280,7 @@ export class InternalQueryReference<TData = unknown> {
         }
 
         this.result = result;
-        this.promise = createSequencedFulfilledPromise(result);
+        this.promise = createFulfilledPromise(result);
         this.deliver(this.promise);
         break;
       }
@@ -311,8 +301,7 @@ export class InternalQueryReference<TData = unknown> {
         break;
       }
       case "idle": {
-        this.promise =
-          createSequencedRejectedPromise<ApolloQueryResult<TData>>(error);
+        this.promise = createRejectedPromise<ApolloQueryResult<TData>>(error);
         this.deliver(this.promise);
       }
     }
@@ -325,13 +314,11 @@ export class InternalQueryReference<TData = unknown> {
   private initiateFetch(returnedPromise: Promise<ApolloQueryResult<TData>>) {
     this.status = "loading";
 
-    this.promise = withSequence(
-      wrapPromiseWithState(
-        new Promise((resolve, reject) => {
-          this.resolve = resolve;
-          this.reject = reject;
-        })
-      )
+    this.promise = wrapPromiseWithState(
+      new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+      })
     );
 
     this.promise.catch(() => {});

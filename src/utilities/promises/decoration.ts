@@ -12,32 +12,10 @@ export interface RejectedPromise<TValue> extends Promise<TValue> {
   reason: unknown;
 }
 
-export interface WithSequence {
-  [sequence]: number;
-}
-
-export function secondIfNewerFulfilledOrFirst<TValue>(
-  first: PromiseWithState<TValue> & WithSequence,
-  second: PromiseWithState<TValue> & WithSequence
-): PromiseWithState<TValue> & WithSequence {
-  return second.status === "fulfilled" && second[sequence] > first[sequence]
-    ? second
-    : first;
-}
-
-let current = 0;
-const sequence = Symbol("sequence");
-
 export type PromiseWithState<TValue> =
   | PendingPromise<TValue>
   | FulfilledPromise<TValue>
   | RejectedPromise<TValue>;
-
-export function withSequence<T extends Promise<any>>(
-  promise: T
-): T & WithSequence {
-  return Object.assign(promise, { [sequence]: current++ });
-}
 
 export function createFulfilledPromise<TValue>(value: TValue) {
   const promise = Promise.resolve(value) as FulfilledPromise<TValue>;

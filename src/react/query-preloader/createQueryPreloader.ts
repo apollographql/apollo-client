@@ -20,6 +20,7 @@ import type {
   FetchMoreFunction,
   RefetchFunction,
 } from "../hooks/useSuspenseQuery.js";
+import type { NoInfer } from "../index.js";
 
 type VariablesOption<TVariables extends OperationVariables> = [
   TVariables,
@@ -46,7 +47,7 @@ export type PreloadQueryOptions<
   queryKey?: string | number | any[];
   returnPartialData?: boolean;
   refetchWritePolicy?: RefetchWritePolicy;
-} & VariablesOption<TVariables>;
+} & VariablesOption<NoInfer<TVariables>>;
 
 export type PreloadedQueryResult<
   TData = unknown,

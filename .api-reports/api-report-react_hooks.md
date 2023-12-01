@@ -2148,8 +2148,8 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:201:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:253:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:26:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:27:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:31:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:49:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

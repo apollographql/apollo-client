@@ -65,9 +65,9 @@ export function unwrapQueryRef<TData>(
       // There is a chance the query ref's promise has been updated in the time
       // the original promise had been suspended. In that case, we want to use
       // it instead of the older promise which may contain outdated data.
-      internalQueryRef.promise.status === "fulfilled"
-        ? internalQueryRef.promise
-        : queryRef[PROMISE_SYMBOL],
+      internalQueryRef.promise.status === "fulfilled" ?
+        internalQueryRef.promise
+      : queryRef[PROMISE_SYMBOL],
   ];
 }
 

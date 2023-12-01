@@ -11,7 +11,10 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { canonicalStringify } from "../../utilities/index.js";
-import type { OnlyRequiredProperties } from "../../utilities/index.js";
+import type {
+  DeepPartial,
+  OnlyRequiredProperties,
+} from "../../utilities/index.js";
 import { wrapQueryRef } from "../cache/QueryReference.js";
 import type { QueryReference } from "../cache/QueryReference.js";
 import { getSuspenseCache } from "../cache/getSuspenseCache.js";
@@ -64,7 +67,59 @@ export type PreloadedQueryResult<
 export function createQueryPreloader(client: ApolloClient<any>) {
   const suspenseCache = getSuspenseCache(client);
 
-  return function preloadQuery<
+  function preloadQuery<
+    TData,
+    TVariables extends OperationVariables,
+    TOptions extends PreloadQueryOptions<TData, TVariables>,
+  >(
+    options: PreloadQueryOptions<TData, TVariables> & TOptions
+  ): PreloadedQueryResult<
+    TOptions["errorPolicy"] extends "ignore" | "all"
+      ? TOptions["returnPartialData"] extends true
+        ? DeepPartial<TData> | undefined
+        : TData | undefined
+      : TOptions["returnPartialData"] extends true
+      ? DeepPartial<TData>
+      : TData,
+    TVariables
+  >;
+
+  function preloadQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: PreloadQueryOptions<TData, TVariables> & {
+      returnPartialData: true;
+      errorPolicy: "ignore" | "all";
+    }
+  ): PreloadedQueryResult<DeepPartial<TData> | undefined, TVariables>;
+
+  function preloadQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: PreloadQueryOptions<TData, TVariables> & {
+      errorPolicy: "ignore" | "all";
+    }
+  ): PreloadedQueryResult<TData | undefined, TVariables>;
+
+  function preloadQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: PreloadQueryOptions<TData, TVariables> & {
+      returnPartialData: true;
+    }
+  ): PreloadedQueryResult<DeepPartial<TData>, TVariables>;
+
+  function preloadQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: PreloadQueryOptions<TData, TVariables>
+  ): PreloadedQueryResult<TData, TVariables>;
+
+  function preloadQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
@@ -97,5 +152,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     const dispose = queryRef.retain();
 
     return [wrapQueryRef(queryRef), { fetchMore, refetch, dispose }];
-  };
+  }
+
+  return preloadQuery;
 }

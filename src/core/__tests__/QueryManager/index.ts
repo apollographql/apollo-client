@@ -47,6 +47,7 @@ import observableToPromise, {
 import { itAsync, subscribeAndCount } from "../../../testing/core";
 import { ApolloClient } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
+import { Concast, print } from "../../../utilities";
 
 interface MockedMutation {
   reject: (reason: any) => any;
@@ -6016,7 +6017,11 @@ describe("QueryManager", () => {
 
       queryManager.query({ query, context: { queryDeduplication: true } });
 
-      expect(queryManager["inFlightLinkObservables"].size).toBe(1);
+      expect(
+        queryManager["inFlightLinkObservables"].peek(print(query), "{}")
+      ).toEqual({
+        observable: expect.any(Concast),
+      });
     });
 
     it("should allow overriding global queryDeduplication: true to false", () => {
@@ -6042,7 +6047,9 @@ describe("QueryManager", () => {
 
       queryManager.query({ query, context: { queryDeduplication: false } });
 
-      expect(queryManager["inFlightLinkObservables"].size).toBe(0);
+      expect(
+        queryManager["inFlightLinkObservables"].peek(print(query), "{}")
+      ).toBeUndefined();
     });
   });
 
@@ -6180,32 +6187,40 @@ describe("QueryManager", () => {
       }).toThrowError(/Cannot set property defaultContext/);
     });
 
-    it("`defaultContext` will be applied to the context of a query", async () => {
-      let context: any;
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new ApolloLink(
-          (operation) =>
-            new Observable((observer) => {
-              ({ cache: _, ...context } = operation.getContext());
-              observer.complete();
-            })
-        ),
-        defaultContext: {
-          foo: "bar",
-        },
-      });
+    it.each([
+      ["query", { method: "query", option: "query" }],
+      ["mutation", { method: "mutate", option: "mutation" }],
+      ["subscription", { method: "subscribe", option: "query" }],
+    ] as const)(
+      "`defaultContext` will be applied to the context of a %s",
+      async (_, { method, option }) => {
+        let context: any;
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: new ApolloLink(
+            (operation) =>
+              new Observable((observer) => {
+                ({ cache: _, ...context } = operation.getContext());
+                observer.complete();
+              })
+          ),
+          defaultContext: {
+            foo: "bar",
+          },
+        });
 
-      await client.query({
-        query: gql`
-          query {
-            foo
-          }
-        `,
-      });
+        // @ts-ignore a bit too generic for TS
+        client[method]({
+          [option]: gql`
+            query {
+              foo
+            }
+          `,
+        });
 
-      expect(context.foo).toBe("bar");
-    });
+        expect(context.foo).toBe("bar");
+      }
+    );
 
     it("`ApolloClient.defaultContext` can be modified and changes will show up in future queries", async () => {
       let context: any;

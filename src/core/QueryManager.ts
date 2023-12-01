@@ -4,11 +4,11 @@ import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 import { equal } from "@wry/equality";
+import { WeakCache } from "@wry/caches";
 
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
 import {
-  compact,
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
@@ -28,7 +28,6 @@ import {
   hasClientExports,
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
-  canUseWeakMap,
   Observable,
   asyncMap,
   isNonEmptyArray,
@@ -100,6 +99,7 @@ interface TransformCacheEntry {
 }
 
 import type { DefaultOptions } from "./ApolloClient.js";
+import { Trie } from "@wry/trie";
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -183,6 +183,15 @@ export class QueryManager<TStore> {
     if ((this.onBroadcast = onBroadcast)) {
       this.mutationStore = Object.create(null);
     }
+
+    // TODO: remove before we release 3.9
+    Object.defineProperty(this.inFlightLinkObservables, "get", {
+      value: () => {
+        throw new Error(
+          "This version of Apollo Client requires at least @apollo/experimental-nextjs-app-support version 0.5.2."
+        );
+      },
+    });
   }
 
   /**
@@ -652,10 +661,10 @@ export class QueryManager<TStore> {
     return this.documentTransform.transformDocument(document);
   }
 
-  private transformCache = new (canUseWeakMap ? WeakMap : Map)<
+  private transformCache = new WeakCache<
     DocumentNode,
     TransformCacheEntry
-  >();
+  >(/** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */);
 
   public getDocumentInfo(document: DocumentNode) {
     const { transformCache } = this;
@@ -1066,10 +1075,9 @@ export class QueryManager<TStore> {
 
   // Use protected instead of private field so
   // @apollo/experimental-nextjs-app-support can access type info.
-  protected inFlightLinkObservables = new Map<
-    string,
-    Map<string, Observable<FetchResult>>
-  >();
+  protected inFlightLinkObservables = new Trie<{
+    observable?: Observable<FetchResult<any>>;
+  }>(false);
 
   private getObservableFromLink<T = any>(
     query: DocumentNode,
@@ -1079,7 +1087,7 @@ export class QueryManager<TStore> {
     deduplication: boolean = context?.queryDeduplication ??
       this.queryDeduplication
   ): Observable<FetchResult<T>> {
-    let observable: Observable<FetchResult<T>>;
+    let observable: Observable<FetchResult<T>> | undefined;
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
     if (serverQuery) {
@@ -1099,24 +1107,22 @@ export class QueryManager<TStore> {
 
       if (deduplication) {
         const printedServerQuery = print(serverQuery);
-        const byVariables =
-          inFlightLinkObservables.get(printedServerQuery) || new Map();
-        inFlightLinkObservables.set(printedServerQuery, byVariables);
-
         const varJson = canonicalStringify(variables);
-        observable = byVariables.get(varJson);
 
+        const entry = inFlightLinkObservables.lookup(
+          printedServerQuery,
+          varJson
+        );
+
+        observable = entry.observable;
         if (!observable) {
           const concast = new Concast([
             execute(link, operation) as Observable<FetchResult<T>>,
           ]);
-
-          byVariables.set(varJson, (observable = concast));
+          observable = entry.observable = concast;
 
           concast.beforeNext(() => {
-            if (byVariables.delete(varJson) && byVariables.size < 1) {
-              inFlightLinkObservables.delete(printedServerQuery);
-            }
+            inFlightLinkObservables.remove(printedServerQuery, varJson);
           });
         }
       } else {
@@ -1161,9 +1167,7 @@ export class QueryManager<TStore> {
     return asyncMap(
       this.getObservableFromLink(
         linkDocument,
-        // explicitly a shallow merge so any class instances etc. a user might
-        // put in here will not be merged into each other.
-        compact(this.defaultContext, options.context),
+        options.context,
         options.variables
       ),
 
@@ -1676,6 +1680,7 @@ export class QueryManager<TStore> {
   private prepareContext(context = {}) {
     const newContext = this.localState.prepareContext(context);
     return {
+      ...this.defaultContext,
       ...newContext,
       clientAwareness: this.clientAwareness,
     };

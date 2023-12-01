@@ -210,7 +210,10 @@ export class Concast<T> extends Observable<T> {
           // followed by a 'complete' message (see addObserver).
           iterateObserversSafely(this.observers, "complete");
         } else if (isPromiseLike(value)) {
-          value.then((obs) => (this.sub = obs.subscribe(this.handlers)));
+          value.then(
+            (obs) => (this.sub = obs.subscribe(this.handlers)),
+            this.handlers.error
+          );
         } else {
           this.sub = value.subscribe(this.handlers);
         }

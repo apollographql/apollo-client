@@ -211,6 +211,8 @@ const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
 });
 ```
 
+> You can only refetch _active_ queries. Active queries are those used by components on the current page. If the data you want to update is not fetched by a component on the current page, it's best to [update your cache directly](#updating-the-cache-directly).
+
 Each element in the `refetchQueries` array is one of the following:
 
 * A `DocumentNode` object parsed with the `gql` function

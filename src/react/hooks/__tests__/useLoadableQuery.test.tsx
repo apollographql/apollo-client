@@ -575,8 +575,8 @@ it("passes context to the link", async () => {
       return new Observable((observer) => {
         const { valueA, valueB } = operation.getContext();
         setTimeout(() => {
-        observer.next({ data: { context: { valueA, valueB } } });
-        observer.complete();
+          observer.next({ data: { context: { valueA, valueB } } });
+          observer.complete();
         }, 10);
       });
     }),
@@ -1559,9 +1559,9 @@ it("applies `context` on next fetch when it changes between renders", async () =
     return new Observable((subscriber) => {
       setTimeout(() => {
         subscriber.next({
-      data: {
-        phase: operation.getContext().phase,
-      },
+          data: {
+            phase: operation.getContext().phase,
+          },
         });
         subscriber.complete();
       }, 10);

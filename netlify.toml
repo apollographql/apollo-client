@@ -1,6 +1,6 @@
 [build]
   publish = "docs/public"
-  command = "npm run typedoc"
+  command = "npm run typedoc; npm run docmodel > docs/public/log.txt || true"
 
 [build.environment]
   NODE_VERSION = "18"
@@ -9,6 +9,8 @@
   base = "docs"
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
   command = """\
+  npm i
+  npm run docmodel
   cd ../
   rm -rf monodocs
   git clone https://github.com/apollographql/docs --branch main --single-branch monodocs

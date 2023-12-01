@@ -274,8 +274,9 @@ export class LocalState<TCacheShape> {
 
     const definitionOperation = mainDefinition.operation;
 
-    const defaultOperationType = definitionOperation
-      ? definitionOperation.charAt(0).toUpperCase() +
+    const defaultOperationType =
+      definitionOperation ?
+        definitionOperation.charAt(0).toUpperCase() +
         definitionOperation.slice(1)
       : "Query";
 

@@ -160,10 +160,10 @@ export function createProfiler<Snapshot extends ValidSnapshot = void>({
         );
       }
       snapshotRef.current = snap(
-        typeof snapshotRef.current === "object"
-          ? // "cheap best effort" to prevent accidental mutation of the last snapshot
-            { ...snapshotRef.current! }
-          : snapshotRef.current!
+        typeof snapshotRef.current === "object" ?
+          // "cheap best effort" to prevent accidental mutation of the last snapshot
+          { ...snapshotRef.current! }
+        : snapshotRef.current!
       );
     } else {
       snapshotRef.current = snap;
@@ -173,9 +173,9 @@ export function createProfiler<Snapshot extends ValidSnapshot = void>({
   const mergeSnapshot: MergeSnapshot<Snapshot> = (partialSnapshot) => {
     replaceSnapshot((snapshot) => ({
       ...snapshot,
-      ...(typeof partialSnapshot === "function"
-        ? partialSnapshot(snapshot)
-        : partialSnapshot),
+      ...(typeof partialSnapshot === "function" ?
+        partialSnapshot(snapshot)
+      : partialSnapshot),
     }));
   };
 
@@ -222,9 +222,8 @@ export function createProfiler<Snapshot extends ValidSnapshot = void>({
       });
 
       const snapshot = snapshotRef.current as Snapshot;
-      const domSnapshot = snapshotDOM
-        ? window.document.body.innerHTML
-        : undefined;
+      const domSnapshot =
+        snapshotDOM ? window.document.body.innerHTML : undefined;
       const render = new RenderInstance(
         baseRender,
         snapshot,
@@ -369,22 +368,21 @@ export class WaitForRenderTimeoutError extends Error {
 type StringReplaceRenderWithSnapshot<T extends string> =
   T extends `${infer Pre}Render${infer Post}` ? `${Pre}Snapshot${Post}` : T;
 
-type ResultReplaceRenderWithSnapshot<T> = T extends (
-  ...args: infer Args
-) => Render<infer Snapshot>
-  ? (...args: Args) => Snapshot
-  : T extends (...args: infer Args) => Promise<Render<infer Snapshot>>
-  ? (...args: Args) => Promise<Snapshot>
+type ResultReplaceRenderWithSnapshot<T> =
+  T extends (...args: infer Args) => Render<infer Snapshot> ?
+    (...args: Args) => Snapshot
+  : T extends (...args: infer Args) => Promise<Render<infer Snapshot>> ?
+    (...args: Args) => Promise<Snapshot>
   : T;
 
 type ProfiledHookFields<ReturnValue> =
-  ProfiledComponentFields<ReturnValue> extends infer PC
-    ? {
-        [K in keyof PC as StringReplaceRenderWithSnapshot<
-          K & string
-        >]: ResultReplaceRenderWithSnapshot<PC[K]>;
-      }
-    : never;
+  ProfiledComponentFields<ReturnValue> extends infer PC ?
+    {
+      [K in keyof PC as StringReplaceRenderWithSnapshot<
+        K & string
+      >]: ResultReplaceRenderWithSnapshot<PC[K]>;
+    }
+  : never;
 
 /** @internal */
 export interface ProfiledHook<Props, ReturnValue>

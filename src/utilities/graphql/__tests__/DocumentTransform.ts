@@ -162,8 +162,8 @@ test("allows custom cache keys to be defined", () => {
   );
 
   const transform = jest.fn((document: DocumentNode) => {
-    return online
-      ? onlineTransform.transformDocument(document)
+    return online ?
+        onlineTransform.transformDocument(document)
       : offlineTransform.transformDocument(document);
   });
 

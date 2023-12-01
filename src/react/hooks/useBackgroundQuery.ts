@@ -46,13 +46,12 @@ export function useBackgroundQuery<
 ): [
   (
     | QueryReference<
-        TOptions["errorPolicy"] extends "ignore" | "all"
-          ? TOptions["returnPartialData"] extends true
-            ? DeepPartial<TData> | undefined
-            : TData | undefined
-          : TOptions["returnPartialData"] extends true
-          ? DeepPartial<TData>
-          : TData
+        TOptions["errorPolicy"] extends "ignore" | "all" ?
+          TOptions["returnPartialData"] extends true ?
+            DeepPartial<TData> | undefined
+          : TData | undefined
+        : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
+        : TData
       >
     | (TOptions["skip"] extends boolean ? undefined : never)
   ),

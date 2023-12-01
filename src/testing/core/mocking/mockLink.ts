@@ -93,8 +93,9 @@ export class MockLink extends ApolloLink {
     const unmatchedVars: Array<Record<string, any>> = [];
     const requestVariables = operation.variables || {};
     const mockedResponses = this.mockedResponsesByKey[key];
-    const responseIndex = mockedResponses
-      ? mockedResponses.findIndex((res, index) => {
+    const responseIndex =
+      mockedResponses ?
+        mockedResponses.findIndex((res, index) => {
           const mockedResponseVars = res.request.variables || {};
           if (equal(requestVariables, mockedResponseVars)) {
             return true;
@@ -117,14 +118,14 @@ export class MockLink extends ApolloLink {
         `No more mocked responses for the query: ${print(operation.query)}
 Expected variables: ${stringifyForDisplay(operation.variables)}
 ${
-  unmatchedVars.length > 0
-    ? `
+  unmatchedVars.length > 0 ?
+    `
 Failed to match ${unmatchedVars.length} mock${
-        unmatchedVars.length === 1 ? "" : "s"
-      } for this query. The mocked response had the following variables:
+      unmatchedVars.length === 1 ? "" : "s"
+    } for this query. The mocked response had the following variables:
 ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
 `
-    : ""
+  : ""
 }`
       );
 
@@ -176,9 +177,9 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
             } else {
               if (response.result) {
                 observer.next(
-                  typeof response.result === "function"
-                    ? response.result(operation.variables)
-                    : response.result
+                  typeof response.result === "function" ?
+                    response.result(operation.variables)
+                  : response.result
                 );
               }
               observer.complete();

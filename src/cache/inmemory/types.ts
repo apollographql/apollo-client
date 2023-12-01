@@ -109,7 +109,13 @@ export type OptimisticStoreItem = {
 };
 
 export type ReadQueryOptions = {
+  /**
+   * The Apollo Client store object.
+   */
   store: NormalizedCache;
+  /**
+   * A parsed GraphQL query document.
+   */
   query: DocumentNode;
   variables?: Object;
   previousResult?: any;

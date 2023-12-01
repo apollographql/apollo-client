@@ -369,16 +369,16 @@ describe("Query component", () => {
                   .fetchMore({
                     variables: { first: 1 },
                     updateQuery: (prev: any, { fetchMoreResult }: any) =>
-                      fetchMoreResult
-                        ? {
-                            allPeople: {
-                              people: [
-                                ...prev.allPeople.people,
-                                ...fetchMoreResult.allPeople.people,
-                              ],
-                            },
-                          }
-                        : prev,
+                      fetchMoreResult ?
+                        {
+                          allPeople: {
+                            people: [
+                              ...prev.allPeople.people,
+                              ...fetchMoreResult.allPeople.people,
+                            ],
+                          },
+                        }
+                      : prev,
                   })
                   .then((result2: any) => {
                     expect(result2.data).toEqual(data2);

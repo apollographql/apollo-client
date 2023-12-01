@@ -1,5 +1,5 @@
 import { itAsync } from "../../../testing/core";
-import { Observable } from "../Observable";
+import { Observable, Observer } from "../Observable";
 import { Concast, ConcastSourcesIterable } from "../Concast";
 
 describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
@@ -187,4 +187,115 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       sub.unsubscribe();
     });
   });
+
+  it("resolving all sources of a concast frees all observer references on `this.observers`", async () => {
+    const { promise, resolve } = deferred<Observable<number>>();
+    const observers: Observer<any>[] = [{ next() {} }];
+    const observerRefs = observers.map((observer) => new WeakRef(observer));
+
+    const concast = new Concast<number>([Observable.of(1, 2), promise]);
+
+    concast.subscribe(observers[0]);
+    delete observers[0];
+
+    expect(concast["observers"].size).toBe(1);
+
+    resolve(Observable.of(3, 4));
+
+    await expect(concast.promise).resolves.toBe(4);
+
+    await expect(observerRefs[0]).toBeGarbageCollected();
+  });
+
+  it("rejecting a source-wrapping promise of a concast frees all observer references on `this.observers`", async () => {
+    const { promise, reject } = deferred<Observable<number>>();
+    let subscribingObserver: Observer<any> | undefined = {
+      next() {},
+      error() {},
+    };
+    const subscribingObserverRef = new WeakRef(subscribingObserver);
+
+    const concast = new Concast<number>([
+      Observable.of(1, 2),
+      promise,
+      // just to ensure this also works if the cancelling source is not the last source
+      Observable.of(3, 5),
+    ]);
+
+    concast.subscribe(subscribingObserver);
+
+    expect(concast["observers"].size).toBe(1);
+
+    reject("error");
+    await expect(concast.promise).rejects.toBe("error");
+    subscribingObserver = undefined;
+    await expect(subscribingObserverRef).toBeGarbageCollected();
+  });
+
+  it("rejecting a source of a concast frees all observer references on `this.observers`", async () => {
+    let subscribingObserver: Observer<any> | undefined = {
+      next() {},
+      error() {},
+    };
+    const subscribingObserverRef = new WeakRef(subscribingObserver);
+
+    let sourceObserver!: Observer<number>;
+    const sourceObservable = new Observable<number>((o) => {
+      sourceObserver = o;
+    });
+
+    const concast = new Concast<number>([
+      Observable.of(1, 2),
+      sourceObservable,
+      Observable.of(3, 5),
+    ]);
+
+    concast.subscribe(subscribingObserver);
+
+    expect(concast["observers"].size).toBe(1);
+
+    await Promise.resolve();
+    sourceObserver.error!("error");
+    await expect(concast.promise).rejects.toBe("error");
+    subscribingObserver = undefined;
+    await expect(subscribingObserverRef).toBeGarbageCollected();
+  });
+
+  it("after subscribing to an already-resolved concast, the reference is freed up again", async () => {
+    const concast = new Concast<number>([Observable.of(1, 2)]);
+    await expect(concast.promise).resolves.toBe(2);
+    await Promise.resolve();
+
+    let sourceObserver: Observer<any> | undefined = { next() {}, error() {} };
+    const sourceObserverRef = new WeakRef(sourceObserver);
+
+    concast.subscribe(sourceObserver);
+
+    sourceObserver = undefined;
+    await expect(sourceObserverRef).toBeGarbageCollected();
+  });
+
+  it("after subscribing to an already-rejected concast, the reference is freed up again", async () => {
+    const concast = new Concast<number>([Promise.reject("error")]);
+    await expect(concast.promise).rejects.toBe("error");
+    await Promise.resolve();
+
+    let sourceObserver: Observer<any> | undefined = { next() {}, error() {} };
+    const sourceObserverRef = new WeakRef(sourceObserver);
+
+    concast.subscribe(sourceObserver);
+
+    sourceObserver = undefined;
+    await expect(sourceObserverRef).toBeGarbageCollected();
+  });
 });
+
+function deferred<X>() {
+  let resolve!: (v: X) => void;
+  let reject!: (e: any) => void;
+  const promise = new Promise<X>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { resolve, reject, promise };
+}

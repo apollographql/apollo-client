@@ -1476,7 +1476,7 @@ describe("has the same timing as `useQuery`", () => {
         from: initialItem,
       });
 
-      ProfiledComponent.updateSnapshot({ queryData, fragmentData });
+      ProfiledComponent.replaceSnapshot({ queryData, fragmentData });
 
       return complete ? JSON.stringify(fragmentData) : "loading";
     }

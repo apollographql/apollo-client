@@ -153,6 +153,10 @@ export class StoreReader {
 
     this.canon = config.canon || new ObjectCanon();
 
+    // memoized functions in this class will be "garbage-collected"
+    // by recreating the whole `StoreReader` in
+    // `InMemoryCache.resetResultsCache`
+    // (triggered from `InMemoryCache.gc` with `resetResultCache: true`)
     this.executeSelectionSet = wrap(
       (options) => {
         const { canonizeResults } = options.context;

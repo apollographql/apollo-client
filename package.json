@@ -48,7 +48,7 @@
     "ci:precheck": "node config/precheck.js",
     "format": "prettier --write .",
     "lint": "eslint 'src/**/*.{[jt]s,[jt]sx}'",
-    "test": "jest --config ./config/jest.config.js",
+    "test": "node --expose-gc ./node_modules/jest/bin/jest.js --config ./config/jest.config.js",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage && npm run test:memory",
     "test:watch": "jest --config ./config/jest.config.js --watch",
@@ -61,7 +61,8 @@
     "typedoc": "typedoc src/index.ts --json docs/public/docs.json",
     "changeset-publish": "npm run build && npm run prepdist:changesets && cd dist && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",
-    "changeset-version": "changeset version && npm i"
+    "changeset-version": "changeset version && npm i",
+    "update-size-limits": "size-limit --json | jq '. | map(select(.sizeLimit) | { key: .name, value: .size}) | from_entries' | tee .new-size-limits.json; mv .new-size-limits.json .size-limits.json"
   },
   "engines": {
     "npm": "^7.20.3 || ^8.0.0 || ^9.0.0 || ^10.0.0"
@@ -89,9 +90,10 @@
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "^3.1.1",
+    "@wry/caches": "^1.0.0",
     "@wry/context": "^0.7.3",
     "@wry/equality": "^0.5.6",
-    "@wry/trie": "^0.4.3",
+    "@wry/trie": "^0.5.0",
     "graphql-tag": "^2.12.6",
     "hoist-non-react-statics": "^3.3.2",
     "optimism": "^0.17.5",

@@ -1,18 +1,102 @@
+import React, { Suspense } from "react";
+import type { ReactElement } from "react";
 import { createQueryPreloader } from "../createQueryPreloader";
 import {
   ApolloClient,
   InMemoryCache,
+  NetworkStatus,
   TypedDocumentNode,
   gql,
 } from "../../../core";
-import { MockLink } from "../../../testing";
+import { MockLink, MockedResponse } from "../../../testing";
 import { expectTypeOf } from "expect-type";
 import { QueryReference } from "../../cache/QueryReference";
 import { DeepPartial } from "../../../utilities";
+import {
+  SimpleCaseData,
+  createProfiler,
+  useSimpleCase,
+  useTrackRenders,
+} from "../../../testing/internal";
+import { ApolloProvider } from "../../context";
+import { RenderOptions, render } from "@testing-library/react";
+import { UseReadQueryResult, useReadQuery } from "../../hooks";
 
-interface SimpleQueryData {
-  greeting: string;
+function createDefaultClient(mocks: MockedResponse[]) {
+  return new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
 }
+
+function renderWithClient(
+  ui: ReactElement,
+  {
+    client,
+    wrapper: Wrapper = React.Fragment,
+  }: { client: ApolloClient<any>; wrapper?: RenderOptions["wrapper"] }
+) {
+  return render(ui, {
+    wrapper: ({ children }) => (
+      <ApolloProvider client={client}>
+        <Wrapper>{children}</Wrapper>
+      </ApolloProvider>
+    ),
+  });
+}
+
+test("loads a query and suspends when passed to useReadQuery", async () => {
+  const { query, mocks } = useSimpleCase();
+  const client = createDefaultClient(mocks);
+  const preloadQuery = createQueryPreloader(client);
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+
+  const [queryRef, { dispose }] = preloadQuery(query);
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
+
+  function App() {
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook />
+      </Suspense>
+    );
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  dispose();
+});
 
 describe.skip("type tests", () => {
   const client = new ApolloClient({

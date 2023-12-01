@@ -349,6 +349,61 @@ it("loads a query with variables and suspends by passing variables to the loadQu
   await expect(Profiler).not.toRerender();
 });
 
+it("tears down the query on unmount", async () => {
+  const { query, mocks } = useSimpleQueryCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleQueryData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [loadQuery, queryRef] = useLoadableQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user, unmount } = renderWithClient(<App />, {
+    client,
+    wrapper: Profiler,
+  });
+
+  // initial render
+  await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
+  await Profiler.takeRender();
+
+  const { snapshot } = await Profiler.takeRender();
+
+  expect(snapshot.result).toEqual({
+    data: { greeting: "Hello" },
+    error: undefined,
+    networkStatus: NetworkStatus.ready,
+  });
+
+  unmount();
+
+  // We need to wait a tick since the cleanup is run in a setTimeout to
+  // prevent strict mode bugs.
+  await wait(0);
+
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 

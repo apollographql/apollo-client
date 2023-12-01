@@ -3042,6 +3042,9 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     });
   }
 
+  // TODO investigate: this test highlights a React render
+  // that actually doesn't rerender any user-provided components
+  // so we need to use `skipNonTrackingRenders`
   await expect(Profiler).not.toRerender();
 });
 
@@ -3126,6 +3129,9 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
     });
   }
 
+  // TODO investigate: this test highlights a React render
+  // that actually doesn't rerender any user-provided components
+  // so we need to use `skipNonTrackingRenders`
   await expect(Profiler).not.toRerender();
 });
 

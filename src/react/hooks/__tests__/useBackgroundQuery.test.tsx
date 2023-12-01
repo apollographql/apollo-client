@@ -216,6 +216,7 @@ function renderVariablesIntegrationTest({
             },
           },
         },
+        delay: 200,
       };
     }
   );
@@ -642,7 +643,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { hello: "world 1" },
@@ -679,7 +680,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     await waitFor(() => {
       expect(_result).toEqual({
@@ -720,7 +721,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     await waitFor(() => {
       expect(_result).toMatchObject({
@@ -780,7 +781,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
     const resultSet = new Set(_result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -841,7 +842,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
     const resultSet = new Set(_result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -883,7 +884,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { hello: "from link" },
@@ -923,7 +924,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { hello: "from cache" },
@@ -970,7 +971,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { foo: "bar", hello: "from link" },
@@ -1010,7 +1011,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { hello: "from link" },
@@ -1053,7 +1054,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { hello: "from link" },
@@ -3224,12 +3225,14 @@ describe("useBackgroundQuery", () => {
           result: {
             data: { character: { id: "1", name: "Captain Marvel" } },
           },
+          delay: 200,
         },
         {
           request: { query, variables: { id: "2" } },
           result: {
             data: { character: { id: "2", name: "Captain America" } },
           },
+          delay: 200,
         },
       ];
 
@@ -3294,7 +3297,7 @@ describe("useBackgroundQuery", () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.count).toBe(2);
+      expect(renders.count).toBe(1);
 
       expect(
         await screen.findByText("1 - Spider-Man (updated)")
@@ -3304,11 +3307,13 @@ describe("useBackgroundQuery", () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(3);
-      expect(renders.count).toBe(3);
+      expect(renders.count).toBe(2);
 
       expect(
         await screen.findByText("1 - Spider-Man (updated again)")
       ).toBeInTheDocument();
+
+      expect(renders.count).toBe(3);
     });
     it("throws errors when errors are returned after calling `refetch`", async () => {
       using _consoleSpy = spyOnConsole("error");

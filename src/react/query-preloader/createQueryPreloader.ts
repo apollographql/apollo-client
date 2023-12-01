@@ -72,7 +72,8 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     TVariables extends OperationVariables,
     TOptions extends PreloadQueryOptions<TData, TVariables>,
   >(
-    options: PreloadQueryOptions<TData, TVariables> & TOptions
+    options: PreloadQueryOptions<TData, TVariables> &
+      Omit<TOptions, "variables">
   ): PreloadedQueryResult<
     TOptions["errorPolicy"] extends "ignore" | "all"
       ? TOptions["returnPartialData"] extends true

@@ -98,17 +98,8 @@ export interface ProfiledComponent<Snapshot extends ValidSnapshot, Props = {}>
 export function profile<Snapshot extends ValidSnapshot = void, Props = {}>({
   Component,
   ...options
-}: {
-  onRender?: (
-    info: BaseRender & {
-      snapshot: Snapshot;
-      replaceSnapshot: ReplaceSnapshot<Snapshot>;
-      mergeSnapshot: MergeSnapshot<Snapshot>;
-    }
-  ) => void;
+}: Parameters<typeof createProfiler<Snapshot>>[0] & {
   Component: React.ComponentType<Props>;
-  snapshotDOM?: boolean;
-  initialSnapshot?: Snapshot;
 }): ProfiledComponent<Snapshot, Props> {
   const Profiler = createProfiler(options);
 
@@ -140,6 +131,7 @@ export function createProfiler<Snapshot extends ValidSnapshot = void>({
   onRender,
   snapshotDOM = false,
   initialSnapshot,
+  skipNonTrackingRenders,
 }: {
   onRender?: (
     info: BaseRender & {
@@ -150,6 +142,11 @@ export function createProfiler<Snapshot extends ValidSnapshot = void>({
   ) => void;
   snapshotDOM?: boolean;
   initialSnapshot?: Snapshot;
+  /**
+   * This will skip renders during which no renders tracked by
+   * `useTrackRenders` occured.
+   */
+  skipNonTrackingRenders?: boolean;
 } = {}) {
   let nextRender: Promise<Render<Snapshot>> | undefined;
   let resolveNextRender: ((render: Render<Snapshot>) => void) | undefined;
@@ -194,6 +191,12 @@ export function createProfiler<Snapshot extends ValidSnapshot = void>({
     startTime,
     commitTime
   ) => {
+    if (
+      skipNonTrackingRenders &&
+      profilerContext.renderedComponents.length === 0
+    ) {
+      return;
+    }
     const baseRender = {
       id,
       phase,

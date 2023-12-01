@@ -162,6 +162,7 @@ function createDefaultProfiler<TData>() {
       error: null as Error | null,
       result: null as UseReadQueryResult<TData> | null,
     },
+    skipNonTrackingRenders: true,
   });
 }
 
@@ -524,6 +525,7 @@ it("allows the client to be overridden", async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       client: localClient,
     });
@@ -588,6 +590,7 @@ it("passes context to the link", async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       context: { valueA: "A", valueB: "B" },
     });
@@ -670,6 +673,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       canonizeResults: true,
     });
@@ -751,6 +755,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       canonizeResults: false,
     });
@@ -1485,6 +1490,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [errorPolicy, setErrorPolicy] = useState<ErrorPolicy>("none");
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       errorPolicy,
@@ -1578,6 +1584,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [phase, setPhase] = React.useState("initial");
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       context: { phase },
@@ -1679,6 +1686,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [canonizeResults, setCanonizeResults] = React.useState(false);
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       canonizeResults,
@@ -1786,6 +1794,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [refetchWritePolicy, setRefetchWritePolicy] =
       React.useState<RefetchWritePolicy>("merge");
 
@@ -2089,6 +2098,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [fetchPolicy, setFetchPolicy] =
       React.useState<LoadableQueryHookFetchPolicy>("cache-first");
 
@@ -2459,6 +2469,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query);
 
     return (
@@ -2533,6 +2544,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       errorPolicy: "ignore",
     });
@@ -2613,6 +2625,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       errorPolicy: "all",
     });
@@ -2695,6 +2708,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       errorPolicy: "all",
     });
@@ -2960,6 +2974,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { fetchMore }] = useLoadableQuery(query);
 
     return (
@@ -3050,6 +3065,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
   });
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { fetchMore }] = useLoadableQuery(query);
 
     return (
@@ -3332,6 +3348,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
   });
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       refetchWritePolicy: "merge",
     });
@@ -3445,6 +3462,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
   });
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query);
 
     return (

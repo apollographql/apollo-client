@@ -39,10 +39,8 @@ export type PreloadQueryFetchPolicy = Extract<
 >;
 
 export type PreloadQueryOptions<
-  TData,
-  TVariables extends OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
 > = {
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   canonizeResults?: boolean;
   context?: DefaultContext;
   errorPolicy?: ErrorPolicy;
@@ -50,7 +48,7 @@ export type PreloadQueryOptions<
   queryKey?: string | number | any[];
   returnPartialData?: boolean;
   refetchWritePolicy?: RefetchWritePolicy;
-} & VariablesOption<NoInfer<TVariables>>;
+} & VariablesOption<TVariables>;
 
 export type PreloadedQueryResult<
   TData = unknown,
@@ -64,16 +62,25 @@ export type PreloadedQueryResult<
   },
 ];
 
+type PreloadQueryOptionsArg<
+  TVariables extends OperationVariables,
+  TOptions = unknown,
+> = [TVariables] extends [never]
+  ? [options?: PreloadQueryOptions<never> & TOptions]
+  : {} extends OnlyRequiredProperties<TVariables>
+  ? [options?: PreloadQueryOptions<NoInfer<TVariables>> & TOptions]
+  : [options: PreloadQueryOptions<NoInfer<TVariables>> & TOptions];
+
 export function createQueryPreloader(client: ApolloClient<any>) {
   const suspenseCache = getSuspenseCache(client);
 
   function preloadQuery<
     TData,
     TVariables extends OperationVariables,
-    TOptions extends PreloadQueryOptions<TData, TVariables>,
+    TOptions extends Omit<PreloadQueryOptions<never>, "variables">,
   >(
-    options: PreloadQueryOptions<TData, TVariables> &
-      Omit<TOptions, "variables">
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>, TOptions>
   ): PreloadedQueryResult<
     TOptions["errorPolicy"] extends "ignore" | "all"
       ? TOptions["returnPartialData"] extends true
@@ -89,7 +96,8 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: PreloadQueryOptions<TData, TVariables> & {
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    options: PreloadQueryOptions & {
       returnPartialData: true;
       errorPolicy: "ignore" | "all";
     }
@@ -99,7 +107,8 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: PreloadQueryOptions<TData, TVariables> & {
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    options: PreloadQueryOptions<NoInfer<TVariables>> & {
       errorPolicy: "ignore" | "all";
     }
   ): PreloadedQueryResult<TData | undefined, TVariables>;
@@ -108,7 +117,8 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: PreloadQueryOptions<TData, TVariables> & {
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    options: PreloadQueryOptions & {
       returnPartialData: true;
     }
   ): PreloadedQueryResult<DeepPartial<TData>, TVariables>;
@@ -117,16 +127,20 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: PreloadQueryOptions<TData, TVariables>
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>
   ): PreloadedQueryResult<TData, TVariables>;
 
   function preloadQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: PreloadQueryOptions<TData, TVariables>
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    options: PreloadQueryOptions & VariablesOption<TVariables> = Object.create(
+      null
+    )
   ): PreloadedQueryResult<TData, TVariables> {
-    const { query, variables, queryKey, ...watchQueryOptions } = options;
+    const { variables, queryKey, ...watchQueryOptions } = options;
 
     const cacheKey: CacheKey = [
       query,

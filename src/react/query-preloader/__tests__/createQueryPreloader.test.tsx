@@ -24,19 +24,19 @@ describe.skip("type tests", () => {
   test("variables are optional and can be anything with untyped DocumentNode", () => {
     const query = gql``;
 
-    preloadQuery({ query });
-    preloadQuery({ query, variables: {} });
-    preloadQuery({ query, variables: { foo: "bar" } });
-    preloadQuery({ query, variables: { foo: "bar", bar: 2 } });
+    preloadQuery(query);
+    preloadQuery(query, { variables: {} });
+    preloadQuery(query, { variables: { foo: "bar" } });
+    preloadQuery(query, { variables: { foo: "bar", bar: 2 } });
   });
 
   test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
     const query: TypedDocumentNode<{ greeting: string }> = gql``;
 
-    preloadQuery({ query });
-    preloadQuery({ query, variables: {} });
-    preloadQuery({ query, variables: { foo: "bar" } });
-    preloadQuery({ query, variables: { foo: "bar", bar: 2 } });
+    preloadQuery(query);
+    preloadQuery(query, { variables: {} });
+    preloadQuery(query, { variables: { foo: "bar" } });
+    preloadQuery(query, { variables: { foo: "bar", bar: 2 } });
   });
 
   test("variables are optional when TVariables are empty", () => {
@@ -45,20 +45,20 @@ describe.skip("type tests", () => {
       Record<string, never>
     > = gql``;
 
-    preloadQuery({ query });
-    preloadQuery({ query, variables: {} });
+    preloadQuery(query);
+    preloadQuery(query, { variables: {} });
     // @ts-expect-error unknown variables
-    preloadQuery({ query, variables: { foo: "bar" } });
+    preloadQuery(query, { variables: { foo: "bar" } });
   });
 
   test("does not allow variables when TVariables is `never`", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
-    preloadQuery({ query });
+    preloadQuery(query);
     // @ts-expect-error no variables option allowed
-    preloadQuery({ query, variables: {} });
+    preloadQuery(query, { variables: {} });
     // @ts-expect-error no variables option allowed
-    preloadQuery({ query, variables: { foo: "bar" } });
+    preloadQuery(query, { variables: { foo: "bar" } });
   });
 
   test("optional variables are optional", () => {
@@ -67,18 +67,16 @@ describe.skip("type tests", () => {
       { limit?: number }
     > = gql``;
 
-    preloadQuery({ query });
-    preloadQuery({ query, variables: {} });
-    preloadQuery({ query, variables: { limit: 10 } });
-    preloadQuery({
-      query,
+    preloadQuery(query);
+    preloadQuery(query, { variables: {} });
+    preloadQuery(query, { variables: { limit: 10 } });
+    preloadQuery(query, {
       variables: {
         // @ts-expect-error unknown variable
         foo: "bar",
       },
     });
-    preloadQuery({
-      query,
+    preloadQuery(query, {
       variables: {
         limit: 10,
         // @ts-expect-error unknown variable
@@ -94,19 +92,17 @@ describe.skip("type tests", () => {
     > = gql``;
 
     // @ts-expect-error missing variables option
-    preloadQuery({ query });
+    preloadQuery(query);
     // @ts-expect-error empty variables
-    preloadQuery({ query, variables: {} });
-    preloadQuery({ query, variables: { id: "1" } });
-    preloadQuery({
-      query,
+    preloadQuery(query, { variables: {} });
+    preloadQuery(query, { variables: { id: "1" } });
+    preloadQuery(query, {
       variables: {
         // @ts-expect-error unknown variable
         foo: "bar",
       },
     });
-    preloadQuery({
-      query,
+    preloadQuery(query, {
       variables: {
         id: "1",
         // @ts-expect-error unknown variable
@@ -122,30 +118,27 @@ describe.skip("type tests", () => {
     > = gql``;
 
     // @ts-expect-error missing variables argument
-    preloadQuery({ query });
+    preloadQuery(query);
     // @ts-expect-error missing variables argument
-    preloadQuery({ query, variables: {} });
-    preloadQuery({ query, variables: { id: "1" } });
+    preloadQuery(query, { variables: {} });
+    preloadQuery(query, { variables: { id: "1" } });
     // @ts-expect-error missing required variable
-    preloadQuery({ query, variables: { language: "en" } });
-    preloadQuery({ query, variables: { id: "1", language: "en" } });
-    preloadQuery({
-      query,
+    preloadQuery(query, { variables: { language: "en" } });
+    preloadQuery(query, { variables: { id: "1", language: "en" } });
+    preloadQuery(query, {
       variables: {
         // @ts-expect-error unknown variable
         foo: "bar",
       },
     });
-    preloadQuery({
-      query,
+    preloadQuery(query, {
       variables: {
         id: "1",
         // @ts-expect-error unknown variable
         foo: "bar",
       },
     });
-    preloadQuery({
-      query,
+    preloadQuery(query, {
       variables: {
         id: "1",
         language: "en",
@@ -158,7 +151,7 @@ describe.skip("type tests", () => {
   test("returns QueryReference<unknown> when TData cannot be inferred", () => {
     const query = gql``;
 
-    const [queryRef] = preloadQuery({ query });
+    const [queryRef] = preloadQuery(query);
 
     expectTypeOf(queryRef).toEqualTypeOf<QueryReference<unknown>>();
   });
@@ -166,14 +159,14 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData> in default case", () => {
     {
       const query: TypedDocumentNode<SimpleQueryData, never> = gql``;
-      const [queryRef] = preloadQuery({ query });
+      const [queryRef] = preloadQuery(query);
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleQueryData>>();
     }
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleQueryData>({ query });
+      const [queryRef] = preloadQuery<SimpleQueryData>(query);
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleQueryData>>();
     }
@@ -182,7 +175,7 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData | undefined> with errorPolicy: 'ignore'", () => {
     {
       const query: TypedDocumentNode<SimpleQueryData, never> = gql``;
-      const [queryRef] = preloadQuery({ query, errorPolicy: "ignore" });
+      const [queryRef] = preloadQuery(query, { errorPolicy: "ignore" });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         QueryReference<SimpleQueryData | undefined>
@@ -191,8 +184,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleQueryData>({
-        query,
+      const [queryRef] = preloadQuery<SimpleQueryData>(query, {
         errorPolicy: "ignore",
       });
 
@@ -205,7 +197,7 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData | undefined> with errorPolicy: 'all'", () => {
     {
       const query: TypedDocumentNode<SimpleQueryData, never> = gql``;
-      const [queryRef] = preloadQuery({ query, errorPolicy: "all" });
+      const [queryRef] = preloadQuery(query, { errorPolicy: "all" });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         QueryReference<SimpleQueryData | undefined>
@@ -214,8 +206,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleQueryData>({
-        query,
+      const [queryRef] = preloadQuery<SimpleQueryData>(query, {
         errorPolicy: "all",
       });
 
@@ -228,15 +219,14 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData> with errorPolicy: 'none'", () => {
     {
       const query: TypedDocumentNode<SimpleQueryData, never> = gql``;
-      const [queryRef] = preloadQuery({ query, errorPolicy: "none" });
+      const [queryRef] = preloadQuery(query, { errorPolicy: "none" });
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleQueryData>>();
     }
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleQueryData>({
-        query,
+      const [queryRef] = preloadQuery<SimpleQueryData>(query, {
         errorPolicy: "none",
       });
 
@@ -247,7 +237,7 @@ describe.skip("type tests", () => {
   test("returns QueryReference<DeepPartial<TData>> with returnPartialData: true", () => {
     {
       const query: TypedDocumentNode<SimpleQueryData, never> = gql``;
-      const [queryRef] = preloadQuery({ query, returnPartialData: true });
+      const [queryRef] = preloadQuery(query, { returnPartialData: true });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         QueryReference<DeepPartial<SimpleQueryData>>
@@ -256,8 +246,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleQueryData>({
-        query,
+      const [queryRef] = preloadQuery<SimpleQueryData>(query, {
         returnPartialData: true,
       });
 
@@ -270,15 +259,14 @@ describe.skip("type tests", () => {
   test("returns QueryReference<DeepPartial<TData>> with returnPartialData: false", () => {
     {
       const query: TypedDocumentNode<SimpleQueryData, never> = gql``;
-      const [queryRef] = preloadQuery({ query, returnPartialData: false });
+      const [queryRef] = preloadQuery(query, { returnPartialData: false });
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleQueryData>>();
     }
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleQueryData>({
-        query,
+      const [queryRef] = preloadQuery<SimpleQueryData>(query, {
         returnPartialData: false,
       });
 
@@ -289,15 +277,14 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData> when passing an option unrelated to TData", () => {
     {
       const query: TypedDocumentNode<SimpleQueryData, never> = gql``;
-      const [queryRef] = preloadQuery({ query, canonizeResults: true });
+      const [queryRef] = preloadQuery(query, { canonizeResults: true });
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleQueryData>>();
     }
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleQueryData>({
-        query,
+      const [queryRef] = preloadQuery<SimpleQueryData>(query, {
         canonizeResults: true,
       });
 
@@ -308,8 +295,7 @@ describe.skip("type tests", () => {
   test("handles combinations of options", () => {
     {
       const query: TypedDocumentNode<SimpleQueryData, never> = gql``;
-      const [queryRef] = preloadQuery({
-        query,
+      const [queryRef] = preloadQuery(query, {
         returnPartialData: true,
         errorPolicy: "ignore",
       });
@@ -321,8 +307,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleQueryData>({
-        query,
+      const [queryRef] = preloadQuery<SimpleQueryData>(query, {
         returnPartialData: true,
         errorPolicy: "ignore",
       });
@@ -334,8 +319,7 @@ describe.skip("type tests", () => {
 
     {
       const query: TypedDocumentNode<SimpleQueryData, never> = gql``;
-      const [queryRef] = preloadQuery({
-        query,
+      const [queryRef] = preloadQuery(query, {
         returnPartialData: true,
         errorPolicy: "none",
       });
@@ -347,8 +331,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleQueryData>({
-        query,
+      const [queryRef] = preloadQuery<SimpleQueryData>(query, {
         returnPartialData: true,
         errorPolicy: "none",
       });
@@ -362,8 +345,7 @@ describe.skip("type tests", () => {
   test("returns correct TData type when combined with options unrelated to TData", () => {
     {
       const query: TypedDocumentNode<SimpleQueryData, never> = gql``;
-      const [queryRef] = preloadQuery({
-        query,
+      const [queryRef] = preloadQuery(query, {
         canonizeResults: true,
         returnPartialData: true,
         errorPolicy: "none",
@@ -376,8 +358,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleQueryData>({
-        query,
+      const [queryRef] = preloadQuery<SimpleQueryData>(query, {
         canonizeResults: true,
         returnPartialData: true,
         errorPolicy: "none",

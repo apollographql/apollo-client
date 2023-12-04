@@ -1,4 +1,3 @@
-import { WeakCache } from "@wry/caches";
 import { invariant } from "../../utilities/globals/index.js";
 
 import type {
@@ -7,6 +6,7 @@ import type {
   VariableDefinitionNode,
   OperationDefinitionNode,
 } from "graphql";
+import { CleanWeakCache, cacheSizes } from "../../utilities/index.js";
 
 export enum DocumentType {
   Query,
@@ -22,7 +22,7 @@ export interface IDocumentDefinition {
 
 let cache:
   | undefined
-  | WeakCache<
+  | CleanWeakCache<
       DocumentNode,
       {
         name: string;
@@ -50,8 +50,7 @@ export function operationName(type: DocumentType) {
 // This parser is mostly used to safety check incoming documents.
 export function parser(document: DocumentNode): IDocumentDefinition {
   if (!cache) {
-    cache =
-      new WeakCache(/** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */);
+    cache = new CleanWeakCache(cacheSizes.parser);
   }
   const cached = cache.get(document);
   if (cached) return cached;

@@ -4,7 +4,6 @@ import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 import { equal } from "@wry/equality";
-import { WeakCache } from "@wry/caches";
 
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
@@ -100,6 +99,7 @@ interface TransformCacheEntry {
 
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
+import { CleanWeakCache, cacheSizes } from "../utilities/index.js";
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -662,10 +662,10 @@ export class QueryManager<TStore> {
     return this.documentTransform.transformDocument(document);
   }
 
-  private transformCache = new WeakCache<
+  private transformCache = new CleanWeakCache<
     DocumentNode,
     TransformCacheEntry
-  >(/** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */);
+  >(cacheSizes.queryManagerTransforms);
 
   public getDocumentInfo(document: DocumentNode) {
     const { transformCache } = this;

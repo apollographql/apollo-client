@@ -504,18 +504,16 @@ export const canUseWeakSet: boolean;
 export function checkDocument(doc: DocumentNode): DocumentNode;
 
 // @public
-export class CleanStrongCache<K, V> extends StrongCache<K, V> {
-    constructor(max: number, dispose?: (value: V) => void);
-    // (undocumented)
-    set(key: K, value: V): V;
-}
+export const CleanStrongCache: typeof StrongCache;
+
+// @public (undocumented)
+export type CleanStrongCache<K, V> = StrongCache<K, V>;
 
 // @public
-export class CleanWeakCache<K extends object, V> extends WeakCache<K, V> {
-    constructor(max: number, dispose?: (value: V) => void);
-    // (undocumented)
-    set(key: K, value: V): V;
-}
+export const CleanWeakCache: typeof WeakCache;
+
+// @public (undocumented)
+export type CleanWeakCache<K extends object, V> = WeakCache<K, V>;
 
 // @public
 export function cloneDeep<T>(value: T): T;

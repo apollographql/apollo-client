@@ -124,7 +124,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
       null
     )
   ): PreloadedQueryResult<TData, TVariables> {
-    const { variables, queryKey, ...watchQueryOptions } = options;
+    const { variables, queryKey = [], ...watchQueryOptions } = options;
 
     const cacheKey: CacheKey = [
       query,

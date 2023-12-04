@@ -52,9 +52,9 @@ describe("SSR", () => {
       const WrappedElement = graphql<Props, Data>(query)(
         ({ data }: ChildProps<Props, Data>) => (
           <div>
-            {!data || data.loading || !data.currentUser
-              ? "loading"
-              : data.currentUser.firstName}
+            {!data || data.loading || !data.currentUser ?
+              "loading"
+            : data.currentUser.firstName}
           </div>
         )
       );
@@ -105,9 +105,9 @@ describe("SSR", () => {
         options: { fetchPolicy: "network-only" },
       })(({ data }: ChildProps<Props, Data>) => (
         <div>
-          {!data || data.loading || !data.currentUser
-            ? "loading"
-            : data.currentUser.firstName}
+          {!data || data.loading || !data.currentUser ?
+            "loading"
+          : data.currentUser.firstName}
         </div>
       ));
 
@@ -191,9 +191,9 @@ describe("SSR", () => {
       const WrappedElement = graphql<Props, Data>(query)(
         ({ data }: ChildProps<Props, Data>) => (
           <div>
-            {!data || data.loading || !data.currentUser
-              ? "loading"
-              : data.currentUser.firstName}
+            {!data || data.loading || !data.currentUser ?
+              "loading"
+            : data.currentUser.firstName}
           </div>
         )
       );
@@ -282,9 +282,9 @@ describe("SSR", () => {
         React.PropsWithChildren<React.PropsWithChildren<any>>
       > = ({ data }) => (
         <div>
-          {!data || data.loading || !data.user
-            ? "loading"
-            : data.user.firstName}
+          {!data || data.loading || !data.user ?
+            "loading"
+          : data.user.firstName}
         </div>
       );
 
@@ -365,9 +365,9 @@ describe("SSR", () => {
         React.PropsWithChildren<React.PropsWithChildren<WithLastNameProps>>
       > = ({ data }) => (
         <div>
-          {!data || data.loading || !data.currentUser
-            ? "loading"
-            : data.currentUser.lastName}
+          {!data || data.loading || !data.currentUser ?
+            "loading"
+          : data.currentUser.lastName}
           <WrappedBorkedComponent />
           <WrappedBorkedComponent />
         </div>
@@ -521,9 +521,9 @@ describe("SSR", () => {
       const Element = graphql<Props, Data, Variables>(query)(
         ({ data }: ChildProps<Props, Data, Variables>) => (
           <div>
-            {!data || data.loading || !data.currentUser
-              ? "loading"
-              : data.currentUser.firstName}
+            {!data || data.loading || !data.currentUser ?
+              "loading"
+            : data.currentUser.firstName}
           </div>
         )
       );
@@ -595,9 +595,9 @@ describe("SSR", () => {
             expect(this.state.thing).toBe(2);
             return (
               <div>
-                {!data || data.loading || !data.currentUser
-                  ? "loading"
-                  : data.currentUser.firstName}
+                {!data || data.loading || !data.currentUser ?
+                  "loading"
+                : data.currentUser.firstName}
               </div>
             );
           }
@@ -714,9 +714,9 @@ describe("SSR", () => {
           expect(this.state.client).toBe(apolloClient);
           return (
             <div>
-              {!data || data.loading || !data.currentUser
-                ? "loading"
-                : data.currentUser.firstName}
+              {!data || data.loading || !data.currentUser ?
+                "loading"
+              : data.currentUser.firstName}
             </div>
           );
         }
@@ -785,9 +785,9 @@ describe("SSR", () => {
         options: (props) => ({ variables: props, ssr: false }),
       })(({ data }) => (
         <div>
-          {!data || data.loading || !data.currentUser
-            ? "loading"
-            : data.currentUser.firstName}
+          {!data || data.loading || !data.currentUser ?
+            "loading"
+          : data.currentUser.firstName}
         </div>
       ));
 
@@ -939,9 +939,9 @@ describe("SSR", () => {
         >
       > = ({ data }) => (
         <div>
-          {!data || data.loading || !data.currentUser
-            ? "loading"
-            : data.currentUser.firstName}
+          {!data || data.loading || !data.currentUser ?
+            "loading"
+          : data.currentUser.firstName}
         </div>
       );
 
@@ -1024,9 +1024,9 @@ describe("SSR", () => {
         >
       > = ({ data }) => (
         <div>
-          {!data || data.loading || !data.currentUser
-            ? "loading"
-            : data.currentUser.firstName}
+          {!data || data.loading || !data.currentUser ?
+            "loading"
+          : data.currentUser.firstName}
         </div>
       );
 
@@ -1069,9 +1069,9 @@ describe("SSR", () => {
       const WrappedElement = graphql<{}, Data>(query)(
         ({ data }: ChildProps<{}, Data>) => (
           <div>
-            {!data || data.loading || !data.currentUser
-              ? "loading"
-              : data.currentUser.firstName}
+            {!data || data.loading || !data.currentUser ?
+              "loading"
+            : data.currentUser.firstName}
           </div>
         )
       );

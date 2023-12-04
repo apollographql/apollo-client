@@ -47,6 +47,7 @@ import observableToPromise, {
 import { itAsync, subscribeAndCount } from "../../../testing/core";
 import { ApolloClient } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
+import { Concast, print } from "../../../utilities";
 
 interface MockedMutation {
   reject: (reason: any) => any;
@@ -5737,9 +5738,8 @@ describe("QueryManager", () => {
 
         const variables = { id: "1234" };
 
-        const refetchError = testQueryError
-          ? new Error("Refetch failed")
-          : undefined;
+        const refetchError =
+          testQueryError ? new Error("Refetch failed") : undefined;
 
         const queryManager = mockQueryManager(
           {
@@ -6016,7 +6016,11 @@ describe("QueryManager", () => {
 
       queryManager.query({ query, context: { queryDeduplication: true } });
 
-      expect(queryManager["inFlightLinkObservables"].size).toBe(1);
+      expect(
+        queryManager["inFlightLinkObservables"].peek(print(query), "{}")
+      ).toEqual({
+        observable: expect.any(Concast),
+      });
     });
 
     it("should allow overriding global queryDeduplication: true to false", () => {
@@ -6042,7 +6046,9 @@ describe("QueryManager", () => {
 
       queryManager.query({ query, context: { queryDeduplication: false } });
 
-      expect(queryManager["inFlightLinkObservables"].size).toBe(0);
+      expect(
+        queryManager["inFlightLinkObservables"].peek(print(query), "{}")
+      ).toBeUndefined();
     });
   });
 

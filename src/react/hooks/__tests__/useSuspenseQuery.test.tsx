@@ -250,17 +250,15 @@ interface VariablesCaseVariables {
 function useVariablesQueryCase() {
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const query: TypedDocumentNode<
-    VariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
+  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+    gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
       }
-    }
-  `;
+    `;
 
   const mocks = CHARACTERS.map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
@@ -1666,17 +1664,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("uses cached result with network request and does not suspend when switching back to already used variables while using `cache-and-network` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -1783,17 +1779,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("refetches and suspends when switching back to already used variables while using `network-only` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -1889,17 +1883,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("refetches and suspends when switching back to already used variables while using `no-cache` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -3650,8 +3642,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(client.getObservableQueries().size).toBe(0);
+    await waitFor(() => expect(client.getObservableQueries().size).toBe(0));
   });
 
   it('throws network errors when errorPolicy is set to "none"', async () => {
@@ -5791,12 +5782,12 @@ describe("useSuspenseQuery", () => {
 
       const todo = data?.todo;
 
-      return todo ? (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      ) : null;
+      return todo ?
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        : null;
     }
 
     render(<App />);
@@ -5891,12 +5882,12 @@ describe("useSuspenseQuery", () => {
 
       const todo = data?.todo;
 
-      return todo ? (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      ) : null;
+      return todo ?
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        : null;
     }
 
     render(<App />);

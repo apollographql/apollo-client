@@ -7,11 +7,12 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { wrapQueryRef } from "../cache/QueryReference.js";
-import type {
-  QueryReference,
-  InternalQueryReference,
+import {
+  unwrapQueryRef,
+  updateWrappedQueryRef,
+  wrapQueryRef,
 } from "../cache/QueryReference.js";
+import type { QueryReference } from "../cache/QueryReference.js";
 import type { LoadableQueryHookOptions } from "../types/types.js";
 import { __use, useRenderGuard } from "./internal/index.js";
 import { getSuspenseCache } from "../cache/index.js";
@@ -30,11 +31,9 @@ export type LoadQueryFunction<TVariables extends OperationVariables> = (
   // which case we don't want to allow a variables argument. In other
   // words, we don't want to allow variables to be passed as an argument to this
   // function if the query does not expect variables in the document.
-  ...args: [TVariables] extends [never]
-    ? []
-    : {} extends OnlyRequiredProperties<TVariables>
-    ? [variables?: TVariables]
-    : [variables: TVariables]
+  ...args: [TVariables] extends [never] ? []
+  : {} extends OnlyRequiredProperties<TVariables> ? [variables?: TVariables]
+  : [variables: TVariables]
 ) => void;
 
 type ResetFunction = () => void;
@@ -60,13 +59,12 @@ export function useLoadableQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LoadableQueryHookOptions & TOptions
 ): UseLoadableQueryResult<
-  TOptions["errorPolicy"] extends "ignore" | "all"
-    ? TOptions["returnPartialData"] extends true
-      ? DeepPartial<TData> | undefined
-      : TData | undefined
-    : TOptions["returnPartialData"] extends true
-    ? DeepPartial<TData>
-    : TData,
+  TOptions["errorPolicy"] extends "ignore" | "all" ?
+    TOptions["returnPartialData"] extends true ?
+      DeepPartial<TData> | undefined
+    : TData | undefined
+  : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
+  : TData,
   TVariables
 >;
 
@@ -121,64 +119,55 @@ export function useLoadableQuery<
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { queryKey = [] } = options;
 
-  const [queryRef, setQueryRef] =
-    React.useState<InternalQueryReference<TData> | null>(null);
-
-  const [promiseCache, setPromiseCache] = React.useState(() =>
-    queryRef ? new Map([[queryRef.key, queryRef.promise]]) : new Map()
+  const [queryRef, setQueryRef] = React.useState<QueryReference<TData> | null>(
+    null
   );
 
-  if (queryRef?.didChangeOptions(watchQueryOptions)) {
-    const promise = queryRef.applyOptions(watchQueryOptions);
-    promiseCache.set(queryRef.key, promise);
-  }
+  const internalQueryRef = queryRef && unwrapQueryRef(queryRef)[0];
 
-  if (queryRef) {
-    queryRef.promiseCache = promiseCache;
+  if (queryRef && internalQueryRef?.didChangeOptions(watchQueryOptions)) {
+    const promise = internalQueryRef.applyOptions(watchQueryOptions);
+    updateWrappedQueryRef(queryRef, promise);
   }
 
   const calledDuringRender = useRenderGuard();
 
-  React.useEffect(() => queryRef?.retain(), [queryRef]);
+  React.useEffect(() => internalQueryRef?.retain(), [internalQueryRef]);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
-      if (!queryRef) {
+      if (!internalQueryRef) {
         throw new Error(
           "The query has not been loaded. Please load the query."
         );
       }
 
-      const promise = queryRef.fetchMore(
+      const promise = internalQueryRef.fetchMore(
         options as FetchMoreQueryOptions<TVariables, TData>
       );
 
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setQueryRef(wrapQueryRef(internalQueryRef));
 
       return promise;
     },
-    [queryRef]
+    [internalQueryRef]
   );
 
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (options) => {
-      if (!queryRef) {
+      if (!internalQueryRef) {
         throw new Error(
           "The query has not been loaded. Please load the query."
         );
       }
 
-      const promise = queryRef.refetch(options);
+      const promise = internalQueryRef.refetch(options);
 
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setQueryRef(wrapQueryRef(internalQueryRef));
 
       return promise;
     },
-    [queryRef]
+    [internalQueryRef]
   );
 
   const loadQuery: LoadQueryFunction<TVariables> = React.useCallback(
@@ -203,28 +192,14 @@ export function useLoadableQuery<
         } as WatchQueryOptions<any, any>)
       );
 
-      promiseCache.set(queryRef.key, queryRef.promise);
-      setQueryRef(queryRef);
+      setQueryRef(wrapQueryRef(queryRef));
     },
-    [
-      query,
-      queryKey,
-      suspenseCache,
-      watchQueryOptions,
-      promiseCache,
-      calledDuringRender,
-    ]
+    [query, queryKey, suspenseCache, watchQueryOptions, calledDuringRender]
   );
 
   const reset: ResetFunction = React.useCallback(() => {
     setQueryRef(null);
   }, [queryRef]);
 
-  return React.useMemo(() => {
-    return [
-      loadQuery,
-      queryRef && wrapQueryRef(queryRef),
-      { fetchMore, refetch, reset },
-    ];
-  }, [queryRef, loadQuery, fetchMore, refetch, reset]);
+  return [loadQuery, queryRef, { fetchMore, refetch, reset }];
 }

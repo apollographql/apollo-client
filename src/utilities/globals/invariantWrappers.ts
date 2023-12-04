@@ -117,9 +117,9 @@ declare global {
 }
 
 function stringify(arg: any) {
-  return typeof arg == "string"
-    ? arg
-    : stringifyForDisplay(arg, 2).slice(0, 1000);
+  return typeof arg == "string" ? arg : (
+      stringifyForDisplay(arg, 2).slice(0, 1000)
+    );
 }
 
 function getHandledErrorMsg(

@@ -7,7 +7,11 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { wrapQueryRef } from "../cache/QueryReference.js";
+import {
+  unwrapQueryRef,
+  updateWrappedQueryRef,
+  wrapQueryRef,
+} from "../cache/QueryReference.js";
 import type { QueryReference } from "../cache/QueryReference.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { __use } from "./internal/index.js";
@@ -42,13 +46,12 @@ export function useBackgroundQuery<
 ): [
   (
     | QueryReference<
-        TOptions["errorPolicy"] extends "ignore" | "all"
-          ? TOptions["returnPartialData"] extends true
-            ? DeepPartial<TData> | undefined
-            : TData | undefined
-          : TOptions["returnPartialData"] extends true
-          ? DeepPartial<TData>
-          : TData
+        TOptions["errorPolicy"] extends "ignore" | "all" ?
+          TOptions["returnPartialData"] extends true ?
+            DeepPartial<TData> | undefined
+          : TData | undefined
+        : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
+        : TData
       >
     | (TOptions["skip"] extends boolean ? undefined : never)
   ),
@@ -202,13 +205,15 @@ export function useBackgroundQuery<
     client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
   );
 
-  const [promiseCache, setPromiseCache] = React.useState(
-    () => new Map([[queryRef.key, queryRef.promise]])
+  const [wrappedQueryRef, setWrappedQueryRef] = React.useState(
+    wrapQueryRef(queryRef)
   );
-
+  if (unwrapQueryRef(wrappedQueryRef)[0] !== queryRef) {
+    setWrappedQueryRef(wrapQueryRef(queryRef));
+  }
   if (queryRef.didChangeOptions(watchQueryOptions)) {
     const promise = queryRef.applyOptions(watchQueryOptions);
-    promiseCache.set(queryRef.key, promise);
+    updateWrappedQueryRef(wrappedQueryRef, promise);
   }
 
   React.useEffect(() => queryRef.retain(), [queryRef]);
@@ -217,9 +222,7 @@ export function useBackgroundQuery<
     (options) => {
       const promise = queryRef.fetchMore(options as FetchMoreQueryOptions<any>);
 
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setWrappedQueryRef(wrapQueryRef(queryRef));
 
       return promise;
     },
@@ -230,19 +233,10 @@ export function useBackgroundQuery<
     (variables) => {
       const promise = queryRef.refetch(variables);
 
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setWrappedQueryRef(wrapQueryRef(queryRef));
 
       return promise;
     },
-    [queryRef]
-  );
-
-  queryRef.promiseCache = promiseCache;
-
-  const wrappedQueryRef = React.useMemo(
-    () => wrapQueryRef(queryRef),
     [queryRef]
   );
 

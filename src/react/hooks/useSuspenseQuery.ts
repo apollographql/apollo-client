@@ -25,7 +25,7 @@ import { getSuspenseCache } from "../cache/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
-import type { CacheKey } from "../cache/types.js";
+import type { CacheKey, QueryKey } from "../cache/types.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -71,17 +71,16 @@ export function useSuspenseQuery<
   options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
     TOptions
 ): UseSuspenseQueryResult<
-  TOptions["errorPolicy"] extends "ignore" | "all"
-    ? TOptions["returnPartialData"] extends true
-      ? DeepPartial<TData> | undefined
-      : TData | undefined
-    : TOptions["returnPartialData"] extends true
-    ? TOptions["skip"] extends boolean
-      ? DeepPartial<TData> | undefined
-      : DeepPartial<TData>
-    : TOptions["skip"] extends boolean
-    ? TData | undefined
-    : TData,
+  TOptions["errorPolicy"] extends "ignore" | "all" ?
+    TOptions["returnPartialData"] extends true ?
+      DeepPartial<TData> | undefined
+    : TData | undefined
+  : TOptions["returnPartialData"] extends true ?
+    TOptions["skip"] extends boolean ?
+      DeepPartial<TData> | undefined
+    : DeepPartial<TData>
+  : TOptions["skip"] extends boolean ? TData | undefined
+  : TData,
   TVariables
 >;
 
@@ -196,29 +195,26 @@ export function useSuspenseQuery<
     client.watchQuery(watchQueryOptions)
   );
 
-  const [promiseCache, setPromiseCache] = React.useState(
-    () => new Map([[queryRef.key, queryRef.promise]])
-  );
+  let [current, setPromise] = React.useState<
+    [QueryKey, Promise<ApolloQueryResult<any>>]
+  >([queryRef.key, queryRef.promise]);
 
-  let promise = promiseCache.get(queryRef.key);
+  // This saves us a re-execution of the render function when a variable changed.
+  if (current[0] !== queryRef.key) {
+    current[0] = queryRef.key;
+    current[1] = queryRef.promise;
+  }
+  let promise = current[1];
 
   if (queryRef.didChangeOptions(watchQueryOptions)) {
-    promise = queryRef.applyOptions(watchQueryOptions);
-    promiseCache.set(queryRef.key, promise);
-  }
-
-  if (!promise) {
-    promise = queryRef.promise;
-    promiseCache.set(queryRef.key, promise);
+    current[1] = promise = queryRef.applyOptions(watchQueryOptions);
   }
 
   React.useEffect(() => {
     const dispose = queryRef.retain();
 
     const removeListener = queryRef.listen((promise) => {
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, promise)
-      );
+      setPromise([queryRef.key, promise]);
     });
 
     return () => {
@@ -239,14 +235,10 @@ export function useSuspenseQuery<
   }, [queryRef.result]);
 
   const result = fetchPolicy === "standby" ? skipResult : __use(promise);
-
   const fetchMore = React.useCallback(
     ((options) => {
       const promise = queryRef.fetchMore(options);
-
-      setPromiseCache((previousPromiseCache) =>
-        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setPromise([queryRef.key, queryRef.promise]);
 
       return promise;
     }) satisfies FetchMoreFunction<
@@ -259,10 +251,7 @@ export function useSuspenseQuery<
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {
       const promise = queryRef.refetch(variables);
-
-      setPromiseCache((previousPromiseCache) =>
-        new Map(previousPromiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setPromise([queryRef.key, queryRef.promise]);
 
       return promise;
     },
@@ -329,8 +318,8 @@ function validatePartialDataReturn(
 }
 
 export function toApolloError(result: ApolloQueryResult<any>) {
-  return isNonEmptyArray(result.errors)
-    ? new ApolloError({ graphQLErrors: result.errors })
+  return isNonEmptyArray(result.errors) ?
+      new ApolloError({ graphQLErrors: result.errors })
     : result.error;
 }
 

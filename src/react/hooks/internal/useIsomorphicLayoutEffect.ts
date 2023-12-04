@@ -6,6 +6,5 @@ import { canUseDOM } from "../../../utilities/index.js";
 // in useSuspenseQuery tests, but to honor the original comment about the
 // warnings for useSyncExternalStore implementation, canUseLayoutEffect is left
 // alone.
-export const useIsomorphicLayoutEffect = canUseDOM
-  ? React.useLayoutEffect
-  : React.useEffect;
+export const useIsomorphicLayoutEffect =
+  canUseDOM ? React.useLayoutEffect : React.useEffect;

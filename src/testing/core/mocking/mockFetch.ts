@@ -105,9 +105,12 @@ function sortByKey(obj: any): Object {
         Object.assign(
           {
             [key]:
-              Object.prototype.toString.call(obj[key]).slice(8, -1) === "Object"
-                ? sortByKey(obj[key])
-                : obj[key],
+              (
+                Object.prototype.toString.call(obj[key]).slice(8, -1) ===
+                "Object"
+              ) ?
+                sortByKey(obj[key])
+              : obj[key],
           },
           ret
         ),

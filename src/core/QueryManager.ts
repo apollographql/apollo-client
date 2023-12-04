@@ -99,6 +99,7 @@ interface TransformCacheEntry {
 }
 
 import type { DefaultOptions } from "./ApolloClient.js";
+import { Trie } from "@wry/trie";
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -168,8 +169,9 @@ export class QueryManager<TStore> {
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = assumeImmutableResults;
-    this.documentTransform = documentTransform
-      ? defaultDocumentTransform
+    this.documentTransform =
+      documentTransform ?
+        defaultDocumentTransform
           .concat(documentTransform)
           // The custom document transform may add new fragment spreads or new
           // field selections, so we want to give the cache a chance to run
@@ -182,6 +184,15 @@ export class QueryManager<TStore> {
     if ((this.onBroadcast = onBroadcast)) {
       this.mutationStore = Object.create(null);
     }
+
+    // TODO: remove before we release 3.9
+    Object.defineProperty(this.inFlightLinkObservables, "get", {
+      value: () => {
+        throw new Error(
+          "This version of Apollo Client requires at least @apollo/experimental-nextjs-app-support version 0.5.2."
+        );
+      },
+    });
   }
 
   /**
@@ -356,11 +367,11 @@ export class QueryManager<TStore> {
           self.broadcastQueries();
 
           reject(
-            err instanceof ApolloError
-              ? err
-              : new ApolloError({
-                  networkError: err,
-                })
+            err instanceof ApolloError ? err : (
+              new ApolloError({
+                networkError: err,
+              })
+            )
           );
         },
       });
@@ -598,9 +609,9 @@ export class QueryManager<TStore> {
     }
   ) {
     const data =
-      typeof optimisticResponse === "function"
-        ? optimisticResponse(mutation.variables)
-        : optimisticResponse;
+      typeof optimisticResponse === "function" ?
+        optimisticResponse(mutation.variables)
+      : optimisticResponse;
 
     return this.cache.recordOptimisticTransaction((cache) => {
       try {
@@ -920,9 +931,9 @@ export class QueryManager<TStore> {
       queryNamesAndDocs.forEach((included, nameOrDoc) => {
         if (!included) {
           invariant.warn(
-            typeof nameOrDoc === "string"
-              ? `Unknown query named "%s" requested in refetchQueries options.include array`
-              : `Unknown query %s requested in refetchQueries options.include array`,
+            typeof nameOrDoc === "string" ?
+              `Unknown query named "%s" requested in refetchQueries options.include array`
+            : `Unknown query %s requested in refetchQueries options.include array`,
             nameOrDoc
           );
         }
@@ -1065,10 +1076,9 @@ export class QueryManager<TStore> {
 
   // Use protected instead of private field so
   // @apollo/experimental-nextjs-app-support can access type info.
-  protected inFlightLinkObservables = new Map<
-    string,
-    Map<string, Observable<FetchResult>>
-  >();
+  protected inFlightLinkObservables = new Trie<{
+    observable?: Observable<FetchResult<any>>;
+  }>(false);
 
   private getObservableFromLink<T = any>(
     query: DocumentNode,
@@ -1078,7 +1088,7 @@ export class QueryManager<TStore> {
     deduplication: boolean = context?.queryDeduplication ??
       this.queryDeduplication
   ): Observable<FetchResult<T>> {
-    let observable: Observable<FetchResult<T>>;
+    let observable: Observable<FetchResult<T>> | undefined;
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
     if (serverQuery) {
@@ -1098,24 +1108,22 @@ export class QueryManager<TStore> {
 
       if (deduplication) {
         const printedServerQuery = print(serverQuery);
-        const byVariables =
-          inFlightLinkObservables.get(printedServerQuery) || new Map();
-        inFlightLinkObservables.set(printedServerQuery, byVariables);
-
         const varJson = canonicalStringify(variables);
-        observable = byVariables.get(varJson);
 
+        const entry = inFlightLinkObservables.lookup(
+          printedServerQuery,
+          varJson
+        );
+
+        observable = entry.observable;
         if (!observable) {
           const concast = new Concast([
             execute(link, operation) as Observable<FetchResult<T>>,
           ]);
-
-          byVariables.set(varJson, (observable = concast));
+          observable = entry.observable = concast;
 
           concast.beforeNext(() => {
-            if (byVariables.delete(varJson) && byVariables.size < 1) {
-              inFlightLinkObservables.delete(printedServerQuery);
-            }
+            inFlightLinkObservables.remove(printedServerQuery, varJson);
           });
         }
       } else {
@@ -1206,9 +1214,10 @@ export class QueryManager<TStore> {
       },
 
       (networkError) => {
-        const error = isApolloError(networkError)
-          ? networkError
-          : new ApolloError({ networkError });
+        const error =
+          isApolloError(networkError) ? networkError : (
+            new ApolloError({ networkError })
+          );
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
@@ -1570,14 +1579,15 @@ export class QueryManager<TStore> {
     };
 
     const cacheWriteBehavior =
-      fetchPolicy === "no-cache"
-        ? CacheWriteBehavior.FORBID
-        : // Watched queries must opt into overwriting existing data on refetch,
+      fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID
+        // Watched queries must opt into overwriting existing data on refetch,
         // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
+      : (
         networkStatus === NetworkStatus.refetch &&
-          refetchWritePolicy !== "merge"
-        ? CacheWriteBehavior.OVERWRITE
-        : CacheWriteBehavior.MERGE;
+        refetchWritePolicy !== "merge"
+      ) ?
+        CacheWriteBehavior.OVERWRITE
+      : CacheWriteBehavior.MERGE;
 
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {

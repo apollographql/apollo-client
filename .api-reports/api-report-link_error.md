@@ -48,7 +48,6 @@ class ApolloLink {
 interface DefaultContext extends Record<string, any> {
 }
 
-// (undocumented)
 export interface ErrorHandler {
     // (undocumented)
     (error: ErrorResponse): Observable<FetchResult> | void;
@@ -56,7 +55,6 @@ export interface ErrorHandler {
 
 // @public (undocumented)
 export namespace ErrorLink {
-    // (undocumented)
     export interface ErrorHandler {
         // (undocumented)
         (error: ErrorResponse): Observable<FetchResult> | void;

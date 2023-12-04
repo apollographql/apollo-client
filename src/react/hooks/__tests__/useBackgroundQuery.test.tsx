@@ -131,7 +131,9 @@ function renderIntegrationTest({
       <ApolloProvider client={_client}>
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
-            {variables ? <ParentWithVariables /> : <Parent />}
+            {variables ?
+              <ParentWithVariables />
+            : <Parent />}
           </Suspense>
         </ErrorBoundary>
       </ApolloProvider>
@@ -154,17 +156,15 @@ interface VariablesCaseVariables {
 }
 
 function useVariablesIntegrationTestCase() {
-  const query: TypedDocumentNode<
-    VariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
+  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+    gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
       }
-    }
-  `;
+    `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
   let mocks = [...CHARACTERS].map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
@@ -208,14 +208,15 @@ function renderVariablesIntegrationTest({
             character: {
               ...result.data.character,
               name:
-                index > 3
-                  ? index > 7
-                    ? `${result.data.character.name} (updated again)`
-                    : `${result.data.character.name} (updated)`
-                  : result.data.character.name,
+                index > 3 ?
+                  index > 7 ?
+                    `${result.data.character.name} (updated again)`
+                  : `${result.data.character.name} (updated)`
+                : result.data.character.name,
             },
           },
         },
+        delay: 200,
       };
     }
   );
@@ -274,7 +275,9 @@ function renderVariablesIntegrationTest({
 
     return (
       <div>
-        {error ? <div>{error.message}</div> : null}
+        {error ?
+          <div>{error.message}</div>
+        : null}
         <button
           onClick={() => {
             refetch(variables);
@@ -454,7 +457,9 @@ function renderPaginatedIntegrationTest({
     }));
     return (
       <div>
-        {error ? <div>{error.message}</div> : null}
+        {error ?
+          <div>{error.message}</div>
+        : null}
         <button
           onClick={() => {
             const fetchMoreOpts: FetchMoreQueryOptions<Variables, QueryData> & {
@@ -638,7 +643,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { hello: "world 1" },
@@ -675,7 +680,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     await waitFor(() => {
       expect(_result).toEqual({
@@ -716,7 +721,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     await waitFor(() => {
       expect(_result).toMatchObject({
@@ -776,7 +781,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
     const resultSet = new Set(_result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -837,7 +842,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
     const resultSet = new Set(_result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
@@ -879,7 +884,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { hello: "from link" },
@@ -919,7 +924,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { hello: "from cache" },
@@ -966,7 +971,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { foo: "bar", hello: "from link" },
@@ -1006,7 +1011,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { hello: "from link" },
@@ -1049,7 +1054,7 @@ describe("useBackgroundQuery", () => {
 
     const [queryRef] = result.current;
 
-    const _result = await unwrapQueryRef(queryRef).promise;
+    const _result = await unwrapQueryRef(queryRef)[0].promise;
 
     expect(_result).toEqual({
       data: { hello: "from link" },
@@ -2409,11 +2414,9 @@ describe("useBackgroundQuery", () => {
     function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data, error } = useReadQuery(queryRef);
 
-      return error ? (
-        <div data-testid="error">{error.message}</div>
-      ) : (
-        <div data-testid="greeting">{data.greeting}</div>
-      );
+      return error ?
+          <div data-testid="error">{error.message}</div>
+        : <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -3120,11 +3123,9 @@ describe("useBackgroundQuery", () => {
     function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data, error } = useReadQuery(queryRef);
 
-      return error ? (
-        <div data-testid="error">{error.message}</div>
-      ) : (
-        <span data-testid="character">{data.character.name}</span>
-      );
+      return error ?
+          <div data-testid="error">{error.message}</div>
+        : <span data-testid="character">{data.character.name}</span>;
     }
 
     function App() {
@@ -3224,12 +3225,14 @@ describe("useBackgroundQuery", () => {
           result: {
             data: { character: { id: "1", name: "Captain Marvel" } },
           },
+          delay: 200,
         },
         {
           request: { query, variables: { id: "2" } },
           result: {
             data: { character: { id: "2", name: "Captain America" } },
           },
+          delay: 200,
         },
       ];
 
@@ -3294,7 +3297,7 @@ describe("useBackgroundQuery", () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.count).toBe(2);
+      expect(renders.count).toBe(1);
 
       expect(
         await screen.findByText("1 - Spider-Man (updated)")
@@ -3304,11 +3307,13 @@ describe("useBackgroundQuery", () => {
 
       // parent component re-suspends
       expect(renders.suspenseCount).toBe(3);
-      expect(renders.count).toBe(3);
+      expect(renders.count).toBe(2);
 
       expect(
         await screen.findByText("1 - Spider-Man (updated again)")
       ).toBeInTheDocument();
+
+      expect(renders.count).toBe(3);
     });
     it("throws errors when errors are returned after calling `refetch`", async () => {
       using _consoleSpy = spyOnConsole("error");

@@ -1,5 +1,7 @@
 import type { MatcherFunction } from "expect";
 
+// this is necessary because this file is picked up by `tsc` (it's not a test),
+// but our main `tsconfig.json` doesn't include `"ES2021.WeakRef"` on purpose
 declare class WeakRef<T extends WeakKey> {
   constructor(target: T);
   deref(): T | undefined;

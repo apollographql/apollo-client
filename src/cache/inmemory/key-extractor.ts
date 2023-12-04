@@ -250,8 +250,8 @@ export function extractKeyPath(
   extract = extract || extractKey;
   return normalize(
     path.reduce(function reducer(obj, key): any {
-      return isArray(obj)
-        ? obj.map((child) => reducer(child, key))
+      return isArray(obj) ?
+          obj.map((child) => reducer(child, key))
         : obj && extract!(obj, key);
     }, object)
   );

@@ -64,7 +64,7 @@ describe("[queries] observableQuery", () => {
             // ensure first assertion and umount tree
             await assert1();
 
-            userEvent.click(screen.getByText("Break things"));
+            await userEvent.click(screen.getByText("Break things"));
 
             // ensure cleanup
             await assert2();

@@ -871,9 +871,9 @@ describe("nextFetchPolicy", () => {
   }) =>
     itAsync(
       `transitions ${args.fetchPolicy} to ${
-        typeof args.nextFetchPolicy === "function"
-          ? args.nextFetchPolicy.name
-          : args.nextFetchPolicy
+        typeof args.nextFetchPolicy === "function" ?
+          args.nextFetchPolicy.name
+        : args.nextFetchPolicy
       } (${args.useDefaultOptions ? "" : "not "}using defaults)`,
       (resolve, reject) => {
         const client = new ApolloClient({
@@ -882,8 +882,9 @@ describe("nextFetchPolicy", () => {
             addTypename: true,
           }),
           defaultOptions: {
-            watchQuery: args.useDefaultOptions
-              ? {
+            watchQuery:
+              args.useDefaultOptions ?
+                {
                   nextFetchPolicy: args.nextFetchPolicy,
                 }
               : {},

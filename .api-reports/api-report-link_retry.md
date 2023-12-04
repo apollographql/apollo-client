@@ -48,7 +48,7 @@ class ApolloLink {
 interface DefaultContext extends Record<string, any> {
 }
 
-// @public (undocumented)
+// @public
 interface DelayFunction {
     // (undocumented)
     (count: number, operation: Operation, error: any): number;
@@ -56,11 +56,8 @@ interface DelayFunction {
 
 // @public (undocumented)
 interface DelayFunctionOptions {
-    // (undocumented)
     initial?: number;
-    // (undocumented)
     jitter?: boolean;
-    // (undocumented)
     max?: number;
 }
 
@@ -167,7 +164,7 @@ type Path = ReadonlyArray<string | number>;
 // @public (undocumented)
 type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
-// @public (undocumented)
+// @public
 interface RetryFunction {
     // (undocumented)
     (count: number, operation: Operation, error: any): boolean | Promise<boolean>;
@@ -175,9 +172,7 @@ interface RetryFunction {
 
 // @public (undocumented)
 interface RetryFunctionOptions {
-    // (undocumented)
     max?: number;
-    // (undocumented)
     retryIf?: (error: any, operation: Operation) => boolean | Promise<boolean>;
 }
 
@@ -187,13 +182,9 @@ export namespace RetryLink {
     export interface Options {
         // Warning: (ae-forgotten-export) The symbol "RetryFunctionOptions" needs to be exported by the entry point index.d.ts
         // Warning: (ae-forgotten-export) The symbol "RetryFunction" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
         attempts?: RetryFunctionOptions | RetryFunction;
         // Warning: (ae-forgotten-export) The symbol "DelayFunctionOptions" needs to be exported by the entry point index.d.ts
         // Warning: (ae-forgotten-export) The symbol "DelayFunction" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
         delay?: DelayFunctionOptions | DelayFunction;
     }
 }

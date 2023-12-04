@@ -203,10 +203,8 @@ describe.skip("type tests", () => {
   });
 
   test("optional variables are optional", () => {
-    const query: TypedDocumentNode<
-      { posts: string[] },
-      { limit?: number }
-    > = gql``;
+    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
 
     preloadQuery(query);
     preloadQuery(query, { variables: {} });
@@ -227,10 +225,8 @@ describe.skip("type tests", () => {
   });
 
   test("enforces required variables", () => {
-    const query: TypedDocumentNode<
-      { character: string },
-      { id: string }
-    > = gql``;
+    const query: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
 
     // @ts-expect-error missing variables option
     preloadQuery(query);

@@ -1,4 +1,5 @@
 import { CleanStrongCache, cacheSizes } from "../../utilities/caching/index.js";
+import { registerGlobalCache } from "../caching/getCacheStatus.js";
 
 /**
  * Like JSON.stringify, but with object keys always sorted in the same order.
@@ -32,6 +33,10 @@ export const canonicalStringify = Object.assign(
     },
   }
 );
+
+if (__DEV__) {
+  registerGlobalCache("canonicalStringify", () => sortingMap.size);
+}
 
 // Values are JSON-serialized arrays of object keys (in any order), and values
 // are sorted arrays of the same keys.

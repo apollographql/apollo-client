@@ -20,7 +20,7 @@ declare global {
  * In most applications, it will be very unlikely that 1000 different queries
  * are on screen at the same time.
  */
-interface CacheSizes {
+export interface CacheSizes {
   /**
    * Cache size for the [`print`](../../utilities/graphql/print.ts) function.
    *

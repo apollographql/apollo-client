@@ -292,6 +292,15 @@ export const createPersistedQueryLink = (
         };
       });
     }),
-    { resetHashCache }
+    {
+      resetHashCache,
+    },
+    __DEV__ ?
+      {
+        get cacheSize() {
+          return hashesByQuery?.size ?? 0;
+        },
+      }
+    : {}
   );
 };

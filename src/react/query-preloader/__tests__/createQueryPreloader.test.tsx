@@ -91,7 +91,7 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
     const { snapshot } = await Profiler.takeRender();
 
     expect(snapshot.result).toEqual({
-      data: { greeting: "hello" },
+      data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });

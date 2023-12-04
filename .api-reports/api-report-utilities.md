@@ -126,6 +126,10 @@ class ApolloClient<TCacheShape> implements DataProxy {
     disableNetworkFetches: boolean;
     get documentTransform(): DocumentTransform;
     extract(optimistic?: boolean): TCacheShape;
+    // Warning: (ae-forgotten-export) The symbol "GetCacheStatus" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getCacheStatus?: GetCacheStatus;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesInclude" needs to be exported by the entry point index.d.ts
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
     getResolvers(): Resolvers;
@@ -271,11 +275,15 @@ class ApolloLink {
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // (undocumented)
+    readonly left?: ApolloLink;
+    // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // (undocumented)
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -463,6 +471,16 @@ interface CacheSizes {
 //
 // @public
 export const cacheSizes: CacheSizes;
+
+// @public (undocumented)
+type CacheStatus = {
+    limits: CacheSizes;
+    sizes: {
+        [K in keyof CacheSizes]?: number | number[];
+    } & {
+        links?: number[];
+    };
+};
 
 // @public (undocumented)
 const enum CacheWriteBehavior {
@@ -748,9 +766,16 @@ export class DocumentTransform {
     concat(otherTransform: DocumentTransform): DocumentTransform;
     // (undocumented)
     static identity(): DocumentTransform;
+    // (undocumented)
+    readonly left?: DocumentTransform;
     resetCache(): void;
     // (undocumented)
-    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform;
+    readonly right?: DocumentTransform;
+    // (undocumented)
+    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
+        left: DocumentTransform;
+        right: DocumentTransform;
+    };
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
 }
@@ -1032,6 +1057,12 @@ interface FulfilledPromise<TValue> extends Promise<TValue> {
     // (undocumented)
     value: TValue;
 }
+
+// Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "CacheStatus" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type GetCacheStatus = (this: ApolloClient<any>) => CacheStatus;
 
 // @public (undocumented)
 export function getDefaultValues(definition: OperationDefinitionNode | undefined): Record<string, any>;
@@ -2491,7 +2522,6 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:163:3 - (ae-forgotten-export) The symbol "FieldMergeFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:132:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/writeToStore.ts:65:7 - (ae-forgotten-export) The symbol "MergeTree" needs to be exported by the entry point index.d.ts
-// src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:120:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts

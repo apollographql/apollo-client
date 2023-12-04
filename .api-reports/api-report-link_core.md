@@ -24,9 +24,13 @@ export class ApolloLink {
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // (undocumented)
+    readonly left?: ApolloLink;
+    // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // (undocumented)
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // (undocumented)

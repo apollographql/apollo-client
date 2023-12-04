@@ -29,11 +29,15 @@ class ApolloLink {
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // (undocumented)
+    readonly left?: ApolloLink;
+    // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // (undocumented)
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts

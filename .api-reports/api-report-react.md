@@ -115,6 +115,10 @@ class ApolloClient<TCacheShape> implements DataProxy {
     // Warning: (ae-forgotten-export) The symbol "DocumentTransform" needs to be exported by the entry point index.d.ts
     get documentTransform(): DocumentTransform;
     extract(optimistic?: boolean): TCacheShape;
+    // Warning: (ae-forgotten-export) The symbol "GetCacheStatus" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getCacheStatus?: GetCacheStatus;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesInclude" needs to be exported by the entry point index.d.ts
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
     getResolvers(): Resolvers;
@@ -282,11 +286,15 @@ class ApolloLink {
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // (undocumented)
+    readonly left?: ApolloLink;
+    // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // (undocumented)
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -494,6 +502,29 @@ namespace Cache_2 {
     import Fragment = DataProxy.Fragment;
 }
 
+// @public
+interface CacheSizes {
+    canonicalStringify: number;
+    documentTransform: number;
+    fragmentRegistryFindFragmentSpreads: number;
+    fragmentRegistryLookup: number;
+    fragmentRegistryTransform: number;
+    parser: number;
+    persistedQueryHashes: number;
+    print: number;
+    queryManagerTransforms: number;
+}
+
+// @public (undocumented)
+type CacheStatus = {
+    limits: CacheSizes;
+    sizes: {
+        [K in keyof CacheSizes]?: number | number[];
+    } & {
+        links?: number[];
+    };
+};
+
 // @public (undocumented)
 const enum CacheWriteBehavior {
     // (undocumented)
@@ -678,9 +709,16 @@ class DocumentTransform {
     concat(otherTransform: DocumentTransform): DocumentTransform;
     // (undocumented)
     static identity(): DocumentTransform;
+    // (undocumented)
+    readonly left?: DocumentTransform;
     resetCache(): void;
     // (undocumented)
-    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform;
+    readonly right?: DocumentTransform;
+    // (undocumented)
+    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
+        left: DocumentTransform;
+        right: DocumentTransform;
+    };
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
 }
@@ -817,6 +855,11 @@ interface FulfilledPromise<TValue> extends Promise<TValue> {
 
 // @public (undocumented)
 export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
+
+// Warning: (ae-forgotten-export) The symbol "CacheStatus" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type GetCacheStatus = (this: ApolloClient<any>) => CacheStatus;
 
 // @public (undocumented)
 type GraphQLErrors = ReadonlyArray<GraphQLError>;
@@ -2260,6 +2303,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:31:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:50:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/utilities/caching/getCacheStatus.ts:12:3 - (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

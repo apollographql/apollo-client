@@ -20,12 +20,9 @@ import { getSuspenseCache } from "../cache/getSuspenseCache.js";
 import type { CacheKey } from "../cache/types.js";
 import type { NoInfer } from "../index.js";
 
-type VariablesOption<TVariables extends OperationVariables> = [
-  TVariables,
-] extends [never]
-  ? { variables?: never }
-  : {} extends OnlyRequiredProperties<TVariables>
-  ? { variables?: TVariables }
+type VariablesOption<TVariables extends OperationVariables> =
+  [TVariables] extends [never] ? { variables?: never }
+  : {} extends OnlyRequiredProperties<TVariables> ? { variables?: TVariables }
   : { variables: TVariables };
 
 export type PreloadQueryFetchPolicy = Extract<
@@ -53,11 +50,11 @@ export type PreloadedQueryResult<
 type PreloadQueryOptionsArg<
   TVariables extends OperationVariables,
   TOptions = unknown,
-> = [TVariables] extends [never]
-  ? [options?: PreloadQueryOptions<never> & TOptions]
-  : {} extends OnlyRequiredProperties<TVariables>
-  ? [options?: PreloadQueryOptions<NoInfer<TVariables>> & TOptions]
-  : [options: PreloadQueryOptions<NoInfer<TVariables>> & TOptions];
+> = [TVariables] extends [never] ?
+  [options?: PreloadQueryOptions<never> & TOptions]
+: {} extends OnlyRequiredProperties<TVariables> ?
+  [options?: PreloadQueryOptions<NoInfer<TVariables>> & TOptions]
+: [options: PreloadQueryOptions<NoInfer<TVariables>> & TOptions];
 
 export function createQueryPreloader(client: ApolloClient<any>) {
   const suspenseCache = getSuspenseCache(client);
@@ -70,13 +67,12 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>, TOptions>
   ): PreloadedQueryResult<
-    TOptions["errorPolicy"] extends "ignore" | "all"
-      ? TOptions["returnPartialData"] extends true
-        ? DeepPartial<TData> | undefined
-        : TData | undefined
-      : TOptions["returnPartialData"] extends true
-      ? DeepPartial<TData>
-      : TData,
+    TOptions["errorPolicy"] extends "ignore" | "all" ?
+      TOptions["returnPartialData"] extends true ?
+        DeepPartial<TData> | undefined
+      : TData | undefined
+    : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
+    : TData,
     TVariables
   >;
 

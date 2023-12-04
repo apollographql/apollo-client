@@ -269,7 +269,8 @@ export class QueryManager<TStore> {
         error: null,
       } as MutationStoreValue);
 
-    if (optimisticResponse) {
+    const isOptimistic =
+      optimisticResponse &&
       this.markMutationOptimistic<TData, TVariables, TContext, TCache>(
         optimisticResponse,
         {
@@ -284,7 +285,6 @@ export class QueryManager<TStore> {
           keepRootFields,
         }
       );
-    }
 
     this.broadcastQueries();
 
@@ -296,7 +296,7 @@ export class QueryManager<TStore> {
           mutation,
           {
             ...context,
-            optimisticResponse,
+            optimisticResponse: isOptimistic ? optimisticResponse : void 0,
           },
           variables,
           false
@@ -336,7 +336,7 @@ export class QueryManager<TStore> {
             updateQueries,
             awaitRefetchQueries,
             refetchQueries,
-            removeOptimistic: optimisticResponse ? mutationId : void 0,
+            removeOptimistic: isOptimistic ? mutationId : void 0,
             onQueryUpdated,
             keepRootFields,
           });
@@ -361,7 +361,7 @@ export class QueryManager<TStore> {
             mutationStoreValue.error = err;
           }
 
-          if (optimisticResponse) {
+          if (isOptimistic) {
             self.cache.removeOptimistic(mutationId);
           }
 
@@ -614,7 +614,11 @@ export class QueryManager<TStore> {
         optimisticResponse(mutation.variables)
       : optimisticResponse;
 
-    return this.cache.recordOptimisticTransaction((cache) => {
+    if (data === null) {
+      return false;
+    }
+
+    this.cache.recordOptimisticTransaction((cache) => {
       try {
         this.markMutationResult<TData, TVariables, TContext, TCache>(
           {
@@ -627,6 +631,8 @@ export class QueryManager<TStore> {
         invariant.error(error);
       }
     }, mutation.mutationId);
+
+    return true;
   }
 
   public fetchQuery<TData, TVars extends OperationVariables>(

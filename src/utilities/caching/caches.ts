@@ -8,13 +8,13 @@ function schedule(cache: CommonCache<any, any>) {
     setTimeout(() => {
       cache.clean();
       scheduledCleanup.delete(cache);
-    }, 1000);
+    }, 100);
   }
 }
 /**
  * A version of WeakCache that will auto-schedule a cleanup of the cache when
  * a new item is added.
- * Throttled to once per second.
+ * Throttled to once per 100ms.
  *
  * @privateRemarks
  * Should be used throughout the rest of the codebase instead of WeakCache,
@@ -34,7 +34,7 @@ export class CleanWeakCache<K extends WeakKey, V> extends WeakCache<K, V> {
 /**
  * A version of StrongCache that will auto-schedule a cleanup of the cache when
  * a new item is added.
- * Throttled to once per second.
+ * Throttled to once per 100ms.
  *
  * @privateRemarks
  * Should be used throughout the rest of the codebase instead of StrongCache,

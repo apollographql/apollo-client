@@ -161,7 +161,7 @@ const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
  *
  * The global cache size configuration for Apollo Client.
  *
- * @remark
+ * @remarks
  *
  * You can directly modify this object, but any modification will
  * only have an effect on caches that are created after the modification.

@@ -1,4 +1,4 @@
-import { CleanStrongCache } from "../../utilities/index.js";
+import { CleanStrongCache, cacheSizes } from "../../utilities/caching/index.js";
 
 /**
  * Like JSON.stringify, but with object keys always sorted in the same order.
@@ -26,7 +26,9 @@ export const canonicalStringify = Object.assign(
       // Clearing the sortingMap will reclaim all cached memory, without
       // affecting the logical results of canonicalStringify, but potentially
       // sacrificing performance until the cache is refilled.
-      sortingMap = new CleanStrongCache<string, readonly string[]>();
+      sortingMap = new CleanStrongCache<string, readonly string[]>(
+        cacheSizes.canonicalStringify
+      );
     },
   }
 );

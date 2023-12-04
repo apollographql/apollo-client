@@ -1,6 +1,6 @@
 import type { ASTNode } from "graphql";
 import { print as origPrint } from "graphql";
-import { CleanWeakCache, cacheSizes } from "../../utilities/index.js";
+import { CleanWeakCache, cacheSizes } from "../caching/index.js";
 
 let printCache!: CleanWeakCache<ASTNode, string>;
 export const print = Object.assign(

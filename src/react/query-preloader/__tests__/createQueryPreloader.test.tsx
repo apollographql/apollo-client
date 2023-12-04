@@ -8,7 +8,7 @@ import {
   TypedDocumentNode,
   gql,
 } from "../../../core";
-import { MockLink, MockedResponse } from "../../../testing";
+import { MockLink, MockedResponse, wait } from "../../../testing";
 import { expectTypeOf } from "expect-type";
 import { QueryReference } from "../../cache/QueryReference";
 import { DeepPartial } from "../../../utilities";
@@ -153,6 +153,24 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
   }
 
   dispose();
+});
+
+test("tears down the query when calling dispose", async () => {
+  const { query, mocks } = useSimpleCase();
+  const client = createDefaultClient(mocks);
+  const preloadQuery = createQueryPreloader(client);
+
+  const [, dispose] = preloadQuery(query);
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  dispose();
+
+  await wait(0);
+
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
 
 describe.skip("type tests", () => {

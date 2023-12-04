@@ -57,7 +57,7 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
     },
   });
 
-  const [queryRef, { dispose }] = preloadQuery(query);
+  const [queryRef, dispose] = preloadQuery(query);
 
   function SuspenseFallback() {
     useTrackRenders();
@@ -110,7 +110,7 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
     },
   });
 
-  const [queryRef, { dispose }] = preloadQuery(query, {
+  const [queryRef, dispose] = preloadQuery(query, {
     variables: { id: "1" },
   });
 

@@ -3,7 +3,6 @@ import type {
   DefaultContext,
   DocumentNode,
   ErrorPolicy,
-  FetchMoreQueryOptions,
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
@@ -19,10 +18,6 @@ import { wrapQueryRef } from "../cache/QueryReference.js";
 import type { QueryReference } from "../cache/QueryReference.js";
 import { getSuspenseCache } from "../cache/getSuspenseCache.js";
 import type { CacheKey } from "../cache/types.js";
-import type {
-  FetchMoreFunction,
-  RefetchFunction,
-} from "../hooks/useSuspenseQuery.js";
 import type { NoInfer } from "../index.js";
 
 type VariablesOption<TVariables extends OperationVariables> = [
@@ -53,14 +48,7 @@ export type PreloadQueryOptions<
 export type PreloadedQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-> = [
-  QueryReference<TData>,
-  {
-    dispose: () => void;
-    fetchMore: FetchMoreFunction<TData, TVariables>;
-    refetch: RefetchFunction<TData, TVariables>;
-  },
-];
+> = [QueryReference<TData>, dispose: () => void];
 
 type PreloadQueryOptionsArg<
   TVariables extends OperationVariables,
@@ -156,17 +144,9 @@ export function createQueryPreloader(client: ApolloClient<any>) {
       } as WatchQueryOptions<any, any>)
     );
 
-    const fetchMore: FetchMoreFunction<TData, TVariables> = (options) => {
-      return queryRef.fetchMore(options as FetchMoreQueryOptions<any>);
-    };
-
-    const refetch: RefetchFunction<TData, TVariables> = (variables) => {
-      return queryRef.refetch(variables);
-    };
-
     const dispose = queryRef.retain();
 
-    return [wrapQueryRef(queryRef), { fetchMore, refetch, dispose }];
+    return [wrapQueryRef(queryRef), dispose];
   }
 
   return preloadQuery;

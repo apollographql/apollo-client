@@ -22,7 +22,7 @@ function schedule(cache: CommonCache<any, any>) {
  * already handles cleanup and should remain a `WeakCache`.
  */
 
-export class CleanWeakCache<K extends WeakKey, V> extends WeakCache<K, V> {
+export class CleanWeakCache<K extends object, V> extends WeakCache<K, V> {
   constructor(max: number, dispose?: (value: V) => void) {
     super(max, dispose);
   }

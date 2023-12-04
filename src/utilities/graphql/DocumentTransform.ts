@@ -5,7 +5,7 @@ import { invariant } from "../globals/index.js";
 import type { DocumentNode } from "graphql";
 import { WeakCache } from "@wry/caches";
 import { wrap } from "optimism";
-import { cacheSizes } from "../../utilities/index.js";
+import { cacheSizes } from "../caching/index.js";
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 

@@ -22,12 +22,14 @@ import type { Observer } from 'zen-observable-ts';
 import type { OperationDefinitionNode } from 'graphql';
 import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
+import { StrongCache } from '@wry/caches';
 import type { Subscriber } from 'zen-observable-ts';
 import { Trie } from '@wry/trie';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ValueNode } from 'graphql';
 import type { VariableDefinitionNode } from 'graphql';
 import type { VariableNode } from 'graphql';
+import { WeakCache } from '@wry/caches';
 
 // @public (undocumented)
 export const addTypenameToDocument: (<TNode extends ASTNode>(doc: TNode) => TNode) & {
@@ -444,6 +446,24 @@ class CacheGroup {
     resetCaching(): void;
 }
 
+// @public
+interface CacheSizes {
+    canonicalStringify: number;
+    documentTransform: number;
+    fragmentRegistryFindFragmentSpreads: number;
+    fragmentRegistryLookup: number;
+    fragmentRegistryTransform: number;
+    parser: number;
+    persistedQueryHashes: number;
+    print: number;
+    queryManagerTransforms: number;
+}
+
+// Warning: (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
+//
+// @public
+export const cacheSizes: CacheSizes;
+
 // @public (undocumented)
 const enum CacheWriteBehavior {
     // (undocumented)
@@ -482,6 +502,20 @@ export const canUseWeakSet: boolean;
 
 // @public (undocumented)
 export function checkDocument(doc: DocumentNode): DocumentNode;
+
+// @public
+export class CleanStrongCache<K, V> extends StrongCache<K, V> {
+    constructor(max: number, dispose?: (value: V) => void);
+    // (undocumented)
+    set(key: K, value: V): V;
+}
+
+// @public
+export class CleanWeakCache<K extends object, V> extends WeakCache<K, V> {
+    constructor(max: number, dispose?: (value: V) => void);
+    // (undocumented)
+    set(key: K, value: V): V;
+}
 
 // @public
 export function cloneDeep<T>(value: T): T;

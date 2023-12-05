@@ -103,6 +103,7 @@ export class InternalQueryReference<TData = unknown> {
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
   private status: "idle" | "loading" = "loading";
+  private __disposed = false;
 
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
@@ -169,6 +170,10 @@ export class InternalQueryReference<TData = unknown> {
 
   get watchQueryOptions() {
     return this.observable.options;
+  }
+
+  get disposed() {
+    return this.__disposed;
   }
 
   retain() {
@@ -242,6 +247,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private dispose() {
+    this.__disposed = true;
     this.subscription.unsubscribe();
     this.onDispose();
   }

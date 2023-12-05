@@ -393,6 +393,70 @@ test("throws when error is returned", async () => {
   dispose();
 });
 
+test("returns error when error policy is 'all'", async () => {
+  // Disable error messages shown by React when an error is thrown to an error
+  // boundary
+  using _consoleSpy = spyOnConsole("error");
+  const { query } = useSimpleCase();
+  const mocks = [
+    { request: { query }, result: { errors: [new GraphQLError("Oops")] } },
+  ];
+  const client = createDefaultClient(mocks);
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData | undefined> | null,
+      error: null as Error | null,
+    },
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query, { errorPolicy: "all" });
+
+  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents(
+    Profiler,
+    queryRef
+  );
+
+  function ErrorFallback({ error }: { error: Error }) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ error });
+
+    return null;
+  }
+
+  function App() {
+    return (
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: undefined,
+      error: new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] }),
+      networkStatus: NetworkStatus.error,
+    });
+    expect(snapshot.error).toEqual(null);
+  }
+
+  dispose();
+});
+
 test("passes context to the link", async () => {
   interface QueryData {
     context: Record<string, any>;

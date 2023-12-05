@@ -85,17 +85,21 @@ function getWrapperInformation(f?: Function) {
 }
 
 function transformInfo(transform?: DocumentTransform): number[] {
-  return [
-    getWrapperInformation(transform?.["performWork"]),
-    ...transformInfo(transform?.["left"]),
-    ...transformInfo(transform?.["right"]),
-  ].filter(Boolean as any as (x: any) => x is number);
+  return !transform ?
+      []
+    : [
+        getWrapperInformation(transform?.["performWork"]),
+        ...transformInfo(transform?.["left"]),
+        ...transformInfo(transform?.["right"]),
+      ].filter(Boolean as any as (x: any) => x is number);
 }
 
 function linkInfo(link?: ApolloLink & { cacheSize?: number }): number[] {
-  return [
-    link?.cacheSize,
-    ...linkInfo(link?.left),
-    ...linkInfo(link?.right),
-  ].filter(Boolean as any as (x: any) => x is number);
+  return !link ?
+      []
+    : [
+        link?.cacheSize,
+        ...linkInfo(link?.left),
+        ...linkInfo(link?.right),
+      ].filter(Boolean as any as (x: any) => x is number);
 }

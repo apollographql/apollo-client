@@ -16,6 +16,7 @@ import {
   SimpleCaseData,
   VariablesCaseData,
   createProfiler,
+  spyOnConsole,
   useSimpleCase,
   useTrackRenders,
   useVariablesCase,
@@ -171,6 +172,66 @@ test("tears down the query when calling dispose", async () => {
 
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
+test("useReadQuery warns when called with a disposed queryRef", async () => {
+  using _consoleSpy = spyOnConsole("warn");
+  const { query, mocks } = useSimpleCase();
+  const client = createDefaultClient(mocks);
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query);
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
+
+  function App() {
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook />
+      </Suspense>
+    );
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  const { rerender } = renderWithClient(<App />, { client, wrapper: Profiler });
+
+  await Profiler.takeRender();
+  await Profiler.takeRender();
+
+  await expect(Profiler).not.toRerender();
+
+  dispose();
+
+  await wait(0);
+
+  rerender(<App />);
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    expect.stringContaining(
+      "'useReadQuery' was called with a disposed queryRef"
+    )
+  );
+
+  rerender(<App />);
+
+  // Ensure re-rendering again only shows the warning once
+  expect(console.warn).toHaveBeenCalledTimes(1);
 });
 
 describe.skip("type tests", () => {

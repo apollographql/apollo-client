@@ -234,6 +234,74 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
   expect(console.warn).toHaveBeenCalledTimes(1);
 });
 
+test("can handle cache updates", async () => {
+  const { query, mocks } = useSimpleCase();
+  const client = createDefaultClient(mocks);
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query);
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
+
+  function App() {
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook />
+      </Suspense>
+    );
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.writeQuery({
+    query,
+    data: { greeting: "Hello (updated)" },
+  });
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello (updated)" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  dispose();
+});
+
 describe.skip("type tests", () => {
   const client = new ApolloClient({
     cache: new InMemoryCache(),

@@ -94,7 +94,7 @@ function transformInfo(transform?: DocumentTransform): number[] {
       ].filter(Boolean as any as (x: any) => x is number);
 }
 
-function linkInfo(link?: ApolloLink & { cacheSize?: number }): number[] {
+function linkInfo(link?: ApolloLink): number[] {
   return !link ?
       []
     : [

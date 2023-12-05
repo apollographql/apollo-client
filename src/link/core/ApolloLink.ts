@@ -159,6 +159,20 @@ export class ApolloLink {
     return this;
   }
 
+  /**
+   * @internal
+   * Used to iterate through all links for caches that are concatenations of `split` links.
+   */
   readonly left?: ApolloLink;
+  /**
+   * @internal
+   * Used to iterate through all links for caches that are concatenations of `split` links.
+   */
   readonly right?: ApolloLink;
+
+  /**
+   * @internal
+   * Can be provided by a link that has an internal cache to report it's cache size.
+   */
+  readonly cacheSize?: number;
 }

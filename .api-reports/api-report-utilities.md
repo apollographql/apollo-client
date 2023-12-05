@@ -450,9 +450,11 @@ class CacheGroup {
 interface CacheSizes {
     canonicalStringify: number;
     documentTransform: number;
+    fragmentQueryDocuments: number;
     fragmentRegistryFindFragmentSpreads: number;
     fragmentRegistryLookup: number;
     fragmentRegistryTransform: number;
+    getVariableDefinitions: number;
     parser: number;
     persistedQueryHashes: number;
     print: number;

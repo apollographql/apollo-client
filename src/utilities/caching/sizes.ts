@@ -154,6 +154,26 @@ interface CacheSizes {
    * might involuntarily invalidate values in the `transform` cache.
    */
   fragmentRegistryFindFragmentSpreads: number;
+  /**
+   * Cache size for the `getFragmentDoc` method of [`ApolloCache`](../../cache/core/cache.ts).
+   *
+   * @defaultValue
+   * Defaults to `1000`.
+   *
+   * @remarks
+   * This function is called from `readFragment` with user-provided fragment definitions.
+   */
+  fragmentQueryDocuments: number;
+  /**
+   * Cache size for the `getVariableDefinitions` function in [`removeTypenameFromVariables`](../../link/remove-typename/removeTypenameFromVariables.ts).
+   *
+   * @defaultValue
+   * Defaults to `2000`.
+   *
+   * @remarks
+   * This function is called in a link with transformed DocumentNodes.
+   */
+  getVariableDefinitions: number;
 }
 
 const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
@@ -189,5 +209,7 @@ export const cacheSizes: CacheSizes = {
   fragmentRegistryTransform: 2000,
   fragmentRegistryLookup: 1000,
   fragmentRegistryFindFragmentSpreads: 4000,
+  fragmentQueryDocuments: 1000,
+  getVariableDefinitions: 2000,
   ...global[cacheSizeSymbol],
 };

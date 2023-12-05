@@ -126,10 +126,10 @@ class ApolloClient<TCacheShape> implements DataProxy {
     disableNetworkFetches: boolean;
     get documentTransform(): DocumentTransform;
     extract(optimistic?: boolean): TCacheShape;
-    // Warning: (ae-forgotten-export) The symbol "GetCacheStatus" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "getApolloClientCacheStatus" needs to be exported by the entry point index.d.ts
     //
     // @internal
-    getCacheStatus?: GetCacheStatus;
+    getCacheStatus?: typeof getApolloClientCacheStatus;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesInclude" needs to be exported by the entry point index.d.ts
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
     getResolvers(): Resolvers;
@@ -262,6 +262,8 @@ interface ApolloErrorOptions {
 // @public (undocumented)
 class ApolloLink {
     constructor(request?: RequestHandler);
+    // @internal
+    readonly cacheSize?: number;
     // (undocumented)
     static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
@@ -274,7 +276,7 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
-    // (undocumented)
+    // @internal
     readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
@@ -282,7 +284,7 @@ class ApolloLink {
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
-    // (undocumented)
+    // @internal
     readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
@@ -471,16 +473,6 @@ interface CacheSizes {
 //
 // @public
 export const cacheSizes: CacheSizes;
-
-// @public (undocumented)
-type CacheStatus = {
-    limits: CacheSizes;
-    sizes: {
-        [K in keyof CacheSizes]?: number | number[];
-    } & {
-        links?: number[];
-    };
-};
 
 // @public (undocumented)
 const enum CacheWriteBehavior {
@@ -1058,11 +1050,42 @@ interface FulfilledPromise<TValue> extends Promise<TValue> {
     value: TValue;
 }
 
+// Warning: (ae-forgotten-export) The symbol "_getApolloClientCacheStatus" needs to be exported by the entry point index.d.ts
+//
+// @internal
+const getApolloClientCacheStatus: typeof _getApolloClientCacheStatus | undefined;
+
 // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "CacheStatus" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type GetCacheStatus = (this: ApolloClient<any>) => CacheStatus;
+function _getApolloClientCacheStatus(this: ApolloClient<any>): {
+    limits: CacheSizes;
+    sizes: {
+        global: {
+            print: number | undefined;
+            parser: number | undefined;
+            canonicalStringify: number | undefined;
+        };
+        links: number[];
+        queryManager: {
+            Transforms: number;
+            documentTransforms: number[];
+        };
+        cache: {
+            addTypenameTransform: number[];
+            storeReader: {
+                executeSelectionSet: number | undefined;
+                executeSubSelectedArray: number | undefined;
+            };
+            maybeBroadcastWatch: number | undefined;
+            fragmentRegistry: {
+                findFragmentSpreads: number | undefined;
+                lookup: number | undefined;
+                transform: number | undefined;
+            };
+        } | undefined;
+    };
+};
 
 // @public (undocumented)
 export function getDefaultValues(definition: OperationDefinitionNode | undefined): Record<string, any>;
@@ -1093,6 +1116,26 @@ export function getGraphQLErrorsFromResult<T>(result: FetchResult<T>): GraphQLEr
 
 // @public (undocumented)
 export function getInclusionDirectives(directives: ReadonlyArray<DirectiveNode>): InclusionDirectives;
+
+// Warning: (ae-forgotten-export) The symbol "_getInMemoryCacheStatus" needs to be exported by the entry point index.d.ts
+//
+// @internal
+const getInMemoryCacheStatus: typeof _getInMemoryCacheStatus | undefined;
+
+// @public (undocumented)
+function _getInMemoryCacheStatus(this: InMemoryCache): {
+    addTypenameTransform: number[];
+    storeReader: {
+        executeSelectionSet: number | undefined;
+        executeSubSelectedArray: number | undefined;
+    };
+    maybeBroadcastWatch: number | undefined;
+    fragmentRegistry: {
+        findFragmentSpreads: number | undefined;
+        lookup: number | undefined;
+        transform: number | undefined;
+    };
+};
 
 // @public
 export function getMainDefinition(queryDoc: DocumentNode): OperationDefinitionNode | FragmentDefinitionNode;
@@ -1215,6 +1258,10 @@ class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         resetResultCache?: boolean;
         resetResultIdentities?: boolean;
     }): string[];
+    // Warning: (ae-forgotten-export) The symbol "getInMemoryCacheStatus" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getCacheStatus?: typeof getInMemoryCacheStatus;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // Warning: (ae-forgotten-export) The symbol "makeVar" needs to be exported by the entry point index.d.ts

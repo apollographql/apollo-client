@@ -15,6 +15,8 @@ import { SubscriptionClient } from 'subscriptions-transport-ws';
 // @public (undocumented)
 class ApolloLink {
     constructor(request?: RequestHandler);
+    // @internal
+    readonly cacheSize?: number;
     // (undocumented)
     static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
@@ -30,7 +32,7 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
-    // (undocumented)
+    // @internal
     readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
@@ -38,7 +40,7 @@ class ApolloLink {
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
-    // (undocumented)
+    // @internal
     readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;

@@ -474,6 +474,26 @@ export interface FragmentRegistryAPI {
     transform<D extends DocumentNode>(document: D): D;
 }
 
+// Warning: (ae-forgotten-export) The symbol "_getInMemoryCacheStatus" needs to be exported by the entry point index.d.ts
+//
+// @internal
+const getInMemoryCacheStatus: typeof _getInMemoryCacheStatus | undefined;
+
+// @public (undocumented)
+function _getInMemoryCacheStatus(this: InMemoryCache): {
+    addTypenameTransform: number[];
+    storeReader: {
+        executeSelectionSet: number | undefined;
+        executeSubSelectedArray: number | undefined;
+    };
+    maybeBroadcastWatch: number | undefined;
+    fragmentRegistry: {
+        findFragmentSpreads: number | undefined;
+        lookup: number | undefined;
+        transform: number | undefined;
+    };
+};
+
 // @public (undocumented)
 export type IdGetter = (value: IdGetterObj) => string | undefined;
 
@@ -513,6 +533,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         resetResultCache?: boolean;
         resetResultIdentities?: boolean;
     }): string[];
+    // Warning: (ae-forgotten-export) The symbol "getInMemoryCacheStatus" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getCacheStatus?: typeof getInMemoryCacheStatus;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)

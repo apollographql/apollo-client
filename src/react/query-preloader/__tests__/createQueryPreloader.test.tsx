@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { createQueryPreloader } from "../createQueryPreloader";
 import {
   ApolloClient,
+  ApolloError,
   ApolloLink,
   InMemoryCache,
   NetworkStatus,
@@ -14,6 +15,7 @@ import { expectTypeOf } from "expect-type";
 import { QueryReference } from "../../cache/QueryReference";
 import { DeepPartial, Observable } from "../../../utilities";
 import {
+  Profiler,
   SimpleCaseData,
   VariablesCaseData,
   createProfiler,
@@ -25,6 +27,8 @@ import {
 import { ApolloProvider } from "../../context";
 import { RenderOptions, render } from "@testing-library/react";
 import { UseReadQueryResult, useReadQuery } from "../../hooks";
+import { GraphQLError } from "graphql";
+import { ErrorBoundary } from "react-error-boundary";
 
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({
@@ -47,6 +51,31 @@ function renderWithClient(
       </ApolloProvider>
     ),
   });
+}
+
+function createDefaultProfiledComponents<
+  Snapshot extends {
+    result: UseReadQueryResult<any> | null;
+  },
+  TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null ?
+    TData
+  : unknown,
+>(profiler: Profiler<Snapshot>, queryRef: QueryReference<TData>) {
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    profiler.mergeSnapshot({
+      result: useReadQuery(queryRef),
+    } as Partial<Snapshot>);
+
+    return null;
+  }
+
+  return { SuspenseFallback, ReadQueryHook };
 }
 
 test("loads a query and suspends when passed to useReadQuery", async () => {
@@ -298,6 +327,67 @@ test("can handle cache updates", async () => {
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
+  }
+
+  dispose();
+});
+
+test("throws when error is returned", async () => {
+  // Disable error messages shown by React when an error is thrown to an error
+  // boundary
+  using _consoleSpy = spyOnConsole("error");
+  const { query } = useSimpleCase();
+  const mocks = [
+    { request: { query }, result: { errors: [new GraphQLError("Oops")] } },
+  ];
+  const client = createDefaultClient(mocks);
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      error: null as Error | null,
+    },
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query);
+
+  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents(
+    Profiler,
+    queryRef
+  );
+
+  function ErrorFallback({ error }: { error: Error }) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ error });
+
+    return null;
+  }
+
+  function App() {
+    return (
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ErrorFallback]);
+    expect(snapshot.error).toEqual(
+      new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] })
+    );
   }
 
   dispose();

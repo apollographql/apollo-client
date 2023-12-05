@@ -30,27 +30,45 @@ export function registerGlobalCache(
   globalCaches[name] = getSize;
 }
 
-export type GetCacheStatus = (this: ApolloClient<any>) => CacheStatus;
+/**
+ * For internal purposes only - please call `ApolloClient.getCacheStatus` instead
+ * @internal
+ */
+export const getApolloClientCacheStatus =
+  __DEV__ ? _getApolloClientCacheStatus : undefined;
 
 /**
  * For internal purposes only - please call `ApolloClient.getCacheStatus` instead
  * @internal
  */
-export const getCacheStatus: GetCacheStatus = function () {
-  if (!__DEV__) throw new Error("only supported in development mode");
-  const documentTransforms: Array<number> = [];
-  if ("addTypenameTransform" in this.cache) {
-    documentTransforms.push(
-      ...transformInfo(
-        (this.cache as any as InMemoryCache)["addTypenameTransform"]
-      )
-    );
-  }
-  documentTransforms.push(
-    ...transformInfo(this["queryManager"].documentTransform)
-  );
+export const getInMemoryCacheStatus =
+  __DEV__ ? _getInMemoryCacheStatus : undefined;
 
-  const fragments = (this.cache as InMemoryCache)["config"].fragments as
+function _getApolloClientCacheStatus(this: ApolloClient<any>) {
+  if (!__DEV__) throw new Error("only supported in development mode");
+
+  return {
+    limits: cacheSizes,
+    sizes: {
+      global: {
+        print: globalCaches.print?.(),
+        parser: globalCaches.parser?.(),
+        canonicalStringify: globalCaches.canonicalStringify?.(),
+      },
+      links: linkInfo(this.link),
+      queryManager: {
+        Transforms: this["queryManager"]["transformCache"].size,
+        documentTransforms: transformInfo(
+          this["queryManager"].documentTransform
+        ),
+      },
+      cache: (this.cache as InMemoryCache).getCacheStatus?.(),
+    },
+  };
+}
+
+function _getInMemoryCacheStatus(this: InMemoryCache) {
+  const fragments = this.config.fragments as
     | undefined
     | {
         findFragmentSpreads?: Function;
@@ -59,22 +77,25 @@ export const getCacheStatus: GetCacheStatus = function () {
       };
 
   return {
-    limits: cacheSizes,
-    sizes: {
-      print: globalCaches.print?.(),
-      parser: globalCaches.parser?.(),
-      canonicalStringify: globalCaches.canonicalStringify?.(),
-      documentTransform: documentTransforms,
-      links: linkInfo(this.link),
-      queryManagerTransforms: this["queryManager"]["transformCache"].size,
-      fragmentRegistryFindFragmentSpreads: getWrapperInformation(
+    addTypenameTransform: transformInfo(this["addTypenameTransform"]),
+    storeReader: {
+      executeSelectionSet: getWrapperInformation(
+        this["storeReader"]["executeSelectionSet"]
+      ),
+      executeSubSelectedArray: getWrapperInformation(
+        this["storeReader"]["executeSubSelectedArray"]
+      ),
+    },
+    maybeBroadcastWatch: getWrapperInformation(this["maybeBroadcastWatch"]),
+    fragmentRegistry: {
+      findFragmentSpreads: getWrapperInformation(
         fragments?.findFragmentSpreads
       ),
-      fragmentRegistryLookup: getWrapperInformation(fragments?.lookup),
-      fragmentRegistryTransform: getWrapperInformation(fragments?.transform),
+      lookup: getWrapperInformation(fragments?.lookup),
+      transform: getWrapperInformation(fragments?.transform),
     },
   };
-};
+}
 
 function isWrapper(f?: Function): f is OptimisticWrapperFunction<any, any> {
   return !!f && "dirtyKey" in f;

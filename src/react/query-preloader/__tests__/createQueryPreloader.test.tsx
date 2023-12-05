@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { createQueryPreloader } from "../createQueryPreloader";
 import {
   ApolloClient,
+  ApolloLink,
   InMemoryCache,
   NetworkStatus,
   TypedDocumentNode,
@@ -11,7 +12,7 @@ import {
 import { MockLink, MockedResponse, wait } from "../../../testing";
 import { expectTypeOf } from "expect-type";
 import { QueryReference } from "../../cache/QueryReference";
-import { DeepPartial } from "../../../utilities";
+import { DeepPartial, Observable } from "../../../utilities";
 import {
   SimpleCaseData,
   VariablesCaseData,
@@ -298,6 +299,77 @@ test("can handle cache updates", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  dispose();
+});
+
+test("passes context to the link", async () => {
+  interface QueryData {
+    context: Record<string, any>;
+  }
+
+  const query: TypedDocumentNode<QueryData, never> = gql`
+    query ContextQuery {
+      context
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        const { valueA, valueB } = operation.getContext();
+        setTimeout(() => {
+          observer.next({ data: { context: { valueA, valueB } } });
+          observer.complete();
+        }, 10);
+      });
+    }),
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query, {
+    context: { valueA: "A", valueB: "B" },
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<QueryData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
+
+  function App() {
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook />
+      </Suspense>
+    );
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  // initial render
+  await Profiler.takeRender();
+
+  const { snapshot } = await Profiler.takeRender();
+
+  expect(snapshot.result).toEqual({
+    data: { context: { valueA: "A", valueB: "B" } },
+    networkStatus: NetworkStatus.ready,
+    error: undefined,
+  });
 
   dispose();
 });

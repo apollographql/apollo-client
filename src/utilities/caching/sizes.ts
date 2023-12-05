@@ -174,6 +174,51 @@ interface CacheSizes {
    * This function is called in a link with transformed DocumentNodes.
    */
   getVariableDefinitions: number;
+  /**
+   * Cache size for the `maybeBroadcastWatch` method on [`InMemoryCache`](../../cache/inmemory/inMemoryCache.ts).
+   *
+   * `maybeBroadcastWatch` will be set to the `resultCacheMaxSize` option and
+   * will fall back to this configuration value if the option is not set.
+   *
+   * @defaultValue
+   * Defaults to `5000`.
+   *
+   * @remarks
+   * This method is used for dependency tracking in the `InMemoryCache` and
+   * prevents from unnecessary re-renders.
+   * It is recommended to keep this value significantly higher than the number of
+   * possible subscribers you will have active at the same time in your application
+   * at any time.
+   */
+  maybeBroadcastWatch: number;
+  /**
+   * Cache size for the `executeSelectionSet` method on [`StoreReader`](../../cache/inmemory/readFromStore.ts).
+   *
+   * `executeSelectionSet` will be set to the `resultCacheMaxSize` option and
+   * will fall back to this configuration value if the option is not set.
+   *
+   * @defaultValue
+   * Defaults to `10000`.
+   *
+   * @remarks
+   * Every object that is read from the cache will be cached here, so it is
+   * recommended to set this to a high value.
+   */
+  executeSelectionSet: number;
+  /**
+   * Cache size for the `executeSubSelectedArray` method on [`StoreReader`](../../cache/inmemory/readFromStore.ts).
+   *
+   * `executeSubSelectedArray` will be set to the `resultCacheMaxSize` option and
+   * will fall back to this configuration value if the option is not set.
+   *
+   * @defaultValue
+   * Defaults to `5000`.
+   *
+   * @remarks
+   * Every array that is read from the cache will be cached here, so it is
+   * recommended to set this to a high value.
+   */
+  executeSubSelectedArray: number;
 }
 
 const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
@@ -211,5 +256,8 @@ export const cacheSizes: CacheSizes = {
   fragmentRegistryFindFragmentSpreads: 4000,
   fragmentQueryDocuments: 1000,
   getVariableDefinitions: 2000,
+  maybeBroadcastWatch: 5000,
+  executeSelectionSet: 10000,
+  executeSubSelectedArray: 5000,
   ...global[cacheSizeSymbol],
 };

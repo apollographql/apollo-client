@@ -93,6 +93,24 @@ function createDefaultTestApp<TData>(queryRef: QueryReference<TData>) {
   return { App, Profiler };
 }
 
+function renderDefaultTestApp<TData>({
+  client,
+  queryRef,
+}: {
+  client: ApolloClient<any>;
+  queryRef: QueryReference<TData>;
+}) {
+  const { App, Profiler } = createDefaultTestApp(queryRef);
+
+  const utils = renderWithClient(<App />, { client, wrapper: Profiler });
+
+  function rerender() {
+    return utils.rerender(<App />);
+  }
+
+  return { ...utils, rerender, Profiler };
+}
+
 test("loads a query and suspends when passed to useReadQuery", async () => {
   const { query, mocks } = useSimpleCase();
   const client = createDefaultClient(mocks);
@@ -100,9 +118,7 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
 
   const [queryRef, dispose] = preloadQuery(query);
 
-  const { App, Profiler } = createDefaultTestApp(queryRef);
-
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -132,9 +148,7 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
     variables: { id: "1" },
   });
 
-  const { App, Profiler } = createDefaultTestApp(queryRef);
-
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -181,9 +195,7 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
   const preloadQuery = createQueryPreloader(client);
   const [queryRef, dispose] = preloadQuery(query);
 
-  const { App, Profiler } = createDefaultTestApp(queryRef);
-
-  const { rerender } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const { Profiler, rerender } = renderDefaultTestApp({ client, queryRef });
 
   await Profiler.takeRender();
   await Profiler.takeRender();
@@ -194,7 +206,7 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
 
   await wait(0);
 
-  rerender(<App />);
+  rerender();
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
@@ -203,7 +215,7 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
     )
   );
 
-  rerender(<App />);
+  rerender();
 
   // Ensure re-rendering again only shows the warning once
   expect(console.warn).toHaveBeenCalledTimes(1);
@@ -216,9 +228,7 @@ test("can handle cache updates", async () => {
   const preloadQuery = createQueryPreloader(client);
   const [queryRef, dispose] = preloadQuery(query);
 
-  const { App, Profiler } = createDefaultTestApp(queryRef);
-
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -267,9 +277,7 @@ test("throws when error is returned", async () => {
   const preloadQuery = createQueryPreloader(client);
   const [queryRef, dispose] = preloadQuery(query);
 
-  const { App, Profiler } = createDefaultTestApp(queryRef);
-
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -302,9 +310,7 @@ test("returns error when error policy is 'all'", async () => {
   const preloadQuery = createQueryPreloader(client);
   const [queryRef, dispose] = preloadQuery(query, { errorPolicy: "all" });
 
-  const { App, Profiler } = createDefaultTestApp(queryRef);
-
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -340,9 +346,7 @@ test("discards error when error policy is 'ignore'", async () => {
   const preloadQuery = createQueryPreloader(client);
   const [queryRef, dispose] = preloadQuery(query, { errorPolicy: "ignore" });
 
-  const { App, Profiler } = createDefaultTestApp(queryRef);
-
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -394,9 +398,7 @@ test("passes context to the link", async () => {
     context: { valueA: "A", valueB: "B" },
   });
 
-  const { App, Profiler } = createDefaultTestApp(queryRef);
-
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
   // initial render
   await Profiler.takeRender();
@@ -466,9 +468,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
     returnPartialData: true,
   });
 
-  const { App, Profiler } = createDefaultTestApp(queryRef);
-
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();

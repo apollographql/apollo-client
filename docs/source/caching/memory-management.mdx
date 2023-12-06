@@ -1,0 +1,49 @@
+---
+title: Memory management
+api_doc:
+  - "@apollo/client!cacheSizes:var"
+  - "@apollo/client!CacheSizes:interface"
+---
+
+## Cache Sizes
+
+For better performance, Apollo Client caches a lot of internally calculated values.
+In most cases, these values are cached in WeakCaches, which means that if the
+source object is garbage-collected, the cached value will be garbage-collected,
+too.
+
+Additionally, those caches are LRU caches, which means that if the cache is full,
+the least recently used value will be garbage-collected.
+
+Depending on your application you might want to tweak the cache size to fit your
+needs.
+
+You can do this in two ways:
+
+### Setting Cache Sizes before loading the Apollo Client library
+
+This is the recommended way to set the cache sizes, as it will allow you to set
+cache sizes before the Apollo Client library is loaded (some caches will already
+be initialized when the library is loaded, and changed cache sizes will only
+affect caches created after the fact).
+
+<DocPiece canonicalReference="@apollo/client!cacheSizes:var" example />
+
+### Adjusting Cache Sizes after loading the Apollo Client library
+
+You can also adjust cache sizes after loading the library.
+
+```js
+import { cacheSizes } from '@apollo/client/utilities';
+import { print } from '@apollo/client'
+
+cacheSizes.print = 100;
+// cache sizes changed this way will only take effect for caches created after
+// the cache size has been changed, so we need to reset the cache for it to be effective
+
+print.reset();
+```
+
+### Cache Details
+
+<InterfaceDetails canonicalReference="@apollo/client!CacheSizes:interface" />

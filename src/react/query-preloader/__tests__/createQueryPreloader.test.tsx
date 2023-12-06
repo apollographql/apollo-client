@@ -12,7 +12,7 @@ import {
 } from "../../../core";
 import { MockLink, MockedResponse, wait } from "../../../testing";
 import { expectTypeOf } from "expect-type";
-import { QueryReference } from "../../cache/QueryReference";
+import { QueryReference, unwrapQueryRef } from "../../cache/QueryReference";
 import { DeepPartial, Observable } from "../../../utilities";
 import {
   Profiler,
@@ -590,6 +590,36 @@ test("passes context to the link", async () => {
   });
 
   dispose();
+});
+
+test("creates unique query refs when provided with a queryKey", async () => {
+  const { query } = useSimpleCase();
+
+  const mocks: MockedResponse[] = [
+    {
+      request: { query },
+      result: { data: { greeting: "Hello" } },
+      maxUsageCount: Infinity,
+    },
+  ];
+
+  const client = createDefaultClient(mocks);
+  const preloadQuery = createQueryPreloader(client);
+
+  const [queryRef1, dispose1] = preloadQuery(query);
+  const [queryRef2, dispose2] = preloadQuery(query);
+  const [queryRef3, dispose3] = preloadQuery(query, { queryKey: 1 });
+
+  const [unwrappedQueryRef1] = unwrapQueryRef(queryRef1);
+  const [unwrappedQueryRef2] = unwrapQueryRef(queryRef2);
+  const [unwrappedQueryRef3] = unwrapQueryRef(queryRef3);
+
+  expect(unwrappedQueryRef2).toBe(unwrappedQueryRef1);
+  expect(unwrappedQueryRef3).not.toBe(unwrappedQueryRef1);
+
+  dispose1();
+  dispose2();
+  dispose3();
 });
 
 describe.skip("type tests", () => {

@@ -38,7 +38,6 @@ export class SuspenseCache {
 
     if (!ref.current) {
       ref.current = new InternalQueryReference(createObservable(), {
-        key: cacheKey,
         autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
         onDispose: () => {
           delete ref.current;

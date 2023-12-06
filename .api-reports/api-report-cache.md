@@ -195,9 +195,9 @@ export const cacheSlot: {
     withValue<TResult, TArgs extends any[], TThis = any>(value: ApolloCache<any>, callback: (this: TThis, ...args: TArgs) => TResult, args?: TArgs | undefined, thisArg?: TThis | undefined): TResult;
 };
 
-// @public (undocumented)
+// @public
 export const canonicalStringify: ((value: any) => string) & {
-    reset: typeof resetCanonicalStringify;
+    reset(): void;
 };
 
 // @public (undocumented)
@@ -332,7 +332,10 @@ export abstract class EntityStore implements NormalizedCache {
     has(dataId: string): boolean;
     // (undocumented)
     protected lookup(dataId: string, dependOnExistence?: boolean): StoreObject | undefined;
-    // (undocumented)
+    makeCacheKey(document: DocumentNode, callback: Cache_2.WatchCallback<any>, details: string): object;
+    makeCacheKey(selectionSet: SelectionSetNode, parent: string | StoreObject, varString: string | undefined, canonizeResults: boolean): object;
+    makeCacheKey(field: FieldNode, array: readonly any[], varString: string | undefined): object;
+    // @deprecated (undocumented)
     makeCacheKey(...args: any[]): object;
     // (undocumented)
     merge(older: string | StoreObject, newer: StoreObject | string): void;
@@ -465,6 +468,8 @@ export interface FragmentRegistryAPI {
     lookup(fragmentName: string): FragmentDefinitionNode | null;
     // (undocumented)
     register(...fragments: DocumentNode[]): this;
+    // (undocumented)
+    resetCaches(): void;
     // (undocumented)
     transform<D extends DocumentNode>(document: D): D;
 }
@@ -841,9 +846,6 @@ export interface Reference {
 }
 
 // @public (undocumented)
-function resetCanonicalStringify(): void;
-
-// @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
 // @public (undocumented)
@@ -931,10 +933,9 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/inmemory/object-canon.ts:203:32 - (ae-forgotten-export) The symbol "resetCanonicalStringify" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:98:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:92:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:132:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

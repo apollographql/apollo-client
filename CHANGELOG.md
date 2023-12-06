@@ -1,5 +1,65 @@
 # @apollo/client
 
+## 3.9.0-alpha.5
+
+### Minor Changes
+
+- [#11345](https://github.com/apollographql/apollo-client/pull/11345) [`1759066a8`](https://github.com/apollographql/apollo-client/commit/1759066a8f9a204e49228568aef9446a64890ff3) Thanks [@phryneas](https://github.com/phryneas)! - `QueryManager.inFlightLinkObservables` now uses a strong `Trie` as an internal data structure.
+
+  #### Warning: requires `@apollo/experimental-nextjs-app-support` update
+
+  If you are using `@apollo/experimental-nextjs-app-support`, you will need to update that to at least 0.5.2, as it accesses this internal data structure.
+
+- [#11300](https://github.com/apollographql/apollo-client/pull/11300) [`a8158733c`](https://github.com/apollographql/apollo-client/commit/a8158733cfa3e65180ec23518d657ea41894bb2b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduces a new `useLoadableQuery` hook. This hook works similarly to `useBackgroundQuery` in that it returns a `queryRef` that can be used to suspend a component via the `useReadQuery` hook. It provides a more ergonomic way to load the query during a user interaction (for example when wanting to preload some data) that would otherwise be clunky with `useBackgroundQuery`.
+
+  ```tsx
+  function App() {
+    const [loadQuery, queryRef, { refetch, fetchMore, reset }] =
+      useLoadableQuery(query, options);
+
+    return (
+      <>
+        <button onClick={() => loadQuery(variables)}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function Child({ queryRef }) {
+    const { data } = useReadQuery(queryRef);
+
+    // ...
+  }
+  ```
+
+### Patch Changes
+
+- [#11356](https://github.com/apollographql/apollo-client/pull/11356) [`cc4ac7e19`](https://github.com/apollographql/apollo-client/commit/cc4ac7e1917f046bcd177882727864eed40b910e) Thanks [@phryneas](https://github.com/phryneas)! - Fix a potential memory leak in `FragmentRegistry.transform` and `FragmentRegistry.findFragmentSpreads` that would hold on to passed-in `DocumentNodes` for too long.
+
+- [#11370](https://github.com/apollographql/apollo-client/pull/11370) [`25e2cb431`](https://github.com/apollographql/apollo-client/commit/25e2cb431c76ec5aa88202eaacbd98fad42edc7f) Thanks [@phryneas](https://github.com/phryneas)! - `parse` function: improve memory management
+
+  - use LRU `WeakCache` instead of `Map` to keep a limited number of parsed results
+  - cache is initiated lazily, only when needed
+  - expose `parse.resetCache()` method
+
+- [#11389](https://github.com/apollographql/apollo-client/pull/11389) [`139acd115`](https://github.com/apollographql/apollo-client/commit/139acd1153afa1445b69dcb4e139668ab8c5889a) Thanks [@phryneas](https://github.com/phryneas)! - `documentTransform`: use `optimism` and `WeakCache` instead of directly storing data on the `Trie`
+
+- [#11358](https://github.com/apollographql/apollo-client/pull/11358) [`7d939f80f`](https://github.com/apollographql/apollo-client/commit/7d939f80fbc2c419c58a6c55b6a35ee7474d0379) Thanks [@phryneas](https://github.com/phryneas)! - Fixes a potential memory leak in `Concast` that might have been triggered when `Concast` was used outside of Apollo Client.
+
+- [#11344](https://github.com/apollographql/apollo-client/pull/11344) [`bd2667619`](https://github.com/apollographql/apollo-client/commit/bd2667619700139af32a45364794d11f845ab6cf) Thanks [@phryneas](https://github.com/phryneas)! - Add a `resetCache` method to `DocumentTransform` and hook `InMemoryCache.addTypenameTransform` up to `InMemoryCache.gc`
+
+- [#11367](https://github.com/apollographql/apollo-client/pull/11367) [`30d17bfeb`](https://github.com/apollographql/apollo-client/commit/30d17bfebe44dbfa7b78c8982cfeb49afd37129c) Thanks [@phryneas](https://github.com/phryneas)! - `print`: use `WeakCache` instead of `WeakMap`
+
+- [#11385](https://github.com/apollographql/apollo-client/pull/11385) [`d9ca4f082`](https://github.com/apollographql/apollo-client/commit/d9ca4f0821c66ae4f03cf35a7ac93fe604cc6de3) Thanks [@phryneas](https://github.com/phryneas)! - ensure `defaultContext` is also used for mutations and subscriptions
+
+- [#11387](https://github.com/apollographql/apollo-client/pull/11387) [`4dce8673b`](https://github.com/apollographql/apollo-client/commit/4dce8673b1757d8a3a4edd2996d780e86fad14e3) Thanks [@phryneas](https://github.com/phryneas)! - `QueryManager.transformCache`: use `WeakCache` instead of `WeakMap`
+
+- [#11371](https://github.com/apollographql/apollo-client/pull/11371) [`ebd8fe2c1`](https://github.com/apollographql/apollo-client/commit/ebd8fe2c1b8b50bfeb2da20aeca5671300fb5564) Thanks [@phryneas](https://github.com/phryneas)! - Clarify types of `EntityStore.makeCacheKey`.
+
+- [#11355](https://github.com/apollographql/apollo-client/pull/11355) [`7d8e18493`](https://github.com/apollographql/apollo-client/commit/7d8e18493cd13134726c6643cbf0fadb08be2d37) Thanks [@phryneas](https://github.com/phryneas)! - InMemoryCache.gc now also triggers FragmentRegistry.resetCaches (if there is a FragmentRegistry)
+
 ## 3.8.8
 
 ### Patch Changes
@@ -9,6 +69,124 @@
 - [#11332](https://github.com/apollographql/apollo-client/pull/11332) [`291aea56b`](https://github.com/apollographql/apollo-client/commit/291aea56bfaed3987a98be7fe4e6160114b62d2d) Thanks [@asvishnyakov](https://github.com/asvishnyakov)! - Add missed reexports of MutationFetchPolicy and RefetchWritePolicy to @apollo/client/core
 
 - [#10931](https://github.com/apollographql/apollo-client/pull/10931) [`e5acf910e`](https://github.com/apollographql/apollo-client/commit/e5acf910e39752b453540b6751046d1c19b66350) Thanks [@phryneas](https://github.com/phryneas)! - `useMutation`: also reset internal state on reset
+
+## 3.9.0-alpha.4
+
+### Minor Changes
+
+- [#11175](https://github.com/apollographql/apollo-client/pull/11175) [`d6d14911c`](https://github.com/apollographql/apollo-client/commit/d6d14911c40782cd6d69167b6f6169c890091ccb) Thanks [@phryneas](https://github.com/phryneas)! - To work around issues in React Server Components, especially with bundling for
+  the Next.js "edge" runtime we now use an external package to wrap `react` imports
+  instead of importing React directly.
+
+### Patch Changes
+
+- [#11343](https://github.com/apollographql/apollo-client/pull/11343) [`776631de4`](https://github.com/apollographql/apollo-client/commit/776631de4500d56252f6f5fdaf29a81c41dfbdc7) Thanks [@phryneas](https://github.com/phryneas)! - Add `reset` method to `print`, hook up to `InMemoryCache.gc`
+
+## 3.9.0-alpha.3
+
+### Minor Changes
+
+- [#11301](https://github.com/apollographql/apollo-client/pull/11301) [`46ab032af`](https://github.com/apollographql/apollo-client/commit/46ab032af83a01f184bfcce5edba4b55dbb2962a) Thanks [@alessbell](https://github.com/alessbell)! - Add multipart subscription network adapters for Relay and urql
+
+  ### Relay
+
+  ```tsx
+  import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/relay";
+  import { Environment, Network, RecordSource, Store } from "relay-runtime";
+
+  const fetchMultipartSubs = createFetchMultipartSubscription(
+    "http://localhost:4000"
+  );
+
+  const network = Network.create(fetchQuery, fetchMultipartSubs);
+
+  export const RelayEnvironment = new Environment({
+    network,
+    store: new Store(new RecordSource()),
+  });
+  ```
+
+  ### Urql
+
+  ```tsx
+  import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/urql";
+  import { Client, fetchExchange, subscriptionExchange } from "@urql/core";
+
+  const url = "http://localhost:4000";
+
+  const multipartSubscriptionForwarder = createFetchMultipartSubscription(url);
+
+  const client = new Client({
+    url,
+    exchanges: [
+      fetchExchange,
+      subscriptionExchange({
+        forwardSubscription: multipartSubscriptionForwarder,
+      }),
+    ],
+  });
+  ```
+
+### Patch Changes
+
+- [#11275](https://github.com/apollographql/apollo-client/pull/11275) [`3862f9ba9`](https://github.com/apollographql/apollo-client/commit/3862f9ba9086394c4cf4c2ecd99e8e0f6cf44885) Thanks [@phryneas](https://github.com/phryneas)! - Add a `defaultContext` option and property on `ApolloClient`, e.g. for keeping track of changing auth tokens or dependency injection.
+
+  This can be used e.g. in authentication scenarios, where a new token might be
+  generated outside of the link chain and should passed into the link chain.
+
+  ```js
+  import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
+  import { setContext } from "@apollo/client/link/context";
+
+  const httpLink = createHttpLink({
+    uri: "/graphql",
+  });
+
+  const authLink = setContext((_, { headers, token }) => {
+    return {
+      headers: {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : "",
+      },
+    };
+  });
+
+  const client = new ApolloClient({
+    link: authLink.concat(httpLink),
+    cache: new InMemoryCache(),
+  });
+
+  // somewhere else in your application
+  function onNewToken(newToken) {
+    // token can now be changed for future requests without need for a global
+    // variable, scoped ref or recreating the client
+    client.defaultContext.token = newToken;
+  }
+  ```
+
+- [#11297](https://github.com/apollographql/apollo-client/pull/11297) [`c8c76a522`](https://github.com/apollographql/apollo-client/commit/c8c76a522e593de0d06cff73fde2d9e88152bed6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an explicit return type for the `useReadQuery` hook called `UseReadQueryResult`. Previously the return type of this hook was inferred from the return value.
+
+## 3.9.0-alpha.2
+
+### Patch Changes
+
+- [#11254](https://github.com/apollographql/apollo-client/pull/11254) [`d08970d34`](https://github.com/apollographql/apollo-client/commit/d08970d348cf4ad6d80c6baf85b4a4cd4034a3bb) Thanks [@benjamn](https://github.com/benjamn)! - Decouple `canonicalStringify` from `ObjectCanon` for better time and memory performance.
+
+## 3.9.0-alpha.1
+
+### Minor Changes
+
+- [#11178](https://github.com/apollographql/apollo-client/pull/11178) [`4d64a6fa2`](https://github.com/apollographql/apollo-client/commit/4d64a6fa2ad5abe6f7f172c164f5e1fc2cb89829) Thanks [@sebakerckhof](https://github.com/sebakerckhof)! - Support re-using of mocks in the MockedProvider
+
+## 3.9.0-alpha.0
+
+### Minor Changes
+
+- [#11202](https://github.com/apollographql/apollo-client/pull/11202) [`7c2bc08b2`](https://github.com/apollographql/apollo-client/commit/7c2bc08b2ab46b9aa181d187a27aec2ad7129599) Thanks [@benjamn](https://github.com/benjamn)! - Prevent `QueryInfo#markResult` mutation of `result.data` and return cache data consistently whether complete or incomplete.
+
+- [#6701](https://github.com/apollographql/apollo-client/pull/6701) [`8d2b4e107`](https://github.com/apollographql/apollo-client/commit/8d2b4e107d7c21563894ced3a65d631183b58fd9) Thanks [@prowe](https://github.com/prowe)! - Ability to dynamically match mocks
+
+  Adds support for a new property `MockedResponse.variableMatcher`: a predicate function that accepts a `variables` param. If `true`, the `variables` will be passed into the `ResultFunction` to help dynamically build a response.
 
 ## 3.8.7
 

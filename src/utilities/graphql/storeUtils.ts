@@ -24,6 +24,7 @@ import type {
 import { isNonNullObject } from "../common/objects.js";
 import type { FragmentMap } from "./fragments.js";
 import { getFragmentFromSelection } from "./fragments.js";
+import { canonicalStringify } from "../common/canonicalStringify.js";
 
 export interface Reference {
   readonly __ref: string;
@@ -212,6 +213,11 @@ const KNOWN_DIRECTIVES: string[] = [
   "nonreactive",
 ];
 
+// Default stable JSON.stringify implementation used by getStoreKeyName. Can be
+// updated/replaced with something better by calling
+// getStoreKeyName.setStringify(newStringifyFunction).
+let storeKeyNameStringify: (value: any) => string = canonicalStringify;
+
 export const getStoreKeyName = Object.assign(
   function (
     fieldName: string,
@@ -239,7 +245,9 @@ export const getStoreKeyName = Object.assign(
           filteredArgs[key] = args[key];
         });
 
-        return `${directives["connection"]["key"]}(${stringify(filteredArgs)})`;
+        return `${directives["connection"]["key"]}(${storeKeyNameStringify(
+          filteredArgs
+        )})`;
       } else {
         return directives["connection"]["key"];
       }
@@ -251,7 +259,7 @@ export const getStoreKeyName = Object.assign(
       // We can't use `JSON.stringify` here since it's non-deterministic,
       // and can lead to different store key names being created even though
       // the `args` object used during creation has the same properties/values.
-      const stringifiedArgs: string = stringify(args);
+      const stringifiedArgs: string = storeKeyNameStringify(args);
       completeFieldName += `(${stringifiedArgs})`;
     }
 
@@ -259,7 +267,9 @@ export const getStoreKeyName = Object.assign(
       Object.keys(directives).forEach((key) => {
         if (KNOWN_DIRECTIVES.indexOf(key) !== -1) return;
         if (directives[key] && Object.keys(directives[key]).length) {
-          completeFieldName += `@${key}(${stringify(directives[key])})`;
+          completeFieldName += `@${key}(${storeKeyNameStringify(
+            directives[key]
+          )})`;
         } else {
           completeFieldName += `@${key}`;
         }
@@ -269,34 +279,13 @@ export const getStoreKeyName = Object.assign(
     return completeFieldName;
   },
   {
-    setStringify(s: typeof stringify) {
-      const previous = stringify;
-      stringify = s;
+    setStringify(s: typeof storeKeyNameStringify) {
+      const previous = storeKeyNameStringify;
+      storeKeyNameStringify = s;
       return previous;
     },
   }
 );
-
-// Default stable JSON.stringify implementation. Can be updated/replaced with
-// something better by calling getStoreKeyName.setStringify.
-let stringify = function defaultStringify(value: any): string {
-  return JSON.stringify(value, stringifyReplacer);
-};
-
-function stringifyReplacer(_key: string, value: any): any {
-  if (isNonNullObject(value) && !Array.isArray(value)) {
-    value = Object.keys(value)
-      .sort()
-      .reduce(
-        (copy, key) => {
-          copy[key] = value[key];
-          return copy;
-        },
-        {} as Record<string, any>
-      );
-  }
-  return value;
-}
 
 export function argumentsObjectFromField(
   field: FieldNode | DirectiveNode,

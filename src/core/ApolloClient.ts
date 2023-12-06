@@ -94,6 +94,7 @@ export interface ApolloClientOptions<TCacheShape> {
    * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
    */
   defaultOptions?: DefaultOptions;
+  defaultContext?: Partial<DefaultContext>;
   /**
    * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
    *
@@ -195,6 +196,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         __DEV__,
       queryDeduplication = true,
       defaultOptions,
+      defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
       resolvers,
       typeDefs,
@@ -243,6 +245,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       cache: this.cache,
       link: this.link,
       defaultOptions: this.defaultOptions,
+      defaultContext,
       documentTransform,
       queryDeduplication,
       ssrMode,
@@ -738,5 +741,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    */
   public setLink(newLink: ApolloLink) {
     this.link = this.queryManager.link = newLink;
+  }
+
+  public get defaultContext() {
+    return this.queryManager.defaultContext;
   }
 }

@@ -9,6 +9,7 @@ import { parseArgs } from "node:util";
 
 // @ts-ignore
 import { map } from "./entryPoints.js";
+import { readFileSync } from "fs";
 
 const parsed = parseArgs({
   options: {
@@ -55,7 +56,7 @@ map((entryPoint: { dirs: string[] }) => {
   };
 
   configObject.apiReport!.reportFileName = `api-report${
-    path ? "-" + path.replace("/", "_") : ""
+    path ? "-" + path.replace(/\//g, "_") : ""
   }.md`;
 
   configObject.apiReport!.enabled =
@@ -83,13 +84,35 @@ map((entryPoint: { dirs: string[] }) => {
     showVerboseMessages: true,
   });
 
-  if (extractorResult.succeeded) {
+  let succeededAdditionalChecks = true;
+  const contents = readFileSync(extractorConfig.reportFilePath, "utf8");
+
+  if (contents.includes("rehackt")) {
+    succeededAdditionalChecks = false;
+    console.error(
+      "❗ %s contains a reference to the `rehackt` package!",
+      extractorConfig.reportFilePath
+    );
+  }
+  if (contents.includes('/// <reference types="react" />')) {
+    succeededAdditionalChecks = false;
+    console.error(
+      "❗ %s contains a reference to the global `React` type!/n" +
+        'Use `import type * as ReactTypes from "react";` instead',
+      extractorConfig.reportFilePath
+    );
+  }
+
+  if (extractorResult.succeeded && succeededAdditionalChecks) {
     console.log(`✅ API Extractor completed successfully`);
   } else {
     console.error(
       `❗ API Extractor completed with ${extractorResult.errorCount} errors` +
         ` and ${extractorResult.warningCount} warnings`
     );
+    if (!succeededAdditionalChecks) {
+      console.error("Additional checks failed.");
+    }
     process.exitCode = 1;
   }
 });

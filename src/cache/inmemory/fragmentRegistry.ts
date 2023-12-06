@@ -6,7 +6,6 @@ import type {
 } from "graphql";
 import { visit } from "graphql";
 
-import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
 import type { FragmentMap } from "../../utilities/index.js";
@@ -16,6 +15,7 @@ export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;
   lookup(fragmentName: string): FragmentDefinitionNode | null;
   transform<D extends DocumentNode>(document: D): D;
+  resetCaches(): void;
 }
 
 // As long as createFragmentRegistry is not imported or used, the
@@ -65,15 +65,12 @@ class FragmentRegistry implements FragmentRegistryAPI {
   private invalidate(name: string) {}
 
   public resetCaches() {
-    this.invalidate = (this.lookup = this.cacheUnaryMethod(this.lookup)).dirty; // This dirty function is bound to the wrapped lookup method.
-    this.transform = this.cacheUnaryMethod(this.transform);
-    this.findFragmentSpreads = this.cacheUnaryMethod(this.findFragmentSpreads);
-  }
-
-  private cacheUnaryMethod<F extends (arg: any) => any>(originalMethod: F) {
-    return wrap<Parameters<F>, ReturnType<F>>(originalMethod.bind(this), {
+    const proto = FragmentRegistry.prototype;
+    this.invalidate = (this.lookup = wrap(proto.lookup.bind(this), {
       makeCacheKey: (arg) => arg,
-    }) as OptimisticWrapperFunction<Parameters<F>, ReturnType<F>> & F;
+    })).dirty; // This dirty function is bound to the wrapped lookup method.
+    this.transform = wrap(proto.transform.bind(this));
+    this.findFragmentSpreads = wrap(proto.findFragmentSpreads.bind(this));
   }
 
   public lookup(fragmentName: string): FragmentDefinitionNode | null {

@@ -1,14 +1,26 @@
+import type { ASTNode } from "graphql";
 import { print as origPrint } from "graphql";
-import { canUseWeakMap } from "../common/canUse.js";
+import { WeakCache } from "@wry/caches";
 
-const printCache = canUseWeakMap ? new WeakMap() : undefined;
-export const print: typeof origPrint = (ast) => {
-  let result;
-  result = printCache?.get(ast);
+let printCache!: WeakCache<ASTNode, string>;
+export const print = Object.assign(
+  (ast: ASTNode) => {
+    let result = printCache.get(ast);
 
-  if (!result) {
-    result = origPrint(ast);
-    printCache?.set(ast, result);
+    if (!result) {
+      result = origPrint(ast);
+      printCache.set(ast, result);
+    }
+    return result;
+  },
+  {
+    reset() {
+      printCache = new WeakCache<
+        ASTNode,
+        string
+      >(/** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */);
+    },
   }
-  return result;
-};
+);
+
+print.reset();

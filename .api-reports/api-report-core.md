@@ -398,9 +398,14 @@ class CacheGroup {
 interface CacheSizes {
     canonicalStringify: number;
     documentTransform: number;
+    executeSelectionSet: number;
+    executeSubSelectedArray: number;
+    fragmentQueryDocuments: number;
     fragmentRegistryFindFragmentSpreads: number;
     fragmentRegistryLookup: number;
     fragmentRegistryTransform: number;
+    getVariableDefinitions: number;
+    maybeBroadcastWatch: number;
     parser: number;
     persistedQueryHashes: number;
     print: number;

@@ -20,7 +20,7 @@ declare global {
  * In most applications, it will be very unlikely that 1000 different queries
  * are on screen at the same time.
  */
-interface CacheSizes {
+export interface CacheSizes {
   /**
    * Cache size for the [`print`](../../utilities/graphql/print.ts) function.
    *
@@ -241,7 +241,7 @@ const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
  * ```ts
  * globalThis[Symbol.for("apollo.cacheSize")] = {
  *  parser: 100
- * }
+ * } satisfies Partial<CacheSizes> // the `satisfies` is optional if using TypeScript
  * ```
  */
 export const cacheSizes: CacheSizes = {

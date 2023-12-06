@@ -137,3 +137,4 @@ export {
   CleanWeakCache,
   cacheSizes,
 } from "./caching/index.js";
+export type { CacheSizes } from "./caching/index.js";

@@ -279,6 +279,77 @@ test("ignores cached result and suspends when `fetchPolicy` is network-only", as
   dispose();
 });
 
+test("does not cache results when `fetchPolicy` is no-cache", async () => {
+  const { query, mocks } = useSimpleCase();
+
+  const client = createDefaultClient(mocks);
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query, {
+    fetchPolicy: "no-cache",
+  });
+
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(client.extract()).toEqual({});
+
+  dispose();
+});
+
+test("returns initial cache data followed by network data when `fetchPolicy` is cache-and-network", async () => {
+  const { query, mocks } = useSimpleCase();
+
+  const client = createDefaultClient(mocks);
+  client.writeQuery({ query, data: { greeting: "Cached Hello" } });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query, {
+    fetchPolicy: "cache-and-network",
+  });
+
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Cached Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  dispose();
+});
+
 test("throws when error is returned", async () => {
   // Disable error messages shown by React when an error is thrown to an error
   // boundary

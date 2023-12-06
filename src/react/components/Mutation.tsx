@@ -1,12 +1,13 @@
-import * as PropTypes from 'prop-types';
+import * as PropTypes from "prop-types";
+import type * as ReactTypes from "react";
 
-import { OperationVariables } from '../../core';
-import { MutationComponentOptions } from './types';
-import { useMutation } from '../hooks';
+import type { OperationVariables } from "../../core/index.js";
+import type { MutationComponentOptions } from "./types.js";
+import { useMutation } from "../hooks/index.js";
 
 export function Mutation<TData = any, TVariables = OperationVariables>(
   props: MutationComponentOptions<TData, TVariables>
-) {
+): ReactTypes.JSX.Element | null {
   const [runMutation, result] = useMutation(props.mutation, props);
   return props.children ? props.children(runMutation, result) : null;
 }
@@ -23,7 +24,7 @@ Mutation.propTypes = {
     PropTypes.arrayOf(
       PropTypes.oneOfType([PropTypes.string, PropTypes.object])
     ),
-    PropTypes.func
+    PropTypes.func,
   ]),
   awaitRefetchQueries: PropTypes.bool,
   update: PropTypes.func,

@@ -1,18 +1,18 @@
 /** @jest-environment node */
-import * as React from 'react';
-import * as ReactDOM from 'react-dom/server';
-import gql from 'graphql-tag';
-import { print } from 'graphql';
-import fetchMock from 'fetch-mock';
+import * as React from "react";
+import * as ReactDOM from "react-dom/server";
+import gql from "graphql-tag";
+import { print } from "graphql";
+import fetchMock from "fetch-mock";
 
-import { ApolloProvider } from '../../../react/context';
-import { InMemoryCache as Cache } from '../../../cache/inmemory/inMemoryCache';
-import { ApolloClient } from '../../../core/ApolloClient';
-import { createHttpLink } from '../../http/createHttpLink';
-import { graphql } from '../../../react/hoc/graphql';
-import { getDataFromTree } from '../../../react/ssr/getDataFromTree';
-import { createPersistedQueryLink as createPersistedQuery, VERSION } from '..';
-import { sha256 } from './persisted-queries.test';
+import { ApolloProvider } from "../../../react/context";
+import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache";
+import { ApolloClient } from "../../../core/ApolloClient";
+import { createHttpLink } from "../../http/createHttpLink";
+import { graphql } from "../../../react/hoc/graphql";
+import { getDataFromTree } from "../../../react/ssr/getDataFromTree";
+import { createPersistedQueryLink as createPersistedQuery, VERSION } from "..";
+import { sha256 } from "./persisted-queries.test";
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint
@@ -33,7 +33,7 @@ const query = gql`
 
 const variables = {
   filter: {
-    $filter: 'smash',
+    $filter: "smash",
   },
 };
 const variables2 = {
@@ -51,12 +51,16 @@ const queryString = print(query);
 
 const hash = sha256(queryString);
 
-describe('react application', () => {
+describe("react application", () => {
   beforeEach(async () => {
     fetchMock.restore();
   });
-  it('works on a simple tree', async () => {
-    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response })), { repeat: 1 });
+  it("works on a simple tree", async () => {
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response })),
+      { repeat: 1 }
+    );
     // `repeat: 1` simulates a `mockResponseOnce` API with fetch-mock:
     // it limits the number of times the route can be used,
     // after which the call to `fetch()` will fall through to be
@@ -64,7 +68,11 @@ describe('react application', () => {
     // With `overwriteRoutes = false`, this means
     // subsequent /graphql mocks will be used
     // see: http://www.wheresrhys.co.uk/fetch-mock/#usageconfiguration
-    fetchMock.post("/graphql", () => new Promise(resolve => resolve({ body: response2 })), { repeat: 1 });
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response2 })),
+      { repeat: 1 }
+    );
 
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
@@ -74,12 +82,15 @@ describe('react application', () => {
       ssrMode: true,
     });
 
-    const Query = graphql<React.PropsWithChildren>(query)(({ data, children }) => {
+    const Query = graphql<React.PropsWithChildren>(query)(({
+      data,
+      children,
+    }) => {
       if (data!.loading) return null;
 
       return (
         <div>
-          {(data as any).foo.bar && 'data was returned!'}
+          {(data as any).foo.bar && "data was returned!"}
           {children}
         </div>
       );
@@ -94,11 +105,11 @@ describe('react application', () => {
 
     // preload all the data for client side request (with filter)
     const result = await getDataFromTree(app);
-    expect(result).toContain('data was returned');
+    expect(result).toContain("data was returned");
     const [[, request]] = fetchMock.calls();
     expect(request!.body).toBe(
       JSON.stringify({
-        operationName: 'Test',
+        operationName: "Test",
         variables,
         extensions: {
           persistedQuery: {
@@ -106,7 +117,7 @@ describe('react application', () => {
             sha256Hash: hash,
           },
         },
-      }),
+      })
     );
 
     // reset client and try with different input object
@@ -130,10 +141,10 @@ describe('react application', () => {
 
     const [, [, request2]] = fetchMock.calls();
 
-    expect(view).not.toContain('data was returned');
+    expect(view).not.toContain("data was returned");
     expect(request2!.body).toBe(
       JSON.stringify({
-        operationName: 'Test',
+        operationName: "Test",
         variables: variables2,
         extensions: {
           persistedQuery: {
@@ -141,7 +152,7 @@ describe('react application', () => {
             sha256Hash: hash,
           },
         },
-      }),
+      })
     );
   });
 });

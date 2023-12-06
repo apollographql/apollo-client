@@ -1,7 +1,9 @@
-import { SubscriptionClient, ClientOptions } from 'subscriptions-transport-ws';
+import type { ClientOptions } from "subscriptions-transport-ws";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 
-import { ApolloLink, Operation, FetchResult } from '../core';
-import { Observable } from '../../utilities';
+import type { Operation, FetchResult } from "../core/index.js";
+import { ApolloLink } from "../core/index.js";
+import type { Observable } from "../../utilities/index.js";
 
 export namespace WebSocketLink {
   /**
@@ -32,7 +34,7 @@ export class WebSocketLink extends ApolloLink {
   private subscriptionClient: SubscriptionClient;
 
   constructor(
-    paramsOrClient: WebSocketLink.Configuration | SubscriptionClient,
+    paramsOrClient: WebSocketLink.Configuration | SubscriptionClient
   ) {
     super();
 
@@ -42,14 +44,14 @@ export class WebSocketLink extends ApolloLink {
       this.subscriptionClient = new SubscriptionClient(
         paramsOrClient.uri,
         paramsOrClient.options,
-        paramsOrClient.webSocketImpl,
+        paramsOrClient.webSocketImpl
       );
     }
   }
 
   public request(operation: Operation): Observable<FetchResult> | null {
-    return this.subscriptionClient.request(operation) as Observable<
-      FetchResult
-    >;
+    return this.subscriptionClient.request(
+      operation
+    ) as Observable<FetchResult>;
   }
 }

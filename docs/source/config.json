@@ -12,12 +12,14 @@
     "Changelog": "https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md",
     "Fetching": {
       "Queries": "/data/queries",
+      "Suspense": "/data/suspense",
       "Mutations": "/data/mutations",
       "Refetching": "/data/refetching",
       "Subscriptions": "/data/subscriptions",
       "Fragments": "/data/fragments",
       "Directives": "/data/directives",
       "Error handling": "/data/error-handling",
+      "Document transforms": "/data/document-transforms",
       "Best practices": "/data/operation-best-practices"
     },
     "Caching": {
@@ -46,7 +48,8 @@
       "Developer tools": "/development-testing/developer-tooling",
       "Using TypeScript": "/development-testing/static-typing",
       "Testing React components": "/development-testing/testing",
-      "Mocking schema capabilities": "/development-testing/client-schema-mocking"
+      "Mocking schema capabilities": "/development-testing/client-schema-mocking",
+      "Reducing bundle size": "/development-testing/reducing-bundle-size"
     },
     "Performance": {
       "Improving performance": "/performance/performance",
@@ -76,7 +79,6 @@
       },
       "React": {
         "Hooks": "/api/react/hooks",
-        "Hooks (experimental)": "/api/react/hooks-experimental",
         "Testing": "/api/react/testing",
         "SSR": "/api/react/ssr",
         "Components (deprecated)": "/api/react/components",
@@ -89,6 +91,7 @@
         "Context": "/api/link/apollo-link-context",
         "Error": "/api/link/apollo-link-error",
         "Persisted Queries": "/api/link/persisted-queries",
+        "Remove Typename": "/api/link/apollo-link-remove-typename",
         "REST": "/api/link/apollo-link-rest",
         "Retry": "/api/link/apollo-link-retry",
         "Schema": "/api/link/apollo-link-schema",

@@ -1,6 +1,6 @@
-import { buildDelayFunction } from '../delayFunction';
+import { buildDelayFunction } from "../delayFunction";
 
-describe('buildDelayFunction', () => {
+describe("buildDelayFunction", () => {
   // For easy testing of just the delay component, which is all we care about in
   // the default implementation.
   interface SimpleDelayFunction {
@@ -15,8 +15,8 @@ describe('buildDelayFunction', () => {
     return results;
   }
 
-  describe('without jitter', () => {
-    it('grows exponentially up to maxDelay', () => {
+  describe("without jitter", () => {
+    it("grows exponentially up to maxDelay", () => {
       const delayFunction = buildDelayFunction({
         jitter: false,
         initial: 100,
@@ -24,17 +24,12 @@ describe('buildDelayFunction', () => {
       }) as SimpleDelayFunction;
 
       expect(delayRange(delayFunction, 6)).toEqual([
-        100,
-        200,
-        400,
-        800,
-        1000,
-        1000,
+        100, 200, 400, 800, 1000, 1000,
       ]);
     });
   });
 
-  describe('with jitter', () => {
+  describe("with jitter", () => {
     let mockRandom: any, origRandom: any;
     beforeEach(() => {
       mockRandom = jest.fn();
@@ -46,7 +41,7 @@ describe('buildDelayFunction', () => {
       Math.random = origRandom;
     });
 
-    it('jitters, on average, exponentially up to maxDelay', () => {
+    it("jitters, on average, exponentially up to maxDelay", () => {
       const delayFunction = buildDelayFunction({
         jitter: true,
         initial: 100,
@@ -57,7 +52,7 @@ describe('buildDelayFunction', () => {
       expect(delayRange(delayFunction, 5)).toEqual([100, 200, 400, 500, 500]);
     });
 
-    it('can have instant retries as the low end of the jitter range', () => {
+    it("can have instant retries as the low end of the jitter range", () => {
       const delayFunction = buildDelayFunction({
         jitter: true,
         initial: 100,
@@ -68,7 +63,7 @@ describe('buildDelayFunction', () => {
       expect(delayRange(delayFunction, 5)).toEqual([0, 0, 0, 0, 0]);
     });
 
-    it('uses double the calculated delay as the high end of the jitter range, up to maxDelay', () => {
+    it("uses double the calculated delay as the high end of the jitter range, up to maxDelay", () => {
       const delayFunction = buildDelayFunction({
         jitter: true,
         initial: 100,

@@ -75,10 +75,12 @@ exports[`writing to the store should not keep reference when type of mixed inlin
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'id' while writing result {
-  \\"__typename\\": \\"Cat\\",
-  \\"name\\": \\"cat\\"
-}",
+      "Missing field '%s' while writing result %o",
+      "id",
+      Object {
+        "__typename": "Cat",
+        "name": "cat",
+      },
     ],
   ],
   "results": Array [
@@ -205,12 +207,14 @@ exports[`writing to the store writeResultToStore shape checking should warn when
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'price' while writing result {
-  \\"id\\": \\"1\\",
-  \\"name\\": \\"Todo 1\\",
-  \\"description\\": \\"Description 1\\",
-  \\"__typename\\": \\"ShoppingCartItem\\"
-}",
+      "Missing field '%s' while writing result %o",
+      "price",
+      Object {
+        "__typename": "ShoppingCartItem",
+        "description": "Description 1",
+        "id": "1",
+        "name": "Todo 1",
+      },
     ],
   ],
   "results": Array [
@@ -226,10 +230,12 @@ exports[`writing to the store writeResultToStore shape checking should warn when
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'description' while writing result {
-  \\"id\\": \\"1\\",
-  \\"name\\": \\"Todo 1\\"
-}",
+      "Missing field '%s' while writing result %o",
+      "description",
+      Object {
+        "id": "1",
+        "name": "Todo 1",
+      },
     ],
   ],
   "results": Array [
@@ -245,10 +251,12 @@ exports[`writing to the store writeResultToStore shape checking should write the
 [MockFunction] {
   "calls": Array [
     Array [
-      "Missing field 'description' while writing result {
-  \\"id\\": \\"1\\",
-  \\"name\\": \\"Todo 1\\"
-}",
+      "Missing field '%s' while writing result %o",
+      "description",
+      Object {
+        "id": "1",
+        "name": "Todo 1",
+      },
     ],
   ],
   "results": Array [

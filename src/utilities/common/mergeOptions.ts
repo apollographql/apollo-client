@@ -3,25 +3,30 @@ import type {
   WatchQueryOptions,
   MutationOptions,
   OperationVariables,
-} from "../../core";
+} from "../../core/index.js";
 
-import { compact } from "./compact";
+import { compact } from "./compact.js";
 
 type OptionsUnion<TData, TVariables extends OperationVariables, TContext> =
   | WatchQueryOptions<TVariables, TData>
   | QueryOptions<TVariables, TData>
-  | MutationOptions<TData, TVariables, TContext>;
+  | MutationOptions<TData, TVariables, TContext, any>;
 
 export function mergeOptions<
-  TOptions extends Partial<OptionsUnion<any, any, any>>
+  TDefaultOptions extends Partial<OptionsUnion<any, any, any>>,
+  TOptions extends TDefaultOptions,
 >(
-  defaults: TOptions | Partial<TOptions> | undefined,
-  options: TOptions | Partial<TOptions>,
-): TOptions {
-  return compact(defaults, options, options.variables && {
-    variables: {
-      ...(defaults && defaults.variables),
-      ...options.variables,
-    },
-  });
+  defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined,
+  options: TOptions | Partial<TOptions>
+): TOptions & TDefaultOptions {
+  return compact(
+    defaults,
+    options,
+    options.variables && {
+      variables: compact({
+        ...(defaults && defaults.variables),
+        ...options.variables,
+      }),
+    }
+  );
 }

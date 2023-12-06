@@ -23,7 +23,7 @@ jobs:
       id-token: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # Fetch entire git history so  Changesets can generate changelogs
           # with the correct commits
@@ -39,7 +39,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Setup Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18.x
 
@@ -52,29 +52,35 @@ jobs:
         with:
           files: ".changeset/pre.json"
 
-      - name: Enter alpha prerelease mode
+      - name: Enter prerelease mode (alpha by default)
         # If .changeset/pre.json does not exist and we did not recently exit
         # prerelease mode, enter prerelease mode with tag alpha
         if: steps.check_files.outputs.files_exists == 'false' && !contains(github.event.head_commit.message, 'Exit prerelease')
         run: npx changeset pre enter alpha
 
-      - name: Create alpha release PR
+      - name: Create prerelease PR
         uses: changesets/action@v1
         with:
           version: npm run changeset-version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: get-npm-version
-        id: package-version
-        uses: martinbeentjes/npm-get-version-action@main
-
-      - name: Run publish
+      - name: Publish to npm + GitHub
         id: changesets
         # Only run publish if we're still in pre mode and the last commit was
         # via an automatically created Version Packages PR
         if: steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')
-        run: npm run changeset-publish
+        uses: changesets/action@v1
+        with:
+          version: echo "This step should never version"
+          publish: npm run changeset-publish # by default, this will publish to npm and GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag release with next on npm
+        if: steps.changesets.outcome == 'success'
+        run: npm dist-tag add @apollo/client@${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }} next
 
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success'
@@ -86,7 +92,6 @@ jobs:
           # You can pass in multiple channels to post to by providing
           # a comma-delimited list of channel IDs
           channel-id: "C01PS0CB41G"
-          # For posting a simple plain text message
           payload: |
             {
               "blocks": [
@@ -94,29 +99,8 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "A new version of `@apollo/client` was released :rocket:"
+                    "text": "A new version of `@apollo/client` was released: <https://github.com/apollographql/apollo-client/releases/tag/v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}|v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}> :rocket:"
                   }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Version:*\n`${{ steps.package-version.outputs.current-version}}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Tag:*\n`alpha`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*GitHub release:*\nN/A"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*npm releases:*\n<https://www.npmjs.com/package/@apollo/client?activeTab=versions|link>"
-                    }
-                  ]
                 }
               ]
             }

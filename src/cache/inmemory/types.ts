@@ -1,29 +1,29 @@
-import { DocumentNode, FieldNode } from 'graphql';
+import type { DocumentNode, FieldNode } from "graphql";
 
-import { Transaction } from '../core/cache';
-import {
+import type { Transaction } from "../core/cache.js";
+import type {
   StoreObject,
   StoreValue,
   Reference,
-} from '../../utilities';
-import { FieldValueGetter } from './entityStore';
-import {
+} from "../../utilities/index.js";
+import type { FieldValueGetter } from "./entityStore.js";
+import type {
   TypePolicies,
   PossibleTypesMap,
   KeyFieldsFunction,
   StorageType,
   FieldMergeFunction,
-} from './policies';
-import {
-  Modifier,
+} from "./policies.js";
+import type {
   Modifiers,
   ToReferenceFunction,
   CanReadFunction,
-} from '../core/types/common';
+  AllFieldsModifier,
+} from "../core/types/common.js";
 
-import { FragmentRegistryAPI } from './fragmentRegistry';
+import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
 
-export { StoreObject, StoreValue, Reference }
+export type { StoreObject, StoreValue, Reference };
 
 export interface IdGetterObj extends Object {
   __typename?: string;
@@ -31,9 +31,7 @@ export interface IdGetterObj extends Object {
   _id?: string;
 }
 
-export declare type IdGetter = (
-  value: IdGetterObj,
-) => string | undefined;
+export declare type IdGetter = (value: IdGetterObj) => string | undefined;
 
 /**
  * This is an interface used to access, set and remove
@@ -49,7 +47,10 @@ export interface NormalizedCache {
   merge(olderId: string, newerObject: StoreObject): void;
   merge(olderObject: StoreObject, newerId: string): void;
 
-  modify(dataId: string, fields: Modifiers | Modifier<any>): boolean;
+  modify<Entity extends Record<string, any>>(
+    dataId: string,
+    fields: Modifiers<Entity> | AllFieldsModifier<Entity>
+  ): boolean;
   delete(dataId: string, fieldName?: string): boolean;
   clear(): void;
 
@@ -108,7 +109,13 @@ export type OptimisticStoreItem = {
 };
 
 export type ReadQueryOptions = {
+  /**
+   * The Apollo Client store object.
+   */
   store: NormalizedCache;
+  /**
+   * A parsed GraphQL query document.
+   */
   query: DocumentNode;
   variables?: Object;
   previousResult?: any;
@@ -139,12 +146,12 @@ export interface MergeInfo {
   field: FieldNode;
   typename: string | undefined;
   merge: FieldMergeFunction;
-};
+}
 
 export interface MergeTree {
   info?: MergeInfo;
   map: Map<string | number, MergeTree>;
-};
+}
 
 export interface ReadMergeModifyContext {
   store: NormalizedCache;

@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { getApolloContext } from '../context';
-import { RenderPromises } from './RenderPromises';
-import { renderToStaticMarkup } from 'react-dom/server';
+import * as React from "rehackt";
+import type * as ReactTypes from "react";
+import { getApolloContext } from "../context/index.js";
+import { RenderPromises } from "./RenderPromises.js";
+import { renderToStaticMarkup } from "react-dom/server";
 
 export function getDataFromTree(
-  tree: React.ReactNode,
+  tree: ReactTypes.ReactNode,
   context: { [key: string]: any } = {}
 ) {
   return getMarkupFromTree({
@@ -12,15 +13,15 @@ export function getDataFromTree(
     context,
     // If you need to configure this renderFunction, call getMarkupFromTree
     // directly instead of getDataFromTree.
-    renderFunction: renderToStaticMarkup
+    renderFunction: renderToStaticMarkup,
   });
 }
 
 export type GetMarkupFromTreeOptions = {
-  tree: React.ReactNode;
+  tree: ReactTypes.ReactNode;
   context?: { [key: string]: any };
   renderFunction?: (
-    tree: React.ReactElement<any>,
+    tree: ReactTypes.ReactElement<any>
   ) => string | PromiseLike<string>;
 };
 
@@ -30,7 +31,7 @@ export function getMarkupFromTree({
   // The rendering function is configurable! We use renderToStaticMarkup as
   // the default, because it's a little less expensive than renderToString,
   // and legacy usage of getDataFromTree ignores the return value anyway.
-  renderFunction = renderToStaticMarkup
+  renderFunction = renderToStaticMarkup,
 }: GetMarkupFromTreeOptions): Promise<string> {
   const renderPromises = new RenderPromises();
 
@@ -42,20 +43,22 @@ export function getMarkupFromTree({
     // elements) for a subtree of the original component tree.
     const ApolloContext = getApolloContext();
 
-    return new Promise<string>(resolve => {
+    return new Promise<string>((resolve) => {
       const element = React.createElement(
         ApolloContext.Provider,
-        { value: { ...context, renderPromises }},
-        tree,
+        { value: { ...context, renderPromises } },
+        tree
       );
       resolve(renderFunction(element));
-    }).then(html => {
-      return renderPromises.hasPromises()
-        ? renderPromises.consumeAndAwaitPromises().then(process)
-        : html;
-    }).finally(() => {
-      renderPromises.stop();
-    });
+    })
+      .then((html) => {
+        return renderPromises.hasPromises() ?
+            renderPromises.consumeAndAwaitPromises().then(process)
+          : html;
+      })
+      .finally(() => {
+        renderPromises.stop();
+      });
   }
 
   return Promise.resolve().then(process);

@@ -7,5 +7,9 @@ const client = new Client({
 });
 
 client.query({
-  query: gql`query { __typename }`,
+  query: gql`
+    query {
+      __typename
+    }
+  `,
 });

@@ -1,15 +1,14 @@
-import { ApolloLink, Operation, FetchResult, NextLink } from '../core';
-import { Observable, Observer, ObservableSubscription } from '../../utilities';
-import {
-  DelayFunction,
-  DelayFunctionOptions,
-  buildDelayFunction,
-} from './delayFunction';
-import {
-  RetryFunction,
-  RetryFunctionOptions,
-  buildRetryFunction,
-} from './retryFunction';
+import type { Operation, FetchResult, NextLink } from "../core/index.js";
+import { ApolloLink } from "../core/index.js";
+import type {
+  Observer,
+  ObservableSubscription,
+} from "../../utilities/index.js";
+import { Observable } from "../../utilities/index.js";
+import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
+import { buildDelayFunction } from "./delayFunction.js";
+import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
+import { buildRetryFunction } from "./retryFunction.js";
 
 export namespace RetryLink {
   export interface Options {
@@ -42,7 +41,7 @@ class RetryableOperation<TValue = any> {
     private operation: Operation,
     private nextLink: NextLink,
     private delayFor: DelayFunction,
-    private retryIf: RetryFunction,
+    private retryIf: RetryFunction
   ) {}
 
   /**
@@ -54,7 +53,7 @@ class RetryableOperation<TValue = any> {
   public subscribe(observer: Observer<TValue>) {
     if (this.canceled) {
       throw new Error(
-        `Subscribing to a retryable link that was canceled is not supported`,
+        `Subscribing to a retryable link that was canceled is not supported`
       );
     }
     this.observers.push(observer);
@@ -81,7 +80,7 @@ class RetryableOperation<TValue = any> {
     const index = this.observers.indexOf(observer);
     if (index < 0) {
       throw new Error(
-        `RetryLink BUG! Attempting to unsubscribe unknown observer!`,
+        `RetryLink BUG! Attempting to unsubscribe unknown observer!`
       );
     }
     // Note that we are careful not to change the order of length of the array,
@@ -89,7 +88,7 @@ class RetryableOperation<TValue = any> {
     this.observers[index] = null;
 
     // If this is the last observer, we're done.
-    if (this.observers.every(o => o === null)) {
+    if (this.observers.every((o) => o === null)) {
       this.cancel();
     }
   }
@@ -147,7 +146,7 @@ class RetryableOperation<TValue = any> {
     const shouldRetry = await this.retryIf(
       this.retryCount,
       this.operation,
-      error,
+      error
     );
     if (shouldRetry) {
       this.scheduleRetry(this.delayFor(this.retryCount, this.operation, error));
@@ -166,10 +165,10 @@ class RetryableOperation<TValue = any> {
       throw new Error(`RetryLink BUG! Encountered overlapping retries`);
     }
 
-    this.timerId = (setTimeout(() => {
+    this.timerId = setTimeout(() => {
       this.timerId = undefined;
       this.try();
-    }, delay) as any) as number;
+    }, delay) as any as number;
   }
 }
 
@@ -181,24 +180,24 @@ export class RetryLink extends ApolloLink {
     super();
     const { attempts, delay } = options || ({} as RetryLink.Options);
     this.delayFor =
-      typeof delay === 'function' ? delay : buildDelayFunction(delay);
+      typeof delay === "function" ? delay : buildDelayFunction(delay);
     this.retryIf =
-      typeof attempts === 'function' ? attempts : buildRetryFunction(attempts);
+      typeof attempts === "function" ? attempts : buildRetryFunction(attempts);
   }
 
   public request(
     operation: Operation,
-    nextLink: NextLink,
+    nextLink: NextLink
   ): Observable<FetchResult> {
     const retryable = new RetryableOperation(
       operation,
       nextLink,
       this.delayFor,
-      this.retryIf,
+      this.retryIf
     );
     retryable.start();
 
-    return new Observable(observer => {
+    return new Observable((observer) => {
       retryable.subscribe(observer);
       return () => {
         retryable.unsubscribe(observer);

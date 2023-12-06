@@ -1,5 +1,6 @@
-import { Observable } from '../../../utilities';
-import { ApolloLink, FetchResult, Operation } from '../../../link/core';
+import { Observable } from "../../../utilities/index.js";
+import type { FetchResult, Operation } from "../../../link/core/index.js";
+import { ApolloLink } from "../../../link/core/index.js";
 
 export interface MockedSubscription {
   request: Operation;
@@ -14,7 +15,7 @@ export interface MockedSubscriptionResult {
 export class MockSubscriptionLink extends ApolloLink {
   public unsubscribers: any[] = [];
   public setups: any[] = [];
-  public operation: Operation;
+  public operation?: Operation;
 
   private observers: any[] = [];
 
@@ -24,11 +25,11 @@ export class MockSubscriptionLink extends ApolloLink {
 
   public request(operation: Operation) {
     this.operation = operation;
-    return new Observable<FetchResult>(observer => {
-      this.setups.forEach(x => x());
+    return new Observable<FetchResult>((observer) => {
+      this.setups.forEach((x) => x());
       this.observers.push(observer);
       return () => {
-        this.unsubscribers.forEach(x => x());
+        this.unsubscribers.forEach((x) => x());
       };
     });
   }
@@ -36,8 +37,8 @@ export class MockSubscriptionLink extends ApolloLink {
   public simulateResult(result: MockedSubscriptionResult, complete = false) {
     setTimeout(() => {
       const { observers } = this;
-      if (!observers.length) throw new Error('subscription torn down');
-      observers.forEach(observer => {
+      if (!observers.length) throw new Error("subscription torn down");
+      observers.forEach((observer) => {
         if (result.result && observer.next) observer.next(result.result);
         if (result.error && observer.error) observer.error(result.error);
         if (complete && observer.complete) observer.complete();
@@ -47,10 +48,10 @@ export class MockSubscriptionLink extends ApolloLink {
 
   public simulateComplete() {
     const { observers } = this;
-    if (!observers.length) throw new Error('subscription torn down');
-    observers.forEach(observer => {
+    if (!observers.length) throw new Error("subscription torn down");
+    observers.forEach((observer) => {
       if (observer.complete) observer.complete();
-    })
+    });
   }
 
   public onSetup(listener: any): void {

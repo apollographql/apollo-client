@@ -1,15 +1,15 @@
 /** @jest-environment node */
-import React from 'react';
-import { DocumentNode } from 'graphql';
-import gql from 'graphql-tag';
-import { mockSingleLink } from '../../../testing';
-import { ApolloClient } from '../../../core';
-import { InMemoryCache } from '../../../cache';
-import { ApolloProvider } from '../../context';
-import { useLazyQuery } from '../../hooks';
-import { renderToStringWithData } from '../../ssr';
+import React from "react";
+import { DocumentNode } from "graphql";
+import gql from "graphql-tag";
+import { mockSingleLink } from "../../../testing";
+import { ApolloClient } from "../../../core";
+import { InMemoryCache } from "../../../cache";
+import { ApolloProvider } from "../../context";
+import { useLazyQuery } from "../../hooks";
+import { renderToStringWithData } from "../../ssr";
 
-describe('useLazyQuery Hook SSR', () => {
+describe("useLazyQuery Hook SSR", () => {
   const CAR_QUERY: DocumentNode = gql`
     query {
       cars {
@@ -23,24 +23,24 @@ describe('useLazyQuery Hook SSR', () => {
   const CAR_RESULT_DATA = {
     cars: [
       {
-        make: 'Audi',
-        model: 'RS8',
-        vin: 'DOLLADOLLABILL',
-        __typename: 'Car'
-      }
-    ]
+        make: "Audi",
+        model: "RS8",
+        vin: "DOLLADOLLABILL",
+        __typename: "Car",
+      },
+    ],
   };
 
-  it('should run query only after calling the lazy mode execute function', () => {
+  it("should run query only after calling the lazy mode execute function", () => {
     const link = mockSingleLink({
       request: { query: CAR_QUERY },
-      result: { data: CAR_RESULT_DATA }
+      result: { data: CAR_RESULT_DATA },
     });
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      ssrMode: true
+      ssrMode: true,
     });
 
     const Component = () => {
@@ -66,7 +66,7 @@ describe('useLazyQuery Hook SSR', () => {
       </ApolloProvider>
     );
 
-    return renderToStringWithData(app).then(markup => {
+    return renderToStringWithData(app).then((markup) => {
       expect(markup).toMatch(/Audi/);
     });
   });

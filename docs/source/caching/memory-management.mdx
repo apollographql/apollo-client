@@ -27,7 +27,13 @@ cache sizes before the Apollo Client library is loaded (some caches will already
 be initialized when the library is loaded, and changed cache sizes will only
 affect caches created after the fact).
 
-<DocPiece canonicalReference="@apollo/client!cacheSizes:var" example />
+ ```ts
+import type { CacheSizes } from '@apollo/client/utilities';
+
+ globalThis[Symbol.for("apollo.cacheSize")] = {
+  parser: 100
+ } satisfies Partial<CacheSizes>
+ ```
 
 ### Adjusting Cache Sizes after loading the Apollo Client library
 

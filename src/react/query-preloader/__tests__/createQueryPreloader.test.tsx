@@ -51,7 +51,13 @@ function renderWithClient(
   });
 }
 
-function createDefaultTestApp<TData>(queryRef: QueryReference<TData>) {
+function renderDefaultTestApp<TData>({
+  client,
+  queryRef,
+}: {
+  client: ApolloClient<any>;
+  queryRef: QueryReference<TData>;
+}) {
   const Profiler = createProfiler({
     initialSnapshot: {
       result: null as UseReadQueryResult<TData> | null,
@@ -89,18 +95,6 @@ function createDefaultTestApp<TData>(queryRef: QueryReference<TData>) {
       </ErrorBoundary>
     );
   }
-
-  return { App, Profiler };
-}
-
-function renderDefaultTestApp<TData>({
-  client,
-  queryRef,
-}: {
-  client: ApolloClient<any>;
-  queryRef: QueryReference<TData>;
-}) {
-  const { App, Profiler } = createDefaultTestApp(queryRef);
 
   const utils = renderWithClient(<App />, { client, wrapper: Profiler });
 

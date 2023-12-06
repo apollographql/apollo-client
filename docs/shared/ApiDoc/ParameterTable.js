@@ -49,10 +49,10 @@ export function ParameterTable({canonicalReference}) {
                 borderBottom={interfaceReference ? 'none' : undefined}
               >
                 <chakra.h6 fontSize="lg" mb="1">
-                  <MDX.InlineCode>{parameter.name}</MDX.InlineCode>
+                  <MDX.inlineCode>{parameter.name}</MDX.inlineCode>
                   {parameter.optional ? <em> (optional)</em> : null}
                 </chakra.h6>
-                <MDX.InlineCode color="tertiary">{parameter.type}</MDX.InlineCode>
+                <MDX.inlineCode color="tertiary">{parameter.type}</MDX.inlineCode>
               </GridItem>
               <GridItem
                 className="cell"

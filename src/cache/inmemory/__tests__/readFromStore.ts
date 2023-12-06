@@ -24,7 +24,9 @@ describe("resultCacheMaxSize", () => {
 
   it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
     const reader = new StoreReader({ cache });
-    expect(reader["executeSelectionSet"].options.max).toBe(cacheSizes.executeSelectionSet);
+    expect(reader["executeSelectionSet"].options.max).toBe(
+      cacheSizes.executeSelectionSet
+    );
   });
 
   it("configures max size on caches when resultCacheMaxSize is set", () => {

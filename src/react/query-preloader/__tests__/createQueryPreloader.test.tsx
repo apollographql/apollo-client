@@ -541,6 +541,65 @@ test('enables canonical results when canonizeResults is "true"', async () => {
   dispose();
 });
 
+test("can disable canonical results when the cache's canonizeResults setting is true", async () => {
+  interface Result {
+    __typename: string;
+    value: number;
+  }
+
+  const cache = new InMemoryCache({
+    canonizeResults: true,
+    typePolicies: {
+      Result: {
+        keyFields: false,
+      },
+    },
+  });
+
+  const query: TypedDocumentNode<{ results: Result[] }, never> = gql`
+    query {
+      results {
+        value
+      }
+    }
+  `;
+
+  const results: Result[] = [
+    { __typename: "Result", value: 0 },
+    { __typename: "Result", value: 1 },
+    { __typename: "Result", value: 1 },
+    { __typename: "Result", value: 2 },
+    { __typename: "Result", value: 3 },
+    { __typename: "Result", value: 5 },
+  ];
+
+  cache.writeQuery({
+    query,
+    data: { results },
+  });
+
+  const client = new ApolloClient({ cache, link: new MockLink([]) });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query, { canonizeResults: false });
+
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+
+  const { snapshot } = await Profiler.takeRender();
+  const resultSet = new Set(snapshot.result!.data.results);
+  const values = Array.from(resultSet).map((item) => item.value);
+
+  expect(snapshot.result).toEqual({
+    data: { results },
+    networkStatus: NetworkStatus.ready,
+    error: undefined,
+  });
+  expect(resultSet.size).toBe(6);
+  expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+
+  dispose();
+});
+
 describe.skip("type tests", () => {
   const client = new ApolloClient({
     cache: new InMemoryCache(),

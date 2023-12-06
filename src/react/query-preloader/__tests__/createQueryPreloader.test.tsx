@@ -622,6 +622,80 @@ test("creates unique query refs when provided with a queryKey", async () => {
   dispose3();
 });
 
+test("does not suspend and returns partial data when `returnPartialData` is `true`", async () => {
+  const { query, mocks } = useVariablesCase();
+  const partialQuery = gql`
+    query CharacterQuery($id: ID!) {
+      character(id: $id) {
+        id
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  client.writeQuery({
+    query: partialQuery,
+    data: { character: { id: "1" } },
+    variables: { id: "1" },
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query, {
+    variables: { id: "1" },
+    returnPartialData: true,
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<VariablesCaseData> | null,
+    },
+  });
+
+  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents(
+    Profiler,
+    queryRef
+  );
+
+  function App() {
+    useTrackRenders();
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1" } },
+      networkStatus: NetworkStatus.loading,
+      error: undefined,
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { character: { id: "1", name: "Spider-Man" } },
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  dispose();
+});
+
 describe.skip("type tests", () => {
   const client = new ApolloClient({
     cache: new InMemoryCache(),

@@ -204,7 +204,7 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
   expect(console.warn).toHaveBeenCalledTimes(1);
 });
 
-test("can handle cache updates", async () => {
+test("reacts to cache updates", async () => {
   const { query, mocks } = useSimpleCase();
   const client = createDefaultClient(mocks);
 

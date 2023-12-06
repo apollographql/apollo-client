@@ -457,20 +457,23 @@ class CacheGroup {
 }
 
 // @public
-interface CacheSizes {
+export interface CacheSizes {
     canonicalStringify: number;
     documentTransform: number;
+    executeSelectionSet: number;
+    executeSubSelectedArray: number;
+    fragmentQueryDocuments: number;
     fragmentRegistryFindFragmentSpreads: number;
     fragmentRegistryLookup: number;
     fragmentRegistryTransform: number;
+    getVariableDefinitions: number;
+    maybeBroadcastWatch: number;
     parser: number;
     persistedQueryHashes: number;
     print: number;
     queryManagerTransforms: number;
 }
 
-// Warning: (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
-//
 // @public
 export const cacheSizes: CacheSizes;
 
@@ -1308,7 +1311,7 @@ interface InMemoryCacheConfig extends ApolloReducerConfig {
     //
     // (undocumented)
     possibleTypes?: PossibleTypesMap;
-    // (undocumented)
+    // @deprecated (undocumented)
     resultCacheMaxSize?: number;
     // (undocumented)
     resultCaching?: boolean;

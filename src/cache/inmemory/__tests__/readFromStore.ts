@@ -17,14 +17,16 @@ import {
   isReference,
   TypedDocumentNode,
 } from "../../../core";
+import { cacheSizes } from "../../../utilities";
 
 describe("resultCacheMaxSize", () => {
   const cache = new InMemoryCache();
-  const defaultMaxSize = Math.pow(2, 16);
 
   it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
     const reader = new StoreReader({ cache });
-    expect(reader["executeSelectionSet"].options.max).toBe(defaultMaxSize);
+    expect(reader["executeSelectionSet"].options.max).toBe(
+      cacheSizes.executeSelectionSet
+    );
   });
 
   it("configures max size on caches when resultCacheMaxSize is set", () => {

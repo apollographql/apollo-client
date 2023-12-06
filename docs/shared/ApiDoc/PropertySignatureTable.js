@@ -1,4 +1,5 @@
-import InlineCode from '../InlineCode';
+import { useMDXComponents } from '@mdx-js/react';
+
 import PropTypes from 'prop-types';
 import React, {useMemo} from 'react';
 import {DocBlock, FunctionSignature, useApiDocContext} from '.';
@@ -12,6 +13,7 @@ export function PropertySignatureTable({
   display = 'parent',
   customOrder = []
 }) {
+  const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
   const Wrapper = display === 'parent' ? ResponsiveGrid : React.Fragment;
@@ -74,15 +76,15 @@ export function PropertySignatureTable({
               sx={{code: {bg: 'none', p: 0}}}
             >
               <chakra.h6 fontSize="lg" mb="1" mr="1">
-                <InlineCode>
+                <MDX.InlineCode>
                   <Text color="gray.400" as="span">
                     {prefix}
                   </Text>
                   {property.displayName}
-                </InlineCode>
+                </MDX.InlineCode>
                 {property.optional ? <em> (optional)</em> : null}
               </chakra.h6>
-              <InlineCode color="tertiary">
+              <MDX.InlineCode color="tertiary">
                 {property.kind === 'MethodSignature' ? (
                   <FunctionSignature
                     canonicalReference={property.canonicalReference}
@@ -93,10 +95,10 @@ export function PropertySignatureTable({
                 ) : (
                   property.type
                 )}
-              </InlineCode>
+              </MDX.InlineCode>
             </GridItem>
             <GridItem className="cell" fontSize="md" lineHeight="base">
-              <DocBlock canonicalReference={property.canonicalReference} />
+              <DocBlock canonicalReference={property.canonicalReference} summary example remarks remarkCollapsible />
             </GridItem>
           </React.Fragment>
         ))}

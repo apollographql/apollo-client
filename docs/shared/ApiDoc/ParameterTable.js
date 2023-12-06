@@ -1,4 +1,5 @@
-import InlineCode from '../InlineCode';
+import { useMDXComponents } from '@mdx-js/react';
+
 import PropTypes from 'prop-types';
 import React from 'react';
 import {GridItem, chakra} from '@chakra-ui/react';
@@ -7,6 +8,7 @@ import {ResponsiveGrid} from './ResponsiveGrid';
 import {mdToReact} from './mdToReact';
 
 export function ParameterTable({canonicalReference}) {
+  const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
 
@@ -47,10 +49,10 @@ export function ParameterTable({canonicalReference}) {
                 borderBottom={interfaceReference ? 'none' : undefined}
               >
                 <chakra.h6 fontSize="lg" mb="1">
-                  <InlineCode>{parameter.name}</InlineCode>
+                  <MDX.InlineCode>{parameter.name}</MDX.InlineCode>
                   {parameter.optional ? <em> (optional)</em> : null}
                 </chakra.h6>
-                <InlineCode color="tertiary">{parameter.type}</InlineCode>
+                <MDX.InlineCode color="tertiary">{parameter.type}</MDX.InlineCode>
               </GridItem>
               <GridItem
                 className="cell"

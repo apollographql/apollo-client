@@ -1,8 +1,8 @@
+import { useMDXComponents } from '@mdx-js/react';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {Box, Heading} from '@chakra-ui/react';
 import {FunctionSignature} from '.';
-import {PrimaryLink} from '../RelativeLink';
 import {useApiDocContext} from './Context';
 
 const levels = {
@@ -18,6 +18,7 @@ export function ApiDocHeading({
   headingLevel = 3,
   link = true
 }) {
+  const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
   const heading =
@@ -41,19 +42,19 @@ export function ApiDocHeading({
         id={item.displayName}
       >
         {link ? (
-          <PrimaryLink href={`#${item.displayName}`}>{heading}</PrimaryLink>
+          <MDX.PrimaryLink href={`#${item.displayName}`}>{heading}</MDX.PrimaryLink>
         ) : (
           heading
         )}
       </Heading>
       {item.file && (
         <Heading as="h6" fontWeight="normal" size="sm" mt="2">
-          <PrimaryLink
+          <MDX.PrimaryLink
             href={`https://github.com/apollographql/apollo-client/blob/main/${item.file}`}
             isExternal
           >
             ({item.file})
-          </PrimaryLink>
+          </MDX.PrimaryLink>
         </Heading>
       )}
     </Box>

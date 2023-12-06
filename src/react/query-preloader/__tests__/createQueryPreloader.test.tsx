@@ -377,6 +377,58 @@ test("returns cached data when all data is present in the cache", async () => {
   dispose();
 });
 
+test("suspends and ignores partial data in the cache", async () => {
+  const query = gql`
+    query {
+      hello
+      foo
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: { data: { hello: "from link", foo: "bar" } },
+      delay: 20,
+    },
+  ];
+
+  const client = createDefaultClient(mocks);
+
+  {
+    // we expect a "Missing field 'foo' while writing result..." error
+    // when writing hello to the cache, so we'll silence it
+    using _consoleSpy = spyOnConsole("error");
+    client.writeQuery({ query, data: { hello: "from cache" } });
+  }
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query);
+
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
+    expect(snapshot.result).toEqual({
+      data: { hello: "from link", foo: "bar" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
+
+  dispose();
+});
+
 test("throws when error is returned", async () => {
   // Disable error messages shown by React when an error is thrown to an error
   // boundary

@@ -478,6 +478,69 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
   dispose();
 });
 
+test('enables canonical results when canonizeResults is "true"', async () => {
+  interface Result {
+    __typename: string;
+    value: number;
+  }
+
+  interface QueryData {
+    results: Result[];
+  }
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Result: {
+        keyFields: false,
+      },
+    },
+  });
+
+  const query: TypedDocumentNode<QueryData, never> = gql`
+    query {
+      results {
+        value
+      }
+    }
+  `;
+
+  const results: Result[] = [
+    { __typename: "Result", value: 0 },
+    { __typename: "Result", value: 1 },
+    { __typename: "Result", value: 1 },
+    { __typename: "Result", value: 2 },
+    { __typename: "Result", value: 3 },
+    { __typename: "Result", value: 5 },
+  ];
+
+  cache.writeQuery({
+    query,
+    data: { results },
+  });
+
+  const client = new ApolloClient({ cache, link: new MockLink([]) });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query, { canonizeResults: true });
+
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+
+  const { snapshot } = await Profiler.takeRender();
+  const resultSet = new Set(snapshot.result?.data.results);
+  const values = Array.from(resultSet).map((item) => item.value);
+
+  expect(snapshot.result).toEqual({
+    data: { results },
+    networkStatus: NetworkStatus.ready,
+    error: undefined,
+  });
+
+  expect(resultSet.size).toBe(5);
+  expect(values).toEqual([0, 1, 2, 3, 5]);
+
+  dispose();
+});
+
 describe.skip("type tests", () => {
   const client = new ApolloClient({
     cache: new InMemoryCache(),

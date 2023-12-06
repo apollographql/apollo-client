@@ -9,7 +9,12 @@ import {
   TypedDocumentNode,
   gql,
 } from "../../../core";
-import { MockLink, MockedResponse, wait } from "../../../testing";
+import {
+  MockLink,
+  MockSubscriptionLink,
+  MockedResponse,
+  wait,
+} from "../../../testing";
 import { expectTypeOf } from "expect-type";
 import { QueryReference, unwrapQueryRef } from "../../cache/QueryReference";
 import { DeepPartial, Observable } from "../../../utilities";
@@ -778,6 +783,90 @@ test("can disable canonical results when the cache's canonizeResults setting is 
   });
   expect(resultSet.size).toBe(6);
   expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+
+  dispose();
+});
+
+test("suspends deferred queries until initial chunk loads then rerenders with deferred data", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query);
+
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+  }
+
+  link.simulateResult({
+    result: {
+      data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+      hasNext: true,
+    },
+  });
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  link.simulateResult(
+    {
+      result: {
+        incremental: [
+          {
+            data: {
+              recipient: { name: "Alice", __typename: "Person" },
+              __typename: "Greeting",
+            },
+            path: ["greeting"],
+          },
+        ],
+        hasNext: false,
+      },
+    },
+    true
+  );
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
+    expect(snapshot.result).toEqual({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   dispose();
 });

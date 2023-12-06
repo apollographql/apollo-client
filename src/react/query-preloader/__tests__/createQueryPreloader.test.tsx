@@ -15,7 +15,6 @@ import { expectTypeOf } from "expect-type";
 import { QueryReference, unwrapQueryRef } from "../../cache/QueryReference";
 import { DeepPartial, Observable } from "../../../utilities";
 import {
-  Profiler,
   SimpleCaseData,
   createProfiler,
   spyOnConsole,
@@ -52,31 +51,6 @@ function renderWithClient(
   });
 }
 
-function createDefaultProfiledComponents<
-  Snapshot extends {
-    result: UseReadQueryResult<any> | null;
-  },
-  TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null ?
-    TData
-  : unknown,
->(profiler: Profiler<Snapshot>, queryRef: QueryReference<TData>) {
-  function SuspenseFallback() {
-    useTrackRenders({ name: "SuspenseFallback" });
-    return <p>Loading</p>;
-  }
-
-  function ReadQueryHook() {
-    useTrackRenders({ name: "ReadQueryHook" });
-    profiler.mergeSnapshot({
-      result: useReadQuery(queryRef),
-    } as Partial<Snapshot>);
-
-    return null;
-  }
-
-  return { SuspenseFallback, ReadQueryHook };
-}
-
 function createDefaultTestApp<TData>(queryRef: QueryReference<TData>) {
   const Profiler = createProfiler({
     initialSnapshot: {
@@ -85,10 +59,17 @@ function createDefaultTestApp<TData>(queryRef: QueryReference<TData>) {
     },
   });
 
-  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents(
-    Profiler,
-    queryRef
-  );
+  function ReadQueryHook() {
+    useTrackRenders({ name: "ReadQueryHook" });
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function SuspenseFallback() {
+    useTrackRenders({ name: "SuspenseFallback" });
+    return <p>Loading</p>;
+  }
 
   function ErrorFallback({ error }: { error: Error }) {
     useTrackRenders({ name: "ErrorFallback" });

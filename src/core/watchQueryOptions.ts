@@ -176,6 +176,13 @@ export interface WatchQueryOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptions#canonizeResults:member} */
   canonizeResults?: boolean;
+
+  /**
+   * A callback function that's called whenever a refetch attempt occurs
+   * while polling. If the function returns `true`, the refetch is
+   * skipped and not reattempted until the next poll interval.
+   */
+  skipPollAttempt?: () => boolean;
 }
 
 export interface NextFetchPolicyContext<

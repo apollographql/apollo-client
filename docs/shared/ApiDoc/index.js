@@ -1,4 +1,4 @@
-export { Provider, useApiDocContext } from "./Context";
+export { useApiDocContext } from "./Context";
 export { DocBlock, DocPiece } from "./DocBlock";
 export { PropertySignatureTable } from "./PropertySignatureTable";
 export { ApiDocHeading } from "./Heading";

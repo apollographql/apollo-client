@@ -76,15 +76,15 @@ export function PropertySignatureTable({
               sx={{code: {bg: 'none', p: 0}}}
             >
               <chakra.h6 fontSize="lg" mb="1" mr="1">
-                <MDX.InlineCode>
+                <MDX.inlineCode>
                   <Text color="gray.400" as="span">
                     {prefix}
                   </Text>
                   {property.displayName}
-                </MDX.InlineCode>
+                </MDX.inlineCode>
                 {property.optional ? <em> (optional)</em> : null}
               </chakra.h6>
-              <MDX.InlineCode color="tertiary">
+              <MDX.inlineCode color="tertiary">
                 {property.kind === 'MethodSignature' ? (
                   <FunctionSignature
                     canonicalReference={property.canonicalReference}
@@ -95,7 +95,7 @@ export function PropertySignatureTable({
                 ) : (
                   property.type
                 )}
-              </MDX.InlineCode>
+              </MDX.inlineCode>
             </GridItem>
             <GridItem className="cell" fontSize="md" lineHeight="base">
               <DocBlock canonicalReference={property.canonicalReference} summary example remarks remarkCollapsible />

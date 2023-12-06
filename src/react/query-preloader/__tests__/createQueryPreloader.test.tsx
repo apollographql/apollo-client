@@ -17,7 +17,6 @@ import { DeepPartial, Observable } from "../../../utilities";
 import {
   Profiler,
   SimpleCaseData,
-  VariablesCaseData,
   createProfiler,
   spyOnConsole,
   useSimpleCase,
@@ -62,12 +61,12 @@ function createDefaultProfiledComponents<
   : unknown,
 >(profiler: Profiler<Snapshot>, queryRef: QueryReference<TData>) {
   function SuspenseFallback() {
-    useTrackRenders();
+    useTrackRenders({ name: "SuspenseFallback" });
     return <p>Loading</p>;
   }
 
   function ReadQueryHook() {
-    useTrackRenders();
+    useTrackRenders({ name: "ReadQueryHook" });
     profiler.mergeSnapshot({
       result: useReadQuery(queryRef),
     } as Partial<Snapshot>);
@@ -78,24 +77,21 @@ function createDefaultProfiledComponents<
   return { SuspenseFallback, ReadQueryHook };
 }
 
-test("loads a query and suspends when passed to useReadQuery", async () => {
-  const { query, mocks } = useSimpleCase();
-  const client = createDefaultClient(mocks);
-  const preloadQuery = createQueryPreloader(client);
+function createDefaultTestApp<TData>(queryRef: QueryReference<TData>) {
   const Profiler = createProfiler({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as UseReadQueryResult<TData> | null,
     },
   });
 
-  const [queryRef, dispose] = preloadQuery(query);
-
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
+  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents(
+    Profiler,
+    queryRef
+  );
 
   function App() {
+    useTrackRenders({ name: "App" });
+
     return (
       <Suspense fallback={<SuspenseFallback />}>
         <ReadQueryHook />
@@ -103,19 +99,24 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
     );
   }
 
-  function ReadQueryHook() {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+  return { App, Profiler };
+}
 
-    return null;
-  }
+test("loads a query and suspends when passed to useReadQuery", async () => {
+  const { query, mocks } = useSimpleCase();
+  const client = createDefaultClient(mocks);
+  const preloadQuery = createQueryPreloader(client);
+
+  const [queryRef, dispose] = preloadQuery(query);
+
+  const { App, Profiler } = createDefaultTestApp(queryRef);
 
   renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
@@ -135,42 +136,19 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
   const { query, mocks } = useVariablesCase();
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<VariablesCaseData> | null,
-    },
-  });
 
   const [queryRef, dispose] = preloadQuery(query, {
     variables: { id: "1" },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function App() {
-    return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <ReadQueryHook />
-      </Suspense>
-    );
-  }
-
-  function ReadQueryHook() {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { App, Profiler } = createDefaultTestApp(queryRef);
 
   renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
@@ -209,34 +187,10 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
   const { query, mocks } = useSimpleCase();
   const client = createDefaultClient(mocks);
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-    },
-  });
-
   const preloadQuery = createQueryPreloader(client);
   const [queryRef, dispose] = preloadQuery(query);
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function App() {
-    return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <ReadQueryHook />
-      </Suspense>
-    );
-  }
-
-  function ReadQueryHook() {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { App, Profiler } = createDefaultTestApp(queryRef);
 
   const { rerender } = renderWithClient(<App />, { client, wrapper: Profiler });
 
@@ -267,41 +221,18 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
 test("can handle cache updates", async () => {
   const { query, mocks } = useSimpleCase();
   const client = createDefaultClient(mocks);
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-    },
-  });
 
   const preloadQuery = createQueryPreloader(client);
   const [queryRef, dispose] = preloadQuery(query);
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function App() {
-    return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <ReadQueryHook />
-      </Suspense>
-    );
-  }
-
-  function ReadQueryHook() {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { App, Profiler } = createDefaultTestApp(queryRef);
 
   renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
@@ -364,6 +295,8 @@ test("throws when error is returned", async () => {
   }
 
   function App() {
+    useTrackRenders();
+
     return (
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <Suspense fallback={<SuspenseFallback />}>
@@ -378,7 +311,7 @@ test("throws when error is returned", async () => {
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    expect(renderedComponents).toStrictEqual([App, "SuspenseFallback"]);
   }
 
   {
@@ -439,13 +372,13 @@ test("returns error when error policy is 'all'", async () => {
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
   }
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
       data: undefined,
       error: new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] }),
@@ -503,13 +436,13 @@ test("discards error when error policy is 'ignore'", async () => {
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
   }
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
       data: undefined,
       error: undefined,
@@ -550,31 +483,7 @@ test("passes context to the link", async () => {
     context: { valueA: "A", valueB: "B" },
   });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<QueryData> | null,
-    },
-  });
-
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function App() {
-    return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <ReadQueryHook />
-      </Suspense>
-    );
-  }
-
-  function ReadQueryHook() {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { App, Profiler } = createDefaultTestApp(queryRef);
 
   renderWithClient(<App />, { client, wrapper: Profiler });
 
@@ -632,10 +541,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
     }
   `;
 
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: new MockLink(mocks),
-  });
+  const client = createDefaultClient(mocks);
 
   client.writeQuery({
     query: partialQuery,
@@ -649,32 +555,14 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
     returnPartialData: true,
   });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<VariablesCaseData> | null,
-    },
-  });
-
-  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents(
-    Profiler,
-    queryRef
-  );
-
-  function App() {
-    useTrackRenders();
-    return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <ReadQueryHook />
-      </Suspense>
-    );
-  }
+  const { App, Profiler } = createDefaultTestApp(queryRef);
 
   renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
     expect(snapshot.result).toEqual({
       data: { character: { id: "1" } },
       networkStatus: NetworkStatus.loading,
@@ -685,7 +573,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Spider-Man" } },
       networkStatus: NetworkStatus.ready,

@@ -350,6 +350,33 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
   dispose();
 });
 
+test("returns cached data when all data is present in the cache", async () => {
+  const { query, mocks } = useSimpleCase();
+
+  const client = createDefaultClient(mocks);
+  client.writeQuery({ query, data: { greeting: "Cached Hello" } });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query);
+
+  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Cached Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
+
+  dispose();
+});
+
 test("throws when error is returned", async () => {
   // Disable error messages shown by React when an error is thrown to an error
   // boundary

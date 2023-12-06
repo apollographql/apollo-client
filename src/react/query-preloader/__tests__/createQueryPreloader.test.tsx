@@ -1,5 +1,4 @@
 import React, { Suspense } from "react";
-import type { ReactElement } from "react";
 import { createQueryPreloader } from "../createQueryPreloader";
 import {
   ApolloClient,
@@ -23,7 +22,7 @@ import {
   useVariablesCase,
 } from "../../../testing/internal";
 import { ApolloProvider } from "../../context";
-import { RenderOptions, render } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { UseReadQueryResult, useReadQuery } from "../../hooks";
 import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";
@@ -32,22 +31,6 @@ function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
-  });
-}
-
-function renderWithClient(
-  ui: ReactElement,
-  {
-    client,
-    wrapper: Wrapper = React.Fragment,
-  }: { client: ApolloClient<any>; wrapper?: RenderOptions["wrapper"] }
-) {
-  return render(ui, {
-    wrapper: ({ children }) => (
-      <ApolloProvider client={client}>
-        <Wrapper>{children}</Wrapper>
-      </ApolloProvider>
-    ),
   });
 }
 
@@ -96,7 +79,13 @@ function renderDefaultTestApp<TData>({
     );
   }
 
-  const utils = renderWithClient(<App />, { client, wrapper: Profiler });
+  const utils = render(<App />, {
+    wrapper: ({ children }) => (
+      <ApolloProvider client={client}>
+        <Profiler>{children}</Profiler>
+      </ApolloProvider>
+    ),
+  });
 
   function rerender() {
     return utils.rerender(<App />);

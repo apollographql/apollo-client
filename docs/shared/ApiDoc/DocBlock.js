@@ -7,7 +7,7 @@ import {useApiDocContext} from '.';
 export function DocBlock({
   canonicalReference,
   summary = true,
-  remark = false,
+  remarks = false,
   example = false,
   remarkCollapsible = true,
   since = true,
@@ -21,9 +21,9 @@ export function DocBlock({
       )}
       {since && <DocPiece since canonicalReference={canonicalReference} />}
       {summary && <DocPiece summary canonicalReference={canonicalReference} />}
-      {remark && (
+      {remarks && (
         <DocPiece
-          remark
+          remarks
           collapsible={remarkCollapsible}
           canonicalReference={canonicalReference}
         />
@@ -36,7 +36,7 @@ export function DocBlock({
 DocBlock.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   summary: PropTypes.bool,
-  remark: PropTypes.bool,
+  remarks: PropTypes.bool,
   example: PropTypes.bool,
   remarkCollapsible: PropTypes.bool,
   since: PropTypes.bool,
@@ -46,7 +46,7 @@ DocBlock.propTypes = {
 export function DocPiece({
   canonicalReference,
   summary = false,
-  remark = false,
+  remarks = false,
   example = false,
   since = false,
   deprecated = false,
@@ -74,8 +74,8 @@ export function DocPiece({
       jsx = value ? mdToReact(value) : null;
       break;
     }
-    case remark: {
-      const value = item.comment?.remark;
+    case remarks: {
+      const value = item.comment?.remarks?.replace(/^@remarks/g, '');
       jsx = value ? mdToReact(value) : null;
       break;
     }
@@ -90,15 +90,13 @@ export function DocPiece({
     default:
       throw new Error(
         'You need to call `DocPiece` with  one of the following props:' +
-          '`summary`, `remark`, `example`, `since`, `deprecated`'
+          '`summary`, `remarks`, `example`, `since`, `deprecated`'
       );
   }
   return collapsible ? (
     jsx ? (
       <details>
-        <summary>
-          <p>Read more...</p>
-        </summary>
+        <summary>Read more...</summary>
         {jsx}
       </details>
     ) : null
@@ -110,7 +108,7 @@ DocPiece.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   collapsible: PropTypes.bool,
   summary: PropTypes.bool,
-  remark: PropTypes.bool,
+  remarks: PropTypes.bool,
   example: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
   since: PropTypes.bool,
   deprecated: PropTypes.bool

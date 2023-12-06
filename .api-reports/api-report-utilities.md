@@ -447,7 +447,7 @@ class CacheGroup {
 }
 
 // @public
-interface CacheSizes {
+export interface CacheSizes {
     canonicalStringify: number;
     documentTransform: number;
     executeSelectionSet: number;
@@ -464,8 +464,6 @@ interface CacheSizes {
     queryManagerTransforms: number;
 }
 
-// Warning: (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
-//
 // @public
 export const cacheSizes: CacheSizes;
 

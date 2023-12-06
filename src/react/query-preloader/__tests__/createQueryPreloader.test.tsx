@@ -457,7 +457,7 @@ test("returns error when error policy is 'all'", async () => {
   dispose();
 });
 
-test("discards error when error policy is 'none'", async () => {
+test("discards error when error policy is 'ignore'", async () => {
   // Disable error messages shown by React when an error is thrown to an error
   // boundary
   using _consoleSpy = spyOnConsole("error");

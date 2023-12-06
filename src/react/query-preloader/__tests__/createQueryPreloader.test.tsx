@@ -81,6 +81,7 @@ function createDefaultTestApp<TData>(queryRef: QueryReference<TData>) {
   const Profiler = createProfiler({
     initialSnapshot: {
       result: null as UseReadQueryResult<TData> | null,
+      error: null as Error | null,
     },
   });
 
@@ -89,13 +90,22 @@ function createDefaultTestApp<TData>(queryRef: QueryReference<TData>) {
     queryRef
   );
 
+  function ErrorFallback({ error }: { error: Error }) {
+    useTrackRenders({ name: "ErrorFallback" });
+    Profiler.mergeSnapshot({ error });
+
+    return null;
+  }
+
   function App() {
     useTrackRenders({ name: "App" });
 
     return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <ReadQueryHook />
-      </Suspense>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
@@ -272,52 +282,24 @@ test("throws when error is returned", async () => {
     { request: { query }, result: { errors: [new GraphQLError("Oops")] } },
   ];
   const client = createDefaultClient(mocks);
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-      error: null as Error | null,
-    },
-  });
 
   const preloadQuery = createQueryPreloader(client);
   const [queryRef, dispose] = preloadQuery(query);
 
-  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents(
-    Profiler,
-    queryRef
-  );
-
-  function ErrorFallback({ error }: { error: Error }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ error });
-
-    return null;
-  }
-
-  function App() {
-    useTrackRenders();
-
-    return (
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <ReadQueryHook />
-        </Suspense>
-      </ErrorBoundary>
-    );
-  }
+  const { App, Profiler } = createDefaultTestApp(queryRef);
 
   renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([App, "SuspenseFallback"]);
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([ErrorFallback]);
+    expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
     expect(snapshot.error).toEqual(
       new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] })
     );
@@ -335,44 +317,18 @@ test("returns error when error policy is 'all'", async () => {
     { request: { query }, result: { errors: [new GraphQLError("Oops")] } },
   ];
   const client = createDefaultClient(mocks);
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData | undefined> | null,
-      error: null as Error | null,
-    },
-  });
 
   const preloadQuery = createQueryPreloader(client);
   const [queryRef, dispose] = preloadQuery(query, { errorPolicy: "all" });
 
-  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents(
-    Profiler,
-    queryRef
-  );
-
-  function ErrorFallback({ error }: { error: Error }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ error });
-
-    return null;
-  }
-
-  function App() {
-    return (
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <ReadQueryHook />
-        </Suspense>
-      </ErrorBoundary>
-    );
-  }
+  const { App, Profiler } = createDefaultTestApp(queryRef);
 
   renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
@@ -399,44 +355,18 @@ test("discards error when error policy is 'ignore'", async () => {
     { request: { query }, result: { errors: [new GraphQLError("Oops")] } },
   ];
   const client = createDefaultClient(mocks);
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData | undefined> | null,
-      error: null as Error | null,
-    },
-  });
 
   const preloadQuery = createQueryPreloader(client);
   const [queryRef, dispose] = preloadQuery(query, { errorPolicy: "ignore" });
 
-  const { SuspenseFallback, ReadQueryHook } = createDefaultProfiledComponents(
-    Profiler,
-    queryRef
-  );
-
-  function ErrorFallback({ error }: { error: Error }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ error });
-
-    return null;
-  }
-
-  function App() {
-    return (
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <ReadQueryHook />
-        </Suspense>
-      </ErrorBoundary>
-    );
-  }
+  const { App, Profiler } = createDefaultTestApp(queryRef);
 
   renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {

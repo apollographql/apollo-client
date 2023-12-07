@@ -1,8 +1,8 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import {Stack} from '@chakra-ui/react';
-import {mdToReact} from './mdToReact';
-import {useApiDocContext} from '.';
+import PropTypes from "prop-types";
+import React from "react";
+import { Stack } from "@chakra-ui/react";
+import { mdToReact } from "./mdToReact";
+import { useApiDocContext } from ".";
 
 export function DocBlock({
   canonicalReference,
@@ -11,7 +11,7 @@ export function DocBlock({
   example = false,
   remarkCollapsible = true,
   since = true,
-  deprecated = true
+  deprecated = true,
 }) {
   return (
     <Stack spacing="4">
@@ -40,7 +40,7 @@ DocBlock.propTypes = {
   example: PropTypes.bool,
   remarkCollapsible: PropTypes.bool,
   since: PropTypes.bool,
-  deprecated: PropTypes.bool
+  deprecated: PropTypes.bool,
 };
 
 export function DocPiece({
@@ -50,7 +50,7 @@ export function DocPiece({
   example = false,
   since = false,
   deprecated = false,
-  collapsible = false
+  collapsible = false,
 }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
@@ -64,9 +64,10 @@ export function DocPiece({
     }
     case since: {
       const value = item.comment?.since;
-      jsx = value /* TODO schema */ ? (
-        <i>Added to Apollo Client in version {value}</i>
-      ) : null;
+      jsx =
+        value /* TODO schema */ ?
+          <i>Added to Apollo Client in version {value}</i>
+        : null;
       break;
     }
     case summary: {
@@ -75,7 +76,7 @@ export function DocPiece({
       break;
     }
     case remarks: {
-      const value = item.comment?.remarks?.replace(/^@remarks/g, '');
+      const value = item.comment?.remarks?.replace(/^@remarks/g, "");
       jsx = value ? mdToReact(value) : null;
       break;
     }
@@ -89,19 +90,19 @@ export function DocPiece({
     }
     default:
       throw new Error(
-        'You need to call `DocPiece` with  one of the following props:' +
-          '`summary`, `remarks`, `example`, `since`, `deprecated`'
+        "You need to call `DocPiece` with  one of the following props:" +
+          "`summary`, `remarks`, `example`, `since`, `deprecated`"
       );
   }
-  return collapsible ? (
-    jsx ? (
-      <details>
-        <summary>Read more...</summary>
-        {jsx}
-      </details>
-    ) : null
-  ) : (
-    jsx
+  return (
+    collapsible ?
+      jsx ?
+        <details>
+          <summary>Read more...</summary>
+          {jsx}
+        </details>
+      : null
+    : jsx
   );
 }
 DocPiece.propTypes = {
@@ -111,5 +112,5 @@ DocPiece.propTypes = {
   remarks: PropTypes.bool,
   example: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
   since: PropTypes.bool,
-  deprecated: PropTypes.bool
+  deprecated: PropTypes.bool,
 };

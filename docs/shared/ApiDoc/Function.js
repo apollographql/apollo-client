@@ -1,32 +1,32 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import {ApiDocHeading, DocBlock, ParameterTable, useApiDocContext} from '.';
+import PropTypes from "prop-types";
+import React from "react";
+import { ApiDocHeading, DocBlock, ParameterTable, useApiDocContext } from ".";
 
 export function FunctionSignature({
   canonicalReference,
   parameterTypes = false,
   name = true,
-  arrow = false
+  arrow = false,
 }) {
   const getItem = useApiDocContext();
-  const {displayName, parameters, returnType} = getItem(canonicalReference);
+  const { displayName, parameters, returnType } = getItem(canonicalReference);
 
   return (
     <>
-      {name ? displayName : ''}(
+      {name ? displayName : ""}(
       {parameters
-        .map(p => {
+        .map((p) => {
           let pStr = p.name;
           if (p.optional) {
-            pStr += '?';
+            pStr += "?";
           }
           if (parameterTypes) {
-            pStr += ': ' + p.type;
+            pStr += ": " + p.type;
           }
           return pStr;
         })
-        .join(', ')}
-      ){arrow ? ' =>' : ':'} {returnType}
+        .join(", ")}
+      ){arrow ? " =>" : ":"} {returnType}
     </>
   );
 }
@@ -35,10 +35,10 @@ FunctionSignature.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   parameterTypes: PropTypes.bool,
   name: PropTypes.bool,
-  arrow: PropTypes.bool
+  arrow: PropTypes.bool,
 };
 
-export function FunctionDetails({canonicalReference, customParameterOrder}) {
+export function FunctionDetails({ canonicalReference, customParameterOrder }) {
   return (
     <>
       <ApiDocHeading canonicalReference={canonicalReference} headingLevel={3} />
@@ -58,5 +58,5 @@ export function FunctionDetails({canonicalReference, customParameterOrder}) {
 
 FunctionDetails.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
-  customParameterOrder: PropTypes.arrayOf(PropTypes.string)
+  customParameterOrder: PropTypes.arrayOf(PropTypes.string),
 };

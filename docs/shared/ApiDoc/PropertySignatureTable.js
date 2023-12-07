@@ -1,22 +1,22 @@
-import { useMDXComponents } from '@mdx-js/react';
+import { useMDXComponents } from "@mdx-js/react";
 
-import PropTypes from 'prop-types';
-import React, {useMemo} from 'react';
-import {DocBlock, FunctionSignature, useApiDocContext} from '.';
-import {GridItem, Text, chakra} from '@chakra-ui/react';
-import {ResponsiveGrid} from './ResponsiveGrid';
+import PropTypes from "prop-types";
+import React, { useMemo } from "react";
+import { DocBlock, FunctionSignature, useApiDocContext } from ".";
+import { GridItem, Text, chakra } from "@chakra-ui/react";
+import { ResponsiveGrid } from "./ResponsiveGrid";
 
 export function PropertySignatureTable({
   canonicalReference,
-  prefix = '',
+  prefix = "",
   showHeaders = true,
-  display = 'parent',
-  customOrder = []
+  display = "parent",
+  customOrder = [],
 }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
-  const Wrapper = display === 'parent' ? ResponsiveGrid : React.Fragment;
+  const Wrapper = display === "parent" ? ResponsiveGrid : React.Fragment;
 
   const sortedProperties = useMemo(
     () =>
@@ -38,7 +38,7 @@ export function PropertySignatureTable({
 
   return (
     <>
-      {showHeaders ? (
+      {showHeaders ?
         <GridItem className="row">
           <chakra.h6
             className="fullWidth"
@@ -51,29 +51,29 @@ export function PropertySignatureTable({
             Properties
           </chakra.h6>
         </GridItem>
-      ) : null}
-      {item.childrenIncomplete ? (
+      : null}
+      {item.childrenIncomplete ?
         <GridItem className="row">
           <br />
           (Warning: some properties might be missing from the table due to
           complex inheritance!)
         </GridItem>
-      ) : null}
+      : null}
 
       <Wrapper>
-        {showHeaders ? (
+        {showHeaders ?
           <>
             <GridItem className="first cell heading">Name / Type</GridItem>
             <GridItem className="cell heading">Description</GridItem>
           </>
-        ) : null}
+        : null}
 
-        {sortedProperties.map(property => (
+        {sortedProperties.map((property) => (
           <React.Fragment key={property.id}>
             <GridItem
               className="first cell"
               fontSize="md"
-              sx={{code: {bg: 'none', p: 0}}}
+              sx={{ code: { bg: "none", p: 0 } }}
             >
               <chakra.h6 fontSize="lg" mb="1" mr="1">
                 <MDX.inlineCode>
@@ -82,19 +82,19 @@ export function PropertySignatureTable({
                   </Text>
                   {property.displayName}
                 </MDX.inlineCode>
-                {property.optional ? <em> (optional)</em> : null}
+                {property.optional ?
+                  <em> (optional)</em>
+                : null}
               </chakra.h6>
               <MDX.inlineCode color="tertiary">
-                {property.kind === 'MethodSignature' ? (
+                {property.kind === "MethodSignature" ?
                   <FunctionSignature
                     canonicalReference={property.canonicalReference}
                     name={false}
                     parameterTypes
                     arrow
                   />
-                ) : (
-                  property.type
-                )}
+                : property.type}
               </MDX.inlineCode>
             </GridItem>
             <GridItem className="cell" fontSize="md" lineHeight="base">
@@ -111,6 +111,6 @@ PropertySignatureTable.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   prefix: PropTypes.string,
   showHeaders: PropTypes.bool,
-  display: PropTypes.oneOf(['parent', 'child']),
-  customOrder: PropTypes.arrayOf(PropTypes.string)
+  display: PropTypes.oneOf(["parent", "child"]),
+  customOrder: PropTypes.arrayOf(PropTypes.string),
 };

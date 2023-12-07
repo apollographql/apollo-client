@@ -1,6 +1,6 @@
-import { useMDXComponents } from '@mdx-js/react';
+import { useMDXComponents } from "@mdx-js/react";
 
-export const useApiDocContext = function(){
+export const useApiDocContext = function () {
   const MDX = useMDXComponents();
-  return MDX.useApiDocContext(this, arguments)
-}
+  return MDX.useApiDocContext(this, arguments);
+};

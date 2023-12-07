@@ -1,11 +1,11 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import {ApiDocHeading, DocBlock, PropertySignatureTable} from '.';
+import PropTypes from "prop-types";
+import React from "react";
+import { ApiDocHeading, DocBlock, PropertySignatureTable } from ".";
 export function InterfaceDetails({
   canonicalReference,
   headingLevel,
   link,
-  customPropertyOrder
+  customPropertyOrder,
 }) {
   return (
     <>
@@ -33,5 +33,5 @@ InterfaceDetails.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   headingLevel: PropTypes.number,
   link: PropTypes.bool,
-  customPropertyOrder: PropTypes.arrayOf(PropTypes.string)
+  customPropertyOrder: PropTypes.arrayOf(PropTypes.string),
 };

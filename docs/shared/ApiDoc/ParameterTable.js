@@ -1,13 +1,13 @@
-import { useMDXComponents } from '@mdx-js/react';
+import { useMDXComponents } from "@mdx-js/react";
 
-import PropTypes from 'prop-types';
-import React from 'react';
-import {GridItem, chakra} from '@chakra-ui/react';
-import {PropertySignatureTable, useApiDocContext} from '.';
-import {ResponsiveGrid} from './ResponsiveGrid';
-import {mdToReact} from './mdToReact';
+import PropTypes from "prop-types";
+import React from "react";
+import { GridItem, chakra } from "@chakra-ui/react";
+import { PropertySignatureTable, useApiDocContext } from ".";
+import { ResponsiveGrid } from "./ResponsiveGrid";
+import { mdToReact } from "./mdToReact";
 
-export function ParameterTable({canonicalReference}) {
+export function ParameterTable({ canonicalReference }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
@@ -31,34 +31,39 @@ export function ParameterTable({canonicalReference}) {
         <GridItem className="first cell heading">Name / Type</GridItem>
         <GridItem className="cell heading">Description</GridItem>
 
-        {item.parameters.map(parameter => {
-          const baseType = parameter.type.split('<')[0];
+        {item.parameters.map((parameter) => {
+          const baseType = parameter.type.split("<")[0];
           const reference = getItem(
-            item.references?.find(r => r.text === baseType)?.canonicalReference,
+            item.references?.find((r) => r.text === baseType)
+              ?.canonicalReference,
             false
           );
           const interfaceReference =
-            reference?.kind === 'Interface' ? reference : null;
+            reference?.kind === "Interface" ? reference : null;
 
           return (
             <React.Fragment key={parameter.id}>
               <GridItem
                 className="first cell"
                 fontSize="md"
-                sx={{code: {bg: 'none', p: 0}}}
-                borderBottom={interfaceReference ? 'none' : undefined}
+                sx={{ code: { bg: "none", p: 0 } }}
+                borderBottom={interfaceReference ? "none" : undefined}
               >
                 <chakra.h6 fontSize="lg" mb="1">
                   <MDX.inlineCode>{parameter.name}</MDX.inlineCode>
-                  {parameter.optional ? <em> (optional)</em> : null}
+                  {parameter.optional ?
+                    <em> (optional)</em>
+                  : null}
                 </chakra.h6>
-                <MDX.inlineCode color="tertiary">{parameter.type}</MDX.inlineCode>
+                <MDX.inlineCode color="tertiary">
+                  {parameter.type}
+                </MDX.inlineCode>
               </GridItem>
               <GridItem
                 className="cell"
                 fontSize="md"
                 lineHeight="base"
-                borderBottom={interfaceReference ? 'none' : undefined}
+                borderBottom={interfaceReference ? "none" : undefined}
               >
                 {mdToReact(parameter.comment)}
               </GridItem>
@@ -84,5 +89,5 @@ export function ParameterTable({canonicalReference}) {
 }
 
 ParameterTable.propTypes = {
-  canonicalReference: PropTypes.string.isRequired
+  canonicalReference: PropTypes.string.isRequired,
 };

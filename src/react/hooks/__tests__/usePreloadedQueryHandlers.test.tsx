@@ -47,7 +47,7 @@ test("refetches and resuspends when calling refetch", async () => {
   });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query);
+  const queryRef = preloadQuery(query);
 
   function SuspenseFallback() {
     useTrackRenders();
@@ -117,8 +117,6 @@ test("refetches and resuspends when calling refetch", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
-
-  dispose();
 });
 
 test("does not interfere with updates from useReadQuery", async () => {
@@ -136,7 +134,7 @@ test("does not interfere with updates from useReadQuery", async () => {
   });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query);
+  const queryRef = preloadQuery(query);
 
   function SuspenseFallback() {
     useTrackRenders();
@@ -215,8 +213,6 @@ test("does not interfere with updates from useReadQuery", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
-
-  dispose();
 });
 
 test('honors refetchWritePolicy set to "merge"', async () => {
@@ -276,7 +272,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
   });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, {
+  const queryRef = preloadQuery(query, {
     refetchWritePolicy: "merge",
     variables: { min: 0, max: 12 },
   });
@@ -351,8 +347,6 @@ test('honors refetchWritePolicy set to "merge"', async () => {
   }
 
   await expect(Profiler).not.toRerender();
-
-  dispose();
 });
 
 test('honors refetchWritePolicy set to "overwrite"', async () => {
@@ -412,7 +406,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
   });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, {
+  const queryRef = preloadQuery(query, {
     refetchWritePolicy: "overwrite",
     variables: { min: 0, max: 12 },
   });
@@ -484,8 +478,6 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
   }
 
   await expect(Profiler).not.toRerender();
-
-  dispose();
 });
 
 test('defaults refetchWritePolicy to "overwrite"', async () => {
@@ -545,7 +537,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
   });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, {
+  const queryRef = preloadQuery(query, {
     variables: { min: 0, max: 12 },
   });
 
@@ -616,8 +608,6 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
   }
 
   await expect(Profiler).not.toRerender();
-
-  dispose();
 });
 
 test("`refetch` works with startTransition", async () => {
@@ -667,7 +657,7 @@ test("`refetch` works with startTransition", async () => {
   });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, { variables: { id: "1" } });
+  const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
   function App() {
     const { refetch } = usePreloadedQueryHandlers(queryRef);
@@ -740,6 +730,4 @@ test("`refetch` works with startTransition", async () => {
   await waitFor(() => {
     expect(todo).toHaveTextContent("Clean room (completed)");
   });
-
-  dispose();
 });

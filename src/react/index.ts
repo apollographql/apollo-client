@@ -16,7 +16,6 @@ export { DocumentType, operationName, parser } from "./parser/index.js";
 export type {
   PreloadQueryOptions,
   PreloadQueryFetchPolicy,
-  PreloadedQueryResult,
 } from "./query-preloader/createQueryPreloader.js";
 export { createQueryPreloader } from "./query-preloader/createQueryPreloader.js";
 

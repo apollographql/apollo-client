@@ -987,7 +987,7 @@ describe.skip("type tests", () => {
 
   test("returns QueryReference<TData> in default case", () => {
     {
-      const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
+      const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query);
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
@@ -1003,7 +1003,7 @@ describe.skip("type tests", () => {
 
   test("returns QueryReference<TData | undefined> with errorPolicy: 'ignore'", () => {
     {
-      const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
+      const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { errorPolicy: "ignore" });
 
       expectTypeOf(queryRef).toEqualTypeOf<
@@ -1025,7 +1025,7 @@ describe.skip("type tests", () => {
 
   test("returns QueryReference<TData | undefined> with errorPolicy: 'all'", () => {
     {
-      const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
+      const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { errorPolicy: "all" });
 
       expectTypeOf(queryRef).toEqualTypeOf<
@@ -1047,7 +1047,7 @@ describe.skip("type tests", () => {
 
   test("returns QueryReference<TData> with errorPolicy: 'none'", () => {
     {
-      const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
+      const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { errorPolicy: "none" });
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
@@ -1065,7 +1065,7 @@ describe.skip("type tests", () => {
 
   test("returns QueryReference<DeepPartial<TData>> with returnPartialData: true", () => {
     {
-      const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
+      const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { returnPartialData: true });
 
       expectTypeOf(queryRef).toEqualTypeOf<
@@ -1087,7 +1087,7 @@ describe.skip("type tests", () => {
 
   test("returns QueryReference<DeepPartial<TData>> with returnPartialData: false", () => {
     {
-      const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
+      const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { returnPartialData: false });
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
@@ -1105,7 +1105,7 @@ describe.skip("type tests", () => {
 
   test("returns QueryReference<TData> when passing an option unrelated to TData", () => {
     {
-      const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
+      const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { canonizeResults: true });
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
@@ -1123,7 +1123,7 @@ describe.skip("type tests", () => {
 
   test("handles combinations of options", () => {
     {
-      const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
+      const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, {
         returnPartialData: true,
         errorPolicy: "ignore",
@@ -1147,7 +1147,7 @@ describe.skip("type tests", () => {
     }
 
     {
-      const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
+      const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, {
         returnPartialData: true,
         errorPolicy: "none",
@@ -1173,7 +1173,7 @@ describe.skip("type tests", () => {
 
   test("returns correct TData type when combined with options unrelated to TData", () => {
     {
-      const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
+      const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, {
         canonizeResults: true,
         returnPartialData: true,

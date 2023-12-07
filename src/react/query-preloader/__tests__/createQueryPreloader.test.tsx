@@ -172,6 +172,16 @@ test("tears down the query when calling dispose", async () => {
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
 
+test.todo(
+  "Auto disposes of the query ref if not retained within the given time"
+);
+test.todo(
+  "useReadQuery auto-retains the queryRef and disposes of it when unmounted"
+);
+test.todo(
+  "queryRef is not disposed when useReadQuery unmounts when manually retained"
+);
+
 test("useReadQuery warns when called with a disposed queryRef", async () => {
   using _consoleSpy = spyOnConsole("warn");
   const { query, mocks } = useSimpleCase();

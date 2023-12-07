@@ -2,6 +2,7 @@ import { equal } from "@wry/equality";
 import type {
   ApolloError,
   ApolloQueryResult,
+  FetchMoreQueryOptions,
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
@@ -25,9 +26,10 @@ type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
 type DisposeFn = () => void;
 
-type FetchMoreOptions<TData> = Parameters<
-  ObservableQuery<TData>["fetchMore"]
->[0];
+type FetchMoreOptions<
+  TData,
+  TVariables extends OperationVariables,
+> = Parameters<ObservableQuery<TData>["fetchMore"]>[0];
 
 const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 const PROMISE_SYMBOL: unique symbol = Symbol();
@@ -51,9 +53,9 @@ interface InternalQueryReferenceOptions {
   autoDisposeTimeoutMs?: number;
 }
 
-export function wrapQueryRef<TData>(
-  internalQueryRef: InternalQueryReference<TData>
-): QueryReference<TData> {
+export function wrapQueryRef<TData, TVariables extends OperationVariables>(
+  internalQueryRef: InternalQueryReference<TData, TVariables>
+): QueryReference<TData, TVariables> {
   return {
     retain: () => internalQueryRef.retain(),
     [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
@@ -61,13 +63,15 @@ export function wrapQueryRef<TData>(
   };
 }
 
-export function getWrappedPromise<TData>(queryRef: QueryReference<TData>) {
+export function getWrappedPromise<TData, TVariables extends OperationVariables>(
+  queryRef: QueryReference<TData, TVariables>
+) {
   return queryRef[PROMISE_SYMBOL];
 }
 
-export function unwrapQueryRef<TData>(
-  queryRef: QueryReference<TData>
-): [InternalQueryReference<TData>, () => QueryRefPromise<TData>] {
+export function unwrapQueryRef<TData, TVariables extends OperationVariables>(
+  queryRef: QueryReference<TData, TVariables>
+): [InternalQueryReference<TData, TVariables>, () => QueryRefPromise<TData>] {
   const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
 
   return [
@@ -109,7 +113,7 @@ export class InternalQueryReference<
 > {
   public result: ApolloQueryResult<TData>;
   public readonly key: QueryKey = {};
-  public readonly observable: ObservableQuery<TData>;
+  public readonly observable: ObservableQuery<TData, TVariables>;
 
   public promise: QueryRefPromise<TData>;
 
@@ -125,7 +129,7 @@ export class InternalQueryReference<
   private references = 0;
 
   constructor(
-    observable: ObservableQuery<TData>,
+    observable: ObservableQuery<TData, TVariables>,
     options: InternalQueryReferenceOptions
   ) {
     this.handleNext = this.handleNext.bind(this);
@@ -256,8 +260,12 @@ export class InternalQueryReference<
     return this.initiateFetch(this.observable.refetch(variables));
   }
 
-  fetchMore(options: FetchMoreOptions<TData>) {
-    return this.initiateFetch(this.observable.fetchMore<TData>(options));
+  fetchMore(options: FetchMoreOptions<TData, TVariables>) {
+    return this.initiateFetch(
+      this.observable.fetchMore<TData>(
+        options as FetchMoreQueryOptions<any, any>
+      )
+    );
   }
 
   private dispose() {

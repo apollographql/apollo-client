@@ -2,6 +2,10 @@ import React from "react";
 import { Global } from "@emotion/react";
 import { Grid } from "@chakra-ui/react";
 
+/**
+ * This component is actually over in the docs repo, just repeated here so the
+ * styles are visible.
+ */
 export function ResponsiveGridStyles() {
   return (
     <Global
@@ -54,13 +58,12 @@ export function ResponsiveGridStyles() {
 }
 
 export function ResponsiveGrid({ children }) {
-  {
-    /*
+  /*
         responsiveness not regarding screen width, but actual available space:
         if less than 350px, show only one column
         show at most two columns (that's where the 45% hack comes - 45% * 3 won't fit)
        */
-  }
+
   return (
     <Grid
       templateColumns="repeat(auto-fit, minmax(max(350px, 45%), 1fr))"

@@ -22,7 +22,7 @@ export function usePreloadedQueryHandlers<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  queryRef: QueryReference<TData>
+  queryRef: QueryReference<TData, TVariables>
 ): UsePreloadedQueryHandlersResult<TData, TVariables> {
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(queryRef);
   const [internalQueryRef] = unwrapQueryRef(queryRef);

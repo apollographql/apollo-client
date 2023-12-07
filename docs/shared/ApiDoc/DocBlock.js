@@ -16,19 +16,16 @@ export function DocBlock({
   return (
     <Stack spacing="4">
       {/** TODO: @since, @deprecated etc. */}
-      {deprecated && (
-        <DocPiece deprecated canonicalReference={canonicalReference} />
-      )}
-      {since && <DocPiece since canonicalReference={canonicalReference} />}
-      {summary && <DocPiece summary canonicalReference={canonicalReference} />}
+      {deprecated && <Deprecated canonicalReference={canonicalReference} />}
+      {since && <Since canonicalReference={canonicalReference} />}
+      {summary && <Summary canonicalReference={canonicalReference} />}
       {remarks && (
-        <DocPiece
-          remarks
+        <Remarks
           collapsible={remarkCollapsible}
           canonicalReference={canonicalReference}
         />
       )}
-      {example && <DocPiece example canonicalReference={canonicalReference} />}
+      {example && <Example canonicalReference={canonicalReference} />}
     </Stack>
   );
 }
@@ -43,74 +40,110 @@ DocBlock.propTypes = {
   deprecated: PropTypes.bool,
 };
 
-export function DocPiece({
+function MaybeCollapsible({ collapsible, children }) {
+  return (
+    collapsible ?
+      children ?
+        <details>
+          <summary>Read more...</summary>
+          {children}
+        </details>
+      : null
+    : children
+  );
+}
+MaybeCollapsible.propTypes = {
+  collapsible: PropTypes.bool,
+  children: PropTypes.node,
+};
+
+/**
+ * Might still need more work on the Gatsby side to get this to work.
+ */
+export function Deprecated({ canonicalReference, collapsible = false }) {
+  const getItem = useApiDocContext();
+  const item = getItem(canonicalReference);
+  const value = item.comment?.deprecated;
+  if (!value) return null;
+  return (
+    <MaybeCollapsible collapsible={collapsible}>
+      <b>{mdToReact(value)}</b>
+    </MaybeCollapsible>
+  );
+}
+Deprecated.propTypes = {
+  canonicalReference: PropTypes.string.isRequired,
+  collapsible: PropTypes.bool,
+};
+
+/**
+ * Might still need more work on the Gatsby side to get this to work.
+ */
+export function Since({ canonicalReference, collapsible = false }) {
+  const getItem = useApiDocContext();
+  const item = getItem(canonicalReference);
+  const value = item.comment?.since;
+  if (!value) return null;
+  return (
+    <MaybeCollapsible collapsible={collapsible}>
+      <i>Added to Apollo Client in version {value}</i>
+    </MaybeCollapsible>
+  );
+}
+Since.propTypes = {
+  canonicalReference: PropTypes.string.isRequired,
+  collapsible: PropTypes.bool,
+};
+
+export function Summary({ canonicalReference, collapsible = false }) {
+  const getItem = useApiDocContext();
+  const item = getItem(canonicalReference);
+  const value = item.comment?.summary;
+  if (!value) return null;
+  return (
+    <MaybeCollapsible collapsible={collapsible}>
+      {mdToReact(value)}
+    </MaybeCollapsible>
+  );
+}
+Summary.propTypes = {
+  canonicalReference: PropTypes.string.isRequired,
+  collapsible: PropTypes.bool,
+};
+
+export function Remarks({ canonicalReference, collapsible = false }) {
+  const getItem = useApiDocContext();
+  const item = getItem(canonicalReference);
+  const value = item.comment?.remarks?.replace(/^@remarks/g, "");
+  if (!value) return null;
+  return (
+    <MaybeCollapsible collapsible={collapsible}>
+      {mdToReact(value)}
+    </MaybeCollapsible>
+  );
+}
+Remarks.propTypes = {
+  canonicalReference: PropTypes.string.isRequired,
+  collapsible: PropTypes.bool,
+};
+
+export function Example({
   canonicalReference,
-  summary = false,
-  remarks = false,
-  example = false,
-  since = false,
-  deprecated = false,
   collapsible = false,
+  index = 0,
 }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
-  let jsx = null;
-
-  switch (true) {
-    case deprecated: {
-      const value = item.comment?.deprecated;
-      jsx = value ? <b>{mdToReact(value)}</b> : null;
-      break;
-    }
-    case since: {
-      const value = item.comment?.since;
-      jsx =
-        value /* TODO schema */ ?
-          <i>Added to Apollo Client in version {value}</i>
-        : null;
-      break;
-    }
-    case summary: {
-      const value = item.comment?.summary;
-      jsx = value ? mdToReact(value) : null;
-      break;
-    }
-    case remarks: {
-      const value = item.comment?.remarks?.replace(/^@remarks/g, "");
-      jsx = value ? mdToReact(value) : null;
-      break;
-    }
-    case example !== false: {
-      // special case: `example`: 0 references the first example, so we can't check for a truthy value
-      // `true` will be interpreted as `0` here
-      const value =
-        item.comment?.examples[Number.isInteger(example) ? example : 0];
-      jsx = value ? <b>{mdToReact(value)}</b> : null;
-      break;
-    }
-    default:
-      throw new Error(
-        "You need to call `DocPiece` with  one of the following props:" +
-          "`summary`, `remarks`, `example`, `since`, `deprecated`"
-      );
-  }
+  const value = item.comment?.examples[index];
+  if (!value) return null;
   return (
-    collapsible ?
-      jsx ?
-        <details>
-          <summary>Read more...</summary>
-          {jsx}
-        </details>
-      : null
-    : jsx
+    <MaybeCollapsible collapsible={collapsible}>
+      <b>{mdToReact(value)}</b>
+    </MaybeCollapsible>
   );
 }
-DocPiece.propTypes = {
+Example.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   collapsible: PropTypes.bool,
-  summary: PropTypes.bool,
-  remarks: PropTypes.bool,
-  example: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
-  since: PropTypes.bool,
-  deprecated: PropTypes.bool,
+  index: PropTypes.number,
 };

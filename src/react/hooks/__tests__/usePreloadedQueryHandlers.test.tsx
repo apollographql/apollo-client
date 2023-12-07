@@ -121,7 +121,7 @@ test("refetches and resuspends when calling refetch", async () => {
   dispose();
 });
 
-test("does not interfere with updates to the query from useReadQuery", async () => {
+test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = useSimpleCase();
 
   const client = new ApolloClient({

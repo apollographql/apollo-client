@@ -43,7 +43,7 @@ export type UseLoadableQueryResult<
   TVariables extends OperationVariables = OperationVariables,
 > = [
   LoadQueryFunction<TVariables>,
-  QueryReference<TData> | null,
+  QueryReference<TData, TVariables> | null,
   {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;

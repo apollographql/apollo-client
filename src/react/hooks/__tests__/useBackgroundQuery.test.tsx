@@ -5661,7 +5661,7 @@ describe("useBackgroundQuery", () => {
       });
 
       expectTypeOf(inferredQueryRef).toEqualTypeOf<
-        QueryReference<VariablesCaseData> | undefined
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
       >();
       expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
         QueryReference<VariablesCaseData>
@@ -5673,10 +5673,10 @@ describe("useBackgroundQuery", () => {
       >(query, { skip: true });
 
       expectTypeOf(explicitQueryRef).toEqualTypeOf<
-        QueryReference<VariablesCaseData> | undefined
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
       >();
       expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData>
+        QueryReference<VariablesCaseData, VariablesCaseVariables>
       >();
 
       // TypeScript is too smart and using a `const` or `let` boolean variable
@@ -5691,10 +5691,10 @@ describe("useBackgroundQuery", () => {
       });
 
       expectTypeOf(dynamicQueryRef).toEqualTypeOf<
-        QueryReference<VariablesCaseData> | undefined
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
       >();
       expectTypeOf(dynamicQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData>
+        QueryReference<VariablesCaseData, VariablesCaseVariables>
       >();
     });
 
@@ -5705,7 +5705,7 @@ describe("useBackgroundQuery", () => {
 
       expectTypeOf(inferredQueryRef).toEqualTypeOf<undefined>();
       expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData> | undefined
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
       >();
 
       const [explicitQueryRef] = useBackgroundQuery<
@@ -5715,7 +5715,7 @@ describe("useBackgroundQuery", () => {
 
       expectTypeOf(explicitQueryRef).toEqualTypeOf<undefined>();
       expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData> | undefined
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
       >();
     });
 
@@ -5731,10 +5731,10 @@ describe("useBackgroundQuery", () => {
       );
 
       expectTypeOf(inferredQueryRef).toEqualTypeOf<
-        QueryReference<VariablesCaseData> | undefined
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
       >();
       expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData>
+        QueryReference<VariablesCaseData, VariablesCaseVariables>
       >();
 
       const [explicitQueryRef] = useBackgroundQuery<
@@ -5743,10 +5743,10 @@ describe("useBackgroundQuery", () => {
       >(query, options.skip ? skipToken : undefined);
 
       expectTypeOf(explicitQueryRef).toEqualTypeOf<
-        QueryReference<VariablesCaseData> | undefined
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
       >();
       expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData>
+        QueryReference<VariablesCaseData, VariablesCaseVariables>
       >();
     });
 
@@ -5762,22 +5762,24 @@ describe("useBackgroundQuery", () => {
       );
 
       expectTypeOf(inferredQueryRef).toEqualTypeOf<
-        QueryReference<DeepPartial<VariablesCaseData>> | undefined
+        | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
+        | undefined
       >();
       expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData>
+        QueryReference<VariablesCaseData, VariablesCaseVariables>
       >();
 
-      const [explicitQueryRef] = useBackgroundQuery<VariablesCaseData>(
-        query,
-        options.skip ? skipToken : { returnPartialData: true }
-      );
+      const [explicitQueryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, options.skip ? skipToken : { returnPartialData: true });
 
       expectTypeOf(explicitQueryRef).toEqualTypeOf<
-        QueryReference<DeepPartial<VariablesCaseData>> | undefined
+        | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
+        | undefined
       >();
       expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-        QueryReference<VariablesCaseData>
+        QueryReference<VariablesCaseData, VariablesCaseVariables>
       >();
     });
   });

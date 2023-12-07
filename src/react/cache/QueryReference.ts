@@ -35,8 +35,11 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
  * A child component reading the `QueryReference` via {@link useReadQuery} will
  * suspend until the promise resolves.
  */
-export interface QueryReference<TData = unknown> {
-  readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+export interface QueryReference<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> {
+  readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData, TVariables>;
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
 }
 
@@ -96,7 +99,10 @@ type ObservedOptions = Pick<
   (typeof OBSERVED_CHANGED_OPTIONS)[number]
 >;
 
-export class InternalQueryReference<TData = unknown> {
+export class InternalQueryReference<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> {
   public result: ApolloQueryResult<TData>;
   public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
@@ -242,7 +248,7 @@ export class InternalQueryReference<TData = unknown> {
     };
   }
 
-  refetch(variables: OperationVariables | undefined) {
+  refetch(variables: Partial<TVariables> | undefined) {
     return this.initiateFetch(this.observable.refetch(variables));
   }
 

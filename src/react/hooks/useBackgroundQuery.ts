@@ -51,7 +51,8 @@ export function useBackgroundQuery<
             DeepPartial<TData> | undefined
           : TData | undefined
         : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
-        : TData
+        : TData,
+        TVariables
       >
     | (TOptions["skip"] extends boolean ? undefined : never)
   ),
@@ -68,7 +69,7 @@ export function useBackgroundQuery<
     errorPolicy: "ignore" | "all";
   }
 ): [
-  QueryReference<DeepPartial<TData> | undefined>,
+  QueryReference<DeepPartial<TData> | undefined, TVariables>,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -81,7 +82,7 @@ export function useBackgroundQuery<
     errorPolicy: "ignore" | "all";
   }
 ): [
-  QueryReference<TData | undefined>,
+  QueryReference<TData | undefined, TVariables>,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -95,7 +96,7 @@ export function useBackgroundQuery<
     returnPartialData: true;
   }
 ): [
-  QueryReference<DeepPartial<TData>> | undefined,
+  QueryReference<DeepPartial<TData>, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -108,7 +109,7 @@ export function useBackgroundQuery<
     returnPartialData: true;
   }
 ): [
-  QueryReference<DeepPartial<TData>>,
+  QueryReference<DeepPartial<TData>, TVariables>,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -121,7 +122,7 @@ export function useBackgroundQuery<
     skip: boolean;
   }
 ): [
-  QueryReference<TData> | undefined,
+  QueryReference<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -131,7 +132,10 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>
-): [QueryReference<TData>, UseBackgroundQueryResult<TData, TVariables>];
+): [
+  QueryReference<TData, TVariables>,
+  UseBackgroundQueryResult<TData, TVariables>,
+];
 
 export function useBackgroundQuery<
   TData = unknown,
@@ -152,7 +156,7 @@ export function useBackgroundQuery<
         returnPartialData: true;
       })
 ): [
-  QueryReference<DeepPartial<TData>> | undefined,
+  QueryReference<DeepPartial<TData>, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -163,7 +167,7 @@ export function useBackgroundQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SkipToken | BackgroundQueryHookOptionsNoInfer<TData, TVariables>
 ): [
-  QueryReference<TData> | undefined,
+  QueryReference<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -177,7 +181,7 @@ export function useBackgroundQuery<
         Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
     | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(null)
 ): [
-  QueryReference<TData> | undefined,
+  QueryReference<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ] {
   const client = useApolloClient(options.client);

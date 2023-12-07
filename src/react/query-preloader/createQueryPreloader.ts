@@ -45,7 +45,7 @@ export type PreloadQueryOptions<
 export type PreloadedQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-> = [QueryReference<TData>, dispose: () => void];
+> = [QueryReference<TData, TVariables>, dispose: () => void];
 
 type PreloadQueryOptionsArg<
   TVariables extends OperationVariables,

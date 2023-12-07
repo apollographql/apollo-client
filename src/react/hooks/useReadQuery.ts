@@ -44,6 +44,8 @@ export function useReadQuery<TData>(
     [queryRef]
   );
 
+  React.useEffect(() => internalQueryRef.retain(), [internalQueryRef]);
+
   if (__DEV__) {
     const didWarnOnDisposedQueryRef = React.useRef(false);
     if (!didWarnOnDisposedQueryRef.current && internalQueryRef.disposed) {

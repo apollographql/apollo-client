@@ -16,6 +16,8 @@ export type {
   UseLoadableQueryResult,
 } from "./useLoadableQuery.js";
 export { useLoadableQuery } from "./useLoadableQuery.js";
+export type { UsePreloadedQueryHandlersResult } from "./usePreloadedQueryHandlers.js";
+export { usePreloadedQueryHandlers } from "./usePreloadedQueryHandlers.js";
 export type { UseReadQueryResult } from "./useReadQuery.js";
 export { useReadQuery } from "./useReadQuery.js";
 export { skipToken } from "./constants.js";

@@ -41,7 +41,7 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
  */
 export interface QueryReference<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
+  TVariables extends OperationVariables = any,
 > {
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData, TVariables>;
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;

@@ -219,6 +219,407 @@ test("does not interfere with updates from useReadQuery", async () => {
   dispose();
 });
 
+test('honors refetchWritePolicy set to "merge"', async () => {
+  const query: TypedDocumentNode<
+    { primes: number[] },
+    { min: number; max: number }
+  > = gql`
+    query GetPrimes($min: number, $max: number) {
+      primes(min: $min, max: $max)
+    }
+  `;
+
+  interface QueryData {
+    primes: number[];
+  }
+
+  const mocks = [
+    {
+      request: { query, variables: { min: 0, max: 12 } },
+      result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 10,
+    },
+    {
+      request: { query, variables: { min: 12, max: 30 } },
+      result: { data: { primes: [13, 17, 19, 23, 29] } },
+      delay: 10,
+    },
+  ];
+
+  const mergeParams: [number[] | undefined, number[]][] = [];
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          primes: {
+            keyArgs: false,
+            merge(existing: number[] | undefined, incoming: number[]) {
+              mergeParams.push([existing, incoming]);
+              return existing ? existing.concat(incoming) : incoming;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const user = userEvent.setup();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache,
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<QueryData> | null,
+    },
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query, {
+    refetchWritePolicy: "merge",
+    variables: { min: 0, max: 12 },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook() {
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function App() {
+    useTrackRenders();
+    const { refetch } = usePreloadedQueryHandlers(queryRef);
+
+    return (
+      <>
+        <button onClick={() => refetch({ min: 12, max: 30 })}>Refetch</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook />}
+        </Suspense>
+      </>
+    );
+  }
+
+  render(<App />, {
+    wrapper: ({ children }) => {
+      return (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      );
+    },
+  });
+
+  // initial render
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { primes: [2, 3, 5, 7, 11] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+  }
+
+  await act(() => user.click(screen.getByText("Refetch")));
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+    ]);
+  }
+
+  await expect(Profiler).not.toRerender();
+
+  dispose();
+});
+
+test('honors refetchWritePolicy set to "overwrite"', async () => {
+  const query: TypedDocumentNode<
+    { primes: number[] },
+    { min: number; max: number }
+  > = gql`
+    query GetPrimes($min: number, $max: number) {
+      primes(min: $min, max: $max)
+    }
+  `;
+
+  interface QueryData {
+    primes: number[];
+  }
+
+  const mocks = [
+    {
+      request: { query, variables: { min: 0, max: 12 } },
+      result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 10,
+    },
+    {
+      request: { query, variables: { min: 12, max: 30 } },
+      result: { data: { primes: [13, 17, 19, 23, 29] } },
+      delay: 10,
+    },
+  ];
+
+  const mergeParams: [number[] | undefined, number[]][] = [];
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          primes: {
+            keyArgs: false,
+            merge(existing: number[] | undefined, incoming: number[]) {
+              mergeParams.push([existing, incoming]);
+              return existing ? existing.concat(incoming) : incoming;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const user = userEvent.setup();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache,
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<QueryData> | null,
+    },
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query, {
+    refetchWritePolicy: "overwrite",
+    variables: { min: 0, max: 12 },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook() {
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function App() {
+    useTrackRenders();
+    const { refetch } = usePreloadedQueryHandlers(queryRef);
+
+    return (
+      <>
+        <button onClick={() => refetch({ min: 12, max: 30 })}>Refetch</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook />}
+        </Suspense>
+      </>
+    );
+  }
+
+  render(<App />, {
+    wrapper: ({ children }) => {
+      return (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      );
+    },
+  });
+
+  // initial render
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { primes: [2, 3, 5, 7, 11] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+  }
+
+  await act(() => user.click(screen.getByText("Refetch")));
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { primes: [13, 17, 19, 23, 29] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [undefined, [13, 17, 19, 23, 29]],
+    ]);
+  }
+
+  await expect(Profiler).not.toRerender();
+
+  dispose();
+});
+
+test('defaults refetchWritePolicy to "overwrite"', async () => {
+  const query: TypedDocumentNode<
+    { primes: number[] },
+    { min: number; max: number }
+  > = gql`
+    query GetPrimes($min: number, $max: number) {
+      primes(min: $min, max: $max)
+    }
+  `;
+
+  interface QueryData {
+    primes: number[];
+  }
+
+  const mocks = [
+    {
+      request: { query, variables: { min: 0, max: 12 } },
+      result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 10,
+    },
+    {
+      request: { query, variables: { min: 12, max: 30 } },
+      result: { data: { primes: [13, 17, 19, 23, 29] } },
+      delay: 10,
+    },
+  ];
+
+  const mergeParams: [number[] | undefined, number[]][] = [];
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          primes: {
+            keyArgs: false,
+            merge(existing: number[] | undefined, incoming: number[]) {
+              mergeParams.push([existing, incoming]);
+              return existing ? existing.concat(incoming) : incoming;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const user = userEvent.setup();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache,
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<QueryData> | null,
+    },
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+  const [queryRef, dispose] = preloadQuery(query, {
+    variables: { min: 0, max: 12 },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook() {
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function App() {
+    useTrackRenders();
+    const { refetch } = usePreloadedQueryHandlers(queryRef);
+
+    return (
+      <>
+        <button onClick={() => refetch({ min: 12, max: 30 })}>Refetch</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook />}
+        </Suspense>
+      </>
+    );
+  }
+
+  render(<App />, {
+    wrapper: ({ children }) => {
+      return (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      );
+    },
+  });
+
+  // initial render
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { primes: [2, 3, 5, 7, 11] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+  }
+
+  await act(() => user.click(screen.getByText("Refetch")));
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { primes: [13, 17, 19, 23, 29] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [undefined, [13, 17, 19, 23, 29]],
+    ]);
+  }
+
+  await expect(Profiler).not.toRerender();
+
+  dispose();
+});
+
 test("`refetch` works with startTransition", async () => {
   type Variables = {
     id: string;

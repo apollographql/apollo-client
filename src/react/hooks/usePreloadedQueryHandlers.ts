@@ -8,14 +8,7 @@ import {
 import type { QueryReference } from "../cache/QueryReference.js";
 import type { OperationVariables } from "../../core/types.js";
 import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";
-import type {
-  FetchMoreQueryOptions,
-  WatchQueryOptions,
-} from "../../core/watchQueryOptions.js";
-
-type UpdateOptionsFunction<TData, TVariables extends OperationVariables> = (
-  options: WatchQueryOptions<TVariables, TData>
-) => void;
+import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";
 
 export interface UsePreloadedQueryHandlersResult<
   TData = unknown,
@@ -23,7 +16,6 @@ export interface UsePreloadedQueryHandlersResult<
 > {
   refetch: RefetchFunction<TData, TVariables>;
   fetchMore: FetchMoreFunction<TData, TVariables>;
-  updateOptions: UpdateOptionsFunction<TData, TVariables>;
 }
 
 export function usePreloadedQueryHandlers<
@@ -64,16 +56,5 @@ export function usePreloadedQueryHandlers<
     [internalQueryRef]
   );
 
-  const updateOptions: UpdateOptionsFunction<TData, TVariables> =
-    React.useCallback(
-      (options) => {
-        if (internalQueryRef.didChangeOptions(options)) {
-          internalQueryRef.applyOptions(options);
-          setWrappedQueryRef(wrapQueryRef(internalQueryRef));
-        }
-      },
-      [internalQueryRef]
-    );
-
-  return { refetch, fetchMore, updateOptions };
+  return { refetch, fetchMore };
 }

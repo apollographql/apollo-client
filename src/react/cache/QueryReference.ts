@@ -54,6 +54,10 @@ export function wrapQueryRef<TData>(
   };
 }
 
+export function getWrappedPromise<TData>(queryRef: QueryReference<TData>) {
+  return queryRef[PROMISE_SYMBOL];
+}
+
 export function unwrapQueryRef<TData>(
   queryRef: QueryReference<TData>
 ): [InternalQueryReference<TData>, () => QueryRefPromise<TData>] {
@@ -67,7 +71,7 @@ export function unwrapQueryRef<TData>(
       // it instead of the older promise which may contain outdated data.
       internalQueryRef.promise.status === "fulfilled" ?
         internalQueryRef.promise
-      : queryRef[PROMISE_SYMBOL],
+      : getWrappedPromise(queryRef),
   ];
 }
 

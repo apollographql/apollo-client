@@ -1,7 +1,9 @@
 import * as React from "rehackt";
 import {
+  getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
+  wrapQueryRef,
 } from "../cache/QueryReference.js";
 import type { QueryReference } from "../cache/QueryReference.js";
 import type { OperationVariables } from "../../core/types.js";
@@ -30,48 +32,47 @@ export function usePreloadedQueryHandlers<
 >(
   queryRef: QueryReference<TData>
 ): UsePreloadedQueryHandlersResult<TData, TVariables> {
-  const [, forceUpdate] = React.useState(0);
+  const [wrappedQueryRef, setWrappedQueryRef] = React.useState(queryRef);
+  const [internalQueryRef] = unwrapQueryRef(queryRef);
+
+  // To ensure we can support React transitions, this hook needs to manage the
+  // queryRef state and apply React's state value immediately to the existing
+  // queryRef since this hook doesn't return the queryRef directly
+  updateWrappedQueryRef(queryRef, getWrappedPromise(wrappedQueryRef));
 
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {
-      const [internalQueryRef] = unwrapQueryRef(queryRef);
       const promise = internalQueryRef.refetch(variables);
 
-      updateWrappedQueryRef(queryRef, internalQueryRef.promise);
-      forceUpdate((c) => c + 1);
+      setWrappedQueryRef(wrapQueryRef(internalQueryRef));
 
       return promise;
     },
-    [queryRef]
+    [internalQueryRef]
   );
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
-      const [internalQueryRef] = unwrapQueryRef(queryRef);
       const promise = internalQueryRef.fetchMore(
         options as FetchMoreQueryOptions<any, any>
       );
 
-      updateWrappedQueryRef(queryRef, internalQueryRef.promise);
-      forceUpdate((c) => c + 1);
+      setWrappedQueryRef(wrapQueryRef(internalQueryRef));
 
       return promise;
     },
-    [queryRef]
+    [internalQueryRef]
   );
 
   const updateOptions: UpdateOptionsFunction<TData, TVariables> =
     React.useCallback(
       (options) => {
-        const [internalQueryRef] = unwrapQueryRef(queryRef);
-
         if (internalQueryRef.didChangeOptions(options)) {
-          const promise = internalQueryRef.applyOptions(options);
-          updateWrappedQueryRef(queryRef, promise);
-          forceUpdate((c) => c + 1);
+          internalQueryRef.applyOptions(options);
+          setWrappedQueryRef(wrapQueryRef(internalQueryRef));
         }
       },
-      [queryRef]
+      [internalQueryRef]
     );
 
   return { refetch, fetchMore, updateOptions };

@@ -42,11 +42,6 @@ export type PreloadQueryOptions<
   refetchWritePolicy?: RefetchWritePolicy;
 } & VariablesOption<TVariables>;
 
-export type PreloadedQueryResult<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> = [QueryReference<TData, TVariables>, dispose: () => void];
-
 type PreloadQueryOptionsArg<
   TVariables extends OperationVariables,
   TOptions = unknown,
@@ -66,7 +61,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>, TOptions>
-  ): PreloadedQueryResult<
+  ): QueryReference<
     TOptions["errorPolicy"] extends "ignore" | "all" ?
       TOptions["returnPartialData"] extends true ?
         DeepPartial<TData> | undefined
@@ -85,7 +80,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
       returnPartialData: true;
       errorPolicy: "ignore" | "all";
     }
-  ): PreloadedQueryResult<DeepPartial<TData> | undefined, TVariables>;
+  ): QueryReference<DeepPartial<TData> | undefined, TVariables>;
 
   function preloadQuery<
     TData = unknown,
@@ -95,7 +90,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
       errorPolicy: "ignore" | "all";
     }
-  ): PreloadedQueryResult<TData | undefined, TVariables>;
+  ): QueryReference<TData | undefined, TVariables>;
 
   function preloadQuery<
     TData = unknown,
@@ -105,7 +100,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     options: PreloadQueryOptions & {
       returnPartialData: true;
     }
-  ): PreloadedQueryResult<DeepPartial<TData>, TVariables>;
+  ): QueryReference<DeepPartial<TData>, TVariables>;
 
   function preloadQuery<
     TData = unknown,
@@ -113,7 +108,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>
-  ): PreloadedQueryResult<TData, TVariables>;
+  ): QueryReference<TData, TVariables>;
 
   function preloadQuery<
     TData = unknown,
@@ -123,7 +118,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     options: PreloadQueryOptions & VariablesOption<TVariables> = Object.create(
       null
     )
-  ): PreloadedQueryResult<TData, TVariables> {
+  ): QueryReference<TData, TVariables> {
     const { variables, queryKey = [], ...watchQueryOptions } = options;
 
     const cacheKey: CacheKey = [
@@ -140,9 +135,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
       } as WatchQueryOptions<any, any>)
     );
 
-    const dispose = queryRef.retain();
-
-    return [wrapQueryRef(queryRef), dispose];
+    return wrapQueryRef(queryRef);
   }
 
   return preloadQuery;

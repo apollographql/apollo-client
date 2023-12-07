@@ -104,7 +104,7 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
 
-  const [queryRef, dispose] = preloadQuery(query);
+  const queryRef = preloadQuery(query);
 
   const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
@@ -123,8 +123,6 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
-
-  dispose();
 });
 
 test("loads a query with variables and suspends when passed to useReadQuery", async () => {
@@ -132,7 +130,7 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
 
-  const [queryRef, dispose] = preloadQuery(query, {
+  const queryRef = preloadQuery(query, {
     variables: { id: "1" },
   });
 
@@ -153,8 +151,6 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
       networkStatus: NetworkStatus.ready,
     });
   }
-
-  dispose();
 });
 
 test("tears down the query when calling dispose", async () => {
@@ -162,7 +158,8 @@ test("tears down the query when calling dispose", async () => {
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
 
-  const [, dispose] = preloadQuery(query);
+  const queryRef = preloadQuery(query);
+  const dispose = queryRef.retain();
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -181,7 +178,8 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
   const client = createDefaultClient(mocks);
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query);
+  const queryRef = preloadQuery(query);
+  const dispose = queryRef.retain();
 
   const { Profiler, rerender } = renderDefaultTestApp({ client, queryRef });
 
@@ -214,7 +212,7 @@ test("reacts to cache updates", async () => {
   const client = createDefaultClient(mocks);
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query);
+  const queryRef = preloadQuery(query);
 
   const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
@@ -248,8 +246,6 @@ test("reacts to cache updates", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
-
-  dispose();
 });
 
 test("ignores cached result and suspends when `fetchPolicy` is network-only", async () => {
@@ -259,7 +255,7 @@ test("ignores cached result and suspends when `fetchPolicy` is network-only", as
   client.writeQuery({ query, data: { greeting: "Cached Hello" } });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, {
+  const queryRef = preloadQuery(query, {
     fetchPolicy: "network-only",
   });
 
@@ -280,8 +276,6 @@ test("ignores cached result and suspends when `fetchPolicy` is network-only", as
       networkStatus: NetworkStatus.ready,
     });
   }
-
-  dispose();
 });
 
 test("does not cache results when `fetchPolicy` is no-cache", async () => {
@@ -290,7 +284,7 @@ test("does not cache results when `fetchPolicy` is no-cache", async () => {
   const client = createDefaultClient(mocks);
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, {
+  const queryRef = preloadQuery(query, {
     fetchPolicy: "no-cache",
   });
 
@@ -313,8 +307,6 @@ test("does not cache results when `fetchPolicy` is no-cache", async () => {
   }
 
   expect(client.extract()).toEqual({});
-
-  dispose();
 });
 
 test("returns initial cache data followed by network data when `fetchPolicy` is cache-and-network", async () => {
@@ -324,7 +316,7 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
   client.writeQuery({ query, data: { greeting: "Cached Hello" } });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, {
+  const queryRef = preloadQuery(query, {
     fetchPolicy: "cache-and-network",
   });
 
@@ -351,8 +343,6 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
       networkStatus: NetworkStatus.ready,
     });
   }
-
-  dispose();
 });
 
 test("returns cached data when all data is present in the cache", async () => {
@@ -362,7 +352,7 @@ test("returns cached data when all data is present in the cache", async () => {
   client.writeQuery({ query, data: { greeting: "Cached Hello" } });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query);
+  const queryRef = preloadQuery(query);
 
   const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
@@ -378,8 +368,6 @@ test("returns cached data when all data is present in the cache", async () => {
   }
 
   await expect(Profiler).not.toRerender();
-
-  dispose();
 });
 
 test("suspends and ignores partial data in the cache", async () => {
@@ -408,7 +396,7 @@ test("suspends and ignores partial data in the cache", async () => {
   }
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query);
+  const queryRef = preloadQuery(query);
 
   const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
@@ -430,8 +418,6 @@ test("suspends and ignores partial data in the cache", async () => {
   }
 
   await expect(Profiler).not.toRerender();
-
-  dispose();
 });
 
 test("throws when error is returned", async () => {
@@ -445,7 +431,7 @@ test("throws when error is returned", async () => {
   const client = createDefaultClient(mocks);
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query);
+  const queryRef = preloadQuery(query);
 
   const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
@@ -463,8 +449,6 @@ test("throws when error is returned", async () => {
       new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] })
     );
   }
-
-  dispose();
 });
 
 test("returns error when error policy is 'all'", async () => {
@@ -478,7 +462,7 @@ test("returns error when error policy is 'all'", async () => {
   const client = createDefaultClient(mocks);
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, { errorPolicy: "all" });
+  const queryRef = preloadQuery(query, { errorPolicy: "all" });
 
   const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
@@ -499,8 +483,6 @@ test("returns error when error policy is 'all'", async () => {
     });
     expect(snapshot.error).toEqual(null);
   }
-
-  dispose();
 });
 
 test("discards error when error policy is 'ignore'", async () => {
@@ -514,7 +496,7 @@ test("discards error when error policy is 'ignore'", async () => {
   const client = createDefaultClient(mocks);
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, { errorPolicy: "ignore" });
+  const queryRef = preloadQuery(query, { errorPolicy: "ignore" });
 
   const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
@@ -535,8 +517,6 @@ test("discards error when error policy is 'ignore'", async () => {
     });
     expect(snapshot.error).toEqual(null);
   }
-
-  dispose();
 });
 
 test("passes context to the link", async () => {
@@ -564,7 +544,7 @@ test("passes context to the link", async () => {
   });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, {
+  const queryRef = preloadQuery(query, {
     context: { valueA: "A", valueB: "B" },
   });
 
@@ -580,8 +560,6 @@ test("passes context to the link", async () => {
     networkStatus: NetworkStatus.ready,
     error: undefined,
   });
-
-  dispose();
 });
 
 test("creates unique query refs when provided with a queryKey", async () => {
@@ -598,9 +576,9 @@ test("creates unique query refs when provided with a queryKey", async () => {
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
 
-  const [queryRef1, dispose1] = preloadQuery(query);
-  const [queryRef2, dispose2] = preloadQuery(query);
-  const [queryRef3, dispose3] = preloadQuery(query, { queryKey: 1 });
+  const queryRef1 = preloadQuery(query);
+  const queryRef2 = preloadQuery(query);
+  const queryRef3 = preloadQuery(query, { queryKey: 1 });
 
   const [unwrappedQueryRef1] = unwrapQueryRef(queryRef1);
   const [unwrappedQueryRef2] = unwrapQueryRef(queryRef2);
@@ -608,10 +586,6 @@ test("creates unique query refs when provided with a queryKey", async () => {
 
   expect(unwrappedQueryRef2).toBe(unwrappedQueryRef1);
   expect(unwrappedQueryRef3).not.toBe(unwrappedQueryRef1);
-
-  dispose1();
-  dispose2();
-  dispose3();
 });
 
 test("does not suspend and returns partial data when `returnPartialData` is `true`", async () => {
@@ -633,7 +607,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
   });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, {
+  const queryRef = preloadQuery(query, {
     variables: { id: "1" },
     returnPartialData: true,
   });
@@ -661,8 +635,6 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
       error: undefined,
     });
   }
-
-  dispose();
 });
 
 test('enables canonical results when canonizeResults is "true"', async () => {
@@ -708,7 +680,7 @@ test('enables canonical results when canonizeResults is "true"', async () => {
   const client = new ApolloClient({ cache, link: new MockLink([]) });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, { canonizeResults: true });
+  const queryRef = preloadQuery(query, { canonizeResults: true });
 
   const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
@@ -724,8 +696,6 @@ test('enables canonical results when canonizeResults is "true"', async () => {
 
   expect(resultSet.size).toBe(5);
   expect(values).toEqual([0, 1, 2, 3, 5]);
-
-  dispose();
 });
 
 test("can disable canonical results when the cache's canonizeResults setting is true", async () => {
@@ -768,7 +738,7 @@ test("can disable canonical results when the cache's canonizeResults setting is 
   const client = new ApolloClient({ cache, link: new MockLink([]) });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query, { canonizeResults: false });
+  const queryRef = preloadQuery(query, { canonizeResults: false });
 
   const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
@@ -783,8 +753,6 @@ test("can disable canonical results when the cache's canonizeResults setting is 
   });
   expect(resultSet.size).toBe(6);
   expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-
-  dispose();
 });
 
 test("suspends deferred queries until initial chunk loads then rerenders with deferred data", async () => {
@@ -805,7 +773,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
   const preloadQuery = createQueryPreloader(client);
-  const [queryRef, dispose] = preloadQuery(query);
+  const queryRef = preloadQuery(query);
 
   const { Profiler } = renderDefaultTestApp({ client, queryRef });
 
@@ -867,8 +835,6 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
       networkStatus: NetworkStatus.ready,
     });
   }
-
-  dispose();
 });
 
 describe.skip("type tests", () => {
@@ -1004,7 +970,7 @@ describe.skip("type tests", () => {
   test("returns QueryReference<unknown> when TData cannot be inferred", () => {
     const query = gql``;
 
-    const [queryRef] = preloadQuery(query);
+    const queryRef = preloadQuery(query);
 
     expectTypeOf(queryRef).toEqualTypeOf<QueryReference<unknown>>();
   });
@@ -1012,14 +978,14 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData> in default case", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
-      const [queryRef] = preloadQuery(query);
+      const queryRef = preloadQuery(query);
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
     }
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleCaseData>(query);
+      const queryRef = preloadQuery<SimpleCaseData>(query);
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
     }
@@ -1028,7 +994,7 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData | undefined> with errorPolicy: 'ignore'", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
-      const [queryRef] = preloadQuery(query, { errorPolicy: "ignore" });
+      const queryRef = preloadQuery(query, { errorPolicy: "ignore" });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         QueryReference<SimpleCaseData | undefined>
@@ -1037,7 +1003,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleCaseData>(query, {
+      const queryRef = preloadQuery<SimpleCaseData>(query, {
         errorPolicy: "ignore",
       });
 
@@ -1050,7 +1016,7 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData | undefined> with errorPolicy: 'all'", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
-      const [queryRef] = preloadQuery(query, { errorPolicy: "all" });
+      const queryRef = preloadQuery(query, { errorPolicy: "all" });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         QueryReference<SimpleCaseData | undefined>
@@ -1059,7 +1025,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleCaseData>(query, {
+      const queryRef = preloadQuery<SimpleCaseData>(query, {
         errorPolicy: "all",
       });
 
@@ -1072,14 +1038,14 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData> with errorPolicy: 'none'", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
-      const [queryRef] = preloadQuery(query, { errorPolicy: "none" });
+      const queryRef = preloadQuery(query, { errorPolicy: "none" });
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
     }
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleCaseData>(query, {
+      const queryRef = preloadQuery<SimpleCaseData>(query, {
         errorPolicy: "none",
       });
 
@@ -1090,7 +1056,7 @@ describe.skip("type tests", () => {
   test("returns QueryReference<DeepPartial<TData>> with returnPartialData: true", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
-      const [queryRef] = preloadQuery(query, { returnPartialData: true });
+      const queryRef = preloadQuery(query, { returnPartialData: true });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         QueryReference<DeepPartial<SimpleCaseData>>
@@ -1099,7 +1065,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleCaseData>(query, {
+      const queryRef = preloadQuery<SimpleCaseData>(query, {
         returnPartialData: true,
       });
 
@@ -1112,14 +1078,14 @@ describe.skip("type tests", () => {
   test("returns QueryReference<DeepPartial<TData>> with returnPartialData: false", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
-      const [queryRef] = preloadQuery(query, { returnPartialData: false });
+      const queryRef = preloadQuery(query, { returnPartialData: false });
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
     }
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleCaseData>(query, {
+      const queryRef = preloadQuery<SimpleCaseData>(query, {
         returnPartialData: false,
       });
 
@@ -1130,14 +1096,14 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData> when passing an option unrelated to TData", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
-      const [queryRef] = preloadQuery(query, { canonizeResults: true });
+      const queryRef = preloadQuery(query, { canonizeResults: true });
 
       expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
     }
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleCaseData>(query, {
+      const queryRef = preloadQuery<SimpleCaseData>(query, {
         canonizeResults: true,
       });
 
@@ -1148,7 +1114,7 @@ describe.skip("type tests", () => {
   test("handles combinations of options", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
-      const [queryRef] = preloadQuery(query, {
+      const queryRef = preloadQuery(query, {
         returnPartialData: true,
         errorPolicy: "ignore",
       });
@@ -1160,7 +1126,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleCaseData>(query, {
+      const queryRef = preloadQuery<SimpleCaseData>(query, {
         returnPartialData: true,
         errorPolicy: "ignore",
       });
@@ -1172,7 +1138,7 @@ describe.skip("type tests", () => {
 
     {
       const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
-      const [queryRef] = preloadQuery(query, {
+      const queryRef = preloadQuery(query, {
         returnPartialData: true,
         errorPolicy: "none",
       });
@@ -1184,7 +1150,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleCaseData>(query, {
+      const queryRef = preloadQuery<SimpleCaseData>(query, {
         returnPartialData: true,
         errorPolicy: "none",
       });
@@ -1198,7 +1164,7 @@ describe.skip("type tests", () => {
   test("returns correct TData type when combined with options unrelated to TData", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData, never> = gql``;
-      const [queryRef] = preloadQuery(query, {
+      const queryRef = preloadQuery(query, {
         canonizeResults: true,
         returnPartialData: true,
         errorPolicy: "none",
@@ -1211,7 +1177,7 @@ describe.skip("type tests", () => {
 
     {
       const query = gql``;
-      const [queryRef] = preloadQuery<SimpleCaseData>(query, {
+      const queryRef = preloadQuery<SimpleCaseData>(query, {
         canonizeResults: true,
         returnPartialData: true,
         errorPolicy: "none",

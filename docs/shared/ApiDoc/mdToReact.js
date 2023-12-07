@@ -6,7 +6,7 @@ import { useMDXComponents } from "@mdx-js/react";
 export function mdToReact(text) {
   const sanitized = text
     .replace(/\{@link (\w*)\}/g, "[$1](#$1)")
-    .replace(/<p ?\/>/g, "");
+    .replace(/<p\s?\/>/g, "");
   return <RenderMd markdown={sanitized} />;
 }
 

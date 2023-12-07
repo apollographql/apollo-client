@@ -1,5 +1,5 @@
 import { Trie } from "@wry/trie";
-import type { ObservableQuery } from "../../core/index.js";
+import type { ObservableQuery, OperationVariables } from "../../core/index.js";
 import { canUseWeakMap } from "../../utilities/index.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey } from "./types.js";
@@ -28,12 +28,15 @@ export class SuspenseCache {
     this.options = options;
   }
 
-  getQueryRef<TData = any>(
+  getQueryRef<
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
     cacheKey: CacheKey,
-    createObservable: () => ObservableQuery<TData>
+    createObservable: () => ObservableQuery<TData, TVariables>
   ) {
     const ref = this.queryRefs.lookupArray(cacheKey) as {
-      current?: InternalQueryReference<TData>;
+      current?: InternalQueryReference<TData, TVariables>;
     };
 
     if (!ref.current) {

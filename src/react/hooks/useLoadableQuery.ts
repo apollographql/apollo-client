@@ -119,9 +119,10 @@ export function useLoadableQuery<
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { queryKey = [] } = options;
 
-  const [queryRef, setQueryRef] = React.useState<QueryReference<TData> | null>(
-    null
-  );
+  const [queryRef, setQueryRef] = React.useState<QueryReference<
+    TData,
+    TVariables
+  > | null>(null);
 
   const internalQueryRef = queryRef && unwrapQueryRef(queryRef)[0];
 

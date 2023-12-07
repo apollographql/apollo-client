@@ -31,7 +31,7 @@ export function InterfaceDetails({
 
 InterfaceDetails.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
-  headingLevel: PropTypes.number,
+  headingLevel: PropTypes.number.isRequired,
   link: PropTypes.bool,
   customPropertyOrder: PropTypes.arrayOf(PropTypes.string),
 };

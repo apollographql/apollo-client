@@ -15,7 +15,7 @@ const levels = {
 
 export function ApiDocHeading({
   canonicalReference,
-  headingLevel = 3,
+  headingLevel,
   link = true,
 }) {
   const MDX = useMDXComponents();
@@ -62,6 +62,6 @@ export function ApiDocHeading({
 }
 ApiDocHeading.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
-  headingLevel: PropTypes.number,
+  headingLevel: PropTypes.number.isRequired,
   link: PropTypes.bool,
 };

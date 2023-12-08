@@ -39,11 +39,8 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
  * A child component reading the `QueryReference` via {@link useReadQuery} will
  * suspend until the promise resolves.
  */
-export interface QueryReference<
-  TData = unknown,
-  TVariables extends OperationVariables = any,
-> {
-  readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData, TVariables>;
+export interface QueryReference<TData = unknown, TVariables = unknown> {
+  readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
   retain: () => DisposeFn;
   toPromise(): Promise<ApolloQueryResult<TData>>;
@@ -92,7 +89,7 @@ export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
 
 export function unwrapQueryRef<TData, TVariables extends OperationVariables>(
   queryRef: QueryReference<TData, TVariables>
-): [InternalQueryReference<TData, TVariables>, () => QueryRefPromise<TData>] {
+): [InternalQueryReference<TData>, () => QueryRefPromise<TData>] {
   const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
 
   return [
@@ -128,13 +125,10 @@ type ObservedOptions = Pick<
   (typeof OBSERVED_CHANGED_OPTIONS)[number]
 >;
 
-export class InternalQueryReference<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> {
+export class InternalQueryReference<TData = unknown> {
   public result: ApolloQueryResult<TData>;
   public readonly key: QueryKey = {};
-  public readonly observable: ObservableQuery<TData, TVariables>;
+  public readonly observable: ObservableQuery<TData>;
 
   public promise: QueryRefPromise<TData>;
 
@@ -150,7 +144,7 @@ export class InternalQueryReference<
   private references = 0;
 
   constructor(
-    observable: ObservableQuery<TData, TVariables>,
+    observable: ObservableQuery<TData>,
     options: InternalQueryReferenceOptions
   ) {
     this.handleNext = this.handleNext.bind(this);
@@ -277,11 +271,11 @@ export class InternalQueryReference<
     };
   }
 
-  refetch(variables: Partial<TVariables> | undefined) {
+  refetch(variables: OperationVariables | undefined) {
     return this.initiateFetch(this.observable.refetch(variables));
   }
 
-  fetchMore(options: FetchMoreOptions<TData, TVariables>) {
+  fetchMore(options: FetchMoreOptions<TData, OperationVariables>) {
     return this.initiateFetch(
       this.observable.fetchMore<TData>(
         options as FetchMoreQueryOptions<any, any>

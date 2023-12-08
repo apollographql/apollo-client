@@ -776,7 +776,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const maybeFetch = () => {
       if (this.pollingInfo) {
-        if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
+        if (
+          !isNetworkRequestInFlight(this.queryInfo.networkStatus) &&
+          !this.options.skipPollAttempt?.()
+        ) {
           this.reobserve(
             {
               // Most fetchPolicy options don't make sense to use in a polling context, as

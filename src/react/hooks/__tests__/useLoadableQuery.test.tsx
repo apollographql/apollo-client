@@ -158,6 +158,7 @@ function createDefaultProfiler<TData>() {
       error: null as Error | null,
       result: null as UseReadQueryResult<TData> | null,
     },
+    skipNonTrackingRenders: true,
   });
 }
 
@@ -348,6 +349,61 @@ it("loads a query with variables and suspends by passing variables to the loadQu
   await expect(Profiler).not.toRerender();
 });
 
+it("tears down the query on unmount", async () => {
+  const { query, mocks } = useSimpleQueryCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleQueryData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [loadQuery, queryRef] = useLoadableQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user, unmount } = renderWithClient(<App />, {
+    client,
+    wrapper: Profiler,
+  });
+
+  // initial render
+  await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
+  await Profiler.takeRender();
+
+  const { snapshot } = await Profiler.takeRender();
+
+  expect(snapshot.result).toEqual({
+    data: { greeting: "Hello" },
+    error: undefined,
+    networkStatus: NetworkStatus.ready,
+  });
+
+  unmount();
+
+  // We need to wait a tick since the cleanup is run in a setTimeout to
+  // prevent strict mode bugs.
+  await wait(0);
+
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
@@ -493,16 +549,24 @@ it("allows the client to be overridden", async () => {
   const { query } = useSimpleQueryCase();
 
   const globalClient = new ApolloClient({
-    link: new ApolloLink(() =>
-      Observable.of({ data: { greeting: "global hello" } })
-    ),
+    link: new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: "global hello" } },
+        delay: 10,
+      },
+    ]),
     cache: new InMemoryCache(),
   });
 
   const localClient = new ApolloClient({
-    link: new ApolloLink(() =>
-      Observable.of({ data: { greeting: "local hello" } })
-    ),
+    link: new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: "local hello" } },
+        delay: 10,
+      },
+    ]),
     cache: new InMemoryCache(),
   });
 
@@ -512,6 +576,7 @@ it("allows the client to be overridden", async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       client: localClient,
     });
@@ -562,9 +627,10 @@ it("passes context to the link", async () => {
     link: new ApolloLink((operation) => {
       return new Observable((observer) => {
         const { valueA, valueB } = operation.getContext();
-
-        observer.next({ data: { context: { valueA, valueB } } });
-        observer.complete();
+        setTimeout(() => {
+          observer.next({ data: { context: { valueA, valueB } } });
+          observer.complete();
+        }, 10);
       });
     }),
   });
@@ -575,6 +641,7 @@ it("passes context to the link", async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       context: { valueA: "A", valueB: "B" },
     });
@@ -657,6 +724,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       canonizeResults: true,
     });
@@ -738,6 +806,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       canonizeResults: false,
     });
@@ -1456,12 +1525,14 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
+      delay: 10,
     },
     {
       request: { query },
       result: {
         errors: [new GraphQLError("oops")],
       },
+      delay: 10,
     },
   ];
 
@@ -1470,6 +1541,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [errorPolicy, setErrorPolicy] = useState<ErrorPolicy>("none");
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       errorPolicy,
@@ -1541,10 +1613,15 @@ it("applies `context` on next fetch when it changes between renders", async () =
   `;
 
   const link = new ApolloLink((operation) => {
-    return Observable.of({
-      data: {
-        phase: operation.getContext().phase,
-      },
+    return new Observable((subscriber) => {
+      setTimeout(() => {
+        subscriber.next({
+          data: {
+            phase: operation.getContext().phase,
+          },
+        });
+        subscriber.complete();
+      }, 10);
     });
   });
 
@@ -1558,6 +1635,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [phase, setPhase] = React.useState("initial");
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       context: { phase },
@@ -1659,6 +1737,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [canonizeResults, setCanonizeResults] = React.useState(false);
     const [loadQuery, queryRef] = useLoadableQuery(query, {
       canonizeResults,
@@ -1724,6 +1803,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     {
       request: { query, variables: { min: 0, max: 12 } },
       result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 10,
     },
     {
       request: { query, variables: { min: 12, max: 30 } },
@@ -1765,6 +1845,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [refetchWritePolicy, setRefetchWritePolicy] =
       React.useState<RefetchWritePolicy>("merge");
 
@@ -1895,6 +1976,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
           },
         },
       },
+      delay: 10,
     },
     {
       request: { query: fullQuery },
@@ -2067,6 +2149,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [fetchPolicy, setFetchPolicy] =
       React.useState<LoadableQueryHookFetchPolicy>("cache-first");
 
@@ -2237,12 +2320,14 @@ it("re-suspends when calling `refetch` with new variables", async () => {
       result: {
         data: { character: { id: "1", name: "Captain Marvel" } },
       },
+      delay: 10,
     },
     {
       request: { query, variables: { id: "2" } },
       result: {
         data: { character: { id: "2", name: "Captain America" } },
       },
+      delay: 10,
     },
   ];
 
@@ -2319,6 +2404,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
         data: { character: { id: "1", name: "Spider-Man" } },
       },
       maxUsageCount: 3,
+      delay: 10,
     },
   ];
 
@@ -2434,6 +2520,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query);
 
     return (
@@ -2491,12 +2578,14 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
       result: {
         data: { character: { id: "1", name: "Captain Marvel" } },
       },
+      delay: 10,
     },
     {
       request: { query, variables: { id: "1" } },
       result: {
         errors: [new GraphQLError("Something went wrong")],
       },
+      delay: 10,
     },
   ];
 
@@ -2506,6 +2595,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       errorPolicy: "ignore",
     });
@@ -2586,6 +2676,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       errorPolicy: "all",
     });
@@ -2668,6 +2759,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       errorPolicy: "all",
     });
@@ -2933,6 +3025,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     createDefaultProfiledComponents(Profiler);
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { fetchMore }] = useLoadableQuery(query);
 
     return (
@@ -3000,6 +3093,9 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     });
   }
 
+  // TODO investigate: this test highlights a React render
+  // that actually doesn't rerender any user-provided components
+  // so we need to use `skipNonTrackingRenders`
   await expect(Profiler).not.toRerender();
 });
 
@@ -3023,6 +3119,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
   });
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { fetchMore }] = useLoadableQuery(query);
 
     return (
@@ -3083,6 +3180,9 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
     });
   }
 
+  // TODO investigate: this test highlights a React render
+  // that actually doesn't rerender any user-provided components
+  // so we need to use `skipNonTrackingRenders`
   await expect(Profiler).not.toRerender();
 });
 
@@ -3269,6 +3369,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     {
       request: { query, variables: { min: 0, max: 12 } },
       result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 10,
     },
     {
       request: { query, variables: { min: 12, max: 30 } },
@@ -3304,6 +3405,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
   });
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       refetchWritePolicy: "merge",
     });
@@ -3381,6 +3483,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     {
       request: { query, variables: { min: 0, max: 12 } },
       result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 10,
     },
     {
       request: { query, variables: { min: 12, max: 30 } },
@@ -3416,6 +3519,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
   });
 
   function App() {
+    useTrackRenders();
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query);
 
     return (
@@ -3691,6 +3795,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     {
       request: { query: fullQuery },
       result: { data: { character: { id: "1", name: "Doctor Strange" } } },
+      delay: 10,
     },
   ];
 
@@ -3782,6 +3887,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     {
       request: { query: fullQuery },
       result: { data: { character: { id: "1", name: "Doctor Strange" } } },
+      delay: 10,
     },
   ];
 

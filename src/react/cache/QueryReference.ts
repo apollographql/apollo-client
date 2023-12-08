@@ -7,28 +7,37 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { isNetworkRequestSettled } from "../../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
+import type {
+  ObservableSubscription,
+  PromiseWithState,
+} from "../../utilities/index.js";
 import {
   createFulfilledPromise,
   createRejectedPromise,
 } from "../../utilities/index.js";
 import type { QueryKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
+import { wrapPromiseWithState } from "../../utilities/index.js";
 
-type Listener<TData> = (promise: Promise<ApolloQueryResult<TData>>) => void;
+type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
+
+type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
 type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>["fetchMore"]
 >[0];
 
 const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
+const PROMISE_SYMBOL: unique symbol = Symbol();
+
 /**
  * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
  * A child component reading the `QueryReference` via {@link useReadQuery} will
  * suspend until the promise resolves.
  */
 export interface QueryReference<TData = unknown> {
-  [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+  readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+  [PROMISE_SYMBOL]: QueryRefPromise<TData>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -39,13 +48,34 @@ interface InternalQueryReferenceOptions {
 export function wrapQueryRef<TData>(
   internalQueryRef: InternalQueryReference<TData>
 ): QueryReference<TData> {
-  return { [QUERY_REFERENCE_SYMBOL]: internalQueryRef };
+  return {
+    [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
+    [PROMISE_SYMBOL]: internalQueryRef.promise,
+  };
 }
 
 export function unwrapQueryRef<TData>(
   queryRef: QueryReference<TData>
-): InternalQueryReference<TData> {
-  return queryRef[QUERY_REFERENCE_SYMBOL];
+): [InternalQueryReference<TData>, () => QueryRefPromise<TData>] {
+  const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
+
+  return [
+    internalQueryRef,
+    () =>
+      // There is a chance the query ref's promise has been updated in the time
+      // the original promise had been suspended. In that case, we want to use
+      // it instead of the older promise which may contain outdated data.
+      internalQueryRef.promise.status === "fulfilled" ?
+        internalQueryRef.promise
+      : queryRef[PROMISE_SYMBOL],
+  ];
+}
+
+export function updateWrappedQueryRef<TData>(
+  queryRef: QueryReference<TData>,
+  promise: QueryRefPromise<TData>
+) {
+  queryRef[PROMISE_SYMBOL] = promise;
 }
 
 const OBSERVED_CHANGED_OPTIONS = [
@@ -67,8 +97,7 @@ export class InternalQueryReference<TData = unknown> {
   public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
 
-  public promiseCache?: Map<QueryKey, Promise<ApolloQueryResult<TData>>>;
-  public promise: Promise<ApolloQueryResult<TData>>;
+  public promise: QueryRefPromise<TData>;
 
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
@@ -104,10 +133,12 @@ export class InternalQueryReference<TData = unknown> {
       this.promise = createFulfilledPromise(this.result);
       this.status = "idle";
     } else {
-      this.promise = new Promise((resolve, reject) => {
-        this.resolve = resolve;
-        this.reject = reject;
-      });
+      this.promise = wrapPromiseWithState(
+        new Promise((resolve, reject) => {
+          this.resolve = resolve;
+          this.reject = reject;
+        })
+      );
     }
 
     this.subscription = observable
@@ -268,23 +299,25 @@ export class InternalQueryReference<TData = unknown> {
         break;
       }
       case "idle": {
-        this.promise = createRejectedPromise(error);
+        this.promise = createRejectedPromise<ApolloQueryResult<TData>>(error);
         this.deliver(this.promise);
       }
     }
   }
 
-  private deliver(promise: Promise<ApolloQueryResult<TData>>) {
+  private deliver(promise: QueryRefPromise<TData>) {
     this.listeners.forEach((listener) => listener(promise));
   }
 
   private initiateFetch(returnedPromise: Promise<ApolloQueryResult<TData>>) {
     this.status = "loading";
 
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
+    this.promise = wrapPromiseWithState(
+      new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+      })
+    );
 
     this.promise.catch(() => {});
 

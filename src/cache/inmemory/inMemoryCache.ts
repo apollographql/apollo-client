@@ -109,9 +109,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
         canonizeResults: shouldCanonizeResults(this.config),
-        canon: resetResultIdentities
-          ? void 0
-          : previousReader && previousReader.canon,
+        canon:
+          resetResultIdentities ? void 0 : (
+            previousReader && previousReader.canon
+          ),
         fragments,
       })),
       fragments
@@ -225,8 +226,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // that nothing was modified.
       return false;
     }
-    const store = options.optimistic // Defaults to false.
-      ? this.optimisticData
+    const store =
+      (
+        options.optimistic // Defaults to false.
+      ) ?
+        this.optimisticData
       : this.data;
     try {
       ++this.txCount;

@@ -87,8 +87,9 @@ export function useLazyQuery<
 
   const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
     (executeOptions) => {
-      execOptionsRef.current = executeOptions
-        ? {
+      execOptionsRef.current =
+        executeOptions ?
+          {
             ...executeOptions,
             fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
           }

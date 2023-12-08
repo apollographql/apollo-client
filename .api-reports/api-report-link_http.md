@@ -72,7 +72,7 @@ export type ClientParseError = InvariantError & {
 // @public (undocumented)
 export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const createSignalIfSupported: () => {
     controller: boolean;
     signal: boolean;
@@ -185,25 +185,15 @@ export class HttpLink extends ApolloLink {
 
 // @public (undocumented)
 export interface HttpOptions {
-    // (undocumented)
     credentials?: string;
-    // (undocumented)
     fetch?: WindowOrWorkerGlobalScope["fetch"];
-    // (undocumented)
     fetchOptions?: any;
-    // (undocumented)
     headers?: Record<string, string>;
-    // (undocumented)
     includeExtensions?: boolean;
-    // (undocumented)
     includeUnusedVariables?: boolean;
-    // (undocumented)
     preserveHeaderCase?: boolean;
-    // (undocumented)
     print?: Printer;
-    // (undocumented)
     uri?: string | UriFunction;
-    // (undocumented)
     useGETForQueries?: boolean;
 }
 

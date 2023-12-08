@@ -71,17 +71,16 @@ export function useSuspenseQuery<
   options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
     TOptions
 ): UseSuspenseQueryResult<
-  TOptions["errorPolicy"] extends "ignore" | "all"
-    ? TOptions["returnPartialData"] extends true
-      ? DeepPartial<TData> | undefined
-      : TData | undefined
-    : TOptions["returnPartialData"] extends true
-    ? TOptions["skip"] extends boolean
-      ? DeepPartial<TData> | undefined
-      : DeepPartial<TData>
-    : TOptions["skip"] extends boolean
-    ? TData | undefined
-    : TData,
+  TOptions["errorPolicy"] extends "ignore" | "all" ?
+    TOptions["returnPartialData"] extends true ?
+      DeepPartial<TData> | undefined
+    : TData | undefined
+  : TOptions["returnPartialData"] extends true ?
+    TOptions["skip"] extends boolean ?
+      DeepPartial<TData> | undefined
+    : DeepPartial<TData>
+  : TOptions["skip"] extends boolean ? TData | undefined
+  : TData,
   TVariables
 >;
 
@@ -329,8 +328,8 @@ function validatePartialDataReturn(
 }
 
 export function toApolloError(result: ApolloQueryResult<any>) {
-  return isNonEmptyArray(result.errors)
-    ? new ApolloError({ graphQLErrors: result.errors })
+  return isNonEmptyArray(result.errors) ?
+      new ApolloError({ graphQLErrors: result.errors })
     : result.error;
 }
 

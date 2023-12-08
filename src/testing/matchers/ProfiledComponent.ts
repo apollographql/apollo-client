@@ -11,9 +11,9 @@ export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
       | ProfiledComponent<any, any>
       | ProfiledHook<any, any>;
     const profiled =
-      "ProfiledComponent" in _profiled
-        ? _profiled.ProfiledComponent
-        : _profiled;
+      "ProfiledComponent" in _profiled ?
+        _profiled.ProfiledComponent
+      : _profiled;
     const hint = this.utils.matcherHint("toRerender");
     let pass = true;
     try {
@@ -52,11 +52,11 @@ export const toRenderExactlyTimes: MatcherFunction<
   const hint = this.utils.matcherHint("toRenderExactlyTimes");
   let pass = true;
   try {
-    if (profiled.currentRenderCount() > times) {
+    if (profiled.totalRenderCount() > times) {
       throw failed;
     }
     try {
-      while (profiled.currentRenderCount() < times) {
+      while (profiled.totalRenderCount() < times) {
         await profiled.waitForNextRender(options);
       }
     } catch (e) {
@@ -84,7 +84,7 @@ export const toRenderExactlyTimes: MatcherFunction<
       return (
         hint +
         ` Expected component to${pass ? " not" : ""} render exactly ${times}.` +
-        ` It rendered ${profiled.currentRenderCount()} times.`
+        ` It rendered ${profiled.totalRenderCount()} times.`
       );
     },
   };

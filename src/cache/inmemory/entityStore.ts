@@ -221,12 +221,12 @@ export abstract class EntityStore implements NormalizedCache {
           from?: StoreObject | Reference
         ) =>
           this.policies.readField<V>(
-            typeof fieldNameOrOptions === "string"
-              ? {
-                  fieldName: fieldNameOrOptions,
-                  from: from || makeReference(dataId),
-                }
-              : fieldNameOrOptions,
+            typeof fieldNameOrOptions === "string" ?
+              {
+                fieldName: fieldNameOrOptions,
+                from: from || makeReference(dataId),
+              }
+            : fieldNameOrOptions,
             { store: this }
           ),
       } satisfies Partial<ModifierDetails>;
@@ -236,19 +236,19 @@ export abstract class EntityStore implements NormalizedCache {
         let fieldValue = storeObject[storeFieldName];
         if (fieldValue === void 0) return;
         const modify: Modifier<StoreValue> | undefined =
-          typeof fields === "function"
-            ? fields
-            : fields[storeFieldName] || fields[fieldName];
+          typeof fields === "function" ? fields : (
+            fields[storeFieldName] || fields[fieldName]
+          );
         if (modify) {
           let newValue =
-            modify === delModifier
-              ? DELETE
-              : modify(maybeDeepFreeze(fieldValue), {
-                  ...sharedDetails,
-                  fieldName,
-                  storeFieldName,
-                  storage: this.getStorage(dataId, storeFieldName),
-                });
+            modify === delModifier ? DELETE : (
+              modify(maybeDeepFreeze(fieldValue), {
+                ...sharedDetails,
+                fieldName,
+                storeFieldName,
+                storage: this.getStorage(dataId, storeFieldName),
+              })
+            );
           if (newValue === INVALIDATE) {
             this.group.dirty(dataId, storeFieldName);
           } else {
@@ -344,16 +344,16 @@ export abstract class EntityStore implements NormalizedCache {
     if (storeObject) {
       const typename = this.getFieldValue<string>(storeObject, "__typename");
       const storeFieldName =
-        fieldName && args
-          ? this.policies.getStoreFieldName({ typename, fieldName, args })
-          : fieldName;
+        fieldName && args ?
+          this.policies.getStoreFieldName({ typename, fieldName, args })
+        : fieldName;
       return this.modify(
         dataId,
-        storeFieldName
-          ? {
-              [storeFieldName]: delModifier,
-            }
-          : delModifier
+        storeFieldName ?
+          {
+            [storeFieldName]: delModifier,
+          }
+        : delModifier
       );
     }
     return false;
@@ -534,17 +534,17 @@ export abstract class EntityStore implements NormalizedCache {
     storeFieldName: string
   ) =>
     maybeDeepFreeze(
-      isReference(objectOrReference)
-        ? this.get(objectOrReference.__ref, storeFieldName)
-        : objectOrReference && objectOrReference[storeFieldName]
+      isReference(objectOrReference) ?
+        this.get(objectOrReference.__ref, storeFieldName)
+      : objectOrReference && objectOrReference[storeFieldName]
     ) as SafeReadonly<T>;
 
   // Returns true for non-normalized StoreObjects and non-dangling
   // References, indicating that readField(name, objOrRef) has a chance of
   // working. Useful for filtering out dangling references from lists.
   public canRead: CanReadFunction = (objOrRef) => {
-    return isReference(objOrRef)
-      ? this.has(objOrRef.__ref)
+    return isReference(objOrRef) ?
+        this.has(objOrRef.__ref)
       : typeof objOrRef === "object";
   };
 
@@ -789,8 +789,8 @@ class Layer extends EntityStore {
 
   public findChildRefIds(dataId: string): Record<string, true> {
     const fromParent = this.parent.findChildRefIds(dataId);
-    return hasOwn.call(this.data, dataId)
-      ? {
+    return hasOwn.call(this.data, dataId) ?
+        {
           ...fromParent,
           ...super.findChildRefIds(dataId),
         }

@@ -20,6 +20,9 @@ import { Suspense } from "react";
 import { createQueryPreloader } from "../../query-preloader/createQueryPreloader";
 import { ApolloProvider } from "../../context";
 import userEvent from "@testing-library/user-event";
+import { QueryReference } from "../../cache/QueryReference";
+import { useBackgroundQuery } from "../useBackgroundQuery";
+import { useLoadableQuery } from "../useLoadableQuery";
 
 test("refetches and resuspends when calling refetch", async () => {
   const { query, mocks: defaultMocks } = useSimpleCase();
@@ -730,4 +733,208 @@ test("`refetch` works with startTransition", async () => {
   await waitFor(() => {
     expect(todo).toHaveTextContent("Clean room (completed)");
   });
+});
+
+test("can attach handlers to queryRefs produced by useBackgroundQuery", async () => {
+  const { query, mocks: defaultMocks } = useSimpleCase();
+
+  const user = userEvent.setup();
+
+  const mocks = [
+    defaultMocks[0],
+    {
+      request: { query },
+      result: { data: { greeting: "Hello again" } },
+      delay: 20,
+    },
+  ];
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryReference<SimpleCaseData>;
+  }) {
+    const { refetch } = usePreloadedQueryHandlers(queryRef);
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return <button onClick={() => refetch()}>Refetch</button>;
+  }
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query);
+
+    return (
+      <>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      </>
+    );
+  }
+
+  render(<App />, {
+    wrapper: ({ children }) => {
+      return (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      );
+    },
+  });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Refetch")));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello again" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+test("can attach handlers to queryRefs produced by useLoadableQuery", async () => {
+  const { query, mocks: defaultMocks } = useSimpleCase();
+
+  const user = userEvent.setup();
+
+  const mocks = [
+    defaultMocks[0],
+    {
+      request: { query },
+      result: { data: { greeting: "Hello again" } },
+      delay: 20,
+    },
+  ];
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryReference<SimpleCaseData>;
+  }) {
+    const { refetch } = usePreloadedQueryHandlers(queryRef);
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return <button onClick={() => refetch()}>Refetch</button>;
+  }
+
+  function App() {
+    useTrackRenders();
+    const [loadQuery, queryRef] = useLoadableQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  render(<App />, {
+    wrapper: ({ children }) => {
+      return (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      );
+    },
+  });
+
+  // initial render
+  await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Refetch")));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello again" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });

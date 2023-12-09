@@ -14,7 +14,7 @@ import {
   useSimpleCase,
   useTrackRenders,
 } from "../../../testing/internal";
-import { usePreloadedQueryHandlers } from "../usePreloadedQueryHandlers";
+import { useQueryRefHandlers } from "../useQueryRefHandlers";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
 import { Suspense } from "react";
 import { createQueryPreloader } from "../../query-preloader/createQueryPreloader";
@@ -65,7 +65,7 @@ test("refetches and resuspends when calling refetch", async () => {
 
   function App() {
     useTrackRenders();
-    const { refetch } = usePreloadedQueryHandlers(queryRef);
+    const { refetch } = useQueryRefHandlers(queryRef);
 
     return (
       <>
@@ -156,7 +156,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     // We can ignore the return result here since we are testing the mechanics
     // of this hook to ensure it doesn't interfere with the updates from
     // useReadQuery
-    usePreloadedQueryHandlers(queryRef);
+    useQueryRefHandlers(queryRef);
 
     return (
       <Suspense fallback={<SuspenseFallback />}>
@@ -293,7 +293,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
 
   function App() {
     useTrackRenders();
-    const { refetch } = usePreloadedQueryHandlers(queryRef);
+    const { refetch } = useQueryRefHandlers(queryRef);
 
     return (
       <>
@@ -427,7 +427,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
 
   function App() {
     useTrackRenders();
-    const { refetch } = usePreloadedQueryHandlers(queryRef);
+    const { refetch } = useQueryRefHandlers(queryRef);
 
     return (
       <>
@@ -557,7 +557,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
 
   function App() {
     useTrackRenders();
-    const { refetch } = usePreloadedQueryHandlers(queryRef);
+    const { refetch } = useQueryRefHandlers(queryRef);
 
     return (
       <>
@@ -671,7 +671,7 @@ test("`refetch` works with startTransition", async () => {
 
   function App() {
     useTrackRenders();
-    const { refetch } = usePreloadedQueryHandlers(queryRef);
+    const { refetch } = useQueryRefHandlers(queryRef);
     const [isPending, startTransition] = React.useTransition();
 
     Profiler.mergeSnapshot({ isPending });
@@ -816,7 +816,7 @@ test("works with startTransition on refetch from useBackgroundQuery and usePrelo
   }) {
     useTrackRenders();
     const [isPending, startTransition] = React.useTransition();
-    const { refetch } = usePreloadedQueryHandlers(queryRef);
+    const { refetch } = useQueryRefHandlers(queryRef);
 
     Profiler.mergeSnapshot({
       usePreloadedQueryHandlersIsPending: isPending,
@@ -989,7 +989,7 @@ test("can attach handlers to queryRefs produced by useBackgroundQuery", async ()
   }: {
     queryRef: QueryReference<SimpleCaseData>;
   }) {
-    const { refetch } = usePreloadedQueryHandlers(queryRef);
+    const { refetch } = useQueryRefHandlers(queryRef);
     Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return <button onClick={() => refetch()}>Refetch</button>;
@@ -1088,7 +1088,7 @@ test("can attach handlers to queryRefs produced by useLoadableQuery", async () =
   }: {
     queryRef: QueryReference<SimpleCaseData>;
   }) {
-    const { refetch } = usePreloadedQueryHandlers(queryRef);
+    const { refetch } = useQueryRefHandlers(queryRef);
     Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return <button onClick={() => refetch()}>Refetch</button>;

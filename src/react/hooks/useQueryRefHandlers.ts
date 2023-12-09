@@ -12,7 +12,7 @@ import type { OperationVariables } from "../../core/types.js";
 import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";
 import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";
 
-export interface UsePreloadedQueryHandlersResult<
+export interface UseQueryRefHandlersResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
@@ -20,12 +20,12 @@ export interface UsePreloadedQueryHandlersResult<
   fetchMore: FetchMoreFunction<TData, TVariables>;
 }
 
-export function usePreloadedQueryHandlers<
+export function useQueryRefHandlers<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   queryRef: QueryReference<TData, TVariables>
-): UsePreloadedQueryHandlersResult<TData, TVariables> {
+): UseQueryRefHandlersResult<TData, TVariables> {
   const [previousQueryRef, setPreviousQueryRef] = React.useState(queryRef);
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(queryRef);
   const internalQueryRef = unwrapQueryRef(queryRef);

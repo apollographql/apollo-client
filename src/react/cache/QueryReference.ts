@@ -80,7 +80,7 @@ export function unwrapQueryRef<TData>(
 }
 
 export function updateWrappedQueryRef<TData>(
-  queryRef: QueryReference<TData, any>,
+  queryRef: QueryReference<TData>,
   promise: QueryRefPromise<TData>
 ) {
   queryRef[PROMISE_SYMBOL] = promise;

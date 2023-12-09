@@ -26,10 +26,9 @@ type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
 type DisposeFn = () => void;
 
-type FetchMoreOptions<
-  TData,
-  TVariables extends OperationVariables,
-> = Parameters<ObservableQuery<TData>["fetchMore"]>[0];
+type FetchMoreOptions<TData> = Parameters<
+  ObservableQuery<TData>["fetchMore"]
+>[0];
 
 const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 const PROMISE_SYMBOL: unique symbol = Symbol();
@@ -250,12 +249,8 @@ export class InternalQueryReference<TData = unknown> {
     return this.initiateFetch(this.observable.refetch(variables));
   }
 
-  fetchMore(options: FetchMoreOptions<TData, OperationVariables>) {
-    return this.initiateFetch(
-      this.observable.fetchMore<TData>(
-        options as FetchMoreQueryOptions<any, any>
-      )
-    );
+  fetchMore(options: FetchMoreOptions<TData>) {
+    return this.initiateFetch(this.observable.fetchMore<TData>(options));
   }
 
   private dispose() {

@@ -45,6 +45,6 @@ export class SuspenseCache {
       });
     }
 
-    return ref.current as InternalQueryReference<TData>;
+    return ref.current;
   }
 }

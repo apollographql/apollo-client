@@ -25,7 +25,7 @@ export function usePreloadedQueryHandlers<
   queryRef: QueryReference<TData, TVariables>
 ): UsePreloadedQueryHandlersResult<TData, TVariables> {
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(queryRef);
-  const [internalQueryRef] = unwrapQueryRef(queryRef);
+  const internalQueryRef = unwrapQueryRef(queryRef);
 
   // To ensure we can support React transitions, this hook needs to manage the
   // queryRef state and apply React's state value immediately to the existing

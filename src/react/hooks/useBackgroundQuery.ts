@@ -212,7 +212,7 @@ export function useBackgroundQuery<
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(
     wrapQueryRef(queryRef)
   );
-  if (unwrapQueryRef(wrappedQueryRef)[0] !== queryRef) {
+  if (unwrapQueryRef(wrappedQueryRef) !== queryRef) {
     setWrappedQueryRef(wrapQueryRef(queryRef));
   }
   if (queryRef.didChangeOptions(watchQueryOptions)) {

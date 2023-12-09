@@ -39,7 +39,7 @@ export interface UseReadQueryResult<TData = unknown> {
 export function useReadQuery<TData>(
   queryRef: QueryReference<TData>
 ): UseReadQueryResult<TData> {
-  const [internalQueryRef, getPromise] = React.useMemo(
+  const internalQueryRef = React.useMemo(
     () => unwrapQueryRef(queryRef),
     [queryRef]
   );
@@ -68,8 +68,8 @@ If you're using a queryRef produced by 'useBackgroundQuery' or 'useLoadableQuery
       },
       [internalQueryRef]
     ),
-    getPromise,
-    getPromise
+    () => queryRef.toPromise(),
+    () => queryRef.toPromise()
   );
 
   const result = __use(promise);

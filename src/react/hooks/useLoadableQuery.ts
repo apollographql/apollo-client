@@ -124,7 +124,7 @@ export function useLoadableQuery<
     TVariables
   > | null>(null);
 
-  const internalQueryRef = queryRef && unwrapQueryRef(queryRef)[0];
+  const internalQueryRef = queryRef && unwrapQueryRef(queryRef);
 
   if (queryRef && internalQueryRef?.didChangeOptions(watchQueryOptions)) {
     const promise = internalQueryRef.applyOptions(watchQueryOptions);

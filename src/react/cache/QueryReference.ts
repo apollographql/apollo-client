@@ -43,7 +43,7 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
   retain: () => DisposeFn;
-  toPromise(): Promise<ApolloQueryResult<TData>>;
+  toPromise(): QueryRefPromise<TData>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -56,6 +56,9 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(
 ): QueryReference<TData, TVariables> {
   return {
     toPromise() {
+      // There is a chance the query ref's promise has been updated in the time
+      // the original promise had been suspended. In that case, we want to use
+      // it instead of the older promise which may contain outdated data.
       return internalQueryRef.promise.status === "fulfilled" ?
           internalQueryRef.promise
         : this[PROMISE_SYMBOL];
@@ -72,19 +75,8 @@ export function getWrappedPromise<TData>(queryRef: QueryReference<TData>) {
 
 export function unwrapQueryRef<TData, TVariables extends OperationVariables>(
   queryRef: QueryReference<TData, TVariables>
-): [InternalQueryReference<TData>, () => QueryRefPromise<TData>] {
-  const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
-
-  return [
-    internalQueryRef,
-    () =>
-      // There is a chance the query ref's promise has been updated in the time
-      // the original promise had been suspended. In that case, we want to use
-      // it instead of the older promise which may contain outdated data.
-      internalQueryRef.promise.status === "fulfilled" ?
-        internalQueryRef.promise
-      : getWrappedPromise(queryRef),
-  ];
+): InternalQueryReference<TData> {
+  return queryRef[QUERY_REFERENCE_SYMBOL];
 }
 
 export function updateWrappedQueryRef<TData>(

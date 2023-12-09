@@ -66,7 +66,7 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   };
 }
 
-export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
+export function getWrappedPromise<TData>(queryRef: QueryReference<TData>) {
   return queryRef[PROMISE_SYMBOL];
 }
 

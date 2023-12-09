@@ -1,5 +1,5 @@
 import React from "react";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import {
   ApolloClient,
   InMemoryCache,
@@ -763,6 +763,188 @@ test("`refetch` works with startTransition", async () => {
       isPending: false,
       result: {
         data: { todo: { id: "1", name: "Clean room", completed: true } },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
+});
+
+test("works with startTransition on refetch from useBackgroundQuery and usePreloadedQueryHandlers", async () => {
+  const { query, mocks: defaultMocks } = useSimpleCase();
+
+  const user = userEvent.setup();
+
+  const mocks = [
+    defaultMocks[0],
+    {
+      request: { query },
+      result: { data: { greeting: "Hello again" } },
+      delay: 20,
+    },
+    {
+      request: { query },
+      result: { data: { greeting: "You again?" } },
+      delay: 20,
+    },
+  ];
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      useBackgroundQueryIsPending: false,
+      usePreloadedQueryHandlersIsPending: false,
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryReference<SimpleCaseData>;
+  }) {
+    useTrackRenders();
+    const [isPending, startTransition] = React.useTransition();
+    const { refetch } = usePreloadedQueryHandlers(queryRef);
+
+    Profiler.mergeSnapshot({
+      usePreloadedQueryHandlersIsPending: isPending,
+      result: useReadQuery(queryRef),
+    });
+
+    return (
+      <button
+        onClick={() =>
+          startTransition(() => {
+            refetch();
+          })
+        }
+      >
+        Refetch from child
+      </button>
+    );
+  }
+
+  function App() {
+    useTrackRenders();
+    const [isPending, startTransition] = React.useTransition();
+    const [queryRef, { refetch }] = useBackgroundQuery(query);
+
+    Profiler.mergeSnapshot({ useBackgroundQueryIsPending: isPending });
+
+    return (
+      <>
+        <button
+          onClick={() =>
+            startTransition(() => {
+              refetch();
+            })
+          }
+        >
+          Refetch from parent
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      </>
+    );
+  }
+
+  render(<App />, {
+    wrapper: ({ children }) => {
+      return (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      );
+    },
+  });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Refetch from parent")));
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot).toEqual({
+      useBackgroundQueryIsPending: true,
+      usePreloadedQueryHandlersIsPending: false,
+      result: {
+        data: { greeting: "Hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot).toEqual({
+      useBackgroundQueryIsPending: false,
+      usePreloadedQueryHandlersIsPending: false,
+      result: {
+        data: { greeting: "Hello again" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Refetch from child")));
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot).toEqual({
+      useBackgroundQueryIsPending: false,
+      usePreloadedQueryHandlersIsPending: true,
+      result: {
+        data: { greeting: "Hello again" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot).toEqual({
+      useBackgroundQueryIsPending: false,
+      usePreloadedQueryHandlersIsPending: false,
+      result: {
+        data: { greeting: "You again?" },
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },

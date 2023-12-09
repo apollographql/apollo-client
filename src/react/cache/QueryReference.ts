@@ -19,7 +19,8 @@ import type { QueryKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
 import { wrapPromiseWithState } from "../../utilities/index.js";
 
-type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
+/** @internal */
+export type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
 
 type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 

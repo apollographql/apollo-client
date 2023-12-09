@@ -43,7 +43,7 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
   retain: () => DisposeFn;
-  toPromise(): QueryRefPromise<TData>;
+  toPromise(): Promise<ApolloQueryResult<TData>>;
 }
 
 interface InternalQueryReferenceOptions {

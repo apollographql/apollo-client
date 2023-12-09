@@ -44,12 +44,6 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
   retain: () => DisposeFn;
   toPromise(): Promise<ApolloQueryResult<TData>>;
-  toPromise(options: {
-    maxWait: number;
-  }): Promise<ApolloQueryResult<TData> | undefined>;
-  toPromise(options: {
-    maxWait?: number | undefined;
-  }): Promise<ApolloQueryResult<TData>>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -58,24 +52,13 @@ interface InternalQueryReferenceOptions {
 }
 
 export function wrapQueryRef<TData, TVariables extends OperationVariables>(
-  internalQueryRef: InternalQueryReference<TData, TVariables>
+  internalQueryRef: InternalQueryReference<TData>
 ): QueryReference<TData, TVariables> {
   return {
-    // @ts-expect-error Target signature provides too few arguments. Expected 1 or more, but got 0. https://github.com/microsoft/TypeScript/issues/54539
-    toPromise(options) {
-      const promise =
-        internalQueryRef.promise.status === "fulfilled" ?
+    toPromise() {
+      return internalQueryRef.promise.status === "fulfilled" ?
           internalQueryRef.promise
         : this[PROMISE_SYMBOL];
-
-      if (options?.maxWait) {
-        return Promise.race([
-          promise,
-          new Promise((resolve) => setTimeout(resolve, options.maxWait)),
-        ]);
-      }
-
-      return promise;
     },
     retain: () => internalQueryRef.retain(),
     [QUERY_REFERENCE_SYMBOL]: internalQueryRef,

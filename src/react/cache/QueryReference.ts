@@ -2,7 +2,6 @@ import { equal } from "@wry/equality";
 import type {
   ApolloError,
   ApolloQueryResult,
-  FetchMoreQueryOptions,
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,

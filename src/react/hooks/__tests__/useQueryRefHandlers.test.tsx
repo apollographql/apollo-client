@@ -9,9 +9,11 @@ import {
 } from "../../../core";
 import { MockLink, MockedResponse } from "../../../testing";
 import {
+  PaginatedCaseData,
   SimpleCaseData,
   createProfiler,
   renderWithClient,
+  usePaginatedCase,
   useSimpleCase,
   useTrackRenders,
 } from "../../../testing/internal";
@@ -23,6 +25,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryReference } from "../../cache/QueryReference";
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { useLoadableQuery } from "../useLoadableQuery";
+import { concatPagination } from "../../../utilities";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = useSimpleCase();
@@ -1086,6 +1089,304 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello again" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+test("resuspends when calling `fetchMore`", async () => {
+  const { query, link } = usePaginatedCase();
+
+  const user = userEvent.setup();
+
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const preloadQuery = createQueryPreloader(client);
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function App() {
+    useTrackRenders();
+    const { fetchMore } = useQueryRefHandlers(queryRef);
+
+    return (
+      <>
+        <button
+          onClick={() => fetchMore({ variables: { limit: 2, offset: 2 } })}
+        >
+          Load next
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook />
+        </Suspense>
+      </>
+    );
+  }
+
+  const queryRef = preloadQuery(query);
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Load next")));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "C", position: 3 },
+          { letter: "D", position: 4 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+test("properly uses `updateQuery` when calling `fetchMore`", async () => {
+  const { query, link } = usePaginatedCase();
+
+  const user = userEvent.setup();
+
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const preloadQuery = createQueryPreloader(client);
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function App() {
+    useTrackRenders();
+    const { fetchMore } = useQueryRefHandlers(queryRef);
+
+    return (
+      <>
+        <button
+          onClick={() =>
+            fetchMore({
+              variables: { limit: 2, offset: 2 },
+              updateQuery: (prev, { fetchMoreResult }) => ({
+                letters: prev.letters.concat(fetchMoreResult.letters),
+              }),
+            })
+          }
+        >
+          Load next
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook />
+        </Suspense>
+      </>
+    );
+  }
+
+  const queryRef = preloadQuery(query);
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Load next")));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+          { letter: "C", position: 3 },
+          { letter: "D", position: 4 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+test("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
+  const { query, link } = usePaginatedCase();
+
+  const user = userEvent.setup();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: concatPagination(),
+          },
+        },
+      },
+    }),
+    link,
+  });
+  const preloadQuery = createQueryPreloader(client);
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function App() {
+    useTrackRenders();
+    const { fetchMore } = useQueryRefHandlers(queryRef);
+
+    return (
+      <>
+        <button
+          onClick={() => fetchMore({ variables: { limit: 2, offset: 2 } })}
+        >
+          Load next
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook />
+        </Suspense>
+      </>
+    );
+  }
+
+  const queryRef = preloadQuery(query);
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Load next")));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+          { letter: "C", position: 3 },
+          { letter: "D", position: 4 },
+        ],
+      },
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });

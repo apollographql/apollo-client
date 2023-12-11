@@ -7,7 +7,7 @@ export interface SimpleCaseData {
 }
 
 export function useSimpleCase() {
-  const query: TypedDocumentNode<SimpleCaseData, never> = gql`
+  const query: TypedDocumentNode<SimpleCaseData, Record<string, never>> = gql`
     query GreetingQuery {
       greeting
     }

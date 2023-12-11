@@ -18,9 +18,7 @@ test("warns when calling `retain` on a disposed query ref", async () => {
   using _consoleSpy = spyOnConsole("warn");
   const { query, mocks } = useSimpleCase();
   const client = createDefaultClient(mocks);
-  const observable = client.watchQuery<SimpleCaseData, Record<string, never>>({
-    query,
-  });
+  const observable = client.watchQuery({ query });
 
   const queryRef = new InternalQueryReference(observable, {});
   const dispose = queryRef.retain();

@@ -1100,7 +1100,6 @@ describe("ObservableQuery", () => {
       const observableQuery = queryManager.watchQuery({
         query,
         variables: { id: 1 },
-        fetchPolicy: "network-only",
       });
       const stream = new ObservableStream(observableQuery);
 
@@ -1135,7 +1134,6 @@ describe("ObservableQuery", () => {
       const observableQuery = queryManager.watchQuery({
         query,
         variables: { id: 1 },
-        fetchPolicy: "network-only",
       });
       const stream = new ObservableStream(observableQuery);
 

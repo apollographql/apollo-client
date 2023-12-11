@@ -1584,3 +1584,303 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     });
   }
 });
+
+test("`fetchMore` works with startTransition", async () => {
+  const { query, link } = usePaginatedCase();
+
+  const user = userEvent.setup();
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const preloadQuery = createQueryPreloader(client);
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      isPending: false,
+      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function App() {
+    useTrackRenders();
+    const [isPending, startTransition] = React.useTransition();
+    const { fetchMore } = useQueryRefHandlers(queryRef);
+
+    Profiler.mergeSnapshot({ isPending });
+
+    return (
+      <>
+        <button
+          onClick={() =>
+            startTransition(() => {
+              fetchMore({ variables: { offset: 2, limit: 2 } });
+            })
+          }
+        >
+          Load next
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook />
+        </Suspense>
+      </>
+    );
+  }
+
+  const queryRef = preloadQuery(query);
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Load next")));
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot).toEqual({
+      isPending: true,
+      result: {
+        data: {
+          letters: [
+            { letter: "A", position: 1 },
+            { letter: "B", position: 2 },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot).toEqual({
+      isPending: false,
+      result: {
+        data: {
+          letters: [
+            { letter: "C", position: 3 },
+            { letter: "D", position: 4 },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
+});
+
+test("`fetchMore` works with startTransition from useBackgroundQuery and useQueryRefHandlers", async () => {
+  const { query, link } = usePaginatedCase();
+
+  const user = userEvent.setup();
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      useBackgroundQueryIsPending: false,
+      useQueryRefHandlersIsPending: false,
+      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryReference<PaginatedCaseData>;
+  }) {
+    useTrackRenders();
+    const [isPending, startTransition] = React.useTransition();
+    const { fetchMore } = useQueryRefHandlers(queryRef);
+
+    Profiler.mergeSnapshot({
+      useQueryRefHandlersIsPending: isPending,
+      result: useReadQuery(queryRef),
+    });
+
+    return (
+      <button
+        onClick={() =>
+          startTransition(() => {
+            fetchMore({ variables: { offset: 4, limit: 2 } });
+          })
+        }
+      >
+        Paginate from child
+      </button>
+    );
+  }
+
+  function App() {
+    useTrackRenders();
+    const [isPending, startTransition] = React.useTransition();
+    const [queryRef, { fetchMore }] = useBackgroundQuery(query);
+
+    Profiler.mergeSnapshot({ useBackgroundQueryIsPending: isPending });
+
+    return (
+      <>
+        <button
+          onClick={() =>
+            startTransition(() => {
+              fetchMore({ variables: { offset: 2, limit: 2 } });
+            })
+          }
+        >
+          Paginate from parent
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      </>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Paginate from parent")));
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot).toEqual({
+      useBackgroundQueryIsPending: true,
+      useQueryRefHandlersIsPending: false,
+      result: {
+        data: {
+          letters: [
+            { letter: "A", position: 1 },
+            { letter: "B", position: 2 },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot).toEqual({
+      useBackgroundQueryIsPending: false,
+      useQueryRefHandlersIsPending: false,
+      result: {
+        data: {
+          letters: [
+            { letter: "C", position: 3 },
+            { letter: "D", position: 4 },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Paginate from child")));
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot).toEqual({
+      useBackgroundQueryIsPending: false,
+      useQueryRefHandlersIsPending: true,
+      result: {
+        data: {
+          letters: [
+            { letter: "C", position: 3 },
+            { letter: "D", position: 4 },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot).toEqual({
+      useBackgroundQueryIsPending: false,
+      useQueryRefHandlersIsPending: false,
+      result: {
+        data: {
+          letters: [
+            { letter: "E", position: 5 },
+            { letter: "F", position: 6 },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
+});

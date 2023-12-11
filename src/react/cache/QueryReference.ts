@@ -119,7 +119,7 @@ export class InternalQueryReference<TData = unknown> {
   private references = 0;
 
   constructor(
-    observable: ObservableQuery<TData>,
+    observable: ObservableQuery<TData, any>,
     options: InternalQueryReferenceOptions
   ) {
     this.handleNext = this.handleNext.bind(this);

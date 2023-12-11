@@ -12,6 +12,7 @@ import type {
 } from "./types.js";
 import type { ApolloCache } from "../cache/index.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
+import type { IgnoreModifier } from "../cache/core/types/common.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -272,7 +273,9 @@ export interface MutationBaseOptions<
    * the result of a mutation immediately, and update the UI later if any errors
    * appear.
    */
-  optimisticResponse?: TData | ((vars: TVariables) => TData | null);
+  optimisticResponse?:
+    | TData
+    | ((vars: TVariables, { IGNORE }: { IGNORE: IgnoreModifier }) => TData);
 
   /**
    * A {@link MutationQueryReducersMap}, which is map from query names to

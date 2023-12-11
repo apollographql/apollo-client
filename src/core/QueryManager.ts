@@ -75,9 +75,12 @@ import {
 import type { ApolloErrorOptions } from "../errors/index.js";
 import { PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
 import { print } from "../utilities/index.js";
+import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { TODO } from "../utilities/types/TODO.js";
 
 const { hasOwnProperty } = Object.prototype;
+
+const IGNORE: IgnoreModifier = Object.create(null);
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -611,10 +614,10 @@ export class QueryManager<TStore> {
   ) {
     const data =
       typeof optimisticResponse === "function" ?
-        optimisticResponse(mutation.variables)
+        optimisticResponse(mutation.variables, { IGNORE })
       : optimisticResponse;
 
-    if (data === null) {
+    if (data === IGNORE) {
       return false;
     }
 

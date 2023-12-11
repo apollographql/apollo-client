@@ -984,7 +984,7 @@ describe("optimistic mutation results", () => {
     );
 
     itAsync(
-      "will not update optimistically if optimisticResponse returns null",
+      "will not update optimistically if optimisticResponse returns IGNORE sentinel object",
       async (resolve, reject) => {
         expect.assertions(5);
 
@@ -1026,7 +1026,9 @@ describe("optimistic mutation results", () => {
         const promise = client.mutate({
           mutation,
           variables,
-          optimisticResponse: () => null,
+          optimisticResponse: (vars, { IGNORE }) => {
+            return IGNORE;
+          },
           update: (proxy: any, mResult: any) => {
             expect(mResult.data.createTodo.id).toBe("99");
 

@@ -1,23 +1,15 @@
 import { ApolloClient, InMemoryCache } from "../../../core";
-import { MockLink, MockedResponse, wait } from "../../../testing";
-import {
-  SimpleCaseData,
-  spyOnConsole,
-  useSimpleCase,
-} from "../../../testing/internal";
+import { MockLink, wait } from "../../../testing";
+import { spyOnConsole, useSimpleCase } from "../../../testing/internal";
 import { InternalQueryReference } from "../QueryReference";
-
-function createDefaultClient(mocks: MockedResponse[]) {
-  return new ApolloClient({
-    cache: new InMemoryCache(),
-    link: new MockLink(mocks),
-  });
-}
 
 test("warns when calling `retain` on a disposed query ref", async () => {
   using _consoleSpy = spyOnConsole("warn");
   const { query, mocks } = useSimpleCase();
-  const client = createDefaultClient(mocks);
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
   const observable = client.watchQuery({ query });
 
   const queryRef = new InternalQueryReference(observable, {});

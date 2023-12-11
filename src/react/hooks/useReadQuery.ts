@@ -52,11 +52,9 @@ export function useReadQuery<TData>(
       didWarnOnDisposedQueryRef.current !== internalQueryRef &&
       internalQueryRef.disposed
     ) {
-      invariant.warn(`'useReadQuery' was called with a disposed queryRef which means the query is no longer watched and cache updates will be missed.
+      invariant.warn(`'useReadQuery' was called with a disposed queryRef which means the query is no longer watched and cache updates will be missed. This may occur when calling 'dispose' before passing the queryRef to 'useReadQuery'.
 
-This occurs when calling 'dispose' while 'useReadQuery' is still mounted, either by calling 'dispose' too early, or because you are using React's strict mode and calling 'dispose' in a 'useEffect' cleanup function.
-
-If you're using a queryRef produced by 'useBackgroundQuery' or 'useLoadableQuery', this is a bug in Apollo Client. Please file an issue.`);
+If you're seeing this warning for a queryRef produced by 'useBackgroundQuery' or 'useLoadableQuery', this is a bug in Apollo Client. Please file an issue.`);
       didWarnOnDisposedQueryRef.current = internalQueryRef;
     }
   }

@@ -191,18 +191,19 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
   const queryRef = preloadQuery(query);
   const dispose = queryRef.retain();
 
-  const { Profiler, rerender } = renderDefaultTestApp({ client, queryRef });
-
-  await Profiler.takeRender();
-  await Profiler.takeRender();
-
-  await expect(Profiler).not.toRerender();
+  await queryRef.toPromise();
 
   dispose();
 
   await wait(0);
 
-  rerender();
+  function App() {
+    useReadQuery(queryRef);
+
+    return null;
+  }
+
+  const { rerender } = render(<App />);
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
@@ -211,7 +212,7 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
     )
   );
 
-  rerender();
+  rerender(<App />);
 
   // Ensure re-rendering again only shows the warning once
   expect(console.warn).toHaveBeenCalledTimes(1);
@@ -590,9 +591,9 @@ test("creates unique query refs when provided with a queryKey", async () => {
   const queryRef2 = preloadQuery(query);
   const queryRef3 = preloadQuery(query, { queryKey: 1 });
 
-  const [unwrappedQueryRef1] = unwrapQueryRef(queryRef1);
-  const [unwrappedQueryRef2] = unwrapQueryRef(queryRef2);
-  const [unwrappedQueryRef3] = unwrapQueryRef(queryRef3);
+  const unwrappedQueryRef1 = unwrapQueryRef(queryRef1);
+  const unwrappedQueryRef2 = unwrapQueryRef(queryRef2);
+  const unwrappedQueryRef3 = unwrapQueryRef(queryRef3);
 
   expect(unwrappedQueryRef2).toBe(unwrappedQueryRef1);
   expect(unwrappedQueryRef3).not.toBe(unwrappedQueryRef1);

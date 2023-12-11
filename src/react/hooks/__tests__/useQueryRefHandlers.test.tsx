@@ -11,6 +11,7 @@ import { MockLink, MockedResponse } from "../../../testing";
 import {
   SimpleCaseData,
   createProfiler,
+  renderWithClient,
   useSimpleCase,
   useTrackRenders,
 } from "../../../testing/internal";
@@ -18,7 +19,6 @@ import { useQueryRefHandlers } from "../useQueryRefHandlers";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
 import { Suspense } from "react";
 import { createQueryPreloader } from "../../query-preloader/createQueryPreloader";
-import { ApolloProvider } from "../../context";
 import userEvent from "@testing-library/user-event";
 import { QueryReference } from "../../cache/QueryReference";
 import { useBackgroundQuery } from "../useBackgroundQuery";
@@ -77,15 +77,7 @@ test("refetches and resuspends when calling refetch", async () => {
     );
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -165,15 +157,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     );
   }
 
-  const { rerender } = render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  const { rerender } = renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -305,15 +289,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     );
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
   // initial render
   await Profiler.takeRender();
@@ -439,15 +415,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     );
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
   // initial render
   await Profiler.takeRender();
@@ -569,15 +537,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     );
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
   // initial render
   await Profiler.takeRender();
@@ -715,9 +675,7 @@ test("`refetch` works with startTransition", async () => {
     );
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => <Profiler>{children}</Profiler>,
-  });
+  render(<App />, { wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -861,15 +819,7 @@ test("works with startTransition on refetch from useBackgroundQuery and usePrelo
     );
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1008,15 +958,7 @@ test("can attach handlers to queryRefs produced by useBackgroundQuery", async ()
     );
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1108,15 +1050,7 @@ test("can attach handlers to queryRefs produced by useLoadableQuery", async () =
     );
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
   // initial render
   await Profiler.takeRender();

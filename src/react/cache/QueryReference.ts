@@ -18,6 +18,7 @@ import {
 import type { QueryKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
 import { wrapPromiseWithState } from "../../utilities/index.js";
+import { invariant } from "../../utilities/globals/index.js";
 
 /** @internal */
 export type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
@@ -187,6 +188,16 @@ export class InternalQueryReference<TData = unknown> {
     this.references++;
     clearTimeout(this.autoDisposeTimeoutId);
     let disposed = false;
+
+    if (__DEV__) {
+      if (this.disposed) {
+        invariant.warn(
+          `'retain' was called on a disposed queryRef which results in a no-op. Please recreate the queryRef by calling 'preloadQuery' again.
+
+If you're seeing this warning for a queryRef produced by 'useBackgroundQuery' or 'useLoadableQuery', this is a bug in Apollo Client. Please file an issue.`
+        );
+      }
+    }
 
     return () => {
       if (disposed || this.disposed) {

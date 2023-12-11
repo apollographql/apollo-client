@@ -189,7 +189,7 @@ export class InternalQueryReference<TData = unknown> {
     let disposed = false;
 
     return () => {
-      if (disposed) {
+      if (disposed || this.disposed) {
         return;
       }
 

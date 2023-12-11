@@ -1392,3 +1392,195 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
     });
   }
 });
+
+test("paginates from queryRefs produced by useBackgroundQuery", async () => {
+  const { query, link } = usePaginatedCase();
+
+  const user = userEvent.setup();
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryReference<PaginatedCaseData>;
+  }) {
+    useTrackRenders();
+    const { fetchMore } = useQueryRefHandlers(queryRef);
+
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return (
+      <button onClick={() => fetchMore({ variables: { limit: 2, offset: 2 } })}>
+        Load next
+      </button>
+    );
+  }
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query);
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Load next")));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "C", position: 3 },
+          { letter: "D", position: 4 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+test("paginates from queryRefs produced by useLoadableQuery", async () => {
+  const { query, link } = usePaginatedCase();
+
+  const user = userEvent.setup();
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryReference<PaginatedCaseData>;
+  }) {
+    useTrackRenders();
+    const { fetchMore } = useQueryRefHandlers(queryRef);
+
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return (
+      <button onClick={() => fetchMore({ variables: { limit: 2, offset: 2 } })}>
+        Load next
+      </button>
+    );
+  }
+
+  function App() {
+    useTrackRenders();
+    const [loadQuery, queryRef] = useLoadableQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  // initial render
+  await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "A", position: 1 },
+          { letter: "B", position: 2 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(screen.getByText("Load next")));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        letters: [
+          { letter: "C", position: 3 },
+          { letter: "D", position: 4 },
+        ],
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});

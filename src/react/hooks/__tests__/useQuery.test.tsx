@@ -4496,7 +4496,7 @@ describe("useQuery Hook", () => {
       });
     });
 
-    it('keeps cache consistency when a call to refetchQueries is interrupted with another query caused by changing variables and the second query returns before the first one', async () => {
+    it("keeps cache consistency when a call to refetchQueries is interrupted with another query caused by changing variables and the second query returns before the first one", async () => {
       const CAR_QUERY_BY_ID = gql`
         query Car($id: Int) {
           car(id: $id) {
@@ -4510,33 +4510,33 @@ describe("useQuery Hook", () => {
         1: [
           {
             car: {
-              make: 'Audi',
-              model: 'A4',
-              __typename: 'Car'
-            }
+              make: "Audi",
+              model: "A4",
+              __typename: "Car",
+            },
           },
           {
             car: {
-              make: 'Audi',
-              model: 'A3', // Changed
-              __typename: 'Car'
-            }
-          }
+              make: "Audi",
+              model: "A3", // Changed
+              __typename: "Car",
+            },
+          },
         ],
         2: [
           {
             car: {
-              make: 'Audi',
-              model: 'RS8',
-              __typename: 'Car'
-            }
-          }
-        ]
+              make: "Audi",
+              model: "RS8",
+              __typename: "Car",
+            },
+          },
+        ],
       };
 
       const link = new ApolloLink(
-        operation =>
-          new Observable(observer => {
+        (operation) =>
+          new Observable((observer) => {
             if (operation.variables.id === 1) {
               // Queries for this ID return after a delay
               setTimeout(() => {
@@ -4550,7 +4550,7 @@ describe("useQuery Hook", () => {
               observer.next({ data });
               observer.complete();
             } else {
-              observer.error(new Error('Unexpected query'));
+              observer.error(new Error("Unexpected query"));
             }
           })
       );
@@ -4561,7 +4561,7 @@ describe("useQuery Hook", () => {
         const result = useQuery(CAR_QUERY_BY_ID, {
           variables: { id },
           notifyOnNetworkStatusChange: true,
-          fetchPolicy: 'network-only'
+          fetchPolicy: "network-only",
         });
         const client = useApolloClient();
         const hasRefetchedRef = useRef(false);
@@ -4602,28 +4602,28 @@ describe("useQuery Hook", () => {
         expect(hookResponse).toHaveBeenCalledTimes(5);
       });
 
-      expect(hookResponse.mock.calls.map(call => call[0].data)).toEqual([
+      expect(hookResponse.mock.calls.map((call) => call[0].data)).toEqual([
         undefined,
         {
-          "car": {
-            "__typename": "Car",
-            "make": "Audi",
-            "model": "A4",
+          car: {
+            __typename: "Car",
+            make: "Audi",
+            model: "A4",
           },
         },
         {
-          "car": {
-            "__typename": "Car",
-            "make": "Audi",
-            "model": "A4",
+          car: {
+            __typename: "Car",
+            make: "Audi",
+            model: "A4",
           },
         },
         undefined,
         {
-          "car": {
-            "__typename": "Car",
-            "make": "Audi",
-            "model": "RS8",
+          car: {
+            __typename: "Car",
+            make: "Audi",
+            model: "RS8",
           },
         },
       ]);

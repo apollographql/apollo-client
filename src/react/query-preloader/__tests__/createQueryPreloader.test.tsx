@@ -1022,6 +1022,8 @@ describe.skip("type tests", () => {
     preloadQuery(query, { returnPartialData: true, variables: {} });
     // @ts-expect-error unknown variables
     preloadQuery(query, { variables: { foo: "bar" } });
+    // @ts-expect-error unknown variables
+    preloadQuery(query, { returnPartialData: true, variables: { foo: "bar" } });
   });
 
   test("does not allow variables when TVariables is `never`", () => {
@@ -1030,8 +1032,10 @@ describe.skip("type tests", () => {
     preloadQuery(query);
     preloadQuery(query, { variables: {} });
     preloadQuery(query, { returnPartialData: true, variables: {} });
-    // @ts-expect-error no variables option allowed
+    // @ts-expect-error no variables allowed
     preloadQuery(query, { variables: { foo: "bar" } });
+    // @ts-expect-error no variables allowed
+    preloadQuery(query, { returnPartialData: true, variables: { foo: "bar" } });
   });
 
   test("optional variables are optional", () => {

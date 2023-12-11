@@ -730,7 +730,7 @@ test("`refetch` works with startTransition", async () => {
   await expect(Profiler).not.toRerender();
 });
 
-test("works with startTransition on refetch from useBackgroundQuery and usePreloadedQueryHandlers", async () => {
+test("`refetch` works with startTransition from useBackgroundQuery and usePreloadedQueryHandlers", async () => {
   const { query, mocks: defaultMocks } = useSimpleCase();
 
   const user = userEvent.setup();
@@ -904,7 +904,7 @@ test("works with startTransition on refetch from useBackgroundQuery and usePrelo
   await expect(Profiler).not.toRerender();
 });
 
-test("can attach handlers to queryRefs produced by useBackgroundQuery", async () => {
+test("refetches from queryRefs produced by useBackgroundQuery", async () => {
   const { query, mocks: defaultMocks } = useSimpleCase();
 
   const user = userEvent.setup();
@@ -995,7 +995,7 @@ test("can attach handlers to queryRefs produced by useBackgroundQuery", async ()
   }
 });
 
-test("can attach handlers to queryRefs produced by useLoadableQuery", async () => {
+test("refetches from queryRefs produced by useLoadableQuery", async () => {
   const { query, mocks: defaultMocks } = useSimpleCase();
 
   const user = userEvent.setup();

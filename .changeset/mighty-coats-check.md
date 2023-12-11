@@ -17,7 +17,6 @@ const UPDATE_COMMENT = gql`
   }
 `;
 
-// Component definition
 function CommentPageWithData() {
   const [mutate] = useMutation(UPDATE_COMMENT);
   return (

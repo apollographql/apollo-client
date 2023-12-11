@@ -212,6 +212,44 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
   expect(console.warn).toHaveBeenCalledTimes(1);
 });
 
+test("useReadQuery warns again when called with a different disposed query ref", async () => {
+  using _consoleSpy = spyOnConsole("warn");
+  const { query } = useSimpleCase();
+
+  const mocks: MockedResponse[] = [
+    {
+      request: { query },
+      result: { data: { greeting: "Hello" } },
+      maxUsageCount: 2,
+    },
+  ];
+
+  const client = createDefaultClient(mocks);
+
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef1 = preloadQuery(query, { queryKey: 1 });
+  const queryRef2 = preloadQuery(query, { queryKey: 2 });
+  const dispose1 = queryRef1.retain();
+  const dispose2 = queryRef2.retain();
+
+  await Promise.all([queryRef1.toPromise(), queryRef2.toPromise()]);
+
+  dispose1();
+  dispose2();
+
+  await wait(0);
+
+  const { rerender } = renderHook(({ queryRef }) => useReadQuery(queryRef), {
+    initialProps: { queryRef: queryRef1 },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+
+  rerender({ queryRef: queryRef2 });
+
+  expect(console.warn).toHaveBeenCalledTimes(2);
+});
+
 test("reacts to cache updates", async () => {
   const { query, mocks } = useSimpleCase();
   const client = createDefaultClient(mocks);

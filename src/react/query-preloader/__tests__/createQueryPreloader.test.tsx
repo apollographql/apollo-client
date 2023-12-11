@@ -195,6 +195,40 @@ test("Auto disposes of the query ref if not retained within the given time", asy
   jest.useRealTimers();
 });
 
+test("Honors configured auto dispose timer on the client", async () => {
+  jest.useFakeTimers();
+  const { query, mocks } = useSimpleCase();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+    defaultOptions: {
+      react: {
+        suspense: {
+          autoDisposeTimeoutMs: 5000,
+        },
+      },
+    },
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+
+  const queryRef = preloadQuery(query);
+
+  // We don't start the dispose timer until the promise is initially resolved
+  // so we need to wait for it
+  jest.advanceTimersByTime(20);
+  await queryRef.toPromise();
+  jest.advanceTimersByTime(5_000);
+
+  const internalQueryRef = unwrapQueryRef(queryRef);
+
+  expect(internalQueryRef.disposed).toBe(true);
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+
+  jest.useRealTimers();
+});
+
 test.todo(
   "useReadQuery auto-retains the queryRef and disposes of it when unmounted"
 );

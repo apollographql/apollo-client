@@ -1001,59 +1001,138 @@ describe.skip("type tests", () => {
     preloadQuery(query, { variables: { foo: "bar", bar: 2 } });
   });
 
-  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
-    const query: TypedDocumentNode<{ greeting: string }> = gql``;
+  test("variables are optional and can be anything with unspecified TVariables", () => {
+    type Data = { greeting: string };
+    const query: TypedDocumentNode<Data> = gql``;
 
     preloadQuery(query);
+    preloadQuery<Data>(query);
     preloadQuery(query, { variables: {} });
+    preloadQuery<Data>(query, { variables: {} });
     preloadQuery(query, { returnPartialData: true, variables: {} });
+    preloadQuery<Data>(query, { returnPartialData: true, variables: {} });
     preloadQuery(query, { variables: { foo: "bar" } });
+    preloadQuery<Data>(query, { variables: { foo: "bar" } });
     preloadQuery(query, { variables: { foo: "bar", bar: 2 } });
+    preloadQuery<Data>(query, { variables: { foo: "bar", bar: 2 } });
   });
 
   test("variables are optional when TVariables are empty", () => {
-    const query: TypedDocumentNode<
-      { greeting: string },
-      Record<string, never>
-    > = gql``;
+    type Data = { greeting: string };
+    type Variables = Record<string, never>;
+    const query: TypedDocumentNode<Data, Variables> = gql``;
 
     preloadQuery(query);
+    preloadQuery<Data, Variables>(query);
     preloadQuery(query, { variables: {} });
+    preloadQuery<Data, Variables>(query, { variables: {} });
     preloadQuery(query, { returnPartialData: true, variables: {} });
-    // @ts-expect-error unknown variables
-    preloadQuery(query, { variables: { foo: "bar" } });
-    // @ts-expect-error unknown variables
-    preloadQuery(query, { returnPartialData: true, variables: { foo: "bar" } });
+    preloadQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {},
+    });
+    preloadQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    preloadQuery<Data, Variables>(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    preloadQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    preloadQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 
   test("does not allow variables when TVariables is `never`", () => {
-    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+    type Data = { greeting: string };
+    const query: TypedDocumentNode<Data, never> = gql``;
 
     preloadQuery(query);
+    preloadQuery<Data, never>(query);
     preloadQuery(query, { variables: {} });
+    preloadQuery<Data, never>(query, { variables: {} });
     preloadQuery(query, { returnPartialData: true, variables: {} });
+    preloadQuery<Data, never>(query, {
+      returnPartialData: true,
+      variables: {},
+    });
     // @ts-expect-error no variables allowed
     preloadQuery(query, { variables: { foo: "bar" } });
     // @ts-expect-error no variables allowed
-    preloadQuery(query, { returnPartialData: true, variables: { foo: "bar" } });
+    preloadQuery<Data, never>(query, { variables: { foo: "bar" } });
+    preloadQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error no variables allowed
+        foo: "bar",
+      },
+    });
+    preloadQuery<Data, never>(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error no variables allowed
+        foo: "bar",
+      },
+    });
   });
 
   test("optional variables are optional", () => {
-    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
-      gql``;
+    type Data = { posts: string[] };
+    type Variables = { limit?: number };
+    const query: TypedDocumentNode<Data, Variables> = gql``;
 
     preloadQuery(query);
+    preloadQuery<Data, Variables>(query);
     preloadQuery(query, { variables: {} });
+    preloadQuery<Data, Variables>(query, { variables: {} });
     preloadQuery(query, { returnPartialData: true, variables: {} });
+    preloadQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {},
+    });
     preloadQuery(query, { variables: { limit: 10 } });
+    preloadQuery<Data, Variables>(query, { variables: { limit: 10 } });
     preloadQuery(query, { returnPartialData: true, variables: { limit: 10 } });
+    preloadQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: { limit: 10 },
+    });
     preloadQuery(query, {
       variables: {
         // @ts-expect-error unknown variable
         foo: "bar",
       },
     });
+    preloadQuery<Data, Variables>(query, {
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
     preloadQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery<Data, Variables>(query, {
       returnPartialData: true,
       variables: {
         // @ts-expect-error unknown variable
@@ -1067,7 +1146,22 @@ describe.skip("type tests", () => {
         foo: "bar",
       },
     });
+    preloadQuery<Data, Variables>(query, {
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
     preloadQuery(query, {
+      returnPartialData: true,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery<Data, Variables>(query, {
       returnPartialData: true,
       variables: {
         limit: 10,
@@ -1078,18 +1172,46 @@ describe.skip("type tests", () => {
   });
 
   test("enforces required variables", () => {
-    const query: TypedDocumentNode<{ character: string }, { id: string }> =
-      gql``;
+    type Data = { character: string };
+    type Variables = { id: string };
+    const query: TypedDocumentNode<Data, Variables> = gql``;
 
     // @ts-expect-error missing variables option
     preloadQuery(query);
-    // @ts-expect-error empty variables
-    preloadQuery(query, { variables: {} });
-    // @ts-expect-error empty variables
-    preloadQuery(query, { returnPartialData: true, variables: {} });
-    preloadQuery(query, { variables: { id: "1" } });
-    preloadQuery(query, { returnPartialData: true, variables: { id: "1" } });
+    // @ts-expect-error missing variables option
+    preloadQuery<Data, Variables>(query);
     preloadQuery(query, {
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    preloadQuery<Data, Variables>(query, {
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    preloadQuery(query, {
+      returnPartialData: true,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    preloadQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    preloadQuery(query, { variables: { id: "1" } });
+    preloadQuery<Data, Variables>(query, { variables: { id: "1" } });
+    preloadQuery(query, { returnPartialData: true, variables: { id: "1" } });
+    preloadQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: { id: "1" },
+    });
+    preloadQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery<Data, Variables>(query, {
       variables: {
         // @ts-expect-error unknown variable
         foo: "bar",
@@ -1102,7 +1224,29 @@ describe.skip("type tests", () => {
         foo: "bar",
       },
     });
+    preloadQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
     preloadQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery<Data, Variables>(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery(query, {
+      returnPartialData: true,
       variables: {
         id: "1",
         // @ts-expect-error unknown variable
@@ -1120,22 +1264,57 @@ describe.skip("type tests", () => {
   });
 
   test("requires variables with mixed TVariables", () => {
-    const query: TypedDocumentNode<
-      { character: string },
-      { id: string; language?: string }
-    > = gql``;
+    type Data = { character: string };
+    type Variables = { id: string; language?: string };
+    const query: TypedDocumentNode<Data, Variables> = gql``;
 
     // @ts-expect-error missing variables argument
     preloadQuery(query);
     // @ts-expect-error missing variables argument
-    preloadQuery(query, { variables: {} });
+    preloadQuery<Data, Variables>(query);
     // @ts-expect-error missing variables argument
-    preloadQuery(query, { returnPartialData: true, variables: {} });
+    preloadQuery(query, {});
+    // @ts-expect-error missing variables argument
+    preloadQuery<Data, Variables>(query, {});
+    preloadQuery(query, {
+      // @ts-expect-error missing required variables
+      variables: {},
+    });
+    preloadQuery<Data, Variables>(query, {
+      // @ts-expect-error missing required variables
+      variables: {},
+    });
+    preloadQuery(query, {
+      returnPartialData: true,
+      // @ts-expect-error missing required variables
+      variables: {},
+    });
+    preloadQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      // @ts-expect-error missing required variables
+      variables: {},
+    });
     preloadQuery(query, { variables: { id: "1" } });
-    // @ts-expect-error missing required variable
-    preloadQuery(query, { variables: { language: "en" } });
+    preloadQuery<Data, Variables>(query, { variables: { id: "1" } });
+    preloadQuery(query, {
+      // @ts-expect-error missing required variable
+      variables: { language: "en" },
+    });
+    preloadQuery<Data, Variables>(query, {
+      // @ts-expect-error missing required variable
+      variables: { language: "en" },
+    });
     preloadQuery(query, { variables: { id: "1", language: "en" } });
+    preloadQuery<Data, Variables>(query, {
+      variables: { id: "1", language: "en" },
+    });
     preloadQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery<Data, Variables>(query, {
       variables: {
         // @ts-expect-error unknown variable
         foo: "bar",
@@ -1148,7 +1327,21 @@ describe.skip("type tests", () => {
         foo: "bar",
       },
     });
+    preloadQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
     preloadQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery<Data, Variables>(query, {
       variables: {
         id: "1",
         // @ts-expect-error unknown variable
@@ -1163,7 +1356,23 @@ describe.skip("type tests", () => {
         foo: "bar",
       },
     });
+    preloadQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
     preloadQuery(query, {
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery<Data, Variables>(query, {
       variables: {
         id: "1",
         language: "en",

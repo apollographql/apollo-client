@@ -261,9 +261,30 @@ test("useReadQuery auto-retains the queryRef and disposes of it when unmounted",
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
 
-test.todo(
-  "queryRef is not disposed when useReadQuery unmounts when manually retained"
-);
+test("unmounting useReadQuery does not auto dispose of the queryRef when manually retained", async () => {
+  const { query, mocks } = useSimpleCase();
+
+  const client = createDefaultClient(mocks);
+  const preloadQuery = createQueryPreloader(client);
+
+  const queryRef = preloadQuery(query);
+  const dispose = queryRef.retain();
+
+  const { unmount } = renderHook(() => useReadQuery(queryRef));
+
+  await act(() => queryRef.toPromise());
+
+  const internalQueryRef = unwrapQueryRef(queryRef);
+
+  expect(internalQueryRef.disposed).toBe(false);
+
+  unmount();
+  await wait(0);
+
+  expect(internalQueryRef.disposed).toBe(false);
+
+  dispose();
+});
 
 test("useReadQuery warns when called with a disposed queryRef", async () => {
   using _consoleSpy = spyOnConsole("warn");

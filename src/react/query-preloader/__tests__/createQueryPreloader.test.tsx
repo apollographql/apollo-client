@@ -172,9 +172,29 @@ test("tears down the query when calling dispose", async () => {
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
 
-test.todo(
-  "Auto disposes of the query ref if not retained within the given time"
-);
+test("Auto disposes of the query ref if not retained within the given time", async () => {
+  jest.useFakeTimers();
+  const { query, mocks } = useSimpleCase();
+  const client = createDefaultClient(mocks);
+  const preloadQuery = createQueryPreloader(client);
+
+  const queryRef = preloadQuery(query);
+
+  // We don't start the dispose timer until the promise is initially resolved
+  // so we need to wait for it
+  jest.advanceTimersByTime(20);
+  await queryRef.toPromise();
+  jest.advanceTimersByTime(30_000);
+
+  const internalQueryRef = unwrapQueryRef(queryRef);
+
+  expect(internalQueryRef.disposed).toBe(true);
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+
+  jest.useRealTimers();
+});
+
 test.todo(
   "useReadQuery auto-retains the queryRef and disposes of it when unmounted"
 );

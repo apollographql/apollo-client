@@ -1,4 +1,4 @@
-import { gql } from "../../../core/index.js";
+import { ApolloLink, Observable, gql } from "../../../core/index.js";
 import type { TypedDocumentNode } from "../../../core/index.js";
 import type { MockedResponse } from "../../core/index.js";
 
@@ -56,4 +56,48 @@ export function useVariablesCase() {
   );
 
   return { mocks, query };
+}
+
+interface Letter {
+  letter: string;
+  position: number;
+}
+
+export interface PaginatedCaseData {
+  letters: Letter[];
+}
+
+export interface PaginatedCaseVariables {
+  limit?: number;
+  offset?: number;
+}
+
+export function usePaginatedCase() {
+  const query: TypedDocumentNode<PaginatedCaseData, PaginatedCaseVariables> =
+    gql`
+      query letters($limit: Int, $offset: Int) {
+        letters(limit: $limit) {
+          letter
+          position
+        }
+      }
+    `;
+
+  const data = "ABCDEFGHIJKLMNOPQRSTUV"
+    .split("")
+    .map((letter, index) => ({ letter, position: index + 1 }));
+
+  const link = new ApolloLink((operation) => {
+    const { offset = 0, limit = 2 } = operation.variables;
+    const letters = data.slice(offset, offset + limit);
+
+    return new Observable((observer) => {
+      setTimeout(() => {
+        observer.next({ data: { letters } });
+        observer.complete();
+      }, 10);
+    });
+  });
+
+  return { query, link };
 }

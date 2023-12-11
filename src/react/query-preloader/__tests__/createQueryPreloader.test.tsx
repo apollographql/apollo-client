@@ -996,6 +996,7 @@ describe.skip("type tests", () => {
 
     preloadQuery(query);
     preloadQuery(query, { variables: {} });
+    preloadQuery(query, { returnPartialData: true, variables: {} });
     preloadQuery(query, { variables: { foo: "bar" } });
     preloadQuery(query, { variables: { foo: "bar", bar: 2 } });
   });
@@ -1005,6 +1006,7 @@ describe.skip("type tests", () => {
 
     preloadQuery(query);
     preloadQuery(query, { variables: {} });
+    preloadQuery(query, { returnPartialData: true, variables: {} });
     preloadQuery(query, { variables: { foo: "bar" } });
     preloadQuery(query, { variables: { foo: "bar", bar: 2 } });
   });
@@ -1017,6 +1019,7 @@ describe.skip("type tests", () => {
 
     preloadQuery(query);
     preloadQuery(query, { variables: {} });
+    preloadQuery(query, { returnPartialData: true, variables: {} });
     // @ts-expect-error unknown variables
     preloadQuery(query, { variables: { foo: "bar" } });
   });
@@ -1028,6 +1031,8 @@ describe.skip("type tests", () => {
     // @ts-expect-error no variables option allowed
     preloadQuery(query, { variables: {} });
     // @ts-expect-error no variables option allowed
+    preloadQuery(query, { returnPartialData: true, variables: {} });
+    // @ts-expect-error no variables option allowed
     preloadQuery(query, { variables: { foo: "bar" } });
   });
 
@@ -1037,7 +1042,9 @@ describe.skip("type tests", () => {
 
     preloadQuery(query);
     preloadQuery(query, { variables: {} });
+    preloadQuery(query, { returnPartialData: true, variables: {} });
     preloadQuery(query, { variables: { limit: 10 } });
+    preloadQuery(query, { returnPartialData: true, variables: { limit: 10 } });
     preloadQuery(query, {
       variables: {
         // @ts-expect-error unknown variable
@@ -1045,6 +1052,21 @@ describe.skip("type tests", () => {
       },
     });
     preloadQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery(query, {
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery(query, {
+      returnPartialData: true,
       variables: {
         limit: 10,
         // @ts-expect-error unknown variable
@@ -1061,7 +1083,10 @@ describe.skip("type tests", () => {
     preloadQuery(query);
     // @ts-expect-error empty variables
     preloadQuery(query, { variables: {} });
+    // @ts-expect-error empty variables
+    preloadQuery(query, { returnPartialData: true, variables: {} });
     preloadQuery(query, { variables: { id: "1" } });
+    preloadQuery(query, { returnPartialData: true, variables: { id: "1" } });
     preloadQuery(query, {
       variables: {
         // @ts-expect-error unknown variable
@@ -1069,6 +1094,21 @@ describe.skip("type tests", () => {
       },
     });
     preloadQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery(query, {
+      returnPartialData: true,
       variables: {
         id: "1",
         // @ts-expect-error unknown variable
@@ -1087,6 +1127,8 @@ describe.skip("type tests", () => {
     preloadQuery(query);
     // @ts-expect-error missing variables argument
     preloadQuery(query, { variables: {} });
+    // @ts-expect-error missing variables argument
+    preloadQuery(query, { returnPartialData: true, variables: {} });
     preloadQuery(query, { variables: { id: "1" } });
     // @ts-expect-error missing required variable
     preloadQuery(query, { variables: { language: "en" } });
@@ -1098,6 +1140,21 @@ describe.skip("type tests", () => {
       },
     });
     preloadQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    preloadQuery(query, {
+      returnPartialData: true,
       variables: {
         id: "1",
         // @ts-expect-error unknown variable

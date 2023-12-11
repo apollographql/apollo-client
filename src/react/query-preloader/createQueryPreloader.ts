@@ -48,8 +48,14 @@ type PreloadQueryOptionsArg<
 > = [TVariables] extends [never] ?
   [options?: PreloadQueryOptions<never> & TOptions]
 : {} extends OnlyRequiredProperties<TVariables> ?
-  [options?: PreloadQueryOptions<NoInfer<TVariables>> & TOptions]
-: [options: PreloadQueryOptions<NoInfer<TVariables>> & TOptions];
+  [
+    options?: PreloadQueryOptions<NoInfer<TVariables>> &
+      Omit<TOptions, "variables">,
+  ]
+: [
+    options: PreloadQueryOptions<NoInfer<TVariables>> &
+      Omit<TOptions, "variables">,
+  ];
 
 export function createQueryPreloader(client: ApolloClient<any>) {
   const suspenseCache = getSuspenseCache(client);
@@ -57,7 +63,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
   function preloadQuery<
     TData,
     TVariables extends OperationVariables,
-    TOptions extends Omit<PreloadQueryOptions<never>, "variables">,
+    TOptions extends Omit<PreloadQueryOptions, "variables">,
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>, TOptions>
@@ -76,7 +82,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     TVariables extends OperationVariables = OperationVariables,
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions & {
+    options: PreloadQueryOptions<NoInfer<TVariables>> & {
       returnPartialData: true;
       errorPolicy: "ignore" | "all";
     }
@@ -97,7 +103,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     TVariables extends OperationVariables = OperationVariables,
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions & {
+    options: PreloadQueryOptions<NoInfer<TVariables>> & {
       returnPartialData: true;
     }
   ): QueryReference<DeepPartial<TData>, TVariables>;

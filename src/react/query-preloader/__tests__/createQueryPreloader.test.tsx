@@ -27,7 +27,7 @@ import {
   useVariablesCase,
 } from "../../../testing/internal";
 import { ApolloProvider } from "../../context";
-import { render } from "@testing-library/react";
+import { render, renderHook } from "@testing-library/react";
 import { UseReadQueryResult, useReadQuery } from "../../hooks";
 import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";
@@ -197,13 +197,7 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
 
   await wait(0);
 
-  function App() {
-    useReadQuery(queryRef);
-
-    return null;
-  }
-
-  const { rerender } = render(<App />);
+  const { rerender } = renderHook(() => useReadQuery(queryRef));
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
@@ -212,7 +206,7 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
     )
   );
 
-  rerender(<App />);
+  rerender();
 
   // Ensure re-rendering again only shows the warning once
   expect(console.warn).toHaveBeenCalledTimes(1);

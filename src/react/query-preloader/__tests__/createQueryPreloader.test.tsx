@@ -27,7 +27,7 @@ import {
   useVariablesCase,
 } from "../../../testing/internal";
 import { ApolloProvider } from "../../context";
-import { render, renderHook } from "@testing-library/react";
+import { act, render, renderHook } from "@testing-library/react";
 import { UseReadQueryResult, useReadQuery } from "../../hooks";
 import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";
@@ -229,9 +229,38 @@ test("Honors configured auto dispose timer on the client", async () => {
   jest.useRealTimers();
 });
 
-test.todo(
-  "useReadQuery auto-retains the queryRef and disposes of it when unmounted"
-);
+test("useReadQuery auto-retains the queryRef and disposes of it when unmounted", async () => {
+  jest.useFakeTimers();
+  const { query, mocks } = useSimpleCase();
+
+  const client = createDefaultClient(mocks);
+  const preloadQuery = createQueryPreloader(client);
+
+  const queryRef = preloadQuery(query);
+
+  const { unmount } = renderHook(() => useReadQuery(queryRef));
+
+  // We don't start the dispose timer until the promise is initially resolved
+  // so we need to wait for it
+  jest.advanceTimersByTime(20);
+  await act(() => queryRef.toPromise());
+  jest.advanceTimersByTime(30_000);
+
+  const internalQueryRef = unwrapQueryRef(queryRef);
+
+  expect(internalQueryRef.disposed).toBe(false);
+
+  jest.useRealTimers();
+
+  unmount();
+
+  await wait(0);
+
+  expect(internalQueryRef.disposed).toBe(true);
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
 test.todo(
   "queryRef is not disposed when useReadQuery unmounts when manually retained"
 );

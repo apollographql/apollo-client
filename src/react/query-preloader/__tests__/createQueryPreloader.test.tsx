@@ -1028,9 +1028,7 @@ describe.skip("type tests", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
     preloadQuery(query);
-    // @ts-expect-error no variables option allowed
     preloadQuery(query, { variables: {} });
-    // @ts-expect-error no variables option allowed
     preloadQuery(query, { returnPartialData: true, variables: {} });
     // @ts-expect-error no variables option allowed
     preloadQuery(query, { variables: { foo: "bar" } });

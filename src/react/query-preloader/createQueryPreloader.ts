@@ -21,7 +21,7 @@ import type { CacheKey } from "../cache/types.js";
 import type { NoInfer } from "../index.js";
 
 type VariablesOption<TVariables extends OperationVariables> =
-  [TVariables] extends [never] ? { variables?: never }
+  [TVariables] extends [never] ? { variables?: Record<string, never> }
   : {} extends OnlyRequiredProperties<TVariables> ? { variables?: TVariables }
   : { variables: TVariables };
 

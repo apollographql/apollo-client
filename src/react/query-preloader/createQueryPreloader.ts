@@ -126,9 +126,9 @@ export function createQueryPreloader(
 
     const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
       client.watchQuery({
+        ...watchQueryOptions,
         query,
         variables,
-        ...watchQueryOptions,
       } as WatchQueryOptions<any, any>)
     );
 

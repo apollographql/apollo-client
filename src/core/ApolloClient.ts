@@ -122,7 +122,7 @@ export interface ApolloClientOptions<TCacheShape> {
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
 import { mergeOptions } from "../utilities/index.js";
-import { getApolloClientCacheStatus } from "../utilities/caching/getCacheStatus.js";
+import { getApolloClientMemoryInternals } from "../utilities/caching/getCacheStatus.js";
 export { mergeOptions };
 
 /**
@@ -755,9 +755,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * information to the DevTools.
    * Use at your own risk!
    */
-  public getCacheStatus?: typeof getApolloClientCacheStatus;
+  public getMemoryInternals?: typeof getApolloClientMemoryInternals;
 }
 
 if (__DEV__) {
-  ApolloClient.prototype.getCacheStatus = getApolloClientCacheStatus;
+  ApolloClient.prototype.getMemoryInternals = getApolloClientMemoryInternals;
 }

@@ -3,6 +3,7 @@ import type {
   InMemoryCache,
   DocumentTransform,
   ApolloLink,
+  ApolloCache,
 } from "../../core/index.js";
 import type { ApolloClient } from "../../core/index.js";
 import type { CacheSizes } from "./sizes.js";
@@ -30,21 +31,42 @@ export function registerGlobalCache(
   globalCaches[name] = getSize;
 }
 
-/**
- * For internal purposes only - please call `ApolloClient.getCacheStatus` instead
- * @internal
- */
-export const getApolloClientCacheStatus =
-  __DEV__ ? _getApolloClientCacheStatus : undefined;
+type RemoveThis<T> = T extends (this: any) => infer R ? () => R : never;
 
 /**
  * For internal purposes only - please call `ApolloClient.getCacheStatus` instead
  * @internal
  */
-export const getInMemoryCacheStatus =
-  __DEV__ ? _getInMemoryCacheStatus : undefined;
+export const getApolloClientMemoryInternals =
+  __DEV__ ?
+    (_getApolloClientMemoryInternals as RemoveThis<
+      typeof _getApolloClientMemoryInternals
+    >)
+  : undefined;
 
-function _getApolloClientCacheStatus(this: ApolloClient<any>) {
+/**
+ * For internal purposes only - please call `ApolloClient.getCacheStatus` instead
+ * @internal
+ */
+export const getInMemoryCacheMemoryInternals =
+  __DEV__ ?
+    (_getInMemoryCacheMemoryInternals as RemoveThis<
+      typeof _getInMemoryCacheMemoryInternals
+    >)
+  : undefined;
+
+/**
+ * For internal purposes only - please call `ApolloClient.getCacheStatus` instead
+ * @internal
+ */
+export const getApolloCacheMemoryInternals =
+  __DEV__ ?
+    (_getApolloCacheMemoryInternals as RemoveThis<
+      typeof _getApolloCacheMemoryInternals
+    >)
+  : undefined;
+
+function _getApolloClientMemoryInternals(this: ApolloClient<any>) {
   if (!__DEV__) throw new Error("only supported in development mode");
 
   return {
@@ -62,12 +84,18 @@ function _getApolloClientCacheStatus(this: ApolloClient<any>) {
           this["queryManager"].documentTransform
         ),
       },
-      cache: (this.cache as InMemoryCache).getCacheStatus?.(),
+      cache: this.cache.getMemoryInternals?.(),
     },
   };
 }
 
-function _getInMemoryCacheStatus(this: InMemoryCache) {
+function _getApolloCacheMemoryInternals(this: ApolloCache<any>) {
+  return {
+    fragmentQueryDocuments: getWrapperInformation(this["getFragmentDoc"]),
+  };
+}
+
+function _getInMemoryCacheMemoryInternals(this: InMemoryCache) {
   const fragments = this.config.fragments as
     | undefined
     | {
@@ -77,6 +105,7 @@ function _getInMemoryCacheStatus(this: InMemoryCache) {
       };
 
   return {
+    ..._getApolloCacheMemoryInternals.apply(this as any),
     addTypenameTransform: transformInfo(this["addTypenameTransform"]),
     storeReader: {
       executeSelectionSet: getWrapperInformation(
@@ -112,15 +141,17 @@ function transformInfo(transform?: DocumentTransform): number[] {
         getWrapperInformation(transform?.["performWork"]),
         ...transformInfo(transform?.["left"]),
         ...transformInfo(transform?.["right"]),
-      ].filter(Boolean as any as (x: any) => x is number);
+      ].filter((x): x is number => x != null);
 }
 
-function linkInfo(link?: ApolloLink): number[] {
+function linkInfo(link?: ApolloLink): unknown[] {
   return !link ?
       []
     : [
-        link?.cacheSize,
+        link?.getMemoryInternals?.(),
         ...linkInfo(link?.left),
         ...linkInfo(link?.right),
-      ].filter(Boolean as any as (x: any) => x is number);
+      ].filter((x) => x != null);
 }
+
+// removeTypenameFromVariables getVariableDefinitions

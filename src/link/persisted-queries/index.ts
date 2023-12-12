@@ -297,8 +297,8 @@ export const createPersistedQueryLink = (
     },
     __DEV__ ?
       {
-        get cacheSize() {
-          return hashesByQuery?.size ?? 0;
+        getMemoryInternals() {
+          return { persistedQueryHashes: hashesByQuery?.size ?? 0 };
         },
       }
     : {}

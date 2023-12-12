@@ -28,7 +28,7 @@ import { makeVar, forgetCache, recallCache } from "./reactiveVars.js";
 import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
 import type { OperationVariables } from "../../core/index.js";
-import { getInMemoryCacheStatus } from "../../utilities/caching/getCacheStatus.js";
+import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getCacheStatus.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -586,9 +586,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
    * information to the DevTools.
    * Use at your own risk!
    */
-  public getCacheStatus?: typeof getInMemoryCacheStatus;
+  public getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
 }
 
 if (__DEV__) {
-  InMemoryCache.prototype.getCacheStatus = getInMemoryCacheStatus;
+  InMemoryCache.prototype.getMemoryInternals = getInMemoryCacheMemoryInternals;
 }

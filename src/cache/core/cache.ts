@@ -6,6 +6,7 @@ import { cacheSizes, getFragmentQueryDocument } from "../../utilities/index.js";
 import type { DataProxy } from "./types/DataProxy.js";
 import type { Cache } from "./types/Cache.js";
 import { WeakCache } from "@wry/caches";
+import { getApolloCacheMemoryInternals } from "../../utilities/caching/getCacheStatus.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -213,4 +214,17 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       },
     });
   }
+
+  /**
+   * @experimental
+   * @internal
+   * This is not a stable API - it is used in development builds to expose
+   * information to the DevTools.
+   * Use at your own risk!
+   */
+  public getMemoryInternals?: typeof getApolloCacheMemoryInternals;
+}
+
+if (__DEV__) {
+  ApolloCache.prototype.getMemoryInternals = getApolloCacheMemoryInternals;
 }

@@ -186,9 +186,7 @@ test("Auto disposes of the query ref if not retained within the given time", asy
   await queryRef.toPromise();
   jest.advanceTimersByTime(30_000);
 
-  const internalQueryRef = unwrapQueryRef(queryRef);
-
-  expect(internalQueryRef.disposed).toBe(true);
+  expect(queryRef).toBeDisposed();
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
@@ -220,9 +218,7 @@ test("Honors configured auto dispose timer on the client", async () => {
   await queryRef.toPromise();
   jest.advanceTimersByTime(5_000);
 
-  const internalQueryRef = unwrapQueryRef(queryRef);
-
-  expect(internalQueryRef.disposed).toBe(true);
+  expect(queryRef).toBeDisposed();
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
@@ -246,9 +242,7 @@ test("useReadQuery auto-retains the queryRef and disposes of it when unmounted",
   await act(() => queryRef.toPromise());
   jest.advanceTimersByTime(30_000);
 
-  const internalQueryRef = unwrapQueryRef(queryRef);
-
-  expect(internalQueryRef.disposed).toBe(false);
+  expect(queryRef).not.toBeDisposed();
 
   jest.useRealTimers();
 
@@ -256,7 +250,7 @@ test("useReadQuery auto-retains the queryRef and disposes of it when unmounted",
 
   await wait(0);
 
-  expect(internalQueryRef.disposed).toBe(true);
+  expect(queryRef).toBeDisposed();
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
@@ -274,14 +268,12 @@ test("unmounting useReadQuery does not auto dispose of the queryRef when manuall
 
   await act(() => queryRef.toPromise());
 
-  const internalQueryRef = unwrapQueryRef(queryRef);
-
-  expect(internalQueryRef.disposed).toBe(false);
+  expect(queryRef).not.toBeDisposed();
 
   unmount();
   await wait(0);
 
-  expect(internalQueryRef.disposed).toBe(false);
+  expect(queryRef).not.toBeDisposed();
 
   dispose();
 });
@@ -299,19 +291,17 @@ test("manually disposing of the queryRef after mounting useReadQuery does not di
 
   await act(() => queryRef.toPromise());
 
-  const internalQueryRef = unwrapQueryRef(queryRef);
-
-  expect(internalQueryRef.disposed).toBe(false);
+  expect(queryRef).not.toBeDisposed();
 
   dispose();
   await wait(0);
 
-  expect(internalQueryRef.disposed).toBe(false);
+  expect(queryRef).not.toBeDisposed();
 
   unmount();
   await wait(0);
 
-  expect(internalQueryRef.disposed).toBe(true);
+  expect(queryRef).toBeDisposed();
 });
 
 test("useReadQuery warns when called with a disposed queryRef", async () => {

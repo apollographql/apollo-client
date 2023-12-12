@@ -4,7 +4,6 @@ import {
   InternalQueryReference,
   unwrapQueryRef,
 } from "../../react/cache/QueryReference.js";
-import { invariant } from "ts-invariant";
 
 function isQueryRef(queryRef: unknown): queryRef is QueryReference {
   try {
@@ -19,10 +18,9 @@ export const toBeDisposed: MatcherFunction<[]> = function (queryRef) {
     isNot: this.isNot,
   });
 
-  invariant(
-    isQueryRef(queryRef),
-    `\n${hint}\n\nmust be called with a valid QueryReference`
-  );
+  if (!isQueryRef(queryRef)) {
+    throw new Error(`\n${hint}\n\nmust be called with a valid QueryReference`);
+  }
 
   const pass = unwrapQueryRef(queryRef).disposed;
 

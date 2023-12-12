@@ -1,6 +1,6 @@
-import { ApolloClient, InMemoryCache } from "../../../core";
-import { MockLink, wait } from "../../../testing";
-import { spyOnConsole, useSimpleCase } from "../../../testing/internal";
+import { ApolloClient, InMemoryCache } from "../../../../core";
+import { MockLink, wait } from "../../../../testing";
+import { spyOnConsole, useSimpleCase } from "../../../../testing/internal";
 import { InternalQueryReference } from "../QueryReference";
 
 test("warns when calling `retain` on a disposed query ref", async () => {

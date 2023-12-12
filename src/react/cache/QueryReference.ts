@@ -54,19 +54,21 @@ interface InternalQueryReferenceOptions {
 export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   internalQueryRef: InternalQueryReference<TData>
 ): QueryReference<TData, TVariables> {
-  return {
+  const ref = {
     toPromise() {
       // There is a chance the query ref's promise has been updated in the time
       // the original promise had been suspended. In that case, we want to use
       // it instead of the older promise which may contain outdated data.
       return internalQueryRef.promise.status === "fulfilled" ?
           internalQueryRef.promise
-        : this[PROMISE_SYMBOL];
+        : ref[PROMISE_SYMBOL];
     },
     retain: () => internalQueryRef.retain(),
     [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
     [PROMISE_SYMBOL]: internalQueryRef.promise,
   };
+
+  return ref;
 }
 
 export function unwrapQueryRef<TData>(

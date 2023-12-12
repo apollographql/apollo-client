@@ -73,8 +73,8 @@ If you're seeing this warning for a queryRef produced by 'useBackgroundQuery' or
       },
       [internalQueryRef]
     ),
-    () => queryRef.toPromise(),
-    () => queryRef.toPromise()
+    queryRef.toPromise,
+    queryRef.toPromise
   );
 
   const result = __use(promise);

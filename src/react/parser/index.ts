@@ -7,7 +7,7 @@ import type {
   OperationDefinitionNode,
 } from "graphql";
 import { CleanWeakCache, cacheSizes } from "../../utilities/index.js";
-import { registerGlobalCache } from "../../utilities/caching/getCacheStatus.js";
+import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
 
 export enum DocumentType {
   Query,

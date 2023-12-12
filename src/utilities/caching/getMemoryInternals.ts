@@ -34,7 +34,7 @@ export function registerGlobalCache(
 type RemoveThis<T> = T extends (this: any) => infer R ? () => R : never;
 
 /**
- * For internal purposes only - please call `ApolloClient.getCacheStatus` instead
+ * For internal purposes only - please call `ApolloClient.getMemoryInternals` instead
  * @internal
  */
 export const getApolloClientMemoryInternals =
@@ -45,7 +45,7 @@ export const getApolloClientMemoryInternals =
   : undefined;
 
 /**
- * For internal purposes only - please call `ApolloClient.getCacheStatus` instead
+ * For internal purposes only - please call `ApolloClient.getMemoryInternals` instead
  * @internal
  */
 export const getInMemoryCacheMemoryInternals =
@@ -56,7 +56,7 @@ export const getInMemoryCacheMemoryInternals =
   : undefined;
 
 /**
- * For internal purposes only - please call `ApolloClient.getCacheStatus` instead
+ * For internal purposes only - please call `ApolloClient.getMemoryInternals` instead
  * @internal
  */
 export const getApolloCacheMemoryInternals =

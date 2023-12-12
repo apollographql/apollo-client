@@ -1,5 +1,5 @@
 import { CleanStrongCache, cacheSizes } from "../../utilities/caching/index.js";
-import { registerGlobalCache } from "../caching/getCacheStatus.js";
+import { registerGlobalCache } from "../caching/getMemoryInternals.js";
 
 /**
  * Like JSON.stringify, but with object keys always sorted in the same order.

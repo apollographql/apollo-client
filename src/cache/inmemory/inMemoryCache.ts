@@ -28,7 +28,7 @@ import { makeVar, forgetCache, recallCache } from "./reactiveVars.js";
 import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
 import type { OperationVariables } from "../../core/index.js";
-import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getCacheStatus.js";
+import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,

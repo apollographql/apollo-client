@@ -6,7 +6,7 @@ import { cacheSizes, getFragmentQueryDocument } from "../../utilities/index.js";
 import type { DataProxy } from "./types/DataProxy.js";
 import type { Cache } from "./types/Cache.js";
 import { WeakCache } from "@wry/caches";
-import { getApolloCacheMemoryInternals } from "../../utilities/caching/getCacheStatus.js";
+import { getApolloCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 

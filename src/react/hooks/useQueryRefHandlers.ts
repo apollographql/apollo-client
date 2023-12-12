@@ -3,11 +3,8 @@ import {
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
-} from "../cache/QueryReference.js";
-import type {
-  QueryRefPromise,
-  QueryReference,
-} from "../cache/QueryReference.js";
+} from "../internal/index.js";
+import type { QueryRefPromise, QueryReference } from "../internal/index.js";
 import type { OperationVariables } from "../../core/types.js";
 import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";
 import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";

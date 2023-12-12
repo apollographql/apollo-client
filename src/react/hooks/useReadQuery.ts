@@ -1,9 +1,6 @@
 import * as React from "rehackt";
-import {
-  unwrapQueryRef,
-  updateWrappedQueryRef,
-} from "../cache/QueryReference.js";
-import type { QueryReference } from "../cache/QueryReference.js";
+import { unwrapQueryRef, updateWrappedQueryRef } from "../internal/index.js";
+import type { QueryReference } from "../internal/index.js";
 import { __use } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";

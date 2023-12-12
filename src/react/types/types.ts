@@ -26,7 +26,7 @@ import type {
 
 /* QueryReference type */
 
-export type { QueryReference } from "../cache/QueryReference.js";
+export type { QueryReference } from "../internal/cache/QueryReference.js";
 
 /* Common types */
 

@@ -14,10 +14,8 @@ import type {
   DeepPartial,
   OnlyRequiredProperties,
 } from "../../utilities/index.js";
-import { wrapQueryRef } from "../cache/QueryReference.js";
-import type { QueryReference } from "../cache/QueryReference.js";
-import { getSuspenseCache } from "../cache/index.js";
-import type { CacheKey } from "../cache/types.js";
+import { getSuspenseCache, wrapQueryRef } from "../internal/cache/index.js";
+import type { CacheKey, QueryReference } from "../internal/cache/index.js";
 import type { NoInfer } from "../index.js";
 
 type VariablesOption<TVariables extends OperationVariables> =

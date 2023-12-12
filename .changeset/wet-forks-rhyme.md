@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-Adds an experimental ApolloClient.getCacheStatus helper
+Adds an experimental `ApolloClient.getMemoryInternals` helper

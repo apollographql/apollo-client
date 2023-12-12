@@ -4,7 +4,7 @@ import {
   InternalQueryReference,
   unwrapQueryRef,
 } from "../../react/cache/QueryReference.js";
-import { invariant } from "../../utilities/globals/index.js";
+import { invariant } from "ts-invariant";
 
 function isQueryRef(queryRef: unknown): queryRef is QueryReference {
   try {

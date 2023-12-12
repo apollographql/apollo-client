@@ -16,7 +16,7 @@ import type {
 } from "../../utilities/index.js";
 import { wrapQueryRef } from "../cache/QueryReference.js";
 import type { QueryReference } from "../cache/QueryReference.js";
-import { getSuspenseCache } from "../cache/getSuspenseCache.js";
+import { getSuspenseCache } from "../cache/index.js";
 import type { CacheKey } from "../cache/types.js";
 import type { NoInfer } from "../index.js";
 

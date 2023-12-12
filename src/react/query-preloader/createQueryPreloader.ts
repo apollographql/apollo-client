@@ -57,10 +57,8 @@ type PreloadQueryOptionsArg<
       Omit<TOptions, "variables">,
   ];
 
-export function createQueryPreloader(client: ApolloClient<any>) {
-  const suspenseCache = getSuspenseCache(client);
-
-  function preloadQuery<
+export interface PreloadQueryFunction {
+  <
     TData,
     TVariables extends OperationVariables,
     TOptions extends Omit<PreloadQueryOptions, "variables">,
@@ -77,10 +75,7 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     TVariables
   >;
 
-  function preloadQuery<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
-  >(
+  <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
       returnPartialData: true;
@@ -88,42 +83,38 @@ export function createQueryPreloader(client: ApolloClient<any>) {
     }
   ): QueryReference<DeepPartial<TData> | undefined, TVariables>;
 
-  function preloadQuery<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
-  >(
+  <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
       errorPolicy: "ignore" | "all";
     }
   ): QueryReference<TData | undefined, TVariables>;
 
-  function preloadQuery<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
-  >(
+  <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
       returnPartialData: true;
     }
   ): QueryReference<DeepPartial<TData>, TVariables>;
 
-  function preloadQuery<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
-  >(
+  <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>
   ): QueryReference<TData, TVariables>;
+}
+
+export function createQueryPreloader(
+  client: ApolloClient<any>
+): PreloadQueryFunction {
+  const suspenseCache = getSuspenseCache(client);
 
   function preloadQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions & VariablesOption<TVariables> = Object.create(
-      null
-    )
+    options: PreloadQueryOptions<NoInfer<TVariables>> &
+      VariablesOption<TVariables> = Object.create(null)
   ): QueryReference<TData, TVariables> {
     const { variables, queryKey = [], ...watchQueryOptions } = options;
 

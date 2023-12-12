@@ -1,9 +1,5 @@
 name: Compare Build Output
-on:
-  pull_request:
-    branches:
-      - main
-      - release-*
+on: pull_request
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 

@@ -53,7 +53,6 @@ export function renderWithMocks<
 >(
   ui: ReactElement,
   {
-    mocks,
     wrapper: Wrapper = React.Fragment,
     ...renderOptions
   }: RenderWithMocksOptions<Q, Container, BaseElement>

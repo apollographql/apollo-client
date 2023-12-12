@@ -22,6 +22,7 @@ import * as linkSubscriptions from "../link/subscriptions";
 import * as linkUtils from "../link/utils";
 import * as linkWS from "../link/ws";
 import * as react from "../react";
+import * as reactInternals from "../react/internal";
 import * as reactComponents from "../react/components";
 import * as reactContext from "../react/context";
 import * as reactHOC from "../react/hoc";
@@ -67,6 +68,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/link/utils", linkUtils);
   check("@apollo/client/link/ws", linkWS);
   check("@apollo/client/react", react);
+  check("@apollo/client/react/internal", reactInternals);
   check("@apollo/client/react/components", reactComponents);
   check("@apollo/client/react/context", reactContext);
   check("@apollo/client/react/hoc", reactHOC);

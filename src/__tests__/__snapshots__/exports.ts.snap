@@ -333,6 +333,17 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/react/internal 1`] = `
+Array [
+  "InternalQueryReference",
+  "getSuspenseCache",
+  "getWrappedPromise",
+  "unwrapQueryRef",
+  "updateWrappedQueryRef",
+  "wrapQueryRef",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/react/parser 1`] = `
 Array [
   "DocumentType",

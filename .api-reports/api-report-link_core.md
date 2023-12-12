@@ -13,8 +13,6 @@ import type { Observer } from 'zen-observable-ts';
 // @public (undocumented)
 export class ApolloLink {
     constructor(request?: RequestHandler);
-    // @internal
-    readonly cacheSize?: number;
     // (undocumented)
     static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
@@ -25,6 +23,8 @@ export class ApolloLink {
     static execute(link: ApolloLink, operation: GraphQLRequest): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
     // @internal
     readonly left?: ApolloLink;
     // (undocumented)

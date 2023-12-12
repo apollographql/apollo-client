@@ -30,6 +30,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     abstract extract(optimistic?: boolean): TSerialized;
     // (undocumented)
     gc(): string[];
+    // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -474,13 +478,13 @@ export interface FragmentRegistryAPI {
     transform<D extends DocumentNode>(document: D): D;
 }
 
-// Warning: (ae-forgotten-export) The symbol "_getInMemoryCacheStatus" needs to be exported by the entry point index.d.ts
-//
 // @internal
-const getInMemoryCacheStatus: typeof _getInMemoryCacheStatus | undefined;
+const getApolloCacheMemoryInternals: (() => {
+    fragmentQueryDocuments: number | undefined;
+}) | undefined;
 
-// @public (undocumented)
-function _getInMemoryCacheStatus(this: InMemoryCache): {
+// @internal
+const getInMemoryCacheMemoryInternals: (() => {
     addTypenameTransform: number[];
     storeReader: {
         executeSelectionSet: number | undefined;
@@ -492,7 +496,8 @@ function _getInMemoryCacheStatus(this: InMemoryCache): {
         lookup: number | undefined;
         transform: number | undefined;
     };
-};
+    fragmentQueryDocuments: number | undefined;
+}) | undefined;
 
 // @public (undocumented)
 export type IdGetter = (value: IdGetterObj) => string | undefined;
@@ -533,10 +538,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         resetResultCache?: boolean;
         resetResultIdentities?: boolean;
     }): string[];
-    // Warning: (ae-forgotten-export) The symbol "getInMemoryCacheStatus" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "getInMemoryCacheMemoryInternals" needs to be exported by the entry point index.d.ts
     //
     // @internal
-    getCacheStatus?: typeof getInMemoryCacheStatus;
+    getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)

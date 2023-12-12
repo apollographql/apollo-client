@@ -40,6 +40,10 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     abstract extract(optimistic?: boolean): TSerialized;
     // (undocumented)
     gc(): string[];
+    // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // Warning: (ae-forgotten-export) The symbol "StoreObject" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -114,10 +118,10 @@ class ApolloClient<TCacheShape> implements DataProxy {
     // Warning: (ae-forgotten-export) The symbol "DocumentTransform" needs to be exported by the entry point index.d.ts
     get documentTransform(): DocumentTransform;
     extract(optimistic?: boolean): TCacheShape;
-    // Warning: (ae-forgotten-export) The symbol "getApolloClientCacheStatus" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "getApolloClientMemoryInternals" needs to be exported by the entry point index.d.ts
     //
     // @internal
-    getCacheStatus?: typeof getApolloClientCacheStatus;
+    getMemoryInternals?: typeof getApolloClientMemoryInternals;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesInclude" needs to be exported by the entry point index.d.ts
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
     getResolvers(): Resolvers;
@@ -250,8 +254,6 @@ interface ApolloErrorOptions {
 // @public (undocumented)
 class ApolloLink {
     constructor(request?: RequestHandler);
-    // @internal
-    readonly cacheSize?: number;
     // (undocumented)
     static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
@@ -264,6 +266,8 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
     // @internal
     readonly left?: ApolloLink;
     // (undocumented)
@@ -679,13 +683,13 @@ interface FragmentMap {
 // @public (undocumented)
 type FragmentMatcher = (rootValue: any, typeCondition: string, context: any) => boolean;
 
-// Warning: (ae-forgotten-export) The symbol "_getApolloClientCacheStatus" needs to be exported by the entry point index.d.ts
-//
 // @internal
-const getApolloClientCacheStatus: typeof _getApolloClientCacheStatus | undefined;
+const getApolloCacheMemoryInternals: (() => {
+    fragmentQueryDocuments: number | undefined;
+}) | undefined;
 
-// @public (undocumented)
-function _getApolloClientCacheStatus(this: ApolloClient<any>): {
+// @internal
+const getApolloClientMemoryInternals: (() => {
     limits: CacheSizes;
     sizes: {
         global: {
@@ -693,26 +697,16 @@ function _getApolloClientCacheStatus(this: ApolloClient<any>): {
             parser: number | undefined;
             canonicalStringify: number | undefined;
         };
-        links: number[];
+        links: unknown[];
         queryManager: {
             Transforms: number;
             documentTransforms: number[];
         };
         cache: {
-            addTypenameTransform: number[];
-            storeReader: {
-                executeSelectionSet: number | undefined;
-                executeSubSelectedArray: number | undefined;
-            };
-            maybeBroadcastWatch: number | undefined;
-            fragmentRegistry: {
-                findFragmentSpreads: number | undefined;
-                lookup: number | undefined;
-                transform: number | undefined;
-            };
+            fragmentQueryDocuments: number | undefined;
         } | undefined;
     };
-};
+}) | undefined;
 
 // @public (undocumented)
 type GraphQLErrors = ReadonlyArray<GraphQLError>;
@@ -1700,7 +1694,7 @@ export function withWarningSpy<TArgs extends any[], TResult>(it: (...args: TArgs
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:201:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:253:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/utilities/caching/getCacheStatus.ts:47:61 - (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
+// src/utilities/caching/getMemoryInternals.ts:40:44 - (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

@@ -13,8 +13,6 @@ import type { Observer } from 'zen-observable-ts';
 // @public (undocumented)
 class ApolloLink {
     constructor(request?: RequestHandler);
-    // @internal
-    readonly cacheSize?: number;
     // (undocumented)
     static concat(first: ApolloLink | RequestHandler, second: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
@@ -30,6 +28,8 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
     // @internal
     readonly left?: ApolloLink;
     // (undocumented)
@@ -166,7 +166,13 @@ type Path = ReadonlyArray<string | number>;
 // Warning: (ae-forgotten-export) The symbol "ApolloLink" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function removeTypenameFromVariables(options?: RemoveTypenameFromVariablesOptions): ApolloLink;
+export function removeTypenameFromVariables(options?: RemoveTypenameFromVariablesOptions): ApolloLink & ({
+    getMemoryInternals(): {
+        getVariableDefinitions: number;
+    };
+} | {
+    getMemoryInternals?: undefined;
+});
 
 // @public (undocumented)
 export interface RemoveTypenameFromVariablesOptions {

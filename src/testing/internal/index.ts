@@ -10,9 +10,9 @@ export type {
   VariablesCaseVariables,
 } from "./scenarios/index.js";
 export {
-  useSimpleCase,
-  useVariablesCase,
-  usePaginatedCase,
+  setupSimpleCase,
+  setupVariablesCase,
+  setupPaginatedCase,
 } from "./scenarios/index.js";
 
 export type {

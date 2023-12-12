@@ -6,7 +6,7 @@ export interface SimpleCaseData {
   greeting: string;
 }
 
-export function useSimpleCase() {
+export function setupSimpleCase() {
   const query: TypedDocumentNode<SimpleCaseData, Record<string, never>> = gql`
     query GreetingQuery {
       greeting
@@ -35,7 +35,7 @@ export interface VariablesCaseVariables {
   id: string;
 }
 
-export function useVariablesCase() {
+export function setupVariablesCase() {
   const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
     gql`
       query CharacterQuery($id: ID!) {
@@ -72,7 +72,7 @@ export interface PaginatedCaseVariables {
   offset?: number;
 }
 
-export function usePaginatedCase() {
+export function setupPaginatedCase() {
   const query: TypedDocumentNode<PaginatedCaseData, PaginatedCaseVariables> =
     gql`
       query letters($limit: Int, $offset: Int) {

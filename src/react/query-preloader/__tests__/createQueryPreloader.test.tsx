@@ -22,9 +22,9 @@ import {
   SimpleCaseData,
   createProfiler,
   spyOnConsole,
-  useSimpleCase,
+  setupSimpleCase,
   useTrackRenders,
-  useVariablesCase,
+  setupVariablesCase,
 } from "../../../testing/internal";
 import { ApolloProvider } from "../../context";
 import { act, render, renderHook } from "@testing-library/react";
@@ -100,7 +100,7 @@ function renderDefaultTestApp<TData>({
 }
 
 test("loads a query and suspends when passed to useReadQuery", async () => {
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
 
@@ -126,7 +126,7 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
 });
 
 test("loads a query with variables and suspends when passed to useReadQuery", async () => {
-  const { query, mocks } = useVariablesCase();
+  const { query, mocks } = setupVariablesCase();
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
 
@@ -154,7 +154,7 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
 });
 
 test("tears down the query when calling dispose", async () => {
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
 
@@ -174,7 +174,7 @@ test("tears down the query when calling dispose", async () => {
 
 test("Auto disposes of the query ref if not retained within the given time", async () => {
   jest.useFakeTimers();
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
 
@@ -195,7 +195,7 @@ test("Auto disposes of the query ref if not retained within the given time", asy
 
 test("Honors configured auto dispose timer on the client", async () => {
   jest.useFakeTimers();
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
@@ -227,7 +227,7 @@ test("Honors configured auto dispose timer on the client", async () => {
 
 test("useReadQuery auto-retains the queryRef and disposes of it when unmounted", async () => {
   jest.useFakeTimers();
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
 
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
@@ -256,7 +256,7 @@ test("useReadQuery auto-retains the queryRef and disposes of it when unmounted",
 });
 
 test("unmounting useReadQuery does not auto dispose of the queryRef when manually retained", async () => {
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
 
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
@@ -279,7 +279,7 @@ test("unmounting useReadQuery does not auto dispose of the queryRef when manuall
 });
 
 test("manually disposing of the queryRef after mounting useReadQuery does not dispose of the queryRef until unmount", async () => {
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
 
   const client = createDefaultClient(mocks);
   const preloadQuery = createQueryPreloader(client);
@@ -306,7 +306,7 @@ test("manually disposing of the queryRef after mounting useReadQuery does not di
 
 test("useReadQuery warns when called with a disposed queryRef", async () => {
   using _consoleSpy = spyOnConsole("warn");
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
   const client = createDefaultClient(mocks);
 
   const preloadQuery = createQueryPreloader(client);
@@ -336,7 +336,7 @@ test("useReadQuery warns when called with a disposed queryRef", async () => {
 
 test("useReadQuery warns again when called with a different disposed query ref", async () => {
   using _consoleSpy = spyOnConsole("warn");
-  const { query } = useSimpleCase();
+  const { query } = setupSimpleCase();
 
   const mocks: MockedResponse[] = [
     {
@@ -373,7 +373,7 @@ test("useReadQuery warns again when called with a different disposed query ref",
 });
 
 test("reacts to cache updates", async () => {
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
   const client = createDefaultClient(mocks);
 
   const preloadQuery = createQueryPreloader(client);
@@ -414,7 +414,7 @@ test("reacts to cache updates", async () => {
 });
 
 test("ignores cached result and suspends when `fetchPolicy` is network-only", async () => {
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
 
   const client = createDefaultClient(mocks);
   client.writeQuery({ query, data: { greeting: "Cached Hello" } });
@@ -444,7 +444,7 @@ test("ignores cached result and suspends when `fetchPolicy` is network-only", as
 });
 
 test("does not cache results when `fetchPolicy` is no-cache", async () => {
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
 
   const client = createDefaultClient(mocks);
 
@@ -475,7 +475,7 @@ test("does not cache results when `fetchPolicy` is no-cache", async () => {
 });
 
 test("returns initial cache data followed by network data when `fetchPolicy` is cache-and-network", async () => {
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
 
   const client = createDefaultClient(mocks);
   client.writeQuery({ query, data: { greeting: "Cached Hello" } });
@@ -511,7 +511,7 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
 });
 
 test("returns cached data when all data is present in the cache", async () => {
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
 
   const client = createDefaultClient(mocks);
   client.writeQuery({ query, data: { greeting: "Cached Hello" } });
@@ -589,7 +589,7 @@ test("throws when error is returned", async () => {
   // Disable error messages shown by React when an error is thrown to an error
   // boundary
   using _consoleSpy = spyOnConsole("error");
-  const { query } = useSimpleCase();
+  const { query } = setupSimpleCase();
   const mocks = [
     { request: { query }, result: { errors: [new GraphQLError("Oops")] } },
   ];
@@ -620,7 +620,7 @@ test("returns error when error policy is 'all'", async () => {
   // Disable error messages shown by React when an error is thrown to an error
   // boundary
   using _consoleSpy = spyOnConsole("error");
-  const { query } = useSimpleCase();
+  const { query } = setupSimpleCase();
   const mocks = [
     { request: { query }, result: { errors: [new GraphQLError("Oops")] } },
   ];
@@ -654,7 +654,7 @@ test("discards error when error policy is 'ignore'", async () => {
   // Disable error messages shown by React when an error is thrown to an error
   // boundary
   using _consoleSpy = spyOnConsole("error");
-  const { query } = useSimpleCase();
+  const { query } = setupSimpleCase();
   const mocks = [
     { request: { query }, result: { errors: [new GraphQLError("Oops")] } },
   ];
@@ -728,7 +728,7 @@ test("passes context to the link", async () => {
 });
 
 test("creates unique query refs when provided with a queryKey", async () => {
-  const { query } = useSimpleCase();
+  const { query } = setupSimpleCase();
 
   const mocks: MockedResponse[] = [
     {
@@ -754,7 +754,7 @@ test("creates unique query refs when provided with a queryKey", async () => {
 });
 
 test("does not suspend and returns partial data when `returnPartialData` is `true`", async () => {
-  const { query, mocks } = useVariablesCase();
+  const { query, mocks } = setupVariablesCase();
   const partialQuery = gql`
     query CharacterQuery($id: ID!) {
       character(id: $id) {

@@ -1,11 +1,11 @@
 import { ApolloClient, InMemoryCache } from "../../../core";
 import { MockLink, wait } from "../../../testing";
-import { spyOnConsole, useSimpleCase } from "../../../testing/internal";
+import { spyOnConsole, setupSimpleCase } from "../../../testing/internal";
 import { InternalQueryReference } from "../QueryReference";
 
 test("warns when calling `retain` on a disposed query ref", async () => {
   using _consoleSpy = spyOnConsole("warn");
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: new MockLink(mocks),

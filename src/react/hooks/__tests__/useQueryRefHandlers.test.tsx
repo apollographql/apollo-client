@@ -13,8 +13,8 @@ import {
   SimpleCaseData,
   createProfiler,
   renderWithClient,
-  usePaginatedCase,
-  useSimpleCase,
+  setupPaginatedCase,
+  setupSimpleCase,
   useTrackRenders,
 } from "../../../testing/internal";
 import { useQueryRefHandlers } from "../useQueryRefHandlers";
@@ -28,7 +28,7 @@ import { useLoadableQuery } from "../useLoadableQuery";
 import { concatPagination } from "../../../utilities";
 
 test("does not interfere with updates from useReadQuery", async () => {
-  const { query, mocks } = useSimpleCase();
+  const { query, mocks } = setupSimpleCase();
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -116,7 +116,7 @@ test("does not interfere with updates from useReadQuery", async () => {
 });
 
 test("refetches and resuspends when calling refetch", async () => {
-  const { query, mocks: defaultMocks } = useSimpleCase();
+  const { query, mocks: defaultMocks } = setupSimpleCase();
 
   const user = userEvent.setup();
 
@@ -734,7 +734,7 @@ test("`refetch` works with startTransition", async () => {
 });
 
 test("`refetch` works with startTransition from useBackgroundQuery and usePreloadedQueryHandlers", async () => {
-  const { query, mocks: defaultMocks } = useSimpleCase();
+  const { query, mocks: defaultMocks } = setupSimpleCase();
 
   const user = userEvent.setup();
 
@@ -908,7 +908,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
 });
 
 test("refetches from queryRefs produced by useBackgroundQuery", async () => {
-  const { query, mocks: defaultMocks } = useSimpleCase();
+  const { query, mocks: defaultMocks } = setupSimpleCase();
 
   const user = userEvent.setup();
 
@@ -999,7 +999,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
 });
 
 test("refetches from queryRefs produced by useLoadableQuery", async () => {
-  const { query, mocks: defaultMocks } = useSimpleCase();
+  const { query, mocks: defaultMocks } = setupSimpleCase();
 
   const user = userEvent.setup();
 
@@ -1096,7 +1096,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
 });
 
 test("resuspends when calling `fetchMore`", async () => {
-  const { query, link } = usePaginatedCase();
+  const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
 
@@ -1188,7 +1188,7 @@ test("resuspends when calling `fetchMore`", async () => {
 });
 
 test("properly uses `updateQuery` when calling `fetchMore`", async () => {
-  const { query, link } = usePaginatedCase();
+  const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
 
@@ -1289,7 +1289,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
 });
 
 test("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
-  const { query, link } = usePaginatedCase();
+  const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
 
@@ -1394,7 +1394,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
 });
 
 test("paginates from queryRefs produced by useBackgroundQuery", async () => {
-  const { query, link } = usePaginatedCase();
+  const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
@@ -1486,7 +1486,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
 });
 
 test("paginates from queryRefs produced by useLoadableQuery", async () => {
-  const { query, link } = usePaginatedCase();
+  const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
@@ -1586,7 +1586,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
 });
 
 test("`fetchMore` works with startTransition", async () => {
-  const { query, link } = usePaginatedCase();
+  const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
@@ -1705,7 +1705,7 @@ test("`fetchMore` works with startTransition", async () => {
 });
 
 test("`fetchMore` works with startTransition from useBackgroundQuery and useQueryRefHandlers", async () => {
-  const { query, link } = usePaginatedCase();
+  const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
   const client = new ApolloClient({ cache: new InMemoryCache(), link });

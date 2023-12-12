@@ -50,7 +50,7 @@ export {
   makeVar,
 } from "../cache/index.js";
 
-export * from "../cache/inmemory/types.js";
+export type * from "../cache/inmemory/types.js";
 
 /* Link */
 

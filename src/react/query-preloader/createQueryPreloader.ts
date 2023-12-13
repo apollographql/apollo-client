@@ -23,16 +23,16 @@ import type { NoInfer } from "../index.js";
 type VariablesOption<TVariables extends OperationVariables> =
   [TVariables] extends [never] ?
     {
-      /** {@inheritDoc @apollo/client!WatchQueryOptions#refetchWritePolicy:member} */
+      /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
       variables?: Record<string, never>;
     }
   : {} extends OnlyRequiredProperties<TVariables> ?
     {
-      /** {@inheritDoc @apollo/client!WatchQueryOptions#refetchWritePolicy:member} */
+      /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
       variables?: TVariables;
     }
   : {
-      /** {@inheritDoc @apollo/client!WatchQueryOptions#variables:member} */
+      /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
       variables: TVariables;
     };
 
@@ -44,15 +44,15 @@ export type PreloadQueryFetchPolicy = Extract<
 export type PreloadQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
 > = {
-  /** {@inheritDoc @apollo/client!WatchQueryOptions#canonizeResults:member} */
+  /** {@inheritDoc @apollo/client!QueryOptions#canonizeResults:member} */
   canonizeResults?: boolean;
-  /** {@inheritDoc @apollo/client!WatchQueryOptions#context:member} */
+  /** {@inheritDoc @apollo/client!QueryOptions#context:member} */
   context?: DefaultContext;
-  /** {@inheritDoc @apollo/client!WatchQueryOptions#errorPolicy:member} */
+  /** {@inheritDoc @apollo/client!QueryOptions#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
-  /** {@inheritDoc @apollo/client!WatchQueryOptions#fetchPolicy:member} */
+  /** {@inheritDoc @apollo/client!QueryOptions#fetchPolicy:member} */
   fetchPolicy?: PreloadQueryFetchPolicy;
-  /** {@inheritDoc @apollo/client!WatchQueryOptions#returnPartialData:member} */
+  /** {@inheritDoc @apollo/client!QueryOptions#returnPartialData:member} */
   returnPartialData?: boolean;
   /** {@inheritDoc @apollo/client!WatchQueryOptions#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;

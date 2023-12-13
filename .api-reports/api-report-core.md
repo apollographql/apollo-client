@@ -2201,7 +2201,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/QueryManager.ts:395:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:253:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
-// src/utilities/caching/getMemoryInternals.ts:40:44 - (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
+// src/utilities/caching/getMemoryInternals.ts:66:44 - (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

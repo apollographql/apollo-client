@@ -163,32 +163,6 @@ export interface PreloadQueryFunction {
 export function createQueryPreloader(
   client: ApolloClient<any>
 ): PreloadQueryFunction {
-  /**
-   * A function that will begin loading a query when called. It's result can be
-   * read by {@link useReadQuery} which will suspend until the query is loaded.
-   * This is useful when you want to start loading a query as early as possible
-   * outside of a React component.
-   *
-   * @example
-   * ```js
-   * const preloadQuery = createQueryPreloader(client);
-   * const queryRef = preloadQuery(query, { variables, ...otherOptions });
-   *
-   * function App() {
-   *   return (
-   *     <Suspense fallback={<div>Loading</div>}>
-   *       <MyQuery />
-   *     </Suspense>
-   *   );
-   * }
-   *
-   * function MyQuery() {
-   *   const { data } = useReadQuery(queryRef);
-   *
-   *   // do something with `data`
-   * }
-   * ```
-   */
   return function preloadQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

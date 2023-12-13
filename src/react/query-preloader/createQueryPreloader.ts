@@ -21,9 +21,20 @@ import type { CacheKey } from "../cache/types.js";
 import type { NoInfer } from "../index.js";
 
 type VariablesOption<TVariables extends OperationVariables> =
-  [TVariables] extends [never] ? { variables?: Record<string, never> }
-  : {} extends OnlyRequiredProperties<TVariables> ? { variables?: TVariables }
-  : { variables: TVariables };
+  [TVariables] extends [never] ?
+    {
+      /** {@inheritDoc @apollo/client!WatchQueryOptions#refetchWritePolicy:member} */
+      variables?: Record<string, never>;
+    }
+  : {} extends OnlyRequiredProperties<TVariables> ?
+    {
+      /** {@inheritDoc @apollo/client!WatchQueryOptions#refetchWritePolicy:member} */
+      variables?: TVariables;
+    }
+  : {
+      /** {@inheritDoc @apollo/client!WatchQueryOptions#variables:member} */
+      variables: TVariables;
+    };
 
 export type PreloadQueryFetchPolicy = Extract<
   WatchQueryFetchPolicy,
@@ -33,12 +44,26 @@ export type PreloadQueryFetchPolicy = Extract<
 export type PreloadQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
 > = {
+  /** {@inheritDoc @apollo/client!WatchQueryOptions#canonizeResults:member} */
   canonizeResults?: boolean;
+  /** {@inheritDoc @apollo/client!WatchQueryOptions#context:member} */
   context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!WatchQueryOptions#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
+  /** {@inheritDoc @apollo/client!WatchQueryOptions#fetchPolicy:member} */
   fetchPolicy?: PreloadQueryFetchPolicy;
+  /**
+   * A unique identifier for the query. Each item in the array must be a stable
+   * identifier to prevent infinite fetches.
+   *
+   * This is useful when using the same query and variables combination in more
+   * than one component, otherwise the components may clobber each other. This
+   * can also be used to force the query to re-evaluate fresh.
+   */
   queryKey?: string | number | any[];
+  /** {@inheritDoc @apollo/client!WatchQueryOptions#returnPartialData:member} */
   returnPartialData?: boolean;
+  /** {@inheritDoc @apollo/client!WatchQueryOptions#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
 } & VariablesOption<TVariables>;
 

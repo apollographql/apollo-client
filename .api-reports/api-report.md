@@ -542,7 +542,10 @@ export const concat: typeof ApolloLink.concat;
 // @public (undocumented)
 export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
 
-// @public (undocumented)
+// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "preloadQuery"
+// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "preloadQuery"
+//
+// @public
 export function createQueryPreloader(client: ApolloClient<any>): PreloadQueryFunction;
 
 // @public @deprecated (undocumented)
@@ -1916,7 +1919,7 @@ export type PossibleTypesMap = {
 // @public (undocumented)
 export type PreloadQueryFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
 
-// @public (undocumented)
+// @public
 export interface PreloadQueryFunction {
     // Warning: (ae-forgotten-export) The symbol "PreloadQueryOptionsArg" needs to be exported by the entry point index.d.ts
     //
@@ -1947,7 +1950,6 @@ export type PreloadQueryOptions<TVariables extends OperationVariables = Operatio
     context?: DefaultContext;
     errorPolicy?: ErrorPolicy;
     fetchPolicy?: PreloadQueryFetchPolicy;
-    queryKey?: string | number | any[];
     returnPartialData?: boolean;
     refetchWritePolicy?: RefetchWritePolicy;
 } & VariablesOption<TVariables>;

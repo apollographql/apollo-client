@@ -542,7 +542,10 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 export interface Context extends Record<string, any> {
 }
 
-// @public (undocumented)
+// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "preloadQuery"
+// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "preloadQuery"
+//
+// @public
 export function createQueryPreloader(client: ApolloClient<any>): PreloadQueryFunction;
 
 // @public (undocumented)
@@ -1388,7 +1391,7 @@ interface PendingPromise<TValue> extends Promise<TValue> {
 // @public (undocumented)
 export type PreloadQueryFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
 
-// @public (undocumented)
+// @public
 export interface PreloadQueryFunction {
     // Warning: (ae-forgotten-export) The symbol "PreloadQueryOptionsArg" needs to be exported by the entry point index.d.ts
     //
@@ -1419,7 +1422,6 @@ export type PreloadQueryOptions<TVariables extends OperationVariables = Operatio
     context?: Context;
     errorPolicy?: ErrorPolicy;
     fetchPolicy?: PreloadQueryFetchPolicy;
-    queryKey?: string | number | any[];
     returnPartialData?: boolean;
     refetchWritePolicy?: RefetchWritePolicy;
 } & VariablesOption<TVariables>;
@@ -2348,6 +2350,10 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:31:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:50:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:32:7 - (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
+// src/react/query-preloader/createQueryPreloader.ts:44:5 - (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
+// src/react/query-preloader/createQueryPreloader.ts:76:1 - (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
+// src/react/query-preloader/createQueryPreloader.ts:84:5 - (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "FetchPolicy"
 
 // (No @packageDocumentation comment for this package)
 

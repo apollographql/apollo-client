@@ -6,17 +6,7 @@ import type {
   ApolloCache,
 } from "../../core/index.js";
 import type { ApolloClient } from "../../core/index.js";
-import type { CacheSizes } from "./sizes.js";
 import { cacheSizes } from "./sizes.js";
-
-export type CacheStatus = {
-  limits: CacheSizes;
-  sizes: {
-    [K in keyof CacheSizes]?: number | number[];
-  } & {
-    links?: number[];
-  };
-};
 
 const globalCaches: {
   print?: () => number;
@@ -31,6 +21,42 @@ export function registerGlobalCache(
   globalCaches[name] = getSize;
 }
 
+/**
+ * Transformative helper type to turn a function of the form
+ * ```ts
+ * (this: any) => R
+ * ```
+ * into a function of the form
+ * ```ts
+ * () => R
+ * ```
+ * preserving the return type, but removing the `this` parameter.
+ *
+ * @remarks
+ *
+ * Further down in the definitions of `_getApolloClientMemoryInternals`,
+ * `_getApolloCacheMemoryInternals` and `_getInMemoryCacheMemoryInternals`,
+ * having the `this` parameter annotation is extremely useful for type checking
+ * inside the function.
+ *
+ * If this is preserved in the exported types, though, it leads to a situation
+ * where `ApolloCache.getMemoryInternals` is a function that requires a `this`
+ * of the type `ApolloCache`, while the extending class `InMemoryCache` has a
+ * `getMemoryInternals` function that requires a `this` of the type
+ * `InMemoryCache`.
+ * This is not compatible with TypeScript's inheritence system (although it is
+ * perfectly correct), and so TypeScript will complain loudly.
+ *
+ * We still want to define our functions with the `this` annotation, though,
+ * and have the return type inferred.
+ * (This requirement for return type inference here makes it impossible to use
+ * a function overload that is more explicit on the inner overload than it is
+ * on the external overload.)
+ *
+ * So in the end, we use this helper to remove the `this` annotation from the
+ * exported function types, while keeping it in the internal implementation.
+ *
+ */
 type RemoveThis<T> = T extends (this: any) => infer R ? () => R : never;
 
 /**
@@ -153,5 +179,3 @@ function linkInfo(link?: ApolloLink): unknown[] {
         ...linkInfo(link?.right),
       ].filter((x) => x != null);
 }
-
-// removeTypenameFromVariables getVariableDefinitions

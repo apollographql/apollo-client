@@ -9,15 +9,15 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "../../core/index.js";
-import { canonicalStringify } from "../../utilities/index.js";
 import type {
   DeepPartial,
   OnlyRequiredProperties,
 } from "../../utilities/index.js";
-import { wrapQueryRef } from "../cache/QueryReference.js";
+import {
+  InternalQueryReference,
+  wrapQueryRef,
+} from "../cache/QueryReference.js";
 import type { QueryReference } from "../cache/QueryReference.js";
-import { getSuspenseCache } from "../cache/index.js";
-import type { CacheKey } from "../cache/types.js";
 import type { NoInfer } from "../index.js";
 
 type VariablesOption<TVariables extends OperationVariables> =
@@ -52,15 +52,6 @@ export type PreloadQueryOptions<
   errorPolicy?: ErrorPolicy;
   /** {@inheritDoc @apollo/client!WatchQueryOptions#fetchPolicy:member} */
   fetchPolicy?: PreloadQueryFetchPolicy;
-  /**
-   * A unique identifier for the query. Each item in the array must be a stable
-   * identifier to prevent infinite fetches.
-   *
-   * This is useful when using the same query and variables combination in more
-   * than one component, otherwise the components may clobber each other. This
-   * can also be used to force the query to re-evaluate fresh.
-   */
-  queryKey?: string | number | any[];
   /** {@inheritDoc @apollo/client!WatchQueryOptions#returnPartialData:member} */
   returnPartialData?: boolean;
   /** {@inheritDoc @apollo/client!WatchQueryOptions#refetchWritePolicy:member} */
@@ -172,8 +163,6 @@ export interface PreloadQueryFunction {
 export function createQueryPreloader(
   client: ApolloClient<any>
 ): PreloadQueryFunction {
-  const suspenseCache = getSuspenseCache(client);
-
   /**
    * A function that will begin loading a query when called. It's result can be
    * read by {@link useReadQuery} which will suspend until the query is loaded.
@@ -208,21 +197,18 @@ export function createQueryPreloader(
     options: PreloadQueryOptions<NoInfer<TVariables>> &
       VariablesOption<TVariables> = Object.create(null)
   ): QueryReference<TData, TVariables> {
-    const { variables, queryKey = [], ...watchQueryOptions } = options;
+    const { variables, ...watchQueryOptions } = options;
 
-    const cacheKey: CacheKey = [
+    const observable = client.watchQuery({
+      ...watchQueryOptions,
       query,
-      canonicalStringify(variables),
-      ...([] as any[]).concat(queryKey),
-    ];
+      variables,
+    } as WatchQueryOptions<any, any>);
 
-    const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-      client.watchQuery({
-        ...watchQueryOptions,
-        query,
-        variables,
-      } as WatchQueryOptions<any, any>)
-    );
+    const queryRef = new InternalQueryReference(observable, {
+      autoDisposeTimeoutMs:
+        client.defaultOptions.react?.suspense?.autoDisposeTimeoutMs,
+    });
 
     return wrapQueryRef(queryRef);
   }

@@ -162,14 +162,12 @@ test("tears down the query when calling dispose", async () => {
   const dispose = queryRef.retain();
 
   expect(client.getObservableQueries().size).toBe(1);
-  expect(client).toHaveSuspenseCacheEntryUsing(query);
 
   dispose();
 
   await wait(0);
 
   expect(client.getObservableQueries().size).toBe(0);
-  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
 
 test("Auto disposes of the query ref if not retained within the given time", async () => {
@@ -349,8 +347,8 @@ test("useReadQuery warns again when called with a different disposed query ref",
   const client = createDefaultClient(mocks);
 
   const preloadQuery = createQueryPreloader(client);
-  const queryRef1 = preloadQuery(query, { queryKey: 1 });
-  const queryRef2 = preloadQuery(query, { queryKey: 2 });
+  const queryRef1 = preloadQuery(query);
+  const queryRef2 = preloadQuery(query);
   const dispose1 = queryRef1.retain();
   const dispose2 = queryRef2.retain();
 
@@ -727,7 +725,7 @@ test("passes context to the link", async () => {
   });
 });
 
-test("creates unique query refs when provided with a queryKey", async () => {
+test("creates unique query refs when calling preloadQuery with the same query", async () => {
   const { query } = setupSimpleCase();
 
   const mocks: MockedResponse[] = [
@@ -743,14 +741,24 @@ test("creates unique query refs when provided with a queryKey", async () => {
 
   const queryRef1 = preloadQuery(query);
   const queryRef2 = preloadQuery(query);
-  const queryRef3 = preloadQuery(query, { queryKey: 1 });
 
   const unwrappedQueryRef1 = unwrapQueryRef(queryRef1);
   const unwrappedQueryRef2 = unwrapQueryRef(queryRef2);
-  const unwrappedQueryRef3 = unwrapQueryRef(queryRef3);
 
-  expect(unwrappedQueryRef2).toBe(unwrappedQueryRef1);
-  expect(unwrappedQueryRef3).not.toBe(unwrappedQueryRef1);
+  // Use Object.is inside expect to prevent circular reference errors on toBe
+  expect(Object.is(queryRef1, queryRef2)).toBe(false);
+  expect(Object.is(unwrappedQueryRef1, unwrappedQueryRef2)).toBe(false);
+
+  await expect(queryRef1.toPromise()).resolves.toEqual({
+    data: { greeting: "Hello" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
+  await expect(queryRef2.toPromise()).resolves.toEqual({
+    data: { greeting: "Hello" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
 });
 
 test("does not suspend and returns partial data when `returnPartialData` is `true`", async () => {

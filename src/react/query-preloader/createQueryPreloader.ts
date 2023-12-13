@@ -57,6 +57,32 @@ type PreloadQueryOptionsArg<
       Omit<TOptions, "variables">,
   ];
 
+/**
+ * A function that will begin loading a query when called. It's result can be
+ * read by {@link useReadQuery} which will suspend until the query is loaded.
+ * This is useful when you want to start loading a query as early as possible
+ * outside of a React component.
+ *
+ * @example
+ * ```js
+ * const preloadQuery = createQueryPreloader(client);
+ * const queryRef = preloadQuery(query, { variables, ...otherOptions });
+ *
+ * function App() {
+ *   return (
+ *     <Suspense fallback={<div>Loading</div>}>
+ *       <MyQuery />
+ *     </Suspense>
+ *   );
+ * }
+ *
+ * function MyQuery() {
+ *   const { data } = useReadQuery(queryRef);
+ *
+ *   // do something with `data`
+ * }
+ * ```
+ */
 export interface PreloadQueryFunction {
   <
     TData,
@@ -103,11 +129,48 @@ export interface PreloadQueryFunction {
   ): QueryReference<TData, TVariables>;
 }
 
+/**
+ * A higher order function that returns a {@link preloadQuery} function which
+ * can be used to begin loading a query with the given `client`. This is useful
+ * when you want to start loading a query as early as possible outside of a
+ * React component.
+ *
+ * @example
+ * ```js
+ * const preloadQuery = createQueryPreloader(client);
+ * ```
+ */
 export function createQueryPreloader(
   client: ApolloClient<any>
 ): PreloadQueryFunction {
   const suspenseCache = getSuspenseCache(client);
 
+  /**
+   * A function that will begin loading a query when called. It's result can be
+   * read by {@link useReadQuery} which will suspend until the query is loaded.
+   * This is useful when you want to start loading a query as early as possible
+   * outside of a React component.
+   *
+   * @example
+   * ```js
+   * const preloadQuery = createQueryPreloader(client);
+   * const queryRef = preloadQuery(query, { variables, ...otherOptions });
+   *
+   * function App() {
+   *   return (
+   *     <Suspense fallback={<div>Loading</div>}>
+   *       <MyQuery />
+   *     </Suspense>
+   *   );
+   * }
+   *
+   * function MyQuery() {
+   *   const { data } = useReadQuery(queryRef);
+   *
+   *   // do something with `data`
+   * }
+   * ```
+   */
   function preloadQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

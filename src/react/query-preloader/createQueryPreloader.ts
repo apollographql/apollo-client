@@ -171,18 +171,16 @@ export function createQueryPreloader(
     options: PreloadQueryOptions<NoInfer<TVariables>> &
       VariablesOption<TVariables> = Object.create(null)
   ): QueryReference<TData, TVariables> {
-    const { variables, ...watchQueryOptions } = options;
-
-    const observable = client.watchQuery({
-      ...watchQueryOptions,
-      query,
-      variables,
-    } as WatchQueryOptions<any, any>);
-
-    const queryRef = new InternalQueryReference(observable, {
-      autoDisposeTimeoutMs:
-        client.defaultOptions.react?.suspense?.autoDisposeTimeoutMs,
-    });
+    const queryRef = new InternalQueryReference(
+      client.watchQuery({
+        ...options,
+        query,
+      } as WatchQueryOptions<any, any>),
+      {
+        autoDisposeTimeoutMs:
+          client.defaultOptions.react?.suspense?.autoDisposeTimeoutMs,
+      }
+    );
 
     return wrapQueryRef(queryRef);
   };

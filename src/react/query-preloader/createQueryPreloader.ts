@@ -189,7 +189,7 @@ export function createQueryPreloader(
    * }
    * ```
    */
-  function preloadQuery<
+  return function preloadQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
@@ -211,7 +211,5 @@ export function createQueryPreloader(
     });
 
     return wrapQueryRef(queryRef);
-  }
-
-  return preloadQuery;
+  };
 }

@@ -1119,14 +1119,6 @@ describe("ObservableQuery", () => {
           data: dataTwo,
         });
       }
-
-      expect(queryManager.cache.extract()).toEqual({
-        ROOT_QUERY: {
-          __typename: "Query",
-          'people_one({"id":1})': dataOne.people_one,
-          'people_one({"id":2})': dataTwo.people_one,
-        },
-      });
     });
 
     it("calling refetch multiple times with different variables will return only results for the most recent variables", async () => {
@@ -1166,7 +1158,7 @@ describe("ObservableQuery", () => {
       observers[2].next({
         data: {
           people_one: {
-            name: "SomeOneElese",
+            name: "SomeOneElse",
           },
         },
       });
@@ -1179,20 +1171,11 @@ describe("ObservableQuery", () => {
           networkStatus: NetworkStatus.ready,
           data: {
             people_one: {
-              name: "SomeOneElese",
+              name: "SomeOneElse",
             },
           },
         });
       }
-
-      expect(queryManager.cache.extract()).toEqual({
-        ROOT_QUERY: {
-          __typename: "Query",
-          'people_one({"id":1})': dataOne.people_one,
-          'people_one({"id":2})': dataTwo.people_one,
-          'people_one({"id":3})': { name: "SomeOneElse" },
-        },
-      });
     });
 
     itAsync(

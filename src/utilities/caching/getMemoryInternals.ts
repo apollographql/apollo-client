@@ -161,21 +161,21 @@ function getWrapperInformation(f?: Function) {
 }
 
 function transformInfo(transform?: DocumentTransform): number[] {
-  return !transform ?
-      []
-    : [
+  return transform ?
+      [
         getWrapperInformation(transform?.["performWork"]),
         ...transformInfo(transform?.["left"]),
         ...transformInfo(transform?.["right"]),
-      ].filter((x): x is number => x != null);
+      ].filter((x): x is number => x != null)
+    : [];
 }
 
 function linkInfo(link?: ApolloLink): unknown[] {
-  return !link ?
-      []
-    : [
+  return link ?
+      [
         link?.getMemoryInternals?.(),
         ...linkInfo(link?.left),
         ...linkInfo(link?.right),
-      ].filter((x) => x != null);
+      ].filter((x) => x != null)
+    : [];
 }

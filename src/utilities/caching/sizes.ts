@@ -240,7 +240,7 @@ const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
  * @example
  * ```ts
  * globalThis[Symbol.for("apollo.cacheSize")] = {
- *  parser: 100
+ *   parser: 100
  * } satisfies Partial<CacheSizes> // the `satisfies` is optional if using TypeScript
  * ```
  */

@@ -108,7 +108,6 @@ export class InternalQueryReference<TData = unknown> {
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
   private status: "idle" | "loading" = "loading";
-  private __disposed = false;
 
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
@@ -177,16 +176,11 @@ export class InternalQueryReference<TData = unknown> {
     return this.observable.options;
   }
 
-  get disposed() {
-    return this.__disposed;
-  }
-
   maybeResubscribe(queryRef: QueryReference<TData, any>) {
     if (this.subscription) {
       return;
     }
 
-    this.__disposed = false;
     // console.log({
     //   fetchPolicy: "cache-first",
     //   nextFetchPolicy: this.observable.options.fetchPolicy,
@@ -222,13 +216,12 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   retain() {
-    this.__disposed = false;
     this.references++;
     clearTimeout(this.autoDisposeTimeoutId);
     let disposed = false;
 
     return () => {
-      if (disposed || this.disposed) {
+      if (disposed) {
         return;
       }
 
@@ -293,7 +286,6 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private dispose() {
-    this.__disposed = true;
     this.subscription?.unsubscribe();
     this.subscription = null;
     this.onDispose();

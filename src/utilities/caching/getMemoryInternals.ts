@@ -160,13 +160,17 @@ function getWrapperInformation(f?: Function) {
   return isWrapper(f) ? f.size : undefined;
 }
 
+function isDefined<T>(value: T | undefined | null): value is T {
+  return value != null;
+}
+
 function transformInfo(transform?: DocumentTransform): number[] {
   return transform ?
       [
         getWrapperInformation(transform?.["performWork"]),
         ...transformInfo(transform?.["left"]),
         ...transformInfo(transform?.["right"]),
-      ].filter((x): x is number => x != null)
+      ].filter(isDefined)
     : [];
 }
 
@@ -176,6 +180,6 @@ function linkInfo(link?: ApolloLink): unknown[] {
         link?.getMemoryInternals?.(),
         ...linkInfo(link?.left),
         ...linkInfo(link?.right),
-      ].filter((x) => x != null)
+      ].filter(isDefined)
     : [];
 }

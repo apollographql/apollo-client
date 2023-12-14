@@ -99,7 +99,7 @@ interface TransformCacheEntry {
 
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
-import { CleanWeakCache, cacheSizes } from "../utilities/index.js";
+import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -662,7 +662,7 @@ export class QueryManager<TStore> {
     return this.documentTransform.transformDocument(document);
   }
 
-  private transformCache = new CleanWeakCache<
+  private transformCache = new AutoCleanedWeakCache<
     DocumentNode,
     TransformCacheEntry
   >(cacheSizes.queryManagerTransforms);

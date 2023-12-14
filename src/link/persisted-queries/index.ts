@@ -12,7 +12,7 @@ import type {
 import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
 import type { NetworkError } from "../../errors/index.js";
 import type { ServerError } from "../utils/index.js";
-import { cacheSizes, CleanWeakCache } from "../../utilities/index.js";
+import { cacheSizes, AutoCleanedWeakCache } from "../../utilities/index.js";
 
 export const VERSION = 1;
 
@@ -94,7 +94,9 @@ function operationDefinesMutation(operation: Operation) {
 export const createPersistedQueryLink = (
   options: PersistedQueryLink.Options
 ) => {
-  let hashesByQuery: CleanWeakCache<DocumentNode, Promise<string>> | undefined;
+  let hashesByQuery:
+    | AutoCleanedWeakCache<DocumentNode, Promise<string>>
+    | undefined;
   function resetHashCache() {
     hashesByQuery = undefined;
   }
@@ -140,7 +142,7 @@ export const createPersistedQueryLink = (
       return getHashPromise(query);
     }
     if (!hashesByQuery) {
-      hashesByQuery = new CleanWeakCache(cacheSizes.persistedQueryHashes);
+      hashesByQuery = new AutoCleanedWeakCache(cacheSizes.persistedQueryHashes);
     }
     let hash = hashesByQuery.get(query)!;
     if (!hash) hashesByQuery.set(query, (hash = getHashPromise(query)));

@@ -9,7 +9,6 @@ import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
 import type { NetworkStatus } from "../../core/index.js";
-import { invariant } from "../../utilities/globals/index.js";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**
@@ -51,19 +50,6 @@ export function useReadQuery<TData>(
       return internalQueryRef.retain();
     }
   }, [internalQueryRef]);
-
-  if (__DEV__) {
-    const didWarnOnDisposedQueryRef = React.useRef<unknown>(void 0);
-    if (
-      didWarnOnDisposedQueryRef.current !== internalQueryRef &&
-      internalQueryRef.disposed
-    ) {
-      invariant.warn(`'useReadQuery' was called with a disposed queryRef which means the query is no longer watched and cache updates will be missed. This may occur when calling 'dispose' before passing the queryRef to 'useReadQuery'.
-
-If you're seeing this warning for a queryRef produced by 'useBackgroundQuery' or 'useLoadableQuery', this is a bug in Apollo Client. Please file an issue.`);
-      didWarnOnDisposedQueryRef.current = internalQueryRef;
-    }
-  }
 
   const promise = useSyncExternalStore(
     React.useCallback(

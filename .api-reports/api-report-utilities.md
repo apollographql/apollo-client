@@ -326,20 +326,16 @@ export type AsStoreObject<T extends {
 // @public (undocumented)
 export function asyncMap<V, R>(observable: Observable<V>, mapFn: (value: V) => R | PromiseLike<R>, catchFn?: (error: any) => R | PromiseLike<R>): Observable<R>;
 
-// Warning: (ae-internal-mixed-release-tag) Mixed release tags are not allowed for "AutoCleanedStrongCache" because one of its declarations is marked as @internal
-//
 // @internal
 export const AutoCleanedStrongCache: typeof StrongCache;
 
-// @public (undocumented)
+// @internal (undocumented)
 export type AutoCleanedStrongCache<K, V> = StrongCache<K, V>;
 
-// Warning: (ae-internal-mixed-release-tag) Mixed release tags are not allowed for "AutoCleanedWeakCache" because one of its declarations is marked as @internal
-//
 // @internal
 export const AutoCleanedWeakCache: typeof WeakCache;
 
-// @public (undocumented)
+// @internal (undocumented)
 export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
 
 // Warning: (ae-forgotten-export) The symbol "InMemoryCache" needs to be exported by the entry point index.d.ts

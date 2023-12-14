@@ -40,6 +40,9 @@ export const AutoCleanedWeakCache = function (
   };
   return cache;
 } as any as typeof WeakCache;
+/**
+ * @internal
+ */
 export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
 
 /**
@@ -71,4 +74,7 @@ export const AutoCleanedStrongCache = function (
   };
   return cache;
 } as any as typeof StrongCache;
+/**
+ * @internal
+ */
 export type AutoCleanedStrongCache<K, V> = StrongCache<K, V>;

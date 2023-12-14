@@ -19,7 +19,7 @@ import { StoreWriter } from "../writeToStore";
 import { ObjectCanon } from "../object-canon";
 import { TypePolicies } from "../policies";
 import { spyOnConsole } from "../../../testing/internal";
-import { cacheSizes } from "../../../utilities";
+import { defaultCacheSizes } from "../../../utilities";
 
 disableFragmentWarnings();
 
@@ -2123,13 +2123,13 @@ describe("resultCacheMaxSize", () => {
   it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
     const cache = new InMemoryCache();
     expect(cache["maybeBroadcastWatch"].options.max).toBe(
-      cacheSizes.maybeBroadcastWatch
+      defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"]
     );
     expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
-      cacheSizes.executeSelectionSet
+      defaultCacheSizes["inMemoryCache.executeSelectionSet"]
     );
     expect(cache["getFragmentDoc"].options.max).toBe(
-      cacheSizes.fragmentQueryDocuments
+      defaultCacheSizes["cache.fragmentQueryDocuments"]
     );
   });
 
@@ -2141,7 +2141,7 @@ describe("resultCacheMaxSize", () => {
       resultCacheMaxSize
     );
     expect(cache["getFragmentDoc"].options.max).toBe(
-      cacheSizes.fragmentQueryDocuments
+      cacheSizes."cache.fragmentQueryDocuments"
     );
   });
 });

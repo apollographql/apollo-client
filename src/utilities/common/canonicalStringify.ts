@@ -1,6 +1,7 @@
 import {
   AutoCleanedStrongCache,
   cacheSizes,
+  defaultCacheSizes,
 } from "../../utilities/caching/index.js";
 
 /**
@@ -30,7 +31,7 @@ export const canonicalStringify = Object.assign(
       // affecting the logical results of canonicalStringify, but potentially
       // sacrificing performance until the cache is refilled.
       sortingMap = new AutoCleanedStrongCache<string, readonly string[]>(
-        cacheSizes.canonicalStringify
+        cacheSizes.canonicalStringify || defaultCacheSizes.canonicalStringify
       );
     },
   }

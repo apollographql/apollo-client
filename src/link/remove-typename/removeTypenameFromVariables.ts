@@ -6,6 +6,7 @@ import {
   stripTypename,
   isPlainObject,
   cacheSizes,
+  defaultCacheSizes,
 } from "../../utilities/index.js";
 import type { OperationVariables } from "../../core/index.js";
 import { WeakCache } from "@wry/caches";
@@ -113,7 +114,9 @@ const getVariableDefinitions = wrap(
     return definitions;
   },
   {
-    max: cacheSizes.getVariableDefinitions,
+    max:
+      cacheSizes["removeTypenameFromVariables.getVariableDefinitions"] ||
+      defaultCacheSizes["removeTypenameFromVariables.getVariableDefinitions"],
     cache: WeakCache,
   }
 );

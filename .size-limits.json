@@ -1,4 +1,4 @@
 {
-  "dist/apollo-client.min.cjs": 38944,
-  "import { ApolloClient, InMemoryCache, HttpLink } from \"dist/index.js\" (production)": 32723
+  "dist/apollo-client.min.cjs": 38828,
+  "import { ApolloClient, InMemoryCache, HttpLink } from \"dist/index.js\" (production)": 32600
 }

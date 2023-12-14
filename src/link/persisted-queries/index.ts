@@ -12,7 +12,11 @@ import type {
 import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
 import type { NetworkError } from "../../errors/index.js";
 import type { ServerError } from "../utils/index.js";
-import { cacheSizes, AutoCleanedWeakCache } from "../../utilities/index.js";
+import {
+  cacheSizes,
+  AutoCleanedWeakCache,
+  defaultCacheSizes,
+} from "../../utilities/index.js";
 
 export const VERSION = 1;
 
@@ -142,7 +146,10 @@ export const createPersistedQueryLink = (
       return getHashPromise(query);
     }
     if (!hashesByQuery) {
-      hashesByQuery = new AutoCleanedWeakCache(cacheSizes.persistedQueryHashes);
+      hashesByQuery = new AutoCleanedWeakCache(
+        cacheSizes["PersistedQueryLink.persistedQueryHashes"] ||
+          defaultCacheSizes["PersistedQueryLink.persistedQueryHashes"]
+      );
     }
     let hash = hashesByQuery.get(query)!;
     if (!hash) hashesByQuery.set(query, (hash = getHashPromise(query)));

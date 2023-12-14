@@ -8,6 +8,7 @@ import { equal } from "@wry/equality";
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
 import {
+  defaultCacheSizes,
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
@@ -665,7 +666,10 @@ export class QueryManager<TStore> {
   private transformCache = new AutoCleanedWeakCache<
     DocumentNode,
     TransformCacheEntry
-  >(cacheSizes.queryManagerTransforms);
+  >(
+    cacheSizes["queryManager.getDocumentInfo"] ||
+      defaultCacheSizes["queryManager.getDocumentInfo"]
+  );
 
   public getDocumentInfo(document: DocumentNode) {
     const { transformCache } = this;

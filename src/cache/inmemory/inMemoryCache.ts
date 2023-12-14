@@ -19,6 +19,7 @@ import {
   canonicalStringify,
   print,
   cacheSizes,
+  defaultCacheSizes,
 } from "../../utilities/index.js";
 import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
 import { StoreReader } from "./readFromStore.js";
@@ -125,7 +126,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         return this.broadcastWatch(c, options);
       },
       {
-        max: this.config.resultCacheMaxSize ?? cacheSizes.maybeBroadcastWatch,
+        max:
+          this.config.resultCacheMaxSize ||
+          cacheSizes["inMemoryCache.maybeBroadcastWatch"] ||
+          defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"],
         makeCacheKey: (c: Cache.WatchOptions) => {
           // Return a cache key (thus enabling result caching) only if we're
           // currently using a data store that can track cache dependencies.

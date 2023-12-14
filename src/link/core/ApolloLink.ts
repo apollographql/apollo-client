@@ -161,12 +161,12 @@ export class ApolloLink {
 
   /**
    * @internal
-   * Used to iterate through all links for caches that are concatenations of `split` links.
+   * Used to iterate through all links that are concatenations or `split` links.
    */
   readonly left?: ApolloLink;
   /**
    * @internal
-   * Used to iterate through all links for caches that are concatenations of `split` links.
+   * Used to iterate through all links that are concatenations or `split` links.
    */
   readonly right?: ApolloLink;
 

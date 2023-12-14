@@ -144,6 +144,14 @@ export class DocumentTransform {
     );
   }
 
+  /**
+   * @internal
+   * Used to iterate through all transforms that are concatenations or `split` links.
+   */
   readonly left?: DocumentTransform;
+  /**
+   * @internal
+   * Used to iterate through all transforms that are concatenations or `split` links.
+   */
   readonly right?: DocumentTransform;
 }

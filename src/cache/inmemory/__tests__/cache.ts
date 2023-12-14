@@ -2141,7 +2141,7 @@ describe("resultCacheMaxSize", () => {
       resultCacheMaxSize
     );
     expect(cache["getFragmentDoc"].options.max).toBe(
-      cacheSizes."cache.fragmentQueryDocuments"
+      defaultCacheSizes["cache.fragmentQueryDocuments"]
     );
   });
 });

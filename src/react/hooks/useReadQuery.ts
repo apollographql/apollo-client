@@ -45,11 +45,7 @@ export function useReadQuery<TData>(
 
   internalQueryRef.maybeResubscribe(queryRef);
 
-  React.useEffect(() => {
-    if (!internalQueryRef.disposed) {
-      return internalQueryRef.retain();
-    }
-  }, [internalQueryRef]);
+  React.useEffect(() => internalQueryRef.retain(), [internalQueryRef]);
 
   const promise = useSyncExternalStore(
     React.useCallback(

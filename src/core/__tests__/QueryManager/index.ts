@@ -2397,23 +2397,7 @@ describe("QueryManager", () => {
               },
             },
           });
-        } else if (count === 3) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.loading,
-            data: {
-              info: {},
-            },
-            partial: true,
-          });
-        } else if (count === 4) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              info: {},
-            },
-          });
+
           setTimeout(resolve, 100);
         } else {
           reject(new Error(`Unexpected ${JSON.stringify({ count, result })}`));

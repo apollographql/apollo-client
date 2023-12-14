@@ -184,6 +184,17 @@ export class QueryInfo {
     diff: Cache.DiffResult<any> | null,
     options?: Cache.DiffOptions
   ) {
+    // some very long comment about feuds
+    if (
+      diff &&
+      !diff.complete &&
+      this.lastDiff &&
+      this.lastDiff.diff.complete &&
+      this.lastWrite &&
+      this.lastWrite.dmCount === destructiveMethodCounts.get(this.cache)
+    ) {
+      return;
+    }
     this.lastDiff =
       diff ?
         {

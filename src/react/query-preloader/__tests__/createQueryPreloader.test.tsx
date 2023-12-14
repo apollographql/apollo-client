@@ -155,23 +155,6 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
   }
 });
 
-test("tears down the query when calling dispose", async () => {
-  const { query, mocks } = setupSimpleCase();
-  const client = createDefaultClient(mocks);
-  const preloadQuery = createQueryPreloader(client);
-
-  const queryRef = preloadQuery(query);
-  const dispose = queryRef.retain();
-
-  expect(client.getObservableQueries().size).toBe(1);
-
-  dispose();
-
-  await wait(0);
-
-  expect(client.getObservableQueries().size).toBe(0);
-});
-
 test("Auto disposes of the query ref if not retained within the given time", async () => {
   jest.useFakeTimers();
   const { query, mocks } = setupSimpleCase();
@@ -423,55 +406,6 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   }
 
   await expect(Profiler).not.toRerender();
-});
-
-test("unmounting useReadQuery does not auto dispose of the queryRef when manually retained", async () => {
-  const { query, mocks } = setupSimpleCase();
-
-  const client = createDefaultClient(mocks);
-  const preloadQuery = createQueryPreloader(client);
-
-  const queryRef = preloadQuery(query);
-  const dispose = queryRef.retain();
-
-  const { unmount } = renderHook(() => useReadQuery(queryRef));
-
-  await act(() => queryRef.toPromise());
-
-  expect(queryRef).not.toBeDisposed();
-
-  unmount();
-  await wait(0);
-
-  expect(queryRef).not.toBeDisposed();
-
-  dispose();
-});
-
-test("manually disposing of the queryRef after mounting useReadQuery does not dispose of the queryRef until unmount", async () => {
-  const { query, mocks } = setupSimpleCase();
-
-  const client = createDefaultClient(mocks);
-  const preloadQuery = createQueryPreloader(client);
-
-  const queryRef = preloadQuery(query);
-  const dispose = queryRef.retain();
-
-  const { unmount } = renderHook(() => useReadQuery(queryRef));
-
-  await act(() => queryRef.toPromise());
-
-  expect(queryRef).not.toBeDisposed();
-
-  dispose();
-  await wait(0);
-
-  expect(queryRef).not.toBeDisposed();
-
-  unmount();
-  await wait(0);
-
-  expect(queryRef).toBeDisposed();
 });
 
 test("reacts to cache updates", async () => {

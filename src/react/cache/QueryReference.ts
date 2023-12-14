@@ -24,8 +24,6 @@ export type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
 
 type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
-type DisposeFn = () => void;
-
 type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>["fetchMore"]
 >[0];
@@ -41,7 +39,6 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
 export interface QueryReference<TData = unknown, TVariables = unknown> {
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
-  retain: () => DisposeFn;
   toPromise(): Promise<ApolloQueryResult<TData>>;
 }
 
@@ -62,7 +59,6 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(
           internalQueryRef.promise
         : ref[PROMISE_SYMBOL];
     },
-    retain: () => internalQueryRef.retain(),
     [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
     [PROMISE_SYMBOL]: internalQueryRef.promise,
   };

@@ -197,8 +197,8 @@ export class InternalQueryReference<TData = unknown> {
     // });
     this.observable.resetLastResults();
     this.observable.forceDiff();
-    const result = this.observable.getCurrentResult();
-    if (result.partial) {
+    this.result = this.observable.getCurrentResult();
+    if (this.result.partial) {
       this.status = "loading";
       this.promise = queryRef[PROMISE_SYMBOL] = wrapPromiseWithState(
         new Promise((resolve, reject) => {
@@ -208,16 +208,12 @@ export class InternalQueryReference<TData = unknown> {
       );
     } else {
       this.status = "idle";
-      this.promise = createFulfilledPromise(this.observable.getCurrentResult());
+      this.promise = createFulfilledPromise(this.result);
     }
 
     this.subscription = this.observable
       .filter(
-        (result) =>
-          !equal(result.data, {}) &&
-          (this.promise.status === "fulfilled" ?
-            !equal(result, this.promise.value)
-          : true)
+        (result) => !equal(result.data, {}) && !equal(result, this.result)
       )
       .subscribe({
         next: this.handleNext,

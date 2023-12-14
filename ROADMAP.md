@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2023-11-21**
+**Last updated: 2023-12-05**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -17,14 +17,14 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 _Currently in development phase_
 
-Tentative beta date: Dec 1, 2023
+Tentative beta date: Dec 12, 2023
 
 Features we plan to tackle:
 
 - Ability to preload a query outside of a React component that can be used with `useReadQuery` to suspend while loading
 - Introduce a new `useLoadableQuery` hook
 - `<MockedProvider />` improvements
-- Optimizing memory usage in SSR scenarios
+- Optimizing memory usage
 
 > NOTE: These are subject to change and are not guaranteed to be part of 3.9 at the time of this writing.
 

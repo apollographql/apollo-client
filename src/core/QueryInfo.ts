@@ -156,6 +156,21 @@ export class QueryInfo {
     this.dirty = false;
   }
 
+  forceDiff() {
+    const options = this.getDiffOptions();
+
+    this.updateWatch(this.variables);
+
+    const oq = this.observableQuery;
+    if (oq && oq.options.fetchPolicy === "no-cache") {
+      return { complete: false };
+    }
+
+    const diff = this.cache.diff(options);
+
+    this.updateLastDiff(diff, options);
+  }
+
   getDiff(): Cache.DiffResult<any> {
     const options = this.getDiffOptions();
 

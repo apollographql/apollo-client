@@ -379,6 +379,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   // disposed
   {
     const { snapshot } = await Profiler.takeRender();
+
     expect(snapshot.result).toEqual({
       data: { greeting: "While you were away" },
       error: undefined,
@@ -420,6 +421,8 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender();
 });
 
 test("unmounting useReadQuery does not auto dispose of the queryRef when manually retained", async () => {

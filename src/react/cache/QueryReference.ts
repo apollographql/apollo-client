@@ -18,7 +18,6 @@ import {
 import type { QueryKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
 import { wrapPromiseWithState } from "../../utilities/index.js";
-import { invariant } from "../../utilities/globals/index.js";
 
 /** @internal */
 export type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
@@ -105,7 +104,7 @@ export class InternalQueryReference<TData = unknown> {
 
   public promise: QueryRefPromise<TData>;
 
-  private subscription: ObservableSubscription;
+  private subscription: ObservableSubscription | null;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
   private status: "idle" | "loading" = "loading";
@@ -182,20 +181,55 @@ export class InternalQueryReference<TData = unknown> {
     return this.__disposed;
   }
 
+  maybeResubscribe(queryRef: QueryReference<TData, any>) {
+    if (this.subscription) {
+      return;
+    }
+
+    this.__disposed = false;
+    // console.log({
+    //   fetchPolicy: "cache-first",
+    //   nextFetchPolicy: this.observable.options.fetchPolicy,
+    // });
+    // this.observable.silentSetOptions({
+    //   fetchPolicy: "cache-first",
+    //   nextFetchPolicy: this.observable.options.fetchPolicy,
+    // });
+    this.observable.resetLastResults();
+    this.observable.forceDiff();
+    const result = this.observable.getCurrentResult();
+    if (result.partial) {
+      this.status = "loading";
+      this.promise = queryRef[PROMISE_SYMBOL] = wrapPromiseWithState(
+        new Promise((resolve, reject) => {
+          this.resolve = resolve;
+          this.reject = reject;
+        })
+      );
+    } else {
+      this.status = "idle";
+      this.promise = createFulfilledPromise(this.observable.getCurrentResult());
+    }
+
+    this.subscription = this.observable
+      .filter(
+        (result) =>
+          !equal(result.data, {}) &&
+          (this.promise.status === "fulfilled" ?
+            !equal(result, this.promise.value)
+          : true)
+      )
+      .subscribe({
+        next: this.handleNext,
+        error: this.handleError,
+      });
+  }
+
   retain() {
+    this.__disposed = false;
     this.references++;
     clearTimeout(this.autoDisposeTimeoutId);
     let disposed = false;
-
-    if (__DEV__) {
-      if (this.disposed) {
-        invariant.warn(
-          `'retain' was called on a disposed queryRef which results in a no-op. Please recreate the queryRef by calling 'preloadQuery' again.
-
-If you're seeing this warning for a queryRef produced by 'useBackgroundQuery' or 'useLoadableQuery', this is a bug in Apollo Client. Please file an issue.`
-        );
-      }
-    }
 
     return () => {
       if (disposed || this.disposed) {
@@ -264,7 +298,8 @@ If you're seeing this warning for a queryRef produced by 'useBackgroundQuery' or
 
   private dispose() {
     this.__disposed = true;
-    this.subscription.unsubscribe();
+    this.subscription?.unsubscribe();
+    this.subscription = null;
     this.onDispose();
   }
 
@@ -308,7 +343,7 @@ If you're seeing this warning for a queryRef produced by 'useBackgroundQuery' or
   }
 
   private handleError(error: ApolloError) {
-    this.subscription.unsubscribe();
+    this.subscription?.unsubscribe();
     this.subscription = this.observable.resubscribeAfterError(
       this.handleNext,
       this.handleError

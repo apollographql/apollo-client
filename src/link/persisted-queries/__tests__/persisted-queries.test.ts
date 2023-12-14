@@ -66,7 +66,7 @@ const giveUpResponse = JSON.stringify({ errors: giveUpErrors });
 const giveUpResponseWithCode = JSON.stringify({ errors: giveUpErrorsWithCode });
 const multiResponse = JSON.stringify({ errors: multipleErrors });
 
-export function sha256(data: string) {
+function sha256(data: string) {
   const hash = crypto.createHash("sha256");
   hash.update(data);
   return hash.digest("hex");
@@ -149,6 +149,32 @@ describe("happy path", () => {
         resolve();
       }, reject);
     }, reject);
+  });
+
+  it("clears the cache when calling `resetHashCache`", async () => {
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response })),
+      { repeat: 1 }
+    );
+
+    const hashRefs: WeakRef<String>[] = [];
+    function hash(query: string) {
+      const newHash = new String(query);
+      hashRefs.push(new WeakRef(newHash));
+      return newHash as string;
+    }
+    const persistedLink = createPersistedQuery({ sha256: hash });
+    await new Promise<void>((complete) =>
+      execute(persistedLink.concat(createHttpLink()), {
+        query,
+        variables,
+      }).subscribe({ complete })
+    );
+
+    await expect(hashRefs[0]).not.toBeGarbageCollected();
+    persistedLink.resetHashCache();
+    await expect(hashRefs[0]).toBeGarbageCollected();
   });
 
   itAsync("supports loading the hash from other method", (resolve, reject) => {
@@ -515,6 +541,41 @@ describe("failure path", () => {
           }, reject);
         }, reject);
       })
+  );
+
+  it.each([
+    ["error message", giveUpResponse],
+    ["error code", giveUpResponseWithCode],
+  ] as const)(
+    "clears the cache when receiving NotSupported error (%s)",
+    async (_description, failingResponse) => {
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: failingResponse })),
+        { repeat: 1 }
+      );
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 1 }
+      );
+
+      const hashRefs: WeakRef<String>[] = [];
+      function hash(query: string) {
+        const newHash = new String(query);
+        hashRefs.push(new WeakRef(newHash));
+        return newHash as string;
+      }
+      const persistedLink = createPersistedQuery({ sha256: hash });
+      await new Promise<void>((complete) =>
+        execute(persistedLink.concat(createHttpLink()), {
+          query,
+          variables,
+        }).subscribe({ complete })
+      );
+
+      await expect(hashRefs[0]).toBeGarbageCollected();
+    }
   );
 
   itAsync("works with multiple errors", (resolve, reject) => {

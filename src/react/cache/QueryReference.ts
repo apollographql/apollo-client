@@ -177,17 +177,19 @@ export class InternalQueryReference<TData = unknown> {
       return;
     }
 
-    // console.log({
-    //   fetchPolicy: "cache-first",
-    //   nextFetchPolicy: this.observable.options.fetchPolicy,
-    // });
-    // this.observable.silentSetOptions({
-    //   fetchPolicy: "cache-first",
-    //   nextFetchPolicy: this.observable.options.fetchPolicy,
-    // });
+    this.observable.silentSetOptions({
+      fetchPolicy: "cache-first",
+      nextFetchPolicy: this.observable.options.fetchPolicy,
+    });
     this.observable.resetLastResults();
     this.observable.forceDiff();
-    this.result = this.observable.getCurrentResult();
+    const result = this.observable.getCurrentResult();
+
+    if (result.data === void 0) {
+      result.data = this.result.data;
+    }
+
+    this.result = result;
     if (this.result.partial) {
       this.status = "loading";
       this.promise = queryRef[PROMISE_SYMBOL] = wrapPromiseWithState(

@@ -1,5 +1,64 @@
 # @apollo/client
 
+## 3.9.0-alpha.5
+
+### Minor Changes
+
+- [#11345](https://github.com/apollographql/apollo-client/pull/11345) [`1759066a8`](https://github.com/apollographql/apollo-client/commit/1759066a8f9a204e49228568aef9446a64890ff3) Thanks [@phryneas](https://github.com/phryneas)! - `QueryManager.inFlightLinkObservables` now uses a strong `Trie` as an internal data structure.
+
+  #### Warning: requires `@apollo/experimental-nextjs-app-support` update
+
+  If you are using `@apollo/experimental-nextjs-app-support`, you will need to update that to at least 0.5.2, as it accesses this internal data structure.
+
+- [#11300](https://github.com/apollographql/apollo-client/pull/11300) [`a8158733c`](https://github.com/apollographql/apollo-client/commit/a8158733cfa3e65180ec23518d657ea41894bb2b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduces a new `useLoadableQuery` hook. This hook works similarly to `useBackgroundQuery` in that it returns a `queryRef` that can be used to suspend a component via the `useReadQuery` hook. It provides a more ergonomic way to load the query during a user interaction (for example when wanting to preload some data) that would otherwise be clunky with `useBackgroundQuery`.
+
+  ```tsx
+  function App() {
+    const [loadQuery, queryRef, { refetch, fetchMore, reset }] =
+      useLoadableQuery(query, options);
+
+    return (
+      <>
+        <button onClick={() => loadQuery(variables)}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <Child queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function Child({ queryRef }) {
+    const { data } = useReadQuery(queryRef);
+
+    // ...
+  }
+  ```
+
+### Patch Changes
+
+- [#11356](https://github.com/apollographql/apollo-client/pull/11356) [`cc4ac7e19`](https://github.com/apollographql/apollo-client/commit/cc4ac7e1917f046bcd177882727864eed40b910e) Thanks [@phryneas](https://github.com/phryneas)! - Fix a potential memory leak in `FragmentRegistry.transform` and `FragmentRegistry.findFragmentSpreads` that would hold on to passed-in `DocumentNodes` for too long.
+
+- [#11370](https://github.com/apollographql/apollo-client/pull/11370) [`25e2cb431`](https://github.com/apollographql/apollo-client/commit/25e2cb431c76ec5aa88202eaacbd98fad42edc7f) Thanks [@phryneas](https://github.com/phryneas)! - `parse` function: improve memory management
+
+  - use LRU `WeakCache` instead of `Map` to keep a limited number of parsed results
+  - cache is initiated lazily, only when needed
+  - expose `parse.resetCache()` method
+
+- [#11389](https://github.com/apollographql/apollo-client/pull/11389) [`139acd115`](https://github.com/apollographql/apollo-client/commit/139acd1153afa1445b69dcb4e139668ab8c5889a) Thanks [@phryneas](https://github.com/phryneas)! - `documentTransform`: use `optimism` and `WeakCache` instead of directly storing data on the `Trie`
+
+- [#11358](https://github.com/apollographql/apollo-client/pull/11358) [`7d939f80f`](https://github.com/apollographql/apollo-client/commit/7d939f80fbc2c419c58a6c55b6a35ee7474d0379) Thanks [@phryneas](https://github.com/phryneas)! - Fixes a potential memory leak in `Concast` that might have been triggered when `Concast` was used outside of Apollo Client.
+
+- [#11344](https://github.com/apollographql/apollo-client/pull/11344) [`bd2667619`](https://github.com/apollographql/apollo-client/commit/bd2667619700139af32a45364794d11f845ab6cf) Thanks [@phryneas](https://github.com/phryneas)! - Add a `resetCache` method to `DocumentTransform` and hook `InMemoryCache.addTypenameTransform` up to `InMemoryCache.gc`
+
+- [#11367](https://github.com/apollographql/apollo-client/pull/11367) [`30d17bfeb`](https://github.com/apollographql/apollo-client/commit/30d17bfebe44dbfa7b78c8982cfeb49afd37129c) Thanks [@phryneas](https://github.com/phryneas)! - `print`: use `WeakCache` instead of `WeakMap`
+
+- [#11385](https://github.com/apollographql/apollo-client/pull/11385) [`d9ca4f082`](https://github.com/apollographql/apollo-client/commit/d9ca4f0821c66ae4f03cf35a7ac93fe604cc6de3) Thanks [@phryneas](https://github.com/phryneas)! - ensure `defaultContext` is also used for mutations and subscriptions
+
+- [#11387](https://github.com/apollographql/apollo-client/pull/11387) [`4dce8673b`](https://github.com/apollographql/apollo-client/commit/4dce8673b1757d8a3a4edd2996d780e86fad14e3) Thanks [@phryneas](https://github.com/phryneas)! - `QueryManager.transformCache`: use `WeakCache` instead of `WeakMap`
+
+- [#11371](https://github.com/apollographql/apollo-client/pull/11371) [`ebd8fe2c1`](https://github.com/apollographql/apollo-client/commit/ebd8fe2c1b8b50bfeb2da20aeca5671300fb5564) Thanks [@phryneas](https://github.com/phryneas)! - Clarify types of `EntityStore.makeCacheKey`.
+
+- [#11355](https://github.com/apollographql/apollo-client/pull/11355) [`7d8e18493`](https://github.com/apollographql/apollo-client/commit/7d8e18493cd13134726c6643cbf0fadb08be2d37) Thanks [@phryneas](https://github.com/phryneas)! - InMemoryCache.gc now also triggers FragmentRegistry.resetCaches (if there is a FragmentRegistry)
 
 ## 3.8.8
 
@@ -128,6 +187,7 @@
 - [#6701](https://github.com/apollographql/apollo-client/pull/6701) [`8d2b4e107`](https://github.com/apollographql/apollo-client/commit/8d2b4e107d7c21563894ced3a65d631183b58fd9) Thanks [@prowe](https://github.com/prowe)! - Ability to dynamically match mocks
 
   Adds support for a new property `MockedResponse.variableMatcher`: a predicate function that accepts a `variables` param. If `true`, the `variables` will be passed into the `ResultFunction` to help dynamically build a response.
+
 ## 3.8.7
 
 ### Patch Changes

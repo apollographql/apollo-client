@@ -317,13 +317,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private initiateFetch(returnedPromise: Promise<ApolloQueryResult<TData>>) {
-    this.promise = wrapPromiseWithState(
-      new Promise((resolve, reject) => {
-        this.resolve = resolve;
-        this.reject = reject;
-      })
-    );
-
+    this.promise = this.createPendingPromise();
     this.promise.catch(() => {});
 
     // If the data returned from the fetch is deeply equal to the data already
@@ -360,20 +354,23 @@ export class InternalQueryReference<TData = unknown> {
       return;
     }
 
-    if (
+    const isFullOrPartialResult =
       result.data &&
-      (!result.partial || this.watchQueryOptions.returnPartialData)
-    ) {
-      this.promise = createFulfilledPromise(result);
-    } else {
-      this.promise = wrapPromiseWithState(
-        new Promise((resolve, reject) => {
-          this.resolve = resolve;
-          this.reject = reject;
-        })
-      );
-    }
+      (!result.partial || this.watchQueryOptions.returnPartialData);
 
     this.result = result;
+    this.promise =
+      isFullOrPartialResult ?
+        createFulfilledPromise(result)
+      : this.createPendingPromise();
+  }
+
+  private createPendingPromise() {
+    return wrapPromiseWithState(
+      new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+      })
+    );
   }
 }

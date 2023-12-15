@@ -1056,7 +1056,9 @@ interface FulfilledPromise<TValue> extends Promise<TValue> {
 
 // @internal
 const getApolloCacheMemoryInternals: (() => {
-    fragmentQueryDocuments: number | undefined;
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
 }) | undefined;
 
 // @internal
@@ -1065,19 +1067,19 @@ const getApolloClientMemoryInternals: (() => {
         [k: string]: number;
     };
     sizes: {
-        global: {
-            print: number | undefined;
-            parser: number | undefined;
-            canonicalStringify: number | undefined;
-        };
-        links: unknown[];
-        queryManager: {
-            Transforms: number;
-            documentTransforms: number[];
-        };
-        cache: {
+        cache?: {
             fragmentQueryDocuments: number | undefined;
         } | undefined;
+        print: number | undefined;
+        parser: number | undefined;
+        canonicalStringify: number | undefined;
+        links: unknown[];
+        queryManager: {
+            getDocumentInfo: number;
+            documentTransforms: {
+                cache: number;
+            }[];
+        };
     };
 }) | undefined;
 
@@ -1086,18 +1088,22 @@ export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
 
 // @internal
 const getInMemoryCacheMemoryInternals: (() => {
-    addTypenameTransform: number[];
-    storeReader: {
+    addTypenameDocumentTransform: {
+        cache: number;
+    }[];
+    inMemoryCache: {
         executeSelectionSet: number | undefined;
         executeSubSelectedArray: number | undefined;
+        maybeBroadcastWatch: number | undefined;
     };
-    maybeBroadcastWatch: number | undefined;
     fragmentRegistry: {
         findFragmentSpreads: number | undefined;
         lookup: number | undefined;
         transform: number | undefined;
     };
-    fragmentQueryDocuments: number | undefined;
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
 }) | undefined;
 
 export { gql }

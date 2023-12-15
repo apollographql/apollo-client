@@ -67,7 +67,9 @@ export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => 
     resetHashCache: () => void;
 } & ({
     getMemoryInternals(): {
-        persistedQueryHashes: number;
+        PersistedQueryLink: {
+            persistedQueryHashes: number;
+        };
     };
 } | {
     getMemoryInternals?: undefined;

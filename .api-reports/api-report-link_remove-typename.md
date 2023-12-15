@@ -168,7 +168,9 @@ type Path = ReadonlyArray<string | number>;
 // @public (undocumented)
 export function removeTypenameFromVariables(options?: RemoveTypenameFromVariablesOptions): ApolloLink & ({
     getMemoryInternals(): {
-        getVariableDefinitions: number;
+        removeTypenameFromVariables: {
+            getVariableDefinitions: number;
+        };
     };
 } | {
     getMemoryInternals?: undefined;

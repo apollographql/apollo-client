@@ -480,23 +480,29 @@ export interface FragmentRegistryAPI {
 
 // @internal
 const getApolloCacheMemoryInternals: (() => {
-    fragmentQueryDocuments: number | undefined;
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
 }) | undefined;
 
 // @internal
 const getInMemoryCacheMemoryInternals: (() => {
-    addTypenameTransform: number[];
-    storeReader: {
+    addTypenameDocumentTransform: {
+        cache: number;
+    }[];
+    inMemoryCache: {
         executeSelectionSet: number | undefined;
         executeSubSelectedArray: number | undefined;
+        maybeBroadcastWatch: number | undefined;
     };
-    maybeBroadcastWatch: number | undefined;
     fragmentRegistry: {
         findFragmentSpreads: number | undefined;
         lookup: number | undefined;
         transform: number | undefined;
     };
-    fragmentQueryDocuments: number | undefined;
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
 }) | undefined;
 
 // @public (undocumented)

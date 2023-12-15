@@ -838,7 +838,9 @@ interface FulfilledPromise<TValue> extends Promise<TValue> {
 
 // @internal
 const getApolloCacheMemoryInternals: (() => {
-    fragmentQueryDocuments: number | undefined;
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
 }) | undefined;
 
 // @internal
@@ -847,19 +849,19 @@ const getApolloClientMemoryInternals: (() => {
         [k: string]: number;
     };
     sizes: {
-        global: {
-            print: number | undefined;
-            parser: number | undefined;
-            canonicalStringify: number | undefined;
-        };
-        links: unknown[];
-        queryManager: {
-            Transforms: number;
-            documentTransforms: number[];
-        };
-        cache: {
+        cache?: {
             fragmentQueryDocuments: number | undefined;
         } | undefined;
+        print: number | undefined;
+        parser: number | undefined;
+        canonicalStringify: number | undefined;
+        links: unknown[];
+        queryManager: {
+            getDocumentInfo: number;
+            documentTransforms: {
+                cache: number;
+            }[];
+        };
     };
 }) | undefined;
 

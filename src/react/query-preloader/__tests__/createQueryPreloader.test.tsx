@@ -578,6 +578,162 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   await expect(Profiler).not.toRerender();
 });
 
+test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () => {
+  const { query } = setupSimpleCase();
+
+  let count = 0;
+  const link = new ApolloLink((operation) => {
+    return new Observable((observer) => {
+      setTimeout(() => {
+        observer.next({ data: { greeting: `Hello ${++count}` } });
+        observer.complete();
+      }, 10);
+    });
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+  const user = userEvent.setup();
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const preloadQuery = createQueryPreloader(client);
+
+  const queryRef = preloadQuery(query, { fetchPolicy: "no-cache" });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
+
+  function App() {
+    useTrackRenders();
+    const [show, setShow] = React.useState(true);
+
+    return (
+      <>
+        <button onClick={() => setShow((show) => !show)}>Toggle</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {show && <ReadQueryHook />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  const toggleButton = screen.getByText("Toggle");
+
+  // initial render
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello 1" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  // unmount ReadQueryHook
+  await act(() => user.click(toggleButton));
+  await wait(0);
+  await Profiler.takeRender();
+
+  expect(queryRef).toBeDisposed();
+
+  // mount ReadQueryHook
+  await act(() => user.click(toggleButton));
+
+  // Ensure we aren't refetching the data by checking we still render the same
+  // cache result
+  {
+    const { renderedComponents, snapshot } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello 1" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(queryRef).not.toBeDisposed();
+
+  client.writeQuery({ query, data: { greeting: "Hello (cached)" } });
+
+  await expect(Profiler).not.toRerender();
+
+  // unmount ReadQueryHook
+  await act(() => user.click(toggleButton));
+  await Profiler.takeRender();
+  await wait(0);
+
+  expect(queryRef).toBeDisposed();
+
+  // Write a cache result to ensure that remounting will read this result
+  // instead of the old one
+  client.writeQuery({ query, data: { greeting: "While you were away" } });
+  // mount ReadQueryHook
+  await act(() => user.click(toggleButton));
+
+  expect(queryRef).not.toBeDisposed();
+
+  // Ensure we read the newest cache result changed while this queryRef was
+  // disposed
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello 1" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  // unmount ReadQueryHook
+  await act(() => user.click(toggleButton));
+  await Profiler.takeRender();
+  await wait(0);
+
+  expect(queryRef).toBeDisposed();
+
+  // Remove cached data to ensure remounting will refetch the data
+  client.cache.modify({
+    fields: {
+      greeting: (_, { DELETE }) => DELETE,
+    },
+  });
+
+  // mount ReadQueryHook
+  await act(() => user.click(toggleButton));
+
+  expect(queryRef).not.toBeDisposed();
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello 1" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
+});
+
 test("reacts to cache updates", async () => {
   const { query, mocks } = setupSimpleCase();
   const client = createDefaultClient(mocks);

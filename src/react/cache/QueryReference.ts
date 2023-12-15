@@ -172,7 +172,7 @@ export class InternalQueryReference<TData = unknown> {
     return this.observable.options;
   }
 
-  maybeResubscribe(queryRef: QueryReference<TData, any>) {
+  maybeResubscribe(updatePromise: (promise: QueryRefPromise<TData>) => void) {
     if (this.subscription) {
       return;
     }
@@ -207,12 +207,13 @@ export class InternalQueryReference<TData = unknown> {
 
         if (this.result.partial && !this.watchQueryOptions.returnPartialData) {
           this.status = "loading";
-          this.promise = queryRef[PROMISE_SYMBOL] = wrapPromiseWithState(
+          this.promise = wrapPromiseWithState(
             new Promise((resolve, reject) => {
               this.resolve = resolve;
               this.reject = reject;
             })
           );
+          updatePromise(this.promise);
         } else {
           this.status = "idle";
           this.promise = createFulfilledPromise(this.result);

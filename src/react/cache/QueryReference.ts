@@ -50,7 +50,7 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(
 ) {
   const ref: QueryReference<TData, TVariables> = {
     toPromise() {
-      // We void resolving this promise with the query data because we want to
+      // We avoid resolving this promise with the query data because we want to
       // discourage using the server data directly from the queryRef and instead
       // should be accessed through `useReadQuery`. If the server data is needed
       // its better to use `client.query()` directly.

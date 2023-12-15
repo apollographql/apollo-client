@@ -1711,12 +1711,12 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
     // (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
     // (undocumented)
-    toPromise(): Promise<ApolloQueryResult<TData>>;
+    toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 
 // Warning: (ae-forgotten-export) The symbol "PromiseWithState" needs to be exported by the entry point index.d.ts
 //
-// @internal (undocumented)
+// @public (undocumented)
 type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
 
 // @public (undocumented)

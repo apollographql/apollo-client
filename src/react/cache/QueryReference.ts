@@ -343,7 +343,7 @@ export class InternalQueryReference<TData = unknown> {
       .filter(
         (result) => !equal(result.data, {}) && !equal(result, this.result)
       )
-      .subscribe({ next: this.handleNext, error: this.handleError });
+      .subscribe(this.handleNext, this.handleError);
   }
 
   private setResult() {

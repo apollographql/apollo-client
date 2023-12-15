@@ -128,8 +128,7 @@ export class InternalQueryReference<TData = unknown> {
 
     if (
       isNetworkRequestSettled(this.result.networkStatus) ||
-      (this.result.data &&
-        (!this.result.partial || this.watchQueryOptions.returnPartialData))
+      this.isPartialResult(this.result)
     ) {
       this.promise = createFulfilledPromise(this.result);
       this.status = "idle";
@@ -192,10 +191,7 @@ export class InternalQueryReference<TData = unknown> {
       if (!equal(result, this.result)) {
         this.result = result;
 
-        if (
-          result.data &&
-          (!result.partial || this.watchQueryOptions.returnPartialData)
-        ) {
+        if (this.isPartialResult(result)) {
           this.status = "idle";
           this.promise = createFulfilledPromise(this.result);
         } else {
@@ -389,5 +385,12 @@ export class InternalQueryReference<TData = unknown> {
         (result) => !equal(result.data, {}) && !equal(result, this.result)
       )
       .subscribe({ next: this.handleNext, error: this.handleError });
+  }
+
+  private isPartialResult(result: ApolloQueryResult<TData>) {
+    return (
+      result.data &&
+      (!result.partial || this.watchQueryOptions.returnPartialData)
+    );
   }
 }

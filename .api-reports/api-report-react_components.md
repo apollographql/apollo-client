@@ -734,6 +734,19 @@ const getApolloClientMemoryInternals: (() => {
         cache?: {
             fragmentQueryDocuments: number | undefined;
         } | undefined;
+        addTypenameDocumentTransform?: {
+            cache: number;
+        }[] | undefined;
+        inMemoryCache?: {
+            executeSelectionSet: number | undefined;
+            executeSubSelectedArray: number | undefined;
+            maybeBroadcastWatch: number | undefined;
+        } | undefined;
+        fragmentRegistry?: {
+            findFragmentSpreads: number | undefined;
+            lookup: number | undefined;
+            transform: number | undefined;
+        } | undefined;
         print: number | undefined;
         parser: number | undefined;
         canonicalStringify: number | undefined;

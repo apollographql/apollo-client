@@ -97,7 +97,7 @@ export class InternalQueryReference<TData = unknown> {
   public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
 
-  public promise: QueryRefPromise<TData>;
+  public promise!: QueryRefPromise<TData>;
 
   private subscription: ObservableSubscription | null = null;
   private listeners = new Set<Listener<TData>>();
@@ -125,18 +125,7 @@ export class InternalQueryReference<TData = unknown> {
       this.onDispose = options.onDispose;
     }
 
-    if (this.isFullOrPartialResult()) {
-      this.promise = createFulfilledPromise(this.result);
-      this.status = "idle";
-    } else {
-      this.promise = wrapPromiseWithState(
-        new Promise((resolve, reject) => {
-          this.resolve = resolve;
-          this.reject = reject;
-        })
-      );
-    }
-
+    this.setStatusAndPromise();
     this.subscribeToQuery();
 
     // Start a timer that will automatically dispose of the query if the
@@ -193,18 +182,9 @@ export class InternalQueryReference<TData = unknown> {
       }
 
       this.result = result;
+      this.setStatusAndPromise();
 
-      if (this.isFullOrPartialResult()) {
-        this.status = "idle";
-        this.promise = createFulfilledPromise(this.result);
-      } else {
-        this.status = "loading";
-        this.promise = wrapPromiseWithState(
-          new Promise((resolve, reject) => {
-            this.resolve = resolve;
-            this.reject = reject;
-          })
-        );
+      if (!this.isFullOrPartialResult()) {
         updatePromise(this.promise);
       }
     } finally {
@@ -394,5 +374,20 @@ export class InternalQueryReference<TData = unknown> {
       this.result.data &&
       (!this.result.partial || this.watchQueryOptions.returnPartialData)
     );
+  }
+
+  private setStatusAndPromise() {
+    if (this.isFullOrPartialResult()) {
+      this.promise = createFulfilledPromise(this.result);
+      this.status = "idle";
+    } else {
+      this.status = "loading";
+      this.promise = wrapPromiseWithState(
+        new Promise((resolve, reject) => {
+          this.resolve = resolve;
+          this.reject = reject;
+        })
+      );
+    }
   }
 }

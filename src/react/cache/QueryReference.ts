@@ -205,7 +205,7 @@ export class InternalQueryReference<TData = unknown> {
       if (!equal(result, this.result)) {
         this.result = result;
 
-        if (this.result.partial) {
+        if (this.result.partial && !this.watchQueryOptions.returnPartialData) {
           this.status = "loading";
           this.promise = queryRef[PROMISE_SYMBOL] = wrapPromiseWithState(
             new Promise((resolve, reject) => {

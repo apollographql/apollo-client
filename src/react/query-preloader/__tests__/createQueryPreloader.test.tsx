@@ -26,6 +26,7 @@ import {
   useTrackRenders,
   setupVariablesCase,
   renderWithClient,
+  VariablesCaseData,
 } from "../../../testing/internal";
 import { ApolloProvider } from "../../context";
 import { act, render, renderHook, screen } from "@testing-library/react";
@@ -413,6 +414,246 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello 2" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
+});
+
+test("useReadQuery handles auto-resubscribe with returnPartialData", async () => {
+  const { query, mocks } = setupVariablesCase();
+
+  let fetchCount = 0;
+  const link = new ApolloLink((operation) => {
+    fetchCount++;
+    const mock = mocks.find(
+      (mock) => mock.request.variables?.id === operation.variables.id
+    );
+
+    if (!mock) {
+      throw new Error("Could not find mock for variables");
+    }
+
+    const result = mock.result as Record<string, any>;
+
+    return new Observable((observer) => {
+      setTimeout(() => {
+        observer.next({ data: result.data });
+        observer.complete();
+      }, 100);
+    });
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<DeepPartial<VariablesCaseData>> | null,
+    },
+  });
+  const user = userEvent.setup();
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const preloadQuery = createQueryPreloader(client);
+
+  const queryRef = preloadQuery(query, {
+    returnPartialData: true,
+    variables: { id: "1" },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
+
+  function App() {
+    useTrackRenders();
+    const [show, setShow] = React.useState(true);
+
+    return (
+      <>
+        <button onClick={() => setShow((show) => !show)}>Toggle</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {show && <ReadQueryHook />}
+        </Suspense>
+      </>
+    );
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  const toggleButton = screen.getByText("Toggle");
+
+  // initial render
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(fetchCount).toBe(1);
+
+  // unmount ReadQueryHook
+  await act(() => user.click(toggleButton));
+  await wait(0);
+  await Profiler.takeRender();
+
+  expect(queryRef).toBeDisposed();
+
+  // mount ReadQueryHook
+  await act(() => user.click(toggleButton));
+
+  // Ensure we aren't refetching the data by checking we still render the same
+  // cache result
+  {
+    const { renderedComponents, snapshot } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(fetchCount).toBe(1);
+  expect(queryRef).not.toBeDisposed();
+
+  client.writeQuery({
+    query,
+    data: {
+      character: {
+        __typename: "Character",
+        id: "1",
+        name: "Spider-Man (cached)",
+      },
+    },
+    variables: { id: "1" },
+  });
+
+  // Ensure we can get cache updates again after remounting
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "1",
+          name: "Spider-Man (cached)",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  // unmount ReadQueryHook
+  await act(() => user.click(toggleButton));
+  await Profiler.takeRender();
+  await wait(0);
+
+  expect(queryRef).toBeDisposed();
+
+  // Write a cache result to ensure that remounting will read this result
+  // instead of the old one
+  client.writeQuery({
+    query,
+    data: {
+      character: {
+        __typename: "Character",
+        id: "1",
+        name: "Spider-Man (Away)",
+      },
+    },
+    variables: { id: "1" },
+  });
+  // mount ReadQueryHook
+  await act(() => user.click(toggleButton));
+
+  expect(queryRef).not.toBeDisposed();
+
+  // Ensure we read the newest cache result changed while this queryRef was
+  // disposed
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "1",
+          name: "Spider-Man (Away)",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(fetchCount).toBe(1);
+
+  // unmount ReadQueryHook
+  await act(() => user.click(toggleButton));
+  await Profiler.takeRender();
+  await wait(0);
+
+  expect(queryRef).toBeDisposed();
+
+  // Remove cached data to ensure remounting will refetch the data
+  client.cache.modify({
+    id: "Character:1",
+    fields: {
+      name: (_, { DELETE }) => DELETE,
+    },
+  });
+
+  // we wait a moment to ensure no network request is triggered
+  // by the `cache.modify` (even with a slight delay)
+  await wait(10);
+  expect(fetchCount).toBe(1);
+
+  // mount ReadQueryHook
+  await act(() => user.click(toggleButton));
+
+  // this should now trigger a network request
+  expect(fetchCount).toBe(2);
+  expect(queryRef).not.toBeDisposed();
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { character: { __typename: "Character", id: "1" } },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });

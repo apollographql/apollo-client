@@ -24,19 +24,32 @@ export interface RemoveTypenameFromVariablesOptions {
 export function removeTypenameFromVariables(
   options: RemoveTypenameFromVariablesOptions = Object.create(null)
 ) {
-  return new ApolloLink((operation, forward) => {
-    const { except } = options;
-    const { query, variables } = operation;
+  return Object.assign(
+    new ApolloLink((operation, forward) => {
+      const { except } = options;
+      const { query, variables } = operation;
 
-    if (variables) {
-      operation.variables =
-        except ?
-          maybeStripTypenameUsingConfig(query, variables, except)
-        : stripTypename(variables);
-    }
+      if (variables) {
+        operation.variables =
+          except ?
+            maybeStripTypenameUsingConfig(query, variables, except)
+          : stripTypename(variables);
+      }
 
-    return forward(operation);
-  });
+      return forward(operation);
+    }),
+    __DEV__ ?
+      {
+        getMemoryInternals() {
+          return {
+            removeTypenameFromVariables: {
+              getVariableDefinitions: getVariableDefinitions?.size ?? 0,
+            },
+          };
+        },
+      }
+    : {}
+  );
 }
 
 function maybeStripTypenameUsingConfig(

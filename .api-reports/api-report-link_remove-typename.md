@@ -28,12 +28,18 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -160,7 +166,15 @@ type Path = ReadonlyArray<string | number>;
 // Warning: (ae-forgotten-export) The symbol "ApolloLink" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function removeTypenameFromVariables(options?: RemoveTypenameFromVariablesOptions): ApolloLink;
+export function removeTypenameFromVariables(options?: RemoveTypenameFromVariablesOptions): ApolloLink & ({
+    getMemoryInternals(): {
+        removeTypenameFromVariables: {
+            getVariableDefinitions: number;
+        };
+    };
+} | {
+    getMemoryInternals?: undefined;
+});
 
 // @public (undocumented)
 export interface RemoveTypenameFromVariablesOptions {

@@ -29,6 +29,7 @@ import { makeVar, forgetCache, recallCache } from "./reactiveVars.js";
 import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
 import type { OperationVariables } from "../../core/index.js";
+import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -581,4 +582,17 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       c.callback((c.lastDiff = diff), lastDiff);
     }
   }
+
+  /**
+   * @experimental
+   * @internal
+   * This is not a stable API - it is used in development builds to expose
+   * information to the DevTools.
+   * Use at your own risk!
+   */
+  public getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
+}
+
+if (__DEV__) {
+  InMemoryCache.prototype.getMemoryInternals = getInMemoryCacheMemoryInternals;
 }

@@ -122,6 +122,7 @@ export interface ApolloClientOptions<TCacheShape> {
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
 import { mergeOptions } from "../utilities/index.js";
+import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
 export { mergeOptions };
 
 /**
@@ -746,4 +747,17 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public get defaultContext() {
     return this.queryManager.defaultContext;
   }
+
+  /**
+   * @experimental
+   * @internal
+   * This is not a stable API - it is used in development builds to expose
+   * information to the DevTools.
+   * Use at your own risk!
+   */
+  public getMemoryInternals?: typeof getApolloClientMemoryInternals;
+}
+
+if (__DEV__) {
+  ApolloClient.prototype.getMemoryInternals = getApolloClientMemoryInternals;
 }

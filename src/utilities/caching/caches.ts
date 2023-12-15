@@ -12,6 +12,7 @@ function schedule(cache: CommonCache<any, any>) {
   }
 }
 /**
+ * @internal
  * A version of WeakCache that will auto-schedule a cleanup of the cache when
  * a new item is added.
  * Throttled to once per 100ms.
@@ -21,7 +22,7 @@ function schedule(cache: CommonCache<any, any>) {
  * with the notable exception of usage in `wrap` from `optimism` - that one
  * already handles cleanup and should remain a `WeakCache`.
  */
-export const CleanWeakCache = function CleanWeakCache(
+export const AutoCleanedWeakCache = function (
   max?: number | undefined,
   dispose?: ((value: any, key: any) => void) | undefined
 ) {
@@ -39,9 +40,13 @@ export const CleanWeakCache = function CleanWeakCache(
   };
   return cache;
 } as any as typeof WeakCache;
-export type CleanWeakCache<K extends object, V> = WeakCache<K, V>;
+/**
+ * @internal
+ */
+export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
 
 /**
+ * @internal
  * A version of StrongCache that will auto-schedule a cleanup of the cache when
  * a new item is added.
  * Throttled to once per 100ms.
@@ -51,7 +56,7 @@ export type CleanWeakCache<K extends object, V> = WeakCache<K, V>;
  * with the notable exception of usage in `wrap` from `optimism` - that one
  * already handles cleanup and should remain a `StrongCache`.
  */
-export const CleanStrongCache = function CleanStrongCache(
+export const AutoCleanedStrongCache = function (
   max?: number | undefined,
   dispose?: ((value: any, key: any) => void) | undefined
 ) {
@@ -69,4 +74,7 @@ export const CleanStrongCache = function CleanStrongCache(
   };
   return cache;
 } as any as typeof StrongCache;
-export type CleanStrongCache<K, V> = StrongCache<K, V>;
+/**
+ * @internal
+ */
+export type AutoCleanedStrongCache<K, V> = StrongCache<K, V>;

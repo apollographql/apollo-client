@@ -404,20 +404,20 @@ namespace Cache_2 {
 
 // @public
 interface CacheSizes {
+    "cache.fragmentQueryDocuments": number;
+    "documentTransform.cache": number;
+    "fragmentRegistry.findFragmentSpreads": number;
+    "fragmentRegistry.lookup": number;
+    "fragmentRegistry.transform": number;
+    "inMemoryCache.executeSelectionSet": number;
+    "inMemoryCache.executeSubSelectedArray": number;
+    "inMemoryCache.maybeBroadcastWatch": number;
+    "PersistedQueryLink.persistedQueryHashes": number;
+    "queryManager.getDocumentInfo": number;
+    "removeTypenameFromVariables.getVariableDefinitions": number;
     canonicalStringify: number;
-    documentTransform: number;
-    executeSelectionSet: number;
-    executeSubSelectedArray: number;
-    fragmentQueryDocuments: number;
-    fragmentRegistryFindFragmentSpreads: number;
-    fragmentRegistryLookup: number;
-    fragmentRegistryTransform: number;
-    getVariableDefinitions: number;
-    maybeBroadcastWatch: number;
     parser: number;
-    persistedQueryHashes: number;
     print: number;
-    queryManagerTransforms: number;
 }
 
 // @public (undocumented)
@@ -571,10 +571,10 @@ class DocumentTransform {
     concat(otherTransform: DocumentTransform): DocumentTransform;
     // (undocumented)
     static identity(): DocumentTransform;
-    // (undocumented)
+    // @internal
     readonly left?: DocumentTransform;
     resetCache(): void;
-    // (undocumented)
+    // @internal
     readonly right?: DocumentTransform;
     // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
@@ -690,7 +690,7 @@ const getApolloCacheMemoryInternals: (() => {
 
 // @internal
 const getApolloClientMemoryInternals: (() => {
-    limits: CacheSizes;
+    limits: Partial<CacheSizes>;
     sizes: {
         global: {
             print: number | undefined;
@@ -1663,6 +1663,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
+    skipPollAttempt?: () => boolean;
     variables?: TVariables;
 }
 
@@ -1686,14 +1687,14 @@ export function withWarningSpy<TArgs extends any[], TResult>(it: (...args: TArgs
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:120:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:154:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:395:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:121:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:155:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:396:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:154:3 - (ae-forgotten-export) The symbol "ApolloError" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:156:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:201:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:253:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:260:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/utilities/caching/getMemoryInternals.ts:66:44 - (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

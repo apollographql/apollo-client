@@ -30,6 +30,7 @@ import {
   compact,
   canonicalStringify,
   cacheSizes,
+  defaultCacheSizes,
 } from "../../utilities/index.js";
 import type { Cache } from "../core/types/Cache.js";
 import type {
@@ -194,7 +195,10 @@ export class StoreReader {
         return this.execSelectionSetImpl(options);
       },
       {
-        max: this.config.resultCacheMaxSize ?? cacheSizes.executeSelectionSet,
+        max:
+          this.config.resultCacheMaxSize ||
+          cacheSizes["inMemoryCache.executeSelectionSet"] ||
+          defaultCacheSizes["inMemoryCache.executeSelectionSet"],
         keyArgs: execSelectionSetKeyArgs,
         // Note that the parameters of makeCacheKey are determined by the
         // array returned by keyArgs.
@@ -221,7 +225,9 @@ export class StoreReader {
       },
       {
         max:
-          this.config.resultCacheMaxSize ?? cacheSizes.executeSubSelectedArray,
+          this.config.resultCacheMaxSize ||
+          cacheSizes["inMemoryCache.executeSubSelectedArray"] ||
+          defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
         makeCacheKey({ field, array, context }) {
           if (supportsResultCaching(context.store)) {
             return context.store.makeCacheKey(field, array, context.varString);

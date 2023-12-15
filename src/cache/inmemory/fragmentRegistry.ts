@@ -9,7 +9,11 @@ import { visit } from "graphql";
 import { wrap } from "optimism";
 
 import type { FragmentMap } from "../../utilities/index.js";
-import { cacheSizes, getFragmentDefinitions } from "../../utilities/index.js";
+import {
+  cacheSizes,
+  defaultCacheSizes,
+  getFragmentDefinitions,
+} from "../../utilities/index.js";
 import { WeakCache } from "@wry/caches";
 
 export interface FragmentRegistryAPI {
@@ -69,15 +73,21 @@ class FragmentRegistry implements FragmentRegistryAPI {
     const proto = FragmentRegistry.prototype;
     this.invalidate = (this.lookup = wrap(proto.lookup.bind(this), {
       makeCacheKey: (arg) => arg,
-      max: cacheSizes.fragmentRegistryLookup,
+      max:
+        cacheSizes["fragmentRegistry.lookup"] ||
+        defaultCacheSizes["fragmentRegistry.lookup"],
     })).dirty; // This dirty function is bound to the wrapped lookup method.
     this.transform = wrap(proto.transform.bind(this), {
       cache: WeakCache,
-      max: cacheSizes.fragmentRegistryTransform,
+      max:
+        cacheSizes["fragmentRegistry.transform"] ||
+        defaultCacheSizes["fragmentRegistry.transform"],
     });
     this.findFragmentSpreads = wrap(proto.findFragmentSpreads.bind(this), {
       cache: WeakCache,
-      max: cacheSizes.fragmentRegistryFindFragmentSpreads,
+      max:
+        cacheSizes["fragmentRegistry.findFragmentSpreads"] ||
+        defaultCacheSizes["fragmentRegistry.findFragmentSpreads"],
     });
   }
 

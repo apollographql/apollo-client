@@ -133,8 +133,9 @@ export type { DeepPartial } from "./types/DeepPartial.js";
 export type { OnlyRequiredProperties } from "./types/OnlyRequiredProperties.js";
 
 export {
-  CleanStrongCache,
-  CleanWeakCache,
+  AutoCleanedStrongCache,
+  AutoCleanedWeakCache,
   cacheSizes,
+  defaultCacheSizes,
 } from "./caching/index.js";
 export type { CacheSizes } from "./caching/index.js";

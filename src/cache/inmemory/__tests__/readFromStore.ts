@@ -17,7 +17,7 @@ import {
   isReference,
   TypedDocumentNode,
 } from "../../../core";
-import { cacheSizes } from "../../../utilities";
+import { defaultCacheSizes } from "../../../utilities";
 
 describe("resultCacheMaxSize", () => {
   const cache = new InMemoryCache();
@@ -25,7 +25,7 @@ describe("resultCacheMaxSize", () => {
   it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
     const reader = new StoreReader({ cache });
     expect(reader["executeSelectionSet"].options.max).toBe(
-      cacheSizes.executeSelectionSet
+      defaultCacheSizes["inMemoryCache.executeSelectionSet"]
     );
   });
 

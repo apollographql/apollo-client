@@ -1,4 +1,8 @@
-import { CleanStrongCache, cacheSizes } from "../../utilities/caching/index.js";
+import {
+  AutoCleanedStrongCache,
+  cacheSizes,
+  defaultCacheSizes,
+} from "../../utilities/caching/index.js";
 import { registerGlobalCache } from "../caching/getMemoryInternals.js";
 
 /**
@@ -27,8 +31,8 @@ export const canonicalStringify = Object.assign(
       // Clearing the sortingMap will reclaim all cached memory, without
       // affecting the logical results of canonicalStringify, but potentially
       // sacrificing performance until the cache is refilled.
-      sortingMap = new CleanStrongCache<string, readonly string[]>(
-        cacheSizes.canonicalStringify
+      sortingMap = new AutoCleanedStrongCache<string, readonly string[]>(
+        cacheSizes.canonicalStringify || defaultCacheSizes.canonicalStringify
       );
     },
   }
@@ -40,7 +44,7 @@ if (__DEV__) {
 
 // Values are JSON-serialized arrays of object keys (in any order), and values
 // are sorted arrays of the same keys.
-let sortingMap!: CleanStrongCache<string, readonly string[]>;
+let sortingMap!: AutoCleanedStrongCache<string, readonly string[]>;
 canonicalStringify.reset();
 
 // The JSON.stringify function takes an optional second argument called a

@@ -100,7 +100,7 @@ export class DocumentTransform {
               return stableCacheKeys.lookupArray(cacheKeys);
             }
           },
-          max: cacheSizes.documentTransform,
+          max: cacheSizes["documentTransform.cache"],
           cache: WeakCache<any, any>,
         }
       );

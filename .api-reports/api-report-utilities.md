@@ -340,6 +340,18 @@ export type AsStoreObject<T extends {
 // @public (undocumented)
 export function asyncMap<V, R>(observable: Observable<V>, mapFn: (value: V) => R | PromiseLike<R>, catchFn?: (error: any) => R | PromiseLike<R>): Observable<R>;
 
+// @internal
+export const AutoCleanedStrongCache: typeof StrongCache;
+
+// @internal (undocumented)
+export type AutoCleanedStrongCache<K, V> = StrongCache<K, V>;
+
+// @internal
+export const AutoCleanedWeakCache: typeof WeakCache;
+
+// @internal (undocumented)
+export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
+
 // Warning: (ae-forgotten-export) The symbol "InMemoryCache" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -462,24 +474,24 @@ class CacheGroup {
 
 // @public
 export interface CacheSizes {
+    "cache.fragmentQueryDocuments": number;
+    "documentTransform.cache": number;
+    "fragmentRegistry.findFragmentSpreads": number;
+    "fragmentRegistry.lookup": number;
+    "fragmentRegistry.transform": number;
+    "inMemoryCache.executeSelectionSet": number;
+    "inMemoryCache.executeSubSelectedArray": number;
+    "inMemoryCache.maybeBroadcastWatch": number;
+    "PersistedQueryLink.persistedQueryHashes": number;
+    "queryManager.getDocumentInfo": number;
+    "removeTypenameFromVariables.getVariableDefinitions": number;
     canonicalStringify: number;
-    documentTransform: number;
-    executeSelectionSet: number;
-    executeSubSelectedArray: number;
-    fragmentQueryDocuments: number;
-    fragmentRegistryFindFragmentSpreads: number;
-    fragmentRegistryLookup: number;
-    fragmentRegistryTransform: number;
-    getVariableDefinitions: number;
-    maybeBroadcastWatch: number;
     parser: number;
-    persistedQueryHashes: number;
     print: number;
-    queryManagerTransforms: number;
 }
 
 // @public
-export const cacheSizes: CacheSizes;
+export const cacheSizes: Partial<CacheSizes>;
 
 // @public (undocumented)
 const enum CacheWriteBehavior {
@@ -519,18 +531,6 @@ export const canUseWeakSet: boolean;
 
 // @public (undocumented)
 export function checkDocument(doc: DocumentNode): DocumentNode;
-
-// @public
-export const CleanStrongCache: typeof StrongCache;
-
-// @public (undocumented)
-export type CleanStrongCache<K, V> = StrongCache<K, V>;
-
-// @public
-export const CleanWeakCache: typeof WeakCache;
-
-// @public (undocumented)
-export type CleanWeakCache<K extends object, V> = WeakCache<K, V>;
 
 // @public
 export function cloneDeep<T>(value: T): T;
@@ -717,6 +717,38 @@ type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
 type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 
 // @public (undocumented)
+export const enum defaultCacheSizes {
+    // (undocumented)
+    "cache.fragmentQueryDocuments" = 1000,
+    // (undocumented)
+    "documentTransform.cache" = 2000,
+    // (undocumented)
+    "fragmentRegistry.findFragmentSpreads" = 4000,
+    // (undocumented)
+    "fragmentRegistry.lookup" = 1000,
+    // (undocumented)
+    "fragmentRegistry.transform" = 2000,
+    // (undocumented)
+    "inMemoryCache.executeSelectionSet" = 10000,
+    // (undocumented)
+    "inMemoryCache.executeSubSelectedArray" = 5000,
+    // (undocumented)
+    "inMemoryCache.maybeBroadcastWatch" = 5000,
+    // (undocumented)
+    "PersistedQueryLink.persistedQueryHashes" = 2000,
+    // (undocumented)
+    "queryManager.getDocumentInfo" = 2000,
+    // (undocumented)
+    "removeTypenameFromVariables.getVariableDefinitions" = 2000,
+    // (undocumented)
+    canonicalStringify = 1000,
+    // (undocumented)
+    parser = 1000,
+    // (undocumented)
+    print = 2000
+}
+
+// @public (undocumented)
 interface DefaultContext extends Record<string, any> {
 }
 
@@ -765,10 +797,10 @@ export class DocumentTransform {
     concat(otherTransform: DocumentTransform): DocumentTransform;
     // (undocumented)
     static identity(): DocumentTransform;
-    // (undocumented)
+    // @internal
     readonly left?: DocumentTransform;
     resetCache(): void;
-    // (undocumented)
+    // @internal
     readonly right?: DocumentTransform;
     // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
@@ -1064,7 +1096,7 @@ const getApolloCacheMemoryInternals: (() => {
 
 // @internal
 const getApolloClientMemoryInternals: (() => {
-    limits: CacheSizes;
+    limits: Partial<CacheSizes>;
     sizes: {
         global: {
             print: number | undefined;
@@ -2514,6 +2546,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
+    skipPollAttempt?: () => boolean;
     variables?: TVariables;
 }
 
@@ -2563,14 +2596,14 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:120:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:154:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:395:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:121:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:155:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:396:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:154:3 - (ae-forgotten-export) The symbol "ApolloError" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:156:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:201:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:253:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:260:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/utilities/graphql/storeUtils.ts:226:12 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:76:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts

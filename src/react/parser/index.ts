@@ -6,7 +6,11 @@ import type {
   VariableDefinitionNode,
   OperationDefinitionNode,
 } from "graphql";
-import { CleanWeakCache, cacheSizes } from "../../utilities/index.js";
+import {
+  AutoCleanedWeakCache,
+  cacheSizes,
+  defaultCacheSizes,
+} from "../../utilities/index.js";
 import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
 
 export enum DocumentType {
@@ -23,7 +27,7 @@ export interface IDocumentDefinition {
 
 let cache:
   | undefined
-  | CleanWeakCache<
+  | AutoCleanedWeakCache<
       DocumentNode,
       {
         name: string;
@@ -51,7 +55,9 @@ export function operationName(type: DocumentType) {
 // This parser is mostly used to safety check incoming documents.
 export function parser(document: DocumentNode): IDocumentDefinition {
   if (!cache) {
-    cache = new CleanWeakCache(cacheSizes.parser);
+    cache = new AutoCleanedWeakCache(
+      cacheSizes.parser || defaultCacheSizes.parser
+    );
   }
   const cached = cache.get(document);
   if (cached) return cached;

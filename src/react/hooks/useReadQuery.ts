@@ -43,9 +43,10 @@ export function useReadQuery<TData>(
     [queryRef]
   );
 
-  internalQueryRef.maybeResubscribe((promise) => {
-    updateWrappedQueryRef(queryRef, promise);
-  });
+  if (internalQueryRef.disposed) {
+    internalQueryRef.reinitialize();
+    updateWrappedQueryRef(queryRef, internalQueryRef.promise);
+  }
 
   React.useEffect(() => internalQueryRef.retain(), [internalQueryRef]);
 

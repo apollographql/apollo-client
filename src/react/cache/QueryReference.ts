@@ -107,6 +107,7 @@ export class InternalQueryReference<TData = unknown> {
   private reject: ((error: unknown) => void) | undefined;
 
   private references = 0;
+  private __disposed = false;
 
   constructor(
     observable: ObservableQuery<TData, any>,
@@ -121,7 +122,7 @@ export class InternalQueryReference<TData = unknown> {
       this.onDispose = options.onDispose;
     }
 
-    this.reinitialize();
+    this.setResult();
     this.subscribeToQuery();
 
     // Start a timer that will automatically dispose of the query if the
@@ -143,15 +144,16 @@ export class InternalQueryReference<TData = unknown> {
     this.promise.then(startDisposeTimer, startDisposeTimer);
   }
 
+  get disposed() {
+    return this.__disposed;
+  }
+
   get watchQueryOptions() {
     return this.observable.options;
   }
 
-  maybeResubscribe(updatePromise: (promise: QueryRefPromise<TData>) => void) {
-    if (this.subscription) {
-      return;
-    }
-
+  reinitialize() {
+    this.__disposed = false;
     const { observable } = this;
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
@@ -171,9 +173,7 @@ export class InternalQueryReference<TData = unknown> {
       }
 
       observable.resetDiff();
-      this.reinitialize();
-
-      updatePromise(this.promise);
+      this.setResult();
     } finally {
       observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
     }
@@ -253,6 +253,7 @@ export class InternalQueryReference<TData = unknown> {
     this.subscription?.unsubscribe();
     this.subscription = null;
     this.onDispose();
+    this.__disposed = true;
   }
 
   private onDispose() {
@@ -345,7 +346,7 @@ export class InternalQueryReference<TData = unknown> {
       .subscribe({ next: this.handleNext, error: this.handleError });
   }
 
-  private reinitialize() {
+  private setResult() {
     // Don't save this result as last result to prevent delivery of last result
     // when first subscribing
     const result = this.observable.getCurrentResult(false);

@@ -100,7 +100,7 @@ export class InternalQueryReference<TData = unknown> {
 
   public promise: QueryRefPromise<TData>;
 
-  private subscription: ObservableSubscription | null;
+  private subscription: ObservableSubscription | null = null;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
   private status: "idle" | "loading" = "loading";
@@ -142,12 +142,7 @@ export class InternalQueryReference<TData = unknown> {
       );
     }
 
-    this.subscription = observable
-      .filter(({ data }) => !equal(data, {}))
-      .subscribe({
-        next: this.handleNext,
-        error: this.handleError,
-      });
+    this.subscribeToQuery();
 
     // Start a timer that will automatically dispose of the query if the
     // suspended resource does not use this queryRef in the given time. This
@@ -188,14 +183,7 @@ export class InternalQueryReference<TData = unknown> {
       observable.silentSetOptions({ fetchPolicy: "standby" });
     }
 
-    this.subscription = observable
-      .filter(
-        (result) => !equal(result.data, {}) && !equal(result, this.result)
-      )
-      .subscribe({
-        next: this.handleNext,
-        error: this.handleError,
-      });
+    this.subscribeToQuery();
 
     if (originalFetchPolicy !== "no-cache") {
       observable.resetDiff();
@@ -390,5 +378,13 @@ export class InternalQueryReference<TData = unknown> {
       .catch(() => {});
 
     return returnedPromise;
+  }
+
+  private subscribeToQuery() {
+    this.subscription = this.observable
+      .filter(
+        (result) => !equal(result.data, {}) && !equal(result, this.result)
+      )
+      .subscribe({ next: this.handleNext, error: this.handleError });
   }
 }

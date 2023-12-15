@@ -1,7 +1,6 @@
 ---
 title: Memory management
 api_doc:
-  - "@apollo/client!cacheSizes:var"
   - "@apollo/client!CacheSizes:interface"
 ---
 
@@ -33,7 +32,8 @@ affect caches created after the fact).
 import type { CacheSizes } from '@apollo/client/utilities';
 
  globalThis[Symbol.for("apollo.cacheSize")] = {
-  parser: 100
+  parser: 100,
+  "fragmentRegistry.lookup": 500
  } satisfies Partial<CacheSizes>
  ```
 
@@ -54,4 +54,4 @@ print.reset();
 
 ### Cache Details
 
-<InterfaceDetails canonicalReference="@apollo/client!CacheSizes:interface" />
+<InterfaceDetails canonicalReference="@apollo/client!CacheSizes:interface" headingLevel={3}/>

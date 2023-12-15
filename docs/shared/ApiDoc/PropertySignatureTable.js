@@ -98,7 +98,12 @@ export function PropertySignatureTable({
               </MDX.inlineCode>
             </GridItem>
             <GridItem className="cell" fontSize="md" lineHeight="base">
-              <DocBlock canonicalReference={property.canonicalReference} />
+              <DocBlock
+                canonicalReference={property.canonicalReference}
+                summary
+                remarks
+                remarkCollapsible
+              />
             </GridItem>
           </React.Fragment>
         ))}

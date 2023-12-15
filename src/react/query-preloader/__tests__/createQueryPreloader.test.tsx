@@ -243,10 +243,10 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
   let fetchCount = 0;
   const link = new ApolloLink((operation) => {
-    let returnedCount = ++fetchCount;
+    let count = ++fetchCount;
     return new Observable((observer) => {
       setTimeout(() => {
-        observer.next({ data: { greeting: `Hello ${returnedCount}` } });
+        observer.next({ data: { greeting: `Hello ${count}` } });
         observer.complete();
       }, 100);
     });
@@ -421,9 +421,10 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
 
   let fetchCount = 0;
   const link = new ApolloLink((operation) => {
+    let count = ++fetchCount;
     return new Observable((observer) => {
       setTimeout(() => {
-        observer.next({ data: { greeting: `Hello ${++fetchCount}` } });
+        observer.next({ data: { greeting: `Hello ${count}` } });
         observer.complete();
       }, 10);
     });
@@ -591,9 +592,10 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
 
   let fetchCount = 0;
   const link = new ApolloLink((operation) => {
+    let count = ++fetchCount;
     return new Observable((observer) => {
       setTimeout(() => {
-        observer.next({ data: { greeting: `Hello ${++fetchCount}` } });
+        observer.next({ data: { greeting: `Hello ${count}` } });
         observer.complete();
       }, 10);
     });
@@ -761,9 +763,10 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
 
   let fetchCount = 0;
   const link = new ApolloLink((operation) => {
+    let count = ++fetchCount;
     return new Observable((observer) => {
       setTimeout(() => {
-        observer.next({ data: { greeting: `Hello ${++fetchCount}` } });
+        observer.next({ data: { greeting: `Hello ${count}` } });
         observer.complete();
       }, 10);
     });

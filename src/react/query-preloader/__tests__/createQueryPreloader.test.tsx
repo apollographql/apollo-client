@@ -387,7 +387,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
   // we wait a moment to ensure no network request is triggered
   // by the `cache.modify` (even with a slight delay)
-  await new Promise((resolve) => setTimeout(resolve, 10));
+  await wait(10);
   expect(count).toBe(1);
 
   // mount ReadQueryHook
@@ -395,7 +395,6 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
   // this should now trigger a network request
   expect(count).toBe(2);
-
   expect(queryRef).not.toBeDisposed();
 
   {

@@ -181,26 +181,28 @@ export class InternalQueryReference<TData = unknown> {
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
 
-    observable.resetLastResults();
-    observable.forceDiff();
-    observable.silentSetOptions({ fetchPolicy: "cache-first" });
+    if (originalFetchPolicy !== "no-cache") {
+      observable.resetLastResults();
+      observable.forceDiff();
+      observable.silentSetOptions({ fetchPolicy: "cache-first" });
 
-    const result = this.observable.getCurrentResult();
+      const result = this.observable.getCurrentResult();
 
-    if (!equal(result, this.result)) {
-      this.result = result;
+      if (!equal(result, this.result)) {
+        this.result = result;
 
-      if (this.result.partial) {
-        this.status = "loading";
-        this.promise = queryRef[PROMISE_SYMBOL] = wrapPromiseWithState(
-          new Promise((resolve, reject) => {
-            this.resolve = resolve;
-            this.reject = reject;
-          })
-        );
-      } else {
-        this.status = "idle";
-        this.promise = createFulfilledPromise(this.result);
+        if (this.result.partial) {
+          this.status = "loading";
+          this.promise = queryRef[PROMISE_SYMBOL] = wrapPromiseWithState(
+            new Promise((resolve, reject) => {
+              this.resolve = resolve;
+              this.reject = reject;
+            })
+          );
+        } else {
+          this.status = "idle";
+          this.promise = createFulfilledPromise(this.result);
+        }
       }
     }
 

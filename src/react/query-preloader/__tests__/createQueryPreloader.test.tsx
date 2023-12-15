@@ -241,9 +241,9 @@ test("useReadQuery auto-retains the queryRef and disposes of it when unmounted",
 test("useReadQuery auto-resubscribes the query after its disposed", async () => {
   const { query } = setupSimpleCase();
 
-  let count = 0;
+  let fetchCount = 0;
   const link = new ApolloLink((operation) => {
-    let returnedCount = ++count;
+    let returnedCount = ++fetchCount;
     return new Observable((observer) => {
       setTimeout(() => {
         observer.next({ data: { greeting: `Hello ${returnedCount}` } });
@@ -388,13 +388,13 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   // we wait a moment to ensure no network request is triggered
   // by the `cache.modify` (even with a slight delay)
   await wait(10);
-  expect(count).toBe(1);
+  expect(fetchCount).toBe(1);
 
   // mount ReadQueryHook
   await act(() => user.click(toggleButton));
 
   // this should now trigger a network request
-  expect(count).toBe(2);
+  expect(fetchCount).toBe(2);
   expect(queryRef).not.toBeDisposed();
 
   {
@@ -419,11 +419,11 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 test("useReadQuery handles auto-resubscribe on network-only fetch policy", async () => {
   const { query } = setupSimpleCase();
 
-  let count = 0;
+  let fetchCount = 0;
   const link = new ApolloLink((operation) => {
     return new Observable((observer) => {
       setTimeout(() => {
-        observer.next({ data: { greeting: `Hello ${++count}` } });
+        observer.next({ data: { greeting: `Hello ${++fetchCount}` } });
         observer.complete();
       }, 10);
     });
@@ -589,11 +589,11 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
 test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", async () => {
   const { query } = setupSimpleCase();
 
-  let count = 0;
+  let fetchCount = 0;
   const link = new ApolloLink((operation) => {
     return new Observable((observer) => {
       setTimeout(() => {
-        observer.next({ data: { greeting: `Hello ${++count}` } });
+        observer.next({ data: { greeting: `Hello ${++fetchCount}` } });
         observer.complete();
       }, 10);
     });
@@ -759,11 +759,11 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
 test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () => {
   const { query } = setupSimpleCase();
 
-  let count = 0;
+  let fetchCount = 0;
   const link = new ApolloLink((operation) => {
     return new Observable((observer) => {
       setTimeout(() => {
-        observer.next({ data: { greeting: `Hello ${++count}` } });
+        observer.next({ data: { greeting: `Hello ${++fetchCount}` } });
         observer.complete();
       }, 10);
     });

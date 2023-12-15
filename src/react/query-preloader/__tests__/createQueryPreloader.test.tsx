@@ -661,6 +661,37 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     });
   }
 
+  // unmount ReadQueryHook
+  await act(() => user.click(toggleButton));
+  await Profiler.takeRender();
+  await wait(0);
+
+  // Ensure that remounting without data in the cache will fetch and suspend
+  client.clearStore();
+
+  // mount ReadQueryHook
+  await act(() => user.click(toggleButton));
+
+  expect(fetchCount).toBe(3);
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
   await expect(Profiler).not.toRerender();
 });
 

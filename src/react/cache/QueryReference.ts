@@ -192,7 +192,13 @@ export class InternalQueryReference<TData = unknown> {
       if (!equal(result, this.result)) {
         this.result = result;
 
-        if (this.result.partial && !this.watchQueryOptions.returnPartialData) {
+        if (
+          result.data &&
+          (!result.partial || this.watchQueryOptions.returnPartialData)
+        ) {
+          this.status = "idle";
+          this.promise = createFulfilledPromise(this.result);
+        } else {
           this.status = "loading";
           this.promise = wrapPromiseWithState(
             new Promise((resolve, reject) => {
@@ -201,9 +207,6 @@ export class InternalQueryReference<TData = unknown> {
             })
           );
           updatePromise(this.promise);
-        } else {
-          this.status = "idle";
-          this.promise = createFulfilledPromise(this.result);
         }
       }
     }

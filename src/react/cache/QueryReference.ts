@@ -189,6 +189,8 @@ export class InternalQueryReference<TData = unknown> {
     if (originalFetchPolicy !== "no-cache") {
       observable.resetLastResults();
       observable.silentSetOptions({ fetchPolicy: "cache-first" });
+    } else {
+      observable.silentSetOptions({ fetchPolicy: "standby" });
     }
 
     this.subscription = observable

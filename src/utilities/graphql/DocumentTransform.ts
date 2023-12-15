@@ -5,6 +5,7 @@ import { invariant } from "../globals/index.js";
 import type { DocumentNode } from "graphql";
 import { WeakCache } from "@wry/caches";
 import { wrap } from "optimism";
+import { cacheSizes } from "../caching/index.js";
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 
@@ -96,7 +97,7 @@ export class DocumentTransform {
               return stableCacheKeys.lookupArray(cacheKeys);
             }
           },
-          max: 1000 /** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */,
+          max: cacheSizes["documentTransform.cache"],
           cache: WeakCache<any, any>,
         }
       );

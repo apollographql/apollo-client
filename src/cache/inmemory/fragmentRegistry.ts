@@ -9,7 +9,12 @@ import { visit } from "graphql";
 import { wrap } from "optimism";
 
 import type { FragmentMap } from "../../utilities/index.js";
-import { getFragmentDefinitions } from "../../utilities/index.js";
+import {
+  cacheSizes,
+  defaultCacheSizes,
+  getFragmentDefinitions,
+} from "../../utilities/index.js";
+import { WeakCache } from "@wry/caches";
 
 export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;
@@ -68,11 +73,29 @@ class FragmentRegistry implements FragmentRegistryAPI {
     const proto = FragmentRegistry.prototype;
     this.invalidate = (this.lookup = wrap(proto.lookup.bind(this), {
       makeCacheKey: (arg) => arg,
+      max:
+        cacheSizes["fragmentRegistry.lookup"] ||
+        defaultCacheSizes["fragmentRegistry.lookup"],
     })).dirty; // This dirty function is bound to the wrapped lookup method.
-    this.transform = wrap(proto.transform.bind(this));
-    this.findFragmentSpreads = wrap(proto.findFragmentSpreads.bind(this));
+    this.transform = wrap(proto.transform.bind(this), {
+      cache: WeakCache,
+      max:
+        cacheSizes["fragmentRegistry.transform"] ||
+        defaultCacheSizes["fragmentRegistry.transform"],
+    });
+    this.findFragmentSpreads = wrap(proto.findFragmentSpreads.bind(this), {
+      cache: WeakCache,
+      max:
+        cacheSizes["fragmentRegistry.findFragmentSpreads"] ||
+        defaultCacheSizes["fragmentRegistry.findFragmentSpreads"],
+    });
   }
 
+  /*
+   * Note:
+   * This method is only memoized so it can serve as a dependency to `tranform`,
+   * so calling `invalidate` will invalidate cache entries for `transform`.
+   */
   public lookup(fragmentName: string): FragmentDefinitionNode | null {
     return this.registry[fragmentName] || null;
   }

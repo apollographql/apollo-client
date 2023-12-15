@@ -137,6 +137,11 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
   possibleTypes?: PossibleTypesMap;
   typePolicies?: TypePolicies;
+  /**
+   * @deprecated
+   * Please use `cacheSizes` instead.
+   * TODO: write docs page, add link here
+   */
   resultCacheMaxSize?: number;
   canonizeResults?: boolean;
   fragments?: FragmentRegistryAPI;

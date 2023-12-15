@@ -19,6 +19,7 @@ import { StoreWriter } from "../writeToStore";
 import { ObjectCanon } from "../object-canon";
 import { TypePolicies } from "../policies";
 import { spyOnConsole } from "../../../testing/internal";
+import { defaultCacheSizes } from "../../../utilities";
 
 disableFragmentWarnings();
 
@@ -2119,15 +2120,17 @@ describe("Cache", () => {
 });
 
 describe("resultCacheMaxSize", () => {
-  const defaultMaxSize = Math.pow(2, 16);
-
   it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
     const cache = new InMemoryCache();
-    expect(cache["maybeBroadcastWatch"].options.max).toBe(defaultMaxSize);
-    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
-      defaultMaxSize
+    expect(cache["maybeBroadcastWatch"].options.max).toBe(
+      defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"]
     );
-    expect(cache["getFragmentDoc"].options.max).toBe(defaultMaxSize);
+    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
+      defaultCacheSizes["inMemoryCache.executeSelectionSet"]
+    );
+    expect(cache["getFragmentDoc"].options.max).toBe(
+      defaultCacheSizes["cache.fragmentQueryDocuments"]
+    );
   });
 
   it("configures max size on caches when resultCacheMaxSize is set", () => {
@@ -2137,7 +2140,9 @@ describe("resultCacheMaxSize", () => {
     expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
       resultCacheMaxSize
     );
-    expect(cache["getFragmentDoc"].options.max).toBe(defaultMaxSize);
+    expect(cache["getFragmentDoc"].options.max).toBe(
+      defaultCacheSizes["cache.fragmentQueryDocuments"]
+    );
   });
 });
 

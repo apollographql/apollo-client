@@ -176,6 +176,7 @@ export class InternalQueryReference<TData = unknown> {
     if (this.subscription) {
       return;
     }
+
     const { observable } = this;
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
@@ -203,14 +204,19 @@ export class InternalQueryReference<TData = unknown> {
       }
     }
 
+    const observer = {
+      next: this.handleNext,
+      error: this.handleError,
+    };
+
+    // Avoid triggering reobserve when resubscribing
+    observable["observers"].add(observer);
+
     this.subscription = observable
       .filter(
         (result) => !equal(result.data, {}) && !equal(result, this.result)
       )
-      .subscribe({
-        next: this.handleNext,
-        error: this.handleError,
-      });
+      .subscribe(observer);
 
     observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
   }

@@ -26,7 +26,7 @@ function CommentPageWithData() {
           variables: { commentId, commentContent },
           optimisticResponse: (vars, { IGNORE }) => {
             if (commentContent === "foo") {
-            // conditionally bail out of optimistic updates
+              // conditionally bail out of optimistic updates
               return IGNORE;
             }
             return {

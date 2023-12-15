@@ -306,6 +306,8 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     });
   }
 
+  expect(fetchCount).toBe(1);
+
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await wait(0);
@@ -329,6 +331,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     });
   }
 
+  expect(fetchCount).toBe(1);
   expect(queryRef).not.toBeDisposed();
 
   client.writeQuery({ query, data: { greeting: "Hello (cached)" } });
@@ -370,6 +373,8 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
@@ -484,6 +489,8 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     });
   }
 
+  expect(fetchCount).toBe(1);
+
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await wait(0);
@@ -507,6 +514,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     });
   }
 
+  expect(fetchCount).toBe(1);
   expect(queryRef).not.toBeDisposed();
 
   client.writeQuery({ query, data: { greeting: "Hello (cached)" } });
@@ -549,6 +557,8 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     });
   }
 
+  expect(fetchCount).toBe(1);
+
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await Profiler.takeRender();
@@ -563,9 +573,14 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     },
   });
 
+  // Ensure the delete doesn't immediately fetch
+  await wait(10);
+  expect(fetchCount).toBe(1);
+
   // mount ReadQueryHook
   await act(() => user.click(toggleButton));
 
+  expect(fetchCount).toBe(2);
   expect(queryRef).not.toBeDisposed();
 
   {
@@ -655,6 +670,8 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     });
   }
 
+  expect(fetchCount).toBe(1);
+
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await wait(0);
@@ -678,6 +695,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     });
   }
 
+  expect(fetchCount).toBe(1);
   expect(queryRef).not.toBeDisposed();
 
   client.writeQuery({ query, data: { greeting: "Hello (cached)" } });
@@ -720,6 +738,8 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     });
   }
 
+  expect(fetchCount).toBe(1);
+
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await Profiler.takeRender();
@@ -734,9 +754,14 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     },
   });
 
+  // Ensure delete doesn't refetch immediately
+  await wait(10);
+  expect(fetchCount).toBe(1);
+
   // mount ReadQueryHook
   await act(() => user.click(toggleButton));
 
+  expect(fetchCount).toBe(2);
   expect(queryRef).not.toBeDisposed();
 
   {
@@ -826,6 +851,8 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     });
   }
 
+  expect(fetchCount).toBe(1);
+
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await wait(0);
@@ -849,6 +876,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     });
   }
 
+  expect(fetchCount).toBe(1);
   expect(queryRef).not.toBeDisposed();
 
   // Ensure caches writes for the query are ignored by the hook
@@ -881,6 +909,8 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     });
   }
 
+  expect(fetchCount).toBe(1);
+
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await Profiler.takeRender();
@@ -895,9 +925,14 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     },
   });
 
+  // Ensure delete doesn't fire off request
+  await wait(10);
+  expect(fetchCount).toBe(1);
+
   // mount ReadQueryHook
   await act(() => user.click(toggleButton));
 
+  expect(fetchCount).toBe(1);
   expect(queryRef).not.toBeDisposed();
 
   // Ensure we are still rendering the same result and haven't refetched

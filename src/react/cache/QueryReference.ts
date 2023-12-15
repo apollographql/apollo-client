@@ -181,11 +181,6 @@ export class InternalQueryReference<TData = unknown> {
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
 
-    const observer = {
-      next: this.handleNext,
-      error: this.handleError,
-    };
-
     if (originalFetchPolicy !== "no-cache") {
       observable.resetLastResults();
       observable.silentSetOptions({ fetchPolicy: "cache-first" });
@@ -197,7 +192,10 @@ export class InternalQueryReference<TData = unknown> {
       .filter(
         (result) => !equal(result.data, {}) && !equal(result, this.result)
       )
-      .subscribe(observer);
+      .subscribe({
+        next: this.handleNext,
+        error: this.handleError,
+      });
 
     if (originalFetchPolicy !== "no-cache") {
       observable.forceDiff();

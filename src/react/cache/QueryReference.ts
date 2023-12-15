@@ -6,7 +6,6 @@ import type {
   OperationVariables,
   WatchQueryOptions,
 } from "../../core/index.js";
-import { isNetworkRequestSettled } from "../../core/index.js";
 import type {
   ObservableSubscription,
   PromiseWithState,
@@ -126,10 +125,7 @@ export class InternalQueryReference<TData = unknown> {
       this.onDispose = options.onDispose;
     }
 
-    if (
-      isNetworkRequestSettled(this.result.networkStatus) ||
-      this.isPartialResult()
-    ) {
+    if (this.isFullOrPartialResult()) {
       this.promise = createFulfilledPromise(this.result);
       this.status = "idle";
     } else {
@@ -198,7 +194,7 @@ export class InternalQueryReference<TData = unknown> {
 
       this.result = result;
 
-      if (this.isPartialResult()) {
+      if (this.isFullOrPartialResult()) {
         this.status = "idle";
         this.promise = createFulfilledPromise(this.result);
       } else {
@@ -393,7 +389,7 @@ export class InternalQueryReference<TData = unknown> {
       .subscribe({ next: this.handleNext, error: this.handleError });
   }
 
-  private isPartialResult() {
+  private isFullOrPartialResult() {
     return (
       this.result.data &&
       (!this.result.partial || this.watchQueryOptions.returnPartialData)

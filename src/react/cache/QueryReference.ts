@@ -175,39 +175,41 @@ export class InternalQueryReference<TData = unknown> {
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
 
-    if (originalFetchPolicy !== "no-cache") {
-      observable.resetLastResults();
-      observable.silentSetOptions({ fetchPolicy: "cache-first" });
-    } else {
-      observable.silentSetOptions({ fetchPolicy: "standby" });
-    }
+    try {
+      if (originalFetchPolicy !== "no-cache") {
+        observable.resetLastResults();
+        observable.silentSetOptions({ fetchPolicy: "cache-first" });
+      } else {
+        observable.silentSetOptions({ fetchPolicy: "standby" });
+      }
 
-    this.subscribeToQuery();
+      this.subscribeToQuery();
 
-    if (originalFetchPolicy !== "no-cache") {
-      observable.resetDiff();
-      const result = this.observable.getCurrentResult();
+      if (originalFetchPolicy !== "no-cache") {
+        observable.resetDiff();
+        const result = this.observable.getCurrentResult();
 
-      if (!equal(result, this.result)) {
-        this.result = result;
+        if (!equal(result, this.result)) {
+          this.result = result;
 
-        if (this.isPartialResult(result)) {
-          this.status = "idle";
-          this.promise = createFulfilledPromise(this.result);
-        } else {
-          this.status = "loading";
-          this.promise = wrapPromiseWithState(
-            new Promise((resolve, reject) => {
-              this.resolve = resolve;
-              this.reject = reject;
-            })
-          );
-          updatePromise(this.promise);
+          if (this.isPartialResult(result)) {
+            this.status = "idle";
+            this.promise = createFulfilledPromise(this.result);
+          } else {
+            this.status = "loading";
+            this.promise = wrapPromiseWithState(
+              new Promise((resolve, reject) => {
+                this.resolve = resolve;
+                this.reject = reject;
+              })
+            );
+            updatePromise(this.promise);
+          }
         }
       }
+    } finally {
+      observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
     }
-
-    observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
   }
 
   retain() {

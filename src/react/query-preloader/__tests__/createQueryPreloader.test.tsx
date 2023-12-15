@@ -243,11 +243,12 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
   let count = 0;
   const link = new ApolloLink((operation) => {
+    let returnedCount = ++count;
     return new Observable((observer) => {
       setTimeout(() => {
-        observer.next({ data: { greeting: `Hello ${++count}` } });
+        observer.next({ data: { greeting: `Hello ${returnedCount}` } });
         observer.complete();
-      }, 10);
+      }, 100);
     });
   });
 
@@ -384,8 +385,16 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     },
   });
 
+  // we wait a moment to ensure no network request is triggered
+  // by the `cache.modify` (even with a slight delay)
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  expect(count).toBe(1);
+
   // mount ReadQueryHook
   await act(() => user.click(toggleButton));
+
+  // this should now trigger a network request
+  expect(count).toBe(2);
 
   expect(queryRef).not.toBeDisposed();
 

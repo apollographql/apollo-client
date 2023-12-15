@@ -1029,6 +1029,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.subscriptions.clear();
     this.queryManager.stopQuery(this.queryId);
     this.observers.clear();
+    // this would actually be a good idea to prevent accidental errors,
+    // but would also be bound to make this class a lot more complicated
+    // this.queryInfo = undefined;
     this.isTornDown = true;
   }
 

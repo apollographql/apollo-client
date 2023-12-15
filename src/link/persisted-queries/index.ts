@@ -307,7 +307,11 @@ export const createPersistedQueryLink = (
     __DEV__ ?
       {
         getMemoryInternals() {
-          return { persistedQueryHashes: hashesByQuery?.size ?? 0 };
+          return {
+            PersistedQueryLink: {
+              persistedQueryHashes: hashesByQuery?.size ?? 0,
+            },
+          };
         },
       }
     : {}

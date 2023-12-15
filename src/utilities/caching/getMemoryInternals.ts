@@ -6,7 +6,8 @@ import type {
   ApolloCache,
 } from "../../core/index.js";
 import type { ApolloClient } from "../../core/index.js";
-import { CacheSizes, cacheSizes, defaultCacheSizes } from "./sizes.js";
+import type { CacheSizes } from "./sizes.js";
+import { cacheSizes, defaultCacheSizes } from "./sizes.js";
 
 const globalCaches: {
   print?: () => number;
@@ -132,26 +133,26 @@ function _getApolloClientMemoryInternals(this: ApolloClient<any>) {
   return {
     limits: getCurrentCacheSizes(),
     sizes: {
-      global: {
-        print: globalCaches.print?.(),
-        parser: globalCaches.parser?.(),
-        canonicalStringify: globalCaches.canonicalStringify?.(),
-      },
+      print: globalCaches.print?.(),
+      parser: globalCaches.parser?.(),
+      canonicalStringify: globalCaches.canonicalStringify?.(),
       links: linkInfo(this.link),
       queryManager: {
-        Transforms: this["queryManager"]["transformCache"].size,
+        getDocumentInfo: this["queryManager"]["transformCache"].size,
         documentTransforms: transformInfo(
           this["queryManager"].documentTransform
         ),
       },
-      cache: this.cache.getMemoryInternals?.(),
+      ...this.cache.getMemoryInternals?.(),
     },
   };
 }
 
 function _getApolloCacheMemoryInternals(this: ApolloCache<any>) {
   return {
-    fragmentQueryDocuments: getWrapperInformation(this["getFragmentDoc"]),
+    cache: {
+      fragmentQueryDocuments: getWrapperInformation(this["getFragmentDoc"]),
+    },
   };
 }
 
@@ -166,16 +167,16 @@ function _getInMemoryCacheMemoryInternals(this: InMemoryCache) {
 
   return {
     ..._getApolloCacheMemoryInternals.apply(this as any),
-    addTypenameTransform: transformInfo(this["addTypenameTransform"]),
-    storeReader: {
+    addTypenameDocumentTransform: transformInfo(this["addTypenameTransform"]),
+    inMemoryCache: {
       executeSelectionSet: getWrapperInformation(
         this["storeReader"]["executeSelectionSet"]
       ),
       executeSubSelectedArray: getWrapperInformation(
         this["storeReader"]["executeSubSelectedArray"]
       ),
+      maybeBroadcastWatch: getWrapperInformation(this["maybeBroadcastWatch"]),
     },
-    maybeBroadcastWatch: getWrapperInformation(this["maybeBroadcastWatch"]),
     fragmentRegistry: {
       findFragmentSpreads: getWrapperInformation(
         fragments?.findFragmentSpreads
@@ -198,12 +199,16 @@ function isDefined<T>(value: T | undefined | null): value is T {
   return value != null;
 }
 
-function transformInfo(transform?: DocumentTransform): number[] {
+function transformInfo(transform?: DocumentTransform) {
+  return recurseTransformInfo(transform).map((cache) => ({ cache }));
+}
+
+function recurseTransformInfo(transform?: DocumentTransform): number[] {
   return transform ?
       [
         getWrapperInformation(transform?.["performWork"]),
-        ...transformInfo(transform?.["left"]),
-        ...transformInfo(transform?.["right"]),
+        ...recurseTransformInfo(transform?.["left"]),
+        ...recurseTransformInfo(transform?.["right"]),
       ].filter(isDefined)
     : [];
 }

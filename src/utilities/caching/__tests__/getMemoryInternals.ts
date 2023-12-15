@@ -65,37 +65,50 @@ it("returns information about cache usage (empty caches)", () => {
   expect(client.getMemoryInternals?.()).toEqual({
     limits: defaultCacheSizesAsObject,
     sizes: {
-      cache: {
-        addTypenameTransform: [0],
-        fragmentQueryDocuments: 0,
-        fragmentRegistry: {
-          findFragmentSpreads: 0,
-          lookup: 0,
-          transform: 0,
-        },
-        maybeBroadcastWatch: 0,
-        storeReader: {
-          executeSelectionSet: 0,
-          executeSubSelectedArray: 0,
-        },
-      },
-      global: {
-        canonicalStringify: 0,
-        parser: 0,
-        print: 0,
-      },
-      links: [
+      parser: 0,
+      canonicalStringify: 0,
+      print: 0,
+      addTypenameDocumentTransform: [
         {
-          persistedQueryHashes: 0,
-        },
-        {
-          getVariableDefinitions: 0,
+          cache: 0,
         },
       ],
       queryManager: {
-        Transforms: 0,
-        documentTransforms: [0, 0],
+        getDocumentInfo: 0,
+        documentTransforms: [
+          {
+            cache: 0,
+          },
+          {
+            cache: 0,
+          },
+        ],
       },
+      fragmentRegistry: {
+        findFragmentSpreads: 0,
+        lookup: 0,
+        transform: 0,
+      },
+      cache: {
+        fragmentQueryDocuments: 0,
+      },
+      inMemoryCache: {
+        executeSelectionSet: 0,
+        executeSubSelectedArray: 0,
+        maybeBroadcastWatch: 0,
+      },
+      links: [
+        {
+          PersistedQueryLink: {
+            persistedQueryHashes: 0,
+          },
+        },
+        {
+          removeTypenameFromVariables: {
+            getVariableDefinitions: 0,
+          },
+        },
+      ],
     },
   });
 });
@@ -129,37 +142,50 @@ it("returns information about cache usage (some query triggered)", () => {
   expect(client.getMemoryInternals?.()).toStrictEqual({
     limits: defaultCacheSizesAsObject,
     sizes: {
-      cache: {
-        addTypenameTransform: [1],
-        fragmentQueryDocuments: 0,
-        fragmentRegistry: {
-          findFragmentSpreads: 1,
-          lookup: 0,
-          transform: 1,
-        },
-        maybeBroadcastWatch: 0,
-        storeReader: {
-          executeSelectionSet: 1,
-          executeSubSelectedArray: 0,
-        },
-      },
-      global: {
-        canonicalStringify: 0,
-        parser: 0,
-        print: 1,
-      },
-      links: [
+      parser: 0,
+      canonicalStringify: 0,
+      print: 1,
+      addTypenameDocumentTransform: [
         {
-          persistedQueryHashes: 1,
-        },
-        {
-          getVariableDefinitions: 0,
+          cache: 1,
         },
       ],
       queryManager: {
-        Transforms: 1,
-        documentTransforms: [1, 1],
+        getDocumentInfo: 1,
+        documentTransforms: [
+          {
+            cache: 1,
+          },
+          {
+            cache: 1,
+          },
+        ],
       },
+      fragmentRegistry: {
+        findFragmentSpreads: 1,
+        lookup: 0,
+        transform: 1,
+      },
+      cache: {
+        fragmentQueryDocuments: 0,
+      },
+      inMemoryCache: {
+        executeSelectionSet: 1,
+        executeSubSelectedArray: 0,
+        maybeBroadcastWatch: 0,
+      },
+      links: [
+        {
+          PersistedQueryLink: {
+            persistedQueryHashes: 1,
+          },
+        },
+        {
+          removeTypenameFromVariables: {
+            getVariableDefinitions: 0,
+          },
+        },
+      ],
     },
   });
 });

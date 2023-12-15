@@ -41,7 +41,11 @@ export function removeTypenameFromVariables(
     __DEV__ ?
       {
         getMemoryInternals() {
-          return { getVariableDefinitions: getVariableDefinitions?.size ?? 0 };
+          return {
+            removeTypenameFromVariables: {
+              getVariableDefinitions: getVariableDefinitions?.size ?? 0,
+            },
+          };
         },
       }
     : {}

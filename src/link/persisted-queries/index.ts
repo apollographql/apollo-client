@@ -301,6 +301,19 @@ export const createPersistedQueryLink = (
         };
       });
     }),
-    { resetHashCache }
+    {
+      resetHashCache,
+    },
+    __DEV__ ?
+      {
+        getMemoryInternals() {
+          return {
+            PersistedQueryLink: {
+              persistedQueryHashes: hashesByQuery?.size ?? 0,
+            },
+          };
+        },
+      }
+    : {}
   );
 };

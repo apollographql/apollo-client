@@ -5,6 +5,7 @@ import {
   cacheSizes,
   defaultCacheSizes,
 } from "../caching/index.js";
+import { registerGlobalCache } from "../caching/getMemoryInternals.js";
 
 let printCache!: AutoCleanedWeakCache<ASTNode, string>;
 export const print = Object.assign(
@@ -25,5 +26,8 @@ export const print = Object.assign(
     },
   }
 );
-
 print.reset();
+
+if (__DEV__) {
+  registerGlobalCache("print", () => (printCache ? printCache.size : 0));
+}

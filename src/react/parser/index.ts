@@ -11,6 +11,7 @@ import {
   cacheSizes,
   defaultCacheSizes,
 } from "../../utilities/index.js";
+import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
 
 export enum DocumentType {
   Query,
@@ -152,6 +153,10 @@ export function parser(document: DocumentNode): IDocumentDefinition {
 parser.resetCache = () => {
   cache = undefined;
 };
+
+if (__DEV__) {
+  registerGlobalCache("parser", () => (cache ? cache.size : 0));
+}
 
 export function verifyDocumentType(document: DocumentNode, type: DocumentType) {
   const operation = parser(document);

@@ -28,12 +28,18 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -59,7 +65,15 @@ interface BaseOptions {
 // @public (undocumented)
 export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => ApolloLink & {
     resetHashCache: () => void;
-};
+} & ({
+    getMemoryInternals(): {
+        PersistedQueryLink: {
+            persistedQueryHashes: number;
+        };
+    };
+} | {
+    getMemoryInternals?: undefined;
+});
 
 // @public (undocumented)
 interface DefaultContext extends Record<string, any> {

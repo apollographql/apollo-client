@@ -149,7 +149,9 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
     const { snapshot } = await Profiler.takeRender();
 
     expect(snapshot.result).toEqual({
-      data: { character: { id: "1", name: "Spider-Man" } },
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1597,7 +1599,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
 
   client.writeQuery({
     query: partialQuery,
-    data: { character: { id: "1" } },
+    data: { character: { __typename: "Character", id: "1" } },
     variables: { id: "1" },
   });
 
@@ -1614,7 +1616,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
     expect(snapshot.result).toEqual({
-      data: { character: { id: "1" } },
+      data: { character: { __typename: "Character", id: "1" } },
       networkStatus: NetworkStatus.loading,
       error: undefined,
     });
@@ -1625,7 +1627,9 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
-      data: { character: { id: "1", name: "Spider-Man" } },
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });

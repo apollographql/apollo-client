@@ -26,6 +26,7 @@ export function setupSimpleCase() {
 
 export interface VariablesCaseData {
   character: {
+    __typename: "Character";
     id: string;
     name: string;
   };
@@ -50,7 +51,11 @@ export function setupVariablesCase() {
   const mocks: MockedResponse<VariablesCaseData>[] = [...CHARACTERS].map(
     (name, index) => ({
       request: { query, variables: { id: String(index + 1) } },
-      result: { data: { character: { id: String(index + 1), name } } },
+      result: {
+        data: {
+          character: { __typename: "Character", id: String(index + 1), name },
+        },
+      },
       delay: 20,
     })
   );

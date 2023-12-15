@@ -94,6 +94,7 @@ export const getApolloCacheMemoryInternals =
   : undefined;
 
 function getCurrentCacheSizes() {
+// `defaultCacheSizes` is a `const enum` that will be inlined during build, so we have to reconstruct it's shape here
   const defaults: Record<keyof CacheSizes, number> = {
     parser: defaultCacheSizes["parser"],
     canonicalStringify: defaultCacheSizes["canonicalStringify"],

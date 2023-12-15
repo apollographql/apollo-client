@@ -144,7 +144,10 @@ function _getApolloClientMemoryInternals(this: ApolloClient<any>) {
           this["queryManager"].documentTransform
         ),
       },
-      ...this.cache.getMemoryInternals?.(),
+      ...(this.cache.getMemoryInternals?.() as Partial<
+        ReturnType<typeof _getApolloCacheMemoryInternals>
+      > &
+        Partial<ReturnType<typeof _getInMemoryCacheMemoryInternals>>),
     },
   };
 }

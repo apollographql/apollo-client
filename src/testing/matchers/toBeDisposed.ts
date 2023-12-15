@@ -22,9 +22,7 @@ export const toBeDisposed: MatcherFunction<[]> = function (queryRef) {
     throw new Error(`\n${hint}\n\nmust be called with a valid QueryReference`);
   }
 
-  // This is a bit of a hacky check but we know the subscription is removed
-  // on dispose, so we can check to see if its set or not
-  const pass = unwrapQueryRef(queryRef)["subscription"] === null;
+  const pass = unwrapQueryRef(queryRef).disposed;
 
   return {
     pass,

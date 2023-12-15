@@ -358,7 +358,6 @@ export class InternalQueryReference<TData = unknown> {
     this.result = result;
     this.promise =
       (
-        // Check if we have a full data set or allow partial data
         result.data &&
         (!result.partial || this.watchQueryOptions.returnPartialData)
       ) ?

@@ -11,12 +11,38 @@ import { removeTypenameFromVariables } from "../../../link/remove-typename";
 import crypto from "crypto";
 // importing react so the `parser` cache initializes
 import "../../../react";
+import { cacheSizes, defaultCacheSizes } from "../sizes";
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");
   hash.update(data);
   return hash.digest("hex");
 }
+
+const defaultCacheSizesAsObject = {
+  parser: defaultCacheSizes["parser"],
+  canonicalStringify: defaultCacheSizes["canonicalStringify"],
+  print: defaultCacheSizes["print"],
+  "documentTransform.cache": defaultCacheSizes["documentTransform.cache"],
+  "queryManager.getDocumentInfo":
+    defaultCacheSizes["queryManager.getDocumentInfo"],
+  "PersistedQueryLink.persistedQueryHashes":
+    defaultCacheSizes["PersistedQueryLink.persistedQueryHashes"],
+  "fragmentRegistry.transform": defaultCacheSizes["fragmentRegistry.transform"],
+  "fragmentRegistry.lookup": defaultCacheSizes["fragmentRegistry.lookup"],
+  "fragmentRegistry.findFragmentSpreads":
+    defaultCacheSizes["fragmentRegistry.findFragmentSpreads"],
+  "cache.fragmentQueryDocuments":
+    defaultCacheSizes["cache.fragmentQueryDocuments"],
+  "removeTypenameFromVariables.getVariableDefinitions":
+    defaultCacheSizes["removeTypenameFromVariables.getVariableDefinitions"],
+  "inMemoryCache.maybeBroadcastWatch":
+    defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"],
+  "inMemoryCache.executeSelectionSet":
+    defaultCacheSizes["inMemoryCache.executeSelectionSet"],
+  "inMemoryCache.executeSubSelectedArray":
+    defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
+};
 
 it("returns information about cache usage (empty caches)", () => {
   const client = new ApolloClient({
@@ -37,22 +63,7 @@ it("returns information about cache usage (empty caches)", () => {
       .concat(ApolloLink.empty()),
   });
   expect(client.getMemoryInternals?.()).toEqual({
-    limits: {
-      canonicalStringify: 1000,
-      documentTransform: 2000,
-      executeSelectionSet: 10000,
-      executeSubSelectedArray: 5000,
-      fragmentQueryDocuments: 1000,
-      fragmentRegistryFindFragmentSpreads: 4000,
-      fragmentRegistryLookup: 1000,
-      fragmentRegistryTransform: 2000,
-      getVariableDefinitions: 2000,
-      maybeBroadcastWatch: 5000,
-      parser: 1000,
-      persistedQueryHashes: 2000,
-      print: 2000,
-      queryManagerTransforms: 2000,
-    },
+    limits: defaultCacheSizesAsObject,
     sizes: {
       cache: {
         addTypenameTransform: [0],
@@ -116,22 +127,7 @@ it("returns information about cache usage (some query triggered)", () => {
     `,
   });
   expect(client.getMemoryInternals?.()).toStrictEqual({
-    limits: {
-      canonicalStringify: 1000,
-      documentTransform: 2000,
-      executeSelectionSet: 10000,
-      executeSubSelectedArray: 5000,
-      fragmentQueryDocuments: 1000,
-      fragmentRegistryFindFragmentSpreads: 4000,
-      fragmentRegistryLookup: 1000,
-      fragmentRegistryTransform: 2000,
-      getVariableDefinitions: 2000,
-      maybeBroadcastWatch: 5000,
-      parser: 1000,
-      persistedQueryHashes: 2000,
-      print: 2000,
-      queryManagerTransforms: 2000,
-    },
+    limits: defaultCacheSizesAsObject,
     sizes: {
       cache: {
         addTypenameTransform: [1],
@@ -165,5 +161,18 @@ it("returns information about cache usage (some query triggered)", () => {
         documentTransforms: [1, 1],
       },
     },
+  });
+});
+
+it("reports user-declared cacheSizes", () => {
+  const client = new ApolloClient({
+    cache: new InMemoryCache({}),
+  });
+
+  cacheSizes["inMemoryCache.executeSubSelectedArray"] = 90;
+
+  expect(client.getMemoryInternals?.().limits).toStrictEqual({
+    ...defaultCacheSizesAsObject,
+    "inMemoryCache.executeSubSelectedArray": 90,
   });
 });

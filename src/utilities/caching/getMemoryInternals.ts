@@ -6,7 +6,7 @@ import type {
   ApolloCache,
 } from "../../core/index.js";
 import type { ApolloClient } from "../../core/index.js";
-import { cacheSizes } from "./sizes.js";
+import { CacheSizes, cacheSizes, defaultCacheSizes } from "./sizes.js";
 
 const globalCaches: {
   print?: () => number;
@@ -92,11 +92,45 @@ export const getApolloCacheMemoryInternals =
     >)
   : undefined;
 
+function getCurrentCacheSizes() {
+  const defaults: Record<keyof CacheSizes, number> = {
+    parser: defaultCacheSizes["parser"],
+    canonicalStringify: defaultCacheSizes["canonicalStringify"],
+    print: defaultCacheSizes["print"],
+    "documentTransform.cache": defaultCacheSizes["documentTransform.cache"],
+    "queryManager.getDocumentInfo":
+      defaultCacheSizes["queryManager.getDocumentInfo"],
+    "PersistedQueryLink.persistedQueryHashes":
+      defaultCacheSizes["PersistedQueryLink.persistedQueryHashes"],
+    "fragmentRegistry.transform":
+      defaultCacheSizes["fragmentRegistry.transform"],
+    "fragmentRegistry.lookup": defaultCacheSizes["fragmentRegistry.lookup"],
+    "fragmentRegistry.findFragmentSpreads":
+      defaultCacheSizes["fragmentRegistry.findFragmentSpreads"],
+    "cache.fragmentQueryDocuments":
+      defaultCacheSizes["cache.fragmentQueryDocuments"],
+    "removeTypenameFromVariables.getVariableDefinitions":
+      defaultCacheSizes["removeTypenameFromVariables.getVariableDefinitions"],
+    "inMemoryCache.maybeBroadcastWatch":
+      defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"],
+    "inMemoryCache.executeSelectionSet":
+      defaultCacheSizes["inMemoryCache.executeSelectionSet"],
+    "inMemoryCache.executeSubSelectedArray":
+      defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
+  };
+  return Object.fromEntries(
+    Object.entries(defaults).map(([k, v]) => [
+      k,
+      cacheSizes[k as keyof CacheSizes] || v,
+    ])
+  );
+}
+
 function _getApolloClientMemoryInternals(this: ApolloClient<any>) {
   if (!__DEV__) throw new Error("only supported in development mode");
 
   return {
-    limits: cacheSizes,
+    limits: getCurrentCacheSizes(),
     sizes: {
       global: {
         print: globalCaches.print?.(),

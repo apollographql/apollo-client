@@ -1,5 +1,6 @@
 import * as React from "rehackt";
 import {
+  getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
 } from "../cache/QueryReference.js";
@@ -43,6 +44,11 @@ export function useReadQuery<TData>(
     [queryRef]
   );
 
+  const getPromise = React.useCallback(
+    () => getWrappedPromise(queryRef),
+    [queryRef]
+  );
+
   if (internalQueryRef.disposed) {
     internalQueryRef.reinitialize();
     updateWrappedQueryRef(queryRef, internalQueryRef.promise);
@@ -60,8 +66,8 @@ export function useReadQuery<TData>(
       },
       [internalQueryRef]
     ),
-    queryRef.toPromise,
-    queryRef.toPromise
+    getPromise,
+    getPromise
   );
 
   const result = __use(promise);

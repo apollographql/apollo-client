@@ -18,8 +18,7 @@ import type { QueryKey } from "./types.js";
 import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
 import { wrapPromiseWithState } from "../../utilities/index.js";
 
-/** @internal */
-export type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
+type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
 
 type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
@@ -38,7 +37,7 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
 export interface QueryReference<TData = unknown, TVariables = unknown> {
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
-  toPromise(): Promise<ApolloQueryResult<TData>>;
+  toPromise(): Promise<void>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -48,21 +47,28 @@ interface InternalQueryReferenceOptions {
 
 export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   internalQueryRef: InternalQueryReference<TData>
-): QueryReference<TData, TVariables> {
-  const ref = {
+) {
+  const ref: QueryReference<TData, TVariables> = {
     toPromise() {
-      // There is a chance the query ref's promise has been updated in the time
-      // the original promise had been suspended. In that case, we want to use
-      // it instead of the older promise which may contain outdated data.
-      return internalQueryRef.promise.status === "fulfilled" ?
-          internalQueryRef.promise
-        : ref[PROMISE_SYMBOL];
+      // We resolve with `undefined` because we want to discourage use of the
+      // server result from the queryRef. If users need access to the data, its
+      // better to use `client.query()` directly to load that data.
+      return getWrappedPromise(ref).then(() => {});
     },
     [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
     [PROMISE_SYMBOL]: internalQueryRef.promise,
   };
 
   return ref;
+}
+
+export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
+  const internalQueryRef = unwrapQueryRef(queryRef);
+  const promise = queryRef[PROMISE_SYMBOL];
+
+  return internalQueryRef.promise.status === "fulfilled" ?
+      internalQueryRef.promise
+    : promise;
 }
 
 export function unwrapQueryRef<TData>(

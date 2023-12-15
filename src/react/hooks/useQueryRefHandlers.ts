@@ -1,13 +1,11 @@
 import * as React from "rehackt";
 import {
+  getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "../cache/QueryReference.js";
-import type {
-  QueryRefPromise,
-  QueryReference,
-} from "../cache/QueryReference.js";
+import type { QueryReference } from "../cache/QueryReference.js";
 import type { OperationVariables } from "../../core/types.js";
 import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";
 import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";
@@ -37,10 +35,7 @@ export function useQueryRefHandlers<
     setPreviousQueryRef(queryRef);
     setWrappedQueryRef(queryRef);
   } else {
-    updateWrappedQueryRef(
-      queryRef,
-      wrappedQueryRef.toPromise() as QueryRefPromise<TData>
-    );
+    updateWrappedQueryRef(queryRef, getWrappedPromise(wrappedQueryRef));
   }
 
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(

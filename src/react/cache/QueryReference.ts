@@ -37,7 +37,7 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
 export interface QueryReference<TData = unknown, TVariables = unknown> {
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
-  toPromise(): Promise<void>;
+  toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -50,10 +50,18 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(
 ) {
   const ref: QueryReference<TData, TVariables> = {
     toPromise() {
-      // We resolve with `undefined` because we want to discourage use of the
-      // server result from the queryRef. If users need access to the data, its
-      // better to use `client.query()` directly to load that data.
-      return getWrappedPromise(ref).then(() => {});
+      // We void resolving this promise with the query data because we want to
+      // discourage using the server data directly from the queryRef and instead
+      // should be accessed through `useReadQuery`. If the server data is needed
+      // its better to use `client.query()` directly.
+      //
+      // Here we resolve with the ref itself to make using this in React Router
+      // or TanStack Router `loader` functions a bit more ergonomic e.g.
+      //
+      // function loader() {
+      //  return { queryRef: await preloadQuery(query).toPromise() }
+      // }
+      return getWrappedPromise(ref).then(() => ref);
     },
     [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
     [PROMISE_SYMBOL]: internalQueryRef.promise,

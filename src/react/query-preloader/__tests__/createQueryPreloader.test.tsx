@@ -1604,8 +1604,8 @@ test("creates unique query refs when calling preloadQuery with the same query", 
   expect(Object.is(queryRef1, queryRef2)).toBe(false);
   expect(Object.is(unwrappedQueryRef1, unwrappedQueryRef2)).toBe(false);
 
-  await expect(queryRef1.toPromise()).resolves.toBeUndefined();
-  await expect(queryRef2.toPromise()).resolves.toBeUndefined();
+  await expect(queryRef1.toPromise()).resolves.toBe(queryRef1);
+  await expect(queryRef2.toPromise()).resolves.toBe(queryRef2);
 });
 
 test("does not suspend and returns partial data when `returnPartialData` is `true`", async () => {

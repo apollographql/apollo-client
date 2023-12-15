@@ -176,34 +176,34 @@ export class InternalQueryReference<TData = unknown> {
     if (this.subscription) {
       return;
     }
+    const { observable } = this;
 
-    this.observable.silentSetOptions({
-      fetchPolicy: "cache-first",
-      nextFetchPolicy: this.observable.options.fetchPolicy,
-    });
-    this.observable.resetLastResults();
-    this.observable.forceDiff();
+    const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
+
+    observable.resetLastResults();
+    observable.forceDiff();
+    observable.silentSetOptions({ fetchPolicy: "cache-first" });
+
     const result = this.observable.getCurrentResult();
 
-    if (result.data === void 0) {
-      result.data = this.result.data;
+    if (!equal(result, this.result)) {
+      this.result = result;
+
+      if (this.result.partial) {
+        this.status = "loading";
+        this.promise = queryRef[PROMISE_SYMBOL] = wrapPromiseWithState(
+          new Promise((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+          })
+        );
+      } else {
+        this.status = "idle";
+        this.promise = createFulfilledPromise(this.result);
+      }
     }
 
-    this.result = result;
-    if (this.result.partial) {
-      this.status = "loading";
-      this.promise = queryRef[PROMISE_SYMBOL] = wrapPromiseWithState(
-        new Promise((resolve, reject) => {
-          this.resolve = resolve;
-          this.reject = reject;
-        })
-      );
-    } else {
-      this.status = "idle";
-      this.promise = createFulfilledPromise(this.result);
-    }
-
-    this.subscription = this.observable
+    this.subscription = observable
       .filter(
         (result) => !equal(result.data, {}) && !equal(result, this.result)
       )
@@ -211,6 +211,8 @@ export class InternalQueryReference<TData = unknown> {
         next: this.handleNext,
         error: this.handleError,
       });
+
+    observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
   }
 
   retain() {

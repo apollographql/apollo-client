@@ -320,6 +320,8 @@ export class QueryInfo {
   private lastWatch?: Cache.WatchOptions;
 
   private updateWatch(variables = this.variables) {
+    // this is not *required* to make the tests pass, but would be a good idea?
+    // this.stopped = false;
     const oq = this.observableQuery;
     if (oq && oq.options.fetchPolicy === "no-cache") {
       return;

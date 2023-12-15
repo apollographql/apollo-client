@@ -181,10 +181,24 @@ export class InternalQueryReference<TData = unknown> {
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
 
+    const observer = {
+      next: this.handleNext,
+      error: this.handleError,
+    };
+
     if (originalFetchPolicy !== "no-cache") {
       observable.resetLastResults();
-      observable.forceDiff();
       observable.silentSetOptions({ fetchPolicy: "cache-first" });
+    }
+
+    this.subscription = observable
+      .filter(
+        (result) => !equal(result.data, {}) && !equal(result, this.result)
+      )
+      .subscribe(observer);
+
+    if (originalFetchPolicy !== "no-cache") {
+      observable.forceDiff();
 
       const result = this.observable.getCurrentResult();
 
@@ -205,20 +219,6 @@ export class InternalQueryReference<TData = unknown> {
         }
       }
     }
-
-    const observer = {
-      next: this.handleNext,
-      error: this.handleError,
-    };
-
-    // Avoid triggering reobserve when resubscribing
-    observable["observers"].add(observer);
-
-    this.subscription = observable
-      .filter(
-        (result) => !equal(result.data, {}) && !equal(result, this.result)
-      )
-      .subscribe(observer);
 
     observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
   }

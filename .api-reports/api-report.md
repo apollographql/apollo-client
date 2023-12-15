@@ -697,9 +697,6 @@ export { disableExperimentalFragmentVariables }
 
 export { disableFragmentWarnings }
 
-// @public (undocumented)
-type DisposeFn = () => void;
-
 export { DocumentNode }
 
 // @public (undocumented)
@@ -1249,6 +1246,8 @@ class InternalQueryReference<TData = unknown> {
     // (undocumented)
     refetch(variables: OperationVariables | undefined): Promise<ApolloQueryResult<TData>>;
     // (undocumented)
+    reinitialize(): void;
+    // (undocumented)
     result: ApolloQueryResult<TData>;
     // (undocumented)
     retain(): () => void;
@@ -1750,6 +1749,8 @@ export class ObservableQuery<TData = any, TVariables extends OperationVariables 
     //
     // (undocumented)
     reobserveAsConcast(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Concast<ApolloQueryResult<TData>>;
+    // @internal (undocumented)
+    resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
     // (undocumented)
@@ -2066,6 +2067,8 @@ class QueryInfo {
     // (undocumented)
     reset(): void;
     // (undocumented)
+    resetDiff(): void;
+    // (undocumented)
     resetLastWrite(): void;
     // (undocumented)
     setDiff(diff: Cache_2.DiffResult<any> | null): void;
@@ -2241,10 +2244,6 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
     //
     // (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-    // Warning: (ae-forgotten-export) The symbol "DisposeFn" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    retain: () => DisposeFn;
     // (undocumented)
     toPromise(): Promise<ApolloQueryResult<TData>>;
 }

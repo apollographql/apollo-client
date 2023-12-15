@@ -355,13 +355,13 @@ export class InternalQueryReference<TData = unknown> {
       return;
     }
 
-    const isFullOrPartialResult =
-      result.data &&
-      (!result.partial || this.watchQueryOptions.returnPartialData);
-
     this.result = result;
     this.promise =
-      isFullOrPartialResult ?
+      (
+        // Check if we have a full data set or allow partial data
+        result.data &&
+        (!result.partial || this.watchQueryOptions.returnPartialData)
+      ) ?
         createFulfilledPromise(result)
       : this.createPendingPromise();
   }

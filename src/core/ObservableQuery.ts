@@ -225,8 +225,9 @@ export class ObservableQuery<
     });
   }
 
-  public forceDiff() {
-    this.queryInfo.forceDiff();
+  /** @internal */
+  public resetDiff() {
+    this.queryInfo.resetDiff();
   }
 
   public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {

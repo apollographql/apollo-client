@@ -198,8 +198,7 @@ export class InternalQueryReference<TData = unknown> {
       });
 
     if (originalFetchPolicy !== "no-cache") {
-      observable.forceDiff();
-
+      observable.resetDiff();
       const result = this.observable.getCurrentResult();
 
       if (!equal(result, this.result)) {

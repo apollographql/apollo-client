@@ -1096,7 +1096,9 @@ const getApolloCacheMemoryInternals: (() => {
 
 // @internal
 const getApolloClientMemoryInternals: (() => {
-    limits: Partial<CacheSizes>;
+    limits: {
+        [k: string]: number;
+    };
     sizes: {
         global: {
             print: number | undefined;

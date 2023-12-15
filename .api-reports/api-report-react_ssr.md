@@ -414,24 +414,6 @@ namespace Cache_2 {
     import Fragment = DataProxy.Fragment;
 }
 
-// @public
-interface CacheSizes {
-    "cache.fragmentQueryDocuments": number;
-    "documentTransform.cache": number;
-    "fragmentRegistry.findFragmentSpreads": number;
-    "fragmentRegistry.lookup": number;
-    "fragmentRegistry.transform": number;
-    "inMemoryCache.executeSelectionSet": number;
-    "inMemoryCache.executeSubSelectedArray": number;
-    "inMemoryCache.maybeBroadcastWatch": number;
-    "PersistedQueryLink.persistedQueryHashes": number;
-    "queryManager.getDocumentInfo": number;
-    "removeTypenameFromVariables.getVariableDefinitions": number;
-    canonicalStringify: number;
-    parser: number;
-    print: number;
-}
-
 // @public (undocumented)
 const enum CacheWriteBehavior {
     // (undocumented)
@@ -696,7 +678,9 @@ const getApolloCacheMemoryInternals: (() => {
 
 // @internal
 const getApolloClientMemoryInternals: (() => {
-    limits: Partial<CacheSizes>;
+    limits: {
+        [k: string]: number;
+    };
     sizes: {
         global: {
             print: number | undefined;
@@ -1633,7 +1617,6 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:201:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:260:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/utilities/caching/getMemoryInternals.ts:66:44 - (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

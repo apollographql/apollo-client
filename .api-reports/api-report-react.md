@@ -508,24 +508,6 @@ namespace Cache_2 {
     import Fragment = DataProxy.Fragment;
 }
 
-// @public
-interface CacheSizes {
-    "cache.fragmentQueryDocuments": number;
-    "documentTransform.cache": number;
-    "fragmentRegistry.findFragmentSpreads": number;
-    "fragmentRegistry.lookup": number;
-    "fragmentRegistry.transform": number;
-    "inMemoryCache.executeSelectionSet": number;
-    "inMemoryCache.executeSubSelectedArray": number;
-    "inMemoryCache.maybeBroadcastWatch": number;
-    "PersistedQueryLink.persistedQueryHashes": number;
-    "queryManager.getDocumentInfo": number;
-    "removeTypenameFromVariables.getVariableDefinitions": number;
-    canonicalStringify: number;
-    parser: number;
-    print: number;
-}
-
 // @public (undocumented)
 const enum CacheWriteBehavior {
     // (undocumented)
@@ -861,7 +843,9 @@ const getApolloCacheMemoryInternals: (() => {
 
 // @internal
 const getApolloClientMemoryInternals: (() => {
-    limits: Partial<CacheSizes>;
+    limits: {
+        [k: string]: number;
+    };
     sizes: {
         global: {
             print: number | undefined;
@@ -2325,7 +2309,6 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:31:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:50:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
-// src/utilities/caching/getMemoryInternals.ts:66:44 - (ae-forgotten-export) The symbol "CacheSizes" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

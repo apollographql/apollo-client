@@ -122,7 +122,7 @@ export class InternalQueryReference<TData = unknown> {
       this.onDispose = options.onDispose;
     }
 
-    this.setResult();
+    this.reinitialize();
     this.subscribeToQuery();
 
     // Start a timer that will automatically dispose of the query if the
@@ -172,7 +172,7 @@ export class InternalQueryReference<TData = unknown> {
       }
 
       observable.resetDiff();
-      this.setResult();
+      this.reinitialize();
 
       updatePromise(this.promise);
     } finally {
@@ -357,7 +357,7 @@ export class InternalQueryReference<TData = unknown> {
       .subscribe({ next: this.handleNext, error: this.handleError });
   }
 
-  private setResult() {
+  private reinitialize() {
     // Don't save this result as last result to prevent delivery of last result
     // when first subscribing
     const result = this.observable.getCurrentResult(false);

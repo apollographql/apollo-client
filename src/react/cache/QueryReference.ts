@@ -93,7 +93,7 @@ type ObservedOptions = Pick<
 >;
 
 export class InternalQueryReference<TData = unknown> {
-  public result: ApolloQueryResult<TData>;
+  public result!: ApolloQueryResult<TData>;
   public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
 
@@ -117,15 +117,12 @@ export class InternalQueryReference<TData = unknown> {
     this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
-    // Don't save this result as last result to prevent delivery of last result
-    // when first subscribing
-    this.result = observable.getCurrentResult(false);
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;
     }
 
-    this.setStatusAndPromise();
+    this.setResult();
     this.subscribeToQuery();
 
     // Start a timer that will automatically dispose of the query if the
@@ -175,18 +172,9 @@ export class InternalQueryReference<TData = unknown> {
       }
 
       observable.resetDiff();
-      const result = this.observable.getCurrentResult();
+      this.setResult();
 
-      if (equal(result, this.result)) {
-        return;
-      }
-
-      this.result = result;
-      this.setStatusAndPromise();
-
-      if (!this.isFullOrPartialResult()) {
-        updatePromise(this.promise);
-      }
+      updatePromise(this.promise);
     } finally {
       observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
     }
@@ -369,16 +357,20 @@ export class InternalQueryReference<TData = unknown> {
       .subscribe({ next: this.handleNext, error: this.handleError });
   }
 
-  private isFullOrPartialResult() {
-    return (
-      this.result.data &&
-      (!this.result.partial || this.watchQueryOptions.returnPartialData)
-    );
-  }
+  private setResult() {
+    // Don't save this result as last result to prevent delivery of last result
+    // when first subscribing
+    const result = this.observable.getCurrentResult(false);
 
-  private setStatusAndPromise() {
-    if (this.isFullOrPartialResult()) {
-      this.promise = createFulfilledPromise(this.result);
+    if (equal(result, this.result)) {
+      return;
+    }
+
+    if (
+      result.data &&
+      (!result.partial || this.watchQueryOptions.returnPartialData)
+    ) {
+      this.promise = createFulfilledPromise(result);
       this.status = "idle";
     } else {
       this.status = "loading";
@@ -389,5 +381,7 @@ export class InternalQueryReference<TData = unknown> {
         })
       );
     }
+
+    this.result = result;
   }
 }

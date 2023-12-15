@@ -656,7 +656,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   await act(() => user.click(toggleButton));
 
   // Ensure we aren't refetching the data by checking we still render the same
-  // cache result
+  // result
   {
     const { renderedComponents, snapshot } = await Profiler.takeRender();
 
@@ -670,6 +670,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
 
   expect(queryRef).not.toBeDisposed();
 
+  // Ensure caches writes for the query are ignored by the hook
   client.writeQuery({ query, data: { greeting: "Hello (cached)" } });
 
   await expect(Profiler).not.toRerender();
@@ -681,16 +682,14 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
 
   expect(queryRef).toBeDisposed();
 
-  // Write a cache result to ensure that remounting will read this result
-  // instead of the old one
+  // Write a cache result to ensure that remounting will ignore this result
   client.writeQuery({ query, data: { greeting: "While you were away" } });
   // mount ReadQueryHook
   await act(() => user.click(toggleButton));
 
   expect(queryRef).not.toBeDisposed();
 
-  // Ensure we read the newest cache result changed while this queryRef was
-  // disposed
+  // Ensure we continue to read the same value
   {
     const { snapshot } = await Profiler.takeRender();
 
@@ -708,7 +707,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
 
   expect(queryRef).toBeDisposed();
 
-  // Remove cached data to ensure remounting will refetch the data
+  // Remove cached data to verify this type of cache change is also ignored
   client.cache.modify({
     fields: {
       greeting: (_, { DELETE }) => DELETE,
@@ -720,6 +719,8 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
 
   expect(queryRef).not.toBeDisposed();
 
+  // Ensure we are still rendering the same result and haven't refetched
+  // anything based on missing cache data
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
 

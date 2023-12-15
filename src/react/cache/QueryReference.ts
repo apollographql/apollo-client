@@ -102,7 +102,6 @@ export class InternalQueryReference<TData = unknown> {
   private subscription: ObservableSubscription | null = null;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
-  private status: "idle" | "loading" = "loading";
 
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
@@ -261,19 +260,18 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private handleNext(result: ApolloQueryResult<TData>) {
-    switch (this.status) {
-      case "loading": {
+    switch (this.promise.status) {
+      case "pending": {
         // Maintain the last successful `data` value if the next result does not
         // have one.
         if (result.data === void 0) {
           result.data = this.result.data;
         }
-        this.status = "idle";
         this.result = result;
         this.resolve?.(result);
         break;
       }
-      case "idle": {
+      default: {
         // This occurs when switching to a result that is fully cached when this
         // class is instantiated. ObservableQuery will run reobserve when
         // subscribing, which delivers a result from the cache.
@@ -302,13 +300,12 @@ export class InternalQueryReference<TData = unknown> {
       this.handleError
     );
 
-    switch (this.status) {
-      case "loading": {
-        this.status = "idle";
+    switch (this.promise.status) {
+      case "pending": {
         this.reject?.(error);
         break;
       }
-      case "idle": {
+      default: {
         this.promise = createRejectedPromise<ApolloQueryResult<TData>>(error);
         this.deliver(this.promise);
       }
@@ -320,8 +317,6 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private initiateFetch(returnedPromise: Promise<ApolloQueryResult<TData>>) {
-    this.status = "loading";
-
     this.promise = wrapPromiseWithState(
       new Promise((resolve, reject) => {
         this.resolve = resolve;
@@ -338,8 +333,7 @@ export class InternalQueryReference<TData = unknown> {
     // promise is resolved correctly.
     returnedPromise
       .then((result) => {
-        if (this.status === "loading") {
-          this.status = "idle";
+        if (this.promise.status === "pending") {
           this.result = result;
           this.resolve?.(result);
         }
@@ -371,9 +365,7 @@ export class InternalQueryReference<TData = unknown> {
       (!result.partial || this.watchQueryOptions.returnPartialData)
     ) {
       this.promise = createFulfilledPromise(result);
-      this.status = "idle";
     } else {
-      this.status = "loading";
       this.promise = wrapPromiseWithState(
         new Promise((resolve, reject) => {
           this.resolve = resolve;

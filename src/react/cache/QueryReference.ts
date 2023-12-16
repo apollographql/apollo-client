@@ -112,7 +112,7 @@ export class InternalQueryReference<TData = unknown> {
 
   public promise!: QueryRefPromise<TData>;
 
-  private subscription: ObservableSubscription | null = null;
+  private subscription!: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
@@ -157,7 +157,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   get disposed() {
-    return this.subscription === null || this.subscription.closed;
+    return this.subscription.closed;
   }
 
   get watchQueryOptions() {
@@ -261,8 +261,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private dispose() {
-    this.subscription?.unsubscribe();
-    this.subscription = null;
+    this.subscription.unsubscribe();
     this.onDispose();
   }
 
@@ -305,7 +304,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private handleError(error: ApolloError) {
-    this.subscription?.unsubscribe();
+    this.subscription.unsubscribe();
     this.subscription = this.observable.resubscribeAfterError(
       this.handleNext,
       this.handleError

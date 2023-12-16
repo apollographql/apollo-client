@@ -51,15 +51,15 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   const ref: QueryReference<TData, TVariables> = {
     toPromise() {
       // We avoid resolving this promise with the query data because we want to
-      // discourage using the server data directly from the queryRef and instead
-      // should be accessed through `useReadQuery`. If the server data is needed
-      // its better to use `client.query()` directly.
+      // discourage using the server data directly from the queryRef. Instead,
+      // the data should be accessed through `useReadQuery`. When the server
+      // data is needed, its better to use `client.query()` directly.
       //
       // Here we resolve with the ref itself to make using this in React Router
       // or TanStack Router `loader` functions a bit more ergonomic e.g.
       //
       // function loader() {
-      //  return { queryRef: await preloadQuery(query).toPromise() }
+      //   return { queryRef: await preloadQuery(query).toPromise() }
       // }
       return getWrappedPromise(ref).then(() => ref);
     },

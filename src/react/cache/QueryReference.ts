@@ -72,11 +72,10 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(
 
 export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
   const internalQueryRef = unwrapQueryRef(queryRef);
-  const promise = queryRef[PROMISE_SYMBOL];
 
   return internalQueryRef.promise.status === "fulfilled" ?
       internalQueryRef.promise
-    : promise;
+    : queryRef[PROMISE_SYMBOL];
 }
 
 export function unwrapQueryRef<TData>(

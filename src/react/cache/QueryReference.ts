@@ -120,7 +120,6 @@ export class InternalQueryReference<TData = unknown> {
   private reject: ((error: unknown) => void) | undefined;
 
   private references = 0;
-  private __disposed = false;
 
   constructor(
     observable: ObservableQuery<TData, any>,
@@ -158,7 +157,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   get disposed() {
-    return this.__disposed;
+    return this.subscription === null || this.subscription.closed;
   }
 
   get watchQueryOptions() {
@@ -166,7 +165,6 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   reinitialize() {
-    this.__disposed = false;
     const { observable } = this;
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
@@ -266,7 +264,6 @@ export class InternalQueryReference<TData = unknown> {
     this.subscription?.unsubscribe();
     this.subscription = null;
     this.onDispose();
-    this.__disposed = true;
   }
 
   private onDispose() {

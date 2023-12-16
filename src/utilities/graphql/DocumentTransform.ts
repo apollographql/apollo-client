@@ -5,6 +5,7 @@ import { invariant } from "../globals/index.js";
 import type { DocumentNode } from "graphql";
 import { WeakCache } from "@wry/caches";
 import { wrap } from "optimism";
+import { cacheSizes } from "../caching/index.js";
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 
@@ -51,14 +52,17 @@ export class DocumentTransform {
     left: DocumentTransform,
     right: DocumentTransform = DocumentTransform.identity()
   ) {
-    return new DocumentTransform(
-      (document) => {
-        const documentTransform = predicate(document) ? left : right;
+    return Object.assign(
+      new DocumentTransform(
+        (document) => {
+          const documentTransform = predicate(document) ? left : right;
 
-        return documentTransform.transformDocument(document);
-      },
-      // Reasonably assume both `left` and `right` transforms handle their own caching
-      { cache: false }
+          return documentTransform.transformDocument(document);
+        },
+        // Reasonably assume both `left` and `right` transforms handle their own caching
+        { cache: false }
+      ),
+      { left, right }
     );
   }
 
@@ -96,7 +100,7 @@ export class DocumentTransform {
               return stableCacheKeys.lookupArray(cacheKeys);
             }
           },
-          max: 1000 /** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */,
+          max: cacheSizes["documentTransform.cache"],
           cache: WeakCache<any, any>,
         }
       );
@@ -122,15 +126,32 @@ export class DocumentTransform {
     return transformedDocument;
   }
 
-  concat(otherTransform: DocumentTransform) {
-    return new DocumentTransform(
-      (document) => {
-        return otherTransform.transformDocument(
-          this.transformDocument(document)
-        );
-      },
-      // Reasonably assume both transforms handle their own caching
-      { cache: false }
+  concat(otherTransform: DocumentTransform): DocumentTransform {
+    return Object.assign(
+      new DocumentTransform(
+        (document) => {
+          return otherTransform.transformDocument(
+            this.transformDocument(document)
+          );
+        },
+        // Reasonably assume both transforms handle their own caching
+        { cache: false }
+      ),
+      {
+        left: this,
+        right: otherTransform,
+      }
     );
   }
+
+  /**
+   * @internal
+   * Used to iterate through all transforms that are concatenations or `split` links.
+   */
+  readonly left?: DocumentTransform;
+  /**
+   * @internal
+   * Used to iterate through all transforms that are concatenations or `split` links.
+   */
+  readonly right?: DocumentTransform;
 }

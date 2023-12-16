@@ -38,11 +38,33 @@ For more information on setting up Apollo Client, see [Getting started](../get-s
 
 ## Apollo Client Devtools
 
-[React Native Debugger](https://github.com/jhen0409/react-native-debugger) supports the [Apollo Client Devtools](../development-testing/developer-tooling/#apollo-client-devtools):
+#### 1. Using [React Native Debugger](https://github.com/jhen0409/react-native-debugger)
 
-1. Install React Native Debugger and open it.
-2. Enable "Debug JS Remotely" in your app.
-3. If you don't see the Developer Tools panel or the Apollo tab is missing from it, toggle the Developer Tools by right-clicking anywhere and selecting **Toggle Developer Tools**.
+The React Native Debugger supports the [Apollo Client Devtools](../development-testing/developer-tooling/#apollo-client-devtools):
+
+  1. Install React Native Debugger and open it.
+  2. Enable "Debug JS Remotely" in your app.
+  3. If you don't see the Developer Tools panel or the Apollo tab is missing from it, toggle the Developer Tools by right-clicking anywhere and selecting **Toggle Developer Tools**.
+
+#### 2. Using [Flipper](https://fbflipper.com/)
+
+A community plugin called [React Native Apollo devtools](https://github.com/razorpay/react-native-apollo-devtools) is available for Flipper, which supports viewing cache data.
+
+   1. Install Flipper and open it.
+   2. Go to add plugin and search for `react-native-apollo-devtools` and install it
+   3. Add `react-native-flipper` and `react-native-apollo-devtools-client` as dev dependecy to react native app.
+   4. Initialize the plugin with flipper on client side
+      
+      ```  
+        import { apolloDevToolsInit } from 'react-native-apollo-devtools-client';
+        const client = new ApolloClient({
+            // ...
+        })
+        
+        if(__DEV__){
+            apolloDevToolsInit(client);
+        }
+      ```
 
 ## Consuming multipart HTTP via text streaming
 

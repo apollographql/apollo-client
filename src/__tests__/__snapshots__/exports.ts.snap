@@ -388,6 +388,8 @@ Array [
 
 exports[`exports of public entry points @apollo/client/utilities 1`] = `
 Array [
+  "AutoCleanedStrongCache",
+  "AutoCleanedWeakCache",
   "Concast",
   "DEV",
   "DeepMerger",
@@ -397,6 +399,7 @@ Array [
   "argumentsObjectFromField",
   "asyncMap",
   "buildQueryFromSelectionSet",
+  "cacheSizes",
   "canUseAsyncIteratorSymbol",
   "canUseDOM",
   "canUseLayoutEffect",

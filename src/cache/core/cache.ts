@@ -2,9 +2,15 @@ import type { DocumentNode } from "graphql";
 import { wrap } from "optimism";
 
 import type { StoreObject, Reference } from "../../utilities/index.js";
-import { getFragmentQueryDocument } from "../../utilities/index.js";
+import {
+  cacheSizes,
+  defaultCacheSizes,
+  getFragmentQueryDocument,
+} from "../../utilities/index.js";
 import type { DataProxy } from "./types/DataProxy.js";
 import type { Cache } from "./types/Cache.js";
+import { WeakCache } from "@wry/caches";
+import { getApolloCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -137,7 +143,12 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   // Make sure we compute the same (===) fragment query document every
   // time we receive the same fragment in readFragment.
-  private getFragmentDoc = wrap(getFragmentQueryDocument);
+  private getFragmentDoc = wrap(getFragmentQueryDocument, {
+    max:
+      cacheSizes["cache.fragmentQueryDocuments"] ||
+      defaultCacheSizes["cache.fragmentQueryDocuments"],
+    cache: WeakCache,
+  });
 
   public readFragment<FragmentType, TVariables = any>(
     options: Cache.ReadFragmentOptions<FragmentType, TVariables>,
@@ -209,4 +220,17 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       },
     });
   }
+
+  /**
+   * @experimental
+   * @internal
+   * This is not a stable API - it is used in development builds to expose
+   * information to the DevTools.
+   * Use at your own risk!
+   */
+  public getMemoryInternals?: typeof getApolloCacheMemoryInternals;
+}
+
+if (__DEV__) {
+  ApolloCache.prototype.getMemoryInternals = getApolloCacheMemoryInternals;
 }

@@ -12,6 +12,11 @@ import type {
 import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
 import type { NetworkError } from "../../errors/index.js";
 import type { ServerError } from "../utils/index.js";
+import {
+  cacheSizes,
+  AutoCleanedWeakCache,
+  defaultCacheSizes,
+} from "../../utilities/index.js";
 
 export const VERSION = 1;
 
@@ -93,7 +98,12 @@ function operationDefinesMutation(operation: Operation) {
 export const createPersistedQueryLink = (
   options: PersistedQueryLink.Options
 ) => {
-  const hashesByQuery = new WeakMap<DocumentNode, Promise<string>>();
+  let hashesByQuery:
+    | AutoCleanedWeakCache<DocumentNode, Promise<string>>
+    | undefined;
+  function resetHashCache() {
+    hashesByQuery = undefined;
+  }
   // Ensure a SHA-256 hash function is provided, if a custom hash
   // generation function is not provided. We don't supply a SHA-256 hash
   // function by default, to avoid forcing one as a dependency. Developers
@@ -135,149 +145,175 @@ export const createPersistedQueryLink = (
       // what to do with the bogus query.
       return getHashPromise(query);
     }
+    if (!hashesByQuery) {
+      hashesByQuery = new AutoCleanedWeakCache(
+        cacheSizes["PersistedQueryLink.persistedQueryHashes"] ||
+          defaultCacheSizes["PersistedQueryLink.persistedQueryHashes"]
+      );
+    }
     let hash = hashesByQuery.get(query)!;
     if (!hash) hashesByQuery.set(query, (hash = getHashPromise(query)));
     return hash;
   }
 
-  return new ApolloLink((operation, forward) => {
-    invariant(
-      forward,
-      "PersistedQueryLink cannot be the last link in the chain."
-    );
+  return Object.assign(
+    new ApolloLink((operation, forward) => {
+      invariant(
+        forward,
+        "PersistedQueryLink cannot be the last link in the chain."
+      );
 
-    const { query } = operation;
+      const { query } = operation;
 
-    return new Observable((observer: Observer<ExecutionResult>) => {
-      let subscription: ObservableSubscription;
-      let retried = false;
-      let originalFetchOptions: any;
-      let setFetchOptions = false;
-      const maybeRetry = (
-        {
-          response,
-          networkError,
-        }: { response?: ExecutionResult; networkError?: ServerError },
-        cb: () => void
-      ) => {
-        if (!retried && ((response && response.errors) || networkError)) {
-          retried = true;
-
-          const graphQLErrors: GraphQLError[] = [];
-
-          const responseErrors = response && response.errors;
-          if (isNonEmptyArray(responseErrors)) {
-            graphQLErrors.push(...responseErrors);
-          }
-
-          // Network errors can return GraphQL errors on for example a 403
-          let networkErrors;
-          if (typeof networkError?.result !== "string") {
-            networkErrors =
-              networkError &&
-              networkError.result &&
-              (networkError.result.errors as GraphQLError[]);
-          }
-          if (isNonEmptyArray(networkErrors)) {
-            graphQLErrors.push(...networkErrors);
-          }
-
-          const disablePayload: ErrorResponse = {
+      return new Observable((observer: Observer<ExecutionResult>) => {
+        let subscription: ObservableSubscription;
+        let retried = false;
+        let originalFetchOptions: any;
+        let setFetchOptions = false;
+        const maybeRetry = (
+          {
             response,
             networkError,
-            operation,
-            graphQLErrors:
-              isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
-            meta: processErrors(graphQLErrors),
-          };
+          }: { response?: ExecutionResult; networkError?: ServerError },
+          cb: () => void
+        ) => {
+          if (!retried && ((response && response.errors) || networkError)) {
+            retried = true;
 
-          // if the server doesn't support persisted queries, don't try anymore
-          supportsPersistedQueries = !disable(disablePayload);
+            const graphQLErrors: GraphQLError[] = [];
 
-          // if its not found, we can try it again, otherwise just report the error
-          if (retry(disablePayload)) {
-            // need to recall the link chain
-            if (subscription) subscription.unsubscribe();
-            // actually send the query this time
-            operation.setContext({
-              http: {
-                includeQuery: true,
-                includeExtensions: supportsPersistedQueries,
-              },
-              fetchOptions: {
-                // Since we're including the full query, which may be
-                // large, we should send it in the body of a POST request.
-                // See issue #7456.
-                method: "POST",
-              },
-            });
-            if (setFetchOptions) {
-              operation.setContext({ fetchOptions: originalFetchOptions });
+            const responseErrors = response && response.errors;
+            if (isNonEmptyArray(responseErrors)) {
+              graphQLErrors.push(...responseErrors);
             }
-            subscription = forward(operation).subscribe(handler);
 
-            return;
+            // Network errors can return GraphQL errors on for example a 403
+            let networkErrors;
+            if (typeof networkError?.result !== "string") {
+              networkErrors =
+                networkError &&
+                networkError.result &&
+                (networkError.result.errors as GraphQLError[]);
+            }
+            if (isNonEmptyArray(networkErrors)) {
+              graphQLErrors.push(...networkErrors);
+            }
+
+            const disablePayload: ErrorResponse = {
+              response,
+              networkError,
+              operation,
+              graphQLErrors:
+                isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
+              meta: processErrors(graphQLErrors),
+            };
+
+            // if the server doesn't support persisted queries, don't try anymore
+            supportsPersistedQueries = !disable(disablePayload);
+            if (!supportsPersistedQueries) {
+              // clear hashes from cache, we don't need them anymore
+              resetHashCache();
+            }
+
+            // if its not found, we can try it again, otherwise just report the error
+            if (retry(disablePayload)) {
+              // need to recall the link chain
+              if (subscription) subscription.unsubscribe();
+              // actually send the query this time
+              operation.setContext({
+                http: {
+                  includeQuery: true,
+                  includeExtensions: supportsPersistedQueries,
+                },
+                fetchOptions: {
+                  // Since we're including the full query, which may be
+                  // large, we should send it in the body of a POST request.
+                  // See issue #7456.
+                  method: "POST",
+                },
+              });
+              if (setFetchOptions) {
+                operation.setContext({ fetchOptions: originalFetchOptions });
+              }
+              subscription = forward(operation).subscribe(handler);
+
+              return;
+            }
           }
+          cb();
+        };
+        const handler = {
+          next: (response: ExecutionResult) => {
+            maybeRetry({ response }, () => observer.next!(response));
+          },
+          error: (networkError: ServerError) => {
+            maybeRetry({ networkError }, () => observer.error!(networkError));
+          },
+          complete: observer.complete!.bind(observer),
+        };
+
+        // don't send the query the first time
+        operation.setContext({
+          http: {
+            includeQuery: !supportsPersistedQueries,
+            includeExtensions: supportsPersistedQueries,
+          },
+        });
+
+        // If requested, set method to GET if there are no mutations. Remember the
+        // original fetchOptions so we can restore them if we fall back to a
+        // non-hashed request.
+        if (
+          useGETForHashedQueries &&
+          supportsPersistedQueries &&
+          !operationDefinesMutation(operation)
+        ) {
+          operation.setContext(
+            ({ fetchOptions = {} }: { fetchOptions: Record<string, any> }) => {
+              originalFetchOptions = fetchOptions;
+              return {
+                fetchOptions: {
+                  ...fetchOptions,
+                  method: "GET",
+                },
+              };
+            }
+          );
+          setFetchOptions = true;
         }
-        cb();
-      };
-      const handler = {
-        next: (response: ExecutionResult) => {
-          maybeRetry({ response }, () => observer.next!(response));
-        },
-        error: (networkError: ServerError) => {
-          maybeRetry({ networkError }, () => observer.error!(networkError));
-        },
-        complete: observer.complete!.bind(observer),
-      };
 
-      // don't send the query the first time
-      operation.setContext({
-        http: {
-          includeQuery: !supportsPersistedQueries,
-          includeExtensions: supportsPersistedQueries,
-        },
+        if (supportsPersistedQueries) {
+          getQueryHash(query)
+            .then((sha256Hash) => {
+              operation.extensions.persistedQuery = {
+                version: VERSION,
+                sha256Hash,
+              };
+              subscription = forward(operation).subscribe(handler);
+            })
+            .catch(observer.error!.bind(observer));
+        } else {
+          subscription = forward(operation).subscribe(handler);
+        }
+
+        return () => {
+          if (subscription) subscription.unsubscribe();
+        };
       });
-
-      // If requested, set method to GET if there are no mutations. Remember the
-      // original fetchOptions so we can restore them if we fall back to a
-      // non-hashed request.
-      if (
-        useGETForHashedQueries &&
-        supportsPersistedQueries &&
-        !operationDefinesMutation(operation)
-      ) {
-        operation.setContext(
-          ({ fetchOptions = {} }: { fetchOptions: Record<string, any> }) => {
-            originalFetchOptions = fetchOptions;
-            return {
-              fetchOptions: {
-                ...fetchOptions,
-                method: "GET",
-              },
-            };
-          }
-        );
-        setFetchOptions = true;
+    }),
+    {
+      resetHashCache,
+    },
+    __DEV__ ?
+      {
+        getMemoryInternals() {
+          return {
+            PersistedQueryLink: {
+              persistedQueryHashes: hashesByQuery?.size ?? 0,
+            },
+          };
+        },
       }
-
-      if (supportsPersistedQueries) {
-        getQueryHash(query)
-          .then((sha256Hash) => {
-            operation.extensions.persistedQuery = {
-              version: VERSION,
-              sha256Hash,
-            };
-            subscription = forward(operation).subscribe(handler);
-          })
-          .catch(observer.error!.bind(observer));
-      } else {
-        subscription = forward(operation).subscribe(handler);
-      }
-
-      return () => {
-        if (subscription) subscription.unsubscribe();
-      };
-    });
-  });
+    : {}
+  );
 };

@@ -48,6 +48,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     abstract extract(optimistic?: boolean): TSerialized;
     // (undocumented)
     gc(): string[];
+    // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -106,6 +110,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     disableNetworkFetches: boolean;
     get documentTransform(): DocumentTransform;
     extract(optimistic?: boolean): TCacheShape;
+    // Warning: (ae-forgotten-export) The symbol "getApolloClientMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getApolloClientMemoryInternals;
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
     getResolvers(): Resolvers;
     // (undocumented)
@@ -244,10 +252,16 @@ export class ApolloLink {
     static execute(link: ApolloLink, operation: GraphQLRequest): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // (undocumented)
@@ -708,9 +722,16 @@ export class DocumentTransform {
     concat(otherTransform: DocumentTransform): DocumentTransform;
     // (undocumented)
     static identity(): DocumentTransform;
+    // @internal
+    readonly left?: DocumentTransform;
     resetCache(): void;
+    // @internal
+    readonly right?: DocumentTransform;
     // (undocumented)
-    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform;
+    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
+        left: DocumentTransform;
+        right: DocumentTransform;
+    };
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
 }
@@ -1039,8 +1060,70 @@ interface FulfilledPromise<TValue> extends Promise<TValue> {
     value: TValue;
 }
 
+// @internal
+const getApolloCacheMemoryInternals: (() => {
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
+}) | undefined;
+
+// @internal
+const getApolloClientMemoryInternals: (() => {
+    limits: {
+        [k: string]: number;
+    };
+    sizes: {
+        cache?: {
+            fragmentQueryDocuments: number | undefined;
+        } | undefined;
+        addTypenameDocumentTransform?: {
+            cache: number;
+        }[] | undefined;
+        inMemoryCache?: {
+            executeSelectionSet: number | undefined;
+            executeSubSelectedArray: number | undefined;
+            maybeBroadcastWatch: number | undefined;
+        } | undefined;
+        fragmentRegistry?: {
+            findFragmentSpreads: number | undefined;
+            lookup: number | undefined;
+            transform: number | undefined;
+        } | undefined;
+        print: number | undefined;
+        parser: number | undefined;
+        canonicalStringify: number | undefined;
+        links: unknown[];
+        queryManager: {
+            getDocumentInfo: number;
+            documentTransforms: {
+                cache: number;
+            }[];
+        };
+    };
+}) | undefined;
+
 // @public (undocumented)
 export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
+
+// @internal
+const getInMemoryCacheMemoryInternals: (() => {
+    addTypenameDocumentTransform: {
+        cache: number;
+    }[];
+    inMemoryCache: {
+        executeSelectionSet: number | undefined;
+        executeSubSelectedArray: number | undefined;
+        maybeBroadcastWatch: number | undefined;
+    };
+    fragmentRegistry: {
+        findFragmentSpreads: number | undefined;
+        lookup: number | undefined;
+        transform: number | undefined;
+    };
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
+}) | undefined;
 
 export { gql }
 
@@ -1128,6 +1211,15 @@ export interface IDocumentDefinition {
 }
 
 // @public (undocumented)
+interface IgnoreModifier {
+    // (undocumented)
+    [_ignoreModifier]: true;
+}
+
+// @public (undocumented)
+const _ignoreModifier: unique symbol;
+
+// @public (undocumented)
 export interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
@@ -1165,6 +1257,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         resetResultCache?: boolean;
         resetResultIdentities?: boolean;
     }): string[];
+    // Warning: (ae-forgotten-export) The symbol "getInMemoryCacheMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -1205,7 +1301,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
     fragments?: FragmentRegistryAPI;
     // (undocumented)
     possibleTypes?: PossibleTypesMap;
-    // (undocumented)
+    // @deprecated (undocumented)
     resultCacheMaxSize?: number;
     // (undocumented)
     resultCaching?: boolean;
@@ -1536,7 +1632,9 @@ interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TCon
     context?: TContext;
     errorPolicy?: ErrorPolicy;
     onQueryUpdated?: OnQueryUpdated<any>;
-    optimisticResponse?: TData | ((vars: TVariables) => TData);
+    optimisticResponse?: TData | ((vars: TVariables, { IGNORE }: {
+        IGNORE: IgnoreModifier;
+    }) => TData);
     refetchQueries?: ((result: FetchResult<TData>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
     updateQueries?: MutationQueryReducersMap<TData>;
@@ -2167,7 +2265,7 @@ class QueryManager<TStore> {
         updateQueries: UpdateQueries<TData>;
         update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
         keepRootFields?: boolean;
-    }): void;
+    }): boolean;
     // (undocumented)
     markMutationResult<TData, TVariables, TContext, TCache extends ApolloCache<any>>(mutation: {
         mutationId: string;
@@ -2985,10 +3083,11 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:132:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:120:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:154:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:395:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:260:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:399:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:261:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:310:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:31:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts

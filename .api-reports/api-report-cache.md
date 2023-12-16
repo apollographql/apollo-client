@@ -30,6 +30,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     abstract extract(optimistic?: boolean): TSerialized;
     // (undocumented)
     gc(): string[];
+    // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -474,6 +478,33 @@ export interface FragmentRegistryAPI {
     transform<D extends DocumentNode>(document: D): D;
 }
 
+// @internal
+const getApolloCacheMemoryInternals: (() => {
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
+}) | undefined;
+
+// @internal
+const getInMemoryCacheMemoryInternals: (() => {
+    addTypenameDocumentTransform: {
+        cache: number;
+    }[];
+    inMemoryCache: {
+        executeSelectionSet: number | undefined;
+        executeSubSelectedArray: number | undefined;
+        maybeBroadcastWatch: number | undefined;
+    };
+    fragmentRegistry: {
+        findFragmentSpreads: number | undefined;
+        lookup: number | undefined;
+        transform: number | undefined;
+    };
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
+}) | undefined;
+
 // @public (undocumented)
 export type IdGetter = (value: IdGetterObj) => string | undefined;
 
@@ -513,6 +544,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         resetResultCache?: boolean;
         resetResultIdentities?: boolean;
     }): string[];
+    // Warning: (ae-forgotten-export) The symbol "getInMemoryCacheMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -551,7 +586,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
     fragments?: FragmentRegistryAPI;
     // (undocumented)
     possibleTypes?: PossibleTypesMap;
-    // (undocumented)
+    // @deprecated (undocumented)
     resultCacheMaxSize?: number;
     // (undocumented)
     resultCaching?: boolean;

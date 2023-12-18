@@ -18,7 +18,6 @@ import {
   DocumentNode,
   ApolloClient,
   ErrorPolicy,
-  NormalizedCacheObject,
   NetworkStatus,
   ApolloCache,
   TypedDocumentNode,
@@ -62,95 +61,6 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
-
-function renderIntegrationTest({
-  client,
-}: {
-  client?: ApolloClient<NormalizedCacheObject>;
-} = {}) {
-  const query: TypedDocumentNode<QueryData> = gql`
-    query SimpleQuery {
-      foo {
-        bar
-      }
-    }
-  `;
-
-  const mocks = [
-    {
-      request: { query },
-      result: { data: { foo: { bar: "hello" } } },
-    },
-  ];
-  const _client =
-    client ||
-    new ApolloClient({
-      cache: new InMemoryCache(),
-      link: new MockLink(mocks),
-    });
-  interface Renders {
-    errors: Error[];
-    errorCount: number;
-    suspenseCount: number;
-    count: number;
-  }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-  };
-  const errorBoundaryProps: ErrorBoundaryProps = {
-    fallback: <div>Error</div>,
-    onError: (error) => {
-      renders.errorCount++;
-      renders.errors.push(error);
-    },
-  };
-
-  interface QueryData {
-    foo: { bar: string };
-  }
-
-  function SuspenseFallback() {
-    renders.suspenseCount++;
-    return <div>loading</div>;
-  }
-
-  function Child({ queryRef }: { queryRef: QueryReference<QueryData> }) {
-    const { data } = useReadQuery(queryRef);
-    // count renders in the child component
-    renders.count++;
-    return <div>{data.foo.bar}</div>;
-  }
-
-  function Parent() {
-    const [queryRef] = useBackgroundQuery(query);
-    return <Child queryRef={queryRef} />;
-  }
-
-  function ParentWithVariables() {
-    const [queryRef] = useBackgroundQuery(query);
-    return <Child queryRef={queryRef} />;
-  }
-
-  function App({ variables }: { variables?: Record<string, unknown> }) {
-    return (
-      <ApolloProvider client={_client}>
-        <ErrorBoundary {...errorBoundaryProps}>
-          <Suspense fallback={<SuspenseFallback />}>
-            {variables ?
-              <ParentWithVariables />
-            : <Parent />}
-          </Suspense>
-        </ErrorBoundary>
-      </ApolloProvider>
-    );
-  }
-
-  const { ...rest } = render(<App />);
-  return { ...rest, query, client: _client, renders };
-}
 
 interface VariablesCaseData {
   character: {

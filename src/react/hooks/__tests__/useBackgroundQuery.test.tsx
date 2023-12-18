@@ -564,7 +564,7 @@ function createTrackedErrorComponents<Snapshot extends { error: Error | null }>(
   Profiler: Profiler<Snapshot>
 ) {
   function ErrorFallback({ error }: FallbackProps) {
-    useTrackRenders();
+    useTrackRenders({ name: "ErrorFallback" });
     Profiler.mergeSnapshot({ error } as Partial<Snapshot>);
 
     return <div>Error</div>;
@@ -578,7 +578,7 @@ function createTrackedErrorComponents<Snapshot extends { error: Error | null }>(
     );
   }
 
-  return { ErrorFallback, ErrorBoundary };
+  return { ErrorBoundary };
 }
 
 function createErrorProfiler<TData = unknown>() {
@@ -3333,8 +3333,7 @@ describe("refetch", () => {
     const Profiler = createErrorProfiler<VariablesCaseData>();
     const { SuspenseFallback, ReadQueryHook } =
       createDefaultTrackedComponents(Profiler);
-    const { ErrorBoundary, ErrorFallback } =
-      createTrackedErrorComponents(Profiler);
+    const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
     function App() {
       useTrackRenders();
@@ -3392,7 +3391,7 @@ describe("refetch", () => {
     {
       const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-      expect(renderedComponents).toStrictEqual([ErrorFallback]);
+      expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
       expect(snapshot.error).toEqual(
         new ApolloError({
           graphQLErrors: [new GraphQLError("Something went wrong")],

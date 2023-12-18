@@ -1382,91 +1382,116 @@ it("works with startTransition to change variables", async () => {
     cache: new InMemoryCache(),
   });
 
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      isPending: false,
+      result: null as UseReadQueryResult<Data> | null,
+    },
+  });
+
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
-
-  function SuspenseFallback() {
-    return <p>Loading</p>;
-  }
-
-  function Parent() {
+    useTrackRenders();
     const [id, setId] = React.useState("1");
+    const [isPending, startTransition] = React.useTransition();
     const [queryRef] = useBackgroundQuery(query, {
       variables: { id },
     });
-    return <Todo queryRef={queryRef} onChange={setId} />;
-  }
 
-  function Todo({
-    queryRef,
-    onChange,
-  }: {
-    queryRef: QueryReference<Data>;
-    onChange: (id: string) => void;
-  }) {
-    const { data } = useReadQuery(queryRef);
-    const [isPending, startTransition] = React.useTransition();
-    const { todo } = data;
+    Profiler.mergeSnapshot({ isPending });
 
     return (
       <>
         <button
           onClick={() => {
             startTransition(() => {
-              onChange("2");
+              setId("2");
             });
           }}
         >
-          Refresh
+          Change todo
         </button>
-        <div data-testid="todo" aria-busy={isPending}>
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
+        <ApolloProvider client={client}>
+          <Suspense fallback={<SuspenseFallback />}>
+            <Todo queryRef={queryRef} />
+          </Suspense>
+        </ApolloProvider>
       </>
     );
   }
 
-  render(<App />);
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
 
-  expect(screen.getByText("Loading")).toBeInTheDocument();
+  function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-  expect(await screen.findByTestId("todo")).toBeInTheDocument();
+    return null;
+  }
 
-  const todo = screen.getByTestId("todo");
-  const button = screen.getByText("Refresh");
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-  expect(todo).toHaveTextContent("Clean room");
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  await act(() => user.click(button));
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
 
-  // startTransition will avoid rendering the suspense fallback for already
-  // revealed content if the state update inside the transition causes the
-  // component to suspend.
-  //
-  // Here we should not see the suspense fallback while the component suspends
-  // until the todo is finished loading. Seeing the suspense fallback is an
-  // indication that we are suspending the component too late in the process.
-  expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  // We can ensure this works with isPending from useTransition in the process
-  expect(todo).toHaveAttribute("aria-busy", "true");
+    expect(renderedComponents).toStrictEqual([Todo]);
+    expect(snapshot).toEqual({
+      isPending: false,
+      result: {
+        data: { todo: { id: "1", name: "Clean room", completed: false } },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
 
-  // Ensure we are showing the stale UI until the new todo has loaded
-  expect(todo).toHaveTextContent("Clean room");
+  await act(() => user.click(screen.getByText("Change todo")));
 
-  // Eventually we should see the updated todo content once its done
-  // suspending.
-  await waitFor(() => {
-    expect(todo).toHaveTextContent("Take out trash (completed)");
-  });
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    // startTransition will avoid rendering the suspense fallback for already
+    // revealed content if the state update inside the transition causes the
+    // component to suspend.
+    //
+    // Here we should not see the suspense fallback while the component suspends
+    // until the todo is finished loading. Seeing the suspense fallback is an
+    // indication that we are suspending the component too late in the process.
+
+    expect(renderedComponents).toStrictEqual([App, Todo]);
+    expect(snapshot).toEqual({
+      isPending: true,
+      result: {
+        data: { todo: { id: "1", name: "Clean room", completed: false } },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    // Eventually we should see the updated todo content once its done
+    // suspending.
+    expect(renderedComponents).toStrictEqual([App, Todo]);
+    expect(snapshot).toEqual({
+      isPending: false,
+      result: {
+        data: { todo: { id: "2", name: "Take out trash", completed: true } },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
 });
 
 it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {

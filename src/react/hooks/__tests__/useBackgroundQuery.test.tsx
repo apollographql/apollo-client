@@ -1055,6 +1055,8 @@ it("returns initial cache data followed by network data when the fetch policy is
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("all data is present in the cache, no network request is made", async () => {

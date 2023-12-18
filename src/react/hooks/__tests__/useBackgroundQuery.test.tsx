@@ -2629,13 +2629,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
 });
 
 it("applies `returnPartialData` on next fetch when it changes between renders", async () => {
-  interface Data {
-    character: {
-      __typename: "Character";
-      id: string;
-      name: string;
-    };
-  }
+  const { query } = setupVariablesCase();
 
   interface PartialData {
     character: {
@@ -2646,16 +2640,6 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
 
   const user = userEvent.setup();
 
-  const fullQuery: TypedDocumentNode<Data> = gql`
-    query {
-      character {
-        __typename
-        id
-        name
-      }
-    }
-  `;
-
   const partialQuery: TypedDocumentNode<PartialData> = gql`
     query {
       character {
@@ -2665,9 +2649,9 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     }
   `;
 
-  const mocks = [
+  const mocks: MockedResponse<VariablesCaseData>[] = [
     {
-      request: { query: fullQuery },
+      request: { query },
       result: {
         data: {
           character: {
@@ -2677,9 +2661,10 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
           },
         },
       },
+      delay: 10,
     },
     {
-      request: { query: fullQuery },
+      request: { query },
       result: {
         data: {
           character: {
@@ -2689,7 +2674,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
           },
         },
       },
-      delay: 100,
+      delay: 10,
     },
   ];
 
@@ -2705,16 +2690,14 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     cache,
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const Profiler = createDefaultProfiler<VariablesCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [returnPartialData, setReturnPartialData] = React.useState(false);
-
-    const [queryRef] = useBackgroundQuery(fullQuery, {
-      returnPartialData,
-    });
+    const [queryRef] = useBackgroundQuery(query, { returnPartialData });
 
     return (
       <>
@@ -2722,35 +2705,31 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
           Update partial data
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Character queryRef={queryRef} />
+          <ReadQueryHook queryRef={queryRef} />
         </Suspense>
       </>
     );
   }
 
-  function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-    return (
-      <span data-testid="character">{data.character.name ?? "unknown"}</span>
-    );
+  // initial suspended render
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
   }
-
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
-
-  render(<App />);
-
-  const character = await screen.findByTestId("character");
-
-  expect(character).toHaveTextContent("Doctor Strange");
 
   await act(() => user.click(screen.getByText("Update partial data")));
+  await Profiler.takeRender();
 
   cache.modify({
     id: cache.identify({ __typename: "Character", id: "1" }),
@@ -2759,13 +2738,31 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     },
   });
 
-  await waitFor(() => {
-    expect(character).toHaveTextContent("unknown");
-  });
+  {
+    const { snapshot } = await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(character).toHaveTextContent("Doctor Strange (refetched)");
-  });
+    expect(snapshot.result).toEqual({
+      data: { character: { __typename: "Character", id: "1" } },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "1",
+          name: "Doctor Strange (refetched)",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {

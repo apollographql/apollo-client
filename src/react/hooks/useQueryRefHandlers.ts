@@ -23,8 +23,19 @@ export interface UseQueryRefHandlersResult<
 /**
  * A React hook that returns a `refetch` and `fetchMore` function for a given
  * `queryRef`.
- * This allows you to control the lifecyle of a queryRef from a different component
- * than the one that created it.
+ *
+ * This is useful to get access to handlers for a `queryRef` that was created by
+ * `createQueryPreloader` or when the handlers for a `queryRef` produced in
+ * a different component are inaccessible.
+ *
+ * @example
+ * ```tsx
+ * const MyComponent({ queryRef }) {
+ *   const { refetch, fetchMore } = useQueryRefHandlers(queryRef)
+ *
+ *   // ...
+ * }
+ * ```
  *
  * @param queryRef a `QueryReference` returned from `useBackgroundQuery` or `createQueryPreloader`.
  */

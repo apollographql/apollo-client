@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.8.9
+
+### Patch Changes
+
+- [#11364](https://github.com/apollographql/apollo-client/pull/11364) [`54b5d14`](https://github.com/apollographql/apollo-client/commit/54b5d149f19edb9a1dc3eb75247d3288be23a33e) Thanks [@mohit23x](https://github.com/mohit23x)! - Update react-native.md - Adds react native devtool in the documentation
+
 ## 3.8.8
 
 ### Patch Changes
@@ -199,7 +205,7 @@
     return data.breeds.map(({ characteristics }) =>
       characteristics.map((characteristic) => (
         <div key={characteristic}>{characteristic}</div>
-      ))
+      )),
     );
   }
   ```
@@ -250,7 +256,7 @@
 
   const { data } = useSuspenseQuery(
     query,
-    id ? { variables: { id } } : skipToken
+    id ? { variables: { id } } : skipToken,
   );
   ```
 
@@ -2205,7 +2211,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
     fields: {
       comments(comments: Reference[], { readField }) {
         return comments.filter(
-          (comment) => idToRemove !== readField("id", comment)
+          (comment) => idToRemove !== readField("id", comment),
         );
       },
     },

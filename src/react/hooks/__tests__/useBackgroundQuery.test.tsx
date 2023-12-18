@@ -42,7 +42,7 @@ import {
   cloneDeep,
 } from "../../../utilities";
 import { useBackgroundQuery } from "../useBackgroundQuery";
-import { useReadQuery } from "../useReadQuery";
+import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
 import { QueryReference, getWrappedPromise } from "../../cache/QueryReference";
 import { InMemoryCache } from "../../../cache";
@@ -53,7 +53,15 @@ import {
 import equal from "@wry/equality";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
-import { profile, spyOnConsole } from "../../../testing/internal";
+import {
+  SimpleCaseData,
+  createProfiler,
+  profile,
+  renderWithMocks,
+  setupSimpleCase,
+  spyOnConsole,
+  useTrackRenders,
+} from "../../../testing/internal";
 
 function renderIntegrationTest({
   client,
@@ -624,32 +632,59 @@ function renderSuspenseHook<Result, Props>(
 
 describe("useBackgroundQuery", () => {
   it("fetches a simple query with minimal config", async () => {
-    const query = gql`
-      query {
-        hello
-      }
-    `;
-    const mocks = [
-      {
-        request: { query },
-        result: { data: { hello: "world 1" } },
+    const { query, mocks } = setupSimpleCase();
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseReadQueryResult<SimpleCaseData> | null,
       },
-    ];
-    const { result } = renderHook(() => useBackgroundQuery(query), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
     });
 
-    const [queryRef] = result.current;
+    function SuspenseFallback() {
+      useTrackRenders();
+      return <div>Loading</div>;
+    }
 
-    const _result = await getWrappedPromise(queryRef);
+    function ReadQueryHook({
+      queryRef,
+    }: {
+      queryRef: QueryReference<SimpleCaseData>;
+    }) {
+      useTrackRenders();
+      Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-    expect(_result).toEqual({
-      data: { hello: "world 1" },
-      loading: false,
-      networkStatus: 7,
-    });
+      return null;
+    }
+
+    function App() {
+      useTrackRenders();
+      const [queryRef] = useBackgroundQuery(query);
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      );
+    }
+
+    renderWithMocks(<App />, { mocks, wrapper: Profiler });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { renderedComponents, snapshot } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+      expect(snapshot.result).toEqual({
+        data: { greeting: "Hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
   });
 
   it("allows the client to be overridden", async () => {

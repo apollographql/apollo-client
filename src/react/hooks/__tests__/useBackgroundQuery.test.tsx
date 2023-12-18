@@ -57,6 +57,7 @@ import {
   SimpleCaseData,
   createProfiler,
   profile,
+  renderWithClient,
   renderWithMocks,
   setupSimpleCase,
   spyOnConsole,
@@ -688,11 +689,7 @@ describe("useBackgroundQuery", () => {
   });
 
   it("allows the client to be overridden", async () => {
-    const query: TypedDocumentNode<SimpleQueryData> = gql`
-      query UserQuery {
-        greeting
-      }
-    `;
+    const { query } = setupSimpleCase();
 
     const globalClient = new ApolloClient({
       link: new ApolloLink(() =>
@@ -708,22 +705,57 @@ describe("useBackgroundQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result } = renderSuspenseHook(
-      () => useBackgroundQuery(query, { client: localClient }),
-      { client: globalClient }
-    );
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseReadQueryResult<SimpleCaseData> | null,
+      },
+    });
 
-    const [queryRef] = result.current;
+    function SuspenseFallback() {
+      useTrackRenders();
+      return <div>Loading</div>;
+    }
 
-    const _result = await getWrappedPromise(queryRef);
+    function ReadQueryHook({
+      queryRef,
+    }: {
+      queryRef: QueryReference<SimpleCaseData>;
+    }) {
+      useTrackRenders();
+      Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-    await waitFor(() => {
-      expect(_result).toEqual({
+      return null;
+    }
+
+    function App() {
+      useTrackRenders();
+      const [queryRef] = useBackgroundQuery(query, { client: localClient });
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      );
+    }
+
+    renderWithClient(<App />, { client: globalClient, wrapper: Profiler });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+      expect(snapshot.result).toEqual({
         data: { greeting: "local hello" },
-        loading: false,
+        error: undefined,
         networkStatus: NetworkStatus.ready,
       });
-    });
+    }
   });
 
   it("passes context to the link", async () => {

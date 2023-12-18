@@ -3192,39 +3192,129 @@ describe("refetch", () => {
   });
 
   it("re-suspends multiple times when calling `refetch` multiple times", async () => {
-    const { renders } = renderVariablesIntegrationTest({
-      variables: { id: "1" },
-    });
+    const { query, mocks: defaultMocks } = setupVariablesCase();
+    const user = userEvent.setup();
+    const Profiler = createDefaultProfiler<VariablesCaseData>();
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
 
-    expect(renders.suspenseCount).toBe(1);
-    expect(screen.getByText("loading")).toBeInTheDocument();
+    const mocks: MockedResponse<VariablesCaseData>[] = [
+      ...defaultMocks,
+      {
+        request: { query, variables: { id: "1" } },
+        result: {
+          data: {
+            character: {
+              __typename: "Character",
+              id: "1",
+              name: "Spider-Man (refetched)",
+            },
+          },
+        },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { id: "1" } },
+        result: {
+          data: {
+            character: {
+              __typename: "Character",
+              id: "1",
+              name: "Spider-Man (refetched again)",
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
 
-    expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
+    function App() {
+      useTrackRenders();
+      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        variables: { id: "1" },
+      });
+
+      return (
+        <>
+          <button onClick={() => refetch()}>Refetch</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <ReadQueryHook queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    renderWithMocks(<App />, { mocks, wrapper: Profiler });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: {
+          character: { __typename: "Character", id: "1", name: "Spider-Man" },
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
 
     const button = screen.getByText("Refetch");
-    const user = userEvent.setup();
-    await act(() => user.click(button));
-
-    // parent component re-suspends
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.count).toBe(1);
-
-    expect(
-      await screen.findByText("1 - Spider-Man (updated)")
-    ).toBeInTheDocument();
 
     await act(() => user.click(button));
 
-    // parent component re-suspends
-    expect(renders.suspenseCount).toBe(3);
-    expect(renders.count).toBe(2);
+    {
+      const { renderedComponents } = await Profiler.takeRender();
 
-    expect(
-      await screen.findByText("1 - Spider-Man (updated again)")
-    ).toBeInTheDocument();
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
 
-    expect(renders.count).toBe(3);
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Spider-Man (refetched)",
+          },
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await act(() => user.click(button));
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Spider-Man (refetched again)",
+          },
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
   });
+
   it("throws errors when errors are returned after calling `refetch`", async () => {
     using _consoleSpy = spyOnConsole("error");
     interface QueryData {

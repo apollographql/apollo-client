@@ -3028,42 +3028,97 @@ it("properly handles changing options along with changing `variables`", async ()
 
 describe("refetch", () => {
   it("re-suspends when calling `refetch`", async () => {
-    const { ProfiledApp } = renderVariablesIntegrationTest({
-      variables: { id: "1" },
-    });
-
-    {
-      const { withinDOM, snapshot } = await ProfiledApp.takeRender();
-      expect(snapshot.suspenseCount).toBe(1);
-      expect(withinDOM().getByText("loading")).toBeInTheDocument();
-    }
-
-    {
-      const { withinDOM } = await ProfiledApp.takeRender();
-      expect(withinDOM().getByText("1 - Spider-Man")).toBeInTheDocument();
-    }
-
-    const button = screen.getByText("Refetch");
+    const { query, mocks: defaultMocks } = setupVariablesCase();
     const user = userEvent.setup();
-    await act(() => user.click(button));
+    const Profiler = createDefaultProfiler<VariablesCaseData>();
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
+
+    const mocks: MockedResponse<VariablesCaseData>[] = [
+      ...defaultMocks,
+      {
+        request: { query, variables: { id: "1" } },
+        result: {
+          data: {
+            character: {
+              __typename: "Character",
+              id: "1",
+              name: "Spider-Man (refetched)",
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    function App() {
+      useTrackRenders();
+      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        variables: { id: "1" },
+      });
+
+      return (
+        <>
+          <button onClick={() => refetch()}>Refetch</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <ReadQueryHook queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    renderWithMocks(<App />, { mocks, wrapper: Profiler });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Spider-Man",
+          },
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Refetch")));
 
     {
       // parent component re-suspends
-      const { snapshot } = await ProfiledApp.takeRender();
-      expect(snapshot.suspenseCount).toBe(2);
-    }
-    {
-      const { snapshot, withinDOM } = await ProfiledApp.takeRender();
-      // @jerelmiller can you please verify that this is still in the spirit of the test?
-      // This seems to have moved onto the next render - or before the test skipped one.
-      expect(snapshot.count).toBe(2);
-      expect(
-        withinDOM().getByText("1 - Spider-Man (updated)")
-      ).toBeInTheDocument();
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
     }
 
-    expect(ProfiledApp).not.toRerender();
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Spider-Man (refetched)",
+          },
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
   });
+
   it("re-suspends when calling `refetch` with new variables", async () => {
     interface QueryData {
       character: {

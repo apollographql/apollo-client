@@ -2766,51 +2766,19 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
 });
 
 it("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {
-  interface Data {
-    character: {
-      __typename: "Character";
-      id: string;
-      name: string;
-    };
-  }
+  const { query, mocks } = setupVariablesCase();
 
   const user = userEvent.setup();
-
-  const query: TypedDocumentNode<Data> = gql`
-    query {
-      character {
-        __typename
-        id
-        name
-      }
-    }
-  `;
-
-  const mocks = [
-    {
-      request: { query },
-      result: {
-        data: {
-          character: {
-            __typename: "Character",
-            id: "1",
-            name: "Doctor Strange",
-          },
-        },
-      },
-      delay: 10,
-    },
-  ];
-
   const cache = new InMemoryCache();
 
   cache.writeQuery({
     query,
+    variables: { id: "1" },
     data: {
       character: {
         __typename: "Character",
         id: "1",
-        name: "Doctor Strangecache",
+        name: "Spider-Cacheman",
       },
     },
   });
@@ -2820,16 +2788,17 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     cache,
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const Profiler = createDefaultProfiler<VariablesCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  function Parent() {
+  function App() {
     const [fetchPolicy, setFetchPolicy] =
       React.useState<SuspenseQueryHookFetchPolicy>("cache-first");
 
     const [queryRef, { refetch }] = useBackgroundQuery(query, {
       fetchPolicy,
+      variables: { id: "1" },
     });
 
     return (
@@ -2839,45 +2808,55 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
         </button>
         <button onClick={() => refetch()}>Refetch</button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Character queryRef={queryRef} />
+          <ReadQueryHook queryRef={queryRef} />
         </Suspense>
       </>
     );
   }
 
-  function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-    return <span data-testid="character">{data.character.name}</span>;
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "1",
+          name: "Spider-Cacheman",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
   }
-
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
-
-  render(<App />);
-
-  const character = await screen.findByTestId("character");
-
-  expect(character).toHaveTextContent("Doctor Strangecache");
 
   await act(() => user.click(screen.getByText("Change fetch policy")));
+  await Profiler.takeRender();
+
   await act(() => user.click(screen.getByText("Refetch")));
-  await waitFor(() => {
-    expect(character).toHaveTextContent("Doctor Strange");
-  });
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   // Because we switched to a `no-cache` fetch policy, we should not see the
   // newly fetched data in the cache after the fetch occurred.
-  expect(cache.readQuery({ query })).toEqual({
+  expect(cache.readQuery({ query, variables: { id: "1" } })).toEqual({
     character: {
       __typename: "Character",
       id: "1",
-      name: "Doctor Strangecache",
+      name: "Spider-Cacheman",
     },
   });
 });

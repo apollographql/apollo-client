@@ -54,25 +54,17 @@ import { skipToken } from "../constants";
 import {
   Profiler,
   SimpleCaseData,
+  VariablesCaseData,
+  VariablesCaseVariables,
   createProfiler,
   profile,
   renderWithClient,
   renderWithMocks,
   setupSimpleCase,
+  setupVariablesCase,
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
-
-interface VariablesCaseData {
-  character: {
-    id: string;
-    name: string;
-  };
-}
-
-interface VariablesCaseVariables {
-  id: string;
-}
 
 function useVariablesIntegrationTestCase() {
   const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
@@ -1485,21 +1477,66 @@ it("reacts to cache updates", async () => {
 });
 
 it("reacts to variables updates", async () => {
-  const { renders, rerender } = renderVariablesIntegrationTest({
-    variables: { id: "1" },
+  const { query, mocks } = setupVariablesCase();
+
+  const Profiler = createDefaultProfiler<VariablesCaseData>();
+
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App({ id }: { id: string }) {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, { variables: { id } });
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  const { rerender } = renderWithMocks(<App id="1" />, {
+    mocks,
+    wrapper: Profiler,
   });
 
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
 
-  rerender({ variables: { id: "2" } });
+  {
+    const { snapshot } = await Profiler.takeRender();
 
-  expect(renders.suspenseCount).toBe(2);
-  expect(screen.getByText("loading")).toBeInTheDocument();
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
-  expect(await screen.findByText("2 - Black Widow")).toBeInTheDocument();
+  rerender(<App id="2" />);
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "2", name: "Black Widow" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it("does not suspend when `skip` is true", async () => {

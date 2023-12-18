@@ -564,14 +564,18 @@ function createDefaultTrackedComponents<
   return { SuspenseFallback, ReadQueryHook };
 }
 
+function createDefaultProfiler<TData = unknown>() {
+  return createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<TData> | null,
+    },
+  });
+}
+
 it("fetches a simple query with minimal config", async () => {
   const { query, mocks } = setupSimpleCase();
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -624,11 +628,7 @@ it("allows the client to be overridden", async () => {
     cache: new InMemoryCache(),
   });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -680,11 +680,7 @@ it("passes context to the link", async () => {
     });
   });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult | null,
-    },
-  });
+  const Profiler = createDefaultProfiler();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -758,11 +754,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
 
   cache.writeQuery({ query, data: { results } });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<Data> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<Data>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -831,11 +823,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
 
   cache.writeQuery({ query, data: { results } });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<Data> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<Data>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -878,11 +866,7 @@ it("returns initial cache data followed by network data when the fetch policy is
 
   cache.writeQuery({ query, data: { greeting: "from cache" } });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -940,11 +924,7 @@ it("all data is present in the cache, no network request is made", async () => {
 
   cache.writeQuery({ query, data: { greeting: "from cache" } });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -999,11 +979,7 @@ it("partial data is present in the cache so it is ignored and network request is
     cache.writeQuery({ query, data: { hello: "from cache" } });
   }
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult | null,
-    },
-  });
+  const Profiler = createDefaultProfiler();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -1053,11 +1029,7 @@ it("existing data in the cache is ignored when fetchPolicy is 'network-only'", a
 
   cache.writeQuery({ query, data: { greeting: "from cache" } });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -1111,11 +1083,7 @@ it("fetches data from the network but does not update the cache when fetchPolicy
 
   cache.writeQuery({ query, data: { greeting: "from cache" } });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -1341,11 +1309,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   });
   const client = new ApolloClient({ cache, link });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<Data> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<Data>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
@@ -1451,11 +1415,7 @@ it("reacts to cache updates", async () => {
     cache: new InMemoryCache(),
   });
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-    },
-  });
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);

@@ -24,8 +24,8 @@ export interface UseQueryRefHandlersResult<
  * A React hook that returns a `refetch` and `fetchMore` function for a given
  * `queryRef`.
  * This allows you to control the lifecyle of a queryRef from a different component
- * than the one that created it. 
- * 
+ * than the one that created it.
+ *
  * @param queryRef a `QueryReference` returned from `useBackgroundQuery` or `createQueryPreloader`.
  */
 export function useQueryRefHandlers<

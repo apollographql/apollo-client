@@ -2274,14 +2274,14 @@ export function useMutation<TData = any, TVariables = OperationVariables, TConte
 // @public (undocumented)
 export function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>): QueryResult<TData, TVariables>;
 
-// @public (undocumented)
+// @public
 export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryReference<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;
 
 // @public (undocumented)
 export interface UseQueryRefHandlersResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
     // (undocumented)
     fetchMore: FetchMoreFunction<TData, TVariables>;
-    // (undocumented)
+
     refetch: RefetchFunction<TData, TVariables>;
 }
 

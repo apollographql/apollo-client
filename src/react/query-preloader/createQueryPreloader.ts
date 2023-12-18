@@ -100,6 +100,7 @@ type PreloadQueryOptionsArg<
  * ```
  */
 export interface PreloadQueryFunction {
+  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <
     TData,
     TVariables extends OperationVariables,
@@ -117,6 +118,7 @@ export interface PreloadQueryFunction {
     TVariables
   >;
 
+  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
@@ -125,6 +127,7 @@ export interface PreloadQueryFunction {
     }
   ): QueryReference<DeepPartial<TData> | undefined, TVariables>;
 
+  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
@@ -132,6 +135,7 @@ export interface PreloadQueryFunction {
     }
   ): QueryReference<TData | undefined, TVariables>;
 
+  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
@@ -139,6 +143,7 @@ export interface PreloadQueryFunction {
     }
   ): QueryReference<DeepPartial<TData>, TVariables>;
 
+  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>

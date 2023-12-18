@@ -1540,117 +1540,57 @@ it("reacts to variables updates", async () => {
 });
 
 it("does not suspend when `skip` is true", async () => {
-  interface Data {
-    greeting: string;
-  }
+  const { query, mocks } = setupSimpleCase();
 
-  const query: TypedDocumentNode<Data> = gql`
-    query {
-      greeting
-    }
-  `;
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  const mocks = [
-    {
-      request: { query },
-      result: { data: { greeting: "Hello" } },
-    },
-  ];
-
-  const client = new ApolloClient({
-    link: new MockLink(mocks),
-    cache: new InMemoryCache(),
-  });
-
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
-
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [queryRef] = useBackgroundQuery(query, { skip: true });
 
     return (
       <Suspense fallback={<SuspenseFallback />}>
-        {queryRef && <Greeting queryRef={queryRef} />}
+        {queryRef && <ReadQueryHook queryRef={queryRef} />}
       </Suspense>
     );
   }
 
-  function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-    return <div data-testid="greeting">{data.greeting}</div>;
-  }
+  const { renderedComponents } = await Profiler.takeRender();
 
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
+  expect(renderedComponents).toStrictEqual([App]);
 
-  render(<App />);
-
-  expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
-  expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
+  await expect(Profiler).not.toRerender();
 });
 
 it("does not suspend when using `skipToken` in options", async () => {
-  interface Data {
-    greeting: string;
-  }
+  const { query, mocks } = setupSimpleCase();
 
-  const query: TypedDocumentNode<Data> = gql`
-    query {
-      greeting
-    }
-  `;
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  const mocks = [
-    {
-      request: { query },
-      result: { data: { greeting: "Hello" } },
-    },
-  ];
-
-  const client = new ApolloClient({
-    link: new MockLink(mocks),
-    cache: new InMemoryCache(),
-  });
-
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
-
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [queryRef] = useBackgroundQuery(query, skipToken);
 
     return (
       <Suspense fallback={<SuspenseFallback />}>
-        {queryRef && <Greeting queryRef={queryRef} />}
+        {queryRef && <ReadQueryHook queryRef={queryRef} />}
       </Suspense>
     );
   }
 
-  function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-    return <div data-testid="greeting">{data.greeting}</div>;
-  }
+  const { renderedComponents } = await Profiler.takeRender();
 
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
+  expect(renderedComponents).toStrictEqual([App]);
 
-  render(<App />);
-
-  expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
-  expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
+  await expect(Profiler).not.toRerender();
 });
 
 it("suspends when `skip` becomes `false` after it was `true`", async () => {

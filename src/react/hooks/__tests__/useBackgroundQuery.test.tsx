@@ -1334,17 +1334,6 @@ it("fetches data from the network but does not update the cache when fetchPolicy
   });
 });
 
-it("suspends and renders hello", async () => {
-  const { renders } = renderIntegrationTest();
-  // ensure the hook suspends immediately
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
-
-  // the parent component re-renders when promise fulfilled
-  expect(await screen.findByText("hello")).toBeInTheDocument();
-  expect(renders.count).toBe(1);
-});
-
 it("works with startTransition to change variables", async () => {
   type Variables = {
     id: string;

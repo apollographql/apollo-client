@@ -158,7 +158,7 @@ export interface PreloadQueryFunction {
  *
  * @param client - The ApolloClient instance that will be used to load queries
  * from the returned `preloadQuery` function.
- * @returns The {@link preloadQuery} function.
+ * @returns The `preloadQuery` function.
  *
  * @example
  * ```js

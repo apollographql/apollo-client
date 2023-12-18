@@ -31,13 +31,13 @@ export interface UseQueryRefHandlersResult<
  * @example
  * ```tsx
  * const MyComponent({ queryRef }) {
- *   const { refetch, fetchMore } = useQueryRefHandlers(queryRef)
+ *   const { refetch, fetchMore } = useQueryRefHandlers(queryRef);
  *
  *   // ...
  * }
  * ```
  *
- * @param queryRef a `QueryReference` returned from `useBackgroundQuery` or `createQueryPreloader`.
+ * @param queryRef - A `QueryReference` returned from `useBackgroundQuery`, `useLoadableQuery`, or `createQueryPreloader`.
  */
 export function useQueryRefHandlers<
   TData = unknown,

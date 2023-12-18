@@ -570,7 +570,7 @@ function createTrackedErrorComponents<Snapshot extends { error: Error | null }>(
     return <div>Error</div>;
   }
 
-  function _ErrorBoundary({ children }: { children: React.ReactNode }) {
+  function ErrorBoundary({ children }: { children: React.ReactNode }) {
     return (
       <ReactErrorBoundary FallbackComponent={ErrorFallback}>
         {children}
@@ -578,7 +578,7 @@ function createTrackedErrorComponents<Snapshot extends { error: Error | null }>(
     );
   }
 
-  return { ErrorFallback, ErrorBoundary: _ErrorBoundary };
+  return { ErrorFallback, ErrorBoundary };
 }
 
 function createErrorProfiler<TData = unknown>() {

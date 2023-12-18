@@ -2498,6 +2498,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     {
       request: { query, variables: { min: 0, max: 12 } },
       result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 10,
     },
     {
       request: { query, variables: { min: 12, max: 30 } },
@@ -2534,11 +2535,12 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     cache,
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const Profiler = createDefaultProfiler<Data>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [refetchWritePolicy, setRefetchWritePolicy] =
       React.useState<RefetchWritePolicy>("merge");
 
@@ -2559,63 +2561,71 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
           Refetch last
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Primes queryRef={queryRef} />
+          <ReadQueryHook queryRef={queryRef} />
         </Suspense>
       </>
     );
   }
 
-  function Primes({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-    return <span data-testid="primes">{data.primes.join(", ")}</span>;
+  // initial suspended render
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { primes: [2, 3, 5, 7, 11] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
-
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
-
-  render(<App />);
-
-  const primes = await screen.findByTestId("primes");
-
-  expect(primes).toHaveTextContent("2, 3, 5, 7, 11");
-  expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
   await act(() => user.click(screen.getByText("Refetch next")));
+  await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(primes).toHaveTextContent("2, 3, 5, 7, 11, 13, 17, 19, 23, 29");
-  });
+  {
+    const { snapshot } = await Profiler.takeRender();
 
-  expect(mergeParams).toEqual([
-    [undefined, [2, 3, 5, 7, 11]],
-    [
-      [2, 3, 5, 7, 11],
-      [13, 17, 19, 23, 29],
-    ],
-  ]);
+    expect(snapshot.result).toEqual({
+      data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+    ]);
+  }
 
   await act(() => user.click(screen.getByText("Change refetch write policy")));
+  await Profiler.takeRender();
 
   await act(() => user.click(screen.getByText("Refetch last")));
+  await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(primes).toHaveTextContent("31, 37, 41, 43, 47");
-  });
+  {
+    const { snapshot } = await Profiler.takeRender();
 
-  expect(mergeParams).toEqual([
-    [undefined, [2, 3, 5, 7, 11]],
-    [
-      [2, 3, 5, 7, 11],
-      [13, 17, 19, 23, 29],
-    ],
-    [undefined, [31, 37, 41, 43, 47]],
-  ]);
+    expect(snapshot.result).toEqual({
+      data: { primes: [31, 37, 41, 43, 47] },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(mergeParams).toEqual([
+      [undefined, [2, 3, 5, 7, 11]],
+      [
+        [2, 3, 5, 7, 11],
+        [13, 17, 19, 23, 29],
+      ],
+      [undefined, [31, 37, 41, 43, 47]],
+    ]);
+  }
 });
 
 it("applies `returnPartialData` on next fetch when it changes between renders", async () => {

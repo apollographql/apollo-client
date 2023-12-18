@@ -10,7 +10,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
-  ErrorBoundary,
+  ErrorBoundary as ReactErrorBoundary,
   ErrorBoundaryProps,
   FallbackProps,
 } from "react-error-boundary";
@@ -238,14 +238,14 @@ function renderVariablesIntegrationTest({
   }) {
     return (
       <ApolloProvider client={client}>
-        <ErrorBoundary {...errorBoundaryProps}>
+        <ReactErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
             <ParentWithVariables
               variables={variables}
               errorPolicy={errorPolicy}
             />
           </Suspense>
-        </ErrorBoundary>
+        </ReactErrorBoundary>
       </ApolloProvider>
     );
   }
@@ -419,7 +419,7 @@ function renderPaginatedIntegrationTest({
   function App() {
     return (
       <ApolloProvider client={client}>
-        <ErrorBoundary
+        <ReactErrorBoundary
           fallback={<div>Error</div>}
           onError={(error) => {
             ProfiledApp.mergeSnapshot(({ errorCount, errors }) => ({
@@ -431,7 +431,7 @@ function renderPaginatedIntegrationTest({
           <Suspense fallback={<SuspenseFallback />}>
             <ParentWithVariables />
           </Suspense>
-        </ErrorBoundary>
+        </ReactErrorBoundary>
       </ApolloProvider>
     );
   }
@@ -518,7 +518,7 @@ function renderSuspenseHook<Result, Props>(
         return (
           <Wrapper>
             <Suspense fallback={<SuspenseFallback />}>
-              <ErrorBoundary
+              <ReactErrorBoundary
                 fallback={<div>Error</div>}
                 onError={(error) => {
                   renders.errorCount++;
@@ -526,7 +526,7 @@ function renderSuspenseHook<Result, Props>(
                 }}
               >
                 <ApolloProvider client={client}>{children}</ApolloProvider>
-              </ErrorBoundary>
+              </ReactErrorBoundary>
             </Suspense>
           </Wrapper>
         );
@@ -572,9 +572,9 @@ function createDefaultErrorComponents<Snapshot extends { error: Error | null }>(
 
   function _ErrorBoundary({ children }: { children: React.ReactNode }) {
     return (
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <ReactErrorBoundary FallbackComponent={ErrorFallback}>
         {children}
-      </ErrorBoundary>
+      </ReactErrorBoundary>
     );
   }
 
@@ -2969,11 +2969,13 @@ it("properly handles changing options along with changing `variables`", async ()
         <button onClick={() => setId("1")}>Get first character</button>
         <button onClick={() => setId("2")}>Get second character</button>
         <button onClick={() => refetch()}>Refetch</button>
-        <ErrorBoundary fallback={<div data-testid="error">Error boundary</div>}>
+        <ReactErrorBoundary
+          fallback={<div data-testid="error">Error boundary</div>}
+        >
           <Suspense fallback={<SuspenseFallback />}>
             <Character queryRef={queryRef} />
           </Suspense>
-        </ErrorBoundary>
+        </ReactErrorBoundary>
       </>
     );
   }
@@ -3465,7 +3467,7 @@ describe("refetch", () => {
 
       return (
         <Suspense fallback={<SuspenseFallback />}>
-          <ErrorBoundary
+          <ReactErrorBoundary
             onReset={() => refetch()}
             fallbackRender={({ error, resetErrorBoundary }) => (
               <>
@@ -3475,7 +3477,7 @@ describe("refetch", () => {
             )}
           >
             <Todo queryRef={queryRef} />
-          </ErrorBoundary>
+          </ReactErrorBoundary>
         </Suspense>
       );
     }
@@ -3588,7 +3590,7 @@ describe("refetch", () => {
 
       return (
         <Suspense fallback={<SuspenseFallback />}>
-          <ErrorBoundary
+          <ReactErrorBoundary
             onReset={() => refetch()}
             fallbackRender={({ error, resetErrorBoundary }) => (
               <>
@@ -3598,7 +3600,7 @@ describe("refetch", () => {
             )}
           >
             <Todo queryRef={queryRef} />
-          </ErrorBoundary>
+          </ReactErrorBoundary>
         </Suspense>
       );
     }

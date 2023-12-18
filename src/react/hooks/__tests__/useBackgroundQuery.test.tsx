@@ -43,7 +43,7 @@ import {
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
-import { QueryReference, getWrappedPromise } from "../../cache/QueryReference";
+import { QueryReference } from "../../cache/QueryReference";
 import { InMemoryCache } from "../../../cache";
 import {
   SuspenseQueryHookFetchPolicy,
@@ -1265,47 +1265,72 @@ it("existing data in the cache is ignored when fetchPolicy is 'network-only'", a
   });
 });
 
-it("fetches data from the network but does not update the cache", async () => {
-  const query = gql`
-    {
-      hello
-    }
-  `;
+it("fetches data from the network but does not update the cache when fetchPolicy is 'no-cache'", async () => {
+  const { query } = setupSimpleCase();
   const cache = new InMemoryCache();
   const link = mockSingleLink({
     request: { query },
-    result: { data: { hello: "from link" } },
+    result: { data: { greeting: "from link" } },
     delay: 20,
   });
 
-  const client = new ApolloClient({
-    link,
-    cache,
+  const client = new ApolloClient({ link, cache });
+
+  cache.writeQuery({ query, data: { greeting: "from cache" } });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
   });
 
-  cache.writeQuery({ query, data: { hello: "from cache" } });
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
 
-  const { result } = renderHook(
-    () => useBackgroundQuery(query, { fetchPolicy: "no-cache" }),
-    {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    }
-  );
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryReference<SimpleCaseData>;
+  }) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-  const [queryRef] = result.current;
+    return null;
+  }
 
-  const _result = await getWrappedPromise(queryRef);
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, { fetchPolicy: "no-cache" });
 
-  expect(_result).toEqual({
-    data: { hello: "from link" },
-    loading: false,
-    networkStatus: 7,
-  });
-  // ...but not updated in the cache
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "from link" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
   expect(client.cache.extract()).toEqual({
-    ROOT_QUERY: { __typename: "Query", hello: "from cache" },
+    ROOT_QUERY: { __typename: "Query", greeting: "from cache" },
   });
 });
 

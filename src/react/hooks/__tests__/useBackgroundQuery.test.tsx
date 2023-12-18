@@ -560,7 +560,7 @@ function createDefaultTrackedComponents<
   return { SuspenseFallback, ReadQueryHook };
 }
 
-function createDefaultErrorComponents<Snapshot extends { error: Error | null }>(
+function createTrackedErrorComponents<Snapshot extends { error: Error | null }>(
   Profiler: Profiler<Snapshot>
 ) {
   function ErrorFallback({ error }: FallbackProps) {
@@ -2242,7 +2242,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
   const Profiler = createErrorProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
-  const { ErrorBoundary } = createDefaultErrorComponents(Profiler);
+  const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
   function App() {
     useTrackRenders();

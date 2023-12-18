@@ -3120,85 +3120,77 @@ describe("refetch", () => {
   });
 
   it("re-suspends when calling `refetch` with new variables", async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: "1" } },
-        result: {
-          data: { character: { id: "1", name: "Captain Marvel" } },
-        },
-        delay: 200,
-      },
-      {
-        request: { query, variables: { id: "2" } },
-        result: {
-          data: { character: { id: "2", name: "Captain America" } },
-        },
-        delay: 200,
-      },
-    ];
-
-    const { renders } = renderVariablesIntegrationTest({
-      variables: { id: "1" },
-      mocks,
-    });
-
-    expect(renders.suspenseCount).toBe(1);
-    expect(screen.getByText("loading")).toBeInTheDocument();
-
-    expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
-
-    const newVariablesRefetchButton = screen.getByText(
-      "Set variables to id: 2"
-    );
-    const refetchButton = screen.getByText("Refetch");
+    const { query, mocks } = setupVariablesCase();
     const user = userEvent.setup();
-    await act(() => user.click(newVariablesRefetchButton));
-    await act(() => user.click(refetchButton));
+    const Profiler = createDefaultProfiler<VariablesCaseData>();
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
 
-    expect(await screen.findByText("2 - Captain America")).toBeInTheDocument();
+    function App() {
+      useTrackRenders();
+      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        variables: { id: "1" },
+      });
 
-    // parent component re-suspends
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.count).toBe(3);
+      return (
+        <>
+          <button onClick={() => refetch({ id: "2" })}>Refetch</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <ReadQueryHook queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
 
-    // extra render puts an additional frame into the array
-    expect(renders.frames).toMatchObject([
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
+    renderWithMocks(<App />, { mocks, wrapper: Profiler });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Spider-Man",
+          },
+        },
         error: undefined,
-      },
-      {
-        ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Refetch")));
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: {
+          character: {
+            __typename: "Character",
+            id: "2",
+            name: "Black Widow",
+          },
+        },
         error: undefined,
-      },
-      {
-        ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+      });
+    }
   });
+
   it("re-suspends multiple times when calling `refetch` multiple times", async () => {
     const { renders } = renderVariablesIntegrationTest({
       variables: { id: "1" },

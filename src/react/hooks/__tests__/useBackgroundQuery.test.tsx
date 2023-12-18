@@ -2031,40 +2031,26 @@ it("result is referentially stable", async () => {
 });
 
 it("`skip` option works with `startTransition`", async () => {
-  interface Data {
-    greeting: string;
-  }
+  const { query, mocks } = setupSimpleCase();
 
   const user = userEvent.setup();
-
-  const query: TypedDocumentNode<Data> = gql`
-    query {
-      greeting
-    }
-  `;
-
-  const mocks = [
-    {
-      request: { query },
-      result: { data: { greeting: "Hello" } },
-      delay: 10,
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      isPending: false,
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
-  ];
-
-  const client = new ApolloClient({
-    link: new MockLink(mocks),
-    cache: new InMemoryCache(),
   });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
-
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [skip, setSkip] = React.useState(true);
     const [isPending, startTransition] = React.useTransition();
     const [queryRef] = useBackgroundQuery(query, { skip });
 
+    Profiler.mergeSnapshot({ isPending });
+
     return (
       <>
         <button
@@ -2078,77 +2064,72 @@ it("`skip` option works with `startTransition`", async () => {
           Toggle skip
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Greeting queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-    return <div data-testid="greeting">{data.greeting}</div>;
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
   }
-
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
-
-  render(<App />);
-
-  const button = screen.getByText("Toggle skip");
 
   // Toggle skip to `false`
-  await act(() => user.click(button));
+  await act(() => user.click(screen.getByText("Toggle skip")));
 
-  expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
-  expect(button).toBeDisabled();
-  expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
-  });
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot).toEqual({
+      isPending: true,
+      result: null,
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot).toEqual({
+      isPending: false,
+      result: {
+        data: { greeting: "Hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("`skipToken` works with `startTransition`", async () => {
-  interface Data {
-    greeting: string;
-  }
-
+  const { query, mocks } = setupSimpleCase();
   const user = userEvent.setup();
 
-  const query: TypedDocumentNode<Data> = gql`
-    query {
-      greeting
-    }
-  `;
-
-  const mocks = [
-    {
-      request: { query },
-      result: { data: { greeting: "Hello" } },
-      delay: 10,
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      isPending: false,
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
-  ];
-
-  const client = new ApolloClient({
-    link: new MockLink(mocks),
-    cache: new InMemoryCache(),
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [skip, setSkip] = React.useState(true);
     const [isPending, startTransition] = React.useTransition();
     const [queryRef] = useBackgroundQuery(query, skip ? skipToken : undefined);
 
+    Profiler.mergeSnapshot({ isPending });
+
     return (
       <>
         <button
@@ -2162,40 +2143,48 @@ it("`skipToken` works with `startTransition`", async () => {
           Toggle skip
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Greeting queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-    return <div data-testid="greeting">{data.greeting}</div>;
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
   }
-
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
-
-  render(<App />);
-
-  const button = screen.getByText("Toggle skip");
 
   // Toggle skip to `false`
-  await act(() => user.click(button));
+  await act(() => user.click(screen.getByText("Toggle skip")));
 
-  expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
-  expect(button).toBeDisabled();
-  expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
-  });
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot).toEqual({
+      isPending: true,
+      result: null,
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot).toEqual({
+      isPending: false,
+      result: {
+        data: { greeting: "Hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("applies `errorPolicy` on next fetch when it changes between renders", async () => {

@@ -1334,294 +1334,292 @@ it("fetches data from the network but does not update the cache when fetchPolicy
   });
 });
 
-describe("integration tests with useReadQuery", () => {
-  it("suspends and renders hello", async () => {
-    const { renders } = renderIntegrationTest();
-    // ensure the hook suspends immediately
-    expect(renders.suspenseCount).toBe(1);
-    expect(screen.getByText("loading")).toBeInTheDocument();
+it("suspends and renders hello", async () => {
+  const { renders } = renderIntegrationTest();
+  // ensure the hook suspends immediately
+  expect(renders.suspenseCount).toBe(1);
+  expect(screen.getByText("loading")).toBeInTheDocument();
 
-    // the parent component re-renders when promise fulfilled
-    expect(await screen.findByText("hello")).toBeInTheDocument();
-    expect(renders.count).toBe(1);
-  });
+  // the parent component re-renders when promise fulfilled
+  expect(await screen.findByText("hello")).toBeInTheDocument();
+  expect(renders.count).toBe(1);
+});
 
-  it("works with startTransition to change variables", async () => {
-    type Variables = {
+it("works with startTransition to change variables", async () => {
+  type Variables = {
+    id: string;
+  };
+
+  interface Data {
+    todo: {
       id: string;
+      name: string;
+      completed: boolean;
     };
+  }
+  const user = userEvent.setup();
 
-    interface Data {
-      todo: {
-        id: string;
-        name: string;
-        completed: boolean;
-      };
-    }
-    const user = userEvent.setup();
-
-    const query: TypedDocumentNode<Data, Variables> = gql`
-      query TodoItemQuery($id: ID!) {
-        todo(id: $id) {
-          id
-          name
-          completed
-        }
+  const query: TypedDocumentNode<Data, Variables> = gql`
+    query TodoItemQuery($id: ID!) {
+      todo(id: $id) {
+        id
+        name
+        completed
       }
-    `;
+    }
+  `;
 
-    const mocks: MockedResponse<Data, Variables>[] = [
-      {
-        request: { query, variables: { id: "1" } },
-        result: {
-          data: { todo: { id: "1", name: "Clean room", completed: false } },
-        },
-        delay: 10,
+  const mocks: MockedResponse<Data, Variables>[] = [
+    {
+      request: { query, variables: { id: "1" } },
+      result: {
+        data: { todo: { id: "1", name: "Clean room", completed: false } },
       },
-      {
-        request: { query, variables: { id: "2" } },
-        result: {
-          data: {
-            todo: { id: "2", name: "Take out trash", completed: true },
-          },
+      delay: 10,
+    },
+    {
+      request: { query, variables: { id: "2" } },
+      result: {
+        data: {
+          todo: { id: "2", name: "Take out trash", completed: true },
         },
-        delay: 10,
       },
-    ];
+      delay: 10,
+    },
+  ];
 
-    const client = new ApolloClient({
-      link: new MockLink(mocks),
-      cache: new InMemoryCache(),
-    });
-
-    function App() {
-      return (
-        <ApolloProvider client={client}>
-          <Suspense fallback={<SuspenseFallback />}>
-            <Parent />
-          </Suspense>
-        </ApolloProvider>
-      );
-    }
-
-    function SuspenseFallback() {
-      return <p>Loading</p>;
-    }
-
-    function Parent() {
-      const [id, setId] = React.useState("1");
-      const [queryRef] = useBackgroundQuery(query, {
-        variables: { id },
-      });
-      return <Todo queryRef={queryRef} onChange={setId} />;
-    }
-
-    function Todo({
-      queryRef,
-      onChange,
-    }: {
-      queryRef: QueryReference<Data>;
-      onChange: (id: string) => void;
-    }) {
-      const { data } = useReadQuery(queryRef);
-      const [isPending, startTransition] = React.useTransition();
-      const { todo } = data;
-
-      return (
-        <>
-          <button
-            onClick={() => {
-              startTransition(() => {
-                onChange("2");
-              });
-            }}
-          >
-            Refresh
-          </button>
-          <div data-testid="todo" aria-busy={isPending}>
-            {todo.name}
-            {todo.completed && " (completed)"}
-          </div>
-        </>
-      );
-    }
-
-    render(<App />);
-
-    expect(screen.getByText("Loading")).toBeInTheDocument();
-
-    expect(await screen.findByTestId("todo")).toBeInTheDocument();
-
-    const todo = screen.getByTestId("todo");
-    const button = screen.getByText("Refresh");
-
-    expect(todo).toHaveTextContent("Clean room");
-
-    await act(() => user.click(button));
-
-    // startTransition will avoid rendering the suspense fallback for already
-    // revealed content if the state update inside the transition causes the
-    // component to suspend.
-    //
-    // Here we should not see the suspense fallback while the component suspends
-    // until the todo is finished loading. Seeing the suspense fallback is an
-    // indication that we are suspending the component too late in the process.
-    expect(screen.queryByText("Loading")).not.toBeInTheDocument();
-
-    // We can ensure this works with isPending from useTransition in the process
-    expect(todo).toHaveAttribute("aria-busy", "true");
-
-    // Ensure we are showing the stale UI until the new todo has loaded
-    expect(todo).toHaveTextContent("Clean room");
-
-    // Eventually we should see the updated todo content once its done
-    // suspending.
-    await waitFor(() => {
-      expect(todo).toHaveTextContent("Take out trash (completed)");
-    });
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
   });
 
-  it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
-    interface Data {
-      greeting: {
-        __typename: string;
-        message: string;
-        recipient: { name: string; __typename: string };
-      };
-    }
+  function App() {
+    return (
+      <ApolloProvider client={client}>
+        <Suspense fallback={<SuspenseFallback />}>
+          <Parent />
+        </Suspense>
+      </ApolloProvider>
+    );
+  }
 
-    const query: TypedDocumentNode<Data> = gql`
-      query {
-        greeting {
-          message
-          ... on Greeting @defer {
-            recipient {
-              name
-            }
+  function SuspenseFallback() {
+    return <p>Loading</p>;
+  }
+
+  function Parent() {
+    const [id, setId] = React.useState("1");
+    const [queryRef] = useBackgroundQuery(query, {
+      variables: { id },
+    });
+    return <Todo queryRef={queryRef} onChange={setId} />;
+  }
+
+  function Todo({
+    queryRef,
+    onChange,
+  }: {
+    queryRef: QueryReference<Data>;
+    onChange: (id: string) => void;
+  }) {
+    const { data } = useReadQuery(queryRef);
+    const [isPending, startTransition] = React.useTransition();
+    const { todo } = data;
+
+    return (
+      <>
+        <button
+          onClick={() => {
+            startTransition(() => {
+              onChange("2");
+            });
+          }}
+        >
+          Refresh
+        </button>
+        <div data-testid="todo" aria-busy={isPending}>
+          {todo.name}
+          {todo.completed && " (completed)"}
+        </div>
+      </>
+    );
+  }
+
+  render(<App />);
+
+  expect(screen.getByText("Loading")).toBeInTheDocument();
+
+  expect(await screen.findByTestId("todo")).toBeInTheDocument();
+
+  const todo = screen.getByTestId("todo");
+  const button = screen.getByText("Refresh");
+
+  expect(todo).toHaveTextContent("Clean room");
+
+  await act(() => user.click(button));
+
+  // startTransition will avoid rendering the suspense fallback for already
+  // revealed content if the state update inside the transition causes the
+  // component to suspend.
+  //
+  // Here we should not see the suspense fallback while the component suspends
+  // until the todo is finished loading. Seeing the suspense fallback is an
+  // indication that we are suspending the component too late in the process.
+  expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+
+  // We can ensure this works with isPending from useTransition in the process
+  expect(todo).toHaveAttribute("aria-busy", "true");
+
+  // Ensure we are showing the stale UI until the new todo has loaded
+  expect(todo).toHaveTextContent("Clean room");
+
+  // Eventually we should see the updated todo content once its done
+  // suspending.
+  await waitFor(() => {
+    expect(todo).toHaveTextContent("Take out trash (completed)");
+  });
+});
+
+it('does not suspend deferred queries with data in the cache and using a "cache-and-network" fetch policy', async () => {
+  interface Data {
+    greeting: {
+      __typename: string;
+      message: string;
+      recipient: { name: string; __typename: string };
+    };
+  }
+
+  const query: TypedDocumentNode<Data> = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
           }
         }
       }
-    `;
+    }
+  `;
 
-    const link = new MockSubscriptionLink();
-    const cache = new InMemoryCache();
-    cache.writeQuery({
-      query,
+  const link = new MockSubscriptionLink();
+  const cache = new InMemoryCache();
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello cached",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+  });
+  const client = new ApolloClient({ cache, link });
+  let renders = 0;
+  let suspenseCount = 0;
+
+  function App() {
+    return (
+      <ApolloProvider client={client}>
+        <Suspense fallback={<SuspenseFallback />}>
+          <Parent />
+        </Suspense>
+      </ApolloProvider>
+    );
+  }
+
+  function SuspenseFallback() {
+    suspenseCount++;
+    return <p>Loading</p>;
+  }
+
+  function Parent() {
+    const [queryRef] = useBackgroundQuery(query, {
+      fetchPolicy: "cache-and-network",
+    });
+    return <Todo queryRef={queryRef} />;
+  }
+
+  function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
+    const { data, networkStatus, error } = useReadQuery(queryRef);
+    const { greeting } = data;
+    renders++;
+
+    return (
+      <>
+        <div>Message: {greeting.message}</div>
+        <div>Recipient: {greeting.recipient.name}</div>
+        <div>Network status: {networkStatus}</div>
+        <div>Error: {error ? error.message : "none"}</div>
+      </>
+    );
+  }
+
+  render(<App />);
+
+  expect(screen.getByText(/Message/i)).toHaveTextContent(
+    "Message: Hello cached"
+  );
+  expect(screen.getByText(/Recipient/i)).toHaveTextContent(
+    "Recipient: Cached Alice"
+  );
+  expect(screen.getByText(/Network status/i)).toHaveTextContent(
+    "Network status: 1" // loading
+  );
+  expect(screen.getByText(/Error/i)).toHaveTextContent("none");
+
+  link.simulateResult({
+    result: {
       data: {
-        greeting: {
-          __typename: "Greeting",
-          message: "Hello cached",
-          recipient: { __typename: "Person", name: "Cached Alice" },
-        },
+        greeting: { __typename: "Greeting", message: "Hello world" },
       },
-    });
-    const client = new ApolloClient({ cache, link });
-    let renders = 0;
-    let suspenseCount = 0;
+      hasNext: true,
+    },
+  });
 
-    function App() {
-      return (
-        <ApolloProvider client={client}>
-          <Suspense fallback={<SuspenseFallback />}>
-            <Parent />
-          </Suspense>
-        </ApolloProvider>
-      );
-    }
-
-    function SuspenseFallback() {
-      suspenseCount++;
-      return <p>Loading</p>;
-    }
-
-    function Parent() {
-      const [queryRef] = useBackgroundQuery(query, {
-        fetchPolicy: "cache-and-network",
-      });
-      return <Todo queryRef={queryRef} />;
-    }
-
-    function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
-      const { data, networkStatus, error } = useReadQuery(queryRef);
-      const { greeting } = data;
-      renders++;
-
-      return (
-        <>
-          <div>Message: {greeting.message}</div>
-          <div>Recipient: {greeting.recipient.name}</div>
-          <div>Network status: {networkStatus}</div>
-          <div>Error: {error ? error.message : "none"}</div>
-        </>
-      );
-    }
-
-    render(<App />);
-
-    expect(screen.getByText(/Message/i)).toHaveTextContent(
-      "Message: Hello cached"
-    );
-    expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-      "Recipient: Cached Alice"
-    );
-    expect(screen.getByText(/Network status/i)).toHaveTextContent(
-      "Network status: 1" // loading
-    );
-    expect(screen.getByText(/Error/i)).toHaveTextContent("none");
-
-    link.simulateResult({
-      result: {
-        data: {
-          greeting: { __typename: "Greeting", message: "Hello world" },
-        },
-        hasNext: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(/Message/i)).toHaveTextContent(
-        "Message: Hello world"
-      );
-    });
-    expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-      "Recipient: Cached Alice"
-    );
-    expect(screen.getByText(/Network status/i)).toHaveTextContent(
-      "Network status: 7" // ready
-    );
-    expect(screen.getByText(/Error/i)).toHaveTextContent("none");
-
-    link.simulateResult({
-      result: {
-        incremental: [
-          {
-            data: {
-              recipient: { name: "Alice", __typename: "Person" },
-              __typename: "Greeting",
-            },
-            path: ["greeting"],
-          },
-        ],
-        hasNext: false,
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-        "Recipient: Alice"
-      );
-    });
+  await waitFor(() => {
     expect(screen.getByText(/Message/i)).toHaveTextContent(
       "Message: Hello world"
     );
-    expect(screen.getByText(/Network status/i)).toHaveTextContent(
-      "Network status: 7" // ready
-    );
-    expect(screen.getByText(/Error/i)).toHaveTextContent("none");
-
-    expect(renders).toBe(3);
-    expect(suspenseCount).toBe(0);
   });
+  expect(screen.getByText(/Recipient/i)).toHaveTextContent(
+    "Recipient: Cached Alice"
+  );
+  expect(screen.getByText(/Network status/i)).toHaveTextContent(
+    "Network status: 7" // ready
+  );
+  expect(screen.getByText(/Error/i)).toHaveTextContent("none");
+
+  link.simulateResult({
+    result: {
+      incremental: [
+        {
+          data: {
+            recipient: { name: "Alice", __typename: "Person" },
+            __typename: "Greeting",
+          },
+          path: ["greeting"],
+        },
+      ],
+      hasNext: false,
+    },
+  });
+
+  await waitFor(() => {
+    expect(screen.getByText(/Recipient/i)).toHaveTextContent(
+      "Recipient: Alice"
+    );
+  });
+  expect(screen.getByText(/Message/i)).toHaveTextContent(
+    "Message: Hello world"
+  );
+  expect(screen.getByText(/Network status/i)).toHaveTextContent(
+    "Network status: 7" // ready
+  );
+  expect(screen.getByText(/Error/i)).toHaveTextContent("none");
+
+  expect(renders).toBe(3);
+  expect(suspenseCount).toBe(0);
 });
 
 it("reacts to cache updates", async () => {

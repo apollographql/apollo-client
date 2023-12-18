@@ -1133,38 +1133,63 @@ it("partial data is present in the cache so it is ignored and network request is
     delay: 20,
   });
 
-  const client = new ApolloClient({
-    link,
-    cache,
+  const client = new ApolloClient({ link, cache });
+
+  {
+    // we expect a "Missing field 'foo' while writing result..." error
+    // when writing hello to the cache, so we'll silence the console.error
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({ query, data: { hello: "from cache" } });
+  }
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult | null,
+    },
   });
 
-  // we expect a "Missing field 'foo' while writing result..." error
-  // when writing hello to the cache, so we'll silence the console.error
-  const originalConsoleError = console.error;
-  console.error = () => {
-    /* noop */
-  };
-  cache.writeQuery({ query, data: { hello: "from cache" } });
-  console.error = originalConsoleError;
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
 
-  const { result } = renderHook(
-    () => useBackgroundQuery(query, { fetchPolicy: "cache-first" }),
-    {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    }
-  );
+  function ReadQueryHook({ queryRef }: { queryRef: QueryReference }) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-  const [queryRef] = result.current;
+    return null;
+  }
 
-  const _result = await getWrappedPromise(queryRef);
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, {
+      fetchPolicy: "cache-first",
+    });
 
-  expect(_result).toEqual({
-    data: { foo: "bar", hello: "from link" },
-    loading: false,
-    networkStatus: 7,
-  });
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { foo: "bar", hello: "from link" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it("existing data in the cache is ignored", async () => {

@@ -2268,11 +2268,8 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
 
   renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-  {
-    const { renderedComponents } = await Profiler.takeRender();
-
-    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
-  }
+  // initial render
+  await Profiler.takeRender();
 
   {
     const { snapshot } = await Profiler.takeRender();

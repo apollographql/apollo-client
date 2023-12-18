@@ -1194,46 +1194,74 @@ it("partial data is present in the cache so it is ignored and network request is
   }
 });
 
-it("existing data in the cache is ignored", async () => {
-  const query = gql`
-    {
-      hello
-    }
-  `;
+it("existing data in the cache is ignored when fetchPolicy is 'network-only'", async () => {
+  const { query } = setupSimpleCase();
   const cache = new InMemoryCache();
   const link = mockSingleLink({
     request: { query },
-    result: { data: { hello: "from link" } },
+    result: { data: { greeting: "from link" } },
     delay: 20,
   });
 
-  const client = new ApolloClient({
-    link,
-    cache,
+  const client = new ApolloClient({ link, cache });
+
+  cache.writeQuery({ query, data: { greeting: "from cache" } });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
   });
 
-  cache.writeQuery({ query, data: { hello: "from cache" } });
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
 
-  const { result } = renderHook(
-    () => useBackgroundQuery(query, { fetchPolicy: "network-only" }),
-    {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    }
-  );
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryReference<SimpleCaseData>;
+  }) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-  const [queryRef] = result.current;
+    return null;
+  }
 
-  const _result = await getWrappedPromise(queryRef);
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, {
+      fetchPolicy: "network-only",
+    });
 
-  expect(_result).toEqual({
-    data: { hello: "from link" },
-    loading: false,
-    networkStatus: 7,
-  });
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "from link" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
   expect(client.cache.extract()).toEqual({
-    ROOT_QUERY: { __typename: "Query", hello: "from link" },
+    ROOT_QUERY: { __typename: "Query", greeting: "from link" },
   });
 });
 

@@ -581,6 +581,14 @@ function createDefaultErrorComponents<Snapshot extends { error: Error | null }>(
   return { ErrorFallback, ErrorBoundary: _ErrorBoundary };
 }
 
+function createErrorProfiler<TData = unknown>() {
+  return createProfiler({
+    initialSnapshot: {
+      error: null as Error | null,
+      result: null as UseReadQueryResult<TData> | null,
+    },
+  });
+}
 function createDefaultProfiler<TData = unknown>() {
   return createProfiler({
     initialSnapshot: {
@@ -2231,12 +2239,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     },
   ];
 
-  const Profiler = createProfiler({
-    initialSnapshot: {
-      error: null as Error | null,
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
-    },
-  });
+  const Profiler = createErrorProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
   const { ErrorBoundary } = createDefaultErrorComponents(Profiler);

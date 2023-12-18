@@ -1644,35 +1644,15 @@ it("suspends when `skip` becomes `false` after it was `true`", async () => {
 });
 
 it("suspends when switching away from `skipToken` in options", async () => {
-  interface Data {
-    greeting: string;
-  }
+  const { query, mocks } = setupSimpleCase();
 
   const user = userEvent.setup();
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  const query: TypedDocumentNode<Data> = gql`
-    query {
-      greeting
-    }
-  `;
-
-  const mocks = [
-    {
-      request: { query },
-      result: { data: { greeting: "Hello" } },
-    },
-  ];
-
-  const client = new ApolloClient({
-    link: new MockLink(mocks),
-    cache: new InMemoryCache(),
-  });
-
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
-
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [skip, setSkip] = React.useState(true);
     const [queryRef] = useBackgroundQuery(query, skip ? skipToken : undefined);
 
@@ -1680,38 +1660,37 @@ it("suspends when switching away from `skipToken` in options", async () => {
       <>
         <button onClick={() => setSkip(false)}>Run query</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Greeting queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-    return <div data-testid="greeting">{data.greeting}</div>;
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
   }
-
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
-
-  render(<App />);
-
-  expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
-  expect(screen.queryByTestId("greeting")).not.toBeInTheDocument();
 
   await act(() => user.click(screen.getByText("Run query")));
 
-  expect(screen.getByText("Loading...")).toBeInTheDocument();
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
-  });
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it("renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`", async () => {

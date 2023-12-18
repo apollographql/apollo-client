@@ -3401,54 +3401,98 @@ describe("refetch", () => {
   });
 
   it('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
+    const { query, mocks: defaultMocks } = setupVariablesCase();
+    const user = userEvent.setup();
     const mocks = [
-      {
-        request: { query, variables: { id: "1" } },
-        result: {
-          data: { character: { id: "1", name: "Captain Marvel" } },
-        },
-      },
+      ...defaultMocks,
       {
         request: { query, variables: { id: "1" } },
         result: {
           errors: [new GraphQLError("Something went wrong")],
         },
+        delay: 10,
       },
     ];
 
-    const { renders } = renderVariablesIntegrationTest({
-      variables: { id: "1" },
-      errorPolicy: "ignore",
-      mocks,
-    });
+    const Profiler = createErrorProfiler<VariablesCaseData | undefined>();
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
+    const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
-    expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
+    function App() {
+      useTrackRenders();
+      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        variables: { id: "1" },
+        errorPolicy: "ignore",
+      });
 
-    const button = screen.getByText("Refetch");
-    const user = userEvent.setup();
-    await act(() => user.click(button));
+      return (
+        <>
+          <button onClick={() => refetch()}>Refetch</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <ErrorBoundary>
+              <ReadQueryHook queryRef={queryRef} />
+            </ErrorBoundary>
+          </Suspense>
+        </>
+      );
+    }
 
-    expect(renders.errorCount).toBe(0);
-    expect(renders.errors).toEqual([]);
+    renderWithMocks(<App />, { mocks, wrapper: Profiler });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot).toEqual({
+        error: null,
+        result: {
+          data: {
+            character: {
+              __typename: "Character",
+              id: "1",
+              name: "Spider-Man",
+            },
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Refetch")));
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot).toEqual({
+        error: null,
+        result: {
+          data: {
+            character: {
+              __typename: "Character",
+              id: "1",
+              name: "Spider-Man",
+            },
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
   });
+
   it('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
     interface QueryData {
       character: {

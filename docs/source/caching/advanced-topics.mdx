@@ -2,7 +2,7 @@
 title: Advanced topics on caching in Apollo Client
 ---
 
-This article describes special cases and considerations when using the Apollo Client cache.
+This article describes special cases and considerations when using the [Apollo Client cache](./overview).
 
 ## Bypassing the cache
 
@@ -22,7 +22,11 @@ You can persist and rehydrate the `InMemoryCache` from a storage provider like `
 
 To get started, pass your cache and a storage provider to `persistCache`. By default, the contents of your cache are immediately restored asynchronously, and they're persisted on every write to the cache with a short configurable debounce interval.
 
-> **Note:** The `persistCache` method is async and returns a `Promise`.
+<Note>
+
+The `persistCache` method is async and returns a `Promise`.
+
+</Note>
 
 ```js
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -60,7 +64,7 @@ function Profile() {
 }
 ```
 
-> To reset the cache _without_ refetching active queries, use `client.clearStore()` instead of `client.resetStore()`.
+To reset the cache _without_ refetching active queries, use `client.clearStore()` instead of `client.resetStore()`.
 
 ### Responding to cache resets
 
@@ -97,7 +101,7 @@ function Foo (){
   const client = useApolloClient();
 
   useEffect(() => {
-    const unsubscribe = client.onResetStore(() => 
+    const unsubscribe = client.onResetStore(() =>
       new Promise(()=>setReset(reset + 1))
     );
 
@@ -174,7 +178,11 @@ In these cases, you can provide a `refetchQueries` option to the `useMutation` h
 
 For details, see [Refetching queries](../data/mutations/#refetching-queries).
 
-> Note that although `refetchQueries` can be faster to implement than an `update` function, it also requires additional network requests that are usually undesirable. For more information, see [this blog post](https://www.apollographql.com/blog/when-to-use-refetch-queries-in-apollo-client/).
+<Note>
+
+Although `refetchQueries` can be faster to implement than an `update` function, it also requires additional network requests that are usually undesirable. For more information, see [this blog post](https://www.apollographql.com/blog/when-to-use-refetch-queries-in-apollo-client/).
+
+</Note>
 
 ## Cache redirects
 
@@ -233,23 +241,61 @@ This `read` function uses the `toReference` helper utility to generate and retur
 
 Now whenever a query includes the `book` field, the `read` function above executes and returns a reference to a `Book` object. Apollo Client uses this reference to look up the object in its cache and return it if it's present. If it _isn't_ present, Apollo Client knows it needs to execute the query over the network.
 
-> ⚠️ **Note:** To avoid a network request, _all_ of a query's requested fields must already be present in the cache. If the detail view's query fetches _any_ `Book` field that the list view's query _didn't_, Apollo Client considers the cache hit to be incomplete, and it executes the full query over the network.
+<Note>
+
+To avoid a network request, _all_ of a query's requested fields must already be present in the cache. If the detail view's query fetches _any_ `Book` field that the list view's query _didn't_, Apollo Client considers the cache hit to be incomplete, and it executes the full query over the network.
+
+</Note>
 
 ## Pagination utilities
 
+Pagination is a best practice in GraphQL [for several reasons](../pagination/overview). Apollo Client enables fetching and caching paginated results using the [Core pagination API](../pagination/core-api). The API includes a few important utilities, including the [`fetchMore`](../pagination/core-api/#the-fetchmore-function) function and the `@connection` directive.
+
 ### Incremental loading: `fetchMore`
 
-You can use the `fetchMore` function to update a query's cached result with data returned by a _followup_ query. Most often, `fetchMore` is used to handle infinite-scroll pagination and other situations where you're loading _more_ data when you already have _some_.
+You can use the `fetchMore` function to update a query's cached result with data returned by a _follow-up_ query. Most often, `fetchMore` is used to handle infinite-scroll pagination and other situations where you're loading more data when you already have some.
 
 For details, see [The `fetchMore` function](../pagination/core-api/#the-fetchmore-function).
 
 ### The `@connection` directive
 
-Fundamentally, paginated queries are the same as any other query with the exception that calls to `fetchMore` update the same cache key. Because these queries are cached by both the initial query and their parameters, a problem arises when later retrieving or updating paginated queries in the cache. We don't care about pagination arguments such as limits, offsets, or cursors outside of the need to `fetchMore`, nor do we want to provide them simply for accessing cached data.
+The `@connection` directive solves the problem of multiple copies of the same field in the cache. This can happen with paginated queries because the `fetchMore` function sends follow-up queries to fetch additional pages of results using arguments like [`offset`](../pagination/offset-based/) and [`limit`](../pagination/offset-based/). These arguments inadvertently fragment data from different pagination requests across the cache.
 
-To solve this, you can use the `@connection` directive to specify a custom cache key for results. A connection allows us to set the cache key for a field and to filter which arguments actually alter the query.
+The `@connection` directive lets you unify paginated results by specifying a custom, stable cache key for a field. It also lets you _intentionally_ separate paginated results in the cache by fields that you specify.
 
-To use the `@connection` directive, add it to the segment of the query you want a custom store key for and provide the `key` parameter to specify the store key. In addition to the `key` parameter, you can also include the optional `filter` parameter, which takes an array of query argument names to include in the generated custom store key.
+<Tip>
+
+Starting in Apollo Client v3, setting the [`keyArgs` field policy](../pagination/key-args/#setting-keyargs) is the most straightforward way to resolve fragmented pagination results in the cache. For example, setting [`keyArgs` to `false`](../pagination/key-args/#supported-values-for-keyargs) indicates that no arguments should be included in cache keys, causing all pagination results to be cached together. Additionally, you only have to set your `keyArgs` configuration once, rather than using `@connection` in multiple queries. Refer to the [usage instructions](#connection-directive-usage) below to compare `@connection` and `keyArgs` usage.
+
+The `@connection` directive is useful when you want to store distinct data in the cache on a query-by-query, field-by-field basis. See the [advanced usage instructions](#advanced-connection-directive-usage) for more details.
+
+</Tip>
+
+#### `@connection` directive usage
+
+<Tip>
+
+For the standard `@connection` directive usage described in this section, it's best to configure a [`keyArgs` field policy](../pagination/key-args/#setting-keyargs). For example, you can use the following [`keyArgs`](../pagination/key-args/#setting-keyargs) configuration for the same effect as the `@connection` example below.
+
+```js
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        feed: {
+          keyArgs: ["type"]
+        }
+      }
+    }
+  }
+})
+```
+
+With this centralized `keyArg`s configuration, you don't need to include the `@connection` directive in your queries because the `type` argument is adequate for keeping feeds of different types separate in the cache. For an example of storing distinct data on a query-by-query basis, see the [advanced usage instructions](#advanced-connection-directive-usage).
+
+</Tip>
+
+To use the `@connection` directive, add it to the field you want a custom cache key for. The directive requires a `key` parameter to specify the custom cache key. You can optionally include the `filter` parameter, which takes an array of query argument names to include in the generated custom cache key.
 
 ```js
 const query = gql`
@@ -261,9 +307,9 @@ const query = gql`
 `
 ```
 
-With the above query, even with multiple `fetchMore`s, the results of each feed update will always result in the `feed` key in the store being updated with the latest accumulated values. In this example, we also use the `@connection` directive's optional `filter` argument to include the `type` query argument in the store key, which results in multiple store values that accumulate queries from each type of feed.
+With the above query, even when multiple `fetchMore`s queries are performed, each feed update always results in an update to the cache's `feed` key with the latest accumulated values. The example also uses the `@connection` directive's optional `filter` argument to include the `type` query argument in the cache key. This creates multiple cache values that accumulate queries from each type of feed.
 
-Now that we have a stable store key, we can easily use `writeQuery` to perform a store update, in this case clearing out the feed.
+With a stable cache key, you can use [`writeQuery`](./cache-interaction/#writequery) to perform a cache update that clears out the feed.
 
 ```js
 client.writeQuery({
@@ -283,4 +329,24 @@ client.writeQuery({
 });
 ```
 
-Note that because we are only using the `type` argument in the store key, we don't have to provide `offset` or `limit`.
+<Note>
+
+Because this example uses the `type` argument in the cache key, it doesn't need to provide `offset` or `limit` arguments.
+
+</Note>
+
+#### Advanced `@connection` directive usage
+
+The `@connection` directive is useful when using the same field in multiple queries, with no distinguishing arguments (for example, `type`)  that `keyArgs` can use, and you want to keep that field's data separate in the cache.
+
+For example, Apollo's [Spotify showcase](https://github.com/apollographql/spotify-showcase) uses `@connection` to independently cache lists of playlists. One list is in the left sidebar, where you navigate between playlists. The other appears when you right-click a song to add it to a playlist.
+
+
+<img src="../img/spotify-playlists.jpg" class="screenshot" alt="Separately cached playlists in Apollo's Spotify Showcase"></img>
+
+Without caching the playlists separately, loading the next page of data from one list affects the other, negatively impacting the UX.
+
+For code examples, see:
+- [The type policy](https://github.com/apollographql/spotify-showcase/blob/185f7b8a155209e9a099490dbc5d1e3bfba4c32f/client/src/apollo/client.ts#L105-L108)
+- [Playlist sidebar query](https://github.com/apollographql/spotify-showcase/blob/185f7b8a155209e9a099490dbc5d1e3bfba4c32f/client/src/components/LoggedInLayout.tsx#L75)
+- [Add to playlist menu](https://github.com/apollographql/spotify-showcase/blob/185f7b8a155209e9a099490dbc5d1e3bfba4c32f/client/src/components/ContextMenuAction/AddToPlaylist.tsx#L17)

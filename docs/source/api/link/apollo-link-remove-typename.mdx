@@ -6,13 +6,7 @@ minVersion: 3.8.0
 
 ## Overview
 
-When reusing data from a query as an argument to another GraphQL operation, `__typename` fields can cause errors. To avoid this, you can use the `removeTypenameFromVariables` link to automatically remove `__typename` fields from variables in operations. You can import and instantiate it like so:
-
-```ts
-import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename';
-
-const removeTypenameLink = removeTypenameFromVariables();
-```
+When reusing data from a query as an argument to another GraphQL operation, `__typename` fields can cause errors. To avoid this, you can use the `removeTypenameFromVariables` link to automatically remove `__typename` fields from variables in operations. 
 
 ## Remove `__typename` from all variables
 
@@ -59,6 +53,60 @@ await client.mutate({
 ```
 
 Without the use of the `removeTypenameFromVariables` link, the server will return an error because `data.dashboard` still contains the `__typename` field.
+
+## Usage
+
+You can import and instantiate it like so:
+
+```ts
+import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename';
+
+const removeTypenameLink = removeTypenameFromVariables();
+```
+
+Include `removeTypeNameLink`  anywhere in your [link chain](./introduction/#your-first-link-chain) before your [terminating link](./introduction#the-terminating-link)
+to remove `__typename` fields from variables for all operations.
+
+```ts
+import { from } from '@apollo/client';
+
+const link = from([removeTypenameLink, httpLink]);
+
+const client = new ApolloClient({
+  link,
+  // ... other options
+});
+```
+
+If you're using [directional composition](./link/introduction#directional-composition), 
+for example, to [send a subscription to a websocket connection](../data/subscriptions#3-split-communication-by-operation-recommended),
+place `removeTypenameLink` before `splitLink` to remove `__typename` from variables for all operations.
+
+```ts
+import { from, split } from '@apollo/client';
+import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename';
+
+const removeTypenameLink = removeTypenameFromVariables();
+
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === 'OperationDefinition' &&
+      definition.operation === 'subscription'
+    );
+  },
+  wsLink,
+  httpLink,
+);
+
+const link = from([removeTypenameLink, splitLink]);
+
+const client = new ApolloClient({
+  link,
+  // ... other options
+});
+```
 
 ## Keep `__typename` in JSON scalars
 
@@ -194,4 +242,3 @@ Determines which input types should retain `__typename`. This maps the input typ
 
 </tbody>
 </table>
-

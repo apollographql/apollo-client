@@ -7,6 +7,7 @@
   "mainEntryPointFilePath": "<projectFolder>/dist/index.d.ts",
   "bundledPackages": [],
   "newlineKind": "lf",
+  "enumMemberOrder": "preserve",
 
   /**
    * Set to true when invoking API Extractor's test harness. When `testMode` is true, the `toolVersion` field in the
@@ -37,14 +38,17 @@
   },
 
   "docModel": {
-    "enabled": false
+    "enabled": false,
+    "apiJsonFilePath": "<projectFolder>/docs/public/<unscopedPackageName>.api.json",
+    "includeForgottenExports": true
   },
 
   "dtsRollup": {
     "enabled": false
   },
   "tsdocMetadata": {
-    "enabled": false
+    "enabled": false,
+    "tsdocMetadataFilePath": "<projectFolder>/docs/public/tsdoc-metadata.json"
   },
 
   /**
@@ -113,6 +117,11 @@
 
       "ae-missing-release-tag": {
         "logLevel": "none"
+      },
+
+      "ae-unresolved-link": {
+        "logLevel": "warning",
+        "addToApiReportFile": true
       }
     }
 

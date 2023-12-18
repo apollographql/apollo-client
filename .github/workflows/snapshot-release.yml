@@ -57,7 +57,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Setup Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18.x
 
@@ -80,7 +80,7 @@ jobs:
 
       - name: Add comment if no new changesets exist
         if: ${{ steps.added-files.outputs.changesets == '' }}
-        uses: peter-evans/create-or-update-comment@v3.0.2
+        uses: peter-evans/create-or-update-comment@v3.1.0
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
@@ -106,7 +106,7 @@ jobs:
 
       - name: Create comment
         if: ${{ steps.added-files.outputs.changesets != '' }}
-        uses: peter-evans/create-or-update-comment@v3.0.2
+        uses: peter-evans/create-or-update-comment@v3.1.0
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |

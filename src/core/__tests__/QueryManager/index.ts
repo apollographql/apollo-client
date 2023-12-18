@@ -1610,7 +1610,7 @@ describe("QueryManager", () => {
     });
   });
 
-  const getIdField = ({ id }: { id: string }) => id;
+  const getIdField = (obj: any) => obj.id;
 
   itAsync(
     "runs a mutation with object parameters and puts the result in the store",
@@ -5848,9 +5848,8 @@ describe("QueryManager", () => {
 
         const variables = { id: "1234" };
 
-        const refetchError = testQueryError
-          ? new Error("Refetch failed")
-          : undefined;
+        const refetchError =
+          testQueryError ? new Error("Refetch failed") : undefined;
 
         const queryManager = mockQueryManager(
           {

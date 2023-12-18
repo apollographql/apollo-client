@@ -51,8 +51,8 @@ export function getMarkupFromTree({
       resolve(renderFunction(element));
     })
       .then((html) => {
-        return renderPromises.hasPromises()
-          ? renderPromises.consumeAndAwaitPromises().then(process)
+        return renderPromises.hasPromises() ?
+            renderPromises.consumeAndAwaitPromises().then(process)
           : html;
       })
       .finally(() => {

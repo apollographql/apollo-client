@@ -59,15 +59,10 @@ export type BatchHandler = (operations: Operation[], forward?: (NextLink | undef
 export namespace BatchLink {
     // (undocumented)
     export interface Options {
-        // (undocumented)
         batchDebounce?: boolean;
-        // (undocumented)
         batchHandler?: BatchHandler;
-        // (undocumented)
         batchInterval?: number;
-        // (undocumented)
         batchKey?: (operation: Operation) => string;
-        // (undocumented)
         batchMax?: number;
     }
 }

@@ -19,14 +19,12 @@ export type DeepOmitArray<T extends any[], K> = {
 // This should be fine as of the time of this writing until omitDeep gets
 // broader use since this utility is only used to strip __typename from
 // `variables`; a case in which class instances are invalid anyways.
-export type DeepOmit<T, K> = T extends DeepOmitPrimitive
-  ? T
+export type DeepOmit<T, K> =
+  T extends DeepOmitPrimitive ? T
   : {
-      [P in Exclude<keyof T, K>]: T[P] extends infer TP
-        ? TP extends DeepOmitPrimitive
-          ? TP
-          : TP extends any[]
-          ? DeepOmitArray<TP, K>
-          : DeepOmit<TP, K>
-        : never;
+      [P in Exclude<keyof T, K>]: T[P] extends infer TP ?
+        TP extends DeepOmitPrimitive ? TP
+        : TP extends any[] ? DeepOmitArray<TP, K>
+        : DeepOmit<TP, K>
+      : never;
     };

@@ -32,7 +32,9 @@ export class SuspenseCache {
     cacheKey: CacheKey,
     createObservable: () => ObservableQuery<TData>
   ) {
-    const ref = this.queryRefs.lookupArray(cacheKey);
+    const ref = this.queryRefs.lookupArray(cacheKey) as {
+      current?: InternalQueryReference<TData>;
+    };
 
     if (!ref.current) {
       ref.current = new InternalQueryReference(createObservable(), {
@@ -44,6 +46,6 @@ export class SuspenseCache {
       });
     }
 
-    return ref.current as InternalQueryReference<TData>;
+    return ref.current;
   }
 }

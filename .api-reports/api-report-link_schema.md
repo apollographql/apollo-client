@@ -156,13 +156,9 @@ type RequestHandler = (operation: Operation, forward: NextLink) => Observable<Fe
 export namespace SchemaLink {
     // (undocumented)
     export interface Options {
-        // (undocumented)
         context?: ResolverContext | ResolverContextFunction;
-        // (undocumented)
         rootValue?: any;
-        // (undocumented)
         schema: GraphQLSchema;
-        // (undocumented)
         validate?: boolean;
     }
     // (undocumented)

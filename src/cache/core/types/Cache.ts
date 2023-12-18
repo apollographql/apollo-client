@@ -93,7 +93,7 @@ export namespace Cache {
       this: TCache,
       watch: Cache.WatchOptions,
       diff: Cache.DiffResult<any>,
-      lastDiff: Cache.DiffResult<any> | undefined
+      lastDiff?: Cache.DiffResult<any> | undefined
     ) => any;
   }
 

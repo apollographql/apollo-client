@@ -42,7 +42,7 @@ export function offsetLimitPagination<T = Reference>(
           // to receive any arguments, so you might prefer to throw an
           // exception here, instead of recovering by appending incoming
           // onto the existing array.
-          merged.push.apply(merged, incoming);
+          merged.push(...incoming);
         }
       }
 
@@ -146,8 +146,9 @@ export function relayStylePagination<TNode extends Reference = Reference>(
         return existing;
       }
 
-      const incomingEdges = incoming.edges
-        ? incoming.edges.map((edge) => {
+      const incomingEdges =
+        incoming.edges ?
+          incoming.edges.map((edge) => {
             if (isReference((edge = { ...edge }))) {
               // In case edge is a Reference, we read out its cursor field and
               // store it as an extra property of the Reference object.

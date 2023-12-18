@@ -20,6 +20,11 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   children?: any;
   link?: ApolloLink;
   showWarnings?: boolean;
+  /**
+   * If set to true, the MockedProvider will try to connect to the Apollo DevTools.
+   * Defaults to false.
+   */
+  connectToDevTools?: boolean;
 }
 
 export interface MockedProviderState {
@@ -45,10 +50,12 @@ export class MockedProvider extends React.Component<
       resolvers,
       link,
       showWarnings,
+      connectToDevTools = false,
     } = this.props;
     const client = new ApolloClient({
       cache: cache || new Cache({ addTypename }),
       defaultOptions,
+      connectToDevTools,
       link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
       resolvers,
     });
@@ -62,11 +69,11 @@ export class MockedProvider extends React.Component<
     const { children, childProps } = this.props;
     const { client } = this.state;
 
-    return React.isValidElement(children) ? (
-      <ApolloProvider client={client}>
-        {React.cloneElement(React.Children.only(children), { ...childProps })}
-      </ApolloProvider>
-    ) : null;
+    return React.isValidElement(children) ?
+        <ApolloProvider client={client}>
+          {React.cloneElement(React.Children.only(children), { ...childProps })}
+        </ApolloProvider>
+      : null;
   }
 
   public componentWillUnmount() {

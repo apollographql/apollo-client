@@ -1,5 +1,5 @@
 import React from "react";
-import { render, cleanup } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import gql from "graphql-tag";
 import { DocumentNode } from "graphql";
 
@@ -25,8 +25,6 @@ function compose(...funcs: Function[]) {
 }
 
 describe("shared operations", () => {
-  afterEach(cleanup);
-
   describe("withApollo", () => {
     it("passes apollo-client to props", () => {
       const client = new ApolloClient({

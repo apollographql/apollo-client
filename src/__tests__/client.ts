@@ -1821,7 +1821,7 @@ describe("client", () => {
         link,
 
         cache: new InMemoryCache({
-          dataIdFromObject: (obj: { id: any }) => obj.id,
+          dataIdFromObject: (obj: any) => obj.id,
           addTypename: false,
         }),
       });
@@ -1870,7 +1870,7 @@ describe("client", () => {
         callback();
         throw new Error("not reached");
       } catch (thrown) {
-        expect(thrown.message).toBe(cacheAndNetworkError);
+        expect((thrown as Error).message).toBe(cacheAndNetworkError);
       }
     }
 

@@ -1207,7 +1207,7 @@ describe("Combining client and server state/operations", () => {
             watchCount += 1;
             client.mutate({
               mutation,
-              update(proxy, { data: { updateUser } }: { data: any }) {
+              update(proxy, { data: { updateUser } }) {
                 proxy.writeQuery({
                   query: userQuery,
                   data: {

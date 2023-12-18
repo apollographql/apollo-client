@@ -131,7 +131,9 @@ function renderIntegrationTest({
       <ApolloProvider client={_client}>
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
-            {variables ? <ParentWithVariables /> : <Parent />}
+            {variables ?
+              <ParentWithVariables />
+            : <Parent />}
           </Suspense>
         </ErrorBoundary>
       </ApolloProvider>
@@ -154,17 +156,15 @@ interface VariablesCaseVariables {
 }
 
 function useVariablesIntegrationTestCase() {
-  const query: TypedDocumentNode<
-    VariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
+  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+    gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
       }
-    }
-  `;
+    `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
   let mocks = [...CHARACTERS].map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
@@ -208,11 +208,11 @@ function renderVariablesIntegrationTest({
             character: {
               ...result.data.character,
               name:
-                index > 3
-                  ? index > 7
-                    ? `${result.data.character.name} (updated again)`
-                    : `${result.data.character.name} (updated)`
-                  : result.data.character.name,
+                index > 3 ?
+                  index > 7 ?
+                    `${result.data.character.name} (updated again)`
+                  : `${result.data.character.name} (updated)`
+                : result.data.character.name,
             },
           },
         },
@@ -274,7 +274,9 @@ function renderVariablesIntegrationTest({
 
     return (
       <div>
-        {error ? <div>{error.message}</div> : null}
+        {error ?
+          <div>{error.message}</div>
+        : null}
         <button
           onClick={() => {
             refetch(variables);
@@ -335,7 +337,7 @@ function renderVariablesIntegrationTest({
   const ProfiledApp = profile<Renders, ComponentProps<typeof App>>({
     Component: App,
     snapshotDOM: true,
-    onRender: ({ updateSnapshot }) => updateSnapshot(cloneDeep(renders)),
+    onRender: ({ replaceSnapshot }) => replaceSnapshot(cloneDeep(renders)),
   });
 
   const { ...rest } = render(
@@ -434,9 +436,8 @@ function renderPaginatedIntegrationTest({
   }
 
   function SuspenseFallback() {
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      suspenseCount: snapshot.suspenseCount + 1,
+    ProfiledApp.mergeSnapshot(({ suspenseCount }) => ({
+      suspenseCount: suspenseCount + 1,
     }));
     return <div>loading</div>;
   }
@@ -450,13 +451,14 @@ function renderPaginatedIntegrationTest({
   }) {
     const { data, error } = useReadQuery(queryRef);
     // count renders in the child component
-    ProfiledApp.updateSnapshot((snapshot) => ({
-      ...snapshot,
-      count: snapshot.count + 1,
+    ProfiledApp.mergeSnapshot(({ count }) => ({
+      count: count + 1,
     }));
     return (
       <div>
-        {error ? <div>{error.message}</div> : null}
+        {error ?
+          <div>{error.message}</div>
+        : null}
         <button
           onClick={() => {
             const fetchMoreOpts: FetchMoreQueryOptions<Variables, QueryData> & {
@@ -504,10 +506,9 @@ function renderPaginatedIntegrationTest({
         <ErrorBoundary
           fallback={<div>Error</div>}
           onError={(error) => {
-            ProfiledApp.updateSnapshot((snapshot) => ({
-              ...snapshot,
-              errorCount: snapshot.errorCount + 1,
-              errors: snapshot.errors.concat(error),
+            ProfiledApp.mergeSnapshot(({ errorCount, errors }) => ({
+              errorCount: errorCount + 1,
+              errors: errors.concat(error),
             }));
           }}
         >
@@ -2412,11 +2413,9 @@ describe("useBackgroundQuery", () => {
     function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data, error } = useReadQuery(queryRef);
 
-      return error ? (
-        <div data-testid="error">{error.message}</div>
-      ) : (
-        <div data-testid="greeting">{data.greeting}</div>
-      );
+      return error ?
+          <div data-testid="error">{error.message}</div>
+        : <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -3123,11 +3122,9 @@ describe("useBackgroundQuery", () => {
     function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data, error } = useReadQuery(queryRef);
 
-      return error ? (
-        <div data-testid="error">{error.message}</div>
-      ) : (
-        <span data-testid="character">{data.character.name}</span>
-      );
+      return error ?
+          <div data-testid="error">{error.message}</div>
+        : <span data-testid="character">{data.character.name}</span>;
     }
 
     function App() {

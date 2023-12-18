@@ -1807,24 +1807,8 @@ it("renders skip result, does not suspend, and maintains `data` when switching b
 });
 
 it("does not make network requests when `skip` is `true`", async () => {
-  interface Data {
-    greeting: string;
-  }
-
+  const { query, mocks } = setupSimpleCase();
   const user = userEvent.setup();
-
-  const query: TypedDocumentNode<Data> = gql`
-    query {
-      greeting
-    }
-  `;
-
-  const mocks = [
-    {
-      request: { query },
-      result: { data: { greeting: "Hello" } },
-    },
-  ];
 
   let fetchCount = 0;
 
@@ -1840,7 +1824,7 @@ it("does not make network requests when `skip` is `true`", async () => {
         throw new Error("Could not find mock for operation");
       }
 
-      observer.next(mock.result);
+      observer.next((mock as any).result);
       observer.complete();
     });
   });
@@ -1850,11 +1834,12 @@ it("does not make network requests when `skip` is `true`", async () => {
     cache: new InMemoryCache(),
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [skip, setSkip] = React.useState(true);
     const [queryRef] = useBackgroundQuery(query, { skip });
 
@@ -1862,64 +1847,59 @@ it("does not make network requests when `skip` is `true`", async () => {
       <>
         <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Greeting queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-    return <div data-testid="greeting">{data.greeting}</div>;
-  }
-
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
-
-  render(<App />);
-
+  // initial skipped result
+  await Profiler.takeRender();
   expect(fetchCount).toBe(0);
 
   // Toggle skip to `false`
   await act(() => user.click(screen.getByText("Toggle skip")));
 
   expect(fetchCount).toBe(1);
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
-  });
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   // Toggle skip to `true`
   await act(() => user.click(screen.getByText("Toggle skip")));
 
   expect(fetchCount).toBe(1);
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it("does not make network requests when `skipToken` is used", async () => {
-  interface Data {
-    greeting: string;
-  }
-
+  const { query, mocks } = setupSimpleCase();
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
   const user = userEvent.setup();
-
-  const query: TypedDocumentNode<Data> = gql`
-    query {
-      greeting
-    }
-  `;
-
-  const mocks = [
-    {
-      request: { query },
-      result: { data: { greeting: "Hello" } },
-    },
-  ];
 
   let fetchCount = 0;
 
@@ -1935,7 +1915,7 @@ it("does not make network requests when `skipToken` is used", async () => {
         throw new Error("Could not find mock for operation");
       }
 
-      observer.next(mock.result);
+      observer.next((mock as any).result);
       observer.complete();
     });
   });
@@ -1945,11 +1925,8 @@ it("does not make network requests when `skipToken` is used", async () => {
     cache: new InMemoryCache(),
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
-
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [skip, setSkip] = React.useState(true);
     const [queryRef] = useBackgroundQuery(query, skip ? skipToken : undefined);
 
@@ -1957,43 +1934,51 @@ it("does not make network requests when `skipToken` is used", async () => {
       <>
         <button onClick={() => setSkip((skip) => !skip)}>Toggle skip</button>
         <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <Greeting queryRef={queryRef} />}
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
         </Suspense>
       </>
     );
   }
 
-  function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-    return <div data-testid="greeting">{data.greeting}</div>;
-  }
-
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
-
-  render(<App />);
-
+  // initial skipped result
+  await Profiler.takeRender();
   expect(fetchCount).toBe(0);
 
   // Toggle skip to `false`
   await act(() => user.click(screen.getByText("Toggle skip")));
 
   expect(fetchCount).toBe(1);
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(screen.getByTestId("greeting")).toHaveTextContent("Hello");
-  });
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   // Toggle skip to `true`
   await act(() => user.click(screen.getByText("Toggle skip")));
 
   expect(fetchCount).toBe(1);
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it("`skip` result is referentially stable", async () => {

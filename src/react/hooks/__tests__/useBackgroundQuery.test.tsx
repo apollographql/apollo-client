@@ -2213,41 +2213,36 @@ it("`skipToken` works with `startTransition`", async () => {
 });
 
 it("applies `errorPolicy` on next fetch when it changes between renders", async () => {
-  interface Data {
-    greeting: string;
-  }
-
+  const { query } = setupSimpleCase();
   const user = userEvent.setup();
-
-  const query: TypedDocumentNode<Data> = gql`
-    query {
-      greeting
-    }
-  `;
 
   const mocks = [
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
+      delay: 10,
     },
     {
       request: { query },
       result: {
         errors: [new GraphQLError("oops")],
       },
+      delay: 10,
     },
   ];
 
-  const client = new ApolloClient({
-    link: new MockLink(mocks),
-    cache: new InMemoryCache(),
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      error: null as Error | null,
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
   });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+  const { ErrorBoundary } = createDefaultErrorComponents(Profiler);
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
-
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [errorPolicy, setErrorPolicy] = React.useState<ErrorPolicy>("none");
     const [queryRef, { refetch }] = useBackgroundQuery(query, {
       errorPolicy,
@@ -2260,40 +2255,51 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
         </button>
         <button onClick={() => refetch()}>Refetch greeting</button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Greeting queryRef={queryRef} />
+          <ErrorBoundary>
+            <ReadQueryHook queryRef={queryRef} />
+          </ErrorBoundary>
         </Suspense>
       </>
     );
   }
 
-  function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data, error } = useReadQuery(queryRef);
+  renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-    return error ?
-        <div data-testid="error">{error.message}</div>
-      : <div data-testid="greeting">{data.greeting}</div>;
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <ErrorBoundary fallback={<div data-testid="error">Error boundary</div>}>
-          <Parent />
-        </ErrorBoundary>
-      </ApolloProvider>
-    );
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
   }
-
-  render(<App />);
-
-  expect(await screen.findByTestId("greeting")).toHaveTextContent("Hello");
 
   await act(() => user.click(screen.getByText("Change error policy")));
-  await act(() => user.click(screen.getByText("Refetch greeting")));
+  await Profiler.takeRender();
 
-  // Ensure we aren't rendering the error boundary and instead rendering the
-  // error message in the Greeting component.
-  expect(await screen.findByTestId("error")).toHaveTextContent("oops");
+  await act(() => user.click(screen.getByText("Refetch greeting")));
+  await Profiler.takeRender();
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot).toEqual({
+      error: null,
+      result: {
+        data: { greeting: "Hello" },
+        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        networkStatus: NetworkStatus.error,
+      },
+    });
+  }
 });
 
 it("applies `context` on next fetch when it changes between renders", async () => {

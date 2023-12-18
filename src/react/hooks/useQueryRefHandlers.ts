@@ -14,10 +14,20 @@ export interface UseQueryRefHandlersResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
+  /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
   refetch: RefetchFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
 }
 
+/**
+ * A React hook that returns a `refetch` and `fetchMore` function for a given
+ * `queryRef`.
+ * This allows you to control the lifecyle of a queryRef from a different component
+ * than the one that created it. 
+ * 
+ * @param queryRef a `QueryReference` returned from `useBackgroundQuery` or `createQueryPreloader`.
+ */
 export function useQueryRefHandlers<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

@@ -556,8 +556,6 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 export interface Context extends Record<string, any> {
 }
 
-// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "preloadQuery"
-//
 // @public
 export function createQueryPreloader(client: ApolloClient<any>): PreloadQueryFunction;
 

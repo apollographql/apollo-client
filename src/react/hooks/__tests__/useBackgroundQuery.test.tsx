@@ -1642,34 +1642,97 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
 });
 
 it("reacts to cache updates", async () => {
-  const { renders, client, query } = renderIntegrationTest();
+  const { query, mocks } = setupSimpleCase();
 
-  expect(renders.suspenseCount).toBe(1);
-  expect(screen.getByText("loading")).toBeInTheDocument();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
 
-  // the parent component re-renders when promise fulfilled
-  expect(await screen.findByText("hello")).toBeInTheDocument();
-  expect(renders.count).toBe(1);
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
+
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryReference<SimpleCaseData>;
+  }) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query);
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   client.writeQuery({
     query,
-    data: { foo: { bar: "baz" } },
+    data: { greeting: "Hello again" },
   });
 
-  // the parent component re-renders when promise fulfilled
-  expect(await screen.findByText("baz")).toBeInTheDocument();
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  expect(renders.count).toBe(2);
-  expect(renders.suspenseCount).toBe(1);
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello again" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   client.writeQuery({
     query,
-    data: { foo: { bar: "bat" } },
+    data: { greeting: "You again?" },
   });
 
-  expect(await screen.findByText("bat")).toBeInTheDocument();
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  expect(renders.suspenseCount).toBe(1);
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "You again?" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("reacts to variables updates", async () => {

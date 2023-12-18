@@ -750,10 +750,83 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * @experimental
-   * @internal
    * This is not a stable API - it is used in development builds to expose
    * information to the DevTools.
    * Use at your own risk!
+   * For more details, see [Memory Management](https://www.apollographql.com/docs/react/caching/memory-management/#measuring-cache-usage)
+   *
+   * @example
+   * ```ts
+   * console.log(client.getMemoryInternals())
+   * ```
+   * will log something in the form of
+   * @example
+   * ```json
+   *{
+   *  limits:     {
+   *    parser: 1000,
+   *    canonicalStringify: 1000,
+   *    print: 2000,
+   *    'documentTransform.cache': 2000,
+   *    'queryManager.getDocumentInfo': 2000,
+   *    'PersistedQueryLink.persistedQueryHashes': 2000,
+   *    'fragmentRegistry.transform': 2000,
+   *    'fragmentRegistry.lookup': 1000,
+   *    'fragmentRegistry.findFragmentSpreads': 4000,
+   *    'cache.fragmentQueryDocuments': 1000,
+   *    'removeTypenameFromVariables.getVariableDefinitions': 2000,
+   *    'inMemoryCache.maybeBroadcastWatch': 5000,
+   *    'inMemoryCache.executeSelectionSet': 10000,
+   *    'inMemoryCache.executeSubSelectedArray': 5000
+   *  },
+   *  sizes: {
+   *    parser: 26,
+   *    canonicalStringify: 4,
+   *    print: 14,
+   *    addTypenameDocumentTransform: [
+   *      {
+   *        cache: 14,
+   *      },
+   *    ],
+   *    queryManager: {
+   *      getDocumentInfo: 14,
+   *      documentTransforms: [
+   *        {
+   *          cache: 14,
+   *        },
+   *        {
+   *          cache: 14,
+   *        },
+   *      ],
+   *    },
+   *    fragmentRegistry: {
+   *      findFragmentSpreads: 34,
+   *      lookup: 20,
+   *      transform: 14,
+   *    },
+   *    cache: {
+   *      fragmentQueryDocuments: 22,
+   *    },
+   *    inMemoryCache: {
+   *      executeSelectionSet: 4345,
+   *      executeSubSelectedArray: 1206,
+   *      maybeBroadcastWatch: 32,
+   *    },
+   *    links: [
+   *      {
+   *        PersistedQueryLink: {
+   *          persistedQueryHashes: 14,
+   *        },
+   *      },
+   *      {
+   *        removeTypenameFromVariables: {
+   *          getVariableDefinitions: 14,
+   *        },
+   *      },
+   *    ],
+   *  },
+   * }
+   *```
    */
   public getMemoryInternals?: typeof getApolloClientMemoryInternals;
 }

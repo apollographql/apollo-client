@@ -2,13 +2,15 @@
 title: Memory management
 api_doc:
   - "@apollo/client!CacheSizes:interface"
+  - "@apollo/client!ApolloClient:class"
 ---
 
-import { InterfaceDetails } from '../../shared/ApiDoc';
+import { Remarks, PropertySignatureTable, Example } from '../../shared/ApiDoc';
 
 ## Cache Sizes
 
-For better performance, Apollo Client caches a lot of internally calculated values.
+For better performance, Apollo Client caches (or, in other words, memoizes) a lot
+of internally calculated values.
 In most cases, these values are cached in WeakCaches, which means that if the
 source object is garbage-collected, the cached value will be garbage-collected,
 too.
@@ -52,6 +54,70 @@ cacheSizes.print = 100;
 print.reset();
 ```
 
-### Cache Details
+### Choosing good cache sizes
 
-<InterfaceDetails canonicalReference="@apollo/client!CacheSizes:interface" headingLevel={3}/>
+<Remarks
+  canonicalReference="@apollo/client!CacheSizes:interface"
+/>
+
+To choose good sizes for our memoization caches, you need to know what they
+use as source values, and have a general understanding of the data flow inside of
+Apollo Client.
+
+For most memoized values, the source value will be a parsed GraphQL document -
+a `DocumentNode`. Here, we need to distinguish between two types of documents:
+
+* User-supplied `DocumentNode`s: These are DocumentNode objects that are created
+  by the user, for example by using the `gql` template literal tag.
+  These are the `QUERY`, `MUTATION` or `SUBSCRIPTION` variables that you pass e.g.
+  into your `useQuery` hook, or as the `query` option to `client.query`.
+* Transformed `DocumentNode`s: These are DocumentNode objects are derived from
+  user-supplied `DocumentNode`s, e.g. by applying `DocumentTransform`s to them.
+
+As a rule of thumb, you should set the cache sizes for caches using a Transformed
+`DocumentNode` at least to the same size as for caches using a user-supplied
+`DocumentNode`. If your application uses a custom `DocumentTransform` that does
+not always transform the same input to the same output, you should set the cache
+size for caches using a Transformed `DocumentNode` to a higher value than for
+caches using a user-supplied `DocumentNode`.
+
+By default, Apollo Client uses a "base value" of 1000 for caches using
+user-supplied `DocumentNode` instances, and scales other cache sizes relative
+to that.
+
+This should be plenty for almost all applications out there, but you might want
+to tweak them if you have different requirements.
+
+#### Measuring cache usage
+
+As it can be hard to estimate good cache sizes for your application, Apollo Client
+exposes an API for cache usage measurement.<br />
+This way, you can click around in your application and then take a look at the
+actual usage of the memoizing caches.
+
+Keep in mind that this API is primarily meant for usage with our DevTools
+(we will release an integration for this soon), and we might change it at any
+point in time.<br />
+It is also only included in development builds, not in production builds.
+
+So please only use this for manual measurements, and don't rely on it in production
+code or tests.
+
+<Example
+  canonicalReference="@apollo/client!ApolloClient#getMemoryInternals:member"
+  index={0}
+/>
+
+<Example
+  collapsible
+  canonicalReference="@apollo/client!ApolloClient#getMemoryInternals:member"
+  index={1}
+/>
+
+### Cache options
+
+<PropertySignatureTable
+  canonicalReference="@apollo/client!CacheSizes:interface"
+  methods
+  properties
+/>

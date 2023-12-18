@@ -9,13 +9,18 @@ declare global {
 /**
  * The cache sizes used by various Apollo Client caches.
  *
- * Note that these caches are all derivative and if an item is cache-collected,
- * it's not the end of the world - the cached item will just be recalculated.
+ * @remarks
+ * All configurable caches hold derivative (memoized) values and if an item is
+ * cache-collected, that only means a small performance hit, but it will not
+ * cause data loss, and a smaller cache size might save you memory.
  *
  * As a result, these cache sizes should not be chosen to hold every value ever
- * encountered, but rather to hold a reasonable number of values that can be
- * assumed to be on the screen at any given time.
- *
+ * encountered, but rather to hold a reasonable number of values.
+ * To prevent too much recalculation, cache sizes should at least be chosen
+ * big enough to hold memoized values for all hooks/queries that are
+ * on the screen at any given time.
+ */
+/*
  * We assume a "base value" of 1000 here, which is already very generous.
  * In most applications, it will be very unlikely that 1000 different queries
  * are on screen at the same time.

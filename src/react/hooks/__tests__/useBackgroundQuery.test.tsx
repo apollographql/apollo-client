@@ -30,7 +30,6 @@ import {
 } from "../../../core";
 import {
   MockedResponse,
-  MockedProvider,
   MockLink,
   MockSubscriptionLink,
   mockSingleLink,
@@ -774,34 +773,64 @@ describe("useBackgroundQuery", () => {
       });
     });
 
-    const { result } = renderHook(
-      () =>
-        useBackgroundQuery(query, {
-          context: { valueA: "A", valueB: "B" },
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider link={link}>{children}</MockedProvider>
-        ),
-      }
-    );
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseReadQueryResult | null,
+      },
+    });
 
-    const [queryRef] = result.current;
+    function SuspenseFallback() {
+      useTrackRenders();
+      return <div>Loading</div>;
+    }
 
-    const _result = await getWrappedPromise(queryRef);
+    function ReadQueryHook({ queryRef }: { queryRef: QueryReference }) {
+      useTrackRenders();
+      Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-    await waitFor(() => {
-      expect(_result).toMatchObject({
+      return null;
+    }
+
+    function App() {
+      useTrackRenders();
+      const [queryRef] = useBackgroundQuery(query, {
+        context: { valueA: "A", valueB: "B" },
+      });
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      );
+    }
+
+    renderWithMocks(<App />, { link, wrapper: Profiler });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
         data: { context: { valueA: "A", valueB: "B" } },
+        error: undefined,
         networkStatus: NetworkStatus.ready,
       });
-    });
+    }
   });
 
   it('enables canonical results when canonizeResults is "true"', async () => {
     interface Result {
       __typename: string;
       value: number;
+    }
+
+    interface Data {
+      results: Result[];
     }
 
     const cache = new InMemoryCache({
@@ -812,7 +841,7 @@ describe("useBackgroundQuery", () => {
       },
     });
 
-    const query: TypedDocumentNode<{ results: Result[] }> = gql`
+    const query: TypedDocumentNode<Data> = gql`
       query {
         results {
           value
@@ -829,31 +858,48 @@ describe("useBackgroundQuery", () => {
       { __typename: "Result", value: 5 },
     ];
 
-    cache.writeQuery({
-      query,
-      data: { results },
+    cache.writeQuery({ query, data: { results } });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseReadQueryResult<Data> | null,
+      },
     });
 
-    const { result } = renderHook(
-      () =>
-        useBackgroundQuery(query, {
-          canonizeResults: true,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider cache={cache}>{children}</MockedProvider>
-        ),
-      }
-    );
+    function SuspenseFallback() {
+      useTrackRenders();
+      return <div>Loading</div>;
+    }
 
-    const [queryRef] = result.current;
+    function ReadQueryHook({ queryRef }: { queryRef: QueryReference<Data> }) {
+      useTrackRenders();
+      Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-    const _result = await getWrappedPromise(queryRef);
-    const resultSet = new Set(_result.data.results);
+      return null;
+    }
+
+    function App() {
+      useTrackRenders();
+      const [queryRef] = useBackgroundQuery(query, { canonizeResults: true });
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      );
+    }
+
+    renderWithMocks(<App />, { cache, wrapper: Profiler });
+
+    const {
+      snapshot: { result },
+    } = await Profiler.takeRender();
+
+    const resultSet = new Set(result!.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
-    expect(_result.data).toEqual({ results });
-    expect(_result.data.results.length).toBe(6);
+    expect(result!.data).toEqual({ results });
+    expect(result!.data.results.length).toBe(6);
     expect(resultSet.size).toBe(5);
     expect(values).toEqual([0, 1, 2, 3, 5]);
   });
@@ -862,6 +908,10 @@ describe("useBackgroundQuery", () => {
     interface Result {
       __typename: string;
       value: number;
+    }
+
+    interface Data {
+      results: Result[];
     }
 
     const cache = new InMemoryCache({
@@ -873,7 +923,7 @@ describe("useBackgroundQuery", () => {
       },
     });
 
-    const query: TypedDocumentNode<{ results: Result[] }> = gql`
+    const query: TypedDocumentNode<Data> = gql`
       query {
         results {
           value
@@ -890,31 +940,47 @@ describe("useBackgroundQuery", () => {
       { __typename: "Result", value: 5 },
     ];
 
-    cache.writeQuery({
-      query,
-      data: { results },
+    cache.writeQuery({ query, data: { results } });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseReadQueryResult<Data> | null,
+      },
     });
 
-    const { result } = renderHook(
-      () =>
-        useBackgroundQuery(query, {
-          canonizeResults: false,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider cache={cache}>{children}</MockedProvider>
-        ),
-      }
-    );
+    function SuspenseFallback() {
+      useTrackRenders();
+      return <div>Loading</div>;
+    }
 
-    const [queryRef] = result.current;
+    function ReadQueryHook({ queryRef }: { queryRef: QueryReference<Data> }) {
+      useTrackRenders();
+      Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-    const _result = await getWrappedPromise(queryRef);
-    const resultSet = new Set(_result.data.results);
+      return null;
+    }
+
+    function App() {
+      useTrackRenders();
+      const [queryRef] = useBackgroundQuery(query, { canonizeResults: false });
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      );
+    }
+
+    renderWithMocks(<App />, { cache, wrapper: Profiler });
+
+    const { snapshot } = await Profiler.takeRender();
+    const result = snapshot.result!;
+
+    const resultSet = new Set(result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
-    expect(_result.data).toEqual({ results });
-    expect(_result.data.results.length).toBe(6);
+    expect(result.data).toEqual({ results });
+    expect(result.data.results.length).toBe(6);
     expect(resultSet.size).toBe(6);
     expect(values).toEqual([0, 1, 1, 2, 3, 5]);
   });

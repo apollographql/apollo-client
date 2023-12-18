@@ -9,7 +9,11 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ErrorBoundary, ErrorBoundaryProps } from "react-error-boundary";
+import {
+  ErrorBoundary,
+  ErrorBoundaryProps,
+  FallbackProps,
+} from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import {
@@ -554,6 +558,27 @@ function createDefaultTrackedComponents<
   }
 
   return { SuspenseFallback, ReadQueryHook };
+}
+
+function createDefaultErrorComponents<Snapshot extends { error: Error | null }>(
+  Profiler: Profiler<Snapshot>
+) {
+  function ErrorFallback({ error }: FallbackProps) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ error } as Partial<Snapshot>);
+
+    return <div>Error</div>;
+  }
+
+  function _ErrorBoundary({ children }: { children: React.ReactNode }) {
+    return (
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        {children}
+      </ErrorBoundary>
+    );
+  }
+
+  return { ErrorFallback, ErrorBoundary: _ErrorBoundary };
 }
 
 function createDefaultProfiler<TData = unknown>() {

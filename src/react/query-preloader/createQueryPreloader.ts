@@ -151,7 +151,7 @@ export interface PreloadQueryFunction {
 }
 
 /**
- * A higher order function that returns a {@link preloadQuery} function which
+ * A higher order function that returns a `preloadQuery` function which
  * can be used to begin loading a query with the given `client`. This is useful
  * when you want to start loading a query as early as possible outside of a
  * React component.

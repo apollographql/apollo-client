@@ -1529,58 +1529,56 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     },
   });
   const client = new ApolloClient({ cache, link });
-  let renders = 0;
-  let suspenseCount = 0;
 
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<Data> | null,
+    },
+  });
 
   function SuspenseFallback() {
-    suspenseCount++;
-    return <p>Loading</p>;
+    useTrackRenders();
+    return <div>Loading</div>;
   }
 
-  function Parent() {
+  function ReadQueryHook({ queryRef }: { queryRef: QueryReference<Data> }) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function App() {
+    useTrackRenders();
     const [queryRef] = useBackgroundQuery(query, {
       fetchPolicy: "cache-and-network",
     });
-    return <Todo queryRef={queryRef} />;
-  }
-
-  function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data, networkStatus, error } = useReadQuery(queryRef);
-    const { greeting } = data;
-    renders++;
 
     return (
-      <>
-        <div>Message: {greeting.message}</div>
-        <div>Recipient: {greeting.recipient.name}</div>
-        <div>Network status: {networkStatus}</div>
-        <div>Error: {error ? error.message : "none"}</div>
-      </>
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
     );
   }
 
-  render(<App />);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-  expect(screen.getByText(/Message/i)).toHaveTextContent(
-    "Message: Hello cached"
-  );
-  expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-    "Recipient: Cached Alice"
-  );
-  expect(screen.getByText(/Network status/i)).toHaveTextContent(
-    "Network status: 1" // loading
-  );
-  expect(screen.getByText(/Error/i)).toHaveTextContent("none");
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello cached",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
 
   link.simulateResult({
     result: {
@@ -1591,18 +1589,22 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     },
   });
 
-  await waitFor(() => {
-    expect(screen.getByText(/Message/i)).toHaveTextContent(
-      "Message: Hello world"
-    );
-  });
-  expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-    "Recipient: Cached Alice"
-  );
-  expect(screen.getByText(/Network status/i)).toHaveTextContent(
-    "Network status: 7" // ready
-  );
-  expect(screen.getByText(/Error/i)).toHaveTextContent("none");
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   link.simulateResult({
     result: {
@@ -1619,21 +1621,24 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     },
   });
 
-  await waitFor(() => {
-    expect(screen.getByText(/Recipient/i)).toHaveTextContent(
-      "Recipient: Alice"
-    );
-  });
-  expect(screen.getByText(/Message/i)).toHaveTextContent(
-    "Message: Hello world"
-  );
-  expect(screen.getByText(/Network status/i)).toHaveTextContent(
-    "Network status: 7" // ready
-  );
-  expect(screen.getByText(/Error/i)).toHaveTextContent("none");
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  expect(renders).toBe(3);
-  expect(suspenseCount).toBe(0);
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
 });
 
 it("reacts to cache updates", async () => {

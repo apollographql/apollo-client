@@ -2429,20 +2429,12 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     data: { results },
   });
 
-  const client = new ApolloClient({
-    link: new MockLink([]),
-    cache,
-  });
+  const Profiler = createDefaultProfiler<Data>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  const result: { current: Data | null } = {
-    current: null,
-  };
-
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
-
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [canonizeResults, setCanonizeResults] = React.useState(false);
     const [queryRef] = useBackgroundQuery(query, {
       canonizeResults,
@@ -2454,52 +2446,39 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
           Canonize results
         </button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Results queryRef={queryRef} />
+          <ReadQueryHook queryRef={queryRef} />
         </Suspense>
       </>
     );
   }
 
-  function Results({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithMocks(<App />, { cache, wrapper: Profiler });
 
-    result.current = data;
-
-    return null;
-  }
-
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
-
-  render(<App />);
-
-  function verifyCanonicalResults(data: Data, canonized: boolean) {
-    const resultSet = new Set(data.results);
+  {
+    const { snapshot } = await Profiler.takeRender();
+    const result = snapshot.result!;
+    const resultSet = new Set(result.data.results);
     const values = Array.from(resultSet).map((item) => item.value);
 
-    expect(data).toEqual({ results });
-
-    if (canonized) {
-      expect(data.results.length).toBe(6);
-      expect(resultSet.size).toBe(5);
-      expect(values).toEqual([0, 1, 2, 3, 5]);
-    } else {
-      expect(data.results.length).toBe(6);
-      expect(resultSet.size).toBe(6);
-      expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-    }
+    expect(result.data).toEqual({ results });
+    expect(result.data.results.length).toBe(6);
+    expect(resultSet.size).toBe(6);
+    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
   }
-
-  verifyCanonicalResults(result.current!, false);
 
   await act(() => user.click(screen.getByText("Canonize results")));
 
-  verifyCanonicalResults(result.current!, true);
+  {
+    const { snapshot } = await Profiler.takeRender();
+    const result = snapshot.result!;
+    const resultSet = new Set(result.data.results);
+    const values = Array.from(resultSet).map((item) => item.value);
+
+    expect(result.data).toEqual({ results });
+    expect(result.data.results.length).toBe(6);
+    expect(resultSet.size).toBe(5);
+    expect(values).toEqual([0, 1, 2, 3, 5]);
+  }
 });
 
 it("applies changed `refetchWritePolicy` to next fetch when changing between renders", async () => {

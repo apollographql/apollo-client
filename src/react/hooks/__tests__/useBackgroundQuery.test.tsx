@@ -2316,23 +2316,23 @@ it("applies `context` on next fetch when it changes between renders", async () =
   `;
 
   const link = new ApolloLink((operation) => {
-    return Observable.of({
-      data: {
-        context: operation.getContext(),
-      },
+    return new Observable((observer) => {
+      setTimeout(() => {
+        const { phase } = operation.getContext();
+        observer.next({ data: { context: { phase } } });
+        observer.complete();
+      }, 10);
     });
   });
 
-  const client = new ApolloClient({
-    link,
-    cache: new InMemoryCache(),
-  });
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const Profiler = createDefaultProfiler<Data>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [phase, setPhase] = React.useState("initial");
     const [queryRef, { refetch }] = useBackgroundQuery(query, {
       context: { phase },
@@ -2343,34 +2343,45 @@ it("applies `context` on next fetch when it changes between renders", async () =
         <button onClick={() => setPhase("rerender")}>Update context</button>
         <button onClick={() => refetch()}>Refetch</button>
         <Suspense fallback={<SuspenseFallback />}>
-          <Context queryRef={queryRef} />
+          <ReadQueryHook queryRef={queryRef} />
         </Suspense>
       </>
     );
   }
 
-  function Context({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data } = useReadQuery(queryRef);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-    return <div data-testid="context">{data.context.phase}</div>;
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { context: { phase: "initial" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
   }
-
-  render(<App />);
-
-  expect(await screen.findByTestId("context")).toHaveTextContent("initial");
 
   await act(() => user.click(screen.getByText("Update context")));
-  await act(() => user.click(screen.getByText("Refetch")));
+  await Profiler.takeRender();
 
-  expect(await screen.findByTestId("context")).toHaveTextContent("rerender");
+  await act(() => user.click(screen.getByText("Refetch")));
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { context: { phase: "rerender" } },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 // NOTE: We only test the `false` -> `true` path here. If the option changes

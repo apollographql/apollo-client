@@ -3589,73 +3589,99 @@ describe("refetch", () => {
   });
 
   it('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
-    interface QueryData {
-      character: {
-        id: string;
-        name: string;
-      };
-    }
-
-    interface QueryVariables {
-      id: string;
-    }
-    const query: TypedDocumentNode<QueryData, QueryVariables> = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
+    const { query, mocks: defaultMocks } = setupVariablesCase();
+    const user = userEvent.setup();
     const mocks = [
+      ...defaultMocks,
       {
         request: { query, variables: { id: "1" } },
         result: {
-          data: { character: { id: "1", name: "Captain Marvel" } },
-        },
-      },
-      {
-        request: { query, variables: { id: "1" } },
-        result: {
-          data: { character: { id: "1", name: null } },
+          data: { character: { __typename: "Character", id: "1", name: null } },
           errors: [new GraphQLError("Something went wrong")],
         },
+        delay: 10,
       },
     ];
 
-    const { renders } = renderVariablesIntegrationTest({
-      variables: { id: "1" },
-      errorPolicy: "all",
-      mocks,
-    });
+    const Profiler = createErrorProfiler<VariablesCaseData | undefined>();
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
+    const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
-    expect(await screen.findByText("1 - Captain Marvel")).toBeInTheDocument();
+    function App() {
+      useTrackRenders();
+      const [queryRef, { refetch }] = useBackgroundQuery(query, {
+        variables: { id: "1" },
+        errorPolicy: "all",
+      });
 
-    const button = screen.getByText("Refetch");
-    const user = userEvent.setup();
-    await act(() => user.click(button));
+      return (
+        <>
+          <button onClick={() => refetch()}>Refetch</button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <ErrorBoundary>
+              <ReadQueryHook queryRef={queryRef} />
+            </ErrorBoundary>
+          </Suspense>
+        </>
+      );
+    }
 
-    expect(renders.errorCount).toBe(0);
-    expect(renders.errors).toEqual([]);
+    renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-    expect(await screen.findByText("Something went wrong")).toBeInTheDocument();
+    {
+      const { renderedComponents } = await Profiler.takeRender();
 
-    const expectedError = new ApolloError({
-      graphQLErrors: [new GraphQLError("Something went wrong")],
-    });
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
 
-    expect(renders.frames).toMatchObject([
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: mocks[1].result.data,
-        networkStatus: NetworkStatus.error,
-        error: expectedError,
-      },
-    ]);
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot).toEqual({
+        error: null,
+        result: {
+          data: {
+            character: {
+              __typename: "Character",
+              id: "1",
+              name: "Spider-Man",
+            },
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Refetch")));
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot).toEqual({
+        error: null,
+        result: {
+          data: {
+            character: {
+              __typename: "Character",
+              id: "1",
+              name: null,
+            },
+          },
+          error: new ApolloError({
+            graphQLErrors: [new GraphQLError("Something went wrong")],
+          }),
+          networkStatus: NetworkStatus.error,
+        },
+      });
+    }
   });
 
   it("can refetch after error is encountered", async () => {

@@ -2862,26 +2862,9 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
 });
 
 it("properly handles changing options along with changing `variables`", async () => {
-  interface Data {
-    character: {
-      __typename: "Character";
-      id: string;
-      name: string;
-    };
-  }
-
+  const { query } = setupVariablesCase();
   const user = userEvent.setup();
-  const query: TypedDocumentNode<Data, { id: string }> = gql`
-    query ($id: ID!) {
-      character(id: $id) {
-        __typename
-        id
-        name
-      }
-    }
-  `;
-
-  const mocks = [
+  const mocks: MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -2925,11 +2908,13 @@ it("properly handles changing options along with changing `variables`", async ()
     cache,
   });
 
-  function SuspenseFallback() {
-    return <div>Loading...</div>;
-  }
+  const Profiler = createErrorProfiler<VariablesCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+  const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
-  function Parent() {
+  function App() {
+    useTrackRenders();
     const [id, setId] = React.useState("1");
 
     const [queryRef, { refetch }] = useBackgroundQuery(query, {
@@ -2942,56 +2927,103 @@ it("properly handles changing options along with changing `variables`", async ()
         <button onClick={() => setId("1")}>Get first character</button>
         <button onClick={() => setId("2")}>Get second character</button>
         <button onClick={() => refetch()}>Refetch</button>
-        <ReactErrorBoundary
-          fallback={<div data-testid="error">Error boundary</div>}
-        >
+        <ErrorBoundary>
           <Suspense fallback={<SuspenseFallback />}>
-            <Character queryRef={queryRef} />
+            <ReadQueryHook queryRef={queryRef} />
           </Suspense>
-        </ReactErrorBoundary>
+        </ErrorBoundary>
       </>
     );
   }
 
-  function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
-    const { data, error } = useReadQuery(queryRef);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-    return error ?
-        <div data-testid="error">{error.message}</div>
-      : <span data-testid="character">{data.character.name}</span>;
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot).toEqual({
+      error: null,
+      result: {
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Doctor Strangecache",
+          },
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
   }
-
-  function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Parent />
-      </ApolloProvider>
-    );
-  }
-
-  render(<App />);
-
-  const character = await screen.findByTestId("character");
-
-  expect(character).toHaveTextContent("Doctor Strangecache");
 
   await act(() => user.click(screen.getByText("Get second character")));
+  await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(character).toHaveTextContent("Hulk");
-  });
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot).toEqual({
+      error: null,
+      result: {
+        data: {
+          character: {
+            __typename: "Character",
+            id: "2",
+            name: "Hulk",
+          },
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
 
   await act(() => user.click(screen.getByText("Get first character")));
 
-  await waitFor(() => {
-    expect(character).toHaveTextContent("Doctor Strangecache");
-  });
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot).toEqual({
+      error: null,
+      result: {
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Doctor Strangecache",
+          },
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      },
+    });
+  }
 
   await act(() => user.click(screen.getByText("Refetch")));
+  await Profiler.takeRender();
 
-  // Ensure we render the inline error instead of the error boundary, which
-  // tells us the error policy was properly applied.
-  expect(await screen.findByTestId("error")).toHaveTextContent("oops");
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    // Ensure we render the inline error instead of the error boundary, which
+    // tells us the error policy was properly applied.
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot).toEqual({
+      error: null,
+      result: {
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Doctor Strangecache",
+          },
+        },
+        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        networkStatus: NetworkStatus.error,
+      },
+    });
+  }
 });
 
 describe("refetch", () => {

@@ -6,7 +6,6 @@ import type {
   OperationVariables,
   WatchQueryOptions,
 } from "../../core/index.js";
-import { isNetworkRequestSettled } from "../../core/index.js";
 import type {
   ObservableSubscription,
   PromiseWithState,
@@ -35,9 +34,10 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
  * A child component reading the `QueryReference` via {@link useReadQuery} will
  * suspend until the promise resolves.
  */
-export interface QueryReference<TData = unknown> {
+export interface QueryReference<TData = unknown, TVariables = unknown> {
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
+  toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -45,30 +45,43 @@ interface InternalQueryReferenceOptions {
   autoDisposeTimeoutMs?: number;
 }
 
-export function wrapQueryRef<TData>(
+export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   internalQueryRef: InternalQueryReference<TData>
-): QueryReference<TData> {
-  return {
+) {
+  const ref: QueryReference<TData, TVariables> = {
+    toPromise() {
+      // We avoid resolving this promise with the query data because we want to
+      // discourage using the server data directly from the queryRef. Instead,
+      // the data should be accessed through `useReadQuery`. When the server
+      // data is needed, its better to use `client.query()` directly.
+      //
+      // Here we resolve with the ref itself to make using this in React Router
+      // or TanStack Router `loader` functions a bit more ergonomic e.g.
+      //
+      // function loader() {
+      //   return { queryRef: await preloadQuery(query).toPromise() }
+      // }
+      return getWrappedPromise(ref).then(() => ref);
+    },
     [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
     [PROMISE_SYMBOL]: internalQueryRef.promise,
   };
+
+  return ref;
+}
+
+export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
+  const internalQueryRef = unwrapQueryRef(queryRef);
+
+  return internalQueryRef.promise.status === "fulfilled" ?
+      internalQueryRef.promise
+    : queryRef[PROMISE_SYMBOL];
 }
 
 export function unwrapQueryRef<TData>(
   queryRef: QueryReference<TData>
-): [InternalQueryReference<TData>, () => QueryRefPromise<TData>] {
-  const internalQueryRef = queryRef[QUERY_REFERENCE_SYMBOL];
-
-  return [
-    internalQueryRef,
-    () =>
-      // There is a chance the query ref's promise has been updated in the time
-      // the original promise had been suspended. In that case, we want to use
-      // it instead of the older promise which may contain outdated data.
-      internalQueryRef.promise.status === "fulfilled" ?
-        internalQueryRef.promise
-      : queryRef[PROMISE_SYMBOL],
-  ];
+): InternalQueryReference<TData> {
+  return queryRef[QUERY_REFERENCE_SYMBOL];
 }
 
 export function updateWrappedQueryRef<TData>(
@@ -93,16 +106,15 @@ type ObservedOptions = Pick<
 >;
 
 export class InternalQueryReference<TData = unknown> {
-  public result: ApolloQueryResult<TData>;
+  public result!: ApolloQueryResult<TData>;
   public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
 
-  public promise: QueryRefPromise<TData>;
+  public promise!: QueryRefPromise<TData>;
 
-  private subscription: ObservableSubscription;
+  private subscription!: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
-  private status: "idle" | "loading" = "loading";
 
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
@@ -110,43 +122,20 @@ export class InternalQueryReference<TData = unknown> {
   private references = 0;
 
   constructor(
-    observable: ObservableQuery<TData>,
+    observable: ObservableQuery<TData, any>,
     options: InternalQueryReferenceOptions
   ) {
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
-    // Don't save this result as last result to prevent delivery of last result
-    // when first subscribing
-    this.result = observable.getCurrentResult(false);
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;
     }
 
-    if (
-      isNetworkRequestSettled(this.result.networkStatus) ||
-      (this.result.data &&
-        (!this.result.partial || this.watchQueryOptions.returnPartialData))
-    ) {
-      this.promise = createFulfilledPromise(this.result);
-      this.status = "idle";
-    } else {
-      this.promise = wrapPromiseWithState(
-        new Promise((resolve, reject) => {
-          this.resolve = resolve;
-          this.reject = reject;
-        })
-      );
-    }
-
-    this.subscription = observable
-      .filter(({ data }) => !equal(data, {}))
-      .subscribe({
-        next: this.handleNext,
-        error: this.handleError,
-      });
+    this.setResult();
+    this.subscribeToQuery();
 
     // Start a timer that will automatically dispose of the query if the
     // suspended resource does not use this queryRef in the given time. This
@@ -167,8 +156,38 @@ export class InternalQueryReference<TData = unknown> {
     this.promise.then(startDisposeTimer, startDisposeTimer);
   }
 
+  get disposed() {
+    return this.subscription.closed;
+  }
+
   get watchQueryOptions() {
     return this.observable.options;
+  }
+
+  reinitialize() {
+    const { observable } = this;
+
+    const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
+
+    try {
+      if (originalFetchPolicy !== "no-cache") {
+        observable.resetLastResults();
+        observable.silentSetOptions({ fetchPolicy: "cache-first" });
+      } else {
+        observable.silentSetOptions({ fetchPolicy: "standby" });
+      }
+
+      this.subscribeToQuery();
+
+      if (originalFetchPolicy === "no-cache") {
+        return;
+      }
+
+      observable.resetDiff();
+      this.setResult();
+    } finally {
+      observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
+    }
   }
 
   retain() {
@@ -251,19 +270,18 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private handleNext(result: ApolloQueryResult<TData>) {
-    switch (this.status) {
-      case "loading": {
+    switch (this.promise.status) {
+      case "pending": {
         // Maintain the last successful `data` value if the next result does not
         // have one.
         if (result.data === void 0) {
           result.data = this.result.data;
         }
-        this.status = "idle";
         this.result = result;
         this.resolve?.(result);
         break;
       }
-      case "idle": {
+      default: {
         // This occurs when switching to a result that is fully cached when this
         // class is instantiated. ObservableQuery will run reobserve when
         // subscribing, which delivers a result from the cache.
@@ -292,13 +310,12 @@ export class InternalQueryReference<TData = unknown> {
       this.handleError
     );
 
-    switch (this.status) {
-      case "loading": {
-        this.status = "idle";
+    switch (this.promise.status) {
+      case "pending": {
         this.reject?.(error);
         break;
       }
-      case "idle": {
+      default: {
         this.promise = createRejectedPromise<ApolloQueryResult<TData>>(error);
         this.deliver(this.promise);
       }
@@ -310,15 +327,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private initiateFetch(returnedPromise: Promise<ApolloQueryResult<TData>>) {
-    this.status = "loading";
-
-    this.promise = wrapPromiseWithState(
-      new Promise((resolve, reject) => {
-        this.resolve = resolve;
-        this.reject = reject;
-      })
-    );
-
+    this.promise = this.createPendingPromise();
     this.promise.catch(() => {});
 
     // If the data returned from the fetch is deeply equal to the data already
@@ -328,8 +337,7 @@ export class InternalQueryReference<TData = unknown> {
     // promise is resolved correctly.
     returnedPromise
       .then((result) => {
-        if (this.status === "loading") {
-          this.status = "idle";
+        if (this.promise.status === "pending") {
           this.result = result;
           this.resolve?.(result);
         }
@@ -337,5 +345,41 @@ export class InternalQueryReference<TData = unknown> {
       .catch(() => {});
 
     return returnedPromise;
+  }
+
+  private subscribeToQuery() {
+    this.subscription = this.observable
+      .filter(
+        (result) => !equal(result.data, {}) && !equal(result, this.result)
+      )
+      .subscribe(this.handleNext, this.handleError);
+  }
+
+  private setResult() {
+    // Don't save this result as last result to prevent delivery of last result
+    // when first subscribing
+    const result = this.observable.getCurrentResult(false);
+
+    if (equal(result, this.result)) {
+      return;
+    }
+
+    this.result = result;
+    this.promise =
+      (
+        result.data &&
+        (!result.partial || this.watchQueryOptions.returnPartialData)
+      ) ?
+        createFulfilledPromise(result)
+      : this.createPendingPromise();
+  }
+
+  private createPendingPromise() {
+    return wrapPromiseWithState(
+      new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+      })
+    );
   }
 }

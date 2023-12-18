@@ -1,5 +1,6 @@
 import * as React from "rehackt";
 import {
+  getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
 } from "../cache/QueryReference.js";
@@ -38,10 +39,22 @@ export interface UseReadQueryResult<TData = unknown> {
 export function useReadQuery<TData>(
   queryRef: QueryReference<TData>
 ): UseReadQueryResult<TData> {
-  const [internalQueryRef, getPromise] = React.useMemo(
+  const internalQueryRef = React.useMemo(
     () => unwrapQueryRef(queryRef),
     [queryRef]
   );
+
+  const getPromise = React.useCallback(
+    () => getWrappedPromise(queryRef),
+    [queryRef]
+  );
+
+  if (internalQueryRef.disposed) {
+    internalQueryRef.reinitialize();
+    updateWrappedQueryRef(queryRef, internalQueryRef.promise);
+  }
+
+  React.useEffect(() => internalQueryRef.retain(), [internalQueryRef]);
 
   const promise = useSyncExternalStore(
     React.useCallback(

@@ -984,45 +984,77 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
   expect(values).toEqual([0, 1, 1, 2, 3, 5]);
 });
 
-// TODO(FIXME): test fails, should return cache data first if it exists
-it.skip("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
-  const query = gql`
-    {
-      hello
-    }
-  `;
+it("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
+  const { query } = setupSimpleCase();
   const cache = new InMemoryCache();
   const link = mockSingleLink({
     request: { query },
-    result: { data: { hello: "from link" } },
+    result: { data: { greeting: "from link" } },
     delay: 20,
   });
 
-  const client = new ApolloClient({
-    link,
-    cache,
+  const client = new ApolloClient({ link, cache });
+
+  cache.writeQuery({ query, data: { greeting: "from cache" } });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
   });
 
-  cache.writeQuery({ query, data: { hello: "from cache" } });
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
 
-  const { result } = renderHook(
-    () => useBackgroundQuery(query, { fetchPolicy: "cache-and-network" }),
-    {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    }
-  );
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryReference<SimpleCaseData>;
+  }) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-  const [queryRef] = result.current;
+    return null;
+  }
 
-  const _result = await getWrappedPromise(queryRef);
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, {
+      fetchPolicy: "cache-and-network",
+    });
 
-  expect(_result).toEqual({
-    data: { hello: "from link" },
-    loading: false,
-    networkStatus: 7,
-  });
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "from cache" },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "from link" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it("all data is present in the cache, no network request is made", async () => {

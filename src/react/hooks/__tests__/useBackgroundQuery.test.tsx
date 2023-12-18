@@ -52,6 +52,7 @@ import equal from "@wry/equality";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
 import {
+  Profiler,
   SimpleCaseData,
   createProfiler,
   profile,
@@ -540,6 +541,29 @@ function renderSuspenseHook<Result, Props>(
   return { ...view, renders };
 }
 
+function createDefaultTrackedComponents<
+  Snapshot extends { result: UseReadQueryResult<any> | null },
+  TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null ?
+    TData
+  : unknown,
+>(Profiler: Profiler<Snapshot>) {
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <div>Loading</div>;
+  }
+
+  function ReadQueryHook({ queryRef }: { queryRef: QueryReference<TData> }) {
+    useTrackRenders();
+    Profiler.mergeSnapshot({
+      result: useReadQuery(queryRef),
+    } as Partial<Snapshot>);
+
+    return null;
+  }
+
+  return { SuspenseFallback, ReadQueryHook };
+}
+
 it("fetches a simple query with minimal config", async () => {
   const { query, mocks } = setupSimpleCase();
 
@@ -549,21 +573,8 @@ it("fetches a simple query with minimal config", async () => {
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleCaseData>;
-  }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -619,21 +630,8 @@ it("allows the client to be overridden", async () => {
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleCaseData>;
-  }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -688,17 +686,8 @@ it("passes context to the link", async () => {
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({ queryRef }: { queryRef: QueryReference }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -775,17 +764,8 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({ queryRef }: { queryRef: QueryReference<Data> }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -857,17 +837,8 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({ queryRef }: { queryRef: QueryReference<Data> }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -913,21 +884,8 @@ it("returns initial cache data followed by network data when the fetch policy is
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleCaseData>;
-  }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -988,21 +946,8 @@ it("all data is present in the cache, no network request is made", async () => {
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleCaseData>;
-  }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -1060,17 +1005,8 @@ it("partial data is present in the cache so it is ignored and network request is
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({ queryRef }: { queryRef: QueryReference }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -1123,21 +1059,8 @@ it("existing data in the cache is ignored when fetchPolicy is 'network-only'", a
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleCaseData>;
-  }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -1194,21 +1117,8 @@ it("fetches data from the network but does not update the cache when fetchPolicy
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleCaseData>;
-  }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -1299,6 +1209,9 @@ it("works with startTransition to change variables", async () => {
     },
   });
 
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
   function App() {
     useTrackRenders();
     const [id, setId] = React.useState("1");
@@ -1322,23 +1235,11 @@ it("works with startTransition to change variables", async () => {
         </button>
         <ApolloProvider client={client}>
           <Suspense fallback={<SuspenseFallback />}>
-            <Todo queryRef={queryRef} />
+            <ReadQueryHook queryRef={queryRef} />
           </Suspense>
         </ApolloProvider>
       </>
     );
-  }
-
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <p>Loading</p>;
-  }
-
-  function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
   }
 
   renderWithClient(<App />, { client, wrapper: Profiler });
@@ -1352,7 +1253,7 @@ it("works with startTransition to change variables", async () => {
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    expect(renderedComponents).toStrictEqual([Todo]);
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot).toEqual({
       isPending: false,
       result: {
@@ -1376,7 +1277,7 @@ it("works with startTransition to change variables", async () => {
     // until the todo is finished loading. Seeing the suspense fallback is an
     // indication that we are suspending the component too late in the process.
 
-    expect(renderedComponents).toStrictEqual([App, Todo]);
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot).toEqual({
       isPending: true,
       result: {
@@ -1392,7 +1293,7 @@ it("works with startTransition to change variables", async () => {
 
     // Eventually we should see the updated todo content once its done
     // suspending.
-    expect(renderedComponents).toStrictEqual([App, Todo]);
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot).toEqual({
       isPending: false,
       result: {
@@ -1446,17 +1347,8 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({ queryRef }: { queryRef: QueryReference<Data> }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();
@@ -1565,21 +1457,8 @@ it("reacts to cache updates", async () => {
     },
   });
 
-  function SuspenseFallback() {
-    useTrackRenders();
-    return <div>Loading</div>;
-  }
-
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleCaseData>;
-  }) {
-    useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
     useTrackRenders();

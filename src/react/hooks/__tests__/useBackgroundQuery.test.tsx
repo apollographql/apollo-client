@@ -54,24 +54,6 @@ import {
   useTrackRenders,
 } from "../../../testing/internal";
 
-function useVariablesIntegrationTestCase() {
-  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
-    gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-  const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
-  let mocks = [...CHARACTERS].map((name, index) => ({
-    request: { query, variables: { id: String(index + 1) } },
-    result: { data: { character: { id: String(index + 1), name } } },
-  }));
-  return { mocks, query };
-}
-
 function createDefaultTrackedComponents<
   Snapshot extends { result: UseReadQueryResult<any> | null },
   TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null ?
@@ -4944,14 +4926,19 @@ describe.skip("type tests", () => {
   });
 
   it("disallows wider variables type than specified", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
-    // @ts-expect-error should not allow wider TVariables type
-    useBackgroundQuery(query, { variables: { id: "1", foo: "bar" } });
+    useBackgroundQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
   });
 
   it("returns TData in default case", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query);
     const { data: inferred } = useReadQuery(inferredQueryRef);
@@ -4971,7 +4958,7 @@ describe.skip("type tests", () => {
   });
 
   it('returns TData | undefined with errorPolicy: "ignore"', () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, {
       errorPolicy: "ignore",
@@ -4995,7 +4982,7 @@ describe.skip("type tests", () => {
   });
 
   it('returns TData | undefined with errorPolicy: "all"', () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, {
       errorPolicy: "all",
@@ -5015,7 +5002,7 @@ describe.skip("type tests", () => {
   });
 
   it('returns TData with errorPolicy: "none"', () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, {
       errorPolicy: "none",
@@ -5035,7 +5022,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns DeepPartial<TData> with returnPartialData: true", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, {
       returnPartialData: true,
@@ -5059,7 +5046,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns TData with returnPartialData: false", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, {
       returnPartialData: false,
@@ -5083,7 +5070,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns TData when passing an option that does not affect TData", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, {
       fetchPolicy: "no-cache",
@@ -5107,7 +5094,7 @@ describe.skip("type tests", () => {
   });
 
   it("handles combinations of options", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredPartialDataIgnoreQueryRef] = useBackgroundQuery(query, {
       returnPartialData: true,
@@ -5180,7 +5167,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns correct TData type when combined options that do not affect TData", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, {
       fetchPolicy: "no-cache",
@@ -5208,7 +5195,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns QueryReference<TData> | undefined when `skip` is present", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, {
       skip: true,
@@ -5253,7 +5240,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns `undefined` when using `skipToken` unconditionally", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, skipToken);
 
@@ -5274,7 +5261,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns QueryReference<TData> | undefined when using conditional `skipToken`", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
     const options = {
       skip: true,
     };
@@ -5305,7 +5292,7 @@ describe.skip("type tests", () => {
   });
 
   it("returns QueryReference<DeepPartial<TData>> | undefined when using `skipToken` with `returnPartialData`", () => {
-    const { query } = useVariablesIntegrationTestCase();
+    const { query } = setupVariablesCase();
     const options = {
       skip: true,
     };

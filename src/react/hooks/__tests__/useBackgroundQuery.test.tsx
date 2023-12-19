@@ -55,6 +55,10 @@ import {
   useTrackRenders,
 } from "../../../testing/internal";
 
+afterEach(() => {
+  jest.useRealTimers();
+});
+
 function createDefaultTrackedComponents<
   Snapshot extends { result: UseReadQueryResult<any> | null },
   TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null ?

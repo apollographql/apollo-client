@@ -2916,7 +2916,8 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
   }
 });
 
-it('suspends and does not use partial data when changing variables and using a "cache-first" fetch policy with returnPartialData', async () => {
+it('suspends and does not use partial data from other variables in the cache when changing variables and using a "cache-first" fetch policy with returnPartialData: true', async () => {
+  const { query, mocks } = setupVariablesCase();
   const partialQuery = gql`
     query ($id: ID!) {
       character(id: $id) {
@@ -2929,51 +2930,79 @@ it('suspends and does not use partial data when changing variables and using a "
 
   cache.writeQuery({
     query: partialQuery,
-    data: { character: { id: "1" } },
+    data: { character: { __typename: "Character", id: "1" } },
     variables: { id: "1" },
   });
 
-  const { renders, mocks, rerender } = renderVariablesIntegrationTest({
-    variables: { id: "1" },
-    cache,
-    options: {
+  const Profiler = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App({ id }: { id: string }) {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
-    },
+      variables: { id },
+    });
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  const { rerender } = renderWithMocks(<App id="1" />, {
+    cache,
+    mocks,
+    wrapper: Profiler,
   });
-  expect(renders.suspenseCount).toBe(0);
 
-  expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  rerender({ variables: { id: "2" } });
-
-  expect(await screen.findByText("2 - Black Widow")).toBeInTheDocument();
-
-  expect(renders.frames[2]).toMatchObject({
-    ...mocks[1].result,
-    networkStatus: NetworkStatus.ready,
-    error: undefined,
-  });
-
-  expect(renders.count).toBe(3);
-  expect(renders.suspenseCount).toBe(1);
-  expect(renders.frames).toMatchObject([
-    {
-      data: { character: { id: "1" } },
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { character: { __typename: "Character", id: "1" } },
+      error: undefined,
       networkStatus: NetworkStatus.loading,
+    });
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
       error: undefined,
-    },
-    {
-      ...mocks[0].result,
       networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  rerender(<App id="2" />);
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "2", name: "Black Widow" },
+      },
       error: undefined,
-    },
-    {
-      ...mocks[1].result,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
-    },
-  ]);
+    });
+  }
 });
 
 it('suspends when partial data is in the cache and using a "network-only" fetch policy with returnPartialData', async () => {

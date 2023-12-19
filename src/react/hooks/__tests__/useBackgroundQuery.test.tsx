@@ -1,4 +1,4 @@
-import React, { ComponentProps, Suspense } from "react";
+import React, { Suspense } from "react";
 import {
   act,
   render,
@@ -10,7 +10,6 @@ import {
 import userEvent from "@testing-library/user-event";
 import {
   ErrorBoundary as ReactErrorBoundary,
-  ErrorBoundaryProps,
   FallbackProps,
 } from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
@@ -18,15 +17,12 @@ import { GraphQLError } from "graphql";
 import {
   gql,
   ApolloError,
-  DocumentNode,
   ApolloClient,
   ErrorPolicy,
   NetworkStatus,
   TypedDocumentNode,
   ApolloLink,
   Observable,
-  OperationVariables,
-  ApolloQueryResult,
 } from "../../../core";
 import {
   MockedResponse,
@@ -39,17 +35,13 @@ import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
-  cloneDeep,
 } from "../../../utilities";
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
 import { QueryReference } from "../../cache/QueryReference";
 import { InMemoryCache } from "../../../cache";
-import {
-  SuspenseQueryHookFetchPolicy,
-  SuspenseQueryHookOptions,
-} from "../../types/types";
+import { SuspenseQueryHookFetchPolicy } from "../../types/types";
 import equal from "@wry/equality";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
@@ -60,7 +52,6 @@ import {
   VariablesCaseData,
   VariablesCaseVariables,
   createProfiler,
-  profile,
   renderWithClient,
   renderWithMocks,
   setupPaginatedCase,
@@ -86,191 +77,6 @@ function useVariablesIntegrationTestCase() {
     result: { data: { character: { id: String(index + 1), name } } },
   }));
   return { mocks, query };
-}
-
-function renderVariablesIntegrationTest({
-  variables,
-  mocks,
-  errorPolicy,
-  options,
-  cache,
-}: {
-  mocks?: {
-    request: { query: DocumentNode; variables: { id: string } };
-    result: {
-      data?: {
-        character: {
-          id: string;
-          name: string | null;
-        };
-      };
-    };
-  }[];
-  variables: { id: string };
-  options?: SuspenseQueryHookOptions;
-  cache?: InMemoryCache;
-  errorPolicy?: ErrorPolicy;
-}) {
-  let { mocks: _mocks, query } = useVariablesIntegrationTestCase();
-
-  // duplicate mocks with (updated) in the name for refetches
-  _mocks = [..._mocks, ..._mocks, ..._mocks].map(
-    ({ request, result }, index) => {
-      return {
-        request: request,
-        result: {
-          data: {
-            character: {
-              ...result.data.character,
-              name:
-                index > 3 ?
-                  index > 7 ?
-                    `${result.data.character.name} (updated again)`
-                  : `${result.data.character.name} (updated)`
-                : result.data.character.name,
-            },
-          },
-        },
-        delay: 200,
-      };
-    }
-  );
-  const client = new ApolloClient({
-    cache: cache || new InMemoryCache(),
-    link: new MockLink(mocks || _mocks),
-  });
-  interface Renders {
-    errors: Error[];
-    errorCount: number;
-    suspenseCount: number;
-    count: number;
-    frames: {
-      data: VariablesCaseData;
-      networkStatus: NetworkStatus;
-      error: ApolloError | undefined;
-    }[];
-  }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-    frames: [],
-  };
-
-  const errorBoundaryProps: ErrorBoundaryProps = {
-    fallback: <div>Error</div>,
-    onError: (error) => {
-      renders.errorCount++;
-      renders.errors.push(error);
-    },
-  };
-
-  function SuspenseFallback() {
-    renders.suspenseCount++;
-    return <div>loading</div>;
-  }
-
-  function Child({
-    refetch,
-    variables: _variables,
-    queryRef,
-  }: {
-    variables: VariablesCaseVariables;
-    refetch: (
-      variables?: Partial<OperationVariables> | undefined
-    ) => Promise<ApolloQueryResult<VariablesCaseData>>;
-    queryRef: QueryReference<VariablesCaseData>;
-  }) {
-    const { data, error, networkStatus } = useReadQuery(queryRef);
-    const [variables, setVariables] = React.useState(_variables);
-    // count renders in the child component
-    renders.count++;
-    renders.frames.push({ data, networkStatus, error });
-
-    return (
-      <div>
-        {error ?
-          <div>{error.message}</div>
-        : null}
-        <button
-          onClick={() => {
-            refetch(variables);
-          }}
-        >
-          Refetch
-        </button>
-        <button
-          onClick={() => {
-            setVariables({ id: "2" });
-          }}
-        >
-          Set variables to id: 2
-        </button>
-        {data?.character.id} - {data?.character.name}
-      </div>
-    );
-  }
-
-  function ParentWithVariables({
-    variables,
-    errorPolicy = "none",
-  }: {
-    variables: VariablesCaseVariables;
-    errorPolicy?: ErrorPolicy;
-  }) {
-    const [queryRef, { refetch }] = useBackgroundQuery(query, {
-      ...options,
-      variables,
-      errorPolicy,
-    });
-    return (
-      <Child refetch={refetch} variables={variables} queryRef={queryRef} />
-    );
-  }
-
-  function App({
-    variables,
-    errorPolicy,
-  }: {
-    variables: VariablesCaseVariables;
-    errorPolicy?: ErrorPolicy;
-  }) {
-    return (
-      <ApolloProvider client={client}>
-        <ReactErrorBoundary {...errorBoundaryProps}>
-          <Suspense fallback={<SuspenseFallback />}>
-            <ParentWithVariables
-              variables={variables}
-              errorPolicy={errorPolicy}
-            />
-          </Suspense>
-        </ReactErrorBoundary>
-      </ApolloProvider>
-    );
-  }
-
-  const ProfiledApp = profile<Renders, ComponentProps<typeof App>>({
-    Component: App,
-    snapshotDOM: true,
-    onRender: ({ replaceSnapshot }) => replaceSnapshot(cloneDeep(renders)),
-  });
-
-  const { ...rest } = render(
-    <ProfiledApp errorPolicy={errorPolicy} variables={variables} />
-  );
-  const rerender = ({ variables }: { variables: VariablesCaseVariables }) => {
-    return rest.rerender(<App variables={variables} />);
-  };
-  return {
-    ...rest,
-    ProfiledApp,
-    query,
-    rerender,
-    client,
-    renders,
-    mocks: mocks || _mocks,
-  };
 }
 
 interface SimpleQueryData {

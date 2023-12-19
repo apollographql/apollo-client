@@ -1,10 +1,5 @@
 import React, { Suspense } from "react";
-import {
-  act,
-  screen,
-  screen as _screen,
-  renderHook,
-} from "@testing-library/react";
+import { act, screen, renderHook } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   ErrorBoundary as ReactErrorBoundary,

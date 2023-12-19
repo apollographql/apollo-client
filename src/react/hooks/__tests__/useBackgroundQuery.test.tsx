@@ -3812,6 +3812,8 @@ describe("refetch", () => {
   });
 
   it("throws errors on refetch after error is encountered after first fetch with error", async () => {
+    // Disable error message shown in the console due to an uncaught error.
+    using _consoleSpy = spyOnConsole("error");
     type Variables = {
       id: string;
     };
@@ -3823,8 +3825,8 @@ describe("refetch", () => {
         completed: boolean;
       };
     }
-    const user = userEvent.setup();
 
+    const user = userEvent.setup();
     const query: TypedDocumentNode<Data, Variables> = gql`
       query TodoItemQuery($id: ID!) {
         todo(id: $id) {
@@ -3854,24 +3856,18 @@ describe("refetch", () => {
       },
     ];
 
-    const client = new ApolloClient({
-      link: new MockLink(mocks),
-      cache: new InMemoryCache(),
-    });
+    const Profiler = createErrorProfiler<Data>();
+    const { SuspenseFallback } = createDefaultTrackedComponents(Profiler);
+
+    function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+      useTrackRenders();
+      Profiler.mergeSnapshot({ error });
+
+      return <button onClick={resetErrorBoundary}>Retry</button>;
+    }
 
     function App() {
-      return (
-        <ApolloProvider client={client}>
-          <Parent />
-        </ApolloProvider>
-      );
-    }
-
-    function SuspenseFallback() {
-      return <p>Loading</p>;
-    }
-
-    function Parent() {
+      useTrackRenders();
       const [queryRef, { refetch }] = useBackgroundQuery(query, {
         variables: { id: "1" },
       });
@@ -3880,12 +3876,7 @@ describe("refetch", () => {
         <Suspense fallback={<SuspenseFallback />}>
           <ReactErrorBoundary
             onReset={() => refetch()}
-            fallbackRender={({ error, resetErrorBoundary }) => (
-              <>
-                <button onClick={resetErrorBoundary}>Retry</button>
-                <div>{error.message}</div>
-              </>
-            )}
+            FallbackComponent={ErrorFallback}
           >
             <Todo queryRef={queryRef} />
           </ReactErrorBoundary>
@@ -3894,40 +3885,51 @@ describe("refetch", () => {
     }
 
     function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
-      const {
-        data: { todo },
-      } = useReadQuery(queryRef);
+      useTrackRenders();
+      Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-      return (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      );
+      return null;
     }
 
-    render(<App />);
+    renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-    // Disable error message shown in the console due to an uncaught error.
-    // TODO: need to determine why the error message is logged to the console
-    // as an uncaught error since other tests do not require this.
-    using _consoleSpy = spyOnConsole("error");
+    {
+      const { renderedComponents } = await Profiler.takeRender();
 
-    expect(screen.getByText("Loading")).toBeInTheDocument();
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
 
-    expect(await screen.findByText("Oops couldn't fetch")).toBeInTheDocument();
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    const button = screen.getByText("Retry");
+      expect(renderedComponents).toStrictEqual([ErrorFallback]);
+      expect(snapshot).toEqual({
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Oops couldn't fetch")],
+        }),
+        result: null,
+      });
+    }
 
-    await act(() => user.click(button));
+    await act(() => user.click(screen.getByText("Retry")));
 
-    expect(screen.getByText("Loading")).toBeInTheDocument();
+    {
+      const { renderedComponents } = await Profiler.takeRender();
 
-    await waitFor(() => {
-      expect(screen.getByText("Oops couldn't fetch again")).toBeInTheDocument();
-    });
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
 
-    expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([ErrorFallback]);
+      expect(snapshot).toEqual({
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Oops couldn't fetch again")],
+        }),
+        result: null,
+      });
+    }
   });
 
   it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {

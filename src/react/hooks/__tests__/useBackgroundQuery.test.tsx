@@ -3006,60 +3006,22 @@ it('suspends and does not use partial data from other variables in the cache whe
 });
 
 it('suspends when partial data is in the cache and using a "network-only" fetch policy with returnPartialData', async () => {
-  interface Data {
-    character: {
-      id: string;
-      name: string;
-    };
-  }
-
-  const fullQuery: TypedDocumentNode<Data> = gql`
-    query {
-      character {
-        id
-        name
-      }
-    }
-  `;
+  const { query, mocks } = setupVariablesCase();
 
   const partialQuery = gql`
-    query {
-      character {
+    query ($id: String!) {
+      character(id: $id) {
         id
       }
     }
   `;
-  const mocks = [
-    {
-      request: { query: fullQuery },
-      result: { data: { character: { id: "1", name: "Doctor Strange" } } },
-    },
-  ];
-
-  interface Renders {
-    errors: Error[];
-    errorCount: number;
-    suspenseCount: number;
-    count: number;
-    frames: {
-      data: DeepPartial<Data>;
-      networkStatus: NetworkStatus;
-      error: ApolloError | undefined;
-    }[];
-  }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-    frames: [],
-  };
 
   const cache = new InMemoryCache();
 
   cache.writeQuery({
     query: partialQuery,
-    data: { character: { id: "1" } },
+    variables: { id: "1" },
+    data: { character: { __typename: "Character", id: "1" } },
   });
 
   const client = new ApolloClient({
@@ -3067,67 +3029,44 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     cache,
   });
 
+  const Profiler = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
-
-  function SuspenseFallback() {
-    renders.suspenseCount++;
-    return <p>Loading</p>;
-  }
-
-  function Parent() {
-    const [queryRef] = useBackgroundQuery(fullQuery, {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, {
       fetchPolicy: "network-only",
       returnPartialData: true,
+      variables: { id: "1" },
     });
 
-    return <Todo queryRef={queryRef} />;
-  }
-
-  function Todo({ queryRef }: { queryRef: QueryReference<DeepPartial<Data>> }) {
-    const { data, networkStatus, error } = useReadQuery(queryRef);
-    renders.frames.push({ data, networkStatus, error });
-    renders.count++;
     return (
-      <>
-        <div data-testid="character-id">{data.character?.id}</div>
-        <div data-testid="character-name">{data.character?.name}</div>
-        <div data-testid="network-status">{networkStatus}</div>
-        <div data-testid="error">{error?.message || "undefined"}</div>
-      </>
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
     );
   }
 
-  render(<App />);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-  expect(renders.suspenseCount).toBe(1);
+  {
+    const { renderedComponents } = await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(screen.getByTestId("character-name")).toHaveTextContent(
-      "Doctor Strange"
-    );
-  });
-  expect(screen.getByTestId("character-id")).toHaveTextContent("1");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
 
-  expect(renders.count).toBe(1);
-  expect(renders.suspenseCount).toBe(1);
+  {
+    const { snapshot } = await Profiler.takeRender();
 
-  expect(renders.frames).toMatchObject([
-    {
-      ...mocks[0].result,
-      networkStatus: NetworkStatus.ready,
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
       error: undefined,
-    },
-  ]);
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {

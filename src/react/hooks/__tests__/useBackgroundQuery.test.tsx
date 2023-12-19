@@ -4193,6 +4193,15 @@ describe("fetchMore", () => {
       },
     ];
 
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        isPending: false,
+        result: null as UseReadQueryResult<Data> | null,
+      },
+    });
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
+
     const client = new ApolloClient({
       link: new MockLink(mocks),
       cache: new InMemoryCache({
@@ -4207,82 +4216,65 @@ describe("fetchMore", () => {
     });
 
     function App() {
-      return (
-        <ApolloProvider client={client}>
-          <Suspense fallback={<SuspenseFallback />}>
-            <Parent />
-          </Suspense>
-        </ApolloProvider>
-      );
-    }
-
-    function SuspenseFallback() {
-      return <p>Loading</p>;
-    }
-
-    function Parent() {
+      useTrackRenders();
+      const [isPending, startTransition] = React.useTransition();
       const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
         variables: { offset: 0 },
       });
-      const onFetchMoreHandler = (variables: Variables) => {
-        fetchMore({ variables });
-      };
-      return <Todo onFetchMore={onFetchMoreHandler} queryRef={queryRef} />;
-    }
 
-    function Todo({
-      queryRef,
-      onFetchMore,
-    }: {
-      onFetchMore: (variables: Variables) => void;
-      queryRef: QueryReference<Data>;
-    }) {
-      const { data } = useReadQuery(queryRef);
-      const [isPending, startTransition] = React.useTransition();
-      const { todos } = data;
+      Profiler.mergeSnapshot({ isPending });
 
       return (
         <>
           <button
             onClick={() => {
               startTransition(() => {
-                onFetchMore({ offset: 1 });
+                fetchMore({ variables: { offset: 1 } });
               });
             }}
           >
             Load more
           </button>
-          <div data-testid="todos" aria-busy={isPending}>
-            {todos.map((todo) => (
-              <div data-testid={`todo:${todo.id}`} key={todo.id}>
-                {todo.name}
-                {todo.completed && " (completed)"}
-              </div>
-            ))}
-          </div>
+          <Suspense fallback={<SuspenseFallback />}>
+            <ReadQueryHook queryRef={queryRef} />
+          </Suspense>
         </>
       );
     }
 
-    const ProfiledApp = profile({ Component: App, snapshotDOM: true });
-    render(<ProfiledApp />);
+    renderWithClient(<App />, { client, wrapper: Profiler });
 
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
-      expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
     }
 
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
-      expect(withinDOM().getByTestId("todos")).toBeInTheDocument();
-      expect(withinDOM().getByTestId("todo:1")).toBeInTheDocument();
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot).toEqual({
+        isPending: false,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
     }
 
-    const button = screen.getByText("Load more");
-    await act(() => user.click(button));
+    await act(() => user.click(screen.getByText("Load more")));
 
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
       // startTransition will avoid rendering the suspense fallback for already
       // revealed content if the state update inside the transition causes the
       // component to suspend.
@@ -4290,27 +4282,93 @@ describe("fetchMore", () => {
       // Here we should not see the suspense fallback while the component suspends
       // until the todo is finished loading. Seeing the suspense fallback is an
       // indication that we are suspending the component too late in the process.
-      expect(withinDOM().queryByText("Loading")).not.toBeInTheDocument();
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-      // We can ensure this works with isPending from useTransition in the process
-      expect(withinDOM().getByTestId("todos")).toHaveAttribute(
-        "aria-busy",
-        "true"
-      );
+      expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+      expect(snapshot).toEqual({
+        isPending: true,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
 
-      // Ensure we are showing the stale UI until the new todo has loaded
-      expect(withinDOM().getByTestId("todo:1")).toHaveTextContent("Clean room");
+    // TODO: Determine why we have this extra render here. This should mimic
+    // the update in the next render where we see <App /> included in the
+    // rerendered components.
+    // Possibly related: https://github.com/apollographql/apollo-client/issues/11315
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+      expect(snapshot).toEqual({
+        isPending: false,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+              {
+                __typename: "Todo",
+                id: "2",
+                name: "Take out trash",
+                completed: true,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
     }
 
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
       // Eventually we should see the updated todos content once its done
       // suspending.
-      expect(withinDOM().getByTestId("todo:2")).toHaveTextContent(
-        "Take out trash (completed)"
-      );
-      expect(withinDOM().getByTestId("todo:1")).toHaveTextContent("Clean room");
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+      expect(snapshot).toEqual({
+        isPending: false,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+              {
+                __typename: "Todo",
+                id: "2",
+                name: "Take out trash",
+                completed: true,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
     }
+
+    await expect(Profiler).not.toRerender();
   });
 
   it('honors refetchWritePolicy set to "merge"', async () => {

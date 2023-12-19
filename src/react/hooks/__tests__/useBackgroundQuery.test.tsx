@@ -79,10 +79,6 @@ function useVariablesIntegrationTestCase() {
   return { mocks, query };
 }
 
-interface SimpleQueryData {
-  greeting: string;
-}
-
 function createDefaultTrackedComponents<
   Snapshot extends { result: UseReadQueryResult<any> | null },
   TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null ?
@@ -2859,7 +2855,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
 it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
   using _consoleSpy = spyOnConsole("warn");
 
-  const query: TypedDocumentNode<SimpleQueryData> = gql`
+  const query: TypedDocumentNode<SimpleCaseData> = gql`
     query UserQuery {
       greeting
     }

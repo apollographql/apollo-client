@@ -4076,15 +4076,6 @@ describe("refetch", () => {
 });
 
 describe("fetchMore", () => {
-  function getItemTexts(
-    screen: Pick<typeof _screen, "getAllByTestId"> = _screen
-  ) {
-    return screen.getAllByTestId(/letter/).map(
-      // eslint-disable-next-line testing-library/no-node-access
-      (li) => li.firstChild!.textContent
-    );
-  }
-
   it("re-suspends when calling `fetchMore` with different variables", async () => {
     const { query, link } = setupPaginatedCase();
     const user = userEvent.setup();

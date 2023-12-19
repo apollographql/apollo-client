@@ -3726,24 +3726,18 @@ describe("refetch", () => {
       },
     ];
 
-    const client = new ApolloClient({
-      link: new MockLink(mocks),
-      cache: new InMemoryCache(),
-    });
+    const Profiler = createErrorProfiler<Data>();
+    const { SuspenseFallback } = createDefaultTrackedComponents(Profiler);
+
+    function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+      useTrackRenders();
+      Profiler.mergeSnapshot({ error });
+
+      return <button onClick={resetErrorBoundary}>Retry</button>;
+    }
 
     function App() {
-      return (
-        <ApolloProvider client={client}>
-          <Parent />
-        </ApolloProvider>
-      );
-    }
-
-    function SuspenseFallback() {
-      return <p>Loading</p>;
-    }
-
-    function Parent() {
+      useTrackRenders();
       const [queryRef, { refetch }] = useBackgroundQuery(query, {
         variables: { id: "1" },
       });
@@ -3752,12 +3746,7 @@ describe("refetch", () => {
         <Suspense fallback={<SuspenseFallback />}>
           <ReactErrorBoundary
             onReset={() => refetch()}
-            fallbackRender={({ error, resetErrorBoundary }) => (
-              <>
-                <button onClick={resetErrorBoundary}>Retry</button>
-                <div>{error.message}</div>
-              </>
-            )}
+            FallbackComponent={ErrorFallback}
           >
             <Todo queryRef={queryRef} />
           </ReactErrorBoundary>
@@ -3766,44 +3755,60 @@ describe("refetch", () => {
     }
 
     function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
-      const {
-        data: { todo },
-      } = useReadQuery(queryRef);
+      useTrackRenders();
+      Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
-      return (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      );
+      return null;
     }
 
-    render(<App />);
+    renderWithMocks(<App />, { mocks, wrapper: Profiler });
 
-    // Disable error message shown in the console due to an uncaught error.
-    // TODO: need to determine why the error message is logged to the console
-    // as an uncaught error since other tests do not require this.
     {
-      using _consoleSpy = spyOnConsole("error");
+      const { renderedComponents } = await Profiler.takeRender();
 
-      expect(screen.getByText("Loading")).toBeInTheDocument();
-
-      expect(
-        await screen.findByText("Oops couldn't fetch")
-      ).toBeInTheDocument();
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
     }
 
-    const button = screen.getByText("Retry");
+    {
+      // Disable error message shown in the console due to an uncaught error.
+      using _consoleSpy = spyOnConsole("error");
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-    await act(() => user.click(button));
+      expect(renderedComponents).toStrictEqual([ErrorFallback]);
+      expect(snapshot).toEqual({
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Oops couldn't fetch")],
+        }),
+        result: null,
+      });
+    }
 
-    expect(screen.getByText("Loading")).toBeInTheDocument();
+    await act(() => user.click(screen.getByText("Retry")));
 
-    await waitFor(() => {
-      expect(screen.getByTestId("todo")).toHaveTextContent(
-        "Clean room (completed)"
-      );
-    });
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([Todo]);
+      expect(snapshot).toEqual({
+        // TODO: We should reset the snapshot between renders to better capture
+        // the actual result. This makes it seem like the error is rendered, but
+        // in this is just leftover from the previous snapshot.
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Oops couldn't fetch")],
+        }),
+        result: {
+          data: { todo: { id: "1", name: "Clean room", completed: true } },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
   });
 
   it("throws errors on refetch after error is encountered after first fetch with error", async () => {

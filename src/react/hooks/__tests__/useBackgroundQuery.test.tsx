@@ -460,10 +460,16 @@ it("returns initial cache data followed by network data when the fetch policy is
 it("all data is present in the cache, no network request is made", async () => {
   const { query } = setupSimpleCase();
   const cache = new InMemoryCache();
-  const link = mockSingleLink({
-    request: { query },
-    result: { data: { greeting: "from link" } },
-    delay: 20,
+
+  let fetchCount = 0;
+  const link = new ApolloLink((operation) => {
+    fetchCount++;
+    return new Observable((observer) => {
+      setTimeout(() => {
+        observer.next({ data: { greeting: "from link" } });
+        observer.complete();
+      }, 20);
+    });
   });
 
   const client = new ApolloClient({ link, cache });
@@ -498,6 +504,8 @@ it("all data is present in the cache, no network request is made", async () => {
     error: undefined,
     networkStatus: NetworkStatus.ready,
   });
+
+  expect(fetchCount).toBe(0);
 
   await expect(Profiler).not.toRerender({ timeout: 50 });
 });

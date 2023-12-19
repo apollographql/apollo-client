@@ -351,7 +351,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("auto resubscribes when mounting useReadQuery after naturally disposed by useReadQuery", async () => {

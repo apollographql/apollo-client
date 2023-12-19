@@ -270,6 +270,90 @@ it("auto disposes of the queryRef if not used within configured timeout", async 
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
 
+it("will resubscribe after disposed when mounting useReadQuery", async () => {
+  const { query, mocks } = setupSimpleCase();
+  const user = userEvent.setup();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      react: {
+        suspense: {
+          // Set this to something really low to avoid fake timers
+          autoDisposeTimeoutMs: 20,
+        },
+      },
+    },
+  });
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [show, setShow] = React.useState(false);
+    const [queryRef] = useBackgroundQuery(query);
+
+    return (
+      <>
+        <button onClick={() => setShow((show) => !show)}>Toggle</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {show && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+  }
+
+  // Wait long enough for auto dispose to kick in
+  await wait(50);
+
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+
+  await act(() => user.click(screen.getByText("Toggle")));
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.writeQuery({
+    query,
+    data: { greeting: "Hello again" },
+  });
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello again" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(Profiler).not.toRerender();
+});
+
 it("allows the client to be overridden", async () => {
   const { query } = setupSimpleCase();
 

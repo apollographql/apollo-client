@@ -151,6 +151,8 @@ it("fetches a simple query with minimal config", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("allows the client to be overridden", async () => {
@@ -204,6 +206,8 @@ it("allows the client to be overridden", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("passes context to the link", async () => {
@@ -450,7 +454,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("all data is present in the cache, no network request is made", async () => {
@@ -495,7 +499,7 @@ it("all data is present in the cache, no network request is made", async () => {
     networkStatus: NetworkStatus.ready,
   });
 
-  await expect(Profiler).not.toRerender();
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("partial data is present in the cache so it is ignored and network request is made", async () => {
@@ -556,6 +560,8 @@ it("partial data is present in the cache so it is ignored and network request is
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("existing data in the cache is ignored when fetchPolicy is 'network-only'", async () => {
@@ -610,6 +616,8 @@ it("existing data in the cache is ignored when fetchPolicy is 'network-only'", a
   expect(client.cache.extract()).toEqual({
     ROOT_QUERY: { __typename: "Query", greeting: "from link" },
   });
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("fetches data from the network but does not update the cache when fetchPolicy is 'no-cache'", async () => {
@@ -662,6 +670,8 @@ it("fetches data from the network but does not update the cache when fetchPolicy
   expect(client.cache.extract()).toEqual({
     ROOT_QUERY: { __typename: "Query", greeting: "from cache" },
   });
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("works with startTransition to change variables", async () => {
@@ -946,7 +956,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("reacts to cache updates", async () => {
@@ -1023,7 +1033,7 @@ it("reacts to cache updates", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("reacts to variables updates", async () => {
@@ -1087,6 +1097,8 @@ it("reacts to variables updates", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("does not suspend when `skip` is true", async () => {
@@ -1113,7 +1125,7 @@ it("does not suspend when `skip` is true", async () => {
 
   expect(renderedComponents).toStrictEqual([App]);
 
-  await expect(Profiler).not.toRerender();
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("does not suspend when using `skipToken` in options", async () => {
@@ -1140,7 +1152,7 @@ it("does not suspend when using `skipToken` in options", async () => {
 
   expect(renderedComponents).toStrictEqual([App]);
 
-  await expect(Profiler).not.toRerender();
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("suspends when `skip` becomes `false` after it was `true`", async () => {
@@ -1191,6 +1203,8 @@ it("suspends when `skip` becomes `false` after it was `true`", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("suspends when switching away from `skipToken` in options", async () => {
@@ -1241,6 +1255,8 @@ it("suspends when switching away from `skipToken` in options", async () => {
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`", async () => {
@@ -1297,7 +1313,7 @@ it("renders skip result, does not suspend, and maintains `data` when `skip` beco
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("renders skip result, does not suspend, and maintains `data` when switching back to `skipToken`", async () => {
@@ -1353,7 +1369,7 @@ it("renders skip result, does not suspend, and maintains `data` when switching b
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("does not make network requests when `skip` is `true`", async () => {
@@ -1734,7 +1750,7 @@ it("`skipToken` works with `startTransition`", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("applies `errorPolicy` on next fetch when it changes between renders", async () => {
@@ -2607,6 +2623,8 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it('suspends and does not use partial data from other variables in the cache when changing variables and using a "cache-first" fetch policy with returnPartialData: true', async () => {
@@ -2696,6 +2714,8 @@ it('suspends and does not use partial data from other variables in the cache whe
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it('suspends when partial data is in the cache and using a "network-only" fetch policy with returnPartialData', async () => {
@@ -2760,6 +2780,8 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
@@ -2825,6 +2847,8 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
@@ -2929,6 +2953,8 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it('suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData', async () => {
@@ -3018,6 +3044,8 @@ it('suspends and does not use partial data when changing variables and using a "
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData`', async () => {
@@ -3161,6 +3189,8 @@ it('does not suspend deferred queries with partial data in the cache and using a
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 describe("refetch", () => {
@@ -3253,7 +3283,7 @@ describe("refetch", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(Profiler).not.toRerender({ timeout: 50 });
   });
 
   it("re-suspends when calling `refetch` with new variables", async () => {
@@ -3326,6 +3356,8 @@ describe("refetch", () => {
         networkStatus: NetworkStatus.ready,
       });
     }
+
+    await expect(Profiler).not.toRerender({ timeout: 50 });
   });
 
   it("re-suspends multiple times when calling `refetch` multiple times", async () => {
@@ -3450,6 +3482,8 @@ describe("refetch", () => {
         networkStatus: NetworkStatus.ready,
       });
     }
+
+    await expect(Profiler).not.toRerender({ timeout: 50 });
   });
 
   it("throws errors when errors are returned after calling `refetch`", async () => {
@@ -3535,6 +3569,8 @@ describe("refetch", () => {
         })
       );
     }
+
+    await expect(Profiler).not.toRerender({ timeout: 50 });
   });
 
   it('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
@@ -3628,6 +3664,8 @@ describe("refetch", () => {
         },
       });
     }
+
+    await expect(Profiler).not.toRerender({ timeout: 50 });
   });
 
   it('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
@@ -3723,6 +3761,8 @@ describe("refetch", () => {
         },
       });
     }
+
+    await expect(Profiler).not.toRerender({ timeout: 50 });
   });
 
   it('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
@@ -3819,6 +3859,8 @@ describe("refetch", () => {
         },
       });
     }
+
+    await expect(Profiler).not.toRerender({ timeout: 50 });
   });
 
   it("can refetch after error is encountered", async () => {
@@ -4505,6 +4547,8 @@ describe("fetchMore", () => {
         networkStatus: NetworkStatus.ready,
       });
     }
+
+    await expect(Profiler).not.toRerender({ timeout: 50 });
   });
 
   it("properly uses `updateQuery` when calling `fetchMore`", async () => {
@@ -4584,6 +4628,8 @@ describe("fetchMore", () => {
         networkStatus: NetworkStatus.ready,
       });
     }
+
+    await expect(Profiler).not.toRerender({ timeout: 50 });
   });
 
   it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
@@ -4669,6 +4715,8 @@ describe("fetchMore", () => {
         networkStatus: NetworkStatus.ready,
       });
     }
+
+    await expect(Profiler).not.toRerender({ timeout: 50 });
   });
 
   it("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {

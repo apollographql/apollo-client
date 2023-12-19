@@ -21,11 +21,11 @@ import type {
   NoInfer,
 } from "../types/types.js";
 import { __use, useDeepMemo } from "./internal/index.js";
-import { getSuspenseCache } from "../cache/index.js";
+import { getSuspenseCache } from "../internal/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
-import type { CacheKey, QueryKey } from "../cache/types.js";
+import type { CacheKey, QueryKey } from "../internal/index.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,

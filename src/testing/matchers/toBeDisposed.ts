@@ -1,9 +1,9 @@
 import type { MatcherFunction } from "expect";
-import type { QueryReference } from "../../react/cache/QueryReference.js";
+import type { QueryReference } from "../../react/internal/index.js";
 import {
   InternalQueryReference,
   unwrapQueryRef,
-} from "../../react/cache/QueryReference.js";
+} from "../../react/internal/index.js";
 
 function isQueryRef(queryRef: unknown): queryRef is QueryReference {
   try {

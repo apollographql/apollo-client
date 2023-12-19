@@ -13,11 +13,8 @@ import type {
   DeepPartial,
   OnlyRequiredProperties,
 } from "../../utilities/index.js";
-import {
-  InternalQueryReference,
-  wrapQueryRef,
-} from "../cache/QueryReference.js";
-import type { QueryReference } from "../cache/QueryReference.js";
+import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
+import type { QueryReference } from "../internal/index.js";
 import type { NoInfer } from "../index.js";
 
 type VariablesOption<TVariables extends OperationVariables> =

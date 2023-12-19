@@ -1,11 +1,9 @@
 import React, { Suspense } from "react";
 import {
   act,
-  render,
   screen,
   screen as _screen,
   renderHook,
-  waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
@@ -3088,80 +3086,43 @@ it('does not suspend deferred queries with partial data in the cache and using a
     });
   }
 
-  interface Renders {
-    errors: Error[];
-    errorCount: number;
-    suspenseCount: number;
-    count: number;
-    frames: {
-      data: DeepPartial<QueryData>;
-      networkStatus: NetworkStatus;
-      error: ApolloError | undefined;
-    }[];
-  }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-    frames: [],
-  };
+  const client = new ApolloClient({ link, cache });
 
-  const client = new ApolloClient({
-    link,
-    cache,
-  });
+  const Profiler = createDefaultProfiler<DeepPartial<QueryData>>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
 
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
-
-  function SuspenseFallback() {
-    renders.suspenseCount++;
-    return <p>Loading</p>;
-  }
-
-  function Parent() {
+    useTrackRenders();
     const [queryRef] = useBackgroundQuery(query, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
     });
 
-    return <Todo queryRef={queryRef} />;
-  }
-
-  function Todo({
-    queryRef,
-  }: {
-    queryRef: QueryReference<DeepPartial<QueryData>>;
-  }) {
-    const { data, networkStatus, error } = useReadQuery(queryRef);
-    renders.frames.push({ data, networkStatus, error });
-    renders.count++;
     return (
-      <>
-        <div data-testid="message">{data.greeting?.message}</div>
-        <div data-testid="recipient">{data.greeting?.recipient?.name}</div>
-        <div data-testid="network-status">{networkStatus}</div>
-        <div data-testid="error">{error?.message || "undefined"}</div>
-      </>
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
     );
   }
 
-  render(<App />);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-  expect(renders.suspenseCount).toBe(0);
-  expect(screen.getByTestId("recipient")).toHaveTextContent("Cached Alice");
-  // message is not present yet, since it's missing in partial data
-  expect(screen.getByTestId("message")).toHaveTextContent("");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("1"); // loading
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
 
   link.simulateResult({
     result: {
@@ -3172,49 +3133,11 @@ it('does not suspend deferred queries with partial data in the cache and using a
     },
   });
 
-  await waitFor(() => {
-    expect(screen.getByTestId("message")).toHaveTextContent("Hello world");
-  });
-  expect(screen.getByTestId("recipient")).toHaveTextContent("Cached Alice");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  link.simulateResult({
-    result: {
-      incremental: [
-        {
-          data: {
-            __typename: "Greeting",
-            recipient: { name: "Alice", __typename: "Person" },
-          },
-          path: ["greeting"],
-        },
-      ],
-      hasNext: false,
-    },
-  });
-
-  await waitFor(() => {
-    expect(screen.getByTestId("recipient").textContent).toEqual("Alice");
-  });
-  expect(screen.getByTestId("message")).toHaveTextContent("Hello world");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
-
-  expect(renders.count).toBe(3);
-  expect(renders.suspenseCount).toBe(0);
-  expect(renders.frames).toMatchObject([
-    {
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          recipient: { __typename: "Person", name: "Cached Alice" },
-        },
-      },
-      networkStatus: NetworkStatus.loading,
-      error: undefined,
-    },
-    {
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -3222,10 +3145,34 @@ it('does not suspend deferred queries with partial data in the cache and using a
           recipient: { __typename: "Person", name: "Cached Alice" },
         },
       },
-      networkStatus: NetworkStatus.ready,
       error: undefined,
-    },
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  link.simulateResult(
     {
+      result: {
+        incremental: [
+          {
+            data: {
+              __typename: "Greeting",
+              recipient: { name: "Alice", __typename: "Person" },
+            },
+            path: ["greeting"],
+          },
+        ],
+        hasNext: false,
+      },
+    },
+    true
+  );
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -3233,10 +3180,10 @@ it('does not suspend deferred queries with partial data in the cache and using a
           recipient: { __typename: "Person", name: "Alice" },
         },
       },
-      networkStatus: NetworkStatus.ready,
       error: undefined,
-    },
-  ]);
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 describe("refetch", () => {

@@ -22,7 +22,7 @@ import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
 import { Suspense } from "react";
 import { createQueryPreloader } from "../../query-preloader/createQueryPreloader";
 import userEvent from "@testing-library/user-event";
-import { QueryReference } from "../../cache/QueryReference";
+import { QueryReference } from "../../internal";
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { useLoadableQuery } from "../useLoadableQuery";
 import { concatPagination } from "../../../utilities";

@@ -3,8 +3,8 @@ import {
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
-} from "../cache/QueryReference.js";
-import type { QueryReference } from "../cache/QueryReference.js";
+} from "../internal/index.js";
+import type { QueryReference } from "../internal/index.js";
 import { __use } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";

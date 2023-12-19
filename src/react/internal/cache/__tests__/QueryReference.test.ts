@@ -3,8 +3,8 @@ import {
   ApolloLink,
   InMemoryCache,
   Observable,
-} from "../../../core";
-import { setupSimpleCase } from "../../../testing/internal";
+} from "../../../../core";
+import { setupSimpleCase } from "../../../../testing/internal";
 import { InternalQueryReference } from "../QueryReference";
 
 test("kicks off request immediately when created", async () => {

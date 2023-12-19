@@ -8,19 +8,18 @@ import type {
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import {
+  getSuspenseCache,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
-} from "../cache/QueryReference.js";
-import type { QueryReference } from "../cache/QueryReference.js";
+} from "../internal/index.js";
+import type { CacheKey, QueryReference } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { __use } from "./internal/index.js";
-import { getSuspenseCache } from "../cache/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
-import type { CacheKey } from "../cache/types.js";
 import type { SkipToken } from "./constants.js";
 
 export type UseBackgroundQueryResult<

@@ -17,7 +17,7 @@ import {
   wait,
 } from "../../../testing";
 import { expectTypeOf } from "expect-type";
-import { QueryReference, unwrapQueryRef } from "../../cache/QueryReference";
+import { QueryReference, unwrapQueryRef } from "../../internal";
 import { DeepPartial, Observable } from "../../../utilities";
 import {
   SimpleCaseData,

@@ -32,7 +32,7 @@ import {
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
-import { QueryReference } from "../../cache/QueryReference";
+import { QueryReference } from "../../internal";
 import { InMemoryCache } from "../../../cache";
 import { SuspenseQueryHookFetchPolicy } from "../../types/types";
 import equal from "@wry/equality";

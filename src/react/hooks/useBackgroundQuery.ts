@@ -219,8 +219,6 @@ export function useBackgroundQuery<
     updateWrappedQueryRef(wrappedQueryRef, promise);
   }
 
-  React.useEffect(() => queryRef.retain(), [queryRef]);
-
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
       const promise = queryRef.fetchMore(options as FetchMoreQueryOptions<any>);

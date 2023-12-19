@@ -204,6 +204,72 @@ it("tears down the query on unmount", async () => {
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
 
+it("auto disposes of the queryRef if not used within timeout", async () => {
+  jest.useFakeTimers();
+  const { query } = setupSimpleCase();
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const { result } = renderHook(() => useBackgroundQuery(query, { client }));
+
+  const [queryRef] = result.current;
+
+  expect(queryRef).not.toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  await act(() => {
+    link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+    // Ensure simulateResult will deliver the result since its wrapped with
+    // setTimeout
+    jest.advanceTimersByTime(10);
+  });
+
+  jest.advanceTimersByTime(30_000);
+
+  expect(queryRef).toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
+it("auto disposes of the queryRef if not used within configured timeout", async () => {
+  jest.useFakeTimers();
+  const { query } = setupSimpleCase();
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      react: {
+        suspense: {
+          autoDisposeTimeoutMs: 5000,
+        },
+      },
+    },
+  });
+
+  const { result } = renderHook(() => useBackgroundQuery(query, { client }));
+
+  const [queryRef] = result.current;
+
+  expect(queryRef).not.toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  await act(() => {
+    link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+    // Ensure simulateResult will deliver the result since its wrapped with
+    // setTimeout
+    jest.advanceTimersByTime(10);
+  });
+
+  jest.advanceTimersByTime(5000);
+
+  expect(queryRef).toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
 it("allows the client to be overridden", async () => {
   const { query } = setupSimpleCase();
 

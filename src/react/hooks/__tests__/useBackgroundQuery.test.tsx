@@ -35,6 +35,7 @@ import {
   MockLink,
   MockSubscriptionLink,
   mockSingleLink,
+  MockedProvider,
 } from "../../../testing";
 import {
   concatPagination,
@@ -3149,13 +3150,17 @@ it('warns when using returnPartialData with a "no-cache" fetch policy', async ()
     },
   ];
 
-  renderSuspenseHook(
+  renderHook(
     () =>
       useBackgroundQuery(query, {
         fetchPolicy: "no-cache",
         returnPartialData: true,
       }),
-    { mocks }
+    {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
+      ),
+    }
   );
 
   expect(console.warn).toHaveBeenCalledTimes(1);

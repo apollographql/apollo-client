@@ -132,8 +132,6 @@ export function useLoadableQuery<
 
   const calledDuringRender = useRenderGuard();
 
-  React.useEffect(() => internalQueryRef?.retain(), [internalQueryRef]);
-
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
       if (!internalQueryRef) {

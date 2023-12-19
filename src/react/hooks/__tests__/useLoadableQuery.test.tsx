@@ -48,9 +48,14 @@ import invariant, { InvariantError } from "ts-invariant";
 import {
   Profiler,
   createProfiler,
+  setupSimpleCase,
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
+
+afterEach(() => {
+  jest.useRealTimers();
+});
 
 interface SimpleQueryData {
   greeting: string;
@@ -400,6 +405,36 @@ it("tears down the query on unmount", async () => {
   // prevent strict mode bugs.
   await wait(0);
 
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
+it("auto disposes of the queryRef if not used within timeout", async () => {
+  jest.useFakeTimers();
+  const { query } = setupSimpleCase();
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const { result } = renderHook(() => useLoadableQuery(query, { client }));
+  const [loadQuery] = result.current;
+
+  act(() => loadQuery());
+  const [, queryRef] = result.current;
+
+  expect(queryRef!).not.toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  await act(async () => {
+    link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+    // Ensure simulateResult will deliver the result since its wrapped with
+    // setTimeout
+    await jest.advanceTimersByTimeAsync(10);
+  });
+
+  jest.advanceTimersByTime(30_000);
+
+  expect(queryRef!).toBeDisposed();
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });

@@ -1,11 +1,10 @@
-import React, { ComponentProps, Fragment, StrictMode, Suspense } from "react";
+import React, { ComponentProps, Suspense } from "react";
 import {
   act,
   render,
   screen,
   screen as _screen,
   renderHook,
-  RenderHookOptions,
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -23,7 +22,6 @@ import {
   ApolloClient,
   ErrorPolicy,
   NetworkStatus,
-  ApolloCache,
   TypedDocumentNode,
   ApolloLink,
   Observable,
@@ -275,91 +273,8 @@ function renderVariablesIntegrationTest({
   };
 }
 
-type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
-  RenderHookOptions<Props>,
-  "wrapper"
-> & {
-  client?: ApolloClient<TSerializedCache>;
-  link?: ApolloLink;
-  cache?: ApolloCache<TSerializedCache>;
-  mocks?: MockedResponse[];
-  strictMode?: boolean;
-};
-
-interface Renders<Result> {
-  errors: Error[];
-  errorCount: number;
-  suspenseCount: number;
-  count: number;
-  frames: Result[];
-}
-
 interface SimpleQueryData {
   greeting: string;
-}
-
-function renderSuspenseHook<Result, Props>(
-  render: (initialProps: Props) => Result,
-  options: RenderSuspenseHookOptions<Props> = Object.create(null)
-) {
-  function SuspenseFallback() {
-    renders.suspenseCount++;
-
-    return <div>loading</div>;
-  }
-
-  const renders: Renders<Result> = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-    frames: [],
-  };
-
-  const { mocks = [], strictMode, ...renderHookOptions } = options;
-
-  const client =
-    options.client ||
-    new ApolloClient({
-      cache: options.cache || new InMemoryCache(),
-      link: options.link || new MockLink(mocks),
-    });
-
-  const view = renderHook(
-    (props) => {
-      renders.count++;
-
-      const view = render(props);
-
-      renders.frames.push(view);
-
-      return view;
-    },
-    {
-      ...renderHookOptions,
-      wrapper: ({ children }) => {
-        const Wrapper = strictMode ? StrictMode : Fragment;
-
-        return (
-          <Wrapper>
-            <Suspense fallback={<SuspenseFallback />}>
-              <ReactErrorBoundary
-                fallback={<div>Error</div>}
-                onError={(error) => {
-                  renders.errorCount++;
-                  renders.errors.push(error);
-                }}
-              >
-                <ApolloProvider client={client}>{children}</ApolloProvider>
-              </ReactErrorBoundary>
-            </Suspense>
-          </Wrapper>
-        );
-      },
-    }
-  );
-
-  return { ...view, renders };
 }
 
 function createDefaultTrackedComponents<

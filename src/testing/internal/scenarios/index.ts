@@ -88,13 +88,11 @@ export function setupPaginatedCase() {
       }
     `;
 
-  const data = "ABCDEFGHIJKLMNOPQRSTUV"
-    .split("")
-    .map((letter, index) => ({
-      __typename: "Letter",
-      letter,
-      position: index + 1,
-    }));
+  const data = "ABCDEFGHIJKLMNOPQRSTUV".split("").map((letter, index) => ({
+    __typename: "Letter",
+    letter,
+    position: index + 1,
+  }));
 
   const link = new ApolloLink((operation) => {
     const { offset = 0, limit = 2 } = operation.variables;

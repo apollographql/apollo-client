@@ -2851,117 +2851,69 @@ it("properly handles changing options along with changing `variables`", async ()
 });
 
 it('does not suspend when partial data is in the cache and using a "cache-first" fetch policy with returnPartialData', async () => {
-  interface Data {
-    character: {
-      id: string;
-      name: string;
-    };
-  }
-
-  const fullQuery: TypedDocumentNode<Data> = gql`
-    query {
-      character {
-        id
-        name
-      }
-    }
-  `;
-
-  const partialQuery = gql`
-    query {
-      character {
-        id
-      }
-    }
-  `;
-  const mocks = [
-    {
-      request: { query: fullQuery },
-      result: { data: { character: { id: "1", name: "Doctor Strange" } } },
-    },
-  ];
-
-  interface Renders {
-    errors: Error[];
-    errorCount: number;
-    suspenseCount: number;
-    count: number;
-  }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-  };
-
+  const { query, mocks } = setupVariablesCase();
   const cache = new InMemoryCache();
 
-  cache.writeQuery({
-    query: partialQuery,
-    data: { character: { id: "1" } },
-  });
+  {
+    // Disable missing field warning
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      // @ts-expect-error writing partial query data
+      data: { character: { __typename: "Character", id: "1" } },
+      variables: { id: "1" },
+    });
+  }
 
   const client = new ApolloClient({
     link: new MockLink(mocks),
     cache,
   });
 
+  const Profiler = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
   function App() {
-    return (
-      <ApolloProvider client={client}>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Parent />
-        </Suspense>
-      </ApolloProvider>
-    );
-  }
-
-  function SuspenseFallback() {
-    renders.suspenseCount++;
-    return <p>Loading</p>;
-  }
-
-  function Parent() {
-    const [queryRef] = useBackgroundQuery(fullQuery, {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, {
       fetchPolicy: "cache-first",
       returnPartialData: true,
+      variables: { id: "1" },
     });
-    return <Todo queryRef={queryRef} />;
-  }
-
-  function Todo({ queryRef }: { queryRef: QueryReference<DeepPartial<Data>> }) {
-    const { data, networkStatus, error } = useReadQuery(queryRef);
-    renders.count++;
 
     return (
-      <>
-        <div data-testid="character-id">{data.character?.id}</div>
-        <div data-testid="character-name">{data.character?.name}</div>
-        <div data-testid="network-status">{networkStatus}</div>
-        <div data-testid="error">{error?.message || "undefined"}</div>
-      </>
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
     );
   }
 
-  render(<App />);
+  renderWithClient(<App />, { client, wrapper: Profiler });
 
-  expect(renders.suspenseCount).toBe(0);
-  expect(screen.getByTestId("character-id")).toHaveTextContent("1");
-  expect(screen.getByTestId("character-name")).toHaveTextContent("");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("1"); // loading
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
 
-  await waitFor(() => {
-    expect(screen.getByTestId("character-name")).toHaveTextContent(
-      "Doctor Strange"
-    );
-  });
-  expect(screen.getByTestId("character-id")).toHaveTextContent("1");
-  expect(screen.getByTestId("network-status")).toHaveTextContent("7"); // ready
-  expect(screen.getByTestId("error")).toHaveTextContent("undefined");
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { character: { __typename: "Character", id: "1" } },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
 
-  expect(renders.count).toBe(2);
-  expect(renders.suspenseCount).toBe(0);
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 });
 
 it('suspends and does not use partial data when changing variables and using a "cache-first" fetch policy with returnPartialData', async () => {

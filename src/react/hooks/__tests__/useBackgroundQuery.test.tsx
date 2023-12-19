@@ -4235,41 +4235,90 @@ describe("fetchMore", () => {
   });
 
   it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
-    const { ProfiledApp } = renderPaginatedIntegrationTest({
-      fieldPolicies: true,
+    const { query, link } = setupPaginatedCase();
+    const user = userEvent.setup();
+    const Profiler = createDefaultProfiler<PaginatedCaseData>();
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              letters: concatPagination(),
+            },
+          },
+        },
+      }),
     });
 
+    function App() {
+      useTrackRenders();
+      const [queryRef, { fetchMore }] = useBackgroundQuery(query);
+
+      return (
+        <>
+          <button
+            onClick={() => fetchMore({ variables: { offset: 2, limit: 2 } })}
+          >
+            Fetch more
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <ReadQueryHook queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    renderWithClient(<App />, { client, wrapper: Profiler });
+
     {
-      const { snapshot, withinDOM } = await ProfiledApp.takeRender();
-      expect(snapshot.suspenseCount).toBe(1);
-      expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
     }
 
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
-      const items = withinDOM().getAllByTestId(/letter/i);
-      expect(items).toHaveLength(2);
-      expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B"]);
+      const { snapshot } = await Profiler.takeRender();
+      expect(snapshot.result).toEqual({
+        data: {
+          letters: [
+            { __typename: "Letter", position: 1, letter: "A" },
+            { __typename: "Letter", position: 2, letter: "B" },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
     }
 
-    const button = screen.getByText("Fetch more");
-    const user = userEvent.setup();
-    await act(() => user.click(button));
+    await act(() => user.click(screen.getByText("Fetch more")));
 
     {
-      const { snapshot } = await ProfiledApp.takeRender();
-      // parent component re-suspends
-      expect(snapshot.suspenseCount).toBe(2);
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
     }
 
     {
-      const { snapshot, withinDOM } = await ProfiledApp.takeRender();
-      expect(snapshot.count).toBe(2);
-      const moreItems = await screen.findAllByTestId(/letter/i);
-      expect(moreItems).toHaveLength(4);
-      expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B", "C", "D"]);
+      const { snapshot } = await Profiler.takeRender();
+      expect(snapshot.result).toEqual({
+        data: {
+          letters: [
+            { __typename: "Letter", position: 1, letter: "A" },
+            { __typename: "Letter", position: 2, letter: "B" },
+            { __typename: "Letter", position: 3, letter: "C" },
+            { __typename: "Letter", position: 4, letter: "D" },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
     }
   });
+
   it("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {
     type Variables = {
       offset: number;

@@ -23,6 +23,7 @@ import {
   MockSubscriptionLink,
   mockSingleLink,
   MockedProvider,
+  wait,
 } from "../../../testing";
 import {
   concatPagination,
@@ -153,6 +154,50 @@ it("fetches a simple query with minimal config", async () => {
   }
 
   await expect(Profiler).not.toRerender({ timeout: 50 });
+});
+
+it("tears down the query on unmount", async () => {
+  const { query, mocks } = setupSimpleCase();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query);
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  const { unmount } = renderWithClient(<App />, { client, wrapper: Profiler });
+
+  // initial suspended render
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  unmount();
+
+  await wait(0);
+
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
 
 it("allows the client to be overridden", async () => {

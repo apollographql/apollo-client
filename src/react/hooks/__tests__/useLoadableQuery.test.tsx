@@ -439,6 +439,46 @@ it("auto disposes of the queryRef if not used within timeout", async () => {
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
 
+it("auto disposes of the queryRef if not used within configured timeout", async () => {
+  jest.useFakeTimers();
+  const { query } = setupSimpleCase();
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      react: {
+        suspense: {
+          autoDisposeTimeoutMs: 5000,
+        },
+      },
+    },
+  });
+
+  const { result } = renderHook(() => useLoadableQuery(query, { client }));
+  const [loadQuery] = result.current;
+
+  act(() => loadQuery());
+  const [, queryRef] = result.current;
+
+  expect(queryRef!).not.toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  await act(async () => {
+    link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+    // Ensure simulateResult will deliver the result since its wrapped with
+    // setTimeout
+    await jest.advanceTimersByTimeAsync(10);
+  });
+
+  jest.advanceTimersByTime(5000);
+
+  expect(queryRef!).toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 

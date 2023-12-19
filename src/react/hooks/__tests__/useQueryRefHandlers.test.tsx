@@ -1154,8 +1154,8 @@ test("resuspends when calling `fetchMore`", async () => {
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
       error: undefined,
@@ -1177,8 +1177,8 @@ test("resuspends when calling `fetchMore`", async () => {
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "C", position: 3 },
-          { letter: "D", position: 4 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
       error: undefined,
@@ -1253,8 +1253,8 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
       error: undefined,
@@ -1276,10 +1276,10 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
-          { letter: "C", position: 3 },
-          { letter: "D", position: 4 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
       error: undefined,
@@ -1358,8 +1358,8 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
       error: undefined,
@@ -1381,10 +1381,10 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
-          { letter: "C", position: 3 },
-          { letter: "D", position: 4 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
       error: undefined,
@@ -1452,8 +1452,8 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
       error: undefined,
@@ -1475,8 +1475,8 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "C", position: 3 },
-          { letter: "D", position: 4 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
       error: undefined,
@@ -1552,8 +1552,8 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
       error: undefined,
@@ -1575,8 +1575,8 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "C", position: 3 },
-          { letter: "D", position: 4 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
       error: undefined,
@@ -1652,8 +1652,8 @@ test("`fetchMore` works with startTransition", async () => {
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
       error: undefined,
@@ -1672,8 +1672,8 @@ test("`fetchMore` works with startTransition", async () => {
       result: {
         data: {
           letters: [
-            { letter: "A", position: 1 },
-            { letter: "B", position: 2 },
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
           ],
         },
         error: undefined,
@@ -1691,8 +1691,8 @@ test("`fetchMore` works with startTransition", async () => {
       result: {
         data: {
           letters: [
-            { letter: "C", position: 3 },
-            { letter: "D", position: 4 },
+            { __typename: "Letter", letter: "C", position: 3 },
+            { __typename: "Letter", letter: "D", position: 4 },
           ],
         },
         error: undefined,
@@ -1789,8 +1789,8 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
       error: undefined,
@@ -1810,8 +1810,8 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
       result: {
         data: {
           letters: [
-            { letter: "A", position: 1 },
-            { letter: "B", position: 2 },
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
           ],
         },
         error: undefined,
@@ -1830,8 +1830,8 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
       result: {
         data: {
           letters: [
-            { letter: "C", position: 3 },
-            { letter: "D", position: 4 },
+            { __typename: "Letter", letter: "C", position: 3 },
+            { __typename: "Letter", letter: "D", position: 4 },
           ],
         },
         error: undefined,
@@ -1852,8 +1852,8 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
       result: {
         data: {
           letters: [
-            { letter: "C", position: 3 },
-            { letter: "D", position: 4 },
+            { __typename: "Letter", letter: "C", position: 3 },
+            { __typename: "Letter", letter: "D", position: 4 },
           ],
         },
         error: undefined,
@@ -1872,8 +1872,8 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
       result: {
         data: {
           letters: [
-            { letter: "E", position: 5 },
-            { letter: "F", position: 6 },
+            { __typename: "Letter", letter: "E", position: 5 },
+            { __typename: "Letter", letter: "F", position: 6 },
           ],
         },
         error: undefined,

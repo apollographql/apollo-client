@@ -56,6 +56,7 @@ import equal from "@wry/equality";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
 import {
+  PaginatedCaseData,
   Profiler,
   SimpleCaseData,
   VariablesCaseData,
@@ -64,6 +65,7 @@ import {
   profile,
   renderWithClient,
   renderWithMocks,
+  setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
   spyOnConsole,
@@ -4084,36 +4086,72 @@ describe("fetchMore", () => {
   }
 
   it("re-suspends when calling `fetchMore` with different variables", async () => {
-    const { ProfiledApp } = renderPaginatedIntegrationTest();
-
-    {
-      const { withinDOM, snapshot } = await ProfiledApp.takeRender();
-      expect(snapshot.suspenseCount).toBe(1);
-      expect(withinDOM().getByText("loading")).toBeInTheDocument();
-    }
-
-    {
-      const { withinDOM } = await ProfiledApp.takeRender();
-      const items = await screen.findAllByTestId(/letter/i);
-      expect(items).toHaveLength(2);
-      expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B"]);
-    }
-
-    const button = screen.getByText("Fetch more");
+    const { query, link } = setupPaginatedCase();
     const user = userEvent.setup();
-    await act(() => user.click(button));
+    const Profiler = createDefaultProfiler<PaginatedCaseData>();
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
 
-    {
-      // parent component re-suspends
-      const { snapshot } = await ProfiledApp.takeRender();
-      expect(snapshot.suspenseCount).toBe(2);
+    function App() {
+      useTrackRenders();
+      const [queryRef, { fetchMore }] = useBackgroundQuery(query);
+
+      return (
+        <>
+          <button
+            onClick={() => fetchMore({ variables: { offset: 2, limit: 2 } })}
+          >
+            Fetch more
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <ReadQueryHook queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
     }
-    {
-      // parent component re-suspends
-      const { snapshot, withinDOM } = await ProfiledApp.takeRender();
-      expect(snapshot.count).toBe(2);
 
-      expect(getItemTexts(withinDOM())).toStrictEqual(["C", "D"]);
+    renderWithMocks(<App />, { link, wrapper: Profiler });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+      expect(snapshot.result).toEqual({
+        data: {
+          letters: [
+            { __typename: "Letter", position: 1, letter: "A" },
+            { __typename: "Letter", position: 2, letter: "B" },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Fetch more")));
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+      expect(snapshot.result).toEqual({
+        data: {
+          letters: [
+            { __typename: "Letter", position: 3, letter: "C" },
+            { __typename: "Letter", position: 4, letter: "D" },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
     }
   });
 

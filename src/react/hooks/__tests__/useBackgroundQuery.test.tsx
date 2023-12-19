@@ -2374,7 +2374,22 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
   }
 
   await act(() => user.click(screen.getByText("Change fetch policy")));
-  await Profiler.takeRender();
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    // ensure we haven't changed the result yet just by changing the fetch policy
+    expect(snapshot.result).toEqual({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "1",
+          name: "Spider-Cacheman",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
 
   await act(() => user.click(screen.getByText("Refetch")));
   await Profiler.takeRender();

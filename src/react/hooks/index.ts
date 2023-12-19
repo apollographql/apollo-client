@@ -9,7 +9,11 @@ export * from "./useReactiveVar.js";
 export * from "./useFragment.js";
 export type { UseSuspenseQueryResult } from "./useSuspenseQuery.js";
 export { useSuspenseQuery } from "./useSuspenseQuery.js";
-export type { UseBackgroundQueryResult } from "./useBackgroundQuery.js";
+export type {
+  BackgroundQueryHookFetchPolicy,
+  BackgroundQueryHookOptions,
+  UseBackgroundQueryResult,
+} from "./useBackgroundQuery.js";
 export { useBackgroundQuery } from "./useBackgroundQuery.js";
 export type {
   LoadQueryFunction,

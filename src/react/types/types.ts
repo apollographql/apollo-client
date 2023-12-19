@@ -153,43 +153,6 @@ export interface SuspenseQueryHookOptions<
   skip?: boolean;
 }
 
-export type BackgroundQueryHookFetchPolicy = Extract<
-  WatchQueryFetchPolicy,
-  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
->;
-
-export interface BackgroundQueryHookOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> extends Pick<
-    QueryHookOptions<TData, TVariables>,
-    | "client"
-    | "variables"
-    | "errorPolicy"
-    | "context"
-    | "canonizeResults"
-    | "returnPartialData"
-    | "refetchWritePolicy"
-  > {
-  fetchPolicy?: BackgroundQueryHookFetchPolicy;
-  queryKey?: string | number | any[];
-
-  /**
-   * If `true`, the query is not executed. The default value is `false`.
-   *
-   * @deprecated We recommend using `skipToken` in place of the `skip` option as
-   * it is more type-safe.
-   *
-   * @example Recommended usage of `skipToken`:
-   * ```ts
-   * import { skipToken, useBackgroundQuery } from '@apollo/client';
-   *
-   * const [queryRef] = useBackgroundQuery(query, id ? { variables: { id } } : skipToken);
-   * ```
-   */
-  skip?: boolean;
-}
-
 export type LoadableQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"

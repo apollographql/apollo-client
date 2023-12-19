@@ -1,9 +1,14 @@
 import * as React from "rehackt";
 import type {
+  ApolloClient,
+  DefaultContext,
   DocumentNode,
+  ErrorPolicy,
   FetchMoreQueryOptions,
   OperationVariables,
+  RefetchWritePolicy,
   TypedDocumentNode,
+  WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -14,13 +19,54 @@ import {
   wrapQueryRef,
 } from "../internal/index.js";
 import type { CacheKey, QueryReference } from "../internal/index.js";
-import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
+import type { NoInfer } from "../types/types.js";
 import { __use } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import type { SkipToken } from "./constants.js";
+
+export type BackgroundQueryHookFetchPolicy = Extract<
+  WatchQueryFetchPolicy,
+  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
+>;
+
+export interface BackgroundQueryHookOptions<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> {
+  /** {@inheritDoc @apollo/client!QueryOptions#canonizeResults:member} */
+  canonizeResults?: boolean;
+  /** {@inheritDoc @apollo/client!BaseQueryOptions#client:member} */
+  client?: ApolloClient<any>;
+  /** {@inheritDoc @apollo/client!QueryOptions#context:member} */
+  context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!QueryOptions#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptions#returnPartialData:member} */
+  returnPartialData?: boolean;
+  /** {@inheritDoc @apollo/client!WatchQueryOptions#refetchWritePolicy:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+  /** {@inheritDoc @apollo/client!QueryOptions#canonizeResults:member} */
+  fetchPolicy?: BackgroundQueryHookFetchPolicy;
+  queryKey?: string | number | any[];
+
+  /**
+   * If `true`, the query is not executed. The default value is `false`.
+   *
+   * @deprecated We recommend using `skipToken` in place of the `skip` option as
+   * it is more type-safe.
+   *
+   * @example Recommended usage of `skipToken`:
+   * ```ts
+   * import { skipToken, useBackgroundQuery } from '@apollo/client';
+   *
+   * const [queryRef] = useBackgroundQuery(query, id ? { variables: { id } } : skipToken);
+   * ```
+   */
+  skip?: boolean;
+}
 
 export type UseBackgroundQueryResult<
   TData = unknown,

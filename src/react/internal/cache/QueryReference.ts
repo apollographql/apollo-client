@@ -5,18 +5,18 @@ import type {
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
-} from "../../core/index.js";
+} from "../../../core/index.js";
 import type {
   ObservableSubscription,
   PromiseWithState,
-} from "../../utilities/index.js";
+} from "../../../utilities/index.js";
 import {
   createFulfilledPromise,
   createRejectedPromise,
-} from "../../utilities/index.js";
+} from "../../../utilities/index.js";
 import type { QueryKey } from "./types.js";
-import type { useBackgroundQuery, useReadQuery } from "../hooks/index.js";
-import { wrapPromiseWithState } from "../../utilities/index.js";
+import type { useBackgroundQuery, useReadQuery } from "../../hooks/index.js";
+import { wrapPromiseWithState } from "../../../utilities/index.js";
 
 type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
 

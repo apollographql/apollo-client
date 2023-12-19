@@ -4613,8 +4613,28 @@ describe("fetchMore", () => {
       expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
     }
 
+    // TODO: Determine why we have this extra render here.
+    // Possibly related: https://github.com/apollographql/apollo-client/issues/11315
     {
       const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: {
+          letters: [
+            { __typename: "Letter", position: 1, letter: "A" },
+            { __typename: "Letter", position: 2, letter: "B" },
+            { __typename: "Letter", position: 3, letter: "C" },
+            { __typename: "Letter", position: 4, letter: "D" },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
       expect(snapshot.result).toEqual({
         data: {
           letters: [
@@ -4700,8 +4720,28 @@ describe("fetchMore", () => {
       expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
     }
 
+    // TODO: Determine why we have this extra render here.
+    // Possibly related: https://github.com/apollographql/apollo-client/issues/11315
     {
       const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: {
+          letters: [
+            { __typename: "Letter", position: 1, letter: "A" },
+            { __typename: "Letter", position: 2, letter: "B" },
+            { __typename: "Letter", position: 3, letter: "C" },
+            { __typename: "Letter", position: 4, letter: "D" },
+          ],
+        },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
       expect(snapshot.result).toEqual({
         data: {
           letters: [

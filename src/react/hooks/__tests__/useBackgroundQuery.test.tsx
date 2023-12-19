@@ -44,7 +44,7 @@ import {
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
-import { QueryReference, getWrappedPromise } from "../../cache/QueryReference";
+import { QueryReference, getWrappedPromise } from "../../internal";
 import { InMemoryCache } from "../../../cache";
 import {
   SuspenseQueryHookFetchPolicy,

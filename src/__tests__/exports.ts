@@ -26,6 +26,7 @@ import * as reactComponents from "../react/components";
 import * as reactContext from "../react/context";
 import * as reactHOC from "../react/hoc";
 import * as reactHooks from "../react/hooks";
+import * as reactInternal from "../react/internal";
 import * as reactParser from "../react/parser";
 import * as reactSSR from "../react/ssr";
 import * as testing from "../testing";
@@ -71,6 +72,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/react/context", reactContext);
   check("@apollo/client/react/hoc", reactHOC);
   check("@apollo/client/react/hooks", reactHooks);
+  check("@apollo/client/react/internal", reactInternal);
   check("@apollo/client/react/parser", reactParser);
   check("@apollo/client/react/ssr", reactSSR);
   check("@apollo/client/testing", testing);

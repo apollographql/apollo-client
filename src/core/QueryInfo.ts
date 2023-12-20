@@ -157,6 +157,10 @@ export class QueryInfo {
     this.dirty = false;
   }
 
+  resetDiff() {
+    this.lastDiff = void 0;
+  }
+
   getDiff(): Cache.DiffResult<any> {
     const options = this.getDiffOptions();
 

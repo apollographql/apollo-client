@@ -22,6 +22,7 @@ const entryPoints = [
   { dirs: ["react", "context"] },
   { dirs: ["react", "hoc"] },
   { dirs: ["react", "hooks"] },
+  { dirs: ["react", "internal"] },
   { dirs: ["react", "parser"] },
   { dirs: ["react", "ssr"] },
   { dirs: ["testing"], extensions: [".js", ".jsx"] },

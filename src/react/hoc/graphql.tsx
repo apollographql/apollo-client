@@ -8,6 +8,11 @@ import { withSubscription } from "./subscription-hoc.js";
 import type { OperationOption, DataProps, MutateProps } from "./types.js";
 import type { OperationVariables } from "../../core/index.js";
 
+/**
+ * @deprecated
+ * Official support for React Apollo higher order components ended in March 2020.
+ * This library is still included in the `@apollo/client` package, but it no longer receives feature updates or bug fixes.
+ */
 export function graphql<
   TProps extends TGraphQLVariables | {} = {},
   TData extends object = {},

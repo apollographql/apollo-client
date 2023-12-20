@@ -906,12 +906,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { concast, fromLink } = this.fetch(options, newNetworkStatus, query);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result) => {
-        finishWaitingForOwnResult();
-        this.reportResult(result, variables);
+        if (equal(this.variables, variables)) {
+          finishWaitingForOwnResult();
+          this.reportResult(result, variables);
+        }
       },
       error: (error) => {
-        finishWaitingForOwnResult();
-        this.reportError(error, variables);
+        if (equal(this.variables, variables)) {
+          finishWaitingForOwnResult();
+          this.reportError(error, variables);
+        }
       },
     };
 

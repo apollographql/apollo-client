@@ -9,97 +9,133 @@ declare global {
 /**
  * The cache sizes used by various Apollo Client caches.
  *
- * Note that these caches are all derivative and if an item is cache-collected,
- * it's not the end of the world - the cached item will just be recalculated.
+ * @remarks
+ * All configurable caches hold memoized values. If an item is
+ * cache-collected, it incurs only a small performance impact and
+ * doesn't cause data loss. A smaller cache size might save you memory.
  *
- * As a result, these cache sizes should not be chosen to hold every value ever
- * encountered, but rather to hold a reasonable number of values that can be
- * assumed to be on the screen at any given time.
- *
+ * You should choose cache sizes appropriate for storing a reasonable
+ * number of values rather than every value. To prevent too much recalculation,
+ * choose cache sizes that are at least large enough to hold memoized values for
+ * all hooks/queries on the screen at any given time.
+ */
+/*
  * We assume a "base value" of 1000 here, which is already very generous.
  * In most applications, it will be very unlikely that 1000 different queries
  * are on screen at the same time.
  */
 export interface CacheSizes {
   /**
-   * Cache size for the [`print`](../../utilities/graphql/print.ts) function.
+   * Cache size for the [`print`](https://github.com/apollographql/apollo-client/blob/main/src/utilities/graphql/print.ts) function.
+   *
+   * It is called with transformed `DocumentNode`s.
    *
    * @defaultValue
    * Defaults to `2000`.
    *
    * @remarks
-   * This method is called from the `QueryManager` and various `Link`s,
+   * This method is called to transform a GraphQL query AST parsed by `gql`
+   * back into a GraphQL string.
+   *
+   * @privateRemarks
+   * This method is called from the `QueryManager` and various `ApolloLink`s,
    * always with the "serverQuery", so the server-facing part of a transformed
-   * DocumentNode.
+   * `DocumentNode`.
    */
   print: number;
   /**
-   * Cache size for the [`parser`](../../react/parser/index.ts) function.
+   * Cache size for the [`parser`](https://github.com/apollographql/apollo-client/blob/main/src/react/parser/index.ts) function.
+   *
+   * It is called with user-provided `DocumentNode`s.
    *
    * @defaultValue
    * Defaults to `1000`.
    *
    * @remarks
+   * This method is called by HOCs and hooks.
+   *
+   * @privateRemarks
    * This function is used directly in HOCs, and nowadays mainly accessed by
    * calling `verifyDocumentType` from various hooks.
    * It is called with a user-provided DocumentNode.
    */
   parser: number;
   /**
-   * Cache size for the `performWork` method of each [`DocumentTransform`](../../utilities/graphql/DocumentTransform.ts).
+   * Cache size for the cache of [`DocumentTransform`](https://github.com/apollographql/apollo-client/blob/main/src/utilities/graphql/DocumentTransform.ts)
+   * instances with the `cache` option set to `true`.
+   *
+   * Can be called with user-defined or already-transformed `DocumentNode`s.
    *
    * @defaultValue
    * Defaults to `2000`.
    *
    * @remarks
+   * The cache size here should be chosen with other `DocumentTransform`s in mind.
+   * For example, if there was a `DocumentTransform` that would take `x` `DocumentNode`s,
+   * and returned a differently-transformed `DocumentNode` depending if the app is
+   * online or offline, then we assume that the cache returns `2*x` documents.
+   * If that were concatenated with another `DocumentTransform` that would
+   * also duplicate the cache size, you'd need to account for `4*x` documents
+   * returned by the second transform.
+   *
+   * Due to an implementation detail of Apollo Client, if you use custom document
+   * transforms you should always add `n` (the "base" number of user-provided
+   * Documents) to the resulting cache size.
+   *
+   * If we assume that the user-provided transforms receive `n` documents and
+   * return `n` documents, the cache size should be `2*n`.
+   *
+   * If we assume that the chain of user-provided transforms receive `n` documents and
+   * return `4*n` documents, the cache size should be `5*n`.
+   *
+   * This size should also then be used in every other cache that mentions that
+   * it operates on a "transformed" `DocumentNode`.
+   *
+   * @privateRemarks
+   * Cache size for the `performWork` method of each [`DocumentTransform`](https://github.com/apollographql/apollo-client/blob/main/src/utilities/graphql/DocumentTransform.ts).
+   *
+   * No user-provided DocumentNode will actually be "the last one", as we run the
+   * `defaultDocumentTransform` before *and* after the user-provided transforms.
+   * For that reason, we need the extra `n` here - `n` for "before transformation"
+   * plus the actual maximum cache size of the user-provided transform chain.
+   *
    * This method is called from `transformDocument`, which is called from
    * `QueryManager` with a user-provided DocumentNode.
    * It is also called with already-transformed DocumentNodes, assuming the
    * user provided additional transforms.
    *
-   * The cache size here should be chosen with other DocumentTransforms in mind.
-   * For example, if there was a DocumentTransform that would take `n` DocumentNodes,
-   * and returned a differently-transformed DocumentNode depending if the app is
-   * online or offline, then we assume that the cache returns `2*n` documents.
-   *
-   * No user-provided DocumentNode will actually be "the last one", as we run the
-   * `defaultDocumentTransform` before *and* after the user-provided transforms.
-   *
-   * So if we assume that the user-provided transforms receive `n` documents and
-   * return `n` documents, the cache size should be `2*n`.
-   *
-   * If we assume that the user-provided transforms receive `n` documents and
-   * returns `2*n` documents, the cache size should be `3*n`.
-   *
-   * This size should also then be used in every other cache that mentions that
-   * it operates on a "transformed" DocumentNode.
    */
   "documentTransform.cache": number;
   /**
-   * Cache size for the `transformCache` used in the `getDocumentInfo` method of
-   * [`QueryManager`](../../core/QueryManager.ts).
+   * A cache inside of [`QueryManager`](https://github.com/apollographql/apollo-client/blob/main/src/core/QueryManager.ts).
+   *
+   * It is called with transformed `DocumentNode`s.
    *
    * @defaultValue
    * Defaults to `2000`.
    *
-   * @remarks
-   * `getDocumentInfo` is called throughout the `QueryManager` with transformed
-   * DocumentNodes.
+   * @privateRemarks
+   * Cache size for the `transformCache` used in the `getDocumentInfo` method of `QueryManager`.
+   * Called throughout the `QueryManager` with transformed DocumentNodes.
    */
   "queryManager.getDocumentInfo": number;
   /**
-   * Cache size for the `hashesByQuery` cache in the [`PersistedQueryLink`](../../link/persisted-queries/index.ts).
+   * A cache inside of [`PersistedQueryLink`](https://github.com/apollographql/apollo-client/blob/main/src/link/persisted-queries/index.ts).
+   *
+   * It is called with transformed `DocumentNode`s.
    *
    * @defaultValue
    * Defaults to `2000`.
    *
    * @remarks
-   * This cache is used to cache the hashes of persisted queries. It is working with
-   * transformed DocumentNodes.
+   * This cache is used to cache the hashes of persisted queries.
+   *
+   * @privateRemarks
+   * Cache size for the `hashesByQuery` cache in the `PersistedQueryLink`.
    */
   "PersistedQueryLink.persistedQueryHashes": number;
   /**
-   * Cache for the `sortingMap` used by [`canonicalStringify`](../../utilities/common/canonicalStringify.ts).
+   * Cache used by [`canonicalStringify`](https://github.com/apollographql/apollo-client/blob/main/src/utilities/common/canonicalStringify.ts).
    *
    * @defaultValue
    * Defaults to `1000`.
@@ -110,52 +146,67 @@ export interface CacheSizes {
    * It uses the stringified unsorted keys of objects as keys.
    * The cache will not grow beyond the size of different object **shapes**
    * encountered in an application, no matter how much actual data gets stringified.
+   *
+   * @privateRemarks
+   * Cache size for the `sortingMap` in `canonicalStringify`.
    */
   canonicalStringify: number;
   /**
-   * Cache size for the `transform` method of [`FragmentRegistry`](../../cache/inmemory/fragmentRegistry.ts).
+   * A cache inside of [`FragmentRegistry`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/fragmentRegistry.ts).
+   *
+   * Can be called with user-defined or already-transformed `DocumentNode`s.
    *
    * @defaultValue
    * Defaults to `2000`.
    *
-   * @remarks
+   * @privateRemarks
+   *
+   * Cache size for the `transform` method of FragmentRegistry.
    * This function is called as part of the `defaultDocumentTransform` which will be called with
    * user-provided and already-transformed DocumentNodes.
    *
    */
   "fragmentRegistry.transform": number;
   /**
-   * Cache size for the `lookup` method of [`FragmentRegistry`](../../cache/inmemory/fragmentRegistry.ts).
+   * A cache inside of [`FragmentRegistry`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/fragmentRegistry.ts).
+   *
+   * This function is called with fragment names in the form of a string.
    *
    * @defaultValue
    * Defaults to `1000`.
    *
    * @remarks
-   * This function is called with fragment names in the form of a string.
+   * The size of this case should be chosen with the number of fragments in
+   * your application in mind.
    *
    * Note:
-   * This function is a dependency of `transform`, so having a too small cache size here
+   * This function is a dependency of `fragmentRegistry.transform`, so having too small of a cache size here
    * might involuntarily invalidate values in the `transform` cache.
+   *
+   * @privateRemarks
+   * Cache size for the `lookup` method of FragmentRegistry.
    */
   "fragmentRegistry.lookup": number;
   /**
-   * Cache size for the `findFragmentSpreads` method of [`FragmentRegistry`](../../cache/inmemory/fragmentRegistry.ts).
+   * Cache size for the `findFragmentSpreads` method of [`FragmentRegistry`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/fragmentRegistry.ts).
+   *
+   * This function is called with transformed `DocumentNode`s, as well as recursively
+   * with every fragment spread referenced within that, or a fragment referenced by a
+   * fragment spread.
    *
    * @defaultValue
    * Defaults to `4000`.
    *
    * @remarks
-   * This function is called with transformed DocumentNodes, as well as recursively
-   * with every fragment spread referenced within that, or a fragment referenced by a
-   * fragment spread.
    *
-   * Note:
-   * This function is a dependency of `transform`, so having a too small cache size here
+   * Note: This function is a dependency of `fragmentRegistry.transform`, so having too small of cache size here
    * might involuntarily invalidate values in the `transform` cache.
    */
   "fragmentRegistry.findFragmentSpreads": number;
   /**
-   * Cache size for the `getFragmentDoc` method of [`ApolloCache`](../../cache/core/cache.ts).
+   * Cache size for the `getFragmentDoc` method of [`ApolloCache`](https://github.com/apollographql/apollo-client/blob/main/src/cache/core/cache.ts).
+   *
+   * This function is called with user-provided fragment definitions.
    *
    * @defaultValue
    * Defaults to `1000`.
@@ -165,19 +216,21 @@ export interface CacheSizes {
    */
   "cache.fragmentQueryDocuments": number;
   /**
-   * Cache size for the `getVariableDefinitions` function in [`removeTypenameFromVariables`](../../link/remove-typename/removeTypenameFromVariables.ts).
+   * Cache used in [`removeTypenameFromVariables`](https://github.com/apollographql/apollo-client/blob/main/src/link/remove-typename/removeTypenameFromVariables.ts).
+   *
+   * This function is called transformed `DocumentNode`s.
    *
    * @defaultValue
    * Defaults to `2000`.
    *
-   * @remarks
-   * This function is called in a link with transformed DocumentNodes.
+   * @privateRemarks
+   * Cache size for the `getVariableDefinitions` function of `removeTypenameFromVariables`.
    */
   "removeTypenameFromVariables.getVariableDefinitions": number;
   /**
-   * Cache size for the `maybeBroadcastWatch` method on [`InMemoryCache`](../../cache/inmemory/inMemoryCache.ts).
+   * Cache size for the `maybeBroadcastWatch` method on [`InMemoryCache`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/inMemoryCache.ts).
    *
-   * `maybeBroadcastWatch` will be set to the `resultCacheMaxSize` option and
+   * Note: `maybeBroadcastWatch` will be set to the `resultCacheMaxSize` option and
    * will fall back to this configuration value if the option is not set.
    *
    * @defaultValue
@@ -192,8 +245,9 @@ export interface CacheSizes {
    */
   "inMemoryCache.maybeBroadcastWatch": number;
   /**
-   * Cache size for the `executeSelectionSet` method on [`StoreReader`](../../cache/inmemory/readFromStore.ts).
+   * Cache size for the `executeSelectionSet` method on [`StoreReader`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/readFromStore.ts).
    *
+   * Note:
    * `executeSelectionSet` will be set to the `resultCacheMaxSize` option and
    * will fall back to this configuration value if the option is not set.
    *
@@ -206,8 +260,9 @@ export interface CacheSizes {
    */
   "inMemoryCache.executeSelectionSet": number;
   /**
-   * Cache size for the `executeSubSelectedArray` method on [`StoreReader`](../../cache/inmemory/readFromStore.ts).
+   * Cache size for the `executeSubSelectedArray` method on [`StoreReader`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/readFromStore.ts).
    *
+   * Note:
    * `executeSubSelectedArray` will be set to the `resultCacheMaxSize` option and
    * will fall back to this configuration value if the option is not set.
    *

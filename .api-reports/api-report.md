@@ -111,8 +111,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     get documentTransform(): DocumentTransform;
     extract(optimistic?: boolean): TCacheShape;
     // Warning: (ae-forgotten-export) The symbol "getApolloClientMemoryInternals" needs to be exported by the entry point index.d.ts
-    //
-    // @internal
     getMemoryInternals?: typeof getApolloClientMemoryInternals;
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
     getResolvers(): Resolvers;

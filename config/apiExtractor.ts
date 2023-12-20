@@ -6,6 +6,7 @@ import {
   IConfigFile,
 } from "@microsoft/api-extractor";
 import { parseArgs } from "node:util";
+import fs from "node:fs";
 
 // @ts-ignore
 import { map } from "./entryPoints.js";
@@ -40,37 +41,67 @@ const packageJsonFullPath = path.resolve(__dirname, "../package.json");
 
 process.exitCode = 0;
 
-map((entryPoint: { dirs: string[] }) => {
-  if (entryPoint.dirs.length > 0 && parsed.values["main-only"]) return;
+const tempDir = fs.mkdtempSync("api-model");
+try {
+  if (parsed.values.generate?.includes("docModel")) {
+    console.log(
+      "\n\nCreating API extractor docmodel for the a combination of all entry points"
+    );
+    const dist = path.resolve(__dirname, "../dist");
+    const entryPoints = map((entryPoint: { dirs: string[] }) => {
+      return `export * from "${dist}/${entryPoint.dirs.join("/")}/index.d.ts";`;
+    }).join("\n");
+    const entryPointFile = path.join(tempDir, "entry.d.ts");
+    fs.writeFileSync(entryPointFile, entryPoints);
 
-  const path = entryPoint.dirs.join("/");
-  const mainEntryPointFilePath =
-    `<projectFolder>/dist/${path}/index.d.ts`.replace("//", "/");
-  console.log(
-    "\n\nCreating API extractor report for " + mainEntryPointFilePath
-  );
+    buildReport(entryPointFile, "docModel");
+  }
 
+  if (parsed.values.generate?.includes("apiReport")) {
+    map((entryPoint: { dirs: string[] }) => {
+      const path = entryPoint.dirs.join("/");
+      const mainEntryPointFilePath =
+        `<projectFolder>/dist/${path}/index.d.ts`.replace("//", "/");
+      console.log(
+        "\n\nCreating API extractor report for " + mainEntryPointFilePath
+      );
+      buildReport(
+        mainEntryPointFilePath,
+        "apiReport",
+        `api-report${path ? "-" + path.replace(/\//g, "_") : ""}.md`
+      );
+    });
+  }
+} finally {
+  fs.rmSync(tempDir, { recursive: true });
+}
+
+function buildReport(
+  mainEntryPointFilePath: string,
+  mode: "apiReport" | "docModel",
+  reportFileName = ""
+) {
   const configObject: IConfigFile = {
     ...(JSON.parse(JSON.stringify(baseConfig)) as IConfigFile),
     mainEntryPointFilePath,
   };
 
-  configObject.apiReport!.reportFileName = `api-report${
-    path ? "-" + path.replace(/\//g, "_") : ""
-  }.md`;
-
-  configObject.apiReport!.enabled =
-    parsed.values.generate?.includes("apiReport") || false;
-
-  configObject.docModel!.enabled =
-    parsed.values.generate?.includes("docModel") || false;
-
-  if (entryPoint.dirs.length !== 0) {
+  if (mode === "apiReport") {
+    configObject.apiReport!.enabled = true;
     configObject.docModel = { enabled: false };
-    configObject.tsdocMetadata = { enabled: false };
     configObject.messages!.extractorMessageReporting![
       "ae-unresolved-link"
     ]!.logLevel = ExtractorLogLevel.None;
+    configObject.apiReport!.reportFileName = reportFileName;
+  } else {
+    configObject.docModel!.enabled = true;
+    configObject.apiReport = {
+      enabled: false,
+      // this has to point to an existing folder, otherwise the extractor will fail
+      // but it will not write the file
+      reportFileName: "disabled.md",
+      reportFolder: tempDir,
+    };
   }
 
   const extractorConfig = ExtractorConfig.prepare({
@@ -85,22 +116,23 @@ map((entryPoint: { dirs: string[] }) => {
   });
 
   let succeededAdditionalChecks = true;
-  const contents = readFileSync(extractorConfig.reportFilePath, "utf8");
-
-  if (contents.includes("rehackt")) {
-    succeededAdditionalChecks = false;
-    console.error(
-      "❗ %s contains a reference to the `rehackt` package!",
-      extractorConfig.reportFilePath
-    );
-  }
-  if (contents.includes('/// <reference types="react" />')) {
-    succeededAdditionalChecks = false;
-    console.error(
-      "❗ %s contains a reference to the global `React` type!/n" +
-        'Use `import type * as ReactTypes from "react";` instead',
-      extractorConfig.reportFilePath
-    );
+  if (fs.existsSync(extractorConfig.reportFilePath)) {
+    const contents = readFileSync(extractorConfig.reportFilePath, "utf8");
+    if (contents.includes("rehackt")) {
+      succeededAdditionalChecks = false;
+      console.error(
+        "❗ %s contains a reference to the `rehackt` package!",
+        extractorConfig.reportFilePath
+      );
+    }
+    if (contents.includes('/// <reference types="react" />')) {
+      succeededAdditionalChecks = false;
+      console.error(
+        "❗ %s contains a reference to the global `React` type!/n" +
+          'Use `import type * as ReactTypes from "react";` instead',
+        extractorConfig.reportFilePath
+      );
+    }
   }
 
   if (extractorResult.succeeded && succeededAdditionalChecks) {
@@ -115,4 +147,4 @@ map((entryPoint: { dirs: string[] }) => {
     }
     process.exitCode = 1;
   }
-});
+}

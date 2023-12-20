@@ -120,8 +120,6 @@ class ApolloClient<TCacheShape> implements DataProxy {
     get documentTransform(): DocumentTransform;
     extract(optimistic?: boolean): TCacheShape;
     // Warning: (ae-forgotten-export) The symbol "getApolloClientMemoryInternals" needs to be exported by the entry point index.d.ts
-    //
-    // @internal
     getMemoryInternals?: typeof getApolloClientMemoryInternals;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesInclude" needs to be exported by the entry point index.d.ts
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
@@ -946,7 +944,7 @@ type Modifiers<T extends Record<string, any> = Record<string, unknown>> = Partia
     [FieldName in keyof T]: Modifier<StoreObjectValueMaybeReference<Exclude<T[FieldName], undefined>>>;
 }>;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function Mutation<TData = any, TVariables = OperationVariables>(props: MutationComponentOptions<TData, TVariables>): ReactTypes.JSX.Element | null;
 
 // @public (undocumented)
@@ -1218,7 +1216,7 @@ type OperationVariables = Record<string, any>;
 // @public (undocumented)
 type Path = ReadonlyArray<string | number>;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function Query<TData = any, TVariables extends OperationVariables = OperationVariables>(props: QueryComponentOptions<TData, TVariables>): ReactTypes.JSX.Element | null;
 
 // @public (undocumented)
@@ -1624,7 +1622,7 @@ type SubscribeToMoreOptions<TData = any, TSubscriptionVariables = OperationVaria
     context?: DefaultContext;
 };
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function Subscription<TData = any, TVariables extends OperationVariables = OperationVariables>(props: SubscriptionComponentOptions<TData, TVariables>): ReactTypes.JSX.Element | null;
 
 // @public (undocumented)

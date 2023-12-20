@@ -4580,9 +4580,12 @@ describe("useQuery Hook", () => {
       }
 
       const { rerender } = render(
-        <MockedProvider link={link}>
-          <Component id={1}>{hookResponse}</Component>
-        </MockedProvider>
+        <Component id={1}>{hookResponse}</Component>,
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider link={link}>{children}</MockedProvider>
+          ),
+        }
       );
 
       await waitFor(() => {
@@ -4591,11 +4594,7 @@ describe("useQuery Hook", () => {
         expect(hookResponse).toHaveBeenCalledTimes(3);
       });
 
-      rerender(
-        <MockedProvider link={link}>
-          <Component id={2}>{hookResponse}</Component>
-        </MockedProvider>
-      );
+      rerender(<Component id={2}>{hookResponse}</Component>);
 
       await waitFor(() => {
         // All results are returned

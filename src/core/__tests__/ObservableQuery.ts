@@ -1119,6 +1119,7 @@ describe("ObservableQuery", () => {
           data: dataTwo,
         });
       }
+      expect(stream.take()).rejects.toThrow(/Timeout/i);
     });
 
     it("calling refetch multiple times with different variables will return only results for the most recent variables", async () => {

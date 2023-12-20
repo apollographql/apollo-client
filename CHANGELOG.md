@@ -1,5 +1,119 @@
 # @apollo/client
 
+## 3.9.0-beta.0
+
+### Minor Changes
+
+- [#11412](https://github.com/apollographql/apollo-client/pull/11412) [`58db5c3`](https://github.com/apollographql/apollo-client/commit/58db5c3295b88162f91019f0898f6baa4b9cced6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Create a new `useQueryRefHandlers` hook that returns `refetch` and `fetchMore` functions for a given `queryRef`. This is useful to get access to handlers for a `queryRef` that was created by `createQueryPreloader` or when the handlers for a `queryRef` produced by a different component are inaccessible.
+
+  ```jsx
+  const MyComponent({ queryRef }) {
+    const { refetch, fetchMore } = useQueryRefHandlers(queryRef);
+
+    // ...
+  }
+  ```
+
+- [#11410](https://github.com/apollographql/apollo-client/pull/11410) [`07fcf6a`](https://github.com/apollographql/apollo-client/commit/07fcf6a3bf5bc78ffe6f3e598897246b4da02cbb) Thanks [@sf-twingate](https://github.com/sf-twingate)! - Allow returning `IGNORE` sentinel object from `optimisticResponse` functions to bail-out from the optimistic update.
+
+  Consider this example:
+
+  ```jsx
+  const UPDATE_COMMENT = gql`
+    mutation UpdateComment($commentId: ID!, $commentContent: String!) {
+      updateComment(commentId: $commentId, content: $commentContent) {
+        id
+        __typename
+        content
+      }
+    }
+  `;
+
+  function CommentPageWithData() {
+    const [mutate] = useMutation(UPDATE_COMMENT);
+    return (
+      <Comment
+        updateComment={({ commentId, commentContent }) =>
+          mutate({
+            variables: { commentId, commentContent },
+            optimisticResponse: (vars, { IGNORE }) => {
+              if (commentContent === "foo") {
+                // conditionally bail out of optimistic updates
+                return IGNORE;
+              }
+              return {
+                updateComment: {
+                  id: commentId,
+                  __typename: "Comment",
+                  content: commentContent,
+                },
+              };
+            },
+          })
+        }
+      />
+    );
+  }
+  ```
+
+  The `IGNORE` sentinel can be destructured from the second parameter in the callback function signature passed to `optimisticResponse`.
+
+- [#11412](https://github.com/apollographql/apollo-client/pull/11412) [`58db5c3`](https://github.com/apollographql/apollo-client/commit/58db5c3295b88162f91019f0898f6baa4b9cced6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to start preloading a query outside React to begin fetching as early as possible. Call `createQueryPreloader` to create a `preloadQuery` function which can be called to start fetching a query. This returns a `queryRef` which is passed to `useReadQuery` and suspended until the query is done fetching.
+
+  ```tsx
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef = preloadQuery(QUERY, { variables, ...otherOptions });
+
+  function App() {
+    return {
+      <Suspense fallback={<div>Loading</div>}>
+        <MyQuery />
+      </Suspense>
+    }
+  }
+
+  function MyQuery() {
+    const { data } = useReadQuery(queryRef);
+
+    // do something with data
+  }
+  ```
+
+- [#11397](https://github.com/apollographql/apollo-client/pull/11397) [`3f7eecb`](https://github.com/apollographql/apollo-client/commit/3f7eecbfbd4f4444cffcaac7dd9fd225c8c2a401) Thanks [@aditya-kumawat](https://github.com/aditya-kumawat)! - Adds a new `skipPollAttempt` callback function that's called whenever a refetch attempt occurs while polling. If the function returns `true`, the refetch is skipped and not reattempted until the next poll interval. This will solve the frequent use-case of disabling polling when the window is inactive.
+
+  ```ts
+  useQuery(QUERY, {
+    pollInterval: 1000,
+    skipPollAttempt: () => document.hidden, // or !document.hasFocus()
+  });
+  // or define it globally
+  new ApolloClient({
+    defaultOptions: {
+      watchQuery: {
+        skipPollAttempt: () => document.hidden, // or !document.hasFocus()
+      },
+    },
+  });
+  ```
+
+- [#11435](https://github.com/apollographql/apollo-client/pull/11435) [`5cce53e`](https://github.com/apollographql/apollo-client/commit/5cce53e83b976f85d2d2b06e28cc38f01324fea1) Thanks [@phryneas](https://github.com/phryneas)! - Deprecates `canonizeResults`.
+
+  Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
+  A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
+
+### Patch Changes
+
+- [#11369](https://github.com/apollographql/apollo-client/pull/11369) [`2a47164`](https://github.com/apollographql/apollo-client/commit/2a471646616e3af1b5c039e961f8d5717fad8f32) Thanks [@phryneas](https://github.com/phryneas)! - Persisted Query Link: improve memory management
+
+  - use LRU `WeakCache` instead of `WeakMap` to keep a limited number of hash results
+  - hash cache is initiated lazily, only when needed
+  - expose `persistedLink.resetHashCache()` method
+  - reset hash cache if the upstream server reports it doesn't accept persisted queries
+
+- [#10804](https://github.com/apollographql/apollo-client/pull/10804) [`221dd99`](https://github.com/apollographql/apollo-client/commit/221dd99ffd1990f8bd0392543af35e9b08d0fed8) Thanks [@phryneas](https://github.com/phryneas)! - use WeakMap in React Native with Hermes
+
+- [#11409](https://github.com/apollographql/apollo-client/pull/11409) [`2e7203b`](https://github.com/apollographql/apollo-client/commit/2e7203b3a9618952ddb522627ded7cceabd7f250) Thanks [@phryneas](https://github.com/phryneas)! - Adds an experimental `ApolloClient.getMemoryInternals` helper
+
 ## 3.9.0-alpha.5
 
 ### Minor Changes
@@ -95,7 +209,7 @@
   import { Environment, Network, RecordSource, Store } from "relay-runtime";
 
   const fetchMultipartSubs = createFetchMultipartSubscription(
-    "http://localhost:4000"
+    "http://localhost:4000",
   );
 
   const network = Network.create(fetchQuery, fetchMultipartSubs);
@@ -377,7 +491,7 @@
     return data.breeds.map(({ characteristics }) =>
       characteristics.map((characteristic) => (
         <div key={characteristic}>{characteristic}</div>
-      ))
+      )),
     );
   }
   ```
@@ -428,7 +542,7 @@
 
   const { data } = useSuspenseQuery(
     query,
-    id ? { variables: { id } } : skipToken
+    id ? { variables: { id } } : skipToken,
   );
   ```
 
@@ -2383,7 +2497,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
     fields: {
       comments(comments: Reference[], { readField }) {
         return comments.filter(
-          (comment) => idToRemove !== readField("id", comment)
+          (comment) => idToRemove !== readField("id", comment),
         );
       },
     },

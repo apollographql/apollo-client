@@ -225,6 +225,11 @@ export class ObservableQuery<
     });
   }
 
+  /** @internal */
+  public resetDiff() {
+    this.queryInfo.resetDiff();
+  }
+
   public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
     // Use the last result as long as the variables match this.variables.
     const lastResult = this.getLastResult(true);

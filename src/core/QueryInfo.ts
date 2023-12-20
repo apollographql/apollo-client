@@ -7,7 +7,7 @@ import { mergeIncrementalData } from "../utilities/index.js";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
-import type { QueryListener, MethodKeys } from "./types.js";
+import type { QueryListener } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
 import {
   isNonEmptyArray,
@@ -36,10 +36,11 @@ const destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)<
 
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,
-  methodName: MethodKeys<ApolloCache<any>>
+  methodName: "evict" | "modify" | "reset"
 ) {
   const original = cache[methodName];
   if (typeof original === "function") {
+    // @ts-expect-error this is just too generic to be typed correctly
     cache[methodName] = function () {
       destructiveMethodCounts.set(
         cache,
@@ -154,6 +155,10 @@ export class QueryInfo {
   reset() {
     cancelNotifyTimeout(this);
     this.dirty = false;
+  }
+
+  resetDiff() {
+    this.lastDiff = void 0;
   }
 
   getDiff(): Cache.DiffResult<any> {

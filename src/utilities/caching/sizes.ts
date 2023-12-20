@@ -62,7 +62,7 @@ export interface CacheSizes {
   parser: number;
   /**
    * Cache size for the cache of [`DocumentTransform`](https://github.com/apollographql/apollo-client/blob/main/src/utilities/graphql/DocumentTransform.ts)
-   * instances with the `cache`option set to `true`.
+   * instances with the `cache` option set to `true`.
    *
    * Can be called with user-defined or already-transformed `DocumentNode`s.
    *
@@ -70,11 +70,11 @@ export interface CacheSizes {
    * Defaults to `2000`.
    *
    * @remarks
-   * The cache size here should be chosen with other DocumentTransforms in mind.
-   * For example, if there was a DocumentTransform that would take `x` DocumentNodes,
-   * and returned a differently-transformed DocumentNode depending if the app is
+   * The cache size here should be chosen with other `DocumentTransform`s in mind.
+   * For example, if there was a `DocumentTransform` that would take `x` `DocumentNode`s,
+   * and returned a differently-transformed `DocumentNode` depending if the app is
    * online or offline, then we assume that the cache returns `2*x` documents.
-   * If that were concatenated with another DocumentTransform that would
+   * If that were concatenated with another `DocumentTransform` that would
    * also duplicate the cache size, you'd need to account for `4*x` documents
    * returned by the second transform.
    *
@@ -82,14 +82,14 @@ export interface CacheSizes {
    * transforms you should always add `n` (the "base" number of user-provided
    * Documents) to the resulting cache size.
    *
-   * So if we assume that the user-provided transforms receive `n` documents and
+   * If we assume that the user-provided transforms receive `n` documents and
    * return `n` documents, the cache size should be `2*n`.
    *
    * If we assume that the chain of user-provided transforms receive `n` documents and
    * return `4*n` documents, the cache size should be `5*n`.
    *
    * This size should also then be used in every other cache that mentions that
-   * it operates on a "transformed" DocumentNode.
+   * it operates on a "transformed" `DocumentNode`.
    *
    * @privateRemarks
    * Cache size for the `performWork` method of each [`DocumentTransform`](https://github.com/apollographql/apollo-client/blob/main/src/utilities/graphql/DocumentTransform.ts).
@@ -180,7 +180,7 @@ export interface CacheSizes {
    * your application in mind.
    *
    * Note:
-   * This function is a dependency of `fragmentRegistry.transform`, so having a too small cache size here
+   * This function is a dependency of `fragmentRegistry.transform`, so having too small of a cache size here
    * might involuntarily invalidate values in the `transform` cache.
    *
    * @privateRemarks
@@ -190,7 +190,7 @@ export interface CacheSizes {
   /**
    * Cache size for the `findFragmentSpreads` method of [`FragmentRegistry`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/fragmentRegistry.ts).
    *
-   * This function is called with transformed DocumentNodes, as well as recursively
+   * This function is called with transformed `DocumentNode`s, as well as recursively
    * with every fragment spread referenced within that, or a fragment referenced by a
    * fragment spread.
    *
@@ -199,8 +199,7 @@ export interface CacheSizes {
    *
    * @remarks
    *
-   * Note:
-   * This function is a dependency of `fragmentRegistry.transform`, so having a too small cache size here
+   * Note: This function is a dependency of `fragmentRegistry.transform`, so having too small of cache size here
    * might involuntarily invalidate values in the `transform` cache.
    */
   "fragmentRegistry.findFragmentSpreads": number;
@@ -219,7 +218,7 @@ export interface CacheSizes {
   /**
    * Cache used in [`removeTypenameFromVariables`](https://github.com/apollographql/apollo-client/blob/main/src/link/remove-typename/removeTypenameFromVariables.ts).
    *
-   * This function is called transformed DocumentNodes.
+   * This function is called transformed `DocumentNode`s.
    *
    * @defaultValue
    * Defaults to `2000`.
@@ -231,8 +230,7 @@ export interface CacheSizes {
   /**
    * Cache size for the `maybeBroadcastWatch` method on [`InMemoryCache`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/inMemoryCache.ts).
    *
-   * Note:
-   * `maybeBroadcastWatch` will be set to the `resultCacheMaxSize` option and
+   * Note: `maybeBroadcastWatch` will be set to the `resultCacheMaxSize` option and
    * will fall back to this configuration value if the option is not set.
    *
    * @defaultValue

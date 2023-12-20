@@ -71,12 +71,12 @@ a `DocumentNode`. There are two types:
 
 * **User-supplied `DocumentNode`s** are created
   by the user, for example by using the `gql` template literal tag.
-  These are the `QUERY`, `MUTATION`, or `SUBSCRIPTION` variables passed
+  This is the `QUERY`, `MUTATION`, or `SUBSCRIPTION` argument passed
   into a [`useQuery` hook](../data/queries/#usequery-api) or as the `query` option to `client.query`.
-* *Transformed `DocumentNode`s** are derived from
+* **Transformed `DocumentNode`s** are derived from
   user-supplied `DocumentNode`s, for example, by applying [`DocumentTransform`s](../data/document-transforms/) to them.
 
-As a rule of thumb, you should set the cache sizes for caches using a Transformed
+As a rule of thumb, you should set the cache sizes for caches using a transformed
 `DocumentNode` at least to the same size as for caches using a user-supplied
 `DocumentNode`. If your application uses a custom `DocumentTransform` that does
 not always transform the same input to the same output, you should set the cache

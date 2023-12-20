@@ -5314,6 +5314,715 @@ describe("fetchMore", () => {
 });
 
 describe.skip("type tests", () => {
+  it("variables are optional and can be anything with untyped DocumentNode", () => {
+    const query = gql``;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { returnPartialData: true, variables: {} });
+    useBackgroundQuery(query, { variables: { foo: "bar" } });
+    useBackgroundQuery(query, { variables: { foo: "bar", bar: 2 } });
+    useBackgroundQuery(query, { skip: true, variables: { foo: "bar" } });
+    useBackgroundQuery(query, skipToken);
+  });
+
+  it("variables are optional and can by anything with unspecified TVariables", () => {
+    const query: TypedDocumentNode<SimpleCaseData> = gql``;
+    const skip: boolean = true;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery<SimpleCaseData>(query);
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery<SimpleCaseData>(query, { variables: {} });
+    useBackgroundQuery(query, { returnPartialData: true, variables: {} });
+    useBackgroundQuery<SimpleCaseData>(query, {
+      returnPartialData: true,
+      variables: {},
+    });
+    useBackgroundQuery(query, { variables: { foo: "bar" } });
+    useBackgroundQuery<SimpleCaseData>(query, { variables: { foo: "bar" } });
+    useBackgroundQuery(query, { variables: { foo: "bar", bar: 2 } });
+    useBackgroundQuery<SimpleCaseData>(query, {
+      variables: { foo: "bar", bar: 2 },
+    });
+    useBackgroundQuery(query, {
+      skip: true,
+      variables: { foo: "bar", bar: 2 },
+    });
+    useBackgroundQuery<SimpleCaseData>(query, {
+      skip: true,
+      variables: { foo: "bar", bar: 2 },
+    });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : { variables: { foo: "bar", bar: 2 } }
+    );
+    useBackgroundQuery<SimpleCaseData>(
+      query,
+      skip ? skipToken : { variables: { foo: "bar", bar: 2 } }
+    );
+  });
+
+  it("variables are optional when TVariables are empty", () => {
+    type Data = { greeting: string };
+    type Variables = Record<string, never>;
+    const query: TypedDocumentNode<Data, Variables> = gql``;
+    const skip: boolean = true;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery<Data, Variables>(query);
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery<Data, Variables>(query, { variables: {} });
+    useBackgroundQuery(query, { returnPartialData: true, variables: {} });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {},
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, { skip: true, variables: {} });
+    useBackgroundQuery<Data, Variables>(query, { skip: true, variables: {} });
+    useBackgroundQuery(query, {
+      skip: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      skip: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery<Data, Variables>(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+  });
+
+  it("only allows empty variables when TVariables is `never`", () => {
+    type Data = { greeting: string };
+    const query: TypedDocumentNode<Data, never> = gql``;
+    const skip: boolean = true;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery<Data, never>(query);
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery<Data, never>(query, { variables: {} });
+    useBackgroundQuery(query, { returnPartialData: true, variables: {} });
+    useBackgroundQuery<Data, never>(query, {
+      returnPartialData: true,
+      variables: {},
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, never>(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, never>(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, { skip: true, variables: {} });
+    useBackgroundQuery<Data, never>(query, { skip: true, variables: {} });
+    useBackgroundQuery(query, {
+      skip: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, never>(query, {
+      skip: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variable
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery<Data, never>(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variable
+            foo: "bar",
+          },
+        }
+      )
+    );
+  });
+
+  it("optional variables are optional", () => {
+    type Data = { posts: string[] };
+    type Variables = { limit?: number };
+    const query: TypedDocumentNode<Data, Variables> = gql``;
+    const skip: boolean = true;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery<Data, Variables>(query);
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery<Data, Variables>(query, { variables: {} });
+    useBackgroundQuery(query, { returnPartialData: true, variables: {} });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {},
+    });
+    useBackgroundQuery(query, { variables: { limit: 10 } });
+    useBackgroundQuery<Data, Variables>(query, { variables: { limit: 10 } });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: { limit: 10 },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: { limit: 10 },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, { skip: true, variables: {} });
+    useBackgroundQuery<Data, Variables>(query, { skip: true, variables: {} });
+    useBackgroundQuery(query, {
+      skip: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      skip: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            limit: 10,
+            // @ts-expect-error unknown variable
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery<Data, Variables>(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            limit: 10,
+            // @ts-expect-error unknown variable
+            foo: "bar",
+          },
+        }
+      )
+    );
+
+    useBackgroundQuery(query, skipToken);
+    useBackgroundQuery<Data, Variables>(query, skipToken);
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery<Data, Variables>(query, skip ? skipToken : undefined);
+  });
+
+  it("enforces required variables", () => {
+    type Data = { character: string };
+    type Variables = { id: string };
+    const query: TypedDocumentNode<Data, Variables> = gql``;
+    const skip: boolean = true;
+
+    // @ts-expect-error missing variables option
+    useBackgroundQuery(query);
+    // @ts-expect-error missing variables option
+    useBackgroundQuery<Data, Variables>(query);
+    // @ts-expect-error missing variables option
+    useBackgroundQuery(query, {});
+    // @ts-expect-error missing variables option
+    useBackgroundQuery<Data, Variables>(query, {});
+    // @ts-expect-error missing variables option
+    useBackgroundQuery(query, { returnPartialData: true });
+    // @ts-expect-error missing variables option
+    useBackgroundQuery<Data, Variables>(query, { returnPartialData: true });
+    useBackgroundQuery(query, {
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    useBackgroundQuery(query, { variables: { id: "1" } });
+    useBackgroundQuery<Data, Variables>(query, { variables: { id: "1" } });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: { id: "1" },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: { id: "1" },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      skip: true,
+      // @ts-expect-error missing required variable
+      variables: {},
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      skip: true,
+      // @ts-expect-error missing required variable
+      variables: {},
+    });
+    useBackgroundQuery(query, {
+      skip: true,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      skip: true,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          // @ts-expect-error missing required variable
+          variables: {},
+        }
+      )
+    );
+    useBackgroundQuery<Data, Variables>(
+      query,
+      skip ? skipToken : (
+        {
+          // @ts-expect-error missing required variable
+          variables: {},
+        }
+      )
+    );
+    useBackgroundQuery(query, skip ? skipToken : { variables: { id: "1" } });
+    useBackgroundQuery<Data, Variables>(
+      query,
+      skip ? skipToken : { variables: { id: "1" } }
+    );
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            // @ts-expect-error unknown variable
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery<Data, Variables>(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            // @ts-expect-error unknown variable
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery(query, skipToken);
+    useBackgroundQuery<Data, Variables>(query, skipToken);
+  });
+
+  it("requires variables with mixed TVariables", () => {
+    type Data = { character: string };
+    type Variables = { id: string; language?: string };
+    const query: TypedDocumentNode<Data, Variables> = gql``;
+    const skip: boolean = true;
+
+    // @ts-expect-error missing variables argument
+    useBackgroundQuery(query);
+    // @ts-expect-error missing variables argument
+    useBackgroundQuery<Data, Variables>(query);
+    // @ts-expect-error missing variables argument
+    useBackgroundQuery(query, {});
+    // @ts-expect-error missing variables argument
+    useBackgroundQuery<Data, Variables>(query, {});
+    // @ts-expect-error missing variables option
+    useBackgroundQuery(query, { returnPartialData: true });
+    // @ts-expect-error missing variables option
+    useBackgroundQuery<Data, Variables>(query, { returnPartialData: true });
+    useBackgroundQuery(query, {
+      // @ts-expect-error missing required variables
+      variables: {},
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      // @ts-expect-error missing required variables
+      variables: {},
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      // @ts-expect-error missing required variables
+      variables: {},
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      // @ts-expect-error missing required variables
+      variables: {},
+    });
+    useBackgroundQuery(query, { variables: { id: "1" } });
+    useBackgroundQuery<Data, Variables>(query, { variables: { id: "1" } });
+    useBackgroundQuery(query, {
+      // @ts-expect-error missing required variable
+      variables: { language: "en" },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      // @ts-expect-error missing required variable
+      variables: { language: "en" },
+    });
+    useBackgroundQuery(query, { variables: { id: "1", language: "en" } });
+    useBackgroundQuery<Data, Variables>(query, {
+      variables: { id: "1", language: "en" },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      returnPartialData: true,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      returnPartialData: true,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      skip: true,
+      // @ts-expect-error missing required variable
+      variables: {},
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      skip: true,
+      // @ts-expect-error missing required variable
+      variables: {},
+    });
+    useBackgroundQuery(query, { skip: true, variables: { id: "1" } });
+    useBackgroundQuery<Data, Variables>(query, {
+      skip: true,
+      variables: { id: "1" },
+    });
+    useBackgroundQuery(query, {
+      skip: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery<Data, Variables>(query, {
+      skip: true,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            language: "en",
+            // @ts-expect-error unknown variable
+            foo: "bar",
+          },
+        }
+      )
+    );
+    const a = useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            language: "en",
+          },
+        }
+      )
+    );
+    useBackgroundQuery<Data, Variables>(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            limit: 10,
+            // @ts-expect-error unknown variable
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery(query, skipToken);
+    useBackgroundQuery<Data, Variables>(query, skipToken);
+  });
+
   it("returns unknown when TData cannot be inferred", () => {
     const query = gql`
       query {

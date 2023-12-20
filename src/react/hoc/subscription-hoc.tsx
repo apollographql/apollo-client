@@ -15,6 +15,11 @@ import {
 } from "./hoc-utils.js";
 import type { OperationOption, OptionProps, DataProps } from "./types.js";
 
+/**
+ * @deprecated
+ * Official support for React Apollo higher order components ended in March 2020.
+ * This library is still included in the `@apollo/client` package, but it no longer receives feature updates or bug fixes.
+ */
 export function withSubscription<
   TProps extends TGraphQLVariables | {} = {},
   TData extends object = {},

@@ -2,7 +2,7 @@
 "@apollo/client": patch
 ---
 
-Adds a deprecation warning to the HOC exports.
+Adds a deprecation warning to the HOC and render prop APIs.
 
-The HOC exports have already been deprecated since 2020,
+The HOC and render prop APIs have already been deprecated since 2020,
 but we previously didn't have a @deprecated tag in the DocBlocks.

@@ -5,6 +5,12 @@ import type { OperationVariables } from "../../core/index.js";
 import type { SubscriptionComponentOptions } from "./types.js";
 import { useSubscription } from "../hooks/index.js";
 
+/**
+ * @deprecated
+ * Official support for React Apollo render prop components ended in March 2020.
+ * This library is still included in the `@apollo/client` package,
+ * but it no longer receives feature updates or bug fixes.
+ */
 export function Subscription<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,

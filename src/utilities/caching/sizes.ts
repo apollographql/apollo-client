@@ -14,11 +14,10 @@ declare global {
  * cache-collected, it incurs only a small performance impact and
  * doesn't cause data loss. A smaller cache size might save you memory.
  *
- * As a result, these cache sizes should not be chosen to hold every value ever
- * encountered, but rather to hold a reasonable number of values.
- * To prevent too much recalculation, cache sizes should at least be chosen
- * big enough to hold memoized values for all hooks/queries that are
- * on the screen at any given time.
+ * You should choose cache sizes appropriate for storing a reasonable
+ * number of values rather than every value. To prevent too much recalculation,
+ * choose cache sizes that are at least large enough to hold memoized values for
+ * all hooks/queries on the screen at any given time.
  */
 /*
  * We assume a "base value" of 1000 here, which is already very generous.

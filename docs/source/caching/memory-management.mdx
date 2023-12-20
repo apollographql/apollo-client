@@ -83,9 +83,9 @@ not always transform the same input to the same output, you should set the cache
 size for caches using a Transformed `DocumentNode` to a higher value than for
 caches using a user-supplied `DocumentNode`.
 
-By default, Apollo Client uses a "base value" of 1000 for caches using
+By default, Apollo Client uses a base value of 1000 cached objects for caches using
 user-supplied `DocumentNode` instances, and scales other cache sizes relative
-to that.
+to that. For example, the default base value of 1000 for user-provided `DocumentNode`s would scale to 2000, 4000, etc. for transformed `DocumentNode`s, depending on the transformation performed.
 
 This base value should be plenty for most applications, but you can tweak them if you have different requirements.
 

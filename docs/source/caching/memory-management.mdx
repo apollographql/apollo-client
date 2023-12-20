@@ -49,8 +49,9 @@ import { cacheSizes } from '@apollo/client/utilities';
 import { print } from '@apollo/client'
 
 cacheSizes.print = 100;
-// cache sizes changed this way will only take effect for caches created after
-// the cache size has been changed, so we need to reset the cache for it to be effective
+// cache sizes changed this way will only take effect for caches 
+// created after the cache size has been changed, so we need to 
+// reset the cache for it to be effective
 
 print.reset();
 ```

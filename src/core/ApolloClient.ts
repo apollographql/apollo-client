@@ -759,7 +759,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * ```ts
    * console.log(client.getMemoryInternals())
    * ```
-   * will log something in the form of
+   * Logs output in the following JSON format:
    * @example
    * ```json
    *{

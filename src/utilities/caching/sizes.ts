@@ -10,9 +10,9 @@ declare global {
  * The cache sizes used by various Apollo Client caches.
  *
  * @remarks
- * All configurable caches hold derivative (memoized) values and if an item is
- * cache-collected, that only means a small performance hit, but it will not
- * cause data loss, and a smaller cache size might save you memory.
+ * All configurable caches hold memoized values. If an item is
+ * cache-collected, it incurs only a small performance impact and
+ * doesn't cause data loss. A smaller cache size might save you memory.
  *
  * As a result, these cache sizes should not be chosen to hold every value ever
  * encountered, but rather to hold a reasonable number of values.

@@ -41,6 +41,10 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     abstract extract(optimistic?: boolean): TSerialized;
     // (undocumented)
     gc(): string[];
+    // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // Warning: (ae-forgotten-export) The symbol "StoreObject" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -115,6 +119,10 @@ class ApolloClient<TCacheShape> implements DataProxy {
     // Warning: (ae-forgotten-export) The symbol "DocumentTransform" needs to be exported by the entry point index.d.ts
     get documentTransform(): DocumentTransform;
     extract(optimistic?: boolean): TCacheShape;
+    // Warning: (ae-forgotten-export) The symbol "getApolloClientMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getApolloClientMemoryInternals;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesInclude" needs to be exported by the entry point index.d.ts
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
     getResolvers(): Resolvers;
@@ -281,12 +289,18 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -442,7 +456,7 @@ namespace Cache_2 {
     }
     // (undocumented)
     interface ReadOptions<TVariables = any, TData = any> extends DataProxy.Query<TVariables, TData> {
-        // (undocumented)
+        // @deprecated (undocumented)
         canonizeResults?: boolean;
         // (undocumented)
         optimistic: boolean;
@@ -542,6 +556,9 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 export interface Context extends Record<string, any> {
 }
 
+// @public
+export function createQueryPreloader(client: ApolloClient<any>): PreloadQueryFunction;
+
 // @public (undocumented)
 namespace DataProxy {
     // (undocumented)
@@ -568,6 +585,7 @@ namespace DataProxy {
     //
     // (undocumented)
     interface ReadFragmentOptions<TData, TVariables> extends Fragment<TVariables, TData> {
+        // @deprecated (undocumented)
         canonizeResults?: boolean;
         optimistic?: boolean;
         returnPartialData?: boolean;
@@ -576,6 +594,7 @@ namespace DataProxy {
     //
     // (undocumented)
     interface ReadQueryOptions<TData, TVariables> extends Query<TVariables, TData> {
+        // @deprecated
         canonizeResults?: boolean;
         optimistic?: boolean;
         returnPartialData?: boolean;
@@ -678,9 +697,16 @@ class DocumentTransform {
     concat(otherTransform: DocumentTransform): DocumentTransform;
     // (undocumented)
     static identity(): DocumentTransform;
+    // @internal
+    readonly left?: DocumentTransform;
     resetCache(): void;
+    // @internal
+    readonly right?: DocumentTransform;
     // (undocumented)
-    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform;
+    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
+        left: DocumentTransform;
+        right: DocumentTransform;
+    };
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
 }
@@ -815,6 +841,48 @@ interface FulfilledPromise<TValue> extends Promise<TValue> {
     value: TValue;
 }
 
+// @internal
+const getApolloCacheMemoryInternals: (() => {
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
+}) | undefined;
+
+// @internal
+const getApolloClientMemoryInternals: (() => {
+    limits: {
+        [k: string]: number;
+    };
+    sizes: {
+        cache?: {
+            fragmentQueryDocuments: number | undefined;
+        } | undefined;
+        addTypenameDocumentTransform?: {
+            cache: number;
+        }[] | undefined;
+        inMemoryCache?: {
+            executeSelectionSet: number | undefined;
+            executeSubSelectedArray: number | undefined;
+            maybeBroadcastWatch: number | undefined;
+        } | undefined;
+        fragmentRegistry?: {
+            findFragmentSpreads: number | undefined;
+            lookup: number | undefined;
+            transform: number | undefined;
+        } | undefined;
+        print: number | undefined;
+        parser: number | undefined;
+        canonicalStringify: number | undefined;
+        links: unknown[];
+        queryManager: {
+            getDocumentInfo: number;
+            documentTransforms: {
+                cache: number;
+            }[];
+        };
+    };
+}) | undefined;
+
 // @public (undocumented)
 export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
 
@@ -846,6 +914,15 @@ export interface IDocumentDefinition {
 }
 
 // @public (undocumented)
+interface IgnoreModifier {
+    // (undocumented)
+    [_ignoreModifier]: true;
+}
+
+// @public (undocumented)
+const _ignoreModifier: unique symbol;
+
+// @public (undocumented)
 interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
@@ -864,13 +941,15 @@ interface IncrementalPayload<TData, TExtensions> {
 // @public (undocumented)
 class InternalQueryReference<TData = unknown> {
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReferenceOptions" needs to be exported by the entry point index.d.ts
-    constructor(observable: ObservableQuery<TData>, options: InternalQueryReferenceOptions);
+    constructor(observable: ObservableQuery<TData, any>, options: InternalQueryReferenceOptions);
     // (undocumented)
     applyOptions(watchQueryOptions: ObservedOptions): QueryRefPromise<TData>;
     // Warning: (ae-forgotten-export) The symbol "ObservedOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     didChangeOptions(watchQueryOptions: ObservedOptions): boolean;
+    // (undocumented)
+    get disposed(): boolean;
     // Warning: (ae-forgotten-export) The symbol "FetchMoreOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -891,6 +970,8 @@ class InternalQueryReference<TData = unknown> {
     promise: QueryRefPromise<TData>;
     // (undocumented)
     refetch(variables: OperationVariables | undefined): Promise<ApolloQueryResult<TData>>;
+    // (undocumented)
+    reinitialize(): void;
     // (undocumented)
     result: ApolloQueryResult<TData>;
     // (undocumented)
@@ -981,6 +1062,7 @@ export type LoadableQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache
 
 // @public (undocumented)
 export interface LoadableQueryHookOptions {
+    // @deprecated (undocumented)
     canonizeResults?: boolean;
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloClient"
     client?: ApolloClient<any>;
@@ -1104,7 +1186,9 @@ interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TCon
     errorPolicy?: ErrorPolicy;
     // Warning: (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
     onQueryUpdated?: OnQueryUpdated<any>;
-    optimisticResponse?: TData | ((vars: TVariables) => TData);
+    optimisticResponse?: TData | ((vars: TVariables, { IGNORE }: {
+        IGNORE: IgnoreModifier;
+    }) => TData);
     refetchQueries?: ((result: FetchResult<TData>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     // Warning: (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloCache"
@@ -1273,6 +1357,8 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     //
     // (undocumented)
     reobserveAsConcast(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Concast<ApolloQueryResult<TData>>;
+    // @internal (undocumented)
+    resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
     // (undocumented)
@@ -1378,6 +1464,47 @@ interface PendingPromise<TValue> extends Promise<TValue> {
 }
 
 // @public (undocumented)
+export type PreloadQueryFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
+
+// @public
+export interface PreloadQueryFunction {
+    // Warning: (ae-forgotten-export) The symbol "PreloadQueryOptionsArg" needs to be exported by the entry point index.d.ts
+    <TData, TVariables extends OperationVariables, TOptions extends Omit<PreloadQueryOptions, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>, TOptions>): QueryReference<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData, TVariables>;
+    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: PreloadQueryOptions<NoInfer<TVariables>> & {
+        returnPartialData: true;
+        errorPolicy: "ignore" | "all";
+    }): QueryReference<DeepPartial<TData> | undefined, TVariables>;
+    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: PreloadQueryOptions<NoInfer<TVariables>> & {
+        errorPolicy: "ignore" | "all";
+    }): QueryReference<TData | undefined, TVariables>;
+    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: PreloadQueryOptions<NoInfer<TVariables>> & {
+        returnPartialData: true;
+    }): QueryReference<DeepPartial<TData>, TVariables>;
+    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>): QueryReference<TData, TVariables>;
+}
+
+// Warning: (ae-forgotten-export) The symbol "VariablesOption" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export type PreloadQueryOptions<TVariables extends OperationVariables = OperationVariables> = {
+    canonizeResults?: boolean;
+    context?: Context;
+    errorPolicy?: ErrorPolicy;
+    fetchPolicy?: PreloadQueryFetchPolicy;
+    returnPartialData?: boolean;
+    refetchWritePolicy?: RefetchWritePolicy;
+} & VariablesOption<TVariables>;
+
+// @public (undocumented)
+type PreloadQueryOptionsArg<TVariables extends OperationVariables, TOptions = unknown> = [TVariables] extends [never] ? [
+options?: PreloadQueryOptions<never> & TOptions
+] : {} extends OnlyRequiredProperties<TVariables> ? [
+options?: PreloadQueryOptions<NoInfer<TVariables>> & Omit<TOptions, "variables">
+] : [
+options: PreloadQueryOptions<NoInfer<TVariables>> & Omit<TOptions, "variables">
+];
+
+// @public (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
 // @public (undocumented)
@@ -1468,6 +1595,8 @@ class QueryInfo {
     readonly queryId: string;
     // (undocumented)
     reset(): void;
+    // (undocumented)
+    resetDiff(): void;
     // (undocumented)
     resetLastWrite(): void;
     // (undocumented)
@@ -1569,7 +1698,7 @@ class QueryManager<TStore> {
         updateQueries: UpdateQueries<TData>;
         update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
         keepRootFields?: boolean;
-    }): void;
+    }): boolean;
     // (undocumented)
     markMutationResult<TData, TVariables, TContext, TCache extends ApolloCache<any>>(mutation: {
         mutationId: string;
@@ -1625,6 +1754,7 @@ class QueryManager<TStore> {
 
 // @public
 interface QueryOptions<TVariables = OperationVariables, TData = any> {
+    // @deprecated (undocumented)
     canonizeResults?: boolean;
     context?: Context;
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ErrorPolicy"
@@ -1642,13 +1772,15 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
 // Warning: (ae-unresolved-link) The @link reference could not be resolved: The reference is ambiguous because "useBackgroundQuery" has more than one declaration; you need to add a TSDoc member reference selector
 //
 // @public
-export interface QueryReference<TData = unknown> {
+export interface QueryReference<TData = unknown, TVariables = unknown> {
     // (undocumented)
     [PROMISE_SYMBOL]: QueryRefPromise<TData>;
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReference" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+    // (undocumented)
+    toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 
 // Warning: (ae-forgotten-export) The symbol "PromiseWithState" needs to be exported by the entry point index.d.ts
@@ -1998,7 +2130,7 @@ export function useApolloClient(override?: ApolloClient<object>): ApolloClient<o
 //
 // @public (undocumented)
 export function useBackgroundQuery<TData, TVariables extends OperationVariables, TOptions extends Omit<BackgroundQueryHookOptions<TData>, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions): [
-(QueryReference<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData> | (TOptions["skip"] extends boolean ? undefined : never)),
+(QueryReference<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData, TVariables> | (TOptions["skip"] extends boolean ? undefined : never)),
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -2007,7 +2139,7 @@ export function useBackgroundQuery<TData = unknown, TVariables extends Operation
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
 }): [
-QueryReference<DeepPartial<TData> | undefined>,
+QueryReference<DeepPartial<TData> | undefined, TVariables>,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -2015,7 +2147,7 @@ UseBackgroundQueryResult<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     errorPolicy: "ignore" | "all";
 }): [
-QueryReference<TData | undefined>,
+QueryReference<TData | undefined, TVariables>,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -2024,7 +2156,7 @@ export function useBackgroundQuery<TData = unknown, TVariables extends Operation
     skip: boolean;
     returnPartialData: true;
 }): [
-QueryReference<DeepPartial<TData>> | undefined,
+QueryReference<DeepPartial<TData>, TVariables> | undefined,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -2032,7 +2164,7 @@ UseBackgroundQueryResult<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
 }): [
-QueryReference<DeepPartial<TData>>,
+QueryReference<DeepPartial<TData>, TVariables>,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -2040,12 +2172,15 @@ UseBackgroundQueryResult<TData, TVariables>
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     skip: boolean;
 }): [
-QueryReference<TData> | undefined,
+QueryReference<TData, TVariables> | undefined,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>): [QueryReference<TData>, UseBackgroundQueryResult<TData, TVariables>];
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>): [
+QueryReference<TData, TVariables>,
+UseBackgroundQueryResult<TData, TVariables>
+];
 
 // @public (undocumented)
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken): [undefined, UseBackgroundQueryResult<TData, TVariables>];
@@ -2054,13 +2189,13 @@ export function useBackgroundQuery<TData = unknown, TVariables extends Operation
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken | (BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
 })): [
-QueryReference<DeepPartial<TData>> | undefined,
+QueryReference<DeepPartial<TData>, TVariables> | undefined,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
 // @public (undocumented)
 export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SkipToken | BackgroundQueryHookOptionsNoInfer<TData, TVariables>): [
-QueryReference<TData> | undefined,
+QueryReference<TData, TVariables> | undefined,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -2120,7 +2255,7 @@ export function useLoadableQuery<TData = unknown, TVariables extends OperationVa
 // @public (undocumented)
 export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = [
 LoadQueryFunction<TVariables>,
-QueryReference<TData> | null,
+QueryReference<TData, TVariables> | null,
     {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
@@ -2133,6 +2268,17 @@ export function useMutation<TData = any, TVariables = OperationVariables, TConte
 
 // @public (undocumented)
 export function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>): QueryResult<TData, TVariables>;
+
+// @public
+export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryReference<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;
+
+// @public (undocumented)
+export interface UseQueryRefHandlersResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+    // (undocumented)
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+
+    refetch: RefetchFunction<TData, TVariables>;
+}
 
 // Warning: (ae-forgotten-export) The symbol "ReactiveVar" needs to be exported by the entry point index.d.ts
 //
@@ -2214,10 +2360,22 @@ export interface UseSuspenseQueryResult<TData = unknown, TVariables extends Oper
 }
 
 // @public (undocumented)
+type VariablesOption<TVariables extends OperationVariables> = [
+TVariables
+] extends [never] ? {
+    variables?: Record<string, never>;
+} : {} extends OnlyRequiredProperties<TVariables> ? {
+    variables?: TVariables;
+} : {
+    variables: TVariables;
+};
+
+// @public (undocumented)
 type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
 // @public
 interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> {
+    // @deprecated (undocumented)
     canonizeResults?: boolean;
     context?: Context;
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ErrorPolicy"
@@ -2241,26 +2399,30 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/types/DataProxy.ts:141:5 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:96:3 - (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:97:3 - (ae-forgotten-export) The symbol "CanReadFunction" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:98:3 - (ae-forgotten-export) The symbol "isReference" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:99:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/common.ts:100:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts:153:5 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:100:3 - (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:101:3 - (ae-forgotten-export) The symbol "CanReadFunction" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:102:3 - (ae-forgotten-export) The symbol "isReference" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:103:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/common.ts:104:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:120:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:154:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:395:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:399:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:154:3 - (ae-forgotten-export) The symbol "ApolloError" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:156:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:201:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:260:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:31:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useLoadableQuery.ts:50:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:277:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:316:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:29:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useLoadableQuery.ts:49:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:80:5 - (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ErrorPolicy"
+// src/react/query-preloader/createQueryPreloader.ts:85:5 - (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "FetchPolicy"
+// src/react/query-preloader/createQueryPreloader.ts:95:5 - (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
 
 // (No @packageDocumentation comment for this package)
 

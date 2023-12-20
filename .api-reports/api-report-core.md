@@ -46,6 +46,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     abstract extract(optimistic?: boolean): TSerialized;
     // (undocumented)
     gc(): string[];
+    // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -104,6 +108,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     disableNetworkFetches: boolean;
     get documentTransform(): DocumentTransform;
     extract(optimistic?: boolean): TCacheShape;
+    // Warning: (ae-forgotten-export) The symbol "getApolloClientMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getApolloClientMemoryInternals;
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
     getResolvers(): Resolvers;
     // (undocumented)
@@ -221,10 +229,16 @@ export class ApolloLink {
     static execute(link: ApolloLink, operation: GraphQLRequest): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // (undocumented)
@@ -322,7 +336,7 @@ namespace Cache_2 {
     }
     // (undocumented)
     interface ReadOptions<TVariables = any, TData = any> extends DataProxy.Query<TVariables, TData> {
-        // (undocumented)
+        // @deprecated (undocumented)
         canonizeResults?: boolean;
         // (undocumented)
         optimistic: boolean;
@@ -468,12 +482,14 @@ export namespace DataProxy {
     }
     // (undocumented)
     export interface ReadFragmentOptions<TData, TVariables> extends Fragment<TVariables, TData> {
+        // @deprecated (undocumented)
         canonizeResults?: boolean;
         optimistic?: boolean;
         returnPartialData?: boolean;
     }
     // (undocumented)
     export interface ReadQueryOptions<TData, TVariables> extends Query<TVariables, TData> {
+        // @deprecated
         canonizeResults?: boolean;
         optimistic?: boolean;
         returnPartialData?: boolean;
@@ -559,9 +575,16 @@ export class DocumentTransform {
     concat(otherTransform: DocumentTransform): DocumentTransform;
     // (undocumented)
     static identity(): DocumentTransform;
+    // @internal
+    readonly left?: DocumentTransform;
     resetCache(): void;
+    // @internal
+    readonly right?: DocumentTransform;
     // (undocumented)
-    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform;
+    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
+        left: DocumentTransform;
+        right: DocumentTransform;
+    };
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
 }
@@ -860,6 +883,68 @@ export function fromError<T>(errorValue: any): Observable<T>;
 // @public (undocumented)
 export function fromPromise<T>(promise: Promise<T>): Observable<T>;
 
+// @internal
+const getApolloCacheMemoryInternals: (() => {
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
+}) | undefined;
+
+// @internal
+const getApolloClientMemoryInternals: (() => {
+    limits: {
+        [k: string]: number;
+    };
+    sizes: {
+        cache?: {
+            fragmentQueryDocuments: number | undefined;
+        } | undefined;
+        addTypenameDocumentTransform?: {
+            cache: number;
+        }[] | undefined;
+        inMemoryCache?: {
+            executeSelectionSet: number | undefined;
+            executeSubSelectedArray: number | undefined;
+            maybeBroadcastWatch: number | undefined;
+        } | undefined;
+        fragmentRegistry?: {
+            findFragmentSpreads: number | undefined;
+            lookup: number | undefined;
+            transform: number | undefined;
+        } | undefined;
+        print: number | undefined;
+        parser: number | undefined;
+        canonicalStringify: number | undefined;
+        links: unknown[];
+        queryManager: {
+            getDocumentInfo: number;
+            documentTransforms: {
+                cache: number;
+            }[];
+        };
+    };
+}) | undefined;
+
+// @internal
+const getInMemoryCacheMemoryInternals: (() => {
+    addTypenameDocumentTransform: {
+        cache: number;
+    }[];
+    inMemoryCache: {
+        executeSelectionSet: number | undefined;
+        executeSubSelectedArray: number | undefined;
+        maybeBroadcastWatch: number | undefined;
+    };
+    fragmentRegistry: {
+        findFragmentSpreads: number | undefined;
+        lookup: number | undefined;
+        transform: number | undefined;
+    };
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
+}) | undefined;
+
 export { gql }
 
 // @public (undocumented)
@@ -936,6 +1021,15 @@ export interface IdGetterObj extends Object {
 }
 
 // @public (undocumented)
+interface IgnoreModifier {
+    // (undocumented)
+    [_ignoreModifier]: true;
+}
+
+// @public (undocumented)
+const _ignoreModifier: unique symbol;
+
+// @public (undocumented)
 export interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
@@ -973,6 +1067,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         resetResultCache?: boolean;
         resetResultIdentities?: boolean;
     }): string[];
+    // Warning: (ae-forgotten-export) The symbol "getInMemoryCacheMemoryInternals" needs to be exported by the entry point index.d.ts
+    //
+    // @internal
+    getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -1005,7 +1103,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
 // @public (undocumented)
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
-    // (undocumented)
+    // @deprecated (undocumented)
     canonizeResults?: boolean;
     // Warning: (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
     //
@@ -1013,7 +1111,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
     fragments?: FragmentRegistryAPI;
     // (undocumented)
     possibleTypes?: PossibleTypesMap;
-    // (undocumented)
+    // @deprecated (undocumented)
     resultCacheMaxSize?: number;
     // (undocumented)
     resultCaching?: boolean;
@@ -1252,7 +1350,9 @@ interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TCon
     context?: TContext;
     errorPolicy?: ErrorPolicy;
     onQueryUpdated?: OnQueryUpdated<any>;
-    optimisticResponse?: TData | ((vars: TVariables) => TData);
+    optimisticResponse?: TData | ((vars: TVariables, { IGNORE }: {
+        IGNORE: IgnoreModifier;
+    }) => TData);
     refetchQueries?: ((result: FetchResult<TData>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
     updateQueries?: MutationQueryReducersMap<TData>;
@@ -1421,6 +1521,8 @@ export class ObservableQuery<TData = any, TVariables extends OperationVariables 
     //
     // (undocumented)
     reobserveAsConcast(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Concast<ApolloQueryResult<TData>>;
+    // @internal (undocumented)
+    resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
     // (undocumented)
@@ -1592,6 +1694,8 @@ class QueryInfo {
     // (undocumented)
     reset(): void;
     // (undocumented)
+    resetDiff(): void;
+    // (undocumented)
     resetLastWrite(): void;
     // (undocumented)
     setDiff(diff: Cache_2.DiffResult<any> | null): void;
@@ -1676,7 +1780,7 @@ class QueryManager<TStore> {
         updateQueries: UpdateQueries<TData>;
         update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
         keepRootFields?: boolean;
-    }): void;
+    }): boolean;
     // (undocumented)
     markMutationResult<TData, TVariables, TContext, TCache extends ApolloCache<any>>(mutation: {
         mutationId: string;
@@ -1729,6 +1833,7 @@ class QueryManager<TStore> {
 
 // @public
 interface QueryOptions<TVariables = OperationVariables, TData = any> {
+    // @deprecated (undocumented)
     canonizeResults?: boolean;
     context?: DefaultContext;
     errorPolicy?: ErrorPolicy;
@@ -2056,6 +2161,7 @@ export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
 // @public
 export interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> {
+    // @deprecated (undocumented)
     canonizeResults?: boolean;
     context?: DefaultContext;
     errorPolicy?: ErrorPolicy;
@@ -2110,13 +2216,14 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:92:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:161:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:132:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:113:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:114:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:120:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:154:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:395:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:260:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:399:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:277:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:316:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

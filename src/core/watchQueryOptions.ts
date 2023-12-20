@@ -12,6 +12,7 @@ import type {
 } from "./types.js";
 import type { ApolloCache } from "../cache/index.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
+import type { IgnoreModifier } from "../cache/core/types/common.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -105,6 +106,12 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   partialRefetch?: boolean;
 
   /**
+   * @deprecated
+   * Using `canonizeResults` can result in memory leaks so we generally do not
+   * recommend using this option anymore.
+   * A future version of Apollo Client will contain a similar feature without
+   * the risk of memory leaks.
+   *
    * Whether to canonize cache results before returning them. Canonization
    * takes some extra time, but it speeds up future deep equality comparisons.
    * Defaults to false.
@@ -272,7 +279,9 @@ export interface MutationBaseOptions<
    * the result of a mutation immediately, and update the UI later if any errors
    * appear.
    */
-  optimisticResponse?: TData | ((vars: TVariables) => TData);
+  optimisticResponse?:
+    | TData
+    | ((vars: TVariables, { IGNORE }: { IGNORE: IgnoreModifier }) => TData);
 
   /**
    * A {@link MutationQueryReducersMap}, which is map from query names to

@@ -1,8 +1,13 @@
 import type { ASTNode } from "graphql";
 import { print as origPrint } from "graphql";
-import { WeakCache } from "@wry/caches";
+import {
+  AutoCleanedWeakCache,
+  cacheSizes,
+  defaultCacheSizes,
+} from "../caching/index.js";
+import { registerGlobalCache } from "../caching/getMemoryInternals.js";
 
-let printCache!: WeakCache<ASTNode, string>;
+let printCache!: AutoCleanedWeakCache<ASTNode, string>;
 export const print = Object.assign(
   (ast: ASTNode) => {
     let result = printCache.get(ast);
@@ -15,12 +20,14 @@ export const print = Object.assign(
   },
   {
     reset() {
-      printCache = new WeakCache<
-        ASTNode,
-        string
-      >(/** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */);
+      printCache = new AutoCleanedWeakCache<ASTNode, string>(
+        cacheSizes.print || defaultCacheSizes.print
+      );
     },
   }
 );
-
 print.reset();
+
+if (__DEV__) {
+  registerGlobalCache("print", () => (printCache ? printCache.size : 0));
+}

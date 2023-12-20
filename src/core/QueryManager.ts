@@ -4,11 +4,11 @@ import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 import { equal } from "@wry/equality";
-import { WeakCache } from "@wry/caches";
 
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
 import {
+  defaultCacheSizes,
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
@@ -75,9 +75,12 @@ import {
 import type { ApolloErrorOptions } from "../errors/index.js";
 import { PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
 import { print } from "../utilities/index.js";
+import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { TODO } from "../utilities/types/TODO.js";
 
 const { hasOwnProperty } = Object.prototype;
+
+const IGNORE: IgnoreModifier = Object.create(null);
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -100,6 +103,7 @@ interface TransformCacheEntry {
 
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
+import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -268,7 +272,8 @@ export class QueryManager<TStore> {
         error: null,
       } as MutationStoreValue);
 
-    if (optimisticResponse) {
+    const isOptimistic =
+      optimisticResponse &&
       this.markMutationOptimistic<TData, TVariables, TContext, TCache>(
         optimisticResponse,
         {
@@ -283,7 +288,6 @@ export class QueryManager<TStore> {
           keepRootFields,
         }
       );
-    }
 
     this.broadcastQueries();
 
@@ -295,7 +299,7 @@ export class QueryManager<TStore> {
           mutation,
           {
             ...context,
-            optimisticResponse,
+            optimisticResponse: isOptimistic ? optimisticResponse : void 0,
           },
           variables,
           false
@@ -335,7 +339,7 @@ export class QueryManager<TStore> {
             updateQueries,
             awaitRefetchQueries,
             refetchQueries,
-            removeOptimistic: optimisticResponse ? mutationId : void 0,
+            removeOptimistic: isOptimistic ? mutationId : void 0,
             onQueryUpdated,
             keepRootFields,
           });
@@ -360,7 +364,7 @@ export class QueryManager<TStore> {
             mutationStoreValue.error = err;
           }
 
-          if (optimisticResponse) {
+          if (isOptimistic) {
             self.cache.removeOptimistic(mutationId);
           }
 
@@ -610,10 +614,14 @@ export class QueryManager<TStore> {
   ) {
     const data =
       typeof optimisticResponse === "function" ?
-        optimisticResponse(mutation.variables)
+        optimisticResponse(mutation.variables, { IGNORE })
       : optimisticResponse;
 
-    return this.cache.recordOptimisticTransaction((cache) => {
+    if (data === IGNORE) {
+      return false;
+    }
+
+    this.cache.recordOptimisticTransaction((cache) => {
       try {
         this.markMutationResult<TData, TVariables, TContext, TCache>(
           {
@@ -626,6 +634,8 @@ export class QueryManager<TStore> {
         invariant.error(error);
       }
     }, mutation.mutationId);
+
+    return true;
   }
 
   public fetchQuery<TData, TVars extends OperationVariables>(
@@ -662,10 +672,13 @@ export class QueryManager<TStore> {
     return this.documentTransform.transformDocument(document);
   }
 
-  private transformCache = new WeakCache<
+  private transformCache = new AutoCleanedWeakCache<
     DocumentNode,
     TransformCacheEntry
-  >(/** TODO: decide on a maximum size (will do all max sizes in a combined separate PR) */);
+  >(
+    cacheSizes["queryManager.getDocumentInfo"] ||
+      defaultCacheSizes["queryManager.getDocumentInfo"]
+  );
 
   public getDocumentInfo(document: DocumentNode) {
     const { transformCache } = this;

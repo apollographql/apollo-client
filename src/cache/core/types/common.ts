@@ -87,6 +87,10 @@ declare const _invalidateModifier: unique symbol;
 export interface InvalidateModifier {
   [_invalidateModifier]: true;
 }
+declare const _ignoreModifier: unique symbol;
+export interface IgnoreModifier {
+  [_ignoreModifier]: true;
+}
 
 export type ModifierDetails = {
   DELETE: DeleteModifier;

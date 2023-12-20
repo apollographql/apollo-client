@@ -28,6 +28,7 @@
       "Reading and writing": "/caching/cache-interaction",
       "Garbage collection and eviction": "/caching/garbage-collection",
       "Customizing field behavior": "/caching/cache-field-behavior",
+      "Memory Management": "/caching/memory-management",
       "Advanced topics": "/caching/advanced-topics"
     },
     "Pagination": {

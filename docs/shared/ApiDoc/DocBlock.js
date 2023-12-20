@@ -138,7 +138,7 @@ export function Example({
   if (!value) return null;
   return (
     <MaybeCollapsible collapsible={collapsible}>
-      <b>{mdToReact(value)}</b>
+      {mdToReact(value)}
     </MaybeCollapsible>
   );
 }

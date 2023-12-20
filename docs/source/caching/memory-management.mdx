@@ -28,8 +28,8 @@ You can set your cache size [before (recommended)](#setting-cache-sizes-before-l
 
 ### Setting cache sizes before loading the Apollo Client library
 
-Setting cache sizes before loading the Apollo Client library is recommended because some caches are already initialized when the library is loaded, and changed cache sizes only
-affect caches created after the fact, so you'd have to write additional runtime codes to recreate these caches after changing their size.
+Setting cache sizes before loading the Apollo Client library is recommended because some caches are already initialized when the library is loaded. Changed cache sizes only
+affect caches created after the fact, so you'd have to write additional runtime code to recreate these caches after changing their size.
 
  ```ts
 import type { CacheSizes } from '@apollo/client/utilities';

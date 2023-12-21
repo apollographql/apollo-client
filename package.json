@@ -108,7 +108,9 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.13.3",
+    "@arktype/attest": "^0.5.0",
     "@babel/parser": "7.23.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.23.3",
     "@changesets/changelog-github": "0.5.0",
     "@changesets/cli": "2.27.1",
     "@graphql-tools/schema": "10.0.2",

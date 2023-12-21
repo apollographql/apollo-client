@@ -1,5 +1,38 @@
 # @apollo/client
 
+## 3.9.0-beta.1
+
+### Minor Changes
+
+- [#11424](https://github.com/apollographql/apollo-client/pull/11424) [`62f3b6d`](https://github.com/apollographql/apollo-client/commit/62f3b6d0e89611e27d9f29812ee60e5db5963fd6) Thanks [@phryneas](https://github.com/phryneas)! - Simplify RetryLink, fix potential memory leak
+
+  Historically, `RetryLink` would keep a `values` array of all previous values,
+  in case the operation would get an additional subscriber at a later point in time.
+  In practice, this could lead to a memory leak (#11393) and did not serve any
+  further purpose, as the resulting observable would only be subscribed to by
+  Apollo Client itself, and only once - it would be wrapped in a `Concast` before
+  being exposed to the user, and that `Concast` would handle subscribers on its
+  own.
+
+- [#11442](https://github.com/apollographql/apollo-client/pull/11442) [`4b6f2bc`](https://github.com/apollographql/apollo-client/commit/4b6f2bccf3ba94643b38689b32edd2839e47aec1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the need to call `retain` from `useLoadableQuery` since `useReadQuery` will now retain the query. This means that a `queryRef` that is not consumed by `useReadQuery` within the given `autoDisposeTimeoutMs` will now be auto diposed for you.
+
+  Thanks to [#11412](https://github.com/apollographql/apollo-client/pull/11412), disposed query refs will be automatically resubscribed to the query when consumed by `useReadQuery` after it has been disposed.
+
+- [#11438](https://github.com/apollographql/apollo-client/pull/11438) [`6d46ab9`](https://github.com/apollographql/apollo-client/commit/6d46ab930a5e9bd5cae153d3b75b8966784fcd4e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the need to call `retain` from `useBackgroundQuery` since `useReadQuery` will now retain the query. This means that a `queryRef` that is not consumed by `useReadQuery` within the given `autoDisposeTimeoutMs` will now be auto diposed for you.
+
+  Thanks to [#11412](https://github.com/apollographql/apollo-client/pull/11412), disposed query refs will be automatically resubscribed to the query when consumed by `useReadQuery` after it has been disposed.
+
+### Patch Changes
+
+- [#11443](https://github.com/apollographql/apollo-client/pull/11443) [`ff5a332`](https://github.com/apollographql/apollo-client/commit/ff5a332ff8b190c418df25371e36719d70061ebe) Thanks [@phryneas](https://github.com/phryneas)! - Adds a deprecation warning to the HOC and render prop APIs.
+
+  The HOC and render prop APIs have already been deprecated since 2020,
+  but we previously didn't have a @deprecated tag in the DocBlocks.
+
+- [#11078](https://github.com/apollographql/apollo-client/pull/11078) [`14edebe`](https://github.com/apollographql/apollo-client/commit/14edebebefb7634c32b921d02c1c85c6c8737989) Thanks [@phryneas](https://github.com/phryneas)! - ObservableQuery: prevent reporting results of previous queries if the variables changed since
+
+- [#11439](https://github.com/apollographql/apollo-client/pull/11439) [`33454f0`](https://github.com/apollographql/apollo-client/commit/33454f0a40a05ea2b00633bda20a84d0ec3a4f4d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Address bundling issue introduced in [#11412](https://github.com/apollographql/apollo-client/pull/11412) where the `react/cache` internals ended up duplicated in the bundle. This was due to the fact that we had a `react/hooks` entrypoint that imported these files along with the newly introduced `createQueryPreloader` function, which lived outside of the `react/hooks` folder.
+
 ## 3.9.0-beta.0
 
 ### Minor Changes

@@ -47,10 +47,16 @@ import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
   Profiler,
+  SimpleCaseData,
   createProfiler,
+  setupSimpleCase,
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
+
+afterEach(() => {
+  jest.useRealTimers();
+});
 
 interface SimpleQueryData {
   greeting: string;
@@ -402,6 +408,262 @@ it("tears down the query on unmount", async () => {
 
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
+it("auto disposes of the queryRef if not used within timeout", async () => {
+  jest.useFakeTimers();
+  const { query } = setupSimpleCase();
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const { result } = renderHook(() => useLoadableQuery(query, { client }));
+  const [loadQuery] = result.current;
+
+  act(() => loadQuery());
+  const [, queryRef] = result.current;
+
+  expect(queryRef!).not.toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  await act(async () => {
+    link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+    // Ensure simulateResult will deliver the result since its wrapped with
+    // setTimeout
+    await jest.advanceTimersByTimeAsync(10);
+  });
+
+  jest.advanceTimersByTime(30_000);
+
+  expect(queryRef!).toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
+it("auto disposes of the queryRef if not used within configured timeout", async () => {
+  jest.useFakeTimers();
+  const { query } = setupSimpleCase();
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      react: {
+        suspense: {
+          autoDisposeTimeoutMs: 5000,
+        },
+      },
+    },
+  });
+
+  const { result } = renderHook(() => useLoadableQuery(query, { client }));
+  const [loadQuery] = result.current;
+
+  act(() => loadQuery());
+  const [, queryRef] = result.current;
+
+  expect(queryRef!).not.toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  await act(async () => {
+    link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+    // Ensure simulateResult will deliver the result since its wrapped with
+    // setTimeout
+    await jest.advanceTimersByTimeAsync(10);
+  });
+
+  jest.advanceTimersByTime(5000);
+
+  expect(queryRef!).toBeDisposed();
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
+it("will resubscribe after disposed when mounting useReadQuery", async () => {
+  const { query, mocks } = setupSimpleCase();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+    defaultOptions: {
+      react: {
+        suspense: {
+          // Set this to something really low to avoid fake timers
+          autoDisposeTimeoutMs: 20,
+        },
+      },
+    },
+  });
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [show, setShow] = React.useState(false);
+    const [loadQuery, queryRef] = useLoadableQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <button onClick={() => setShow((show) => !show)}>Toggle</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {show && queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+
+  // initial render
+  await Profiler.takeRender();
+  await act(() => user.click(screen.getByText("Load query")));
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+  }
+
+  // Wait long enough for auto dispose to kick in
+  await wait(50);
+
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+
+  await act(() => user.click(screen.getByText("Toggle")));
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.writeQuery({
+    query,
+    data: { greeting: "Hello again" },
+  });
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello again" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
+});
+
+it("auto resubscribes when mounting useReadQuery after naturally disposed by useReadQuery", async () => {
+  const { query, mocks } = setupSimpleCase();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [show, setShow] = React.useState(true);
+    const [loadQuery, queryRef] = useLoadableQuery(query);
+
+    return (
+      <>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <button onClick={() => setShow((show) => !show)}>Toggle</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {show && queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  const toggleButton = screen.getByText("Toggle");
+
+  // initial render
+  await Profiler.takeRender();
+  await act(() => user.click(screen.getByText("Load query")));
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(toggleButton));
+  await Profiler.takeRender();
+  await wait(0);
+
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+
+  await act(() => user.click(toggleButton));
+
+  expect(client.getObservableQueries().size).toBe(1);
+  // Here we don't expect a suspense cache entry because we previously disposed
+  // of it and did not call `loadQuery` again, which would normally add it to
+  // the suspense cache
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.writeQuery({
+    query,
+    data: { greeting: "Hello again" },
+  });
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello again" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {

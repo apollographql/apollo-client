@@ -335,7 +335,7 @@ This style of link also composes well for customization using a function:
 import { ApolloLink } from '@apollo/client';
 
 const reportErrors = (errorCallback) => new ApolloLink((operation, forward) => {
-    return new Observable((observer) => {
+  return new Observable((observer) => {
     const observable = forward(operation);
     const subscription = observable.subscribe({
       next(value) {

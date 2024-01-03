@@ -49,6 +49,51 @@ To use Apollo Client with a GraphQL endpoint that supports [multipart subscripti
 
 Aside from updating your client version, no additional configuration is required! Apollo Client automatically sends the required headers with the request if the terminating `HTTPLink` is passed a subscription operation.
 
+#### Usage with Relay or urql
+
+To consume a multipart subscription over HTTP in an app using Relay or urql, Apollo Client provides network layer adapters that handle the parsing of the multipart response format.
+
+##### Relay
+
+```ts
+import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/relay";
+import { Environment, Network, RecordSource, Store } from "relay-runtime";
+
+const fetchMultipartSubs = createFetchMultipartSubscription(
+  "https://api.example.com"
+);
+
+const network = Network.create(fetchQuery, fetchMultipartSubs);
+
+export const RelayEnvironment = new Environment({
+  network,
+  store: new Store(new RecordSource()),
+});
+```
+
+#### urql
+
+```ts
+import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/urql";
+import { Client, fetchExchange, subscriptionExchange } from "@urql/core";
+
+const url = "https://api.example.com";
+
+const multipartSubscriptionForwarder = createFetchMultipartSubscription(
+  url
+);
+
+const client = new Client({
+  url,
+  exchanges: [
+    fetchExchange,
+    subscriptionExchange({
+      forwardSubscription: multipartSubscriptionForwarder,
+    }),
+  ],
+});
+```
+
 ## Defining a subscription
 
 You define a subscription on both the server side and the client side, just like you do for queries and mutations.

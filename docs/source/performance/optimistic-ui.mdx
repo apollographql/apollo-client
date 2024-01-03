@@ -75,7 +75,7 @@ As this example shows, the value of `optimisticResponse` is an object that match
 
 ## Bailing out of an optimistic update
 
-In some cases you may want to skip an optimisitic update. For example, you may want to perform an optimistic update _only_ when certain variables are passed to the mutation. In order to skip an update, you can pass a function to `optimisticResponse` and use the `IGNORE` sentinel object available on the second argument passed to your `optimisticResponse` function to bail out of the optimistic update.
+In some cases you may want to skip an optimistic update. For example, you may want to perform an optimistic update _only_ when certain variables are passed to the mutation. To skip an update, pass a function to the `optimisticResponse` option and return the `IGNORE` sentinel object available on the second argument to bail out of the optimistic update.
 
 Consider this example:
 

@@ -1,7 +1,7 @@
 import { invariant, newInvariantError } from "../../utilities/globals/index.js";
 
 import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
-import { Kind } from "graphql";
+import { Kind } from "../../utilities/index.js";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 

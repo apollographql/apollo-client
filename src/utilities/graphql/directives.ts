@@ -12,7 +12,7 @@ import type {
   ValueNode,
   ASTNode,
 } from "graphql";
-import { visit, BREAK } from "graphql";
+import { visit, BREAK } from "../../utilities/index.js";
 
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };

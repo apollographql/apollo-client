@@ -1,5 +1,5 @@
 import type { VariableDefinitionNode, DocumentNode } from "graphql";
-import { visit } from "graphql";
+import { visit } from "../../utilities/index.js";
 
 export function filterOperationVariables(
   variables: Record<string, any>,

@@ -4,13 +4,12 @@ import type {
   FragmentDefinitionNode,
   FragmentSpreadNode,
 } from "graphql";
-import { visit } from "graphql";
 
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
 import type { FragmentMap } from "../../utilities/index.js";
-import { getFragmentDefinitions } from "../../utilities/index.js";
+import { getFragmentDefinitions, visit } from "../../utilities/index.js";
 
 export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;

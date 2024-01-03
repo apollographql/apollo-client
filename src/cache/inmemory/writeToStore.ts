@@ -2,7 +2,7 @@ import { invariant, newInvariantError } from "../../utilities/globals/index.js";
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
 import type { SelectionSetNode, FieldNode } from "graphql";
-import { Kind } from "graphql";
+import { Kind } from "../../utilities/index.js";
 
 import type {
   FragmentMap,

@@ -1,8 +1,12 @@
 import { wrap } from "optimism";
 import type { DocumentNode, TypeNode } from "graphql";
-import { Kind, visit } from "graphql";
 import { ApolloLink } from "../core/index.js";
-import { stripTypename, isPlainObject } from "../../utilities/index.js";
+import {
+  stripTypename,
+  isPlainObject,
+  Kind,
+  visit,
+} from "../../utilities/index.js";
 import type { OperationVariables } from "../../core/index.js";
 
 export const KEEP = "__KEEP";
@@ -107,6 +111,7 @@ const getVariableDefinitions = wrap((document: DocumentNode) => {
   return definitions;
 });
 
+// @ts-ignore
 function unwrapType(node: TypeNode): string {
   switch (node.kind) {
     case Kind.NON_NULL_TYPE:

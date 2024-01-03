@@ -13,7 +13,7 @@ import type {
   FragmentSpreadNode,
   ExecutableDefinitionNode,
 } from "graphql";
-import { visit, BREAK, isSelectionNode } from "graphql";
+import { visit, BREAK, isSelectionNode } from "../utilities/index.js";
 
 import type { ApolloCache } from "../cache/index.js";
 import type { FragmentMap, StoreObject } from "../utilities/index.js";

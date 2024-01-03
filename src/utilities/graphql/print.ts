@@ -1,4 +1,4 @@
-import { print as origPrint } from "graphql";
+import { print as origPrint } from "./gql.js";
 import { canUseWeakMap } from "../common/canUse.js";
 
 const printCache = canUseWeakMap ? new WeakMap() : undefined;

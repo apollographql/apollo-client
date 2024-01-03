@@ -15,7 +15,7 @@ import type {
   ASTVisitFn,
   InlineFragmentNode,
 } from "graphql";
-import { visit, Kind } from "graphql";
+import { visit, Kind } from "../graphql/gql.js";
 
 import {
   checkDocument,

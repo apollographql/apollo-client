@@ -53,6 +53,10 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
+import { attest, setup, cleanup } from "@arktype/attest";
+
+beforeAll(setup);
+afterAll(cleanup);
 
 afterEach(() => {
   jest.useRealTimers();
@@ -4645,7 +4649,14 @@ it("allows loadQuery to be called in useEffect on first render", async () => {
   expect(() => renderWithMocks(<App />, { mocks })).not.toThrow();
 });
 
-describe.skip("type tests", () => {
+type UseLoadableQuery = typeof useLoadableQuery;
+type Gql = typeof gql;
+type UseReadQuery = typeof useReadQuery;
+describe("type tests", () => {
+  const useLoadableQuery = (() => [() => {}, {}]) as any as UseLoadableQuery;
+  const gql = (() => {}) as any as Gql;
+  const useReadQuery = (() => ({})) as any as UseReadQuery;
+
   it("returns unknown when TData cannot be inferred", () => {
     const query = gql``;
 
@@ -4706,7 +4717,7 @@ describe.skip("type tests", () => {
     loadQuery({ foo: "bar" });
   });
 
-  it("optional variables are optional to loadQuery", () => {
+  it.only("optional variables are optional to loadQuery", () => {
     const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
       gql``;
 
@@ -4715,15 +4726,27 @@ describe.skip("type tests", () => {
     loadQuery();
     loadQuery({});
     loadQuery({ limit: 10 });
-    loadQuery({
-      // @ts-expect-error unknown variable
-      foo: "bar",
-    });
-    loadQuery({
-      limit: 10,
-      // @ts-expect-error unknown variable
-      foo: "bar",
-    });
+
+    attest(
+      loadQuery({
+        // @ts-expect-error
+        foo: "bar",
+      })
+    ).type.errors(
+      "Object literal may only specify known properties, " +
+        "and 'foo' does not exist in type '{ limit?: number | undefined; }"
+    );
+
+    attest(
+      loadQuery({
+        limit: 10,
+        // @ts-expect-error
+        foo: "bar",
+      })
+    ).type.errors(
+      "Object literal may only specify known properties, " +
+        "and 'foo' does not exist in type '{ limit?: number | undefined; }'."
+    );
   });
 
   it("enforces required variables when TVariables includes required variables", () => {

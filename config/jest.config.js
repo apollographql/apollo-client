@@ -22,7 +22,12 @@ const defaults = {
         },
       },
     ],
+    "\\.js$": [
+      "babel-jest",
+      { configFile: "./src/config/jest/babel.config.js" },
+    ],
   },
+  transformIgnorePatterns: ["node_modules/(?!(@arktype))"],
   resolver: "ts-jest-resolver",
 };
 

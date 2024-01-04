@@ -13,7 +13,7 @@ describe("useDeepMemo", () => {
   it("returns memoized value when its dependencies are deeply equal", () => {
     const { result, rerender } = renderHook(
       ({ active, items, user }) => {
-        useDeepMemo(() => ({ active, items, user }), [items, name, active]);
+        useDeepMemo(() => ({ active, items, user }), [items, user, active]);
       },
       {
         initialProps: {

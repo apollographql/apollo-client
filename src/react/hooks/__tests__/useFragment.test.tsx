@@ -1513,12 +1513,6 @@ describe("has the same timing as `useQuery`", () => {
 
     cache.writeQuery({ query, data: { item: updatedItem } });
 
-    if (React.version.startsWith("17.")) {
-      const { snapshot } = await ProfiledComponent.takeRender();
-      expect(snapshot.queryData).toStrictEqual({ item: initialItem });
-      expect(snapshot.fragmentData).toStrictEqual(updatedItem);
-    }
-
     {
       const { snapshot } = await ProfiledComponent.takeRender();
       expect(snapshot.queryData).toStrictEqual({ item: updatedItem });

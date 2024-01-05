@@ -80,7 +80,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
           ...diffOptions,
           immediate: true,
           callback(diff) {
-            if (!equal(diff.result, resultRef.current?.data)) {
+            if (!equal(diff.result, resultRef.current.data)) {
               resultRef.current = diffToResult(diff);
               // If we get another update before we've re-rendered, bail out of
               // the update and try again. This ensures that the relative timing

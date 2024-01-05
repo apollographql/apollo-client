@@ -47,7 +47,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient();
 
-  const diffOptions: Cache.DiffOptions<TData, TVars> = useDeepMemo(() => {
+  const diffOptions = useDeepMemo<Cache.DiffOptions<TData, TVars>>(() => {
     const {
       fragment,
       fragmentName,

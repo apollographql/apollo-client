@@ -1,4 +1,3 @@
-import * as React from "react";
 import { equal } from "@wry/equality";
 
 import type { DeepPartial } from "../../utilities/index.js";
@@ -14,7 +13,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
-import { useDeepMemo } from "./internal/useDeepMemo.js";
+import { useDeepMemo, useLazyRef } from "./internal/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -65,12 +64,13 @@ export function useFragment<TData = any, TVars = OperationVariables>(
     };
   }, [options]);
 
-  const resultRef = React.useRef<UseFragmentResult<TData>>();
+  const resultRef = useLazyRef<UseFragmentResult<TData>>(() =>
+    diffToResult(cache.diff<TData>(diffOptions))
+  );
 
   // Used for both getSnapshot and getServerSnapshot
   const getSnapshot = () => {
-    const latestDiffToResult =
-      resultRef.current || diffToResult(cache.diff<TData>(diffOptions));
+    const latestDiffToResult = resultRef.current;
 
     return (
         resultRef.current &&

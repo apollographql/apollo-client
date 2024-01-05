@@ -82,6 +82,10 @@ export function useFragment<TData = any, TVars = OperationVariables>(
           callback(diff) {
             if (!equal(diff.result, resultRef.current?.data)) {
               resultRef.current = diffToResult(diff);
+              // If we get another update before we've re-rendered, bail out of
+              // the update and try again. This ensures that the relative timing
+              // between useQuery and useFragment stays roughly the same as
+              // fixed in https://github.com/apollographql/apollo-client/pull/11083
               clearTimeout(lastTimeout);
               lastTimeout = setTimeout(forceUpdate) as any;
             }

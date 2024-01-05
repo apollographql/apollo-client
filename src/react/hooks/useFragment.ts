@@ -14,6 +14,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
+import { useDeepMemo } from "./internal/useDeepMemo.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -46,15 +47,23 @@ export function useFragment<TData = any, TVars = OperationVariables>(
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient();
 
-  const { fragment, fragmentName, from, optimistic = true, ...rest } = options;
+  const diffOptions: Cache.DiffOptions<TData, TVars> = useDeepMemo(() => {
+    const {
+      fragment,
+      fragmentName,
+      from,
+      optimistic = true,
+      ...rest
+    } = options;
 
-  const diffOptions: Cache.DiffOptions<TData, TVars> = {
-    ...rest,
-    returnPartialData: true,
-    id: typeof from === "string" ? from : cache.identify(from),
-    query: cache["getFragmentDoc"](fragment, fragmentName),
-    optimistic,
-  };
+    return {
+      ...rest,
+      returnPartialData: true,
+      id: typeof from === "string" ? from : cache.identify(from),
+      query: cache["getFragmentDoc"](fragment, fragmentName),
+      optimistic,
+    };
+  }, [options]);
 
   const resultRef = React.useRef<UseFragmentResult<TData>>();
   let latestDiff = cache.diff<TData>(diffOptions);

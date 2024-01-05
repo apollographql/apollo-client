@@ -82,6 +82,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
           callback(diff) {
             if (!equal(diff.result, resultRef.current?.data)) {
               resultRef.current = diffToResult(diff);
+              clearTimeout(lastTimeout);
               lastTimeout = setTimeout(forceUpdate) as any;
             }
           },

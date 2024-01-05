@@ -66,11 +66,12 @@ export function useFragment<TData = any, TVars = OperationVariables>(
   }, [options]);
 
   const resultRef = React.useRef<UseFragmentResult<TData>>();
-  let latestDiff = cache.diff<TData>(diffOptions);
 
   // Used for both getSnapshot and getServerSnapshot
   const getSnapshot = () => {
-    const latestDiffToResult = resultRef.current || diffToResult(latestDiff);
+    const latestDiffToResult =
+      resultRef.current || diffToResult(cache.diff<TData>(diffOptions));
+
     return (
         resultRef.current &&
           equal(resultRef.current.data, latestDiffToResult.data)
@@ -87,7 +88,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
         immediate: true,
         callback(diff) {
           if (!equal(diff.result, resultRef.current?.data)) {
-            resultRef.current = diffToResult((latestDiff = diff));
+            resultRef.current = diffToResult(diff);
             lastTimeout = setTimeout(forceUpdate) as any;
           }
         },

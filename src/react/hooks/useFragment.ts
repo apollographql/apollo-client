@@ -86,7 +86,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
         ...diffOptions,
         immediate: true,
         callback(diff) {
-          if (!equal(diff, latestDiff)) {
+          if (!equal(diff.result, resultRef.current?.data)) {
             resultRef.current = diffToResult((latestDiff = diff));
             lastTimeout = setTimeout(forceUpdate) as any;
           }

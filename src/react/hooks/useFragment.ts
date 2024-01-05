@@ -73,23 +73,26 @@ export function useFragment<TData = any, TVars = OperationVariables>(
   const getSnapshot = React.useCallback(() => resultRef.current, []);
 
   return useSyncExternalStore(
-    (forceUpdate) => {
-      let lastTimeout = 0;
-      const unsubcribe = cache.watch({
-        ...diffOptions,
-        immediate: true,
-        callback(diff) {
-          if (!equal(diff.result, resultRef.current?.data)) {
-            resultRef.current = diffToResult(diff);
-            lastTimeout = setTimeout(forceUpdate) as any;
-          }
-        },
-      });
-      return () => {
-        unsubcribe();
-        clearTimeout(lastTimeout);
-      };
-    },
+    React.useCallback(
+      (forceUpdate) => {
+        let lastTimeout = 0;
+        const unsubcribe = cache.watch({
+          ...diffOptions,
+          immediate: true,
+          callback(diff) {
+            if (!equal(diff.result, resultRef.current?.data)) {
+              resultRef.current = diffToResult(diff);
+              lastTimeout = setTimeout(forceUpdate) as any;
+            }
+          },
+        });
+        return () => {
+          unsubcribe();
+          clearTimeout(lastTimeout);
+        };
+      },
+      [cache, diffOptions]
+    ),
     getSnapshot,
     getSnapshot
   );

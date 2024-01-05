@@ -1,3 +1,4 @@
+import * as React from "react";
 import { equal } from "@wry/equality";
 
 import type { DeepPartial } from "../../utilities/index.js";
@@ -69,16 +70,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
   );
 
   // Used for both getSnapshot and getServerSnapshot
-  const getSnapshot = () => {
-    const latestDiffToResult = resultRef.current;
-
-    return (
-        resultRef.current &&
-          equal(resultRef.current.data, latestDiffToResult.data)
-      ) ?
-        resultRef.current
-      : (resultRef.current = latestDiffToResult);
-  };
+  const getSnapshot = React.useCallback(() => resultRef.current, []);
 
   return useSyncExternalStore(
     (forceUpdate) => {

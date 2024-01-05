@@ -1,18 +1,66 @@
 import type { DocumentNode } from "graphql";
 import { wrap } from "optimism";
 
-import type { StoreObject, Reference } from "../../utilities/index.js";
+import type {
+  StoreObject,
+  Reference,
+  DeepPartial,
+} from "../../utilities/index.js";
 import {
+  Observable,
   cacheSizes,
   defaultCacheSizes,
   getFragmentQueryDocument,
+  mergeDeepArray,
 } from "../../utilities/index.js";
 import type { DataProxy } from "./types/DataProxy.js";
 import type { Cache } from "./types/Cache.js";
 import { WeakCache } from "@wry/caches";
 import { getApolloCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
+import type {
+  OperationVariables,
+  TypedDocumentNode,
+} from "../../core/types.js";
+import { equal } from "@wry/equality";
+import type { MissingTree } from "./types/common.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
+
+// todo: confirm we can start with this limited set of options
+export interface WatchFragmentOptions<TData, TVars> {
+  fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+  from: StoreObject | Reference | string;
+  /**
+   * Any variables that the GraphQL query may depend on.
+   */
+  variables?: TVars;
+  fragmentName?: string;
+  optimistic?: boolean;
+  /**
+   * @deprecated
+   * Using `canonizeResults` can result in memory leaks so we generally do not
+   * recommend using this option anymore.
+   * A future version of Apollo Client will contain a similar feature.
+   *
+   * Whether to canonize cache results before returning them. Canonization
+   * takes some extra time, but it speeds up future deep equality comparisons.
+   * Defaults to false.
+   */
+  canonizeResults?: boolean;
+}
+
+// todo: refactor duplicated type, see UseFragmentResult
+export type WatchFragmentResult<TData> =
+  | {
+      data: TData;
+      complete: true;
+      missing?: never;
+    }
+  | {
+      data: DeepPartial<TData>;
+      complete: false;
+      missing: MissingTree;
+    };
 
 export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
@@ -138,6 +186,46 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       ...options,
       rootId: options.id || "ROOT_QUERY",
       optimistic,
+    });
+  }
+
+  public watchFragment<TData = any, TVars = OperationVariables>(
+    options: WatchFragmentOptions<TData, TVars>
+  ): Observable<WatchFragmentResult<TData>> {
+    const { fragment, fragmentName, from, optimistic = true } = options;
+
+    const diffOptions: Cache.DiffOptions<TData, TVars> = {
+      returnPartialData: true,
+      id: typeof from === "string" ? from : this.identify(from),
+      query: this.getFragmentDoc(fragment, fragmentName),
+      optimistic,
+    };
+
+    // let latestDiff: DataProxy.DiffResult<TData> | undefined = undefined;
+    let latestDiff: DataProxy.DiffResult<TData> = this.diff<TData>(diffOptions);
+
+    return new Observable((observer) => {
+      return this.watch<TData, TVars>({
+        ...diffOptions,
+        immediate: true, // is this necessary? tests pass without it
+        query: this.getFragmentDoc(fragment, fragmentName),
+        callback(diff) {
+          const result = {
+            data: diff.result as DeepPartial<TData>,
+            complete: !!diff.complete,
+          } as WatchFragmentResult<TData>;
+
+          if (diff.missing) {
+            result.missing = mergeDeepArray(
+              diff.missing.map((error) => error.missing)
+            );
+          }
+          if (!equal(diff, latestDiff)) {
+            latestDiff = diff;
+            observer.next(result);
+          }
+        },
+      });
     });
   }
 

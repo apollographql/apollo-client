@@ -13,7 +13,8 @@ import { Observable } from "../utilities";
 import { ApolloLink } from "../link/core";
 import { HttpLink } from "../link/http";
 import { InMemoryCache } from "../cache";
-import { itAsync } from "../testing";
+import { concatPagination } from "../utilities";
+import { itAsync, wait } from "../testing";
 import { spyOnConsole } from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
@@ -2172,6 +2173,295 @@ describe("ApolloClient", () => {
         });
       }
     );
+  });
+
+  describe.only("watchFragment", () => {
+    type Item = {
+      __typename: string;
+      id: number;
+      text?: string;
+    };
+
+    it.only("if all data is available, `complete` is `true`", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const handleNext = jest.fn();
+
+      observable.subscribe(handleNext);
+
+      await wait(0); // need to wait a tick
+
+      expect(handleNext).toHaveBeenCalledTimes(1);
+
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        complete: true,
+      });
+    });
+    it("if only partial data is available, `complete` is `false`", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const handleNext = jest.fn();
+
+      observable.subscribe(handleNext);
+
+      {
+        // we expect a "Missing field 'text' while writing result..." error
+        // when writing item to the cache, so we'll silence the console.error
+        using _consoleSpy = spyOnConsole("error");
+        cache.writeFragment({
+          fragment: ItemFragment,
+          data: {
+            __typename: "Item",
+            id: 5,
+          },
+        });
+      }
+
+      expect(handleNext).toHaveBeenCalledTimes(1);
+
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          __typename: "Item",
+          id: 5,
+        },
+        complete: false,
+        missing: {
+          text: "Can't find field 'text' on Item:5 object",
+        },
+      });
+    });
+    it("if no data is written after observable is subscribed to, next is never called", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const handleNext = jest.fn();
+
+      observable.subscribe(handleNext);
+
+      expect(handleNext).toHaveBeenCalledTimes(0);
+    });
+    // it.only("does not react to updates to @nonreactive fields", async () => {
+    //   const cache = new InMemoryCache();
+    //   const client = new ApolloClient({
+    //     cache,
+    //     link: ApolloLink.empty(),
+    //   });
+    //   const ItemFragment = gql`
+    //     fragment ItemFragment on Item {
+    //       id
+    //       text @nonreactive
+    //     }
+    //   `;
+
+    //   const observable = client.watchFragment({
+    //     fragment: ItemFragment,
+    //     from: { __typename: "Item", id: 5 },
+    //   });
+
+    //   const handleNext = jest.fn();
+
+    //   observable.subscribe(handleNext);
+
+    //   cache.writeFragment({
+    //     fragment: ItemFragment,
+    //     data: {
+    //       __typename: "Item",
+    //       id: 5,
+    //       text: "Item #5",
+    //     },
+    //   });
+
+    //   expect(handleNext).toHaveBeenCalledTimes(1);
+    //   expect(handleNext).toHaveBeenLastCalledWith({
+    //     data: {
+    //       __typename: "Item",
+    //       id: 5,
+    //       text: "Item #5",
+    //     },
+    //     complete: true,
+    //   });
+    // });
+    it.each<TypedDocumentNode<{ list: Item[] }>>([
+      // This query uses a basic field-level @nonreactive directive.
+      gql`
+        query GetItems {
+          list {
+            id
+            text @nonreactive
+          }
+        }
+      `,
+      // This query uses @nonreactive on an anonymous/inline ...spread directive.
+      gql`
+        query GetItems {
+          list {
+            id
+            ... @nonreactive {
+              text
+            }
+          }
+        }
+      `,
+      // This query uses @nonreactive on a ...spread with a type condition.
+      gql`
+        query GetItems {
+          list {
+            id
+            ... on Item @nonreactive {
+              text
+            }
+          }
+        }
+      `,
+      // This query uses @nonreactive directive on a named fragment ...spread.
+      gql`
+        query GetItems {
+          list {
+            id
+            ...ItemText @nonreactive
+          }
+        }
+        fragment ItemText on Item {
+          text
+        }
+      `,
+    ])(
+      "watchQuery can use @nonreactive to avoid rerendering",
+      async (query) => {
+        const cache = new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                list: concatPagination(),
+              },
+            },
+            Item: {
+              keyFields: ["id"],
+              // Configuring keyArgs:false for Item.text is one way to prevent field
+              // keys like text@nonreactive, but it's not the only way. Since
+              // @nonreactive is now in the KNOWN_DIRECTIVES array defined in
+              // utilities/graphql/storeUtils.ts, the '@nonreactive' suffix won't be
+              // automatically appended to field keys by default.
+              // fields: {
+              //   text: {
+              //     keyArgs: false,
+              //   },
+              // },
+            },
+          },
+        });
+
+        const client = new ApolloClient({
+          cache,
+          link: ApolloLink.empty(),
+        });
+
+        const queryObs = client.watchQuery({
+          query,
+        });
+
+        const handleNext = jest.fn();
+
+        queryObs.subscribe(handleNext);
+
+        cache.writeQuery({
+          query,
+          data: {
+            list: [
+              { __typename: "Item", id: 1, text: "first" },
+              { __typename: "Item", id: 2, text: "second" },
+              { __typename: "Item", id: 3, text: "third" },
+            ],
+          },
+        });
+
+        expect(cache.extract()).toEqual({
+          ROOT_QUERY: {
+            __typename: "Query",
+            list: [
+              { __ref: 'Item:{"id":1}' },
+              { __ref: 'Item:{"id":2}' },
+              { __ref: 'Item:{"id":3}' },
+            ],
+          },
+          'Item:{"id":1}': {
+            __typename: "Item",
+            id: 1,
+            text: "first",
+          },
+          'Item:{"id":2}': {
+            __typename: "Item",
+            id: 2,
+            text: "second",
+          },
+          'Item:{"id":3}': {
+            __typename: "Item",
+            id: 3,
+            text: "third",
+          },
+        });
+      }
+    );
+    it.todo("always returns partial data");
+    it.todo("missing is a tree describing missing fields");
   });
 
   describe("defaultOptions", () => {

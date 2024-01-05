@@ -70,7 +70,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
 
   // Used for both getSnapshot and getServerSnapshot
   const getSnapshot = () => {
-    const latestDiffToResult = diffToResult(latestDiff);
+    const latestDiffToResult = resultRef.current || diffToResult(latestDiff);
     return (
         resultRef.current &&
           equal(resultRef.current.data, latestDiffToResult.data)

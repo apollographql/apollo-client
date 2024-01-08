@@ -5,7 +5,7 @@
 {
   "compilerOptions": {
     "noEmit": true,
-    "lib": ["es2015", "esnext.asynciterable", "dom"],
+    "lib": ["es2015", "esnext.asynciterable"],
     "types": ["jest", "node", "./testing/matchers/index.d.ts"]
   },
   "extends": "../tsconfig.json",

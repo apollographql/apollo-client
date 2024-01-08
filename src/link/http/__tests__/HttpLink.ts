@@ -887,10 +887,7 @@ describe("HttpLink", () => {
 
     itAsync("allows uri to be a function", (resolve, reject) => {
       const variables = { params: "stub" };
-      const customFetch: WindowOrWorkerGlobalScope["fetch"] = (
-        uri,
-        options
-      ) => {
+      const customFetch: typeof fetch = (uri, options) => {
         const { operationName } = convertBatchedBody(options!.body);
         try {
           expect(operationName).toBe("SampleQuery");

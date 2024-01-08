@@ -395,7 +395,7 @@ const enum CacheWriteBehavior {
 type CanReadFunction = (value: StoreValue) => boolean;
 
 // @public (undocumented)
-export const checkFetcher: (fetcher: WindowOrWorkerGlobalScope["fetch"] | undefined) => void;
+export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
 
 // @public (undocumented)
 export type ClientParseError = InvariantError & {
@@ -897,7 +897,7 @@ export class HttpLink extends ApolloLink {
 // @public (undocumented)
 export interface HttpOptions {
     credentials?: string;
-    fetch?: WindowOrWorkerGlobalScope["fetch"];
+    fetch?: typeof fetch;
     fetchOptions?: any;
     headers?: Record<string, string>;
     includeExtensions?: boolean;

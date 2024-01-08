@@ -5848,9 +5848,8 @@ describe("QueryManager", () => {
 
         const variables = { id: "1234" };
 
-        const refetchError = testQueryError
-          ? new Error("Refetch failed")
-          : undefined;
+        const refetchError =
+          testQueryError ? new Error("Refetch failed") : undefined;
 
         const queryManager = mockQueryManager(
           {

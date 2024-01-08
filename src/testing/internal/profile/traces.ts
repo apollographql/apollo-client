@@ -11,11 +11,9 @@ export function captureStackTrace(callingFunction?: string | (() => {})) {
   }
 
   const callerName =
-    typeof callingFunction === "string"
-      ? callingFunction
-      : callingFunction
-      ? callingFunction.name
-      : undefined;
+    typeof callingFunction === "string" ? callingFunction
+    : callingFunction ? callingFunction.name
+    : undefined;
 
   if (callerName && stack.includes(callerName)) {
     const lines = stack.split("\n");

@@ -19,25 +19,25 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   /**
    * Used to determine if the Suspense cache has a cache entry.
    */
-  toHaveSuspenseCacheEntryUsing: T extends ApolloClient<any>
-    ? (
-        query: DocumentNode,
-        options?: {
-          variables?: OperationVariables;
-          queryKey?: string | number | any[];
-        }
-      ) => R
-    : { error: "matcher needs to be called on an ApolloClient instance" };
+  toHaveSuspenseCacheEntryUsing: T extends ApolloClient<any> ?
+    (
+      query: DocumentNode,
+      options?: {
+        variables?: OperationVariables;
+        queryKey?: string | number | any[];
+      }
+    ) => R
+  : { error: "matcher needs to be called on an ApolloClient instance" };
 
-  toRerender: T extends ProfiledComponent<any, any> | ProfiledHook<any, any>
-    ? (options?: NextRenderOptions) => Promise<R>
-    : { error: "matcher needs to be called on a ProfiledComponent instance" };
+  toRerender: T extends ProfiledComponent<any, any> | ProfiledHook<any, any> ?
+    (options?: NextRenderOptions) => Promise<R>
+  : { error: "matcher needs to be called on a ProfiledComponent instance" };
 
-  toRenderExactlyTimes: T extends
-    | ProfiledComponent<any, any>
-    | ProfiledHook<any, any>
-    ? (count: number, options?: NextRenderOptions) => Promise<R>
-    : { error: "matcher needs to be called on a ProfiledComponent instance" };
+  toRenderExactlyTimes: T extends (
+    ProfiledComponent<any, any> | ProfiledHook<any, any>
+  ) ?
+    (count: number, options?: NextRenderOptions) => Promise<R>
+  : { error: "matcher needs to be called on a ProfiledComponent instance" };
 }
 
 declare global {

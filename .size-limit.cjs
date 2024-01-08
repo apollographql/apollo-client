@@ -27,11 +27,15 @@ const checks = [
   .map((config) => ({
     ...config,
     name:
-      config.name || config.import
-        ? `import ${config.import} from "${config.path}"`
-        : config.path,
+      config.name || config.import ?
+        `import ${config.import} from "${config.path}"`
+      : config.path,
+    // newer versions of size-limit changed to brotli as a default
+    // we'll stay on gzip for now, so results are easier to compare
+    gzip: true,
     ignore: [
       ...(config.ignore || []),
+      "rehackt",
       "react",
       "react-dom",
       "@graphql-typed-document-node/core",
@@ -50,21 +54,21 @@ const checks = [
     ],
   }))
   .flatMap((value) =>
-    value.path == "dist/apollo-client.min.cjs"
-      ? value
-      : [
-          value,
-          {
-            ...value,
-            name: `${value.name} (production)`,
-            modifyEsbuildConfig(config) {
-              config.define = {
-                "globalThis.__DEV__": `false`,
-              };
-              return config;
-            },
+    value.path == "dist/apollo-client.min.cjs" ?
+      value
+    : [
+        value,
+        {
+          ...value,
+          name: `${value.name} (production)`,
+          modifyEsbuildConfig(config) {
+            config.define = {
+              "globalThis.__DEV__": `false`,
+            };
+            return config;
           },
-        ]
+        },
+      ]
   )
   .map((value) => {
     value.limit = limits[value.name];

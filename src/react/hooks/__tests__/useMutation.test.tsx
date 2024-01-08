@@ -2289,8 +2289,9 @@ describe("useMutation Hook", () => {
                 const oldData = cache.readQuery({ query: NumbersQuery });
                 cache.writeQuery({
                   query: NumbersQuery,
-                  data: oldData
-                    ? {
+                  data:
+                    oldData ?
+                      {
                         ...oldData,
                         numbers: {
                           ...oldData.numbers,

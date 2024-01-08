@@ -97,9 +97,8 @@ export function withMutation<
               // this matches the query HoC
               const result = Object.assign(r, data || {});
               const name = operationOptions.name || "mutate";
-              const resultName = operationOptions.name
-                ? `${name}Result`
-                : "result";
+              const resultName =
+                operationOptions.name ? `${name}Result` : "result";
               let childProps = {
                 [name]: mutate,
                 [resultName]: result,

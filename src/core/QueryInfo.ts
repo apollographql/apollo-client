@@ -184,8 +184,9 @@ export class QueryInfo {
     diff: Cache.DiffResult<any> | null,
     options?: Cache.DiffOptions
   ) {
-    this.lastDiff = diff
-      ? {
+    this.lastDiff =
+      diff ?
+        {
           diff,
           options: options || this.getDiffOptions(),
         }
@@ -360,9 +361,8 @@ export class QueryInfo {
     cacheWriteBehavior: CacheWriteBehavior
   ) {
     const merger = new DeepMerger();
-    const graphQLErrors = isNonEmptyArray(result.errors)
-      ? result.errors.slice(0)
-      : [];
+    const graphQLErrors =
+      isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.

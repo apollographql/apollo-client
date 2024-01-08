@@ -156,7 +156,7 @@ interface GraphQLRequest<TVariables = Record<string, any>> {
 // @public (undocumented)
 interface HttpOptions {
     credentials?: string;
-    fetch?: WindowOrWorkerGlobalScope["fetch"];
+    fetch?: typeof fetch;
     fetchOptions?: any;
     headers?: Record<string, string>;
     includeExtensions?: boolean;

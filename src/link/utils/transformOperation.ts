@@ -12,9 +12,9 @@ export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   // Best guess at an operation name
   if (!transformedOperation.operationName) {
     transformedOperation.operationName =
-      typeof transformedOperation.query !== "string"
-        ? getOperationName(transformedOperation.query) || undefined
-        : "";
+      typeof transformedOperation.query !== "string" ?
+        getOperationName(transformedOperation.query) || undefined
+      : "";
   }
 
   return transformedOperation as Operation;

@@ -47,14 +47,14 @@ export class ApolloLink {
 
     if (isTerminating(leftLink) && isTerminating(rightLink)) {
       return new ApolloLink((operation) => {
-        return test(operation)
-          ? leftLink.request(operation) || Observable.of()
+        return test(operation) ?
+            leftLink.request(operation) || Observable.of()
           : rightLink.request(operation) || Observable.of();
       });
     } else {
       return new ApolloLink((operation, forward) => {
-        return test(operation)
-          ? leftLink.request(operation, forward) || Observable.of()
+        return test(operation) ?
+            leftLink.request(operation, forward) || Observable.of()
           : rightLink.request(operation, forward) || Observable.of();
       });
     }

@@ -187,17 +187,17 @@ describe("asyncMap", () => {
       let lastMapped = 0;
       const mapped = asyncMap(
         observable,
-        synchronity === "sync"
-          ? (n: number) => {
-              lastMapped = n;
-              if (n === 3) throw new Error("expected");
-              return n * 2;
-            }
-          : async (n: number) => {
-              lastMapped = n;
-              if (n === 3) throw new Error("expected");
-              return n * 2;
-            }
+        synchronity === "sync" ?
+          (n: number) => {
+            lastMapped = n;
+            if (n === 3) throw new Error("expected");
+            return n * 2;
+          }
+        : async (n: number) => {
+            lastMapped = n;
+            if (n === 3) throw new Error("expected");
+            return n * 2;
+          }
       );
       const stream = new ObservableStream(mapped);
       await expect(stream.takeNext()).resolves.toBe(2);

@@ -105,7 +105,7 @@ import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
 
 const client = new ApolloClient({
-  uri: "http://localhost:4000/graphql"
+  uri: "http://localhost:4000/graphql",
   cache: new InMemoryCache({
     fragments: createFragmentRegistry(gql`
       fragment ItemFragment on Item {
@@ -148,7 +148,7 @@ import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
 
 const client = new ApolloClient({
-  uri: "http://localhost:4000/graphql"
+  uri: "http://localhost:4000/graphql",
   cache: new InMemoryCache({
     fragments: createFragmentRegistry(gql`
       fragment ItemFragment on Item {

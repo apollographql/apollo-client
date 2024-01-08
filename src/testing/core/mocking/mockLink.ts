@@ -163,7 +163,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
             if (response.error) {
               observer.error(response.error);
             } else {
-              if (response.result) {
+              if (response.result && response.delay !== Infinity) {
                 observer.next(
                   typeof response.result === "function" ?
                     (response.result as ResultFunction<FetchResult>)()

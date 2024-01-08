@@ -26,12 +26,14 @@ import * as reactComponents from "../react/components";
 import * as reactContext from "../react/context";
 import * as reactHOC from "../react/hoc";
 import * as reactHooks from "../react/hooks";
+import * as reactInternal from "../react/internal";
 import * as reactParser from "../react/parser";
 import * as reactSSR from "../react/ssr";
 import * as testing from "../testing";
 import * as testingCore from "../testing/core";
 import * as utilities from "../utilities";
 import * as utilitiesGlobals from "../utilities/globals";
+import * as urqlUtilities from "../utilities/subscriptions/urql";
 
 const entryPoints = require("../../config/entryPoints.js");
 
@@ -70,17 +72,24 @@ describe("exports of public entry points", () => {
   check("@apollo/client/react/context", reactContext);
   check("@apollo/client/react/hoc", reactHOC);
   check("@apollo/client/react/hooks", reactHooks);
+  check("@apollo/client/react/internal", reactInternal);
   check("@apollo/client/react/parser", reactParser);
   check("@apollo/client/react/ssr", reactSSR);
   check("@apollo/client/testing", testing);
   check("@apollo/client/testing/core", testingCore);
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
+  check("@apollo/client/utilities/subscriptions/urql", urqlUtilities);
 
   it("completeness", () => {
     const { join } = require("path").posix;
     entryPoints.forEach((info: Record<string, any>) => {
       const id = join("@apollo/client", ...info.dirs);
+      // We don't want to add a devDependency for relay-runtime,
+      // and our API extractor job is already validating its public exports,
+      // so we'll skip the utilities/subscriptions/relay entrypoing here
+      // since it errors on the `relay-runtime` import.
+      if (id === "@apollo/client/utilities/subscriptions/relay") return;
       expect(testedIds).toContain(id);
     });
   });

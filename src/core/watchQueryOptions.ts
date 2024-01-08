@@ -12,6 +12,7 @@ import type {
 } from "./types.js";
 import type { ApolloCache } from "../cache/index.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
+import type { IgnoreModifier } from "../cache/core/types/common.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -41,7 +42,7 @@ export type RefetchWritePolicy = "merge" | "overwrite";
 
 /**
  * errorPolicy determines the level of events for errors in the execution result. The options are:
- * - none (default): any errors from the request are treated like runtime errors and the observable is stopped (XXX this is default to lower breaking changes going from AC 1.0 => 2.0)
+ * - none (default): any errors from the request are treated like runtime errors and the observable is stopped
  * - ignore: errors from the request do not stop the observable, but also don't call `next`
  * - all: errors are treated like data and will notify observables
  */
@@ -105,6 +106,12 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   partialRefetch?: boolean;
 
   /**
+   * @deprecated
+   * Using `canonizeResults` can result in memory leaks so we generally do not
+   * recommend using this option anymore.
+   * A future version of Apollo Client will contain a similar feature without
+   * the risk of memory leaks.
+   *
    * Whether to canonize cache results before returning them. Canonization
    * takes some extra time, but it speeds up future deep equality comparisons.
    * Defaults to false.
@@ -118,7 +125,7 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
 export interface WatchQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
   TData = any,
-> extends Omit<QueryOptions<TVariables, TData>, "fetchPolicy"> {
+> {
   /**
    * Specifies the {@link FetchPolicy} to be used for this query.
    */
@@ -149,6 +156,40 @@ export interface WatchQueryOptions<
    * behavior, for backwards compatibility with Apollo Client 3.x.
    */
   refetchWritePolicy?: RefetchWritePolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#query:member} */
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
+  variables?: TVariables;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#context:member} */
+  context?: DefaultContext;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#pollInterval:member} */
+  pollInterval?: number;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#notifyOnNetworkStatusChange:member} */
+  notifyOnNetworkStatusChange?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#returnPartialData:member} */
+  returnPartialData?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#partialRefetch:member} */
+  partialRefetch?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptions#canonizeResults:member} */
+  canonizeResults?: boolean;
+
+  /**
+   * A callback function that's called whenever a refetch attempt occurs
+   * while polling. If the function returns `true`, the refetch is
+   * skipped and not reattempted until the next poll interval.
+   */
+  skipPollAttempt?: () => boolean;
 }
 
 export interface NextFetchPolicyContext<
@@ -238,7 +279,9 @@ export interface MutationBaseOptions<
    * the result of a mutation immediately, and update the UI later if any errors
    * appear.
    */
-  optimisticResponse?: TData | ((vars: TVariables) => TData);
+  optimisticResponse?:
+    | TData
+    | ((vars: TVariables, { IGNORE }: { IGNORE: IgnoreModifier }) => TData);
 
   /**
    * A {@link MutationQueryReducersMap}, which is map from query names to

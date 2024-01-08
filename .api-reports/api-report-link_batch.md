@@ -28,12 +28,18 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -59,15 +65,10 @@ export type BatchHandler = (operations: Operation[], forward?: (NextLink | undef
 export namespace BatchLink {
     // (undocumented)
     export interface Options {
-        // (undocumented)
         batchDebounce?: boolean;
-        // (undocumented)
         batchHandler?: BatchHandler;
-        // (undocumented)
         batchInterval?: number;
-        // (undocumented)
         batchKey?: (operation: Operation) => string;
-        // (undocumented)
         batchMax?: number;
     }
 }

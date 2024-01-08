@@ -235,7 +235,7 @@ describe("optimistic mutation results", () => {
             await promise;
           } catch (err) {
             expect(err).toBeInstanceOf(Error);
-            expect(err.message).toBe("forbidden (test error)");
+            expect((err as Error).message).toBe("forbidden (test error)");
 
             const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore["TodoList5"] as any).todos.length).toBe(3);
@@ -489,7 +489,7 @@ describe("optimistic mutation results", () => {
             await promise;
           } catch (err) {
             expect(err).toBeInstanceOf(Error);
-            expect(err.message).toBe("forbidden (test error)");
+            expect((err as Error).message).toBe("forbidden (test error)");
 
             const dataInStore = (client.cache as InMemoryCache).extract(true);
             expect((dataInStore["TodoList5"] as any).todos.length).toBe(3);
@@ -976,6 +976,113 @@ describe("optimistic mutation results", () => {
 
         // Since we used `prepend` it should be at the front
         expect(newResult.data.todoList.todos[0].text).toEqual(
+          "This one was created with a mutation."
+        );
+
+        resolve();
+      }
+    );
+
+    itAsync(
+      "will not update optimistically if optimisticResponse returns IGNORE sentinel object",
+      async (resolve, reject) => {
+        expect.assertions(5);
+
+        let subscriptionHandle: Subscription;
+
+        const client = await setup(reject, {
+          request: { query: mutation, variables },
+          result: mutationResult,
+        });
+
+        // we have to actually subscribe to the query to be able to update it
+        await new Promise((resolve) => {
+          const handle = client.watchQuery({ query });
+          subscriptionHandle = handle.subscribe({
+            next(res: any) {
+              resolve(res);
+            },
+          });
+        });
+
+        const id = "TodoList5";
+        const isTodoList = (
+          list: unknown
+        ): list is { todos: { text: string }[] } =>
+          typeof initialList === "object" &&
+          initialList !== null &&
+          "todos" in initialList &&
+          Array.isArray(initialList.todos);
+
+        const initialList = client.cache.extract(true)[id];
+
+        if (!isTodoList(initialList)) {
+          reject(new Error("Expected TodoList"));
+          return;
+        }
+
+        expect(initialList.todos.length).toEqual(3);
+
+        const promise = client.mutate({
+          mutation,
+          variables,
+          optimisticResponse: (vars, { IGNORE }) => {
+            return IGNORE;
+          },
+          update: (proxy: any, mResult: any) => {
+            expect(mResult.data.createTodo.id).toBe("99");
+
+            const fragment = gql`
+              fragment todoList on TodoList {
+                todos {
+                  id
+                  text
+                  completed
+                  __typename
+                }
+              }
+            `;
+
+            const data: any = proxy.readFragment({ id, fragment });
+
+            proxy.writeFragment({
+              data: {
+                ...data,
+                todos: [mResult.data.createTodo, ...data.todos],
+              },
+              id,
+              fragment,
+            });
+          },
+        });
+
+        const list = client.cache.extract(true)[id];
+
+        if (!isTodoList(list)) {
+          reject(new Error("Expected TodoList"));
+          return;
+        }
+
+        expect(list.todos.length).toEqual(3);
+
+        await promise;
+
+        const result = await client.query({ query });
+
+        subscriptionHandle!.unsubscribe();
+
+        const newList = result.data.todoList;
+
+        if (!isTodoList(newList)) {
+          reject(new Error("Expected TodoList"));
+          return;
+        }
+
+        // There should be one more todo item than before
+        expect(newList.todos.length).toEqual(4);
+
+        // Since we used `prepend` it should be at the front
+        expect(newList.todos[0].text).toBe(
           "This one was created with a mutation."
         );
 
@@ -2019,11 +2126,12 @@ describe("optimistic mutation results", () => {
       const wrapReject = <TArgs extends any[], TResult>(
         fn: (...args: TArgs) => TResult
       ): typeof fn => {
-        return function () {
+        return function (this: unknown, ...args: TArgs) {
           try {
-            return fn.apply(this, arguments);
+            return fn.apply(this, args);
           } catch (e) {
             reject(e);
+            throw e;
           }
         };
       };

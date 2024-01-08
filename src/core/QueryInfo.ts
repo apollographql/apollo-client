@@ -7,9 +7,8 @@ import { mergeIncrementalData } from "../utilities/index.js";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
-import type { QueryListener, MethodKeys } from "./types.js";
+import type { QueryListener } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
-import type { ObservableSubscription } from "../utilities/index.js";
 import {
   isNonEmptyArray,
   graphQLResultHasError,
@@ -37,10 +36,11 @@ const destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)<
 
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,
-  methodName: MethodKeys<ApolloCache<any>>
+  methodName: "evict" | "modify" | "reset"
 ) {
   const original = cache[methodName];
   if (typeof original === "function") {
+    // @ts-expect-error this is just too generic to be typed correctly
     cache[methodName] = function () {
       destructiveMethodCounts.set(
         cache,
@@ -50,6 +50,7 @@ function wrapDestructiveCacheMethod(
         // that matters in any conceivable practical scenario.
         (destructiveMethodCounts.get(cache)! + 1) % 1e15
       );
+      // @ts-expect-error this is just too generic to be typed correctly
       return original.apply(this, arguments);
     };
   }
@@ -78,7 +79,6 @@ export class QueryInfo {
   listeners = new Set<QueryListener>();
   document: DocumentNode | null = null;
   lastRequestId = 1;
-  subscriptions = new Set<ObservableSubscription>();
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
@@ -113,7 +113,7 @@ export class QueryInfo {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus?: NetworkStatus;
-    observableQuery?: ObservableQuery<any>;
+    observableQuery?: ObservableQuery<any, any>;
     lastRequestId?: number;
   }): this {
     let networkStatus = query.networkStatus || NetworkStatus.loading;
@@ -157,6 +157,10 @@ export class QueryInfo {
     this.dirty = false;
   }
 
+  resetDiff() {
+    this.lastDiff = void 0;
+  }
+
   getDiff(): Cache.DiffResult<any> {
     const options = this.getDiffOptions();
 
@@ -185,8 +189,9 @@ export class QueryInfo {
     diff: Cache.DiffResult<any> | null,
     options?: Cache.DiffOptions
   ) {
-    this.lastDiff = diff
-      ? {
+    this.lastDiff =
+      diff ?
+        {
           diff,
           options: options || this.getDiffOptions(),
         }
@@ -214,10 +219,10 @@ export class QueryInfo {
     }
   }
 
-  public readonly observableQuery: ObservableQuery<any> | null = null;
+  public readonly observableQuery: ObservableQuery<any, any> | null = null;
   private oqListener?: QueryListener;
 
-  setObservableQuery(oq: ObservableQuery<any> | null) {
+  setObservableQuery(oq: ObservableQuery<any, any> | null) {
     if (oq === this.observableQuery) return;
 
     if (this.oqListener) {
@@ -293,8 +298,6 @@ export class QueryInfo {
       // QueryInfo.prototype.
       this.cancel = QueryInfo.prototype.cancel;
 
-      this.subscriptions.forEach((sub) => sub.unsubscribe());
-
       const oq = this.observableQuery;
       if (oq) oq.stopPolling();
     }
@@ -361,11 +364,11 @@ export class QueryInfo {
       "variables" | "fetchPolicy" | "errorPolicy"
     >,
     cacheWriteBehavior: CacheWriteBehavior
-  ) {
+  ): typeof result {
+    result = { ...result };
     const merger = new DeepMerger();
-    const graphQLErrors = isNonEmptyArray(result.errors)
-      ? result.errors.slice(0)
-      : [];
+    const graphQLErrors =
+      isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
@@ -408,7 +411,10 @@ export class QueryInfo {
             });
 
             this.lastWrite = {
-              result,
+              // Make a shallow defensive copy of the result object, in case we
+              // later later modify result.data in place, since we don't want
+              // that mutation affecting the saved lastWrite.result.data.
+              result: { ...result },
               variables: options.variables,
               dmCount: destructiveMethodCounts.get(this.cache),
             };
@@ -470,20 +476,19 @@ export class QueryInfo {
             this.updateWatch(options.variables);
           }
 
-          // If we're allowed to write to the cache, and we can read a
-          // complete result from the cache, update result.data to be the
-          // result from the cache, rather than the raw network result.
-          // Set without setDiff to avoid triggering a notify call, since
-          // we have other ways of notifying for this result.
+          // If we're allowed to write to the cache, update result.data to be
+          // the result as re-read from the cache, rather than the raw network
+          // result. Set without setDiff to avoid triggering a notify call,
+          // since we have other ways of notifying for this result.
           this.updateLastDiff(diff, diffOptions);
-          if (diff.complete) {
-            result.data = diff.result;
-          }
+          result.data = diff.result;
         });
       } else {
         this.lastWrite = void 0;
       }
     }
+
+    return result;
   }
 
   public markReady() {

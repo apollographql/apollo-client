@@ -16,18 +16,13 @@ const { hasOwnProperty } = Object.prototype;
 // inference, but that approach has several fatal flaws (boolean becomes
 // true & false, and the inferred type ends up as unknown in many cases),
 // in addition to being nearly impossible to explain/understand.
-export type TupleToIntersection<T extends any[]> = T extends [infer A]
-  ? A
-  : T extends [infer A, infer B]
-  ? A & B
-  : T extends [infer A, infer B, infer C]
-  ? A & B & C
-  : T extends [infer A, infer B, infer C, infer D]
-  ? A & B & C & D
-  : T extends [infer A, infer B, infer C, infer D, infer E]
-  ? A & B & C & D & E
-  : T extends (infer U)[]
-  ? U
+export type TupleToIntersection<T extends any[]> =
+  T extends [infer A] ? A
+  : T extends [infer A, infer B] ? A & B
+  : T extends [infer A, infer B, infer C] ? A & B & C
+  : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D
+  : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E
+  : T extends (infer U)[] ? U
   : any;
 
 export function mergeDeep<T extends any[]>(
@@ -72,7 +67,7 @@ const defaultReconciler: ReconcilerFunction<any[]> = function (
 
 export class DeepMerger<TContextArgs extends any[]> {
   constructor(
-    private reconciler: ReconcilerFunction<TContextArgs> = defaultReconciler
+    private reconciler: ReconcilerFunction<TContextArgs> = defaultReconciler as any as ReconcilerFunction<TContextArgs>
   ) {}
 
   public merge(target: any, source: any, ...context: TContextArgs): any {

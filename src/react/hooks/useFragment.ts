@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import { equal } from "@wry/equality";
 
 import type { DeepPartial } from "../../utilities/index.js";
@@ -62,9 +62,11 @@ export function useFragment<TData = any, TVars = OperationVariables>(
   // Used for both getSnapshot and getServerSnapshot
   const getSnapshot = () => {
     const latestDiffToResult = diffToResult(latestDiff);
-    return resultRef.current &&
-      equal(resultRef.current.data, latestDiffToResult.data)
-      ? resultRef.current
+    return (
+        resultRef.current &&
+          equal(resultRef.current.data, latestDiffToResult.data)
+      ) ?
+        resultRef.current
       : (resultRef.current = latestDiffToResult);
   };
 

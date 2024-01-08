@@ -40,9 +40,9 @@ export const withState =
     > {
       state = {
         stateValue:
-          typeof initialState === "function"
-            ? initialState(this.props)
-            : initialState,
+          typeof initialState === "function" ?
+            initialState(this.props)
+          : initialState,
       };
 
       updateStateValue = (

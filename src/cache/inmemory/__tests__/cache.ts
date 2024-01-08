@@ -18,6 +18,8 @@ import { StoreReader } from "../readFromStore";
 import { StoreWriter } from "../writeToStore";
 import { ObjectCanon } from "../object-canon";
 import { TypePolicies } from "../policies";
+import { spyOnConsole } from "../../../testing/internal";
+import { defaultCacheSizes } from "../../../utilities";
 
 disableFragmentWarnings();
 
@@ -2118,15 +2120,17 @@ describe("Cache", () => {
 });
 
 describe("resultCacheMaxSize", () => {
-  const defaultMaxSize = Math.pow(2, 16);
-
   it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
     const cache = new InMemoryCache();
-    expect(cache["maybeBroadcastWatch"].options.max).toBe(defaultMaxSize);
-    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
-      defaultMaxSize
+    expect(cache["maybeBroadcastWatch"].options.max).toBe(
+      defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"]
     );
-    expect(cache["getFragmentDoc"].options.max).toBe(defaultMaxSize);
+    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
+      defaultCacheSizes["inMemoryCache.executeSelectionSet"]
+    );
+    expect(cache["getFragmentDoc"].options.max).toBe(
+      defaultCacheSizes["cache.fragmentQueryDocuments"]
+    );
   });
 
   it("configures max size on caches when resultCacheMaxSize is set", () => {
@@ -2136,7 +2140,9 @@ describe("resultCacheMaxSize", () => {
     expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
       resultCacheMaxSize
     );
-    expect(cache["getFragmentDoc"].options.max).toBe(defaultMaxSize);
+    expect(cache["getFragmentDoc"].options.max).toBe(
+      defaultCacheSizes["cache.fragmentQueryDocuments"]
+    );
   });
 });
 
@@ -3454,6 +3460,225 @@ describe("InMemoryCache#modify", () => {
 
     expect(cache.extract()).toEqual(snapshot);
   });
+
+  it("warns if `modify` returns a mixed array of objects and references", () => {
+    const cache = new InMemoryCache();
+    const query = gql`
+      query {
+        me {
+          id
+          books {
+            id
+            title
+          }
+        }
+      }
+    `;
+
+    interface Book {
+      __typename: "Book";
+      id: string;
+      title: string;
+    }
+
+    const book1: Book = { __typename: "Book", id: "1", title: "1984" };
+    const book2: Book = { __typename: "Book", id: "2", title: "The Odyssey" };
+    const book3: Book = { __typename: "Book", id: "3", title: "The Hobbit" };
+    const book4: Book = { __typename: "Book", id: "4", title: "The Swarm" };
+
+    cache.writeQuery({
+      query,
+      data: {
+        me: {
+          __typename: "User",
+          id: "42",
+          books: [book1, book2, book3],
+        },
+      },
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      me: {
+        __typename: "User",
+        books: [book1, book2, book3],
+        id: "42",
+      },
+    });
+
+    {
+      using consoleSpy = spyOnConsole("warn");
+      cache.modify<{ books: Book[] }>({
+        id: cache.identify({ __typename: "User", id: "42" }),
+        fields: {
+          books(existingBooks, { toReference }) {
+            return [toReference(existingBooks[2])!, book4];
+          },
+        },
+      });
+      expect(consoleSpy.warn).toHaveBeenLastCalledWith(
+        "cache.modify: Writing an array with a mix of both References and Objects will not result in the Objects being normalized correctly.\n" +
+          "Please convert the object instance %o to a Reference before writing it to the cache by calling `toReference(object, true)`.",
+        book4
+      );
+    }
+  });
+
+  it("warns if `modify` returns a Reference that is not part of the store as part of an array", () => {
+    const cache = new InMemoryCache();
+    const query = gql`
+      query {
+        me {
+          id
+          books {
+            id
+            title
+          }
+        }
+      }
+    `;
+
+    type Book = {
+      __typename: "Book";
+      id: string;
+      title: string;
+    };
+
+    const book1: Book = { __typename: "Book", id: "1", title: "1984" };
+    const book2: Book = { __typename: "Book", id: "2", title: "The Odyssey" };
+    const book3: Book = { __typename: "Book", id: "3", title: "The Hobbit" };
+    const book4: Book = { __typename: "Book", id: "4", title: "The Swarm" };
+
+    cache.writeQuery({
+      query,
+      data: {
+        me: {
+          __typename: "User",
+          id: "42",
+          books: [book1, book2, book3],
+        },
+      },
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      me: {
+        __typename: "User",
+        books: [book1, book2, book3],
+        id: "42",
+      },
+    });
+
+    {
+      using consoleSpy = spyOnConsole("warn");
+      cache.modify<{ books: Book[] }>({
+        id: cache.identify({ __typename: "User", id: "42" }),
+        fields: {
+          books(existingBooks, { toReference }) {
+            return [...existingBooks, toReference(book4)!];
+          },
+        },
+      });
+      expect(consoleSpy.warn).toHaveBeenLastCalledWith(
+        "cache.modify: You are trying to write a Reference that is not part of the store: %o\n" +
+          "Please make sure to set the `mergeIntoStore` parameter to `true` when creating a Reference that is not part of the store yet:\n" +
+          "`toReference(object, true)`",
+        { __ref: "Book:4" }
+      );
+    }
+
+    // reading the cache *looks* good to the user
+    expect(cache.readQuery({ query })).toEqual({
+      me: {
+        __typename: "User",
+        // this is what we're warning about - book 4 is not in the store
+        books: [book1, book2, book3],
+        id: "42",
+      },
+    });
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: { __typename: "Query", me: { __ref: "User:42" } },
+      "Book:1": book1,
+      "Book:2": book2,
+      "Book:3": book3,
+      // no Book:4
+      "User:42": {
+        __typename: "User",
+        id: "42",
+        // Book:4 here is a dead ref
+        books: [
+          { __ref: "Book:1" },
+          { __ref: "Book:2" },
+          { __ref: "Book:3" },
+          { __ref: "Book:4" },
+        ],
+      },
+    });
+  });
+
+  it("warns if `modify` returns a Reference that is not part of the store", () => {
+    const cache = new InMemoryCache();
+    const query = gql`
+      query {
+        me {
+          id
+        }
+      }
+    `;
+
+    type User = {
+      __typename: string;
+      id: string;
+    };
+
+    cache.writeQuery({
+      query,
+      data: {
+        me: {
+          __typename: "User",
+          id: "42",
+        },
+      },
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      me: {
+        __typename: "User",
+        id: "42",
+      },
+    });
+
+    {
+      using consoleSpy = spyOnConsole("warn");
+      cache.modify<{ me: User }>({
+        id: "ROOT_QUERY",
+        fields: {
+          me(existingUser, { toReference }) {
+            return toReference({
+              __typename: "User",
+              id: "43",
+            })!;
+          },
+        },
+      });
+      expect(consoleSpy.warn).toHaveBeenLastCalledWith(
+        "cache.modify: You are trying to write a Reference that is not part of the store: %o\n" +
+          "Please make sure to set the `mergeIntoStore` parameter to `true` when creating a Reference that is not part of the store yet:\n" +
+          "`toReference(object, true)`",
+        { __ref: "User:43" }
+      );
+    }
+
+    // reading the cache returns `null`
+    expect(cache.readQuery({ query })).toEqual(null);
+    expect(cache.extract()).toEqual({
+      // User:43 is a dead ref
+      ROOT_QUERY: { __typename: "Query", me: { __ref: "User:43" } },
+      "User:42": {
+        __typename: "User",
+        id: "42",
+      },
+      // no User:43
+    });
+  });
 });
 
 describe("ReactiveVar and makeVar", () => {
@@ -3815,6 +4040,7 @@ describe("ReactiveVar and makeVar", () => {
     let broadcastCount = 0;
     cache["broadcastWatches"] = function () {
       ++broadcastCount;
+      // @ts-expect-error
       return broadcast.apply(this, arguments);
     };
 

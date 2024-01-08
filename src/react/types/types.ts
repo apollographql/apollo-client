@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type * as ReactTypes from "react";
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -20,11 +20,13 @@ import type {
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
+  ErrorPolicy,
+  RefetchWritePolicy,
 } from "../../core/index.js";
 
 /* QueryReference type */
 
-export type { QueryReference } from "../cache/QueryReference.js";
+export type { QueryReference } from "../internal/index.js";
 
 /* Common types */
 
@@ -93,7 +95,7 @@ export interface QueryDataOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {
-  children?: (result: QueryResult<TData, TVariables>) => ReactNode;
+  children?: (result: QueryResult<TData, TVariables>) => ReactTypes.ReactNode;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
@@ -186,6 +188,73 @@ export interface BackgroundQueryHookOptions<
    * ```
    */
   skip?: boolean;
+}
+
+export type LoadableQueryHookFetchPolicy = Extract<
+  WatchQueryFetchPolicy,
+  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
+>;
+
+export interface LoadableQueryHookOptions {
+  /**
+   * @deprecated
+   * Using `canonizeResults` can result in memory leaks so we generally do not
+   * recommend using this option anymore.
+   * A future version of Apollo Client will contain a similar feature without
+   * the risk of memory leaks.
+   *
+   * Whether to canonize cache results before returning them. Canonization
+   * takes some extra time, but it speeds up future deep equality comparisons.
+   * Defaults to false.
+   */
+  canonizeResults?: boolean;
+  /**
+   * The instance of {@link ApolloClient} to use to execute the query.
+   *
+   * By default, the instance that's passed down via context is used, but you
+   * can provide a different instance here.
+   */
+  client?: ApolloClient<any>;
+  /**
+   * Context to be passed to link execution chain
+   */
+  context?: DefaultContext;
+  /**
+   * Specifies the {@link ErrorPolicy} to be used for this query
+   */
+  errorPolicy?: ErrorPolicy;
+  /**
+   *
+   * Specifies how the query interacts with the Apollo Client cache during
+   * execution (for example, whether it checks the cache for results before
+   * sending a request to the server).
+   *
+   * For details, see {@link https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy | Setting a fetch policy}.
+   *
+   * The default value is `cache-first`.
+   */
+  fetchPolicy?: LoadableQueryHookFetchPolicy;
+  /**
+   * A unique identifier for the query. Each item in the array must be a stable
+   * identifier to prevent infinite fetches.
+   *
+   * This is useful when using the same query and variables combination in more
+   * than one component, otherwise the components may clobber each other. This
+   * can also be used to force the query to re-evaluate fresh.
+   */
+  queryKey?: string | number | any[];
+  /**
+   * Specifies whether a {@link NetworkStatus.refetch} operation should merge
+   * incoming field data with existing data, or overwrite the existing data.
+   * Overwriting is probably preferable, but merging is currently the default
+   * behavior, for backwards compatibility with Apollo Client 3.x.
+   */
+  refetchWritePolicy?: RefetchWritePolicy;
+  /**
+   * Allow returning incomplete data from the cache when a larger query cannot
+   * be fully satisfied by the cache, instead of returning nothing.
+   */
+  returnPartialData?: boolean;
 }
 
 /**

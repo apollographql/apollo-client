@@ -11,7 +11,6 @@ import type { GraphQLError } from 'graphql';
 import { InvariantError } from 'ts-invariant';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
-import { print as print_3 } from 'graphql';
 
 // @public (undocumented)
 class ApolloLink {
@@ -31,12 +30,18 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -72,7 +77,7 @@ export type ClientParseError = InvariantError & {
 // @public (undocumented)
 export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const createSignalIfSupported: () => {
     controller: boolean;
     signal: boolean;
@@ -181,31 +186,19 @@ export class HttpLink extends ApolloLink {
     constructor(options?: HttpOptions);
     // (undocumented)
     options: HttpOptions;
-    // (undocumented)
-    requester: RequestHandler;
 }
 
 // @public (undocumented)
 export interface HttpOptions {
-    // (undocumented)
     credentials?: string;
-    // (undocumented)
     fetch?: WindowOrWorkerGlobalScope["fetch"];
-    // (undocumented)
     fetchOptions?: any;
-    // (undocumented)
     headers?: Record<string, string>;
-    // (undocumented)
     includeExtensions?: boolean;
-    // (undocumented)
     includeUnusedVariables?: boolean;
-    // (undocumented)
     preserveHeaderCase?: boolean;
-    // (undocumented)
     print?: Printer;
-    // (undocumented)
     uri?: string | UriFunction;
-    // (undocumented)
     useGETForQueries?: boolean;
 }
 
@@ -261,7 +254,9 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]): 
 type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
-const print_2: typeof print_3;
+const print_2: ((ast: ASTNode) => string) & {
+    reset(): void;
+};
 
 // @public (undocumented)
 interface Printer {
@@ -278,7 +273,7 @@ type RequestHandler = (operation: Operation, forward: NextLink) => Observable<Fe
 //
 // @public (undocumented)
 export function rewriteURIForGET(chosenURI: string, body: Body_2): {
-    parseError: any;
+    parseError: unknown;
     newURI?: undefined;
 } | {
     newURI: string;

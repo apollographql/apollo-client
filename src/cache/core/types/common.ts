@@ -5,6 +5,7 @@ import type {
   StoreObject,
   StoreValue,
   isReference,
+  AsStoreObject,
 } from "../../../utilities/index.js";
 
 import type { StorageType } from "../../inmemory/policies.js";
@@ -86,6 +87,10 @@ declare const _invalidateModifier: unique symbol;
 export interface InvalidateModifier {
   [_invalidateModifier]: true;
 }
+declare const _ignoreModifier: unique symbol;
+export interface IgnoreModifier {
+  [_ignoreModifier]: true;
+}
 
 export type ModifierDetails = {
   DELETE: DeleteModifier;
@@ -104,19 +109,20 @@ export type Modifier<T> = (
   details: ModifierDetails
 ) => T | DeleteModifier | InvalidateModifier;
 
-type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Record<
-  string,
-  any
->[]
-  ? Readonly<StoreVal> | readonly Reference[]
-  : StoreVal extends Record<string, any>
-  ? StoreVal | Reference
+type StoreObjectValueMaybeReference<StoreVal> =
+  StoreVal extends Array<Record<string, any>> ?
+    StoreVal extends Array<infer Item> ?
+      Item extends Record<string, any> ?
+        ReadonlyArray<AsStoreObject<Item> | Reference>
+      : never
+    : never
+  : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference
   : StoreVal;
 
 export type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<
-  Entity[keyof Entity] extends infer Value
-    ? StoreObjectValueMaybeReference<Exclude<Value, undefined>>
-    : never
+  Entity[keyof Entity] extends infer Value ?
+    StoreObjectValueMaybeReference<Exclude<Value, undefined>>
+  : never
 >;
 
 export type Modifiers<T extends Record<string, any> = Record<string, unknown>> =

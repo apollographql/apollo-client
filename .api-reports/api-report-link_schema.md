@@ -29,12 +29,18 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -156,13 +162,9 @@ type RequestHandler = (operation: Operation, forward: NextLink) => Observable<Fe
 export namespace SchemaLink {
     // (undocumented)
     export interface Options {
-        // (undocumented)
         context?: ResolverContext | ResolverContextFunction;
-        // (undocumented)
         rootValue?: any;
-        // (undocumented)
         schema: GraphQLSchema;
-        // (undocumented)
         validate?: boolean;
     }
     // (undocumented)

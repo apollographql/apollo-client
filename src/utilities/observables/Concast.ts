@@ -147,9 +147,9 @@ export class Concast<T> extends Observable<T> {
   // Any Concast object can be trivially converted to a Promise, without
   // having to create a new wrapper Observable. This promise provides an
   // easy way to observe the final state of the Concast.
-  private resolve: (result?: T | PromiseLike<T>) => void;
-  private reject: (reason: any) => void;
-  public readonly promise = new Promise<T>((resolve, reject) => {
+  private resolve!: (result?: T | PromiseLike<T>) => void;
+  private reject!: (reason: any) => void;
+  public readonly promise = new Promise<T | undefined>((resolve, reject) => {
     this.resolve = resolve;
     this.reject = reject;
   });
@@ -210,7 +210,10 @@ export class Concast<T> extends Observable<T> {
           // followed by a 'complete' message (see addObserver).
           iterateObserversSafely(this.observers, "complete");
         } else if (isPromiseLike(value)) {
-          value.then((obs) => (this.sub = obs.subscribe(this.handlers)));
+          value.then(
+            (obs) => (this.sub = obs.subscribe(this.handlers)),
+            this.handlers.error
+          );
         } else {
           this.sub = value.subscribe(this.handlers);
         }

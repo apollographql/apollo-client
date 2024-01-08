@@ -264,12 +264,12 @@ For more information, see [Updating the cache after a mutation](/react/data/muta
 
 ###### `optimisticResponse`
 
-`Object`
+`TData | (vars: TVariables, { IGNORE }: { IGNORE: IgnoreModifier }) => TData`
 </td>
 
 <td>
 
-If provided, Apollo Client caches this temporary (and potentially incorrect) response until the mutation completes, enabling more responsive UI updates.
+By providing either an object or a callback function that, when invoked after a mutation, allows you to return optimistic data and optionally skip updates via the `IGNORE` sentinel object, Apollo Client caches this temporary (and potentially incorrect) response until the mutation completes, enabling more responsive UI updates.
 
 For more information, see [Optimistic mutation results](/react/performance/optimistic-ui/).
 

@@ -250,17 +250,15 @@ interface VariablesCaseVariables {
 function useVariablesQueryCase() {
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const query: TypedDocumentNode<
-    VariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
+  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+    gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
       }
-    }
-  `;
+    `;
 
   const mocks = CHARACTERS.map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
@@ -357,7 +355,7 @@ describe("useSuspenseQuery", () => {
 
     const Component = () => {
       const result = useSuspenseQuery(query);
-      ProfiledApp.updateSnapshot(result);
+      ProfiledApp.replaceSnapshot(result);
       return <div>{result.data.greeting}</div>;
     };
 
@@ -805,8 +803,12 @@ describe("useSuspenseQuery", () => {
 
     expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
 
-    link.simulateResult({ result: { data: { greeting: "Hello" } } });
-    link.simulateComplete();
+    await act(() => {
+      link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+      // Ensure simulateResult will deliver the result since its wrapped with
+      // setTimeout
+      jest.advanceTimersByTime(10);
+    });
 
     expect(client.getObservableQueries().size).toBe(1);
     expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -817,10 +819,6 @@ describe("useSuspenseQuery", () => {
     expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
     jest.useRealTimers();
-
-    // Avoid act warnings for a suspended resource
-    // eslint-disable-next-line testing-library/no-unnecessary-act
-    await act(() => wait(0));
   });
 
   it("has configurable auto dispose timer if the component never renders again after suspending", async () => {
@@ -871,8 +869,12 @@ describe("useSuspenseQuery", () => {
 
     expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
 
-    link.simulateResult({ result: { data: { greeting: "Hello" } } });
-    link.simulateComplete();
+    await act(() => {
+      link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+      // Ensure simulateResult will deliver the result since its wrapped with
+      // setTimeout
+      jest.advanceTimersByTime(10);
+    });
 
     expect(client.getObservableQueries().size).toBe(1);
     expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -883,10 +885,6 @@ describe("useSuspenseQuery", () => {
     expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
     jest.useRealTimers();
-
-    // Avoid act warnings for a suspended resource
-    // eslint-disable-next-line testing-library/no-unnecessary-act
-    await act(() => wait(0));
   });
 
   it("cancels auto dispose if the component renders before timer finishes", async () => {
@@ -936,6 +934,57 @@ describe("useSuspenseQuery", () => {
 
     expect(client.getObservableQueries().size).toBe(1);
     expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+    jest.useRealTimers();
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/11270
+  it("does not leave component suspended if query completes if request takes longer than auto dispose timeout", async () => {
+    jest.useFakeTimers();
+    const { query } = useSimpleQueryCase();
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      defaultOptions: {
+        react: {
+          suspense: {
+            autoDisposeTimeoutMs: 10,
+          },
+        },
+      },
+    });
+
+    function App() {
+      return (
+        <ApolloProvider client={client}>
+          <Suspense fallback="Loading greeting...">
+            <Greeting />
+          </Suspense>
+        </ApolloProvider>
+      );
+    }
+
+    function Greeting() {
+      const { data } = useSuspenseQuery(query);
+
+      return <span>{data.greeting}</span>;
+    }
+
+    render(<App />);
+
+    // Ensure <Greeting /> suspends immediately
+    expect(screen.getByText("Loading greeting...")).toBeInTheDocument();
+
+    jest.advanceTimersByTime(20);
+
+    link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
+
+    await waitFor(() => {
+      expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Hello")).toBeInTheDocument();
 
     jest.useRealTimers();
   });
@@ -1615,17 +1664,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("uses cached result with network request and does not suspend when switching back to already used variables while using `cache-and-network` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -1732,17 +1779,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("refetches and suspends when switching back to already used variables while using `network-only` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -1838,17 +1883,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("refetches and suspends when switching back to already used variables while using `no-cache` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -3599,8 +3642,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(client.getObservableQueries().size).toBe(0);
+    await waitFor(() => expect(client.getObservableQueries().size).toBe(0));
   });
 
   it('throws network errors when errorPolicy is set to "none"', async () => {
@@ -5740,12 +5782,12 @@ describe("useSuspenseQuery", () => {
 
       const todo = data?.todo;
 
-      return todo ? (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      ) : null;
+      return todo ?
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        : null;
     }
 
     render(<App />);
@@ -5840,12 +5882,12 @@ describe("useSuspenseQuery", () => {
 
       const todo = data?.todo;
 
-      return todo ? (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      ) : null;
+      return todo ?
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        : null;
     }
 
     render(<App />);

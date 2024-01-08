@@ -814,16 +814,24 @@ describe("cache-and-network", function () {
 
 describe("nextFetchPolicy", () => {
   type TData = {
-    linkCounter: number;
-    opName: string;
-    opVars: Record<string, any>;
+    echo: {
+      linkCounter: number;
+      opName: string;
+      opVars: Record<string, any>;
+    };
+  };
+
+  type TVars = {
+    refetching?: boolean;
   };
 
   const EchoQuery: TypedDocumentNode<TData> = gql`
     query EchoQuery {
-      linkCounter
-      opName
-      opVars
+      echo {
+        linkCounter
+        opName
+        opVars
+      }
     }
   `;
 
@@ -835,9 +843,12 @@ describe("nextFetchPolicy", () => {
           setTimeout(() => {
             observer.next({
               data: {
-                linkCounter: ++linkCounter,
-                opName: request.operationName,
-                opVars: request.variables,
+                echo: {
+                  __typename: "Echo",
+                  linkCounter: ++linkCounter,
+                  opName: request.operationName,
+                  opVars: request.variables,
+                },
               },
             });
             observer.complete();
@@ -846,9 +857,9 @@ describe("nextFetchPolicy", () => {
     );
   }
 
-  const checkNextFetchPolicy = <TData, TVars extends object>(args: {
+  const checkNextFetchPolicy = (args: {
     fetchPolicy: WatchQueryFetchPolicy;
-    nextFetchPolicy: WatchQueryOptions<TVars, TData>["nextFetchPolicy"];
+    nextFetchPolicy: WatchQueryOptions<{}, TData>["nextFetchPolicy"];
     useDefaultOptions: boolean;
     onResult(info: {
       count: number;
@@ -860,17 +871,20 @@ describe("nextFetchPolicy", () => {
   }) =>
     itAsync(
       `transitions ${args.fetchPolicy} to ${
-        typeof args.nextFetchPolicy === "function"
-          ? args.nextFetchPolicy.name
-          : args.nextFetchPolicy
+        typeof args.nextFetchPolicy === "function" ?
+          args.nextFetchPolicy.name
+        : args.nextFetchPolicy
       } (${args.useDefaultOptions ? "" : "not "}using defaults)`,
       (resolve, reject) => {
         const client = new ApolloClient({
           link: makeLink(),
-          cache: new InMemoryCache(),
+          cache: new InMemoryCache({
+            addTypename: true,
+          }),
           defaultOptions: {
-            watchQuery: args.useDefaultOptions
-              ? {
+            watchQuery:
+              args.useDefaultOptions ?
+                {
                   nextFetchPolicy: args.nextFetchPolicy,
                 }
               : {},
@@ -917,7 +931,8 @@ describe("nextFetchPolicy", () => {
   }) => {
     if (count === 1) {
       expect(result.loading).toBe(false);
-      expect(result.data).toEqual({
+      expect(result.data.echo).toEqual({
+        __typename: "Echo",
         linkCounter: 1,
         opName: "EchoQuery",
         opVars: {},
@@ -930,7 +945,8 @@ describe("nextFetchPolicy", () => {
           refetching: true,
         })
         .then((result) => {
-          expect(result.data).toEqual({
+          expect(result.data.echo).toEqual({
+            __typename: "Echo",
             linkCounter: 2,
             opName: "EchoQuery",
             opVars: {
@@ -941,7 +957,8 @@ describe("nextFetchPolicy", () => {
         .catch(reject);
     } else if (count === 2) {
       expect(result.loading).toBe(false);
-      expect(result.data).toEqual({
+      expect(result.data.echo).toEqual({
+        __typename: "Echo",
         linkCounter: 2,
         opName: "EchoQuery",
         opVars: {
@@ -959,7 +976,8 @@ describe("nextFetchPolicy", () => {
         })
         .then((result) => {
           expect(result.loading).toBe(false);
-          expect(result.data).toEqual({
+          expect(result.data.echo).toEqual({
+            __typename: "Echo",
             linkCounter: 3,
             opName: "EchoQuery",
             opVars: {
@@ -973,7 +991,8 @@ describe("nextFetchPolicy", () => {
       expect(observable.options.fetchPolicy).toBe("cache-first");
     } else if (count === 3) {
       expect(result.loading).toBe(false);
-      expect(result.data).toEqual({
+      expect(result.data.echo).toEqual({
+        __typename: "Echo",
         linkCounter: 3,
         opName: "EchoQuery",
         opVars: {
@@ -1044,7 +1063,8 @@ describe("nextFetchPolicy", () => {
   }) => {
     if (count === 1) {
       expect(result.loading).toBe(false);
-      expect(result.data).toEqual({
+      expect(result.data.echo).toEqual({
+        __typename: "Echo",
         linkCounter: 1,
         opName: "EchoQuery",
         opVars: {},
@@ -1057,7 +1077,8 @@ describe("nextFetchPolicy", () => {
           refetching: true,
         })
         .then((result) => {
-          expect(result.data).toEqual({
+          expect(result.data.echo).toEqual({
+            __typename: "Echo",
             linkCounter: 2,
             opName: "EchoQuery",
             opVars: {
@@ -1068,7 +1089,8 @@ describe("nextFetchPolicy", () => {
         .catch(reject);
     } else if (count === 2) {
       expect(result.loading).toBe(false);
-      expect(result.data).toEqual({
+      expect(result.data.echo).toEqual({
+        __typename: "Echo",
         linkCounter: 2,
         opName: "EchoQuery",
         opVars: {
@@ -1086,7 +1108,8 @@ describe("nextFetchPolicy", () => {
         })
         .then((result) => {
           expect(result.loading).toBe(false);
-          expect(result.data).toEqual({
+          expect(result.data.echo).toEqual({
+            __typename: "Echo",
             linkCounter: 3,
             opName: "EchoQuery",
             opVars: {
@@ -1100,7 +1123,8 @@ describe("nextFetchPolicy", () => {
       // expect(observable.options.fetchPolicy).toBe("cache-and-network");
     } else if (count === 3) {
       expect(result.loading).toBe(true);
-      expect(result.data).toEqual({
+      expect(result.data.echo).toEqual({
+        __typename: "Echo",
         linkCounter: 2,
         opName: "EchoQuery",
         opVars: {
@@ -1112,7 +1136,8 @@ describe("nextFetchPolicy", () => {
       expect(observable.options.fetchPolicy).toBe("cache-first");
     } else if (count === 4) {
       expect(result.loading).toBe(false);
-      expect(result.data).toEqual({
+      expect(result.data.echo).toEqual({
+        __typename: "Echo",
         linkCounter: 3,
         opName: "EchoQuery",
         opVars: {
@@ -1191,7 +1216,8 @@ describe("nextFetchPolicy", () => {
   }) => {
     if (count === 1) {
       expect(result.loading).toBe(false);
-      expect(result.data).toEqual({
+      expect(result.data.echo).toEqual({
+        __typename: "Echo",
         linkCounter: 1,
         opName: "EchoQuery",
         opVars: {},
@@ -1204,7 +1230,8 @@ describe("nextFetchPolicy", () => {
           refetching: true,
         })
         .then((result) => {
-          expect(result.data).toEqual({
+          expect(result.data.echo).toEqual({
+            __typename: "Echo",
             linkCounter: 2,
             opName: "EchoQuery",
             opVars: {
@@ -1215,7 +1242,8 @@ describe("nextFetchPolicy", () => {
         .catch(reject);
     } else if (count === 2) {
       expect(result.loading).toBe(false);
-      expect(result.data).toEqual({
+      expect(result.data.echo).toEqual({
+        __typename: "Echo",
         linkCounter: 2,
         opName: "EchoQuery",
         opVars: {
@@ -1233,7 +1261,8 @@ describe("nextFetchPolicy", () => {
         })
         .then((result) => {
           expect(result.loading).toBe(false);
-          expect(result.data).toEqual({
+          expect(result.data.echo).toEqual({
+            __typename: "Echo",
             linkCounter: 2,
             opName: "EchoQuery",
             opVars: {
@@ -1250,7 +1279,8 @@ describe("nextFetchPolicy", () => {
       expect(observable.options.fetchPolicy).toBe("cache-first");
     } else if (count === 3) {
       expect(result.loading).toBe(false);
-      expect(result.data).toEqual({
+      expect(result.data.echo).toEqual({
+        __typename: "Echo",
         linkCounter: 2,
         opName: "EchoQuery",
         opVars: {

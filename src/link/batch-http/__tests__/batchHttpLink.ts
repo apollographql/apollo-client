@@ -35,10 +35,11 @@ function makeCallback<TArgs extends any[]>(
 ) {
   return function () {
     try {
+      // @ts-expect-error
       callback.apply(this, arguments);
       resolve();
     } catch (error) {
-      reject(error);
+      reject(error as Error);
     }
   } as typeof callback;
 }
@@ -472,7 +473,7 @@ describe("SharedHttpTest", () => {
 
           after();
         } catch (e) {
-          reject(e);
+          reject(e as Error);
         }
       },
     });
@@ -523,6 +524,9 @@ describe("SharedHttpTest", () => {
       expect(subscriber.next).toHaveBeenCalledTimes(2);
       expect(subscriber.complete).toHaveBeenCalledTimes(2);
       expect(subscriber.error).not.toHaveBeenCalled();
+      // only one call because batchHttpLink can handle more than one subscriber
+      // without starting a new request
+      expect(fetchMock.calls().length).toBe(1);
       resolve();
     }, 50);
   });

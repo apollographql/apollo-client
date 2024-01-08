@@ -10,7 +10,6 @@ import type { ExecutionResult } from 'graphql';
 import type { GraphQLError } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
-import { print as print_3 } from 'graphql';
 
 // @public (undocumented)
 class ApolloLink {
@@ -30,12 +29,18 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -60,7 +65,7 @@ export namespace BatchHttpLink {
 
 // Warning: (ae-forgotten-export) The symbol "ApolloLink" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export class BatchHttpLink extends ApolloLink {
     constructor(fetchParams?: BatchHttpLink.Options);
     // (undocumented)
@@ -71,17 +76,11 @@ export class BatchHttpLink extends ApolloLink {
 namespace BatchLink {
     // (undocumented)
     interface Options {
-        // (undocumented)
         batchDebounce?: boolean;
         // Warning: (ae-forgotten-export) The symbol "BatchHandler" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
         batchHandler?: BatchHandler;
-        // (undocumented)
         batchInterval?: number;
-        // (undocumented)
         batchKey?: (operation: Operation) => string;
-        // (undocumented)
         batchMax?: number;
     }
 }
@@ -161,29 +160,17 @@ interface GraphQLRequest<TVariables = Record<string, any>> {
 
 // @public (undocumented)
 interface HttpOptions {
-    // (undocumented)
     credentials?: string;
-    // (undocumented)
     fetch?: WindowOrWorkerGlobalScope["fetch"];
-    // (undocumented)
     fetchOptions?: any;
-    // (undocumented)
     headers?: Record<string, string>;
-    // (undocumented)
     includeExtensions?: boolean;
-    // (undocumented)
     includeUnusedVariables?: boolean;
-    // (undocumented)
     preserveHeaderCase?: boolean;
     // Warning: (ae-forgotten-export) The symbol "Printer" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     print?: Printer;
     // Warning: (ae-forgotten-export) The symbol "UriFunction" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     uri?: string | UriFunction;
-    // (undocumented)
     useGETForQueries?: boolean;
 }
 
@@ -226,7 +213,9 @@ interface Operation {
 type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
-const print_2: typeof print_3;
+const print_2: ((ast: ASTNode) => string) & {
+    reset(): void;
+};
 
 // @public (undocumented)
 interface Printer {

@@ -1,6 +1,6 @@
 import { invariant } from "../../utilities/globals/index.js";
 
-import * as React from "react";
+import * as React from "rehackt";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { equal } from "@wry/equality";
 
@@ -302,8 +302,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
   // useQuery method, so we can safely use these members in other/later methods
   // without worrying they might be uninitialized.
   private renderPromises: ApolloContextValue["renderPromises"];
-  private queryHookOptions: QueryHookOptions<TData, TVariables>;
-  private watchQueryOptions: WatchQueryOptions<TVariables, TData>;
+  private queryHookOptions!: QueryHookOptions<TData, TVariables>;
+  private watchQueryOptions!: WatchQueryOptions<TVariables, TData>;
 
   private useOptions(options: QueryHookOptions<TData, TVariables>) {
     const watchQueryOptions = this.createWatchQueryOptions(
@@ -492,8 +492,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
   private onCompleted(data: TData) {}
   private onError(error: ApolloError) {}
 
-  private observable: ObservableQuery<TData, TVariables>;
-  private obsQueryFields: Omit<
+  private observable!: ObservableQuery<TData, TVariables>;
+  private obsQueryFields!: Omit<
     ObservableQueryFields<TData, TVariables>,
     "variables"
   >;
@@ -583,8 +583,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
   private toApolloError(
     result: ApolloQueryResult<TData>
   ): ApolloError | undefined {
-    return isNonEmptyArray(result.errors)
-      ? new ApolloError({ graphQLErrors: result.errors })
+    return isNonEmptyArray(result.errors) ?
+        new ApolloError({ graphQLErrors: result.errors })
       : result.error;
   }
 

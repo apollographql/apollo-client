@@ -8,8 +8,8 @@ import { isArray } from "./helpers.js";
 
 function shallowCopy<T>(value: T): T {
   if (isObjectOrArray(value)) {
-    return isArray(value)
-      ? (value.slice(0) as any as T)
+    return isArray(value) ?
+        (value.slice(0) as any as T)
       : { __proto__: Object.getPrototypeOf(value), ...value };
   }
   return value;
@@ -195,35 +195,3 @@ type SortedKeysInfo = {
   sorted: string[];
   json: string;
 };
-
-// Since the keys of canonical objects are always created in lexicographically
-// sorted order, we can use the ObjectCanon to implement a fast and stable
-// version of JSON.stringify, which automatically sorts object keys.
-export const canonicalStringify = Object.assign(
-  function (value: any): string {
-    if (isObjectOrArray(value)) {
-      if (stringifyCanon === void 0) {
-        resetCanonicalStringify();
-      }
-      const canonical = stringifyCanon.admit(value);
-      let json = stringifyCache.get(canonical);
-      if (json === void 0) {
-        stringifyCache.set(canonical, (json = JSON.stringify(canonical)));
-      }
-      return json;
-    }
-    return JSON.stringify(value);
-  },
-  {
-    reset: resetCanonicalStringify,
-  }
-);
-
-// Can be reset by calling canonicalStringify.reset().
-let stringifyCanon: ObjectCanon;
-let stringifyCache: WeakMap<object, string>;
-
-function resetCanonicalStringify() {
-  stringifyCanon = new ObjectCanon();
-  stringifyCache = new (canUseWeakMap ? WeakMap : Map)();
-}

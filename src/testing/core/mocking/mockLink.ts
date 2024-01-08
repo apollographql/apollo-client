@@ -19,16 +19,22 @@ import {
   print,
 } from "../../../utilities/index.js";
 
-export type ResultFunction<T> = () => T;
+export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
+
+export type VariableMatcher<V = Record<string, any>> = (
+  variables: V
+) => boolean;
 
 export interface MockedResponse<
   TData = Record<string, any>,
   TVariables = Record<string, any>,
 > {
   request: GraphQLRequest<TVariables>;
-  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
+  maxUsageCount?: number;
+  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;
   error?: Error;
   delay?: number;
+  variableMatcher?: VariableMatcher<TVariables>;
   newData?: ResultFunction<FetchResult>;
 }
 
@@ -45,13 +51,13 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
 }
 
 export class MockLink extends ApolloLink {
-  public operation: Operation;
+  public operation!: Operation;
   public addTypename: Boolean = true;
   public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
-    mockedResponses: ReadonlyArray<MockedResponse>,
+    mockedResponses: ReadonlyArray<MockedResponse<any, any>>,
     addTypename: Boolean = true,
     options: MockLinkOptions = Object.create(null)
   ) {
@@ -87,10 +93,14 @@ export class MockLink extends ApolloLink {
     const unmatchedVars: Array<Record<string, any>> = [];
     const requestVariables = operation.variables || {};
     const mockedResponses = this.mockedResponsesByKey[key];
-    const responseIndex = mockedResponses
-      ? mockedResponses.findIndex((res, index) => {
+    const responseIndex =
+      mockedResponses ?
+        mockedResponses.findIndex((res, index) => {
           const mockedResponseVars = res.request.variables || {};
           if (equal(requestVariables, mockedResponseVars)) {
+            return true;
+          }
+          if (res.variableMatcher && res.variableMatcher(operation.variables)) {
             return true;
           }
           unmatchedVars.push(mockedResponseVars);
@@ -108,14 +118,14 @@ export class MockLink extends ApolloLink {
         `No more mocked responses for the query: ${print(operation.query)}
 Expected variables: ${stringifyForDisplay(operation.variables)}
 ${
-  unmatchedVars.length > 0
-    ? `
+  unmatchedVars.length > 0 ?
+    `
 Failed to match ${unmatchedVars.length} mock${
-        unmatchedVars.length === 1 ? "" : "s"
-      } for this query. The mocked response had the following variables:
+      unmatchedVars.length === 1 ? "" : "s"
+    } for this query. The mocked response had the following variables:
 ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
 `
-    : ""
+  : ""
 }`
       );
 
@@ -127,11 +137,14 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
         );
       }
     } else {
-      mockedResponses.splice(responseIndex, 1);
-
+      if (response.maxUsageCount! > 1) {
+        response.maxUsageCount!--;
+      } else {
+        mockedResponses.splice(responseIndex, 1);
+      }
       const { newData } = response;
       if (newData) {
-        response.result = newData();
+        response.result = newData(operation.variables);
         mockedResponses.push(response);
       }
 
@@ -164,9 +177,9 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
             } else {
               if (response.result) {
                 observer.next(
-                  typeof response.result === "function"
-                    ? (response.result as ResultFunction<FetchResult>)()
-                    : response.result
+                  typeof response.result === "function" ?
+                    response.result(operation.variables)
+                  : response.result
                 );
               }
               observer.complete();
@@ -195,7 +208,33 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
     if (query) {
       newMockedResponse.request.query = query;
     }
+
+    mockedResponse.maxUsageCount = mockedResponse.maxUsageCount ?? 1;
+    invariant(
+      mockedResponse.maxUsageCount > 0,
+      `Mock response maxUsageCount must be greater than 0, %s given`,
+      mockedResponse.maxUsageCount
+    );
+
+    this.normalizeVariableMatching(newMockedResponse);
     return newMockedResponse;
+  }
+
+  private normalizeVariableMatching(mockedResponse: MockedResponse) {
+    const variables = mockedResponse.request.variables;
+    if (mockedResponse.variableMatcher && variables) {
+      throw new Error(
+        "Mocked response should contain either variableMatcher or request.variables"
+      );
+    }
+
+    if (!mockedResponse.variableMatcher) {
+      mockedResponse.variableMatcher = (vars) => {
+        const requestVariables = vars || {};
+        const mockedResponseVariables = variables || {};
+        return equal(requestVariables, mockedResponseVariables);
+      };
+    }
   }
 }
 

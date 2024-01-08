@@ -1,4 +1,5 @@
-import * as React from "react";
+import * as React from "rehackt";
+import type * as ReactTypes from "react";
 import type { ApolloClient } from "../../core/index.js";
 import { canUseSymbol } from "../../utilities/index.js";
 import type { RenderPromises } from "../ssr/index.js";
@@ -13,11 +14,10 @@ export interface ApolloContextValue {
 // (which can lead to problems like having an Apollo Client instance added
 // in one context, then attempting to retrieve it from another different
 // context), a single Apollo context is created and tracked in global state.
-const contextKey = canUseSymbol
-  ? Symbol.for("__APOLLO_CONTEXT__")
-  : "__APOLLO_CONTEXT__";
+const contextKey =
+  canUseSymbol ? Symbol.for("__APOLLO_CONTEXT__") : "__APOLLO_CONTEXT__";
 
-export function getApolloContext(): React.Context<ApolloContextValue> {
+export function getApolloContext(): ReactTypes.Context<ApolloContextValue> {
   invariant(
     "createContext" in React,
     "Invoking `getApolloContext` in an environment where `React.createContext` is not available.\n" +

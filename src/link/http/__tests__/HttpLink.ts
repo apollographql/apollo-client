@@ -92,10 +92,11 @@ function makeCallback<TArgs extends any[]>(
 ) {
   return function () {
     try {
+      // @ts-expect-error
       callback.apply(this, arguments);
       resolve();
     } catch (error) {
-      reject(error);
+      reject(error as Error);
     }
   } as typeof callback;
 }
@@ -633,6 +634,7 @@ describe("HttpLink", () => {
         expect(subscriber.next).toHaveBeenCalledTimes(2);
         expect(subscriber.complete).toHaveBeenCalledTimes(2);
         expect(subscriber.error).not.toHaveBeenCalled();
+        expect(fetchMock.calls().length).toBe(2);
         resolve();
       }, 50);
     });
@@ -1202,7 +1204,7 @@ describe("HttpLink", () => {
         reject("warning wasn't called");
       } catch (e) {
         makeCallback(resolve, reject, () =>
-          expect(e.message).toMatch(/has not been found globally/)
+          expect((e as Error).message).toMatch(/has not been found globally/)
         )();
       }
     });
@@ -1214,7 +1216,7 @@ describe("HttpLink", () => {
         reject("warning wasn't called");
       } catch (e) {
         makeCallback(resolve, reject, () =>
-          expect(e.message).toMatch(/has not been found globally/)
+          expect((e as Error).message).toMatch(/has not been found globally/)
         )();
       }
     });

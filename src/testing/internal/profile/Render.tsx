@@ -30,12 +30,12 @@ export interface BaseRender {
 type Screen = typeof screen;
 /** @internal */
 export type SyncScreen = {
-  [K in keyof Screen]: K extends `find${string}`
-    ? {
-        /** @deprecated A snapshot is static, so avoid async queries! */
-        (...args: Parameters<Screen[K]>): ReturnType<Screen[K]>;
-      }
-    : Screen[K];
+  [K in keyof Screen]: K extends `find${string}` ?
+    {
+      /** @deprecated A snapshot is static, so avoid async queries! */
+      (...args: Parameters<Screen[K]>): ReturnType<Screen[K]>;
+    }
+  : Screen[K];
 };
 
 /** @internal */
@@ -62,6 +62,8 @@ export interface Render<Snapshot> extends BaseRender {
    * ```
    */
   withinDOM: () => SyncScreen;
+
+  renderedComponents: Array<string | React.ComponentType>;
 }
 
 /** @internal */
@@ -77,7 +79,8 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
   constructor(
     baseRender: BaseRender,
     public snapshot: Snapshot,
-    private stringifiedDOM: string | undefined
+    private stringifiedDOM: string | undefined,
+    public renderedComponents: Array<string | React.ComponentType>
   ) {
     this.id = baseRender.id;
     this.phase = baseRender.phase;

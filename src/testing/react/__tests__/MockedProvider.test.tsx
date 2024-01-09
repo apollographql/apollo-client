@@ -710,6 +710,8 @@ describe("General use", () => {
   );
 
   it("should support loading state testing with delay", async () => {
+    jest.useFakeTimers();
+
     function Component({ username }: Variables) {
       const { loading, data } = useQuery<Data, Variables>(query, { variables });
 
@@ -720,7 +722,7 @@ describe("General use", () => {
 
     const mocks: ReadonlyArray<MockedResponse> = [
       {
-        delay: 30, // prevent React from batching the loading state away
+        delay: 30000, // prevent React from batching the loading state away
         request: {
           query,
           variables,
@@ -738,16 +740,26 @@ describe("General use", () => {
     expect(
       await screen.findByText("Loading the user ID...")
     ).toBeInTheDocument();
+
+    jest.advanceTimersByTime(30_000);
+
     expect(
       await screen.findByText("The user ID is 'user_id'")
     ).toBeInTheDocument();
+
+    jest.useRealTimers();
   });
 
-  it("should support loading state testing with infinite delay", async () => {
-    function Component({ username }: Variables) {
-      const { loading, data } = useQuery<Data, Variables>(query, { variables });
+  it("should support an infinite loading state with result and delay: Infinity", async () => {
+    jest.useFakeTimers();
 
-      if (loading || data === undefined) return <p>Loading the user ID...</p>;
+    function Component({ username }: Variables) {
+      const { loading, data } = useQuery<Data, Variables>(query, {
+        variables,
+      });
+
+      if (loading) return <p>Loading the user ID...</p>;
+      if (data === undefined) return <p>Undefined data</p>;
 
       return <p>The user ID is '{data.user.id}'</p>;
     }
@@ -759,6 +771,7 @@ describe("General use", () => {
           query,
           variables,
         },
+        result: { data: { user } },
       },
     ];
 
@@ -771,6 +784,62 @@ describe("General use", () => {
     expect(
       await screen.findByText("Loading the user ID...")
     ).toBeInTheDocument();
+
+    jest.advanceTimersByTime(Number.MAX_SAFE_INTEGER);
+
+    expect(
+      await screen.findByText("Loading the user ID...")
+    ).toBeInTheDocument();
+
+    expect(screen.queryByText(/The user ID is/i)).toBeNull();
+
+    jest.useRealTimers();
+  });
+
+  it("should support an infinite loading state with error and delay: Infinity", async () => {
+    jest.useFakeTimers();
+
+    function Component({ username }: Variables) {
+      const { loading, data } = useQuery<Data, Variables>(query, {
+        variables,
+      });
+
+      if (loading) return <p>Loading the user ID...</p>;
+      if (data === undefined) return <p>Undefined data</p>;
+
+      return <p>The user ID is '{data.user.id}'</p>;
+    }
+
+    const mocks: ReadonlyArray<MockedResponse> = [
+      {
+        delay: Infinity, // keep loading forever.
+        request: {
+          query,
+          variables,
+        },
+        error: new Error("something went wrong"),
+      },
+    ];
+
+    render(
+      <MockedProvider mocks={mocks}>
+        <Component {...variables} />
+      </MockedProvider>
+    );
+
+    expect(
+      await screen.findByText("Loading the user ID...")
+    ).toBeInTheDocument();
+
+    jest.advanceTimersByTime(Number.MAX_SAFE_INTEGER);
+
+    expect(
+      await screen.findByText("Loading the user ID...")
+    ).toBeInTheDocument();
+
+    expect(screen.queryByText(/The user ID is/i)).toBeNull();
+
+    jest.useRealTimers();
   });
 });
 

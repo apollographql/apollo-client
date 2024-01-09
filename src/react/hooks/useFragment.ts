@@ -76,7 +76,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
     React.useCallback(
       (forceUpdate) => {
         let lastTimeout = 0;
-        const unsubcribe = cache.watch({
+        const unsubscribe = cache.watch({
           ...diffOptions,
           immediate: true,
           callback(diff) {
@@ -92,7 +92,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
           },
         });
         return () => {
-          unsubcribe();
+          unsubscribe();
           clearTimeout(lastTimeout);
         };
       },

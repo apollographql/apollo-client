@@ -160,7 +160,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
               observer.error(error);
             }
           } else if (response) {
-            if (response.error) {
+            if (response.error && response.delay !== Infinity) {
               observer.error(response.error);
             } else {
               if (response.result && response.delay !== Infinity) {

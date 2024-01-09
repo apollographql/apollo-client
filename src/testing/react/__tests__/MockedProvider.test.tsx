@@ -709,7 +709,7 @@ describe("General use", () => {
     }
   );
 
-  it.only("should support loading state testing with delay", async () => {
+  it("should support loading state testing with delay", async () => {
     jest.useFakeTimers();
 
     function Component({ username }: Variables) {
@@ -750,7 +750,7 @@ describe("General use", () => {
     jest.useRealTimers();
   });
 
-  it.only("should support an infinite loading state with result and delay: Infinity", async () => {
+  it("should support an infinite loading state with result and delay: Infinity", async () => {
     jest.useFakeTimers();
 
     function Component({ username }: Variables) {
@@ -796,7 +796,7 @@ describe("General use", () => {
     jest.useRealTimers();
   });
 
-  it.only("should support an infinite loading state with error and delay: Infinity", async () => {
+  it("should support an infinite loading state with error and delay: Infinity", async () => {
     jest.useFakeTimers();
 
     function Component({ username }: Variables) {

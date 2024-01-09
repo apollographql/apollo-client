@@ -12,3 +12,5 @@ export { ApiDocHeading } from "./Heading";
 export { InterfaceDetails } from "./InterfaceDetails";
 export { FunctionSignature, FunctionDetails } from "./Function";
 export { ParameterTable } from "./ParameterTable";
+export { PropertyDetails } from "./PropertyDetails";
+export { EnumDetails } from "./EnumDetails";

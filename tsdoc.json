@@ -1,0 +1,21 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+
+  // Inherit the TSDoc configuration for API Extractor
+  "extends": ["@microsoft/api-extractor/extends/tsdoc-base.json"],
+
+  "tagDefinitions": [
+    // Define a custom tag and specify how it should be parsed
+    {
+      "tagName": "@since",
+      "syntaxKind": "block",
+      "allowMultiple": false
+    }
+  ],
+
+  "supportForTags": {
+    // Indicate that the custom tag is supported by your tooling.  (Without this, warnings may
+    // be reported saying that the tag is unsupported.)
+    "@since": true
+  }
+}

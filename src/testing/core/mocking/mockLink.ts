@@ -164,11 +164,11 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
           } catch (error) {
             observer.error(error);
           }
-        } else if (response) {
-          if (response.error && response.delay !== Infinity) {
+        } else if (response && response.delay !== Infinity) {
+          if (response.error) {
             observer.error(response.error);
           } else {
-            if (response.result && response.delay !== Infinity) {
+            if (response.result) {
               observer.next(
                 typeof response.result === "function" ?
                   (response.result as ResultFunction<FetchResult>)()

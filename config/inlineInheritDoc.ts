@@ -128,7 +128,7 @@ function processComments() {
   const sourceFiles = project.addSourceFilesAtPaths("dist/**/*.d.ts");
   for (const file of sourceFiles) {
     file.forEachDescendant((node) => {
-      if (Node.isPropertySignature(node)) {
+      if (Node.isPropertySignature(node) || Node.isMethodSignature(node)) {
         const docsNode = node.getJsDocs()[0];
         if (!docsNode) return;
         const oldText = docsNode.getInnerText();

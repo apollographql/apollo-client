@@ -9,7 +9,7 @@ import { ResponsiveGrid } from "./ResponsiveGrid";
 export function PropertySignatureTable({
   canonicalReference,
   prefix = "",
-  showHeaders = true,
+  showHeaders = false,
   display = "parent",
   customOrder = [],
 }) {
@@ -17,7 +17,6 @@ export function PropertySignatureTable({
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
   const Wrapper = display === "parent" ? ResponsiveGrid : React.Fragment;
-
   const sortedProperties = useMemo(
     () =>
       item.properties.map(getItem).sort((a, b) => {
@@ -35,6 +34,12 @@ export function PropertySignatureTable({
       }),
     [item.properties, getItem, customOrder]
   );
+  if (item.childrenIncomplete) {
+    console.warn(
+      "Warning: some properties might be missing from the table due to complex inheritance!",
+      item.childrenIncompleteDetails
+    );
+  }
 
   return (
     <>

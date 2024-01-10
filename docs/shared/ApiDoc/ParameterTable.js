@@ -7,7 +7,7 @@ import { PropertySignatureTable, useApiDocContext } from ".";
 import { ResponsiveGrid } from "./ResponsiveGrid";
 import { mdToReact } from "./mdToReact";
 
-export function ParameterTable({ canonicalReference }) {
+export function ParameterTable({ canonicalReference, showHeaders = false }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
@@ -16,17 +16,19 @@ export function ParameterTable({ canonicalReference }) {
 
   return (
     <>
-      <GridItem className="row">
-        <chakra.h6
-          mb="4"
-          fontWeight="bold"
-          textTransform="uppercase"
-          fontSize="sm"
-          letterSpacing="wider"
-        >
-          Parameters
-        </chakra.h6>
-      </GridItem>
+      {showHeaders ?
+        <GridItem className="row">
+          <chakra.h6
+            mb="4"
+            fontWeight="bold"
+            textTransform="uppercase"
+            fontSize="sm"
+            letterSpacing="wider"
+          >
+            Parameters
+          </chakra.h6>
+        </GridItem>
+      : null}
       <ResponsiveGrid>
         <GridItem className="first cell heading">Name / Type</GridItem>
         <GridItem className="cell heading">Description</GridItem>
@@ -76,7 +78,6 @@ export function ParameterTable({ canonicalReference }) {
                     canonicalReference={interfaceReference.canonicalReference}
                     display="child"
                     prefix={`${parameter.name}.`}
-                    showHeaders={false}
                   />
                 </details>
               )}
@@ -90,4 +91,5 @@ export function ParameterTable({ canonicalReference }) {
 
 ParameterTable.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
+  showHeaders: PropTypes.bool,
 };

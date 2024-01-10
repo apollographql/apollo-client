@@ -9,19 +9,18 @@ export function DocBlock({
   summary = true,
   remarks = false,
   example = false,
-  remarkCollapsible = true,
-  since = true,
-  deprecated = true,
+  remarksCollapsible = false,
+  since = false,
+  deprecated = false,
 }) {
   return (
     <Stack spacing="4">
-      {/** TODO: @since, @deprecated etc. */}
       {deprecated && <Deprecated canonicalReference={canonicalReference} />}
       {since && <Since canonicalReference={canonicalReference} />}
       {summary && <Summary canonicalReference={canonicalReference} />}
       {remarks && (
         <Remarks
-          collapsible={remarkCollapsible}
+          collapsible={remarksCollapsible}
           canonicalReference={canonicalReference}
         />
       )}
@@ -35,7 +34,7 @@ DocBlock.propTypes = {
   summary: PropTypes.bool,
   remarks: PropTypes.bool,
   example: PropTypes.bool,
-  remarkCollapsible: PropTypes.bool,
+  remarksCollapsible: PropTypes.bool,
   since: PropTypes.bool,
   deprecated: PropTypes.bool,
 };
@@ -131,15 +130,19 @@ export function Example({
   canonicalReference,
   collapsible = false,
   index = 0,
+  children,
 }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
   const value = item.comment?.examples[index];
   if (!value) return null;
   return (
-    <MaybeCollapsible collapsible={collapsible}>
-      <b>{mdToReact(value)}</b>
-    </MaybeCollapsible>
+    <>
+      {children}
+      <MaybeCollapsible collapsible={collapsible}>
+        <b>{mdToReact(value)}</b>
+      </MaybeCollapsible>
+    </>
   );
 }
 Example.propTypes = {

@@ -12,7 +12,7 @@ export function PropertyDetails({ canonicalReference, headingLevel }) {
       <DocBlock
         canonicalReference={canonicalReference}
         remark
-        remarkCollapsible
+        remarksCollapsible
         example
       />
     </>

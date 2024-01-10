@@ -116,8 +116,16 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
  * Watched query options.
  */
 export interface WatchQueryOptions<
-  TVariables extends OperationVariables = OperationVariables,
-  TData = any,
+TVariables extends OperationVariables = OperationVariables,
+TData = any,
+> extends SharedWatchQueryOptions<TVariables, TData> {
+  /** {@inheritDoc @apollo/client!QueryOptions#query:member} */
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+}
+
+export interface SharedWatchQueryOptions<
+  TVariables extends OperationVariables,
+  TData,
 > {
   /**
    * Specifies the {@link FetchPolicy} to be used for this query.
@@ -149,9 +157,6 @@ export interface WatchQueryOptions<
    * behavior, for backwards compatibility with Apollo Client 3.x.
    */
   refetchWritePolicy?: RefetchWritePolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptions#query:member} */
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
   /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
   variables?: TVariables;

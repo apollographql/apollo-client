@@ -20,6 +20,7 @@ export function InterfaceDetails({
         headingLevel={3}
       />
       <PropertySignatureTable
+        showHeaders
         canonicalReference={canonicalReference}
         methods
         properties

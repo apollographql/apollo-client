@@ -41,6 +41,37 @@ const {
   prototype: { hasOwnProperty },
 } = Object;
 
+/**
+ * A hook for executing queries in an Apollo application.
+ *
+ * To run a query within a React component, call `useQuery` and pass it a GraphQL query document.
+ *
+ * When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
+ *
+ * > Refer to the [Queries](https://www.apollographql.com/docs/react/data/queries) section for a more in-depth overview of `useQuery`.
+ *
+ * @example
+ * ```jsx
+ * import { gql, useQuery } from '@apollo/client';
+ *
+ * const GET_GREETING = gql`
+ *   query GetGreeting($language: String!) {
+ *     greeting(language: $language) {
+ *       message
+ *     }
+ *   }
+ * `;
+ *
+ * function Hello() {
+ *   const { loading, error, data } = useQuery(GET_GREETING, {
+ *     variables: { language: 'english' },
+ *   });
+ *   if (loading) return <p>Loading ...</p>;
+ *   return <h1>Hello {data.greeting.message}!</h1>;
+ * }
+ * ```
+ * @since 3.0.0
+ */
 export function useQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,

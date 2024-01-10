@@ -22,7 +22,11 @@ import type {
   WatchQueryFetchPolicy,
   RefetchWritePolicy,
   ErrorPolicy,
+  SubscribeToMoreOptions,
+  ApolloQueryResult,
+  FetchMoreQueryOptions,
 } from "../../core/index.js";
+import type { SharedWatchQueryOptions } from "../../core/watchQueryOptions.js";
 
 /* QueryReference type */
 
@@ -40,7 +44,8 @@ export type CommonOptions<TOptions> = TOptions & {
 
 export interface BaseQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
-> extends Omit<WatchQueryOptions<TVariables>, "query"> {
+  TData = any,
+> extends SharedWatchQueryOptions<TVariables, TData> {
   ssr?: boolean;
   /**
    * The instance of `ApolloClient` to use to execute the query.
@@ -54,7 +59,7 @@ export interface BaseQueryOptions<
 export interface QueryFunctionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends BaseQueryOptions<TVariables> {
+> extends BaseQueryOptions<TVariables, TData> {
   skip?: boolean;
   onCompleted?: (data: TData) => void;
   onError?: (error: ApolloError) => void;
@@ -67,32 +72,110 @@ export interface QueryFunctionOptions<
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 
-export type ObservableQueryFields<
-  TData,
-  TVariables extends OperationVariables,
-> = Pick<
-  ObservableQuery<TData, TVariables>,
-  | "startPolling"
-  | "stopPolling"
-  | "subscribeToMore"
-  | "updateQuery"
-  | "refetch"
-  | "reobserve"
-  | "variables"
-  | "fetchMore"
->;
+type TData = any;
+type TVariables = any;
+export type ObservableQueryFields<A, B> = ObservableQueryFields2;
+export interface ObservableQueryFields2 {
+  /** {@inheritDoc @apollo/client!ObservableQuery#startPolling:member(1)} */
+  startPolling(pollInterval: number): void;
+  /** {@inheritDoc @apollo/client!ObservableQuery#stopPolling:member(1)} */
+  stopPolling(): void;
+  /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
+  subscribeToMore<
+    TSubscriptionData = TData,
+    TSubscriptionVariables extends OperationVariables = TVariables,
+  >(
+    options: SubscribeToMoreOptions<
+      TData,
+      TSubscriptionVariables,
+      TSubscriptionData
+    >
+  ): () => void;
+  /** {@inheritDoc @apollo/client!ObservableQuery#updateQuery:member(1)} */
+  updateQuery<TVars extends OperationVariables = TVariables>(
+    mapFn: (
+      previousQueryResult: TData,
+      options: Pick<WatchQueryOptions<TVars, TData>, "variables">
+    ) => TData
+  ): void;
+  /**
+   * A function that enables you to re-execute the query, optionally passing in new `variables`.
+   *
+   * To guarantee that the refetch performs a network request, its `fetchPolicy` is set to `network-only` (unless the original query's `fetchPolicy` is `no-cache` or `cache-and-network`, which also guarantee a network request).
+   *
+   * See also [Refetching](/react/data/queries/#refetching).
+   */
+  refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>>;
+  /** {@inheritDoc @apollo/client!ObservableQuery#reobserve:member(1)} */
+  reobserve(
+    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
+    newNetworkStatus?: NetworkStatus
+  ): Promise<ApolloQueryResult<TData>>;
+  /** {@inheritDoc @apollo/client!ObservableQuery#variables:member} */
+  variables: TVariables | undefined;
+  /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
+  fetchMore<
+    TFetchData = TData,
+    TFetchVars extends OperationVariables = TVariables,
+  >(
+    fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+      updateQuery?: (
+        previousQueryResult: TData,
+        options: {
+          fetchMoreResult: TFetchData;
+          variables: TFetchVars;
+        }
+      ) => TData;
+    }
+  ): Promise<ApolloQueryResult<TFetchData>>;
+}
 
 export interface QueryResult<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends ObservableQueryFields<TData, TVariables> {
+> extends ObservableQueryFields2 {
+  /**
+   * The instance of Apollo Client that executed the query.
+   * Can be useful for manually executing followup queries or writing data to the cache.
+   */
   client: ApolloClient<any>;
+  /**
+   * A reference to the internal `ObservableQuery` used by the hook.
+   */
   observable: ObservableQuery<TData, TVariables>;
+  /**
+   * An object containing the result of your GraphQL query after it completes.
+   *
+   * This value might be `undefined` if a query results in one or more errors (depending on the query's `errorPolicy`).
+   */
   data: TData | undefined;
+  /**
+   * An object containing the result from the most recent _previous_ execution of this query.
+   *
+   * This value is `undefined` if this is the query's first execution.
+   */
   previousData?: TData;
+  /**
+   * If the query produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
+   *
+   * For more information, see [Handling operation errors](/react/data/error-handling/).
+   */
   error?: ApolloError;
+  /**
+   * If `true`, the query is still in flight and results have not yet been returned.
+   */
   loading: boolean;
+  /**
+   * A number indicating the current network state of the query's associated request. [See possible values.](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4)
+   *
+   * Used in conjunction with the [`notifyOnNetworkStatusChange`](#notifyonnetworkstatuschange) option.
+   */
   networkStatus: NetworkStatus;
+  /**
+   * If `true`, the associated lazy query has been executed.
+   *
+   * This field is only present on the result object returned by [`useLazyQuery`](/react/data/queries/#executing-queries-manually).
+   */
   called: boolean;
 }
 

@@ -1,34 +1,48 @@
 import PropTypes from "prop-types";
 import React from "react";
-import { ApiDocHeading, DocBlock, ParameterTable, useApiDocContext } from ".";
-
+import { useMDXComponents } from "@mdx-js/react";
+import {
+  ApiDocHeading,
+  SubHeading,
+  DocBlock,
+  ParameterTable,
+  useApiDocContext,
+  PropertySignatureTable,
+  SourceLink,
+  Example,
+} from ".";
+import { GridItem, Heading, chakra } from "@chakra-ui/react";
 export function FunctionSignature({
   canonicalReference,
   parameterTypes = false,
   name = true,
   arrow = false,
+  highlight = false,
 }) {
+  const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const { displayName, parameters, returnType } = getItem(canonicalReference);
 
-  return (
-    <>
-      {name ? displayName : ""}(
-      {parameters
-        .map((p) => {
-          let pStr = p.name;
-          if (p.optional) {
-            pStr += "?";
-          }
-          if (parameterTypes) {
-            pStr += ": " + p.type;
-          }
-          return pStr;
-        })
-        .join(", ")}
-      ){arrow ? " =>" : ":"} {returnType}
-    </>
-  );
+  const signature = `${name ? displayName : ""}(
+  ${parameters
+    .map((p) => {
+      let pStr = p.name;
+      if (p.optional) {
+        pStr += "?";
+      }
+      if (parameterTypes) {
+        pStr += ": " + p.type;
+      }
+      return pStr;
+    })
+    .join(",\n  ")}
+)${arrow ? " =>" : ":"} ${returnType}`;
+
+  return highlight ?
+      <MDX.pre language="ts">
+        {{ props: { className: "language-ts", children: signature } }}
+      </MDX.pre>
+    : signature;
 }
 
 FunctionSignature.propTypes = {
@@ -37,6 +51,36 @@ FunctionSignature.propTypes = {
   name: PropTypes.bool,
   arrow: PropTypes.bool,
 };
+
+export function ReturnType({ canonicalReference }) {
+  const MDX = useMDXComponents();
+  const getItem = useApiDocContext();
+  const item = getItem(canonicalReference);
+
+  const baseType = item.returnType.split("<")[0];
+  const reference = getItem(
+    item.references?.find((r) => r.text === baseType)?.canonicalReference,
+    false
+  );
+  const interfaceReference = reference?.kind === "Interface" ? reference : null;
+  return (
+    <>
+      <MDX.pre language="ts">
+        {{ props: { className: "language-ts", children: item.returnType } }}
+      </MDX.pre>
+      {interfaceReference ?
+        <details>
+          <GridItem as="summary" className="row">
+            Show/hide child attributes
+          </GridItem>
+          <PropertySignatureTable
+            canonicalReference={interfaceReference.canonicalReference}
+          />
+        </details>
+      : null}
+    </>
+  );
+}
 
 export function FunctionDetails({
   canonicalReference,
@@ -48,17 +92,56 @@ export function FunctionDetails({
       <ApiDocHeading
         canonicalReference={canonicalReference}
         headingLevel={headingLevel}
+        since
+        link
       />
       <DocBlock
         canonicalReference={canonicalReference}
-        remark
+        deprecated
+        remarks
         remarkCollapsible
-        example
       />
+      <Example canonicalReference={canonicalReference}>
+        <SubHeading
+          canonicalReference={canonicalReference}
+          headingLevel={headingLevel + 1}
+          link
+        >
+          Example
+        </SubHeading>
+      </Example>
+      <SubHeading
+        canonicalReference={canonicalReference}
+        headingLevel={headingLevel + 1}
+        link
+      >
+        Signature
+      </SubHeading>
+      <FunctionSignature
+        canonicalReference={canonicalReference}
+        parameterTypes
+        highlight
+      />
+      <SourceLink canonicalReference={canonicalReference} />
+      <SubHeading
+        canonicalReference={canonicalReference}
+        headingLevel={headingLevel + 1}
+        link
+      >
+        Parameters
+      </SubHeading>
       <ParameterTable
         canonicalReference={canonicalReference}
         customOrder={customParameterOrder}
       />
+      <SubHeading
+        canonicalReference={canonicalReference}
+        headingLevel={headingLevel + 1}
+        link
+      >
+        Result
+      </SubHeading>
+      <ReturnType canonicalReference={canonicalReference} />
     </>
   );
 }

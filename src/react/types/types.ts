@@ -225,7 +225,7 @@ export interface SuspenseQueryHookOptions<
   canonizeResults?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptions#returnPartialData:member} */
   returnPartialData?: boolean;
-  /** {@inheritdoc @apollo/client!WatchQueryOptions#refetchWritePolicy:member} */
+  /** {@inheritdoc @apollo/client!~SharedWatchQueryOptions#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
   /**
    * Watched queries must opt into overwriting existing data on refetch, by passing `refetchWritePolicy: "overwrite"` in their `WatchQueryOptions`.

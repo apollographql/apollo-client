@@ -24,7 +24,7 @@ export function FunctionSignature({
   const getItem = useApiDocContext();
   const { displayName, parameters, returnType } = getItem(canonicalReference);
 
-  const signature = `${name ? displayName : ""}(
+  const signature = `${arrow ? "" : "function "}${name ? displayName : ""}(
   ${parameters
     .map((p) => {
       let pStr = p.name;
@@ -41,7 +41,7 @@ export function FunctionSignature({
 
   return highlight ?
       <MDX.pre language="ts">
-        {{ props: { className: "language-ts", children: signature } }}
+        <code className="language-ts">{signature}</code>
       </MDX.pre>
     : signature;
 }

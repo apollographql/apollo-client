@@ -1,10 +1,12 @@
 ---
 title: Subscriptions
 description: Get real-time updates from your GraphQL server
+api_doc:
+  - "@apollo/client!SubscriptionHookOptions:interface"
+  - "@apollo/client!SubscriptionResult:interface"
 ---
 
-import SubscriptionOptions from '../../shared/subscription-options.mdx';
-import SubscriptionResult from '../../shared/subscription-result.mdx';
+import { PropertySignatureTable } from '../../shared/ApiDoc';
 
 In addition to [queries](./queries/) and [mutations](./mutations/), GraphQL supports a third operation type: **subscriptions**.
 
@@ -373,13 +375,13 @@ export function CommentsPage({subscribeToNewComments}) {
 
 The `useSubscription` Hook accepts the following options:
 
-<SubscriptionOptions />
+<PropertySignatureTable canonicalReference="@apollo/client!SubscriptionHookOptions:interface" />
 
 ### Result
 
 After being called, the `useSubscription` Hook returns a result object with the following properties:
 
-<SubscriptionResult />
+<PropertySignatureTable canonicalReference="@apollo/client!SubscriptionResult:interface" />
 
 ## The older `subscriptions-transport-ws` library
 

@@ -547,30 +547,71 @@ export interface BaseSubscriptionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > {
+  /**
+   * An object containing all of the variables your subscription needs to execute
+   */
   variables?: TVariables;
+  /**
+   * How you want your component to interact with the Apollo cache. For details, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
+   */
   fetchPolicy?: FetchPolicy;
+  /**
+   * Determines if your subscription should be unsubscribed and subscribed again when an input to the hook (such as `subscription` or `variables`) changes.
+   */
   shouldResubscribe?:
     | boolean
     | ((options: BaseSubscriptionOptions<TData, TVariables>) => boolean);
+  /**
+   * An `ApolloClient` instance. By default `useSubscription` / `Subscription` uses the client passed down via context, but a different client can be passed in.
+   */
   client?: ApolloClient<object>;
+
+  /**
+   * Determines if the current subscription should be skipped. Useful if, for example, variables depend on previous queries and are not ready yet.
+   */
   skip?: boolean;
+  /**
+   * Shared context between your component and your network interface (Apollo Link).
+   */
   context?: DefaultContext;
+  /**
+   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component completes the subscription.
+   */
   onComplete?: () => void;
+  /**
+   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `data`.
+   */
   onData?: (options: OnDataOptions<TData>) => any;
   /**
+   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.
+   *
    * @deprecated Use onData instead
    */
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
+  /**
+   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives an error.
+   */
   onError?: (error: ApolloError) => void;
   /**
+   * Allows the registration of a callback function that will be triggered when the `useSubscription` Hook / `Subscription` component completes the subscription.
+   *
    * @deprecated Use onComplete instead
    */
   onSubscriptionComplete?: () => void;
 }
 
 export interface SubscriptionResult<TData = any, TVariables = any> {
+  /**
+   * A boolean that indicates whether any initial data has been returned
+   */
   loading: boolean;
+  /**
+   * An object containing the result of your GraphQL subscription. Defaults to an empty object.
+   */
   data?: TData;
+  /**
+   * A runtime error with `graphQLErrors` and `networkError` properties
+   */
   error?: ApolloError;
   // This was added by the legacy useSubscription type, and is tested in unit
   // tests, but probably shouldn’t be added to the result.

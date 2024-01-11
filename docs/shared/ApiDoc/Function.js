@@ -96,12 +96,7 @@ export function FunctionDetails({
         since
         link
       />
-      <DocBlock
-        canonicalReference={canonicalReference}
-        deprecated
-        remarks
-        remarkCollapsible
-      />
+      <DocBlock canonicalReference={canonicalReference} deprecated remarks />
       <Example canonicalReference={canonicalReference}>
         <SubHeading
           canonicalReference={canonicalReference}

@@ -45,6 +45,9 @@ export interface SubscriptionComponentOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {
+  /**
+   * A GraphQL subscription document parsed into an AST by `graphql-tag`. **Optional** for the `useSubscription` Hook since the subscription can be passed in as the first parameter to the Hook. **Required** for the `Subscription` component.
+   */
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
   children?:
     | null

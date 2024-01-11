@@ -2,12 +2,12 @@
 title: Components
 description: Deprecated React Apollo render prop component API
 api_doc:
-  - "@apollo/client!QueryComponentOptions:interface"
+  - "@apollo/client!QueryFunctionOptions:interface"
   - "@apollo/client!QueryResult:interface"
+  - "@apollo/client!MutationFunctionOptions:interface"
+  - "@apollo/client!MutationResult:interface"
 ---
 
-import MutationOptions3 from '../../../shared/mutation-options.mdx';
-import MutationResult3 from '../../../shared/mutation-result.mdx';
 import SubscriptionOptions3 from '../../../shared/subscription-options.mdx';
 import SubscriptionResult3 from '../../../shared/subscription-result.mdx';
 
@@ -31,7 +31,7 @@ You then import the library's symbols from `@apollo/client/react/components`.
 
 The `Query` component accepts the following props. `query` is **required**.
 
-<PropertySignatureTable canonicalReference="@apollo/client!QueryComponentOptions:interface" />
+<PropertySignatureTable canonicalReference="@apollo/client!QueryFunctionOptions:interface" />
 
 ### Render prop function
 
@@ -43,13 +43,13 @@ The render prop function that you pass to the `children` prop of `Query` is call
 
 The Mutation component accepts the following props. Only `mutation` is **required**.
 
-<MutationOptions3 />
+<PropertySignatureTable canonicalReference="@apollo/client!MutationFunctionOptions:interface" />
 
 ### Render prop function
 
 The render prop function that you pass to the `children` prop of `Mutation` is called with the `mutate` function and an object with the mutation result. The `mutate` function is how you trigger the mutation from your UI. The object contains your mutation result, plus loading and error state.
 
-<MutationResult3 />
+<PropertySignatureTable canonicalReference="@apollo/client!MutationResult:interface" />
 
 ## `Subscription`
 

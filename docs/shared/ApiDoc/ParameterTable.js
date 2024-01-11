@@ -3,7 +3,11 @@ import { useMDXComponents } from "@mdx-js/react";
 import PropTypes from "prop-types";
 import React from "react";
 import { GridItem, chakra } from "@chakra-ui/react";
-import { PropertySignatureTable, useApiDocContext } from ".";
+import {
+  PropertySignatureTable,
+  getInterfaceReference,
+  useApiDocContext,
+} from ".";
 import { ResponsiveGrid } from "./ResponsiveGrid";
 import { mdToReact } from "./mdToReact";
 
@@ -33,18 +37,15 @@ export function ParameterTable({ canonicalReference, showHeaders = false }) {
         <GridItem className="first cell heading">Name / Type</GridItem>
         <GridItem className="cell heading">Description</GridItem>
 
-        {item.parameters.map((parameter) => {
-          const baseType = parameter.type.split("<")[0];
-          const reference = getItem(
-            item.references?.find((r) => r.text === baseType)
-              ?.canonicalReference,
-            false
+        {item.parameters.map((parameter, idx) => {
+          const interfaceReference = getInterfaceReference(
+            parameter.type,
+            item,
+            getItem
           );
-          const interfaceReference =
-            reference?.kind === "Interface" ? reference : null;
 
           return (
-            <React.Fragment key={parameter.id}>
+            <React.Fragment key={idx}>
               <GridItem
                 className="first cell"
                 fontSize="md"

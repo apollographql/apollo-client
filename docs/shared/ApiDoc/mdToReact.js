@@ -12,7 +12,14 @@ export function mdToReact(text) {
 
 function RenderMd({ markdown }) {
   return (
-    <ReactMarkdown components={useMDXComponents()}>{markdown}</ReactMarkdown>
+    <ReactMarkdown
+      components={{
+        ...useMDXComponents(),
+        li: "li",
+      }}
+    >
+      {markdown}
+    </ReactMarkdown>
   );
 }
 RenderMd.propTypes = {

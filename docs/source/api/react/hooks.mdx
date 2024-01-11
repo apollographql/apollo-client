@@ -4,10 +4,10 @@ description: Apollo Client react hooks API reference
 api_doc:
   - "@apollo/client!SuspenseQueryHookOptions:interface"
   - "@apollo/client!useQuery:function(1)"
+  - "@apollo/client!useLazyQuery:function(1)"
+  - "@apollo/client!useMutation:function(1)"
 ---
 
-import MutationOptions3 from '../../../shared/mutation-options.mdx';
-import MutationResult3 from '../../../shared/mutation-result.mdx';
 import SubscriptionOptions3 from '../../../shared/subscription-options.mdx';
 import SubscriptionResult3 from '../../../shared/subscription-result.mdx';
 import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
@@ -16,7 +16,7 @@ import UseBackgroundQueryOptions from '../../../shared/useBackgroundQuery-option
 import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx';
 import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
 import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
-import { FunctionDetails } from '../../../shared/ApiDoc';
+import { FunctionDetails, PropertySignatureTable, ManualTuple, InterfaceDetails } from '../../../shared/ApiDoc';
 
 ## Installation
 
@@ -72,140 +72,86 @@ function WithApolloClient() {
 
 <FunctionDetails canonicalReference="@apollo/client!useQuery:function(1)" headingLevel={2} />
 
+<FunctionDetails canonicalReference="@apollo/client!useLazyQuery:function(1)" headingLevel={2}
+result={<div>
+<pre><code class="language-ts">
+[execute: LazyQueryExecFunction&lt;TData, TVariables&gt;, result: QueryResult&lt;TData, TVariables&gt;]
+</code></pre>
 
-## `useLazyQuery`
+A tuple of two values:
 
-### Example
-
-```jsx
-import { gql, useLazyQuery } from "@apollo/client";
-
-const GET_GREETING = gql`
-  query GetGreeting($language: String!) {
-    greeting(language: $language) {
-      message
-    }
+<ManualTuple elements={[
+  {
+    name: "execute",
+    type: "(options?: LazyQueryHookOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>",
+    description: "Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails."
+  },
+  {
+    name: "result",
+    type: "QueryResult<TData, TVariables>",
+    description: "The result of the query. See the `useQuery` hook for more details.",
+    canonicalReference: "@apollo/client!QueryResult:interface"
   }
-`;
+]}/>
+</div>}
+/>
 
-function Hello() {
-  const [loadGreeting, { called, loading, data }] = useLazyQuery(
-    GET_GREETING,
-    { variables: { language: "english" } }
-  );
-  if (called && loading) return <p>Loading ...</p>
-  if (!called) {
-    return <button onClick={() => loadGreeting()}>Load greeting</button>
-  }
-  return <h1>Hello {data.greeting.message}!</h1>;
-}
-```
-
-> Refer to the [Queries](../../data/queries/) section for a more in-depth overview of `useLazyQuery`.
-
-### Signature
-
-```ts
-function useLazyQuery<TData = any, TVariables = OperationVariables>(
-  query: DocumentNode,
-  options?: LazyQueryHookOptions<TData, TVariables>,
-): [
-  (options?: LazyQueryHookOptions<TData, TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
-  LazyQueryResult<TData, TVariables>
-] {}
-```
-
-### Params
-
-#### `query`
-
-| Param   | Type         | Description                                                   |
-| ------- | ------------ | ------------------------------------------------------------- |
-| `query` | DocumentNode | A GraphQL query document parsed into an AST by `gql`. |
-
-#### `options`
-
-<PropertySignatureTable canonicalReference="@apollo/client!QueryHookOptions:interface" />
-
-### Result tuple
-
-**Execute function (first tuple item)**
-
-| Param            | Type                                                  | Description                                                                                                                     |
-| ---------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Execute function | `(options?: LazyQueryHookOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>` | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails. |
-
-**`LazyQueryResult<TData, TVariables>` object (second tuple item)**
-
-<PropertySignatureTable canonicalReference="@apollo/client!QueryResult:interface" />
-
-## `useMutation`
-
-### Example
-
-```jsx
-import { gql, useMutation } from '@apollo/client';
-
-const ADD_TODO = gql`
-  mutation AddTodo($type: String!) {
-    addTodo(type: $type) {
-      id
-      type
-    }
-  }
-`;
-
-function AddTodo() {
-  let input;
-  const [addTodo, { data }] = useMutation(ADD_TODO);
-
-  return (
+<FunctionDetails
+  canonicalReference="@apollo/client!useMutation:function(1)"
+  headingLevel={2}
+  result={
     <div>
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          addTodo({ variables: { type: input.value } });
-          input.value = '';
-        }}
-      >
-        <input
-          ref={node => {
-            input = node;
-          }}
-        />
-        <button type="submit">Add Todo</button>
-      </form>
+      <pre>
+        <code class="language-ts">
+        {`[
+  mutate: (options?: MutationFunctionOptions<TData, TVariables>) => Promise<FetchResult<TData>>,
+  result: MutationResult<TData>
+]`}
+        </code>
+      </pre>
+      A tuple of two values:
+      <ManualTuple
+        elements={[
+          {
+            name: "mutate",
+            type: `(
+    options?: MutationFunctionOptions<TData, TVariables>
+  ) => Promise<FetchResult<TData>>`,
+            description: <div>
+A function to trigger the mutation from your UI. You can optionally pass this function any of the following options:
+
+<ul>
+<li><code>awaitRefetchQueries</code></li>
+<li><code>context</code></li>
+<li><code>fetchPolicy</code></li>
+<li><code>onCompleted</code></li>
+<li><code>onError</code></li>
+<li><code>optimisticResponse</code></li>
+<li><code>refetchQueries</code></li>
+<li><code>onQueryUpdated</code></li>
+<li><code>update</code></li>
+<li><code>variables</code></li>
+<li><code>client</code></li>
+</ul>
+
+Any option you pass here overrides any existing value for that option that you passed to <code>useMutation</code>.
+
+The mutate function returns a promise that fulfills with your mutation result.
+</div>,
+          },
+          {
+            name: "result",
+            type: "MutationResult<TData>",
+            description: "The result of the mutation.",
+            canonicalReference: "@apollo/client!MutationResult:interface",
+          },
+        ]}
+      />
     </div>
-  );
-}
-```
+  }
+/>
 
-> Refer to the [Mutations](../../data/mutations/) section for a more in-depth overview of `useMutation`.
 
-### Signature
-
-```ts
-function useMutation<TData = any, TVariables = OperationVariables>(
-  mutation: DocumentNode,
-  options?: MutationHookOptions<TData, TVariables>,
-): MutationTuple<TData, TVariables> {}
-```
-
-### Params
-
-#### `mutation`
-
-| Param      | Type         | Description                                                      |
-| ---------- | ------------ | ---------------------------------------------------------------- |
-| `mutation` | DocumentNode | A GraphQL mutation document parsed into an AST by `gql`. |
-
-#### `options`
-
-<MutationOptions3 />
-
-### `MutationTuple<TData, TVariables>` result tuple
-
-<MutationResult3 />
 
 ## `useSubscription`
 
@@ -476,6 +422,7 @@ Instead of passing a `SuspenseQueryHookOptions` object into the hook, you can al
 <InterfaceDetails
   canonicalReference="@apollo/client!SuspenseQueryHookOptions:interface"
   customPropertyOrder={["variables", "errorPolicy", "skip"]}
+  headingLevel={3}
 />
 
 ### Result

@@ -140,8 +140,8 @@ export function Example({
     <>
       {children}
       <MaybeCollapsible collapsible={collapsible}>
-      {mdToReact(value)}
-    </MaybeCollapsible>
+        {mdToReact(value)}
+      </MaybeCollapsible>
     </>
   );
 }

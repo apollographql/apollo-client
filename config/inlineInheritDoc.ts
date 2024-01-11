@@ -136,12 +136,15 @@ function processComments() {
         const docsNode = node.getJsDocs()[0];
         if (!docsNode) return;
         const oldText = docsNode.getInnerText();
-        const newText = oldText.replace(
-          inheritDocRegex,
-          (_, canonicalReference) => {
-            return getCommentFor(canonicalReference) || "";
-          }
-        );
+        let newText = oldText;
+        while (inheritDocRegex.test(newText)) {
+          newText = oldText.replace(
+            inheritDocRegex,
+            (_, canonicalReference) => {
+              return getCommentFor(canonicalReference) || "";
+            }
+          );
+        }
         if (oldText !== newText) {
           docsNode.replaceWithText(newText);
         }

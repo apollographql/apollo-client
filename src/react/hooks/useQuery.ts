@@ -71,6 +71,9 @@ const {
  * }
  * ```
  * @since 3.0.0
+ * @param query A GraphQL query document parsed into an AST by `gql`.
+ * @param options
+ * @returns Query result object
  */
 export function useQuery<
   TData = any,

@@ -14,3 +14,5 @@ export { FunctionSignature, FunctionDetails } from "./Function";
 export { ParameterTable } from "./ParameterTable";
 export { PropertyDetails } from "./PropertyDetails";
 export { EnumDetails } from "./EnumDetails";
+export { ManualTuple } from "./Tuple";
+export { getInterfaceReference } from "./getInterfaceReference";

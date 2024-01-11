@@ -16,6 +16,9 @@ export function PropertySignatureTable({
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
+
+  console.log({ canonicalReference, item });
+
   const Wrapper = display === "parent" ? ResponsiveGrid : React.Fragment;
   const sortedProperties = useMemo(
     () =>

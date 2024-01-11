@@ -13,7 +13,6 @@ import type {
   ApolloClient,
   DefaultContext,
   FetchPolicy,
-  MutationOptions,
   NetworkStatus,
   ObservableQuery,
   OperationVariables,
@@ -26,7 +25,10 @@ import type {
   ErrorPolicy,
   RefetchWritePolicy,
 } from "../../core/index.js";
-import type { SharedWatchQueryOptions } from "../../core/watchQueryOptions.js";
+import type {
+  MutationSharedOptions,
+  SharedWatchQueryOptions,
+} from "../../core/watchQueryOptions.js";
 
 /* QueryReference type */
 
@@ -72,10 +74,10 @@ export interface QueryFunctionOptions<
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 
-type TData = any;
-type TVariables = any;
-export type ObservableQueryFields<A, B> = ObservableQueryFields2;
-export interface ObservableQueryFields2 {
+export interface ObservableQueryFields<
+  TData,
+  TVariables extends OperationVariables,
+> {
   /** {@inheritDoc @apollo/client!ObservableQuery#startPolling:member(1)} */
   startPolling(pollInterval: number): void;
   /** {@inheritDoc @apollo/client!ObservableQuery#stopPolling:member(1)} */
@@ -133,7 +135,7 @@ export interface ObservableQueryFields2 {
 export interface QueryResult<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends ObservableQueryFields2 {
+> extends ObservableQueryFields<TData, TVariables> {
   /**
    * The instance of Apollo Client that executed the query.
    * Can be useful for manually executing followup queries or writing data to the cache.
@@ -195,8 +197,15 @@ export interface QueryHookOptions<
 export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends Omit<QueryHookOptions<TData, TVariables>, "skip"> {}
+> extends BaseQueryOptions<TVariables, TData> {
+  /** {@inheritDoc @apollo/client!QueryFunctionOptions#onCompleted:member} */
+  onCompleted?: (data: TData) => void;
+  /** {@inheritDoc @apollo/client!QueryFunctionOptions#onError:member} */
+  onError?: (error: ApolloError) => void;
 
+  /** {@inheritDoc @apollo/client!QueryFunctionOptions#defaultOptions:member} */
+  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+}
 export interface LazyQueryHookExecOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
@@ -225,7 +234,7 @@ export interface SuspenseQueryHookOptions<
   canonizeResults?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptions#returnPartialData:member} */
   returnPartialData?: boolean;
-  /** {@inheritdoc @apollo/client!~SharedWatchQueryOptions#refetchWritePolicy:member} */
+  /** {@inheritDoc @apollo/client!~SharedWatchQueryOptions#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
   /**
    * Watched queries must opt into overwriting existing data on refetch, by passing `refetchWritePolicy: "overwrite"` in their `WatchQueryOptions`.
@@ -394,7 +403,10 @@ export type LazyQueryExecFunction<
 export type LazyQueryResultTuple<
   TData,
   TVariables extends OperationVariables,
-> = [LazyQueryExecFunction<TData, TVariables>, QueryResult<TData, TVariables>];
+> = [
+  execute: LazyQueryExecFunction<TData, TVariables>,
+  result: QueryResult<TData, TVariables>,
+];
 
 /* Mutation types */
 
@@ -407,14 +419,36 @@ export interface BaseMutationOptions<
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-> extends Omit<
-    MutationOptions<TData, TVariables, TContext, TCache>,
-    "mutation"
-  > {
+> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
+  /**
+   * The instance of `ApolloClient` to use to execute the mutation.
+   *
+   * By default, the instance that's passed down via context is used, but you can provide a different instance here.
+   */
   client?: ApolloClient<object>;
+  /**
+   * If `true`, the in-progress mutation's associated component re-renders whenever the network status changes or a network error occurs.
+   *
+   * The default value is `false`.
+   */
   notifyOnNetworkStatusChange?: boolean;
+  /**
+   * A callback function that's called when your mutation successfully completes with zero errors (or if `errorPolicy` is `ignore` and partial data is returned).
+   *
+   * This function is passed the mutation's result `data` and any options passed to the mutation.
+   */
   onCompleted?: (data: TData, clientOptions?: BaseMutationOptions) => void;
+  /**
+   * A callback function that's called when the mutation encounters one or more errors (unless `errorPolicy` is `ignore`).
+   *
+   * This function is passed an [`ApolloError`](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/errors/index.ts#L36-L39) object that contains either a `networkError` object or a `graphQLErrors` array, depending on the error(s) that occurred, as well as any options passed the mutation.
+   */
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
+  /**
+   * If `true`, the mutation's `data` property is not updated with the mutation's result.
+   *
+   * The default value is `false`.
+   */
   ignoreResults?: boolean;
 }
 
@@ -428,11 +462,33 @@ export interface MutationFunctionOptions<
 }
 
 export interface MutationResult<TData = any> {
+  /**
+   * The data returned from your mutation. Can be `undefined` if `ignoreResults` is `true`.
+   */
   data?: TData | null;
+  /**
+   * If the mutation produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
+   *
+   * For more information, see [Handling operation errors](/react/data/error-handling/).
+   */
   error?: ApolloError;
+  /**
+   * If `true`, the mutation is currently in flight.
+   */
   loading: boolean;
+  /**
+   * If `true`, the mutation's mutate function has been called.
+   */
   called: boolean;
+  /**
+   * The instance of Apollo Client that executed the mutation.
+   *
+   * Can be useful for manually executing followup operations or writing data to the cache.
+   */
   client: ApolloClient<object>;
+  /**
+   * A function that you can call to reset the mutation's result to its initial, uncalled state.
+   */
   reset(): void;
 }
 
@@ -467,12 +523,12 @@ export type MutationTuple<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > = [
-  (
+  mutate: (
     options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
     // TODO This FetchResult<TData> seems strange here, as opposed to an
     // ApolloQueryResult<TData>
   ) => Promise<FetchResult<TData>>,
-  MutationResult<TData>,
+  result: MutationResult<TData>,
 ];
 
 /* Subscription types */

@@ -123,8 +123,8 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
  * Watched query options.
  */
 export interface WatchQueryOptions<
-TVariables extends OperationVariables = OperationVariables,
-TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+  TData = any,
 > extends SharedWatchQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptions#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -278,11 +278,13 @@ export interface MutationBaseOptions<
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > {
   /**
-   * An object that represents the result of this mutation that will be
-   * optimistically stored before the server has actually returned a result.
-   * This is most often used for optimistic UI, where we want to be able to see
-   * the result of a mutation immediately, and update the UI later if any errors
-   * appear.
+   * By providing either an object or a callback function that, when invoked after
+   * a mutation, allows you to return optimistic data and optionally skip updates
+   * via the `IGNORE` sentinel object, Apollo Client caches this temporary
+   * (and potentially incorrect) response until the mutation completes, enabling
+   * more responsive UI updates.
+   *
+   * For more information, see [Optimistic mutation results](/react/performance/optimistic-ui/).
    */
   optimisticResponse?:
     | TData
@@ -297,73 +299,57 @@ export interface MutationBaseOptions<
   updateQueries?: MutationQueryReducersMap<TData>;
 
   /**
-   * A list of query names which will be refetched once this mutation has
-   * returned. This is often used if you have a set of queries which may be
-   * affected by a mutation and will have to update. Rather than writing a
-   * mutation query reducer (i.e. `updateQueries`) for this, you can simply
-   * refetch the queries that will be affected and achieve a consistent store
-   * once these queries return.
+   * An array (or a function that _returns_ an array) that specifies which queries you want to refetch after the mutation occurs.
+   *
+   * Each array value can be either:
+   *
+   * - An object containing the `query` to execute, along with any `variables`
+   * 
+   * - A string indicating the operation name of the query to refetch
    */
   refetchQueries?:
     | ((result: FetchResult<TData>) => InternalRefetchQueriesInclude)
     | InternalRefetchQueriesInclude;
 
   /**
-   * By default, `refetchQueries` does not wait for the refetched queries to
-   * be completed, before resolving the mutation `Promise`. This ensures that
-   * query refetching does not hold up mutation response handling (query
-   * refetching is handled asynchronously). Set `awaitRefetchQueries` to
-   * `true` if you would like to wait for the refetched queries to complete,
-   * before the mutation can be marked as resolved.
+   * If `true`, makes sure all queries included in `refetchQueries` are completed before the mutation is considered complete.
+   *
+   * The default value is `false` (queries are refetched asynchronously).
    */
   awaitRefetchQueries?: boolean;
 
   /**
-   * A function which provides an {@link ApolloCache} instance, and the result
-   * of the mutation, to allow the user to update the store based on the
-   * results of the mutation.
+   * A function used to update the Apollo Client cache after the mutation completes.
    *
-   * This function will be called twice over the lifecycle of a mutation. Once
-   * at the very beginning if an `optimisticResponse` was provided. The writes
-   * created from the optimistic data will be rolled back before the second time
-   * this function is called which is when the mutation has successfully
-   * resolved. At that point `update` will be called with the *actual* mutation
-   * result and those writes will not be rolled back.
-   *
-   * Note that since this function is intended to be used to update the
-   * store, it cannot be used with a `no-cache` fetch policy. If you're
-   * interested in performing some action after a mutation has completed,
-   * and you don't need to update the store, use the Promise returned from
-   * `client.mutate` instead.
+   * For more information, see [Updating the cache after a mutation](/react/data/mutations#updating-the-cache-after-a-mutation).
    */
   update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
 
   /**
-   * A function that will be called for each ObservableQuery affected by
-   * this mutation, after the mutation has completed.
+   * Optional callback for intercepting queries whose cache data has been updated by the mutation, as well as any queries specified in the [`refetchQueries: [...]`](#refetchQueries) list passed to `client.mutate`.
+   *
+   * Returning a `Promise` from `onQueryUpdated` will cause the final mutation `Promise` to await the returned `Promise`. Returning `false` causes the query to be ignored.
    */
   onQueryUpdated?: OnQueryUpdated<any>;
 
   /**
-   * Specifies the {@link ErrorPolicy} to be used for this operation
+   * Specifies how the mutation handles a response that returns both GraphQL errors and partial results.
+   *
+   * For details, see [GraphQL error policies](/react/data/error-handling/#graphql-error-policies).
+   *
+   * The default value is `none`, meaning that the mutation result includes error details but _not_ partial results.
    */
   errorPolicy?: ErrorPolicy;
 
   /**
-   * An object that maps from the name of a variable as used in the mutation
-   * GraphQL document to that variable's value.
+   * An object containing all of the GraphQL variables your mutation requires to execute.
+   *
+   * Each key in the object corresponds to a variable name, and that key's value corresponds to the variable value.
    */
   variables?: TVariables;
 
   /**
-   * The context to be passed to the link execution chain. This context will
-   * only be used with this mutation. It will not be used with
-   * `refetchQueries`. Refetched queries use the context they were
-   * initialized with (since the initial context is stored as part of the
-   * `ObservableQuery` instance). If a specific context is needed when
-   * refetching queries, make sure it is configured (via the
-   * [query `context` option](https://www.apollographql.com/docs/react/api/apollo-client#ApolloClient.query))
-   * when the query is first initialized/run.
+   * If you're using [Apollo Link](/react/api/link/introduction/), this object is the initial value of the `context` object that's passed along your link chain.
    */
   context?: TContext;
 }
@@ -373,17 +359,23 @@ export interface MutationOptions<
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
+> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
    * package, that contains a single mutation inside of it.
    */
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
-
+}
+export interface MutationSharedOptions<
+  TData = any,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
+> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
   /**
-   * Specifies the {@link MutationFetchPolicy} to be used for this query.
-   * Mutations support only 'network-only' and 'no-cache' fetchPolicy strings.
-   * If fetchPolicy is not provided, it defaults to 'network-only'.
+   * Provide `no-cache` if the mutation's result should _not_ be written to the Apollo Client cache.
+   * The default value is `network-only` (which means the result _is_ written to the cache).
+   * Unlike queries, mutations _do not_ support [fetch policies](/react/data/queries/#setting-a-fetch-policy) besides `network-only` and `no-cache`.
    */
   fetchPolicy?: MutationFetchPolicy;
 

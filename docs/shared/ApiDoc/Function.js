@@ -10,6 +10,7 @@ import {
   PropertySignatureTable,
   SourceLink,
   Example,
+  getInterfaceReference,
 } from ".";
 import { GridItem, Heading, chakra } from "@chakra-ui/react";
 export function FunctionSignature({
@@ -57,12 +58,11 @@ export function ReturnType({ canonicalReference }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
 
-  const baseType = item.returnType.split("<")[0];
-  const reference = getItem(
-    item.references?.find((r) => r.text === baseType)?.canonicalReference,
-    false
+  const interfaceReference = getInterfaceReference(
+    item.returnType,
+    item,
+    getItem
   );
-  const interfaceReference = reference?.kind === "Interface" ? reference : null;
   return (
     <>
       <MDX.pre language="ts">
@@ -86,6 +86,7 @@ export function FunctionDetails({
   canonicalReference,
   customParameterOrder,
   headingLevel,
+  result,
 }) {
   return (
     <>
@@ -134,14 +135,18 @@ export function FunctionDetails({
         canonicalReference={canonicalReference}
         customOrder={customParameterOrder}
       />
-      <SubHeading
-        canonicalReference={canonicalReference}
-        headingLevel={headingLevel + 1}
-        link
-      >
-        Result
-      </SubHeading>
-      <ReturnType canonicalReference={canonicalReference} />
+      {result === false ? null : (
+        <>
+          <SubHeading
+            canonicalReference={canonicalReference}
+            headingLevel={headingLevel + 1}
+            link
+          >
+            Result
+          </SubHeading>
+          {result || <ReturnType canonicalReference={canonicalReference} />}
+        </>
+      )}
     </>
   );
 }

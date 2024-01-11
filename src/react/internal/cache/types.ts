@@ -5,3 +5,7 @@ export type CacheKey = [
   stringifiedVariables: string,
   ...queryKey: any[],
 ];
+
+export interface QueryKey {
+  __queryKey?: string;
+}

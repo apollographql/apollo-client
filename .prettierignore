@@ -33,3 +33,4 @@
 node_modules/
 .yalc/
 .next/
+.changeset/

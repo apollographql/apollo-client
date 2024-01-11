@@ -119,6 +119,11 @@
         "logLevel": "none"
       },
 
+      "ae-internal-missing-underscore": {
+        "logLevel": "none",
+        "addToApiReportFile": false
+      },
+
       "ae-unresolved-link": {
         "logLevel": "warning",
         "addToApiReportFile": true

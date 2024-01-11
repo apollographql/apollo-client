@@ -2920,7 +2920,10 @@ describe("client", () => {
       return client
         .query({ query })
         .then(({ data }) => {
-          expect(data).toEqual(result.data);
+          const { price, ...todoWithoutPrice } = data.todos[0];
+          expect(data).toEqual({
+            todos: [todoWithoutPrice],
+          });
         })
         .then(resolve, reject);
     });

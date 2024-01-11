@@ -1,0 +1,5 @@
+# explicitly avoiding to check in this one
+# so we run this test always with the latest version
+package-lock.json
+dist
+node_modules

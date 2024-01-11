@@ -228,6 +228,11 @@ export class ObservableQuery<
     });
   }
 
+  /** @internal */
+  public resetDiff() {
+    this.queryInfo.resetDiff();
+  }
+
   public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
     // Use the last result as long as the variables match this.variables.
     const lastResult = this.getLastResult(true);
@@ -798,7 +803,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const maybeFetch = () => {
       if (this.pollingInfo) {
-        if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
+        if (
+          !isNetworkRequestInFlight(this.queryInfo.networkStatus) &&
+          !this.options.skipPollAttempt?.()
+        ) {
           this.reobserve(
             {
               // Most fetchPolicy options don't make sense to use in a polling context, as
@@ -920,12 +928,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { concast, fromLink } = this.fetch(options, newNetworkStatus, query);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result) => {
-        finishWaitingForOwnResult();
-        this.reportResult(result, variables);
+        if (equal(this.variables, variables)) {
+          finishWaitingForOwnResult();
+          this.reportResult(result, variables);
+        }
       },
       error: (error) => {
-        finishWaitingForOwnResult();
-        this.reportError(error, variables);
+        if (equal(this.variables, variables)) {
+          finishWaitingForOwnResult();
+          this.reportError(error, variables);
+        }
       },
     };
 

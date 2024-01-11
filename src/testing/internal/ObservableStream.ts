@@ -29,6 +29,7 @@ async function* observableToAsyncEventIterator<T>(observable: Observable<T>) {
     (error) => resolveNext({ type: "error", error }),
     () => resolveNext({ type: "complete" })
   );
+  yield "initialization value" as unknown as Promise<ObservableEvent<T>>;
 
   while (true) {
     yield promises.shift()!;
@@ -54,7 +55,11 @@ class IteratorStream<T> {
 
 export class ObservableStream<T> extends IteratorStream<ObservableEvent<T>> {
   constructor(observable: Observable<T>) {
-    super(observableToAsyncEventIterator(observable));
+    const iterator = observableToAsyncEventIterator(observable);
+    // we need to call next() once to start the generator so we immediately subscribe.
+    // the first value is always "initialization value" which we don't care about
+    iterator.next();
+    super(iterator);
   }
 
   async takeNext(options?: TakeOptions): Promise<T> {

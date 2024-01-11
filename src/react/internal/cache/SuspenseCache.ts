@@ -1,6 +1,6 @@
 import { Trie } from "@wry/trie";
-import type { ObservableQuery } from "../../core/index.js";
-import { canUseWeakMap } from "../../utilities/index.js";
+import type { ObservableQuery } from "../../../core/index.js";
+import { canUseWeakMap } from "../../../utilities/index.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey } from "./types.js";
 
@@ -38,7 +38,6 @@ export class SuspenseCache {
 
     if (!ref.current) {
       ref.current = new InternalQueryReference(createObservable(), {
-        key: cacheKey,
         autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
         onDispose: () => {
           delete ref.current;

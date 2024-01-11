@@ -3642,8 +3642,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(client.getObservableQueries().size).toBe(0);
+    await waitFor(() => expect(client.getObservableQueries().size).toBe(0));
   });
 
   it('throws network errors when errorPolicy is set to "none"', async () => {

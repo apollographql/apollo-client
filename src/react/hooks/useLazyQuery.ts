@@ -1,6 +1,6 @@
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import * as React from "react";
+import * as React from "rehackt";
 
 import type { OperationVariables } from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";

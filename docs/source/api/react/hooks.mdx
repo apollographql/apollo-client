@@ -7,6 +7,8 @@ api_doc:
   - "@apollo/client!useLazyQuery:function(1)"
   - "@apollo/client!useMutation:function(1)"
   - "@apollo/client!useSubscription:function(1)"
+  - "@apollo/client!useApolloClient:function(1)"
+  - "@apollo/client!useReactiveVar:function(1)"
 ---
 
 import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
@@ -152,53 +154,9 @@ The mutate function returns a promise that fulfills with your mutation result.
 
 <FunctionDetails canonicalReference="@apollo/client!useSubscription:function(1)" headingLevel={2} />
 
-## `useApolloClient`
+<FunctionDetails canonicalReference="@apollo/client!useApolloClient:function(1)" headingLevel={2} />
 
-### Example
-
-```jsx
-import { useApolloClient } from '@apollo/client';
-
-function SomeComponent() {
-  const client = useApolloClient();
-  // `client` is now set to the `ApolloClient` instance being used by the
-  // application (that was configured using something like `ApolloProvider`)
-}
-```
-
-### Signature
-
-```ts
-function useApolloClient(): ApolloClient<object> {}
-```
-
-### Result
-
-| Param                  | Type                       | Description                                                |
-| ---------------------- | -------------------------- | ---------------------------------------------------------- |
-| Apollo Client instance | ApolloClient&lt;object&gt; | The `ApolloClient` instance being used by the application. |
-
-
-## `useReactiveVar`
-
-Reads the value of a [reactive variable](../../local-state/reactive-variables/) and re-renders the containing component whenever that variable's value changes. This enables a reactive variable to trigger changes _without_ relying on the `useQuery` hook.
-
-### Example
-
-```jsx
-import { makeVar, useReactiveVar } from "@apollo/client";
-export const cartItemsVar = makeVar([]);
-
-export function Cart() {
-  const cartItems = useReactiveVar(cartItemsVar);
-  // ...
-```
-
-### Signature
-
-```tsx
-function useReactiveVar<T>(rv: ReactiveVar<T>): T {}
-```
+<FunctionDetails canonicalReference="@apollo/client!useReactiveVar:function(1)" headingLevel={2} />
 
 <MinVersion version="3.8.0">
 

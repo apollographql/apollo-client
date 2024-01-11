@@ -25,7 +25,11 @@
 
 // @ts-ignore
 import { Project, ts, printNode, Node } from "ts-morph";
-import { ApiModel, ApiDocumentedItem } from "@microsoft/api-extractor-model";
+import {
+  ApiModel,
+  ApiDocumentedItem,
+  ApiFunction,
+} from "@microsoft/api-extractor-model";
 import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference";
 
 import fs from "node:fs";

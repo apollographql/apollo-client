@@ -65,6 +65,7 @@ export function ReturnType({ canonicalReference }) {
   );
   return (
     <>
+      {item.comment?.returns}
       <MDX.pre language="ts">
         {{ props: { className: "language-ts", children: item.returnType } }}
       </MDX.pre>

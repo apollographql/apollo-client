@@ -2090,6 +2090,70 @@ describe("writing to the store", () => {
 
       expect(cache.extract()).toMatchSnapshot();
     });
+
+    it("should warn about potential data loss", () => {
+      using consoleSpy = spyOnConsole("warn");
+
+      const dataWithoutId = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+          __typename: "Author",
+        },
+      };
+
+      const dataWithId = {
+        author: {
+          firstName: "John",
+          id: "129",
+          __typename: "Author",
+        },
+      };
+
+      const queryWithoutId = gql`
+        query {
+          author {
+            firstName
+            lastName
+            __typename
+          }
+        }
+      `;
+      const queryWithId = gql`
+        query {
+          author {
+            firstName
+            id
+            __typename
+          }
+        }
+      `;
+
+      const cache = new InMemoryCache();
+
+      cache.writeQuery({
+        query: queryWithoutId,
+        data: dataWithoutId,
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          author: {
+            firstName: "John",
+            lastName: "Smith",
+            __typename: "Author",
+          },
+        },
+      });
+
+      cache.writeQuery({
+        query: queryWithId,
+        data: dataWithId,
+      });
+
+      expect(consoleSpy.warn).toHaveBeenCalled();
+    });
   });
 
   describe("writeResultToStore shape checking", () => {

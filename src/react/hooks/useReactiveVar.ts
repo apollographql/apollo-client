@@ -16,7 +16,7 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
  * }
  * ```
  * @since 3.2.0
- * @param rv A reactive variable.
+ * @param rv - A reactive variable.
  * @returns The current value of the reactive variable.
  */
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T {

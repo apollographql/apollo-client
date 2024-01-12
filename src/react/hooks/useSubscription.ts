@@ -93,8 +93,8 @@ import { useApolloClient } from "./useApolloClient.js";
  * Now, the first message will be added to the `accumulatedData` array since `onData` is called _before_ the component re-renders. React 18 automatic batching is still in effect and results in a single re-render, but with `onData` we can guarantee each message received after the component mounts is added to `accumulatedData`.
  *
  * @since 3.0.0
- * @param subscription A GraphQL subscription document parsed into an AST by `gql`.
- * @param options
+ * @param subscription - A GraphQL subscription document parsed into an AST by `gql`.
+ * @param options - Options to control how the subscription is executed.
  * @returns Query result object
  */
 export function useSubscription<

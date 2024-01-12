@@ -56,8 +56,8 @@ const EAGER_METHODS = [
  * ```
  * @since 3.0.0
  *
- * @param query A GraphQL query document parsed into an AST by `gql`.
- * @param options
+ * @param query - A GraphQL query document parsed into an AST by `gql`.
+ * @param options - Default options to control how the query is executed.
  * @returns A tuple in the form of `[executeLazyQuery, queryResult]`
  */
 export function useLazyQuery<

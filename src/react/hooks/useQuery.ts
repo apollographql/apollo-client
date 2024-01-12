@@ -71,8 +71,8 @@ const {
  * }
  * ```
  * @since 3.0.0
- * @param query A GraphQL query document parsed into an AST by `gql`.
- * @param options
+ * @param query - A GraphQL query document parsed into an AST by `gql`.
+ * @param options - Options to control how the query is executed.
  * @returns Query result object
  */
 export function useQuery<

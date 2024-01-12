@@ -36,7 +36,7 @@ Object {
 
 exports[`writing to the store "Cache data may be lost..." warnings should not warn when scalar fields are updated 3`] = `[MockFunction]`;
 
-exports[`writing to the store "Cache data may be lost..." warnings should warn "Cache data may be lost..." error 1`] = `
+exports[`writing to the store "Cache data may be lost..." warnings should warn "Cache data may be lost..." message 1`] = `
 Object {
   "ROOT_QUERY": Object {
     "__typename": "Query",
@@ -47,7 +47,7 @@ Object {
 }
 `;
 
-exports[`writing to the store "Cache data may be lost..." warnings should warn "Cache data may be lost..." error 2`] = `
+exports[`writing to the store "Cache data may be lost..." warnings should warn "Cache data may be lost..." message 2`] = `
 Object {
   "ROOT_QUERY": Object {
     "__typename": "Query",
@@ -58,7 +58,7 @@ Object {
 }
 `;
 
-exports[`writing to the store "Cache data may be lost..." warnings should warn "Cache data may be lost..." error 3`] = `
+exports[`writing to the store "Cache data may be lost..." warnings should warn "Cache data may be lost..." message 3`] = `
 [MockFunction] {
   "calls": Array [
     Array [
@@ -96,99 +96,6 @@ For more information about these options, please refer to the documentation:
   ],
 }
 `;
-
-exports[`writing to the store "Cache data may be lost..." warnings should warn with "Cache data may be lost..." 1`] = `
-Object {
-  "ROOT_QUERY": Object {
-    "__typename": "Query",
-    "someJSON": Object {
-      "name": "Tom",
-    },
-  },
-}
-`;
-
-exports[`writing to the store "Cache data may be lost..." warnings should warn with "Cache data may be lost..." 2`] = `
-Object {
-  "ROOT_QUERY": Object {
-    "__typename": "Query",
-    "someJSON": Object {
-      "age": 20,
-    },
-  },
-}
-`;
-
-exports[`writing to the store "Cache data may be lost..." warnings should warn with "Cache data may be lost..." 3`] = `
-[MockFunction] {
-  "calls": Array [
-    Array [
-      "Cache data may be lost when replacing the %s field of a %s object.
-
-This could cause additional (usually avoidable) network requests to fetch data that were otherwise cached.
-
-To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
-
-  existing: %s
-  incoming: %s
-
-For more information about these options, please refer to the documentation:
-
-  * Ensuring entity objects have IDs: https://go.apollo.dev/c/generating-unique-identifiers
-  * Defining custom merge functions: https://go.apollo.dev/c/merging-non-normalized-objects
-",
-      "someJSON",
-      "Query",
-      "",
-      "Query.someJSON",
-      "{\\"name\\":\\"Tom\\"}",
-      "{\\"age\\":20}",
-    ],
-  ],
-  "results": Array [
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-  ],
-}
-`;
-
-exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 1`] = `
-Object {
-  "ROOT_QUERY": Object {
-    "__typename": "Query",
-    "currentTime({\\"tz\\":\\"UTC-5\\"})": Object {
-      "localeString": "9/25/2020, 1:08:33 PM",
-    },
-    "someJSON": Object {
-      "foos": Array [
-        "bar",
-        "baz",
-      ],
-      "oyez": 3,
-    },
-  },
-}
-`;
-
-exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 2`] = `
-Object {
-  "ROOT_QUERY": Object {
-    "__typename": "Query",
-    "currentTime({\\"tz\\":\\"UTC-5\\"})": Object {
-      "msSinceEpoch": 1601053713081,
-    },
-    "someJSON": Object {
-      "asdf": "middle",
-      "qwer": "upper",
-      "zxcv": "lower",
-    },
-  },
-}
-`;
-
-exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 3`] = `[MockFunction]`;
 
 exports[`writing to the store correctly merges fragment fields along multiple paths 1`] = `
 Object {

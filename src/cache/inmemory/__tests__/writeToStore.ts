@@ -2048,7 +2048,7 @@ describe("writing to the store", () => {
   });
 
   describe('"Cache data may be lost..." warnings', () => {
-    it('should warn with "Cache data may be lost..."', () => {
+    it('should warn "Cache data may be lost..." error', () => {
       using _consoleSpy = spyOnConsole.takeSnapshots("warn");
       const cache = new InMemoryCache();
 

@@ -36,7 +36,7 @@ export interface HttpOptions {
   /**
    * A `fetch`-compatible API to use when making requests.
    */
-  fetch?: WindowOrWorkerGlobalScope["fetch"];
+  fetch?: typeof fetch;
 
   /**
    * An object representing values to be sent as headers on the request.

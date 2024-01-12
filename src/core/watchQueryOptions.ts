@@ -304,7 +304,7 @@ export interface MutationBaseOptions<
    * Each array value can be either:
    *
    * - An object containing the `query` to execute, along with any `variables`
-   * 
+   *
    * - A string indicating the operation name of the query to refetch
    */
   refetchQueries?:

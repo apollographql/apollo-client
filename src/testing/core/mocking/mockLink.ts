@@ -143,8 +143,8 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
         );
       }
     } else {
-      if (response.maxUsageCount! > 1) {
-        response.maxUsageCount!--;
+      if (response.maxUsageCount && response.maxUsageCount > 1) {
+        response.maxUsageCount--;
       } else {
         mockedResponses.splice(responseIndex, 1);
       }

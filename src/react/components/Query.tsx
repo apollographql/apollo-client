@@ -18,7 +18,7 @@ export function Query<
   props: QueryComponentOptions<TData, TVariables>
 ): ReactTypes.JSX.Element | null {
   const { children, query, ...options } = props;
-  const result = useQuery(query, options);
+  const result = useQuery<unknown, OperationVariables>(query, options);
   return result ? children(result as any) : null;
 }
 

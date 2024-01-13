@@ -41,6 +41,37 @@ const {
   prototype: { hasOwnProperty },
 } = Object;
 
+interface QueryHookOptionsWithVariables<
+  TData,
+  TVariables extends OperationVariables,
+> extends Omit<QueryHookOptions<TData, TVariables>, "variables"> {
+  variables: TVariables;
+}
+
+type OnlyRequiredProperties<T> = {
+  [K in keyof T as {} extends Pick<T, K> ? never : K]-?: T[K];
+};
+
+type HasRequiredVariables<T, TrueCase, FalseCase> =
+  {} extends OnlyRequiredProperties<T> ? FalseCase : TrueCase;
+
+export function useQuery<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: HasRequiredVariables<
+    TVariables,
+    [
+      optionsWithVariables: QueryHookOptionsWithVariables<
+        NoInfer<TData>,
+        NoInfer<TVariables>
+      >,
+    ],
+    [options?: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>]
+  >
+): QueryResult<TData, TVariables>;
+
 export function useQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,

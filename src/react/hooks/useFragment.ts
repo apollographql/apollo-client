@@ -25,10 +25,15 @@ export interface UseFragmentOptions<TData, TVars>
       Cache.ReadFragmentOptions<TData, TVars>,
       "id" | "variables" | "returnPartialData"
     > {
-  from: StoreObject<TData> | Reference | string;
+  from: Reference | string | FragmentStoreObject<TData>;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
 }
+
+type FragmentStoreObject<TData> =
+  TData extends { __typename: string | undefined } ?
+    StoreObject<TData["__typename"]>
+  : StoreObject;
 
 export type UseFragmentResult<TData> =
   | {

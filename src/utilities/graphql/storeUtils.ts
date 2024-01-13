@@ -50,8 +50,10 @@ export type StoreValue =
   | void
   | Object;
 
-export interface StoreObject {
-  __typename?: string;
+export interface StoreObject<TData = any> {
+  __typename?: TData extends { __typename: string | undefined } ?
+    TData["__typename"]
+  : string | undefined;
   [storeFieldName: string]: StoreValue;
 }
 

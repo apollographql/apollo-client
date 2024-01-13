@@ -25,7 +25,7 @@ export interface UseFragmentOptions<TData, TVars>
       Cache.ReadFragmentOptions<TData, TVars>,
       "id" | "variables" | "returnPartialData"
     > {
-  from: Reference | string | FragmentStoreObject<TData>;
+  from: FragmentStoreObject<TData> | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
 }

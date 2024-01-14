@@ -9,7 +9,11 @@ import {
 import userEvent from "@testing-library/user-event";
 import { act } from "react-dom/test-utils";
 
-import { UseFragmentOptions, useFragment } from "../useFragment";
+import {
+  FragmentStoreObject,
+  UseFragmentOptions,
+  useFragment,
+} from "../useFragment";
 import { MockedProvider } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {
@@ -1715,7 +1719,7 @@ describe.skip("Type Tests", () => {
 
   test("UseFragmentOptions interface shape", <TData, TVars>() => {
     expectTypeOf<UseFragmentOptions<TData, TVars>>().branded.toEqualTypeOf<{
-      from: string | StoreObject | Reference;
+      from: string | FragmentStoreObject<TData> | Reference;
       fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
       fragmentName?: string;
       optimistic?: boolean;

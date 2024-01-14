@@ -30,7 +30,7 @@ export interface UseFragmentOptions<TData, TVars>
   optimistic?: boolean;
 }
 
-type FragmentStoreObject<TData> =
+export type FragmentStoreObject<TData> =
   TData extends { __typename?: string | undefined } ?
     StoreObject<TData["__typename"]>
   : StoreObject;

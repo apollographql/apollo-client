@@ -24,7 +24,6 @@ import {
   ApolloClient,
   Observable,
   ApolloLink,
-  StoreObject,
   DocumentNode,
   FetchResult,
 } from "../../../core";

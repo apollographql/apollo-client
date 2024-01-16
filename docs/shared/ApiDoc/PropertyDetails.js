@@ -22,5 +22,4 @@ export function PropertyDetails({ canonicalReference, headingLevel }) {
 PropertyDetails.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   headingLevel: PropTypes.number.isRequired,
-  customParameterOrder: PropTypes.arrayOf(PropTypes.string),
 };

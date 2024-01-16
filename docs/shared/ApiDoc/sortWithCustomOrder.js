@@ -6,7 +6,7 @@
  * - items not in the `customOrder` array will be sorted in lexicographical order after that
  * - deprecated items will be sorted in lexicographical order to the end
  */
-export function sortWithCustomOrder(customOrder) {
+export function sortWithCustomOrder(customOrder = []) {
   return (a, b) => {
     let aIndex = customOrder.indexOf(a.displayName);
     if (aIndex == -1) {

@@ -49,3 +49,13 @@ export function ManualTuple({ elements = [] }) {
     </MDX.table>
   );
 }
+ManualTuple.propTypes = {
+  elements: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      type: PropTypes.string.isRequired,
+      description: PropTypes.string.isRequired,
+      canonicalReference: PropTypes.string,
+    })
+  ).isRequired,
+};

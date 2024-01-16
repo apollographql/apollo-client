@@ -20,8 +20,9 @@ export function Heading({ headingLevel, link, children, ...props }) {
 }
 Heading.propTypes = {
   headingLevel: PropTypes.number.isRequired,
-  title: PropTypes.string,
   link: PropTypes.bool,
+  children: PropTypes.node.isRequired,
+  id: PropTypes.string,
 };
 
 export function SubHeading({ canonicalReference, ...props }) {

@@ -12,7 +12,7 @@ import {
   Example,
   getInterfaceReference,
 } from ".";
-import { GridItem, Heading, chakra } from "@chakra-ui/react";
+import { GridItem } from "@chakra-ui/react";
 export function FunctionSignature({
   canonicalReference,
   parameterTypes = false,
@@ -51,6 +51,7 @@ FunctionSignature.propTypes = {
   parameterTypes: PropTypes.bool,
   name: PropTypes.bool,
   arrow: PropTypes.bool,
+  highlight: PropTypes.bool,
 };
 
 export function ReturnType({ canonicalReference }) {
@@ -82,6 +83,9 @@ export function ReturnType({ canonicalReference }) {
     </>
   );
 }
+ReturnType.propTypes = {
+  canonicalReference: PropTypes.string.isRequired,
+};
 
 export function FunctionDetails({
   canonicalReference,
@@ -151,4 +155,5 @@ FunctionDetails.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   headingLevel: PropTypes.number.isRequired,
   customParameterOrder: PropTypes.arrayOf(PropTypes.string),
+  result: PropTypes.oneOfType([PropTypes.bool, PropTypes.node])
 };

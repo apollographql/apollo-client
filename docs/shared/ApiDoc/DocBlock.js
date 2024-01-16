@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { Stack } from "@chakra-ui/react";
-import { mdToReact } from "./mdToReact";
 import { useApiDocContext } from ".";
 import { useMDXComponents } from "@mdx-js/react";
 
@@ -70,7 +69,7 @@ export function Deprecated({ canonicalReference, collapsible = false }) {
     <MaybeCollapsible collapsible={collapsible}>
       <MDX.blockquote>
         <p>⚠️ Deprecated</p>
-        {mdToReact(value)}
+        <MDX.MDXRenderer>{value}</MDX.MDXRenderer>
       </MDX.blockquote>
     </MaybeCollapsible>
   );
@@ -102,11 +101,12 @@ Since.propTypes = {
 export function Summary({ canonicalReference, collapsible = false }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
+  const MDX = useMDXComponents();
   const value = item.comment?.summary;
   if (!value) return null;
   return (
     <MaybeCollapsible collapsible={collapsible}>
-      {mdToReact(value)}
+      {value && <MDX.MDXRenderer>{value}</MDX.MDXRenderer>}
     </MaybeCollapsible>
   );
 }
@@ -118,11 +118,12 @@ Summary.propTypes = {
 export function Remarks({ canonicalReference, collapsible = false }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
+  const MDX = useMDXComponents();
   const value = item.comment?.remarks?.replace(/^@remarks/g, "");
   if (!value) return null;
   return (
     <MaybeCollapsible collapsible={collapsible}>
-      {mdToReact(value)}
+      {value && <MDX.MDXRenderer>{value}</MDX.MDXRenderer>}
     </MaybeCollapsible>
   );
 }
@@ -139,13 +140,14 @@ export function Example({
 }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
+  const MDX = useMDXComponents();
   const value = item.comment?.examples[index];
   if (!value) return null;
   return (
     <>
       {children}
       <MaybeCollapsible collapsible={collapsible}>
-        {mdToReact(value)}
+        {value && <MDX.MDXRenderer>{value}</MDX.MDXRenderer>}
       </MaybeCollapsible>
     </>
   );

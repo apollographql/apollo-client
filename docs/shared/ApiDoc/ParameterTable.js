@@ -9,7 +9,6 @@ import {
   useApiDocContext,
 } from ".";
 import { ResponsiveGrid } from "./ResponsiveGrid";
-import { mdToReact } from "./mdToReact";
 
 export function ParameterTable({ canonicalReference, showHeaders = false }) {
   const MDX = useMDXComponents();
@@ -68,7 +67,9 @@ export function ParameterTable({ canonicalReference, showHeaders = false }) {
                 lineHeight="base"
                 borderBottom={interfaceReference ? "none" : undefined}
               >
-                {mdToReact(parameter.comment)}
+                {parameter.comment && (
+                  <MDX.MDXRenderer>{parameter.comment}</MDX.MDXRenderer>
+                )}
               </GridItem>
               {interfaceReference && (
                 <details>

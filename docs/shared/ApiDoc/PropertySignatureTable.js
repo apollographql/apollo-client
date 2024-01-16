@@ -5,6 +5,7 @@ import React, { useMemo } from "react";
 import { DocBlock, FunctionSignature, useApiDocContext } from ".";
 import { GridItem, Text, chakra } from "@chakra-ui/react";
 import { ResponsiveGrid } from "./ResponsiveGrid";
+import { sortWithCustomOrder } from "./sortWithCustomOrder";
 
 export function PropertySignatureTable({
   canonicalReference,
@@ -17,24 +18,11 @@ export function PropertySignatureTable({
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
 
-  console.log({ canonicalReference, item });
-
   const Wrapper = display === "parent" ? ResponsiveGrid : React.Fragment;
   const sortedProperties = useMemo(
     () =>
-      item.properties.map(getItem).sort((a, b) => {
-        const aIndex = customOrder.indexOf(a.displayName);
-        const bIndex = customOrder.indexOf(b.displayName);
-        if (aIndex >= 0 && bIndex >= 0) {
-          return aIndex - bIndex;
-        } else if (aIndex >= 0) {
-          return -1;
-        } else if (bIndex >= 0) {
-          return 1;
-        } else {
-          return a.displayName.localeCompare(b.displayName);
-        }
-      }),
+      // TODO extract function
+      item.properties.map(getItem).sort(sortWithCustomOrder(customOrder)),
     [item.properties, getItem, customOrder]
   );
   if (item.childrenIncomplete) {
@@ -108,6 +96,7 @@ export function PropertySignatureTable({
             <GridItem className="cell" fontSize="md" lineHeight="base">
               <DocBlock
                 canonicalReference={property.canonicalReference}
+                deprecated
                 summary
                 remarks
                 remarkCollapsible

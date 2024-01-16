@@ -309,15 +309,15 @@ export type LoadableQueryHookFetchPolicy = Extract<
 
 export interface LoadableQueryHookOptions {
   /**
+   * Whether to canonize cache results before returning them. Canonization
+   * takes some extra time, but it speeds up future deep equality comparisons.
+   * Defaults to false.
+   *
    * @deprecated
    * Using `canonizeResults` can result in memory leaks so we generally do not
    * recommend using this option anymore.
    * A future version of Apollo Client will contain a similar feature without
    * the risk of memory leaks.
-   *
-   * Whether to canonize cache results before returning them. Canonization
-   * takes some extra time, but it speeds up future deep equality comparisons.
-   * Defaults to false.
    */
   canonizeResults?: boolean;
   /**
@@ -370,7 +370,7 @@ export interface LoadableQueryHookOptions {
 }
 
 /**
- * @deprecated TODO Delete this unused interface.
+ * @deprecated This type will be removed in the next major version of Apollo Client
  */
 export interface QueryLazyOptions<TVariables> {
   variables?: TVariables;
@@ -378,7 +378,7 @@ export interface QueryLazyOptions<TVariables> {
 }
 
 /**
- * @deprecated TODO Delete this unused type alias.
+ * @deprecated This type will be removed in the next major version of Apollo Client
  */
 export type LazyQueryResult<
   TData,
@@ -386,7 +386,7 @@ export type LazyQueryResult<
 > = QueryResult<TData, TVariables>;
 
 /**
- * @deprecated TODO Delete this unused type alias.
+ * @deprecated This type will be removed in the next major version of Apollo Client
  */
 export type QueryTuple<
   TData,

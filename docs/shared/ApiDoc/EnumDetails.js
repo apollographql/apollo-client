@@ -5,6 +5,7 @@ import React, { useMemo } from "react";
 import { DocBlock, useApiDocContext, ApiDocHeading } from ".";
 import { GridItem, chakra } from "@chakra-ui/react";
 import { ResponsiveGrid } from "./ResponsiveGrid";
+import { sortWithCustomOrder } from "./sortWithCustomOrder";
 
 export function EnumDetails({
   canonicalReference,
@@ -18,19 +19,7 @@ export function EnumDetails({
 
   const sortedMembers = useMemo(
     () =>
-      item.members.map(getItem).sort((a, b) => {
-        const aIndex = customOrder.indexOf(a.displayName);
-        const bIndex = customOrder.indexOf(b.displayName);
-        if (aIndex >= 0 && bIndex >= 0) {
-          return aIndex - bIndex;
-        } else if (aIndex >= 0) {
-          return -1;
-        } else if (bIndex >= 0) {
-          return 1;
-        } else {
-          return a.displayName.localeCompare(b.displayName);
-        }
-      }),
+      item.members.map(getItem).sort(sortWithCustomOrder(customOrder)),
     [item.members, getItem, customOrder]
   );
 

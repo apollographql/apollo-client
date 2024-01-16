@@ -3,6 +3,7 @@ import React from "react";
 import { Stack } from "@chakra-ui/react";
 import { mdToReact } from "./mdToReact";
 import { useApiDocContext } from ".";
+import { useMDXComponents } from "@mdx-js/react";
 
 export function DocBlock({
   canonicalReference,
@@ -62,11 +63,15 @@ MaybeCollapsible.propTypes = {
 export function Deprecated({ canonicalReference, collapsible = false }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
+  const MDX = useMDXComponents();
   const value = item.comment?.deprecated;
   if (!value) return null;
   return (
     <MaybeCollapsible collapsible={collapsible}>
-      <b>{mdToReact(value)}</b>
+      <MDX.blockquote>
+        <p>⚠️ Deprecated</p>
+        {mdToReact(value)}
+      </MDX.blockquote>
     </MaybeCollapsible>
   );
 }

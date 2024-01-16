@@ -18,8 +18,7 @@ export function EnumDetails({
   console.log(item);
 
   const sortedMembers = useMemo(
-    () =>
-      item.members.map(getItem).sort(sortWithCustomOrder(customOrder)),
+    () => item.members.map(getItem).sort(sortWithCustomOrder(customOrder)),
     [item.members, getItem, customOrder]
   );
 

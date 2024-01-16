@@ -155,5 +155,5 @@ FunctionDetails.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   headingLevel: PropTypes.number.isRequired,
   customParameterOrder: PropTypes.arrayOf(PropTypes.string),
-  result: PropTypes.oneOfType([PropTypes.bool, PropTypes.node])
+  result: PropTypes.oneOfType([PropTypes.bool, PropTypes.node]),
 };

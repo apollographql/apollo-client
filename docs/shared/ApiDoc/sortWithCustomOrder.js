@@ -1,7 +1,6 @@
-
 /**
  * Sorts items by their `displayName` with a custom order:
- * - items within the `customOrder` array will be sorted to the start, 
+ * - items within the `customOrder` array will be sorted to the start,
  *   sorted by the order of the `customOrder` array
  * - items not in the `customOrder` array will be sorted in lexicographical order after that
  * - deprecated items will be sorted in lexicographical order to the end

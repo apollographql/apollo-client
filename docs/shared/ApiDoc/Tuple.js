@@ -1,7 +1,7 @@
 import React from "react";
 import { useMDXComponents } from "@mdx-js/react";
 import { useApiDocContext, PropertySignatureTable } from ".";
-
+import PropTypes from "prop-types";
 export function ManualTuple({ elements = [] }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
@@ -54,7 +54,7 @@ ManualTuple.propTypes = {
     PropTypes.shape({
       name: PropTypes.string.isRequired,
       type: PropTypes.string.isRequired,
-      description: PropTypes.string.isRequired,
+      description: PropTypes.oneOfType([PropTypes.node, PropTypes.string]).isRequired,
       canonicalReference: PropTypes.string,
     })
   ).isRequired,

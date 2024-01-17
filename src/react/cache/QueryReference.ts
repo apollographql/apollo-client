@@ -238,7 +238,10 @@ export class InternalQueryReference<TData = unknown> {
         // This occurs when switching to a result that is fully cached when this
         // class is instantiated. ObservableQuery will run reobserve when
         // subscribing, which delivers a result from the cache.
-        if (result.data === this.result.data) {
+        if (
+          result.data === this.result.data &&
+          result.networkStatus === this.result.networkStatus
+        ) {
           return;
         }
 

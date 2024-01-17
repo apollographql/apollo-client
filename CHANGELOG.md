@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.9.0-rc.0
+
+### Minor Changes
+
+- [#11495](https://github.com/apollographql/apollo-client/pull/11495) [`1190aa5`](https://github.com/apollographql/apollo-client/commit/1190aa59a106217f7192c1f81099adfa5e4365c1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Increase the default memory limits for `executeSelectionSet` and `executeSelectionSetArray`.
+
 ## 3.8.9
 
 ### Patch Changes

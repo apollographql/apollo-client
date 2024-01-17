@@ -1,11 +1,13 @@
 import * as React from "react";
 import type {
+  ApolloQueryResult,
   DocumentNode,
   FetchMoreQueryOptions,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryOptions,
 } from "../../core/index.js";
+import { NetworkStatus } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { wrapQueryRef } from "../cache/QueryReference.js";
 import type { QueryReference } from "../cache/QueryReference.js";
@@ -18,6 +20,7 @@ import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import type { CacheKey } from "../cache/types.js";
 import type { SkipToken } from "./constants.js";
+import { useTrackedExternalStore } from "./useTrackedExternalStore.js";
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -25,6 +28,7 @@ export type UseBackgroundQueryResult<
 > = {
   fetchMore: FetchMoreFunction<TData, TVariables>;
   refetch: RefetchFunction<TData, TVariables>;
+  networkStatus: NetworkStatus;
 };
 
 type BackgroundQueryHookOptionsNoInfer<
@@ -238,6 +242,27 @@ export function useBackgroundQuery<
     [queryRef]
   );
 
+  let valueRef = React.useRef<ApolloQueryResult<TData>>({
+    data: undefined as any,
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+  });
+  const trackedValue = useTrackedExternalStore(
+    React.useCallback(
+      (notify) => {
+        const sub = queryRef.observable.subscribe({
+          next(nextValue) {
+            valueRef.current = nextValue;
+            notify();
+          },
+        });
+        return () => sub.unsubscribe();
+      },
+      [queryRef.observable]
+    ),
+    () => valueRef.current
+  );
+
   queryRef.promiseCache = promiseCache;
 
   const wrappedQueryRef = React.useMemo(
@@ -247,6 +272,12 @@ export function useBackgroundQuery<
 
   return [
     didFetchResult.current ? wrappedQueryRef : void 0,
-    { fetchMore, refetch },
+    {
+      fetchMore,
+      refetch,
+      get networkStatus() {
+        return trackedValue.networkStatus;
+      },
+    },
   ];
 }

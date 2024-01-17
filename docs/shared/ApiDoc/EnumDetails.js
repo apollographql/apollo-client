@@ -2,8 +2,8 @@ import { useMDXComponents } from "@mdx-js/react";
 
 import PropTypes from "prop-types";
 import React, { useMemo } from "react";
-import { DocBlock, useApiDocContext, ApiDocHeading } from ".";
-import { GridItem, chakra } from "@chakra-ui/react";
+import { DocBlock, useApiDocContext, ApiDocHeading, SectionHeading } from ".";
+import { GridItem, Text } from "@chakra-ui/react";
 import { ResponsiveGrid } from "./ResponsiveGrid";
 import { sortWithCustomOrder } from "./sortWithCustomOrder";
 
@@ -35,16 +35,7 @@ export function EnumDetails({
       />
 
       <GridItem className="row">
-        <chakra.h6
-          className="fullWidth"
-          mb="4"
-          fontWeight="bold"
-          textTransform="uppercase"
-          fontSize="sm"
-          letterSpacing="wider"
-        >
-          Enumeration Members
-        </chakra.h6>
+        <SectionHeading>Enumeration Members</SectionHeading>
       </GridItem>
 
       <ResponsiveGrid columns="1fr">
@@ -55,9 +46,9 @@ export function EnumDetails({
               fontSize="md"
               sx={{ code: { bg: "none", p: 0 } }}
             >
-              <chakra.h6 fontSize="lg" mb="1" mr="1">
+              <Text fontSize="lg" mb="1" mr="1">
                 <MDX.inlineCode>{member.displayName}</MDX.inlineCode>
-              </chakra.h6>
+              </Text>
               <DocBlock canonicalReference={member.canonicalReference} />
             </GridItem>
           </React.Fragment>

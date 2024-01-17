@@ -2,9 +2,10 @@ import { useMDXComponents } from "@mdx-js/react";
 
 import PropTypes from "prop-types";
 import React from "react";
-import { GridItem, chakra } from "@chakra-ui/react";
+import { GridItem, Text } from "@chakra-ui/react";
 import {
   PropertySignatureTable,
+  SectionHeading,
   getInterfaceReference,
   useApiDocContext,
 } from ".";
@@ -21,15 +22,7 @@ export function ParameterTable({ canonicalReference, showHeaders = false }) {
     <>
       {showHeaders ?
         <GridItem className="row">
-          <chakra.h6
-            mb="4"
-            fontWeight="bold"
-            textTransform="uppercase"
-            fontSize="sm"
-            letterSpacing="wider"
-          >
-            Parameters
-          </chakra.h6>
+          <SectionHeading>Parameters</SectionHeading>
         </GridItem>
       : null}
       <ResponsiveGrid>
@@ -51,12 +44,12 @@ export function ParameterTable({ canonicalReference, showHeaders = false }) {
                 sx={{ code: { bg: "none", p: 0 } }}
                 borderBottom={interfaceReference ? "none" : undefined}
               >
-                <chakra.h6 fontSize="lg" mb="1">
+                <Text fontSize="lg" mb="1">
                   <MDX.inlineCode>{parameter.name}</MDX.inlineCode>
                   {parameter.optional ?
                     <em> (optional)</em>
                   : null}
-                </chakra.h6>
+                </Text>
                 <MDX.inlineCode color="tertiary">
                   {parameter.type}
                 </MDX.inlineCode>

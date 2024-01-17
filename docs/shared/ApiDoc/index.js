@@ -8,7 +8,12 @@ export {
   Summary,
 } from "./DocBlock";
 export { PropertySignatureTable } from "./PropertySignatureTable";
-export { ApiDocHeading, SubHeading, SourceLink } from "./Heading";
+export {
+  ApiDocHeading,
+  SubHeading,
+  SourceLink,
+  SectionHeading,
+} from "./Heading";
 export { InterfaceDetails } from "./InterfaceDetails";
 export { FunctionSignature, FunctionDetails } from "./Function";
 export { ParameterTable } from "./ParameterTable";

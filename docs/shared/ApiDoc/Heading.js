@@ -5,7 +5,7 @@ import { Box, Text } from "@chakra-ui/react";
 import { FunctionSignature } from ".";
 import { useApiDocContext } from "./Context";
 
-export function Heading({ headingLevel, link, children, ...props }) {
+export function Heading({ headingLevel, as, link, children, ...props }) {
   const MDX = useMDXComponents();
   let heading = children;
 
@@ -14,12 +14,12 @@ export function Heading({ headingLevel, link, children, ...props }) {
       <MDX.PrimaryLink href={`#${props.id}`}>{heading}</MDX.PrimaryLink>
     );
   }
-  const Tag = MDX[`h${headingLevel}`];
+  const Tag = as ? as : MDX[`h${headingLevel}`];
 
   return <Tag {...props}>{heading}</Tag>;
 }
 Heading.propTypes = {
-  headingLevel: PropTypes.number.isRequired,
+  headingLevel: PropTypes.number,
   link: PropTypes.bool,
   children: PropTypes.node.isRequired,
   id: PropTypes.string,
@@ -50,6 +50,9 @@ export function ApiDocHeading({
   link = false,
   signature = false,
   since = false,
+  prefix = "",
+  suffix = "",
+  ...props
 }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
@@ -74,8 +77,11 @@ export function ApiDocHeading({
       id={item.displayName.toLowerCase()}
       link={link}
       minVersion={since && item.comment?.since ? item.comment.since : undefined}
+      {...props}
     >
+      {prefix}
       {heading}
+      {suffix}
     </Heading>
   );
 
@@ -83,10 +89,12 @@ export function ApiDocHeading({
 }
 ApiDocHeading.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
-  headingLevel: PropTypes.number.isRequired,
+  headingLevel: PropTypes.number,
   link: PropTypes.bool,
   signature: PropTypes.bool,
   since: PropTypes.bool,
+  prefix: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
+  suffix: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
 };
 
 export function SourceLink({ canonicalReference }) {
@@ -107,3 +115,18 @@ export function SourceLink({ canonicalReference }) {
 SourceLink.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
 };
+
+export function SectionHeading(props) {
+  return (
+    <Text
+      className="fullWidth"
+      mb="4"
+      fontWeight="bold"
+      textTransform="uppercase"
+      fontSize="sm"
+      letterSpacing="wider"
+      {...props}
+    />
+  );
+}
+SectionHeading.propTypes = Text.propTypes;

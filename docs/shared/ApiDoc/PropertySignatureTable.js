@@ -2,8 +2,14 @@ import { useMDXComponents } from "@mdx-js/react";
 
 import PropTypes from "prop-types";
 import React, { useMemo } from "react";
-import { DocBlock, FunctionSignature, useApiDocContext } from ".";
-import { GridItem, Text, chakra } from "@chakra-ui/react";
+import {
+  DocBlock,
+  FunctionSignature,
+  useApiDocContext,
+  ApiDocHeading,
+  SectionHeading,
+} from ".";
+import { GridItem, Text } from "@chakra-ui/react";
 import { ResponsiveGrid } from "./ResponsiveGrid";
 import { sortWithCustomOrder } from "./sortWithCustomOrder";
 
@@ -20,9 +26,7 @@ export function PropertySignatureTable({
 
   const Wrapper = display === "parent" ? ResponsiveGrid : React.Fragment;
   const sortedProperties = useMemo(
-    () =>
-      // TODO extract function
-      item.properties.map(getItem).sort(sortWithCustomOrder(customOrder)),
+    () => item.properties.map(getItem).sort(sortWithCustomOrder(customOrder)),
     [item.properties, getItem, customOrder]
   );
   if (item.childrenIncomplete) {
@@ -36,16 +40,7 @@ export function PropertySignatureTable({
     <>
       {showHeaders ?
         <GridItem className="row">
-          <chakra.h6
-            className="fullWidth"
-            mb="4"
-            fontWeight="bold"
-            textTransform="uppercase"
-            fontSize="sm"
-            letterSpacing="wider"
-          >
-            Properties
-          </chakra.h6>
+          <SectionHeading>Properties</SectionHeading>
         </GridItem>
       : null}
       {item.childrenIncomplete ?
@@ -71,17 +66,19 @@ export function PropertySignatureTable({
               fontSize="md"
               sx={{ code: { bg: "none", p: 0 } }}
             >
-              <chakra.h6 fontSize="lg" mb="1" mr="1">
-                <MDX.inlineCode>
-                  <Text color="gray.400" as="span">
-                    {prefix}
-                  </Text>
-                  {property.displayName}
-                </MDX.inlineCode>
-                {property.optional ?
-                  <em> (optional)</em>
-                : null}
-              </chakra.h6>
+              <ApiDocHeading
+                canonicalReference={property.canonicalReference}
+                fontSize="lg"
+                as={Text}
+                since
+                link={false}
+                prefix={
+                  prefix ?
+                    <MDX.inlineCode color="gray.400">{prefix}</MDX.inlineCode>
+                  : null
+                }
+                suffix={property.optional ? <em> (optional)</em> : null}
+              />
               <MDX.inlineCode color="tertiary">
                 {property.kind === "MethodSignature" ?
                   <FunctionSignature

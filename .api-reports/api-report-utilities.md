@@ -729,9 +729,9 @@ export const enum defaultCacheSizes {
     // (undocumented)
     "fragmentRegistry.transform" = 2000,
     // (undocumented)
-    "inMemoryCache.executeSelectionSet" = 10000,
+    "inMemoryCache.executeSelectionSet" = 50000,
     // (undocumented)
-    "inMemoryCache.executeSubSelectedArray" = 5000,
+    "inMemoryCache.executeSubSelectedArray" = 10000,
     // (undocumented)
     "inMemoryCache.maybeBroadcastWatch" = 5000,
     // (undocumented)

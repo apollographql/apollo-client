@@ -1,12 +1,5 @@
 export { useApiDocContext } from "./Context";
-export {
-  DocBlock,
-  Deprecated,
-  Example,
-  Remarks,
-  Since,
-  Summary,
-} from "./DocBlock";
+export { DocBlock, Deprecated, Example, Remarks, Summary } from "./DocBlock";
 export { PropertySignatureTable } from "./PropertySignatureTable";
 export {
   ApiDocHeading,

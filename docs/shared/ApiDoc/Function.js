@@ -99,14 +99,12 @@ export function FunctionDetails({
         canonicalReference={canonicalReference}
         headingLevel={headingLevel}
         since
-        link
       />
       <DocBlock canonicalReference={canonicalReference} deprecated remarks />
       <Example canonicalReference={canonicalReference}>
         <SubHeading
           canonicalReference={canonicalReference}
           headingLevel={headingLevel + 1}
-          link
         >
           Example
         </SubHeading>
@@ -114,7 +112,6 @@ export function FunctionDetails({
       <SubHeading
         canonicalReference={canonicalReference}
         headingLevel={headingLevel + 1}
-        link
       >
         Signature
       </SubHeading>
@@ -127,7 +124,6 @@ export function FunctionDetails({
       <SubHeading
         canonicalReference={canonicalReference}
         headingLevel={headingLevel + 1}
-        link
       >
         Parameters
       </SubHeading>
@@ -140,7 +136,6 @@ export function FunctionDetails({
           <SubHeading
             canonicalReference={canonicalReference}
             headingLevel={headingLevel + 1}
-            link
           >
             Result
           </SubHeading>

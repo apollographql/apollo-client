@@ -5,7 +5,14 @@ import { Box, Text } from "@chakra-ui/react";
 import { FunctionSignature } from ".";
 import { useApiDocContext } from "./Context";
 
-export function Heading({ headingLevel, as, link, children, ...props }) {
+export function Heading({
+  headingLevel,
+  link,
+  children,
+  as,
+  minVersion,
+  ...props
+}) {
   const MDX = useMDXComponents();
   let heading = children;
 
@@ -16,24 +23,38 @@ export function Heading({ headingLevel, as, link, children, ...props }) {
   }
   const Tag = as ? as : MDX[`h${headingLevel}`];
 
-  return <Tag {...props}>{heading}</Tag>;
+  return (
+    <Tag {...props}>
+      {heading}
+      {minVersion ?
+        <MDX.MinVersionTag minVersion={minVersion} />
+      : null}
+    </Tag>
+  );
 }
 Heading.propTypes = {
   headingLevel: PropTypes.number,
   link: PropTypes.bool,
   children: PropTypes.node.isRequired,
   id: PropTypes.string,
+  as: PropTypes.any,
+  minVersion: PropTypes.string,
 };
 
-export function SubHeading({ canonicalReference, ...props }) {
+export function SubHeading({
+  canonicalReference,
+  link = typeof headingLevel === "number" && headingLevel <= 4,
+  ...props
+}) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
 
   return (
     <Heading
       id={
-        props.id ||
-        `${item.displayName}-${props.title || props.children}`.toLowerCase()
+        props.id || link ?
+          `${item.displayName}-${props.title || props.children}`.toLowerCase()
+        : undefined
       }
       {...props}
     />
@@ -47,7 +68,7 @@ SubHeading.propTypes = {
 export function ApiDocHeading({
   canonicalReference,
   headingLevel,
-  link = false,
+  link = typeof headingLevel === "number" && headingLevel <= 4,
   signature = false,
   since = false,
   prefix = "",
@@ -73,8 +94,7 @@ export function ApiDocHeading({
   heading = (
     <Heading
       headingLevel={headingLevel}
-      title={item.displayName}
-      id={item.displayName.toLowerCase()}
+      id={link ? item.displayName.toLowerCase() : undefined}
       link={link}
       minVersion={since && item.comment?.since ? item.comment.since : undefined}
       {...props}

@@ -14,11 +14,7 @@ export function InterfaceDetails({
         headingLevel={headingLevel}
         link={link}
       />
-      <DocBlock
-        canonicalReference={canonicalReference}
-        heading
-        headingLevel={3}
-      />
+      <DocBlock canonicalReference={canonicalReference} />
       <PropertySignatureTable
         showHeaders
         canonicalReference={canonicalReference}

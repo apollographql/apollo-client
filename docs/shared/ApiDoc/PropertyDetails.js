@@ -8,12 +8,14 @@ export function PropertyDetails({ canonicalReference, headingLevel }) {
       <ApiDocHeading
         canonicalReference={canonicalReference}
         headingLevel={headingLevel}
+        since
       />
       <DocBlock
         canonicalReference={canonicalReference}
         remark
         remarksCollapsible
         example
+        deprecated
       />
     </>
   );

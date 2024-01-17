@@ -71,7 +71,6 @@ export function PropertySignatureTable({
                 fontSize="lg"
                 as={Text}
                 since
-                link={false}
                 prefix={
                   prefix ?
                     <MDX.inlineCode color="gray.400">{prefix}</MDX.inlineCode>

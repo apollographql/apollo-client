@@ -46,10 +46,22 @@ export function EnumDetails({
               fontSize="md"
               sx={{ code: { bg: "none", p: 0 } }}
             >
-              <Text fontSize="lg" mb="1" mr="1">
-                <MDX.inlineCode>{member.displayName}</MDX.inlineCode>
-              </Text>
-              <DocBlock canonicalReference={member.canonicalReference} />
+              <ApiDocHeading
+                canonicalReference={member.canonicalReference}
+                fontSize="lg"
+                mb="1"
+                mr="1"
+                as={Text}
+                since
+              />
+              <DocBlock
+                canonicalReference={member.canonicalReference}
+                summary
+                remarks
+                remarksCollapsible
+                example
+                deprecated
+              />
             </GridItem>
           </React.Fragment>
         ))}

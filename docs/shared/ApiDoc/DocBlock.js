@@ -10,13 +10,11 @@ export function DocBlock({
   remarks = false,
   example = false,
   remarksCollapsible = false,
-  since = false,
   deprecated = false,
 }) {
   return (
     <Stack spacing="4">
       {deprecated && <Deprecated canonicalReference={canonicalReference} />}
-      {since && <Since canonicalReference={canonicalReference} />}
       {summary && <Summary canonicalReference={canonicalReference} />}
       {remarks && (
         <Remarks
@@ -35,7 +33,6 @@ DocBlock.propTypes = {
   remarks: PropTypes.bool,
   example: PropTypes.bool,
   remarksCollapsible: PropTypes.bool,
-  since: PropTypes.bool,
   deprecated: PropTypes.bool,
 };
 
@@ -56,9 +53,6 @@ MaybeCollapsible.propTypes = {
   children: PropTypes.node,
 };
 
-/**
- * Might still need more work on the Gatsby side to get this to work.
- */
 export function Deprecated({ canonicalReference, collapsible = false }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
@@ -75,25 +69,6 @@ export function Deprecated({ canonicalReference, collapsible = false }) {
   );
 }
 Deprecated.propTypes = {
-  canonicalReference: PropTypes.string.isRequired,
-  collapsible: PropTypes.bool,
-};
-
-/**
- * Might still need more work on the Gatsby side to get this to work.
- */
-export function Since({ canonicalReference, collapsible = false }) {
-  const getItem = useApiDocContext();
-  const item = getItem(canonicalReference);
-  const value = item.comment?.since;
-  if (!value) return null;
-  return (
-    <MaybeCollapsible collapsible={collapsible}>
-      <i>Added to Apollo Client in version {value}</i>
-    </MaybeCollapsible>
-  );
-}
-Since.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   collapsible: PropTypes.bool,
 };

@@ -43,6 +43,7 @@ Heading.propTypes = {
 
 export function SubHeading({
   canonicalReference,
+  headingLevel,
   link = typeof headingLevel === "number" && headingLevel <= 4,
   ...props
 }) {
@@ -52,10 +53,12 @@ export function SubHeading({
   return (
     <Heading
       id={
-        props.id || link ?
+        link ?
           `${item.displayName}-${props.title || props.children}`.toLowerCase()
         : undefined
       }
+      link={link}
+      headingLevel={headingLevel}
       {...props}
     />
   );

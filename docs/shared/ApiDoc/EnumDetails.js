@@ -53,6 +53,8 @@ export function EnumDetails({
                 mr="1"
                 as={Text}
                 since
+                link
+                id={`${item.displayName.toLowerCase()}-member-${member.displayName.toLowerCase()}`}
               />
               <DocBlock
                 canonicalReference={member.canonicalReference}

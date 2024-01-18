@@ -35,6 +35,7 @@ export function ParameterTable({ canonicalReference, showHeaders = false }) {
             item,
             getItem
           );
+          const id = `${item.displayName.toLowerCase()}-parameters-${parameter.name.toLowerCase()}`;
 
           return (
             <React.Fragment key={idx}>
@@ -44,12 +45,14 @@ export function ParameterTable({ canonicalReference, showHeaders = false }) {
                 sx={{ code: { bg: "none", p: 0 } }}
                 borderBottom={interfaceReference ? "none" : undefined}
               >
-                <Text fontSize="lg" mb="1">
-                  <MDX.inlineCode>{parameter.name}</MDX.inlineCode>
-                  {parameter.optional ?
-                    <em> (optional)</em>
-                  : null}
-                </Text>
+                <MDX.PrimaryLink href={`#${id}`} id={id}>
+                  <Text fontSize="lg" mb="1">
+                    <MDX.inlineCode>{parameter.name}</MDX.inlineCode>
+                    {parameter.optional ?
+                      <em> (optional)</em>
+                    : null}
+                  </Text>
+                </MDX.PrimaryLink>
                 <MDX.inlineCode color="tertiary">
                   {parameter.type}
                 </MDX.inlineCode>
@@ -72,6 +75,7 @@ export function ParameterTable({ canonicalReference, showHeaders = false }) {
                   <PropertySignatureTable
                     canonicalReference={interfaceReference.canonicalReference}
                     display="child"
+                    idPrefix={id}
                   />
                 </details>
               )}

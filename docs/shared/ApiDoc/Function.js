@@ -77,6 +77,7 @@ export function ReturnType({ canonicalReference }) {
           </GridItem>
           <PropertySignatureTable
             canonicalReference={interfaceReference.canonicalReference}
+            idPrefix={`${item.displayName.toLowerCase()}-result`}
           />
         </details>
       : null}

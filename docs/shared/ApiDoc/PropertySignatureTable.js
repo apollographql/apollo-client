@@ -19,6 +19,7 @@ export function PropertySignatureTable({
   showHeaders = false,
   display = "parent",
   customOrder = [],
+  idPrefix = "",
 }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
@@ -84,6 +85,12 @@ export function PropertySignatureTable({
                         : null
                       }
                       suffix={property.optional ? <em> (optional)</em> : null}
+                      link={!!idPrefix}
+                      id={
+                        idPrefix ?
+                          `${idPrefix}-${property.displayName.toLowerCase()}`
+                        : undefined
+                      }
                     />
                     <MDX.inlineCode color="tertiary">
                       {property.kind === "MethodSignature" ?
@@ -121,4 +128,5 @@ PropertySignatureTable.propTypes = {
   showHeaders: PropTypes.bool,
   display: PropTypes.oneOf(["parent", "child"]),
   customOrder: PropTypes.arrayOf(PropTypes.string),
+  idPrefix: PropTypes.string,
 };

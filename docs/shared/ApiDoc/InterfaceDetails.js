@@ -1,12 +1,14 @@
 import PropTypes from "prop-types";
 import React from "react";
-import { ApiDocHeading, DocBlock, PropertySignatureTable } from ".";
+import { ApiDocHeading, DocBlock, PropertySignatureTable, useApiDocContext } from ".";
 export function InterfaceDetails({
   canonicalReference,
   headingLevel,
   link,
   customPropertyOrder,
 }) {
+  const getItem = useApiDocContext();
+  const item = getItem(canonicalReference);
   return (
     <>
       <ApiDocHeading
@@ -21,6 +23,7 @@ export function InterfaceDetails({
         methods
         properties
         customOrder={customPropertyOrder}
+        idPrefix={item.displayName.toLowerCase()}
       />
     </>
   );

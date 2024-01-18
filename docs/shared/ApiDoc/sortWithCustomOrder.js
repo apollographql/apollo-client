@@ -39,7 +39,6 @@ function sortLocally(a, b) {
  * @param {string[]} customOrder
  */
 export function groupItems(items = [], customOrder = []) {
-  console.log(items);
   const customItems = [];
   const groupedItems = [];
   for (const item of items) {
@@ -63,7 +62,6 @@ export function groupItems(items = [], customOrder = []) {
       items,
     ])
   );
-  console.log({ groups, customItems });
   return customItems.length === 0 ?
       groupsWithoutPrefix
     : {

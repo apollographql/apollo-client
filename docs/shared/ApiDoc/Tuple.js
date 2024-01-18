@@ -2,7 +2,7 @@ import React from "react";
 import { useMDXComponents } from "@mdx-js/react";
 import { useApiDocContext, PropertySignatureTable } from ".";
 import PropTypes from "prop-types";
-export function ManualTuple({ elements = [] }) {
+export function ManualTuple({ elements = [], idPrefix = "" }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
 
@@ -36,6 +36,7 @@ export function ManualTuple({ elements = [] }) {
                         <summary>Show/hide child attributes</summary>
                         <PropertySignatureTable
                           canonicalReference={canonicalReference}
+                          idPrefix={idPrefix ? `${idPrefix}-${name.toLowerCase()}` : undefined}
                         />
                       </details>
                     </MDX.td>

@@ -80,11 +80,11 @@ export interface ObservableQueryFields<
   TData,
   TVariables extends OperationVariables,
 > {
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
   startPolling(pollInterval: number): void;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
   stopPolling(): void;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
   subscribeToMore<
     TSubscriptionData = TData,
     TSubscriptionVariables extends OperationVariables = TVariables,
@@ -95,14 +95,14 @@ export interface ObservableQueryFields<
       TSubscriptionData
     >
   ): () => void;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
   updateQuery<TVars extends OperationVariables = TVariables>(
     mapFn: (
       previousQueryResult: TData,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">
     ) => TData
   ): void;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>>;
   /** @internal */
   reobserve(
@@ -111,7 +111,7 @@ export interface ObservableQueryFields<
   ): Promise<ApolloQueryResult<TData>>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
   variables: TVariables | undefined;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
   fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
@@ -368,7 +368,7 @@ export interface MutationResult<TData = any> {
   called: boolean;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   client: ApolloClient<object>;
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member(1)} */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member} */
   reset(): void;
 }
 

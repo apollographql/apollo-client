@@ -1868,7 +1868,7 @@ export interface ObservableQueryFields<TData, TVariables extends OperationVariab
         }) => TData;
     }): Promise<ApolloQueryResult<TFetchData>>;
     refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>>;
-    // (undocumented)
+    // @internal (undocumented)
     reobserve(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Promise<ApolloQueryResult<TData>>;
     startPolling(pollInterval: number): void;
     stopPolling(): void;
@@ -2675,7 +2675,7 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
     data?: TData;
     error?: ApolloError;
     loading: boolean;
-    // (undocumented)
+    // @internal (undocumented)
     variables?: TVariables;
 }
 

@@ -1376,7 +1376,7 @@ export interface ObservableQueryFields<TData, TVariables extends OperationVariab
         }) => TData;
     }): Promise<ApolloQueryResult<TFetchData>>;
     refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>>;
-    // (undocumented)
+    // @internal (undocumented)
     reobserve(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Promise<ApolloQueryResult<TData>>;
     startPolling(pollInterval: number): void;
     stopPolling(): void;
@@ -2052,7 +2052,7 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
     data?: TData;
     error?: ApolloError;
     loading: boolean;
-    // (undocumented)
+    // @internal (undocumented)
     variables?: TVariables;
 }
 
@@ -2381,7 +2381,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/types/DataProxy.ts:153:5 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts:146:7 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:100:3 - (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:101:3 - (ae-forgotten-export) The symbol "CanReadFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:102:3 - (ae-forgotten-export) The symbol "isReference" needs to be exported by the entry point index.d.ts

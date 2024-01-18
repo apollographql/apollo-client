@@ -502,7 +502,7 @@ export interface MutationResultDocumentation {
   /**
    * A function that you can call to reset the mutation's result to its initial, uncalled state.
    */
-  reset(): unknown;
+  reset: unknown;
 }
 
 export interface SubscriptionOptionsDocumentation {

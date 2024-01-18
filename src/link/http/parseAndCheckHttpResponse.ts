@@ -205,14 +205,6 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
       .text()
       .then((bodyText) => parseJsonBody(response, bodyText))
       .then((result: any) => {
-        if (response.status >= 300) {
-          // Network error
-          throwServerError(
-            response,
-            result,
-            `Response not successful: Received status code ${response.status}`
-          );
-        }
         if (
           !Array.isArray(result) &&
           !hasOwnProperty.call(result, "data") &&

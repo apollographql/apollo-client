@@ -1,5 +1,23 @@
 # @apollo/client
 
+## 3.9.0-rc.0
+
+### Minor Changes
+
+- [#11495](https://github.com/apollographql/apollo-client/pull/11495) [`1190aa5`](https://github.com/apollographql/apollo-client/commit/1190aa59a106217f7192c1f81099adfa5e4365c1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Increase the default memory limits for `executeSelectionSet` and `executeSelectionSetArray`.
+
+## 3.8.9
+
+### Patch Changes
+
+- [#11472](https://github.com/apollographql/apollo-client/pull/11472) [`afc844d`](https://github.com/apollographql/apollo-client/commit/afc844dd8d6f9f7a3e2003f9a5b541291dfe3fb4) Thanks [@alessbell](https://github.com/alessbell)! - Fix delay: Infinity when set on a MockResponse passed to Mocked Provider so it indefinitely enters loading state.
+
+- [#11464](https://github.com/apollographql/apollo-client/pull/11464) [`aac12b2`](https://github.com/apollographql/apollo-client/commit/aac12b221a6cb776d4941b6c8aadf04f0f0acd27) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Prevent `useFragment` from excessively unsubscribing and resubscribing the fragment with the cache on every render.
+
+- [#11449](https://github.com/apollographql/apollo-client/pull/11449) [`f40cda4`](https://github.com/apollographql/apollo-client/commit/f40cda45841e93b056c781c19651b54464f7346a) Thanks [@phryneas](https://github.com/phryneas)! - Removes refences to the typescript "dom" lib.
+
+- [#11470](https://github.com/apollographql/apollo-client/pull/11470) [`e293bc9`](https://github.com/apollographql/apollo-client/commit/e293bc90d6f7937a6fc7c169f7b16eeb39d5fd49) Thanks [@phryneas](https://github.com/phryneas)! - Remove an unnecessary check from parseAndCheckHttpResponse.
+
 ## 3.9.0-beta.1
 
 ### Minor Changes

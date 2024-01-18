@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.9.0-rc.1
+
+### Patch Changes
+
+- [#11503](https://github.com/apollographql/apollo-client/pull/11503) [`67f62e3`](https://github.com/apollographql/apollo-client/commit/67f62e359bc471787d066319326e5582b4a635c8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Release changes from [`v3.8.10`](https://github.com/apollographql/apollo-client/releases/tag/v3.8.10)
+
 ## 3.8.10
 
 ### Patch Changes

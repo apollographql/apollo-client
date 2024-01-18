@@ -48,13 +48,11 @@ export interface BaseQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
   TData = any,
 > extends SharedWatchQueryOptions<TVariables, TData> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
   ssr?: boolean;
-  /**
-   * The instance of `ApolloClient` to use to execute the query.
-   *
-   * By default, the instance that's passed down via context is used, but you can provide a different instance here.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient<any>;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
 }
 
@@ -62,8 +60,11 @@ export interface QueryFunctionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
   skip?: boolean;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
   onCompleted?: (data: TData) => void;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
 
   // Default WatchQueryOptions for this useQuery, providing initial values for
@@ -71,6 +72,7 @@ export interface QueryFunctionOptions<
   // by option, not whole), but never overriding options previously passed to
   // useQuery (or options added/modified later by other means).
   // TODO What about about default values that are expensive to evaluate?
+  /** @internal */
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 
@@ -186,6 +188,7 @@ export interface QueryDataOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {
   children?: (result: QueryResult<TData, TVariables>) => ReactTypes.ReactNode;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
@@ -203,7 +206,7 @@ export interface LazyQueryHookOptions<
   /** {@inheritDoc @apollo/client!QueryFunctionOptions#onError:member} */
   onError?: (error: ApolloError) => void;
 
-  /** {@inheritDoc @apollo/client!QueryFunctionOptions#defaultOptions:member} */
+  /** @internal */
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 export interface LazyQueryHookExecOptions<
@@ -224,23 +227,19 @@ export interface SuspenseQueryHookOptions<
 > {
   /** {@inheritDoc @apollo/client!BaseQueryOptions#client:member} */
   client?: ApolloClient<any>;
-  /** {@inheritDoc @apollo/client!QueryOptions#context:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
-  /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: TVariables;
-  /** {@inheritDoc @apollo/client!QueryOptions#errorPolicy:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
-  /** {@inheritDoc @apollo/client!QueryOptions#canonizeResults:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
-  /** {@inheritDoc @apollo/client!QueryOptions#returnPartialData:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
-  /** {@inheritDoc @apollo/client!~SharedWatchQueryOptions#refetchWritePolicy:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
   refetchWritePolicy?: RefetchWritePolicy;
-  /**
-   * Watched queries must opt into overwriting existing data on refetch, by passing `refetchWritePolicy: "overwrite"` in their `WatchQueryOptions`.
-   *
-   * The default value is `"overwrite"`.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
   /**
    * A unique identifier for the query. Each item in the array must be a stable identifier to prevent infinite fetches.
@@ -250,10 +249,7 @@ export interface SuspenseQueryHookOptions<
   queryKey?: string | number | any[];
 
   /**
-   * If `true`, the query is not executed. The default value is `false`.
-   *
-   * @deprecated We recommend using `skipToken` in place of the `skip` option as
-   * it is more type-safe.
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
    *
    * @example Recommended usage of `skipToken`:
    * ```ts
@@ -261,7 +257,7 @@ export interface SuspenseQueryHookOptions<
    *
    * const { data } = useSuspenseQuery(query, id ? { variables: { id } } : skipToken);
    * ```
-   */
+   * */
   skip?: boolean;
 }
 
@@ -287,10 +283,7 @@ export interface BackgroundQueryHookOptions<
   queryKey?: string | number | any[];
 
   /**
-   * If `true`, the query is not executed. The default value is `false`.
-   *
-   * @deprecated We recommend using `skipToken` in place of the `skip` option as
-   * it is more type-safe.
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
    *
    * @example Recommended usage of `skipToken`:
    * ```ts
@@ -308,64 +301,21 @@ export type LoadableQueryHookFetchPolicy = Extract<
 >;
 
 export interface LoadableQueryHookOptions {
-  /**
-   * Whether to canonize cache results before returning them. Canonization
-   * takes some extra time, but it speeds up future deep equality comparisons.
-   * Defaults to false.
-   *
-   * @deprecated
-   * Using `canonizeResults` can result in memory leaks so we generally do not
-   * recommend using this option anymore.
-   * A future version of Apollo Client will contain a similar feature without
-   * the risk of memory leaks.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
-  /**
-   * The instance of {@link ApolloClient} to use to execute the query.
-   *
-   * By default, the instance that's passed down via context is used, but you
-   * can provide a different instance here.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient<any>;
-  /**
-   * Context to be passed to link execution chain
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
-  /**
-   * Specifies the {@link ErrorPolicy} to be used for this query
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
-  /**
-   *
-   * Specifies how the query interacts with the Apollo Client cache during
-   * execution (for example, whether it checks the cache for results before
-   * sending a request to the server).
-   *
-   * For details, see {@link https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy | Setting a fetch policy}.
-   *
-   * The default value is `cache-first`.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: LoadableQueryHookFetchPolicy;
-  /**
-   * A unique identifier for the query. Each item in the array must be a stable
-   * identifier to prevent infinite fetches.
-   *
-   * This is useful when using the same query and variables combination in more
-   * than one component, otherwise the components may clobber each other. This
-   * can also be used to force the query to re-evaluate fresh.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
   queryKey?: string | number | any[];
-  /**
-   * Specifies whether a {@link NetworkStatus.refetch} operation should merge
-   * incoming field data with existing data, or overwrite the existing data.
-   * Overwriting is probably preferable, but merging is currently the default
-   * behavior, for backwards compatibility with Apollo Client 3.x.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
-  /**
-   * Allow returning incomplete data from the cache when a larger query cannot
-   * be fully satisfied by the cache, instead of returning nothing.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
 }
 
@@ -373,7 +323,9 @@ export interface LoadableQueryHookOptions {
  * @deprecated This type will be removed in the next major version of Apollo Client
  */
 export interface QueryLazyOptions<TVariables> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: TVariables;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
 }
 

@@ -28,3 +28,46 @@ export function sortWithCustomOrder(customOrder = []) {
     }
   };
 }
+
+function sortLocally(a, b) {
+  return a.localeCompare(b);
+}
+
+/**
+ *
+ * @param {Array<{displayName: string, comment: { docGroup: string }}>} items
+ * @param {string[]} customOrder
+ */
+export function groupItems(items = [], customOrder = []) {
+  console.log(items);
+  const customItems = [];
+  const groupedItems = [];
+  for (const item of items) {
+    if (customOrder.includes(item.displayName)) customItems.push(item);
+    else groupedItems.push(item);
+  }
+  customItems.sort(sortWithCustomOrder(customOrder));
+  const groupNames = [
+    ...new Set(groupedItems.map((item) => item.comment?.docGroup || "Other")),
+  ].sort(sortLocally);
+  const groups = Object.fromEntries(groupNames.map((name) => [name, []]));
+  for (const item of groupedItems) {
+    groups[item.comment?.docGroup || "Other"].push(item);
+  }
+  for (const group of Object.values(groups)) {
+    group.sort(sortWithCustomOrder([]));
+  }
+  const groupsWithoutPrefix = Object.fromEntries(
+    Object.entries(groups).map(([name, items]) => [
+      name.replace(/^\s*\d*\.\s*/, ""),
+      items,
+    ])
+  );
+  console.log({ groups, customItems });
+  return customItems.length === 0 ?
+      groupsWithoutPrefix
+    : {
+        "": customItems,
+        ...groupsWithoutPrefix,
+      };
+}

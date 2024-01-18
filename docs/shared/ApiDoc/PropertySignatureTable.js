@@ -11,7 +11,7 @@ import {
 } from ".";
 import { GridItem, Text } from "@chakra-ui/react";
 import { ResponsiveGrid } from "./ResponsiveGrid";
-import { sortWithCustomOrder } from "./sortWithCustomOrder";
+import { groupItems } from "./sortWithCustomOrder";
 
 export function PropertySignatureTable({
   canonicalReference,
@@ -25,8 +25,8 @@ export function PropertySignatureTable({
   const item = getItem(canonicalReference);
 
   const Wrapper = display === "parent" ? ResponsiveGrid : React.Fragment;
-  const sortedProperties = useMemo(
-    () => item.properties.map(getItem).sort(sortWithCustomOrder(customOrder)),
+  const groupedProperties = useMemo(
+    () => groupItems(item.properties.map(getItem), customOrder),
     [item.properties, getItem, customOrder]
   );
   if (item.childrenIncomplete) {
@@ -58,48 +58,56 @@ export function PropertySignatureTable({
             <GridItem className="cell heading">Description</GridItem>
           </>
         : null}
-
-        {sortedProperties.map((property) => (
-          <React.Fragment key={property.id}>
-            <GridItem
-              className="first cell"
-              fontSize="md"
-              sx={{ code: { bg: "none", p: 0 } }}
-            >
-              <ApiDocHeading
-                canonicalReference={property.canonicalReference}
-                fontSize="lg"
-                as={Text}
-                since
-                prefix={
-                  prefix ?
-                    <MDX.inlineCode color="gray.400">{prefix}</MDX.inlineCode>
-                  : null
-                }
-                suffix={property.optional ? <em> (optional)</em> : null}
-              />
-              <MDX.inlineCode color="tertiary">
-                {property.kind === "MethodSignature" ?
-                  <FunctionSignature
-                    canonicalReference={property.canonicalReference}
-                    name={false}
-                    parameterTypes
-                    arrow
-                  />
-                : property.type}
-              </MDX.inlineCode>
-            </GridItem>
-            <GridItem className="cell" fontSize="md" lineHeight="base">
-              <DocBlock
-                canonicalReference={property.canonicalReference}
-                deprecated
-                summary
-                remarks
-                remarkCollapsible
-              />
-            </GridItem>
-          </React.Fragment>
-        ))}
+        {Object.entries(groupedProperties).map(
+          ([groupName, sortedProperties]) => (
+            <>
+              {groupName ? <GridItem className="row heading">{groupName}</GridItem> : null}
+              {sortedProperties.map((property) => (
+                <React.Fragment key={property.id}>
+                  <GridItem
+                    className="first cell"
+                    fontSize="md"
+                    sx={{ code: { bg: "none", p: 0 } }}
+                  >
+                    <ApiDocHeading
+                      canonicalReference={property.canonicalReference}
+                      fontSize="lg"
+                      as={Text}
+                      since
+                      prefix={
+                        prefix ?
+                          <MDX.inlineCode color="gray.400">
+                            {prefix}
+                          </MDX.inlineCode>
+                        : null
+                      }
+                      suffix={property.optional ? <em> (optional)</em> : null}
+                    />
+                    <MDX.inlineCode color="tertiary">
+                      {property.kind === "MethodSignature" ?
+                        <FunctionSignature
+                          canonicalReference={property.canonicalReference}
+                          name={false}
+                          parameterTypes
+                          arrow
+                        />
+                      : property.type}
+                    </MDX.inlineCode>
+                  </GridItem>
+                  <GridItem className="cell" fontSize="md" lineHeight="base">
+                    <DocBlock
+                      canonicalReference={property.canonicalReference}
+                      deprecated
+                      summary
+                      remarks
+                      remarkCollapsible
+                    />
+                  </GridItem>
+                </React.Fragment>
+              ))}
+            </>
+          )
+        )}
       </Wrapper>
     </>
   );

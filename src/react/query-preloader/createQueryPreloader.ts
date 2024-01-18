@@ -20,16 +20,16 @@ import type { NoInfer } from "../index.js";
 type VariablesOption<TVariables extends OperationVariables> =
   [TVariables] extends [never] ?
     {
-      /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
       variables?: Record<string, never>;
     }
   : {} extends OnlyRequiredProperties<TVariables> ?
     {
-      /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
       variables?: TVariables;
     }
   : {
-      /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
       variables: TVariables;
     };
 
@@ -41,15 +41,15 @@ export type PreloadQueryFetchPolicy = Extract<
 export type PreloadQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
 > = {
-  /** {@inheritDoc @apollo/client!QueryOptions#canonizeResults:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
-  /** {@inheritDoc @apollo/client!QueryOptions#context:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
-  /** {@inheritDoc @apollo/client!QueryOptions#errorPolicy:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
-  /** {@inheritDoc @apollo/client!QueryOptions#fetchPolicy:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: PreloadQueryFetchPolicy;
-  /** {@inheritDoc @apollo/client!QueryOptions#returnPartialData:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
   /** {@inheritDoc @apollo/client!~SharedWatchQueryOptions#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;

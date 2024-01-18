@@ -53,69 +53,35 @@ export type ErrorPolicy = "none" | "ignore" | "all";
  */
 export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   /**
-   * A GraphQL document that consists of a single query to be sent down to the
-   * server.
-   */
-  // TODO REFACTOR: rename this to document. Didn't do it yet because it's in a
-  // lot of tests.
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member}
+   *  */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
-  /**
-   * A map going from variable name to variable value, where the variables are used
-   * within the GraphQL query.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: TVariables;
 
-  /**
-   * Specifies the {@link ErrorPolicy} to be used for this query
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
 
-  /**
-   * Context to be passed to link execution chain
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
 
-  /**
-   * Specifies the {@link FetchPolicy} to be used for this query
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: FetchPolicy;
 
-  /**
-   * The time interval (in milliseconds) on which this query should be
-   * refetched from the server.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
   pollInterval?: number;
 
-  /**
-   * Whether or not updates to the network status should trigger next on the observer of this query
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
   notifyOnNetworkStatusChange?: boolean;
 
-  /**
-   * Allow returning incomplete data from the cache when a larger query cannot
-   * be fully satisfied by the cache, instead of returning nothing.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
 
-  /**
-   * If `true`, perform a query `refetch` if the query result is marked as
-   * being partial, and the returned data is reset to an empty Object by the
-   * Apollo Client `QueryManager` (due to a cache miss).
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#partialRefetch:member} */
   partialRefetch?: boolean;
 
-  /**
-   * Whether to canonize cache results before returning them. Canonization
-   * takes some extra time, but it speeds up future deep equality comparisons.
-   * Defaults to false.
-   *
-   * @deprecated
-   * Using `canonizeResults` can result in memory leaks so we generally do not
-   * recommend using this option anymore.
-   * A future version of Apollo Client will contain a similar feature without
-   * the risk of memory leaks.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
 }
 
@@ -126,7 +92,7 @@ export interface WatchQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
   TData = any,
 > extends SharedWatchQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryOptions#query:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
@@ -134,14 +100,10 @@ export interface SharedWatchQueryOptions<
   TVariables extends OperationVariables,
   TData,
 > {
-  /**
-   * Specifies the {@link FetchPolicy} to be used for this query.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: WatchQueryFetchPolicy;
 
-  /**
-   * Specifies the {@link FetchPolicy} to be used after this query has completed.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
   nextFetchPolicy?:
     | WatchQueryFetchPolicy
     | ((
@@ -150,43 +112,34 @@ export interface SharedWatchQueryOptions<
         context: NextFetchPolicyContext<TData, TVariables>
       ) => WatchQueryFetchPolicy);
 
-  /**
-   * Defaults to the initial value of options.fetchPolicy, but can be explicitly
-   * configured to specify the WatchQueryFetchPolicy to revert back to whenever
-   * variables change (unless nextFetchPolicy intervenes).
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
   initialFetchPolicy?: WatchQueryFetchPolicy;
 
-  /**
-   * Specifies whether a {@link NetworkStatus.refetch} operation should merge
-   * incoming field data with existing data, or overwrite the existing data.
-   * Overwriting is probably preferable, but merging is currently the default
-   * behavior, for backwards compatibility with Apollo Client 3.x.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
 
-  /** {@inheritDoc @apollo/client!QueryOptions#variables:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: TVariables;
 
-  /** {@inheritDoc @apollo/client!QueryOptions#errorPolicy:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
 
-  /** {@inheritDoc @apollo/client!QueryOptions#context:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
 
-  /** {@inheritDoc @apollo/client!QueryOptions#pollInterval:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
   pollInterval?: number;
 
-  /** {@inheritDoc @apollo/client!QueryOptions#notifyOnNetworkStatusChange:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
   notifyOnNetworkStatusChange?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptions#returnPartialData:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptions#partialRefetch:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#partialRefetch:member} */
   partialRefetch?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptions#canonizeResults:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
 
   /**
@@ -208,7 +161,9 @@ export interface NextFetchPolicyContext<
 }
 
 export interface FetchMoreQueryOptions<TVariables, TData = any> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: Partial<TVariables>;
   context?: DefaultContext;
 }

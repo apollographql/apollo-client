@@ -5,17 +5,20 @@
   "extends": ["@microsoft/api-extractor/extends/tsdoc-base.json"],
 
   "tagDefinitions": [
-    // Define a custom tag and specify how it should be parsed
     {
       "tagName": "@since",
+      "syntaxKind": "block",
+      "allowMultiple": false
+    },
+    {
+      "tagName": "@docGroup",
       "syntaxKind": "block",
       "allowMultiple": false
     }
   ],
 
   "supportForTags": {
-    // Indicate that the custom tag is supported by your tooling.  (Without this, warnings may
-    // be reported saying that the tag is unsupported.)
-    "@since": true
+    "@since": true,
+    "@docGroup": true
   }
 }

@@ -17,6 +17,7 @@ export type { Observer, ObservableSubscription, Subscriber };
 const { prototype } = Observable;
 const fakeObsSymbol = "@@observable" as keyof typeof prototype;
 if (!prototype[fakeObsSymbol]) {
+  // @ts-expect-error
   prototype[fakeObsSymbol] = function () {
     return this;
   };

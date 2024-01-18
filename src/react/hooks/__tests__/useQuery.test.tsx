@@ -6409,11 +6409,10 @@ describe("useQuery Hook", () => {
             observer.next({
               data: {
                 people:
-                  gender === "all"
-                    ? peopleData
-                    : gender
-                    ? peopleData.filter((person) => person.gender === gender)
-                    : peopleData,
+                  gender === "all" ? peopleData
+                  : gender ?
+                    peopleData.filter((person) => person.gender === gender)
+                  : peopleData,
               },
             });
             observer.complete();

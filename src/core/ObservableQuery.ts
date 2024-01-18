@@ -35,6 +35,7 @@ import type { QueryInfo } from "./QueryInfo.js";
 import type { MissingFieldError } from "../cache/index.js";
 import type { MissingTree } from "../cache/core/types/common.js";
 import { equalByQuery } from "./equalByQuery.js";
+import type { TODO } from "../utilities/types/TODO.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -166,9 +167,9 @@ export class ObservableQuery<
     const {
       fetchPolicy = defaultFetchPolicy,
       // Make sure we don't store "standby" as the initialFetchPolicy.
-      initialFetchPolicy = fetchPolicy === "standby"
-        ? defaultFetchPolicy
-        : fetchPolicy,
+      initialFetchPolicy = fetchPolicy === "standby" ? defaultFetchPolicy : (
+        fetchPolicy
+      ),
     } = options;
 
     this.options = {
@@ -316,9 +317,9 @@ export class ObservableQuery<
       return true;
     }
 
-    const resultIsDifferent = this.queryManager.getDocumentInfo(this.query)
-      .hasNonreactiveDirective
-      ? !equalByQuery(this.query, this.last.result, newResult, this.variables)
+    const resultIsDifferent =
+      this.queryManager.getDocumentInfo(this.query).hasNonreactiveDirective ?
+        !equalByQuery(this.query, this.last.result, newResult, this.variables)
       : !equal(this.last.result, newResult);
 
     return (
@@ -363,7 +364,7 @@ export class ObservableQuery<
    * Update the variables of this observable query, and fetch the new results.
    * This method should be preferred over `setVariables` in most use cases.
    *
-   * @param variables: The new set of variables. If there are missing variables,
+   * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
   public refetch(
@@ -426,17 +427,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   ): Promise<ApolloQueryResult<TFetchData>> {
     const combinedOptions = {
-      ...(fetchMoreOptions.query
-        ? fetchMoreOptions
-        : {
-            ...this.options,
-            query: this.options.query,
-            ...fetchMoreOptions,
-            variables: {
-              ...this.options.variables,
-              ...fetchMoreOptions.variables,
-            },
-          }),
+      ...(fetchMoreOptions.query ? fetchMoreOptions : (
+        {
+          ...this.options,
+          query: this.options.query,
+          ...fetchMoreOptions,
+          variables: {
+            ...this.options.variables,
+            ...fetchMoreOptions.variables,
+          },
+        }
+      )),
       // The fetchMore request goes immediately to the network and does
       // not automatically write its result to the cache (hence no-cache
       // instead of network-only), because we allow the caller of
@@ -454,8 +455,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // pagination. We will however run the transforms on the original document
     // as well as the document passed in `fetchMoreOptions` to ensure the cache
     // uses the most up-to-date document which may rely on runtime conditionals.
-    this.lastQuery = fetchMoreOptions.query
-      ? this.transformDocument(this.options.query)
+    this.lastQuery =
+      fetchMoreOptions.query ?
+        this.transformDocument(this.options.query)
       : combinedOptions.query;
 
     // Simulate a loading result for the original query with
@@ -613,9 +615,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * Note: the promise will return null immediately if the query is not active
    * (there are no subscribers).
    *
-   * @private
-   *
-   * @param variables: The new set of variables. If there are missing variables,
+   * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
   public setVariables(
@@ -784,9 +784,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               // no-cache are both useful for when the user wants to control whether or not the
               // polled results are written to the cache.
               fetchPolicy:
-                this.options.initialFetchPolicy === "no-cache"
-                  ? "no-cache"
-                  : "network-only",
+                this.options.initialFetchPolicy === "no-cache" ?
+                  "no-cache"
+                : "network-only",
             },
             NetworkStatus.poll
           ).then(poll, poll);
@@ -817,8 +817,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       error = void 0;
     }
     return (this.last = {
-      result: this.queryManager.assumeImmutableResults
-        ? newResult
+      result:
+        this.queryManager.assumeImmutableResults ?
+          newResult
         : cloneDeep(newResult),
       variables,
       ...(error ? { error } : null),
@@ -848,8 +849,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const oldFetchPolicy = this.options.fetchPolicy;
 
     const mergedOptions = compact(this.options, newOptions || {});
-    const options = useDisposableConcast
-      ? // Disposable Concast fetches receive a shallow copy of this.options
+    const options =
+      useDisposableConcast ?
+        // Disposable Concast fetches receive a shallow copy of this.options
         // (merged with newOptions), leaving this.options unmodified.
         mergedOptions
       : assign(this.options, mergedOptions);
@@ -924,8 +926,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ) {
-    return this.reobserveAsConcast(newOptions, newNetworkStatus).promise;
+  ): Promise<ApolloQueryResult<TData>> {
+    return this.reobserveAsConcast(newOptions, newNetworkStatus)
+      .promise as TODO;
   }
 
   public resubscribeAfterError(
@@ -1048,14 +1051,18 @@ export function reobserveCacheFirst<TData, TVars extends OperationVariables>(
       fetchPolicy: "cache-first",
       // Use a temporary nextFetchPolicy function that replaces itself with the
       // previous nextFetchPolicy value and returns the original fetchPolicy.
-      nextFetchPolicy(this: WatchQueryOptions<TVars, TData>) {
+      nextFetchPolicy(
+        this: WatchQueryOptions<TVars, TData>,
+        currentFetchPolicy: WatchQueryFetchPolicy,
+        context: NextFetchPolicyContext<TData, TVars>
+      ) {
         // Replace this nextFetchPolicy function in the options object with the
         // original this.options.nextFetchPolicy value.
         this.nextFetchPolicy = nextFetchPolicy;
         // If the original nextFetchPolicy value was a function, give it a
         // chance to decide what happens here.
-        if (typeof nextFetchPolicy === "function") {
-          return nextFetchPolicy.apply(this, arguments);
+        if (typeof this.nextFetchPolicy === "function") {
+          return this.nextFetchPolicy(currentFetchPolicy, context);
         }
         // Otherwise go back to the original this.options.fetchPolicy.
         return fetchPolicy!;

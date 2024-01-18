@@ -48,6 +48,7 @@ const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
       # properly cached.
       id
       name
+      breed
     }
   }
 `;
@@ -121,7 +122,7 @@ function App() {
         onChange={(e) => setSelectedDog(e.target.value)}
       >
         {data.dogs.map(({ id, name }) => (
-          <option key={id} value={id}>{dog.name}</option>
+          <option key={id} value={id}>{name}</option>
         ))}
       </select>
       <Suspense fallback={<div>Loading...</div>}>

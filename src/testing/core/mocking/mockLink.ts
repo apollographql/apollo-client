@@ -45,7 +45,7 @@ function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
 }
 
 export class MockLink extends ApolloLink {
-  public operation: Operation;
+  public operation!: Operation;
   public addTypename: Boolean = true;
   public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
@@ -87,8 +87,9 @@ export class MockLink extends ApolloLink {
     const unmatchedVars: Array<Record<string, any>> = [];
     const requestVariables = operation.variables || {};
     const mockedResponses = this.mockedResponsesByKey[key];
-    const responseIndex = mockedResponses
-      ? mockedResponses.findIndex((res, index) => {
+    const responseIndex =
+      mockedResponses ?
+        mockedResponses.findIndex((res, index) => {
           const mockedResponseVars = res.request.variables || {};
           if (equal(requestVariables, mockedResponseVars)) {
             return true;
@@ -101,6 +102,12 @@ export class MockLink extends ApolloLink {
     const response =
       responseIndex >= 0 ? mockedResponses[responseIndex] : void 0;
 
+    // There have been platform- and engine-dependent differences with
+    // setInterval(fn, Infinity), so we pass 0 instead (but detect
+    // Infinity where we call observer.error or observer.next to pend
+    // indefinitely in those cases.)
+    const delay = response?.delay === Infinity ? 0 : response?.delay ?? 0;
+
     let configError: Error;
 
     if (!response) {
@@ -108,14 +115,14 @@ export class MockLink extends ApolloLink {
         `No more mocked responses for the query: ${print(operation.query)}
 Expected variables: ${stringifyForDisplay(operation.variables)}
 ${
-  unmatchedVars.length > 0
-    ? `
+  unmatchedVars.length > 0 ?
+    `
 Failed to match ${unmatchedVars.length} mock${
-        unmatchedVars.length === 1 ? "" : "s"
-      } for this query. The mocked response had the following variables:
+      unmatchedVars.length === 1 ? "" : "s"
+    } for this query. The mocked response had the following variables:
 ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
 `
-    : ""
+  : ""
 }`
       );
 
@@ -143,38 +150,35 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
     }
 
     return new Observable((observer) => {
-      const timer = setTimeout(
-        () => {
-          if (configError) {
-            try {
-              // The onError function can return false to indicate that
-              // configError need not be passed to observer.error. For
-              // example, the default implementation of onError calls
-              // observer.error(configError) and then returns false to
-              // prevent this extra (harmless) observer.error call.
-              if (this.onError(configError, observer) !== false) {
-                throw configError;
-              }
-            } catch (error) {
-              observer.error(error);
+      const timer = setTimeout(() => {
+        if (configError) {
+          try {
+            // The onError function can return false to indicate that
+            // configError need not be passed to observer.error. For
+            // example, the default implementation of onError calls
+            // observer.error(configError) and then returns false to
+            // prevent this extra (harmless) observer.error call.
+            if (this.onError(configError, observer) !== false) {
+              throw configError;
             }
-          } else if (response) {
-            if (response.error) {
-              observer.error(response.error);
-            } else {
-              if (response.result) {
-                observer.next(
-                  typeof response.result === "function"
-                    ? (response.result as ResultFunction<FetchResult>)()
-                    : response.result
-                );
-              }
-              observer.complete();
-            }
+          } catch (error) {
+            observer.error(error);
           }
-        },
-        (response && response.delay) || 0
-      );
+        } else if (response && response.delay !== Infinity) {
+          if (response.error) {
+            observer.error(response.error);
+          } else {
+            if (response.result) {
+              observer.next(
+                typeof response.result === "function" ?
+                  (response.result as ResultFunction<FetchResult>)()
+                : response.result
+              );
+            }
+            observer.complete();
+          }
+        }
+      }, delay);
 
       return () => {
         clearTimeout(timer);

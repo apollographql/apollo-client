@@ -250,17 +250,15 @@ interface VariablesCaseVariables {
 function useVariablesQueryCase() {
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const query: TypedDocumentNode<
-    VariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
+  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+    gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
       }
-    }
-  `;
+    `;
 
   const mocks = CHARACTERS.map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
@@ -357,7 +355,7 @@ describe("useSuspenseQuery", () => {
 
     const Component = () => {
       const result = useSuspenseQuery(query);
-      ProfiledApp.updateSnapshot(result);
+      ProfiledApp.replaceSnapshot(result);
       return <div>{result.data.greeting}</div>;
     };
 
@@ -1666,17 +1664,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("uses cached result with network request and does not suspend when switching back to already used variables while using `cache-and-network` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -1783,17 +1779,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("refetches and suspends when switching back to already used variables while using `network-only` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -1889,17 +1883,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("refetches and suspends when switching back to already used variables while using `no-cache` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -5791,12 +5783,12 @@ describe("useSuspenseQuery", () => {
 
       const todo = data?.todo;
 
-      return todo ? (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      ) : null;
+      return todo ?
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        : null;
     }
 
     render(<App />);
@@ -5891,12 +5883,12 @@ describe("useSuspenseQuery", () => {
 
       const todo = data?.todo;
 
-      return todo ? (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      ) : null;
+      return todo ?
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        : null;
     }
 
     render(<App />);
@@ -9937,6 +9929,53 @@ describe("useSuspenseQuery", () => {
         "Take out trash (completed)"
       );
       expect(todo1).toHaveTextContent("Clean room");
+    });
+  });
+
+  it("updates networkStatus when a network request returns the same cached data with 'cache-and-network' fetchPolicy", async () => {
+    const { query } = useSimpleQueryCase();
+
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { greeting: "Hello" } });
+          observer.complete();
+        }, 10);
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    // preloaded cache
+    await client.writeQuery({ query, data: { greeting: "Hello" } });
+
+    const { result } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          fetchPolicy: "cache-and-network",
+        }),
+      { client }
+    );
+
+    await waitFor(() => {
+      // We should see the cached greeting while the network request is in flight
+      // and the network status should be set to `loading`.
+      expect(result.current).toMatchObject({
+        data: { greeting: "Hello" },
+        networkStatus: NetworkStatus.loading,
+      });
+    });
+
+    await waitFor(() => {
+      // We should see the updated greeting once the network request finishes
+      // and the network status should be set to `ready`.
+      expect(result.current).toMatchObject({
+        data: { greeting: "Hello" },
+        networkStatus: NetworkStatus.ready,
+      });
     });
   });
 

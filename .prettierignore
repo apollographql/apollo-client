@@ -25,6 +25,11 @@
 /docs/source/development-testing/**
 !/docs/source/development-testing/reducing-bundle-size.mdx
 
+!docs/shared
+/docs/shared/**
+!/docs/shared/ApiDoc
+!/docs/shared/ApiDoc/**
+
 node_modules/
 .yalc/
 .next/

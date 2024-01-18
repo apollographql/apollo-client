@@ -221,12 +221,12 @@ export abstract class EntityStore implements NormalizedCache {
           from?: StoreObject | Reference
         ) =>
           this.policies.readField<V>(
-            typeof fieldNameOrOptions === "string"
-              ? {
-                  fieldName: fieldNameOrOptions,
-                  from: from || makeReference(dataId),
-                }
-              : fieldNameOrOptions,
+            typeof fieldNameOrOptions === "string" ?
+              {
+                fieldName: fieldNameOrOptions,
+                from: from || makeReference(dataId),
+              }
+            : fieldNameOrOptions,
             { store: this }
           ),
       } satisfies Partial<ModifierDetails>;
@@ -236,19 +236,19 @@ export abstract class EntityStore implements NormalizedCache {
         let fieldValue = storeObject[storeFieldName];
         if (fieldValue === void 0) return;
         const modify: Modifier<StoreValue> | undefined =
-          typeof fields === "function"
-            ? fields
-            : fields[storeFieldName] || fields[fieldName];
+          typeof fields === "function" ? fields : (
+            fields[storeFieldName] || fields[fieldName]
+          );
         if (modify) {
           let newValue =
-            modify === delModifier
-              ? DELETE
-              : modify(maybeDeepFreeze(fieldValue), {
-                  ...sharedDetails,
-                  fieldName,
-                  storeFieldName,
-                  storage: this.getStorage(dataId, storeFieldName),
-                });
+            modify === delModifier ? DELETE : (
+              modify(maybeDeepFreeze(fieldValue), {
+                ...sharedDetails,
+                fieldName,
+                storeFieldName,
+                storage: this.getStorage(dataId, storeFieldName),
+              })
+            );
           if (newValue === INVALIDATE) {
             this.group.dirty(dataId, storeFieldName);
           } else {
@@ -344,16 +344,16 @@ export abstract class EntityStore implements NormalizedCache {
     if (storeObject) {
       const typename = this.getFieldValue<string>(storeObject, "__typename");
       const storeFieldName =
-        fieldName && args
-          ? this.policies.getStoreFieldName({ typename, fieldName, args })
-          : fieldName;
+        fieldName && args ?
+          this.policies.getStoreFieldName({ typename, fieldName, args })
+        : fieldName;
       return this.modify(
         dataId,
-        storeFieldName
-          ? {
-              [storeFieldName]: delModifier,
-            }
-          : delModifier
+        storeFieldName ?
+          {
+            [storeFieldName]: delModifier,
+          }
+        : delModifier
       );
     }
     return false;
@@ -534,17 +534,17 @@ export abstract class EntityStore implements NormalizedCache {
     storeFieldName: string
   ) =>
     maybeDeepFreeze(
-      isReference(objectOrReference)
-        ? this.get(objectOrReference.__ref, storeFieldName)
-        : objectOrReference && objectOrReference[storeFieldName]
+      isReference(objectOrReference) ?
+        this.get(objectOrReference.__ref, storeFieldName)
+      : objectOrReference && objectOrReference[storeFieldName]
     ) as SafeReadonly<T>;
 
   // Returns true for non-normalized StoreObjects and non-dangling
   // References, indicating that readField(name, objOrRef) has a chance of
   // working. Useful for filtering out dangling references from lists.
   public canRead: CanReadFunction = (objOrRef) => {
-    return isReference(objOrRef)
-      ? this.has(objOrRef.__ref)
+    return isReference(objOrRef) ?
+        this.has(objOrRef.__ref)
       : typeof objOrRef === "object";
   };
 
@@ -593,7 +593,7 @@ class CacheGroup {
 
   // Used by the EntityStore#makeCacheKey method to compute cache keys
   // specific to this CacheGroup.
-  public keyMaker: Trie<object>;
+  public keyMaker!: Trie<object>;
 
   constructor(
     public readonly caching: boolean,
@@ -789,8 +789,8 @@ class Layer extends EntityStore {
 
   public findChildRefIds(dataId: string): Record<string, true> {
     const fromParent = this.parent.findChildRefIds(dataId);
-    return hasOwn.call(this.data, dataId)
-      ? {
+    return hasOwn.call(this.data, dataId) ?
+        {
           ...fromParent,
           ...super.findChildRefIds(dataId),
         }
@@ -800,7 +800,11 @@ class Layer extends EntityStore {
   public getStorage(): StorageType {
     let p: EntityStore = this.parent;
     while ((p as Layer).parent) p = (p as Layer).parent;
-    return p.getStorage.apply(p, arguments);
+    return p.getStorage.apply(
+      p,
+      // @ts-expect-error
+      arguments
+    );
   }
 }
 
@@ -823,20 +827,20 @@ class Stump extends Layer {
     return this;
   }
 
-  public merge() {
+  public merge(older: string | StoreObject, newer: string | StoreObject) {
     // We never want to write any data into the Stump, so we forward any merge
     // calls to the Root instead. Another option here would be to throw an
     // exception, but the toReference(object, true) function can sometimes
     // trigger Stump writes (which used to be Root writes, before the Stump
     // concept was introduced).
-    return this.parent.merge.apply(this.parent, arguments);
+    return this.parent.merge(older, newer);
   }
 }
 
 function storeObjectReconciler(
   existingObject: StoreObject,
   incomingObject: StoreObject,
-  property: string
+  property: string | number
 ): StoreValue {
   const existingValue = existingObject[property];
   const incomingValue = incomingObject[property];

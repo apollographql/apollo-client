@@ -75,6 +75,7 @@ export function useLazyQuery<
           // Only the first time populating execOptionsRef.current matters here.
           internalState.forceUpdateState();
         }
+        // @ts-expect-error this is just too generic to type
         return method.apply(this, arguments);
       };
     }
@@ -86,8 +87,9 @@ export function useLazyQuery<
 
   const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
     (executeOptions) => {
-      execOptionsRef.current = executeOptions
-        ? {
+      execOptionsRef.current =
+        executeOptions ?
+          {
             ...executeOptions,
             fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
           }

@@ -1231,29 +1231,29 @@ describe("useFragment", () => {
         from: { __typename: "Query" },
       });
 
-      return complete ? (
-        <>
-          <select
-            onChange={(e) => {
-              setCurrentItem(parseInt(e.currentTarget.value));
-            }}
-          >
-            {data.list.map((item) => (
-              <option key={item.id} value={item.id}>
-                Select item {item.id}
-              </option>
-            ))}
-          </select>
-          <div>
-            <Item id={currentItem} />
-          </div>
-          <ol>
-            {data.list.map((item) => (
-              <Item key={item.id} id={item.id} />
-            ))}
-          </ol>
-        </>
-      ) : null;
+      return complete ?
+          <>
+            <select
+              onChange={(e) => {
+                setCurrentItem(parseInt(e.currentTarget.value));
+              }}
+            >
+              {data.list.map((item) => (
+                <option key={item.id} value={item.id}>
+                  Select item {item.id}
+                </option>
+              ))}
+            </select>
+            <div>
+              <Item id={currentItem} />
+            </div>
+            <ol>
+              {data.list.map((item) => (
+                <Item key={item.id} id={item.id} />
+              ))}
+            </ol>
+          </>
+        : null;
     }
 
     function Item({ id }: { id: number }) {
@@ -1476,7 +1476,7 @@ describe("has the same timing as `useQuery`", () => {
         from: initialItem,
       });
 
-      ProfiledComponent.updateSnapshot({ queryData, fragmentData });
+      ProfiledComponent.replaceSnapshot({ queryData, fragmentData });
 
       return complete ? JSON.stringify(fragmentData) : "loading";
     }
@@ -1512,12 +1512,6 @@ describe("has the same timing as `useQuery`", () => {
     }
 
     cache.writeQuery({ query, data: { item: updatedItem } });
-
-    if (React.version.startsWith("17.")) {
-      const { snapshot } = await ProfiledComponent.takeRender();
-      expect(snapshot.queryData).toStrictEqual({ item: initialItem });
-      expect(snapshot.fragmentData).toStrictEqual(updatedItem);
-    }
 
     {
       const { snapshot } = await ProfiledComponent.takeRender();

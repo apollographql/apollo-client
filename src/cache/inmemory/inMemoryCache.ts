@@ -33,18 +33,18 @@ type BroadcastOptions = Pick<
 >;
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data: EntityStore;
-  private optimisticData: EntityStore;
+  private data!: EntityStore;
+  private optimisticData!: EntityStore;
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
 
-  private storeReader: StoreReader;
-  private storeWriter: StoreWriter;
+  private storeReader!: StoreReader;
+  private storeWriter!: StoreWriter;
   private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
-  private maybeBroadcastWatch: OptimisticWrapperFunction<
+  private maybeBroadcastWatch!: OptimisticWrapperFunction<
     [Cache.WatchOptions, BroadcastOptions?],
     any,
     [Cache.WatchOptions]
@@ -109,9 +109,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
         canonizeResults: shouldCanonizeResults(this.config),
-        canon: resetResultIdentities
-          ? void 0
-          : previousReader && previousReader.canon,
+        canon:
+          resetResultIdentities ? void 0 : (
+            previousReader && previousReader.canon
+          ),
         fragments,
       })),
       fragments
@@ -225,8 +226,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // that nothing was modified.
       return false;
     }
-    const store = options.optimistic // Defaults to false.
-      ? this.optimisticData
+    const store =
+      (
+        options.optimistic // Defaults to false.
+      ) ?
+        this.optimisticData
       : this.data;
     try {
       ++this.txCount;

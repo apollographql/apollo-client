@@ -6,14 +6,14 @@ import type {
   ProfiledHook,
 } from "../internal/index.js";
 export const toRerender: MatcherFunction<[options?: NextRenderOptions]> =
-  async function (
-    _profiled: ProfiledComponent<any, any> | ProfiledHook<any, any>,
-    options?: NextRenderOptions
-  ) {
+  async function (actual, options) {
+    const _profiled = actual as
+      | ProfiledComponent<any, any>
+      | ProfiledHook<any, any>;
     const profiled =
-      "ProfiledComponent" in _profiled
-        ? _profiled.ProfiledComponent
-        : _profiled;
+      "ProfiledComponent" in _profiled ?
+        _profiled.ProfiledComponent
+      : _profiled;
     const hint = this.utils.matcherHint("toRerender");
     let pass = true;
     try {
@@ -42,22 +42,21 @@ const failed = {};
 
 export const toRenderExactlyTimes: MatcherFunction<
   [times: number, options?: NextRenderOptions]
-> = async function (
-  _profiled: ProfiledComponent<any, any> | ProfiledHook<any, any>,
-  times: number,
-  optionsPerRender?: NextRenderOptions
-) {
+> = async function (actual, times, optionsPerRender) {
+  const _profiled = actual as
+    | ProfiledComponent<any, any>
+    | ProfiledHook<any, any>;
   const profiled =
     "ProfiledComponent" in _profiled ? _profiled.ProfiledComponent : _profiled;
   const options = { timeout: 100, ...optionsPerRender };
   const hint = this.utils.matcherHint("toRenderExactlyTimes");
   let pass = true;
   try {
-    if (profiled.currentRenderCount() > times) {
+    if (profiled.totalRenderCount() > times) {
       throw failed;
     }
     try {
-      while (profiled.currentRenderCount() < times) {
+      while (profiled.totalRenderCount() < times) {
         await profiled.waitForNextRender(options);
       }
     } catch (e) {
@@ -85,7 +84,7 @@ export const toRenderExactlyTimes: MatcherFunction<
       return (
         hint +
         ` Expected component to${pass ? " not" : ""} render exactly ${times}.` +
-        ` It rendered ${profiled.currentRenderCount()} times.`
+        ` It rendered ${profiled.totalRenderCount()} times.`
       );
     },
   };

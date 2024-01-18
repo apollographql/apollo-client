@@ -12,7 +12,7 @@ import type {
   FragmentSpreadNode,
   VariableDefinitionNode,
   ASTNode,
-  ASTVisitor,
+  ASTVisitFn,
   InlineFragmentNode,
 } from "graphql";
 import { visit, Kind } from "graphql";
@@ -28,6 +28,12 @@ import { isField } from "./storeUtils.js";
 import type { FragmentMap } from "./fragments.js";
 import { createFragmentMap } from "./fragments.js";
 import { isArray, isNonEmptyArray } from "../common/arrays.js";
+
+// https://github.com/graphql/graphql-js/blob/8d7c8fccf5a9846a50785de04abda58a7eb13fc0/src/language/visitor.ts#L20-L23
+interface EnterLeaveVisitor<TVisitedNode extends ASTNode> {
+  readonly enter?: ASTVisitFn<TVisitedNode>;
+  readonly leave?: ASTVisitFn<TVisitedNode>;
+}
 
 export type RemoveNodeConfig<N> = {
   name?: string;
@@ -73,11 +79,13 @@ function isEmpty(
 }
 
 function nullIfDocIsEmpty(doc: DocumentNode) {
-  return isEmpty(
-    getOperationDefinition(doc) || getFragmentDefinition(doc),
-    createFragmentMap(getFragmentDefinitions(doc))
-  )
-    ? null
+  return (
+      isEmpty(
+        getOperationDefinition(doc) || getFragmentDefinition(doc),
+        createFragmentMap(getFragmentDefinitions(doc))
+      )
+    ) ?
+      null
     : doc;
 }
 
@@ -208,8 +216,10 @@ export function removeDirectivesFromDocument(
   // original doc immediately without any modifications.
   let firstVisitMadeChanges = false;
 
-  const fieldOrInlineFragmentVisitor: ASTVisitor = {
-    enter(node: FieldNode | InlineFragmentNode) {
+  const fieldOrInlineFragmentVisitor: EnterLeaveVisitor<
+    FieldNode | InlineFragmentNode
+  > = {
+    enter(node) {
       if (shouldRemoveField(node.directives)) {
         firstVisitMadeChanges = true;
         return null;
@@ -385,8 +395,10 @@ export function removeDirectivesFromDocument(
       )
     );
 
-  const enterVisitor: ASTVisitor = {
-    enter(node: FragmentSpreadNode | FragmentDefinitionNode) {
+  const enterVisitor: EnterLeaveVisitor<
+    FragmentSpreadNode | FragmentDefinitionNode
+  > = {
+    enter(node) {
       if (fragmentWillBeRemoved(node.name.value)) {
         return null;
       }
@@ -588,8 +600,9 @@ export function removeArgumentsFromDocument(
           return {
             ...node,
             // Remove matching top level variables definitions.
-            variableDefinitions: node.variableDefinitions
-              ? node.variableDefinitions.filter(
+            variableDefinitions:
+              node.variableDefinitions ?
+                node.variableDefinitions.filter(
                   (varDef) =>
                     !config.some(
                       (arg) => arg.name === varDef.variable.name.value

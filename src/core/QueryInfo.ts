@@ -49,6 +49,7 @@ function wrapDestructiveCacheMethod(
         // that matters in any conceivable practical scenario.
         (destructiveMethodCounts.get(cache)! + 1) % 1e15
       );
+      // @ts-expect-error this is just too generic to be typed correctly
       return original.apply(this, arguments);
     };
   }
@@ -111,7 +112,7 @@ export class QueryInfo {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus?: NetworkStatus;
-    observableQuery?: ObservableQuery<any>;
+    observableQuery?: ObservableQuery<any, any>;
     lastRequestId?: number;
   }): this {
     let networkStatus = query.networkStatus || NetworkStatus.loading;
@@ -183,8 +184,9 @@ export class QueryInfo {
     diff: Cache.DiffResult<any> | null,
     options?: Cache.DiffOptions
   ) {
-    this.lastDiff = diff
-      ? {
+    this.lastDiff =
+      diff ?
+        {
           diff,
           options: options || this.getDiffOptions(),
         }
@@ -212,10 +214,10 @@ export class QueryInfo {
     }
   }
 
-  public readonly observableQuery: ObservableQuery<any> | null = null;
+  public readonly observableQuery: ObservableQuery<any, any> | null = null;
   private oqListener?: QueryListener;
 
-  setObservableQuery(oq: ObservableQuery<any> | null) {
+  setObservableQuery(oq: ObservableQuery<any, any> | null) {
     if (oq === this.observableQuery) return;
 
     if (this.oqListener) {
@@ -359,9 +361,8 @@ export class QueryInfo {
     cacheWriteBehavior: CacheWriteBehavior
   ) {
     const merger = new DeepMerger();
-    const graphQLErrors = isNonEmptyArray(result.errors)
-      ? result.errors.slice(0)
-      : [];
+    const graphQLErrors =
+      isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.

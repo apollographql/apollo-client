@@ -37,17 +37,17 @@ export function useSubscription<
 
     if (options?.onSubscriptionData) {
       invariant.warn(
-        options.onData
-          ? "'useSubscription' supports only the 'onSubscriptionData' or 'onData' option, but not both. Only the 'onData' option will be used."
-          : "'onSubscriptionData' is deprecated and will be removed in a future major version. Please use the 'onData' option instead."
+        options.onData ?
+          "'useSubscription' supports only the 'onSubscriptionData' or 'onData' option, but not both. Only the 'onData' option will be used."
+        : "'onSubscriptionData' is deprecated and will be removed in a future major version. Please use the 'onData' option instead."
       );
     }
 
     if (options?.onSubscriptionComplete) {
       invariant.warn(
-        options.onComplete
-          ? "'useSubscription' supports only the 'onSubscriptionComplete' or 'onComplete' option, but not both. Only the 'onComplete' option will be used."
-          : "'onSubscriptionComplete' is deprecated and will be removed in a future major version. Please use the 'onComplete' option instead."
+        options.onComplete ?
+          "'useSubscription' supports only the 'onSubscriptionComplete' or 'onComplete' option, but not both. Only the 'onComplete' option will be used."
+        : "'onSubscriptionComplete' is deprecated and will be removed in a future major version. Please use the 'onComplete' option instead."
       );
     }
   }

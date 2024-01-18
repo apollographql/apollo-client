@@ -146,7 +146,7 @@ describe("mergeDeep", function () {
   });
 
   it("supports custom reconciler functions", function () {
-    const merger = new DeepMerger((target, source, key) => {
+    const merger = new DeepMerger(function (target, source, key) {
       const targetValue = target[key];
       const sourceValue = source[key];
       if (Array.isArray(sourceValue)) {

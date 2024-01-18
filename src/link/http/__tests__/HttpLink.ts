@@ -92,10 +92,11 @@ function makeCallback<TArgs extends any[]>(
 ) {
   return function () {
     try {
+      // @ts-expect-error
       callback.apply(this, arguments);
       resolve();
     } catch (error) {
-      reject(error);
+      reject(error as Error);
     }
   } as typeof callback;
 }
@@ -886,10 +887,7 @@ describe("HttpLink", () => {
 
     itAsync("allows uri to be a function", (resolve, reject) => {
       const variables = { params: "stub" };
-      const customFetch: WindowOrWorkerGlobalScope["fetch"] = (
-        uri,
-        options
-      ) => {
+      const customFetch: typeof fetch = (uri, options) => {
         const { operationName } = convertBatchedBody(options!.body);
         try {
           expect(operationName).toBe("SampleQuery");
@@ -1202,7 +1200,7 @@ describe("HttpLink", () => {
         reject("warning wasn't called");
       } catch (e) {
         makeCallback(resolve, reject, () =>
-          expect(e.message).toMatch(/has not been found globally/)
+          expect((e as Error).message).toMatch(/has not been found globally/)
         )();
       }
     });
@@ -1214,7 +1212,7 @@ describe("HttpLink", () => {
         reject("warning wasn't called");
       } catch (e) {
         makeCallback(resolve, reject, () =>
-          expect(e.message).toMatch(/has not been found globally/)
+          expect((e as Error).message).toMatch(/has not been found globally/)
         )();
       }
     });

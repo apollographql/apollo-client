@@ -327,8 +327,8 @@ interface BaseMutationOptions<TData = any, TVariables = OperationVariables, TCon
 //
 // @public (undocumented)
 interface BaseQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends SharedWatchQueryOptions<TVariables, TData> {
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloClient"
     client?: ApolloClient<any>;
-    // (undocumented)
     context?: DefaultContext;
     ssr?: boolean;
 }
@@ -669,9 +669,7 @@ interface ExecutionPatchResultBase {
 interface FetchMoreQueryOptions<TVariables, TData = any> {
     // (undocumented)
     context?: DefaultContext;
-    // (undocumented)
     query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-    // (undocumented)
     variables?: Partial<TVariables>;
 }
 
@@ -991,7 +989,6 @@ type MutationFunction<TData = any, TVariables = OperationVariables, TContext = D
 
 // @public (undocumented)
 interface MutationFunctionOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
-    // (undocumented)
     mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
@@ -1148,7 +1145,6 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
 
 // @public (undocumented)
 interface ObservableQueryFields<TData, TVariables extends OperationVariables> {
-    // (undocumented)
     fetchMore<TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
         updateQuery?: (previousQueryResult: TData, options: {
             fetchMoreResult: TFetchData;
@@ -1158,15 +1154,10 @@ interface ObservableQueryFields<TData, TVariables extends OperationVariables> {
     refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>>;
     // (undocumented)
     reobserve(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Promise<ApolloQueryResult<TData>>;
-    // (undocumented)
     startPolling(pollInterval: number): void;
-    // (undocumented)
     stopPolling(): void;
-    // (undocumented)
     subscribeToMore<TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData>): () => void;
-    // (undocumented)
     updateQuery<TVars extends OperationVariables = TVariables>(mapFn: (previousQueryResult: TData, options: Pick<WatchQueryOptions<TVars, TData>, "variables">) => TData): void;
-    // (undocumented)
     variables: TVariables | undefined;
 }
 
@@ -1570,31 +1561,24 @@ type ServerParseError = Error & {
 
 // @public (undocumented)
 interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> {
-    // (undocumented)
+    // @deprecated
     canonizeResults?: boolean;
-    // (undocumented)
     context?: DefaultContext;
-    // (undocumented)
     errorPolicy?: ErrorPolicy;
-    // (undocumented)
     fetchPolicy?: WatchQueryFetchPolicy;
     initialFetchPolicy?: WatchQueryFetchPolicy;
     // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "FetchPolicy"
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    // (undocumented)
     notifyOnNetworkStatusChange?: boolean;
-    // (undocumented)
+    // @deprecated
     partialRefetch?: boolean;
-    // (undocumented)
     pollInterval?: number;
     // Warning: (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
     refetchWritePolicy?: RefetchWritePolicy;
-    // (undocumented)
     returnPartialData?: boolean;
     skipPollAttempt?: () => boolean;
-    // (undocumented)
     variables?: TVariables;
 }
 
@@ -1664,9 +1648,8 @@ export interface SubscriptionComponentOptions<TData = any, TVariables extends Op
 // @public (undocumented)
 interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
     context?: DefaultContext;
-    // (undocumented)
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ErrorPolicy"
     errorPolicy?: ErrorPolicy;
-    // (undocumented)
     fetchPolicy?: FetchPolicy;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     variables?: TVariables;
@@ -1736,7 +1719,6 @@ type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
 // @public
 interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends SharedWatchQueryOptions<TVariables, TData> {
-    // (undocumented)
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
@@ -1756,8 +1738,8 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/QueryManager.ts:399:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:203:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:268:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:320:41 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

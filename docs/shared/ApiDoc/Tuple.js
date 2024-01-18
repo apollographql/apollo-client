@@ -36,7 +36,11 @@ export function ManualTuple({ elements = [], idPrefix = "" }) {
                         <summary>Show/hide child attributes</summary>
                         <PropertySignatureTable
                           canonicalReference={canonicalReference}
-                          idPrefix={idPrefix ? `${idPrefix}-${name.toLowerCase()}` : undefined}
+                          idPrefix={
+                            idPrefix ?
+                              `${idPrefix}-${name.toLowerCase()}`
+                            : undefined
+                          }
                         />
                       </details>
                     </MDX.td>

@@ -1,6 +1,11 @@
 import PropTypes from "prop-types";
 import React from "react";
-import { ApiDocHeading, DocBlock, PropertySignatureTable, useApiDocContext } from ".";
+import {
+  ApiDocHeading,
+  DocBlock,
+  PropertySignatureTable,
+  useApiDocContext,
+} from ".";
 export function InterfaceDetails({
   canonicalReference,
   headingLevel,

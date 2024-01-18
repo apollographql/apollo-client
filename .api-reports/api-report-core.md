@@ -484,7 +484,7 @@ export namespace DataProxy {
     }
     // (undocumented)
     export interface ReadFragmentOptions<TData, TVariables> extends Fragment<TVariables, TData> {
-        // @deprecated (undocumented)
+        // @deprecated
         canonizeResults?: boolean;
         optimistic?: boolean;
         returnPartialData?: boolean;
@@ -1403,7 +1403,7 @@ interface MutationStoreValue {
     variables: Record<string, any>;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export type MutationUpdaterFn<T = {
     [key: string]: any;
 }> = (cache: ApolloCache<T>, mutationResult: FetchResult<T>) => void;
@@ -1833,12 +1833,13 @@ class QueryManager<TStore> {
 
 // @public
 interface QueryOptions<TVariables = OperationVariables, TData = any> {
-    // @deprecated (undocumented)
+    // @deprecated
     canonizeResults?: boolean;
     context?: DefaultContext;
     errorPolicy?: ErrorPolicy;
     fetchPolicy?: FetchPolicy;
     notifyOnNetworkStatusChange?: boolean;
+    // @deprecated
     partialRefetch?: boolean;
     pollInterval?: number;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -2017,20 +2018,28 @@ export { setLogVerbosity }
 
 // @public (undocumented)
 interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> {
-    // @deprecated (undocumented)
+    // (undocumented)
     canonizeResults?: boolean;
+    // (undocumented)
     context?: DefaultContext;
+    // (undocumented)
     errorPolicy?: ErrorPolicy;
+    // (undocumented)
     fetchPolicy?: WatchQueryFetchPolicy;
     initialFetchPolicy?: WatchQueryFetchPolicy;
     // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+    // (undocumented)
     notifyOnNetworkStatusChange?: boolean;
+    // (undocumented)
     partialRefetch?: boolean;
+    // (undocumented)
     pollInterval?: number;
     refetchWritePolicy?: RefetchWritePolicy;
+    // (undocumented)
     returnPartialData?: boolean;
     skipPollAttempt?: () => boolean;
+    // (undocumented)
     variables?: TVariables;
 }
 
@@ -2088,7 +2097,9 @@ export type SubscribeToMoreOptions<TData = any, TSubscriptionVariables = Operati
 // @public (undocumented)
 export interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
     context?: DefaultContext;
+    // (undocumented)
     errorPolicy?: ErrorPolicy;
+    // (undocumented)
     fetchPolicy?: FetchPolicy;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     variables?: TVariables;
@@ -2182,6 +2193,7 @@ export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 //
 // @public
 export interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends SharedWatchQueryOptions<TVariables, TData> {
+    // (undocumented)
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
@@ -2228,8 +2240,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:399:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:282:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:328:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:268:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:320:41 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

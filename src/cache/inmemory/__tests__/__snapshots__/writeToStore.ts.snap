@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 1`] = `
+exports[`writing to the store "Cache data may be lost..." warnings should not warn when scalar fields are updated 1`] = `
 Object {
   "ROOT_QUERY": Object {
     "__typename": "Query",
@@ -18,7 +18,7 @@ Object {
 }
 `;
 
-exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 2`] = `
+exports[`writing to the store "Cache data may be lost..." warnings should not warn when scalar fields are updated 2`] = `
 Object {
   "ROOT_QUERY": Object {
     "__typename": "Query",
@@ -34,7 +34,68 @@ Object {
 }
 `;
 
-exports[`writing to the store "Cache data maybe lost..." warnings should not warn when scalar fields are updated 3`] = `[MockFunction]`;
+exports[`writing to the store "Cache data may be lost..." warnings should not warn when scalar fields are updated 3`] = `[MockFunction]`;
+
+exports[`writing to the store "Cache data may be lost..." warnings should warn "Cache data may be lost..." message 1`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "someJSON": Object {
+      "name": "Tom",
+    },
+  },
+}
+`;
+
+exports[`writing to the store "Cache data may be lost..." warnings should warn "Cache data may be lost..." message 2`] = `
+Object {
+  "ROOT_QUERY": Object {
+    "__typename": "Query",
+    "someJSON": Object {
+      "age": 20,
+    },
+  },
+}
+`;
+
+exports[`writing to the store "Cache data may be lost..." warnings should warn "Cache data may be lost..." message 3`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Cache data may be lost when replacing the %s field of a %s object.
+
+This could cause additional (usually avoidable) network requests to fetch data that were otherwise cached.
+
+To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
+
+  existing: %o
+  incoming: %o
+
+For more information about these options, please refer to the documentation:
+
+  * Ensuring entity objects have IDs: https://go.apollo.dev/c/generating-unique-identifiers
+  * Defining custom merge functions: https://go.apollo.dev/c/merging-non-normalized-objects
+",
+      "someJSON",
+      "Query",
+      "",
+      "Query.someJSON",
+      Object {
+        "name": "Tom",
+      },
+      Object {
+        "age": 20,
+      },
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
 
 exports[`writing to the store correctly merges fragment fields along multiple paths 1`] = `
 Object {

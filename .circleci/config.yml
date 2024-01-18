@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  secops: apollo/circleci-secops-orb@2.0.6
+  secops: apollo/circleci-secops-orb@2.0.7
 
 jobs:
   # Filesize:

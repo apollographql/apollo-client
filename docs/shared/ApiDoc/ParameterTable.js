@@ -72,7 +72,6 @@ export function ParameterTable({ canonicalReference, showHeaders = false }) {
                   <PropertySignatureTable
                     canonicalReference={interfaceReference.canonicalReference}
                     display="child"
-                    prefix={`${parameter.name}.`}
                   />
                 </details>
               )}

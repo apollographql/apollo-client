@@ -421,7 +421,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   /**
-   * A function that helps you fetch the next set of results for a [paginated list field](/react/pagination/core-api/).
+   * A function that helps you fetch the next set of results for a [paginated list field](https://www.apollographql.com/docs/react/pagination/core-api/).
    */
   public fetchMore<
     TFetchData = TData,
@@ -552,7 +552,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
   /**
-   * A function that enables you to execute a [subscription](/react/data/subscriptions/), usually to subscribe to specific fields that were included in the query.
+   * A function that enables you to execute a [subscription](https://www.apollographql.com/docs/react/data/subscriptions/), usually to subscribe to specific fields that were included in the query.
    *
    * This function returns _another_ function that you can call to terminate the subscription.
    */
@@ -664,7 +664,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   /**
    * A function that enables you to update the query's cached result without executing a followup GraphQL operation.
    *
-   * See [using updateQuery and updateFragment](/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for additional information.
+   * See [using updateQuery and updateFragment](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for additional information.
    */
   public updateQuery<TVars extends OperationVariables = TVariables>(
     mapFn: (

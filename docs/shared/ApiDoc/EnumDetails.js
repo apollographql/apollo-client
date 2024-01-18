@@ -12,7 +12,6 @@ export function EnumDetails({
   headingLevel,
   customOrder = [],
 }) {
-  const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
   console.log(item);

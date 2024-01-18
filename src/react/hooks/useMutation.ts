@@ -24,7 +24,7 @@ import { useApolloClient } from "./useApolloClient.js";
 /**
  *
  *
- * > Refer to the [Mutations](../../data/mutations/) section for a more in-depth overview of `useMutation`.
+ * > Refer to the [Mutations](https://www.apollographql.com/docs/react/data/mutations/) section for a more in-depth overview of `useMutation`.
  *
  * @example
  * ```jsx

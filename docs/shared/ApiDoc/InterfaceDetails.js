@@ -25,8 +25,6 @@ export function InterfaceDetails({
       <PropertySignatureTable
         showHeaders
         canonicalReference={canonicalReference}
-        methods
-        properties
         customOrder={customPropertyOrder}
         idPrefix={item.displayName.toLowerCase()}
       />

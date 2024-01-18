@@ -253,7 +253,7 @@ export interface SuspenseQueryHookOptions<
    *
    * const { data } = useSuspenseQuery(query, id ? { variables: { id } } : skipToken);
    * ```
-   * */
+   */
   skip?: boolean;
 }
 

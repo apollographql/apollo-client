@@ -13,7 +13,7 @@ import type {
 import type { OperationVariables } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 /**
- * > Refer to the [Subscriptions](../../data/subscriptions/) section for a more in-depth overview of `useSubscription`.
+ * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
  *
  * @example
  * ```jsx

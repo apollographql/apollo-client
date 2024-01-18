@@ -138,48 +138,21 @@ export interface QueryResult<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends ObservableQueryFields<TData, TVariables> {
-  /**
-   * The instance of Apollo Client that executed the query.
-   * Can be useful for manually executing followup queries or writing data to the cache.
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
   client: ApolloClient<any>;
-  /**
-   * A reference to the internal `ObservableQuery` used by the hook.
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
   observable: ObservableQuery<TData, TVariables>;
-  /**
-   * An object containing the result of your GraphQL query after it completes.
-   *
-   * This value might be `undefined` if a query results in one or more errors (depending on the query's `errorPolicy`).
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
   data: TData | undefined;
-  /**
-   * An object containing the result from the most recent _previous_ execution of this query.
-   *
-   * This value is `undefined` if this is the query's first execution.
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
   previousData?: TData;
-  /**
-   * If the query produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
-   *
-   * For more information, see [Handling operation errors](/react/data/error-handling/).
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ApolloError;
-  /**
-   * If `true`, the query is still in flight and results have not yet been returned.
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
-  /**
-   * A number indicating the current network state of the query's associated request. [See possible values.](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4)
-   *
-   * Used in conjunction with the [`notifyOnNetworkStatusChange`](#notifyonnetworkstatuschange) option.
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
   networkStatus: NetworkStatus;
-  /**
-   * If `true`, the associated lazy query has been executed.
-   *
-   * This field is only present on the result object returned by [`useLazyQuery`](/react/data/queries/#executing-queries-manually).
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#called:member} */
   called: boolean;
 }
 
@@ -391,33 +364,17 @@ export interface MutationFunctionOptions<
 }
 
 export interface MutationResult<TData = any> {
-  /**
-   * The data returned from your mutation. Can be `undefined` if `ignoreResults` is `true`.
-   */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   data?: TData | null;
-  /**
-   * If the mutation produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
-   *
-   * For more information, see [Handling operation errors](/react/data/error-handling/).
-   */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   error?: ApolloError;
-  /**
-   * If `true`, the mutation is currently in flight.
-   */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   loading: boolean;
-  /**
-   * If `true`, the mutation's mutate function has been called.
-   */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   called: boolean;
-  /**
-   * The instance of Apollo Client that executed the mutation.
-   *
-   * Can be useful for manually executing followup operations or writing data to the cache.
-   */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   client: ApolloClient<object>;
-  /**
-   * A function that you can call to reset the mutation's result to its initial, uncalled state.
-   */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member(1)} */
   reset(): void;
 }
 
@@ -503,20 +460,17 @@ export interface BaseSubscriptionOptions<
 }
 
 export interface SubscriptionResult<TData = any, TVariables = any> {
-  /**
-   * A boolean that indicates whether any initial data has been returned
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
   loading: boolean;
-  /**
-   * An object containing the result of your GraphQL subscription. Defaults to an empty object.
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */
   data?: TData;
-  /**
-   * A runtime error with `graphQLErrors` and `networkError` properties
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
   error?: ApolloError;
   // This was added by the legacy useSubscription type, and is tested in unit
   // tests, but probably shouldn’t be added to the result.
+  /**
+   * @internal
+   */
   variables?: TVariables;
 }
 

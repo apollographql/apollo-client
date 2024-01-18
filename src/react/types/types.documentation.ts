@@ -204,6 +204,52 @@ export interface QueryOptionsDocumentation {
   skipPollAttempt: unknown;
 }
 
+export interface QueryResultDocumentation {
+  /**
+   * The instance of Apollo Client that executed the query.
+   * Can be useful for manually executing followup queries or writing data to the cache.
+   */
+  client: unknown;
+  /**
+   * A reference to the internal `ObservableQuery` used by the hook.
+   */
+  observable: unknown;
+  /**
+   * An object containing the result of your GraphQL query after it completes.
+   *
+   * This value might be `undefined` if a query results in one or more errors (depending on the query's `errorPolicy`).
+   */
+  data: unknown;
+  /**
+   * An object containing the result from the most recent _previous_ execution of this query.
+   *
+   * This value is `undefined` if this is the query's first execution.
+   */
+  previousData: unknown;
+  /**
+   * If the query produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
+   *
+   * For more information, see [Handling operation errors](/react/data/error-handling/).
+   */
+  error: unknown;
+  /**
+   * If `true`, the query is still in flight and results have not yet been returned.
+   */
+  loading: unknown;
+  /**
+   * A number indicating the current network state of the query's associated request. [See possible values.](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4)
+   *
+   * Used in conjunction with the [`notifyOnNetworkStatusChange`](#notifyonnetworkstatuschange) option.
+   */
+  networkStatus: unknown;
+  /**
+   * If `true`, the associated lazy query has been executed.
+   *
+   * This field is only present on the result object returned by [`useLazyQuery`](/react/data/queries/#executing-queries-manually).
+   */
+  called: unknown;
+}
+
 export interface MutationOptionsDocumentation {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
@@ -363,6 +409,37 @@ export interface MutationOptionsDocumentation {
   ignoreResults: unknown;
 }
 
+export interface MutationResultDocumentation {
+  /**
+   * The data returned from your mutation. Can be `undefined` if `ignoreResults` is `true`.
+   */
+  data: unknown;
+  /**
+   * If the mutation produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
+   *
+   * For more information, see [Handling operation errors](https://www.apollographql.com/docs/react/data/error-handling/).
+   */
+  error: unknown;
+  /**
+   * If `true`, the mutation is currently in flight.
+   */
+  loading: unknown;
+  /**
+   * If `true`, the mutation's mutate function has been called.
+   */
+  called: unknown;
+  /**
+   * The instance of Apollo Client that executed the mutation.
+   *
+   * Can be useful for manually executing followup operations or writing data to the cache.
+   */
+  client: unknown;
+  /**
+   * A function that you can call to reset the mutation's result to its initial, uncalled state.
+   */
+  reset(): unknown;
+}
+
 export interface SubscriptionOptionsDocumentation {
   /**
    * A GraphQL document, often created with `gql` from the `graphql-tag`
@@ -440,4 +517,19 @@ export interface SubscriptionOptionsDocumentation {
    * @deprecated Use onComplete instead
    */
   onSubscriptionComplete: unknown;
+}
+
+export interface SubscriptionResultDocumentation {
+  /**
+   * A boolean that indicates whether any initial data has been returned
+   */
+  loading: unknown;
+  /**
+   * An object containing the result of your GraphQL subscription. Defaults to an empty object.
+   */
+  data: unknown;
+  /**
+   * A runtime error with `graphQLErrors` and `networkError` properties
+   */
+  error: unknown;
 }

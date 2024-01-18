@@ -195,6 +195,13 @@ export interface QueryOptionsDocumentation {
    * @docGroup 2. Networking options
    */
   ssr: unknown;
+
+  /**
+   * A callback function that's called whenever a refetch attempt occurs
+   * while polling. If the function returns `true`, the refetch is
+   * skipped and not reattempted until the next poll interval.
+   */
+  skipPollAttempt: unknown;
 }
 
 export interface MutationOptionsDocumentation {
@@ -354,4 +361,83 @@ export interface MutationOptionsDocumentation {
    * @docGroup 1. Operation options
    */
   ignoreResults: unknown;
+}
+
+export interface SubscriptionOptionsDocumentation {
+  /**
+   * A GraphQL document, often created with `gql` from the `graphql-tag`
+   * package, that contains a single subscription inside of it.
+   */
+  query: unknown;
+  /**
+   * An object containing all of the variables your subscription needs to execute
+   *
+   * @docGroup 1. Operation options
+   */
+  variables: unknown;
+
+  /**
+   * Specifies the {@link ErrorPolicy} to be used for this operation
+   */
+  errorPolicy: unknown;
+
+  /**
+   * How you want your component to interact with the Apollo cache. For details, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
+   */
+  fetchPolicy: unknown;
+
+  /**
+   * Determines if your subscription should be unsubscribed and subscribed again when an input to the hook (such as `subscription` or `variables`) changes.
+   */
+  shouldResubscribe: unknown;
+
+  /**
+   * An `ApolloClient` instance. By default `useSubscription` / `Subscription` uses the client passed down via context, but a different client can be passed in.
+   */
+  client: unknown;
+
+  /**
+   * Determines if the current subscription should be skipped. Useful if, for example, variables depend on previous queries and are not ready yet.
+   */
+  skip: unknown;
+
+  /**
+   * Shared context between your component and your network interface (Apollo Link).
+   */
+  context: unknown;
+
+  /**
+   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component completes the subscription.
+   *
+   * @since 3.7.0
+   */
+  onComplete: unknown;
+
+  /**
+   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `data`.
+   *
+   * @since 3.7.0
+   */
+  onData: unknown;
+
+  /**
+   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.
+   *
+   * @deprecated Use onData instead
+   */
+  onSubscriptionData: unknown;
+
+  /**
+   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives an error.
+   *
+   * @since 3.7.0
+   */
+  onError: unknown;
+
+  /**
+   * Allows the registration of a callback function that will be triggered when the `useSubscription` Hook / `Subscription` component completes the subscription.
+   *
+   * @deprecated Use onComplete instead
+   */
+  onSubscriptionComplete: unknown;
 }

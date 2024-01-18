@@ -241,11 +241,7 @@ export interface SuspenseQueryHookOptions<
   refetchWritePolicy?: RefetchWritePolicy;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
-  /**
-   * A unique identifier for the query. Each item in the array must be a stable identifier to prevent infinite fetches.
-   *
-   * This is useful when using the same query and variables combination in more than one component, otherwise the components may clobber each other. This can also be used to force the query to re-evaluate fresh.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
   queryKey?: string | number | any[];
 
   /**
@@ -480,64 +476,29 @@ export interface BaseSubscriptionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > {
-  /**
-   * An object containing all of the variables your subscription needs to execute
-   *
-   * @docGroup 1. Operation options
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#variables:member} */
   variables?: TVariables;
-  /**
-   * How you want your component to interact with the Apollo cache. For details, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: FetchPolicy;
-  /**
-   * Determines if your subscription should be unsubscribed and subscribed again when an input to the hook (such as `subscription` or `variables`) changes.
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#shouldResubscribe:member} */
   shouldResubscribe?:
     | boolean
     | ((options: BaseSubscriptionOptions<TData, TVariables>) => boolean);
-  /**
-   * An `ApolloClient` instance. By default `useSubscription` / `Subscription` uses the client passed down via context, but a different client can be passed in.
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#client:member} */
   client?: ApolloClient<object>;
-
-  /**
-   * Determines if the current subscription should be skipped. Useful if, for example, variables depend on previous queries and are not ready yet.
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#skip:member} */
   skip?: boolean;
-  /**
-   * Shared context between your component and your network interface (Apollo Link).
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
   context?: DefaultContext;
-  /**
-   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component completes the subscription.
-   *
-   * @since 3.7.0
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onComplete:member} */
   onComplete?: () => void;
-  /**
-   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `data`.
-   *
-   * @since 3.7.0
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onData:member} */
   onData?: (options: OnDataOptions<TData>) => any;
-  /**
-   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.
-   *
-   * @deprecated Use onData instead
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionData:member} */
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
-  /**
-   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives an error.
-   *
-   * @since 3.7.0
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
-  /**
-   * Allows the registration of a callback function that will be triggered when the `useSubscription` Hook / `Subscription` component completes the subscription.
-   *
-   * @deprecated Use onComplete instead
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
   onSubscriptionComplete?: () => void;
 }
 

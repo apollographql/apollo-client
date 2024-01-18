@@ -140,11 +140,7 @@ export interface SharedWatchQueryOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
 
-  /**
-   * A callback function that's called whenever a refetch attempt occurs
-   * while polling. If the function returns `true`, the refetch is
-   * skipped and not reattempted until the next poll interval.
-   */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
   skipPollAttempt?: () => boolean;
 }
 
@@ -196,31 +192,19 @@ export interface SubscriptionOptions<
   TVariables = OperationVariables,
   TData = any,
 > {
-  /**
-   * A GraphQL document, often created with `gql` from the `graphql-tag`
-   * package, that contains a single subscription inside of it.
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
-  /**
-   * An object that maps from the name of a variable as used in the subscription
-   * GraphQL document to that variable's value.
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#variables:member} */
   variables?: TVariables;
 
-  /**
-   * Specifies the {@link FetchPolicy} to be used for this subscription.
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: FetchPolicy;
 
-  /**
-   * Specifies the {@link ErrorPolicy} to be used for this operation
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
 
-  /**
-   * Context object to be passed through the link execution chain.
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
   context?: DefaultContext;
 }
 

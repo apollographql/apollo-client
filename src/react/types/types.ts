@@ -372,35 +372,15 @@ export interface BaseMutationOptions<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
-  /**
-   * The instance of `ApolloClient` to use to execute the mutation.
-   *
-   * By default, the instance that's passed down via context is used, but you can provide a different instance here.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
   client?: ApolloClient<object>;
-  /**
-   * If `true`, the in-progress mutation's associated component re-renders whenever the network status changes or a network error occurs.
-   *
-   * The default value is `false`.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
   notifyOnNetworkStatusChange?: boolean;
-  /**
-   * A callback function that's called when your mutation successfully completes with zero errors (or if `errorPolicy` is `ignore` and partial data is returned).
-   *
-   * This function is passed the mutation's result `data` and any options passed to the mutation.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
   onCompleted?: (data: TData, clientOptions?: BaseMutationOptions) => void;
-  /**
-   * A callback function that's called when the mutation encounters one or more errors (unless `errorPolicy` is `ignore`).
-   *
-   * This function is passed an [`ApolloError`](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/errors/index.ts#L36-L39) object that contains either a `networkError` object or a `graphQLErrors` array, depending on the error(s) that occurred, as well as any options passed the mutation.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
-  /**
-   * If `true`, the mutation's `data` property is not updated with the mutation's result.
-   *
-   * The default value is `false`.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member} */
   ignoreResults?: boolean;
 }
 
@@ -410,6 +390,7 @@ export interface MutationFunctionOptions<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
@@ -501,6 +482,8 @@ export interface BaseSubscriptionOptions<
 > {
   /**
    * An object containing all of the variables your subscription needs to execute
+   *
+   * @docGroup 1. Operation options
    */
   variables?: TVariables;
   /**

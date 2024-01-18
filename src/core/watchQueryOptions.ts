@@ -52,9 +52,7 @@ export type ErrorPolicy = "none" | "ignore" | "all";
  * Query options.
  */
 export interface QueryOptions<TVariables = OperationVariables, TData = any> {
-  /**
-   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member}
-   *  */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
@@ -232,80 +230,35 @@ export interface MutationBaseOptions<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > {
-  /**
-   * By providing either an object or a callback function that, when invoked after
-   * a mutation, allows you to return optimistic data and optionally skip updates
-   * via the `IGNORE` sentinel object, Apollo Client caches this temporary
-   * (and potentially incorrect) response until the mutation completes, enabling
-   * more responsive UI updates.
-   *
-   * For more information, see [Optimistic mutation results](/react/performance/optimistic-ui/).
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
   optimisticResponse?:
     | TData
     | ((vars: TVariables, { IGNORE }: { IGNORE: IgnoreModifier }) => TData);
 
-  /**
-   * A {@link MutationQueryReducersMap}, which is map from query names to
-   * mutation query reducers. Briefly, this map defines how to incorporate the
-   * results of the mutation into the results of queries that are currently
-   * being watched by your application.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
   updateQueries?: MutationQueryReducersMap<TData>;
 
-  /**
-   * An array (or a function that _returns_ an array) that specifies which queries you want to refetch after the mutation occurs.
-   *
-   * Each array value can be either:
-   *
-   * - An object containing the `query` to execute, along with any `variables`
-   *
-   * - A string indicating the operation name of the query to refetch
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
   refetchQueries?:
     | ((result: FetchResult<TData>) => InternalRefetchQueriesInclude)
     | InternalRefetchQueriesInclude;
 
-  /**
-   * If `true`, makes sure all queries included in `refetchQueries` are completed before the mutation is considered complete.
-   *
-   * The default value is `false` (queries are refetched asynchronously).
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */
   awaitRefetchQueries?: boolean;
 
-  /**
-   * A function used to update the Apollo Client cache after the mutation completes.
-   *
-   * For more information, see [Updating the cache after a mutation](/react/data/mutations#updating-the-cache-after-a-mutation).
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
   update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
 
-  /**
-   * Optional callback for intercepting queries whose cache data has been updated by the mutation, as well as any queries specified in the [`refetchQueries: [...]`](#refetchQueries) list passed to `client.mutate`.
-   *
-   * Returning a `Promise` from `onQueryUpdated` will cause the final mutation `Promise` to await the returned `Promise`. Returning `false` causes the query to be ignored.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
   onQueryUpdated?: OnQueryUpdated<any>;
 
-  /**
-   * Specifies how the mutation handles a response that returns both GraphQL errors and partial results.
-   *
-   * For details, see [GraphQL error policies](/react/data/error-handling/#graphql-error-policies).
-   *
-   * The default value is `none`, meaning that the mutation result includes error details but _not_ partial results.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
 
-  /**
-   * An object containing all of the GraphQL variables your mutation requires to execute.
-   *
-   * Each key in the object corresponds to a variable name, and that key's value corresponds to the variable value.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
   variables?: TVariables;
 
-  /**
-   * If you're using [Apollo Link](/react/api/link/introduction/), this object is the initial value of the `context` object that's passed along your link chain.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
   context?: TContext;
 }
 
@@ -315,10 +268,7 @@ export interface MutationOptions<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
-  /**
-   * A GraphQL document, often created with `gql` from the `graphql-tag`
-   * package, that contains a single mutation inside of it.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 export interface MutationSharedOptions<
@@ -327,21 +277,9 @@ export interface MutationSharedOptions<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
-  /**
-   * Provide `no-cache` if the mutation's result should _not_ be written to the Apollo Client cache.
-   * The default value is `network-only` (which means the result _is_ written to the cache).
-   * Unlike queries, mutations _do not_ support [fetch policies](/react/data/queries/#setting-a-fetch-policy) besides `network-only` and `no-cache`.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: MutationFetchPolicy;
 
-  /**
-   * To avoid retaining sensitive information from mutation root field
-   * arguments, Apollo Client v3.4+ automatically clears any `ROOT_MUTATION`
-   * fields from the cache after each mutation finishes. If you need this
-   * information to remain in the cache, you can prevent the removal by passing
-   * `keepRootFields: true` to the mutation. `ROOT_MUTATION` result data are
-   * also passed to the mutation `update` function, so we recommend obtaining
-   * the results that way, rather than using this option, if possible.
-   */
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
   keepRootFields?: boolean;
 }

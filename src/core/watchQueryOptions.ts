@@ -24,6 +24,7 @@ import type { ObservableQuery } from "./ObservableQuery.js";
  */
 export type FetchPolicy =
   | "cache-first"
+  | "cache-and-network"
   | "network-only"
   | "cache-only"
   | "no-cache"

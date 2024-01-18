@@ -201,9 +201,9 @@ export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryFunctionOptions#onCompleted:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
   onCompleted?: (data: TData) => void;
-  /** {@inheritDoc @apollo/client!QueryFunctionOptions#onError:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
 
   /** @internal */
@@ -225,7 +225,7 @@ export interface SuspenseQueryHookOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
-  /** {@inheritDoc @apollo/client!BaseQueryOptions#client:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient<any>;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;

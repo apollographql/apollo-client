@@ -51,7 +51,7 @@ export type PreloadQueryOptions<
   fetchPolicy?: PreloadQueryFetchPolicy;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
-  /** {@inheritDoc @apollo/client!~SharedWatchQueryOptions#refetchWritePolicy:member} */
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
 } & VariablesOption<TVariables>;
 

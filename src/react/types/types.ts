@@ -80,11 +80,11 @@ export interface ObservableQueryFields<
   TData,
   TVariables extends OperationVariables,
 > {
-  /** {@inheritDoc @apollo/client!ObservableQuery#startPolling:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member(1)} */
   startPolling(pollInterval: number): void;
-  /** {@inheritDoc @apollo/client!ObservableQuery#stopPolling:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member(1)} */
   stopPolling(): void;
-  /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member(1)} */
   subscribeToMore<
     TSubscriptionData = TData,
     TSubscriptionVariables extends OperationVariables = TVariables,
@@ -95,29 +95,23 @@ export interface ObservableQueryFields<
       TSubscriptionData
     >
   ): () => void;
-  /** {@inheritDoc @apollo/client!ObservableQuery#updateQuery:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member(1)} */
   updateQuery<TVars extends OperationVariables = TVariables>(
     mapFn: (
       previousQueryResult: TData,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">
     ) => TData
   ): void;
-  /**
-   * A function that enables you to re-execute the query, optionally passing in new `variables`.
-   *
-   * To guarantee that the refetch performs a network request, its `fetchPolicy` is set to `network-only` (unless the original query's `fetchPolicy` is `no-cache` or `cache-and-network`, which also guarantee a network request).
-   *
-   * See also [Refetching](/react/data/queries/#refetching).
-   */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member(1)} */
   refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>>;
-  /** {@inheritDoc @apollo/client!ObservableQuery#reobserve:member(1)} */
+  /** @internal */
   reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<TData>>;
-  /** {@inheritDoc @apollo/client!ObservableQuery#variables:member} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
   variables: TVariables | undefined;
-  /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member(1)} */
   fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,

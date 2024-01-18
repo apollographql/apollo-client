@@ -102,7 +102,7 @@ export interface QueryOptionsDocumentation {
    *
    * The default value is "overwrite".
    *
-   * * @docGroup 3. Caching options
+   * @docGroup 3. Caching options
    */
   refetchWritePolicy_suspense: unknown;
 
@@ -200,6 +200,8 @@ export interface QueryOptionsDocumentation {
    * A callback function that's called whenever a refetch attempt occurs
    * while polling. If the function returns `true`, the refetch is
    * skipped and not reattempted until the next poll interval.
+   *
+   * @docGroup 2. Networking options
    */
   skipPollAttempt: unknown;
 }
@@ -208,6 +210,8 @@ export interface QueryResultDocumentation {
   /**
    * The instance of Apollo Client that executed the query.
    * Can be useful for manually executing followup queries or writing data to the cache.
+   *
+   * @docGroup 2. Network info
    */
   client: unknown;
   /**
@@ -218,36 +222,95 @@ export interface QueryResultDocumentation {
    * An object containing the result of your GraphQL query after it completes.
    *
    * This value might be `undefined` if a query results in one or more errors (depending on the query's `errorPolicy`).
+   *
+   * @docGroup 1. Operation data
    */
   data: unknown;
   /**
    * An object containing the result from the most recent _previous_ execution of this query.
    *
    * This value is `undefined` if this is the query's first execution.
+   *
+   * @docGroup 1. Operation data
    */
   previousData: unknown;
   /**
    * If the query produces one or more errors, this object contains either an array of `graphQLErrors` or a single `networkError`. Otherwise, this value is `undefined`.
    *
-   * For more information, see [Handling operation errors](/react/data/error-handling/).
+   * For more information, see [Handling operation errors](https://www.apollographql.com/docs/react/data/error-handling/).
+   *
+   * @docGroup 1. Operation data
    */
   error: unknown;
   /**
    * If `true`, the query is still in flight and results have not yet been returned.
+   *
+   * @docGroup 2. Network info
    */
   loading: unknown;
   /**
    * A number indicating the current network state of the query's associated request. [See possible values.](https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4)
    *
    * Used in conjunction with the [`notifyOnNetworkStatusChange`](#notifyonnetworkstatuschange) option.
+   *
+   * @docGroup 2. Network info
    */
   networkStatus: unknown;
   /**
    * If `true`, the associated lazy query has been executed.
    *
    * This field is only present on the result object returned by [`useLazyQuery`](/react/data/queries/#executing-queries-manually).
+   *
+   * @docGroup 2. Network info
    */
   called: unknown;
+  /**
+   * An object containing the variables that were provided for the query.
+   *
+   * @docGroup 1. Operation data
+   */
+  variables: unknown;
+
+  /**
+   * A function that enables you to re-execute the query, optionally passing in new `variables`.
+   *
+   * To guarantee that the refetch performs a network request, its `fetchPolicy` is set to `network-only` (unless the original query's `fetchPolicy` is `no-cache` or `cache-and-network`, which also guarantee a network request).
+   *
+   * See also [Refetching](https://www.apollographql.com/docs/react/data/queries/#refetching).
+   *
+   *   @docGroup 3. Helper functions
+   */
+  refetch: unknown;
+  /**
+   * {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)}
+   *
+   * @docGroup 3. Helper functions
+   */
+  fetchMore: unknown;
+  /**
+   * {@inheritDoc @apollo/client!ObservableQuery#startPolling:member(1)}
+   *
+   * @docGroup 3. Helper functions
+   */
+  startPolling: unknown;
+  /**
+   * {@inheritDoc @apollo/client!ObservableQuery#stopPolling:member(1)}
+   *
+   * @docGroup 3. Helper functions
+   */
+  stopPolling: unknown;
+  /**
+   * {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)}
+   *
+   * @docGroup 3. Helper functions
+   */
+  subscribeToMore: unknown;
+  /**
+   * {@inheritDoc @apollo/client!ObservableQuery#updateQuery:member(1)}
+   *
+   * @docGroup 3. Helper functions
+   */
+  updateQuery: unknown;
 }
 
 export interface MutationOptionsDocumentation {
@@ -261,7 +324,9 @@ export interface MutationOptionsDocumentation {
 
   /**
    * Provide `no-cache` if the mutation's result should _not_ be written to the Apollo Client cache.
+   *
    * The default value is `network-only` (which means the result _is_ written to the cache).
+   *
    * Unlike queries, mutations _do not_ support [fetch policies](https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy) besides `network-only` and `no-cache`.
    *
    * @docGroup 3. Caching options
@@ -448,8 +513,6 @@ export interface SubscriptionOptionsDocumentation {
   query: unknown;
   /**
    * An object containing all of the variables your subscription needs to execute
-   *
-   * @docGroup 1. Operation options
    */
   variables: unknown;
 

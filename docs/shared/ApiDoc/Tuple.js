@@ -54,7 +54,8 @@ ManualTuple.propTypes = {
     PropTypes.shape({
       name: PropTypes.string.isRequired,
       type: PropTypes.string.isRequired,
-      description: PropTypes.oneOfType([PropTypes.node, PropTypes.string]).isRequired,
+      description: PropTypes.oneOfType([PropTypes.node, PropTypes.string])
+        .isRequired,
       canonicalReference: PropTypes.string,
     })
   ).isRequired,

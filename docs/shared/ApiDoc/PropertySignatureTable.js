@@ -61,7 +61,9 @@ export function PropertySignatureTable({
         {Object.entries(groupedProperties).map(
           ([groupName, sortedProperties]) => (
             <>
-              {groupName ? <GridItem className="row heading">{groupName}</GridItem> : null}
+              {groupName ?
+                <GridItem className="row heading">{groupName}</GridItem>
+              : null}
               {sortedProperties.map((property) => (
                 <React.Fragment key={property.id}>
                   <GridItem

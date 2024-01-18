@@ -127,8 +127,7 @@ function arraysEqualUpTo(a, b, end) {
   return true;
 }
 
-
-exports.buildDocEntryPoints= () => {
+exports.buildDocEntryPoints = () => {
   const dist = path.resolve(__dirname, "../dist");
   const entryPoints = exports.map((entryPoint) => {
     return `export * from "${dist}/${entryPoint.dirs.join("/")}/index.d.ts";`;
@@ -137,4 +136,4 @@ exports.buildDocEntryPoints= () => {
     `export * from "${dist}/react/types/types.documentation.ts";`
   );
   return entryPoints.join("\n");
-}
+};

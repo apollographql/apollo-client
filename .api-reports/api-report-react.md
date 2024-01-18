@@ -1066,7 +1066,6 @@ export interface LoadableQueryHookOptions {
     fetchPolicy?: LoadableQueryHookFetchPolicy;
     queryKey?: string | number | any[];
     // Warning: (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
 }
@@ -1964,7 +1963,6 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
     // @deprecated
     partialRefetch?: boolean;
     pollInterval?: number;
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
     skipPollAttempt?: () => boolean;
@@ -2402,7 +2400,6 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/react/hooks/useBackgroundQuery.ts:29:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:49:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
-// src/react/query-preloader/createQueryPreloader.ts:166:5 - (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
 
 // (No @packageDocumentation comment for this package)
 

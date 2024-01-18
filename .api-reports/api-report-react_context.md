@@ -1531,7 +1531,6 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
     partialRefetch?: boolean;
     pollInterval?: number;
     // Warning: (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "NetworkStatus"
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
     skipPollAttempt?: () => boolean;

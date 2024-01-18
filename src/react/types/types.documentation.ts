@@ -88,7 +88,7 @@ export interface QueryOptionsDocumentation {
   returnPartialData: unknown;
 
   /**
-   * Specifies whether a {@link NetworkStatus.refetch} operation should merge
+   * Specifies whether a `NetworkStatus.refetch` operation should merge
    * incoming field data with existing data, or overwrite the existing data.
    * Overwriting is probably preferable, but merging is currently the default
    * behavior, for backwards compatibility with Apollo Client 3.x.
@@ -130,7 +130,7 @@ export interface QueryOptionsDocumentation {
   canonizeResults: unknown;
 
   /**
-   * If true, the query is not executed. **Not available with `useLazyQuery`**.
+   * If true, the query is not executed.
    *
    * The default value is `false`.
    *
@@ -216,7 +216,7 @@ export interface MutationOptionsDocumentation {
   /**
    * Provide `no-cache` if the mutation's result should _not_ be written to the Apollo Client cache.
    * The default value is `network-only` (which means the result _is_ written to the cache).
-   * Unlike queries, mutations _do not_ support [fetch policies](/react/data/queries/#setting-a-fetch-policy) besides `network-only` and `no-cache`.
+   * Unlike queries, mutations _do not_ support [fetch policies](https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy) besides `network-only` and `no-cache`.
    *
    * @docGroup 3. Caching options
    */
@@ -240,7 +240,7 @@ export interface MutationOptionsDocumentation {
    * (and potentially incorrect) response until the mutation completes, enabling
    * more responsive UI updates.
    *
-   * For more information, see [Optimistic mutation results](/react/performance/optimistic-ui/).
+   * For more information, see [Optimistic mutation results](https://www.apollographql.com/docs/react/performance/optimistic-ui/).
    *
    * @docGroup 3. Caching options
    */
@@ -279,14 +279,14 @@ export interface MutationOptionsDocumentation {
   /**
    * A function used to update the Apollo Client cache after the mutation completes.
    *
-   * For more information, see [Updating the cache after a mutation](/react/data/mutations#updating-the-cache-after-a-mutation).
+   * For more information, see [Updating the cache after a mutation](https://www.apollographql.com/docs/react/data/mutations#updating-the-cache-after-a-mutation).
    *
    * @docGroup 3. Caching options
    */
   update: unknown;
 
   /**
-   * Optional callback for intercepting queries whose cache data has been updated by the mutation, as well as any queries specified in the [`refetchQueries: [...]`](#refetchQueries) list passed to `client.mutate`.
+   * Optional callback for intercepting queries whose cache data has been updated by the mutation, as well as any queries specified in the `refetchQueries: [...]` list passed to `client.mutate`.
    *
    * Returning a `Promise` from `onQueryUpdated` will cause the final mutation `Promise` to await the returned `Promise`. Returning `false` causes the query to be ignored.
    *
@@ -297,7 +297,7 @@ export interface MutationOptionsDocumentation {
   /**
    * Specifies how the mutation handles a response that returns both GraphQL errors and partial results.
    *
-   * For details, see [GraphQL error policies](/react/data/error-handling/#graphql-error-policies).
+   * For details, see [GraphQL error policies](https://www.apollographql.com/docs/react/data/error-handling/#graphql-error-policies).
    *
    * The default value is `none`, meaning that the mutation result includes error details but _not_ partial results.
    *
@@ -315,7 +315,7 @@ export interface MutationOptionsDocumentation {
   variables: unknown;
 
   /**
-   * If you're using [Apollo Link](/react/api/link/introduction/), this object is the initial value of the `context` object that's passed along your link chain.
+   * If you're using [Apollo Link](https://www.apollographql.com/docs/react/api/link/introduction/), this object is the initial value of the `context` object that's passed along your link chain.
    *
    * @docGroup 2. Networking options
    */
@@ -382,7 +382,7 @@ export interface SubscriptionOptionsDocumentation {
   errorPolicy: unknown;
 
   /**
-   * How you want your component to interact with the Apollo cache. For details, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
+   * How you want your component to interact with the Apollo cache. For details, see [Setting a fetch policy](https://www.apollographql.com/docs/react/data/queries/#setting-a-fetch-policy).
    */
   fetchPolicy: unknown;
 

@@ -22,3 +22,10 @@ body:
       description: Please provide any additional non-trivial steps required to reproduce the issue.
     validations:
       required: false
+  - type: input
+    attributes:
+      label: "`@apollo/client` version"
+      description: "What version of Apollo Client are you running?"
+      placeholder: "ex: 3.8.10"
+    validations:
+      required: true

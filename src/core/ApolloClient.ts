@@ -52,7 +52,7 @@ export interface ApolloClientOptions<TCacheShape> {
   uri?: string | UriFunction;
   credentials?: string;
   /**
-   * An object representing headers to include in eery HTTP request, such as `{Authorization: 'Bearer 1234'}`
+   * An object representing headers to include in every HTTP request, such as `{Authorization: 'Bearer 1234'}`
    *
    * This value will be ignored when using the `link` option.
    */

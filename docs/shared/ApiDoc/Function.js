@@ -24,8 +24,7 @@ export function FunctionSignature({
   const getItem = useApiDocContext();
   const { displayName, parameters, returnType } = getItem(canonicalReference);
 
-  const signature = `${arrow ? "" : "function "}${name ? displayName : ""}(
-  ${parameters
+  let paramSignature = parameters
     .map((p) => {
       let pStr = p.name;
       if (p.optional) {
@@ -36,8 +35,15 @@ export function FunctionSignature({
       }
       return pStr;
     })
-    .join(",\n  ")}
-)${arrow ? " =>" : ":"} ${returnType}`;
+    .join(",\n  ");
+
+  if (paramSignature) {
+    paramSignature = "\n  " + paramSignature + "\n";
+  }
+
+  const signature = `${arrow ? "" : "function "}${
+    name ? displayName : ""
+  }(${paramSignature})${arrow ? " =>" : ":"} ${returnType}`;
 
   return highlight ?
       <MDX.pre language="ts">
@@ -94,6 +100,8 @@ export function FunctionDetails({
   headingLevel,
   result,
 }) {
+  const getItem = useApiDocContext();
+  const item = getItem(canonicalReference);
   return (
     <>
       <ApiDocHeading
@@ -122,18 +130,25 @@ export function FunctionDetails({
         highlight
       />
       <SourceLink canonicalReference={canonicalReference} />
-      <SubHeading
-        canonicalReference={canonicalReference}
-        headingLevel={headingLevel + 1}
-      >
-        Parameters
-      </SubHeading>
-      <ParameterTable
-        canonicalReference={canonicalReference}
-        customOrder={customParameterOrder}
-      />
-      {result === false ? null : (
+      {item.parameters.length == 0 ? null : (
         <>
+          <SubHeading
+            canonicalReference={canonicalReference}
+            headingLevel={headingLevel + 1}
+          >
+            Parameters
+          </SubHeading>
+          <ParameterTable
+            canonicalReference={canonicalReference}
+            customOrder={customParameterOrder}
+          />
+        </>
+      )}
+      {(
+        result === false || (result === undefined && item.returnType === "void")
+      ) ?
+        null
+      : <>
           <SubHeading
             canonicalReference={canonicalReference}
             headingLevel={headingLevel + 1}
@@ -141,8 +156,7 @@ export function FunctionDetails({
             Result
           </SubHeading>
           {result || <ReturnType canonicalReference={canonicalReference} />}
-        </>
-      )}
+        </>}
     </>
   );
 }

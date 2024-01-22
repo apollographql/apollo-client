@@ -157,7 +157,6 @@ export interface ApolloClientOptions<TCacheShape> {
     documentTransform?: DocumentTransform;
     // (undocumented)
     fragmentMatcher?: FragmentMatcher;
-    // (undocumented)
     headers?: Record<string, string>;
     link?: ApolloLink;
     name?: string;

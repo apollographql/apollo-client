@@ -51,6 +51,11 @@ export interface ApolloClientOptions<TCacheShape> {
    */
   uri?: string | UriFunction;
   credentials?: string;
+  /**
+   * An object representing headers to include in every HTTP request, such as `{Authorization: 'Bearer 1234'}`
+   *
+   * This value will be ignored when using the `link` option.
+   */
   headers?: Record<string, string>;
   /**
    * You can provide an {@link ApolloLink} instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).

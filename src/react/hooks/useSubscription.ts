@@ -120,7 +120,7 @@ export function useSubscription<
     }
 
     Object.assign(ref.current, { client, subscription, options });
-  }, [client, subscription, options, canResetObservableRef.current]);
+  }, [client, subscription, options]);
 
   React.useEffect(() => {
     if (!observable) {
@@ -187,7 +187,11 @@ export function useSubscription<
         subscription.unsubscribe();
       });
     };
-  }, [observable]);
+    // React Hook React.useEffect has a missing dependency: 'options?.variables'.
+    // This seems like a valid complaint and we should investigate that.
+    // Generally: why is this a second `useEffect` and not part of the first one?
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, observable]);
 
   return result;
 }

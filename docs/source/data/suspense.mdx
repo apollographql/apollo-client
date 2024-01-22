@@ -433,6 +433,59 @@ When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsu
 
 The `useBackgroundQuery` hook used in a parent component is responsible for kicking off fetches, but doesn't deal with reading or rendering data. This is delegated to the `useReadQuery` hook used in a child component. This separation of concerns provides a nice performance benefit because cache updates are observed by `useReadQuery` and re-render only the child component. You may find this as a useful tool to optimize your component structure to avoid unnecessarily re-rendering parent components when cache data changes.
 
+<MinVersion version="3.9.0">
+
+### Querying in response to user interaction
+
+</MinVersion>
+
+`useSuspenseQuery` and `useBackgroundQuery` are useful hooks that will begin loading data as soon as the hook is mounted. But what happens when you'd like to start loading your query in response to a user interaction? With `useSuspenseQuery` and `useBackgroundQuery`, you'd need to update React state in response to the user interaction in order to re-render your component.
+
+Starting with Apollo Client `3.9.0`, you can use `useLoadableQuery` to start loading data in response to user interaction. This is not only more ergonomic, but starts loading the query immediately, providing a nice performance benefit.
+
+`useLoadableQuery` returns a function that when called will begin fetching the query with the provided variables. Like `useBackgroundQuery`, you get access to a `queryRef` that is passed to `useReadQuery` to read the data in a child component. When the child component renders before the query has finished loading, the child component suspends.
+
+Let's update our example to start loading the dog's details as a result of selecting from a dropdown.
+
+```tsx
+function App() {
+  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
+  const [queryRef, loadDog] = useLoadableQuery(GET_DOG_QUERY)
+
+  return (
+    <>
+      <select
+        onChange={(e) => loadDog({ id: e.target.value })}
+      >
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>
+            {name}
+          </option>
+        ))}
+      </select>
+      <Suspense fallback={<div>Loading...</div>}>
+        {queryRef && <Dog queryRef={queryRef} />}
+      </Suspense>
+    </>
+  );
+}
+
+function Dog({ queryRef }) {
+  const { data } = useReadQuery(queryRef)
+
+  return (
+    <>
+      <div>Name: {data.dog.name}</div>
+      <div>Breed: {data.dog.breed}</div>
+    </>
+  );
+}
+```
+
+> It's important to note that the `queryRef` is `null` until the query loading function is called for the first time. You should conditionally render the child component when the query has not yet been loaded.
+
+We begin fetching our `GET_DOG_QUERY` as soon as a new dog is selected rather than waiting for our `Dog` component to re-render. When the `Dog` component renders, it reads data from the `GET_DOG_QUERY`, and if not ready, will suspend. As a result of this change, we've also removed the need to track the selected dog ID as part of React state!
+
 ### Refetching and pagination
 
 Apollo's Suspense data fetching hooks return functions for refetching query data via the `refetch` function, and fetching additional pages of data via the `fetchMore` function.

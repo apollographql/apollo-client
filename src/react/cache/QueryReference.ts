@@ -60,7 +60,7 @@ const OBSERVED_CHANGED_OPTIONS = [
 
 type ObservedOptions = Pick<
   WatchQueryOptions,
-  typeof OBSERVED_CHANGED_OPTIONS[number]
+  (typeof OBSERVED_CHANGED_OPTIONS)[number]
 >;
 
 export class InternalQueryReference<TData = unknown> {
@@ -73,7 +73,7 @@ export class InternalQueryReference<TData = unknown> {
 
   private subscription: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
-  private autoDisposeTimeoutId: NodeJS.Timeout;
+  private autoDisposeTimeoutId?: NodeJS.Timeout;
   private status: "idle" | "loading" = "loading";
 
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
@@ -123,10 +123,19 @@ export class InternalQueryReference<TData = unknown> {
     // suspended resource does not use this queryRef in the given time. This
     // helps prevent memory leaks when a component has unmounted before the
     // query has finished loading.
-    this.autoDisposeTimeoutId = setTimeout(
-      this.dispose,
-      options.autoDisposeTimeoutMs ?? 30_000
-    );
+    const startDisposeTimer = () => {
+      if (!this.references) {
+        this.autoDisposeTimeoutId = setTimeout(
+          this.dispose,
+          options.autoDisposeTimeoutMs ?? 30_000
+        );
+      }
+    };
+
+    // We wait until the request has settled to ensure we don't dispose of the
+    // query ref before the request finishes, otherwise we would leave the
+    // promise in a pending state rendering the suspense boundary indefinitely.
+    this.promise.then(startDisposeTimer, startDisposeTimer);
   }
 
   get watchQueryOptions() {
@@ -229,7 +238,10 @@ export class InternalQueryReference<TData = unknown> {
         // This occurs when switching to a result that is fully cached when this
         // class is instantiated. ObservableQuery will run reobserve when
         // subscribing, which delivers a result from the cache.
-        if (result.data === this.result.data) {
+        if (
+          result.data === this.result.data &&
+          result.networkStatus === this.result.networkStatus
+        ) {
           return;
         }
 
@@ -248,6 +260,12 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private handleError(error: ApolloError) {
+    this.subscription.unsubscribe();
+    this.subscription = this.observable.resubscribeAfterError(
+      this.handleNext,
+      this.handleError
+    );
+
     switch (this.status) {
       case "loading": {
         this.status = "idle";

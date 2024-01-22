@@ -13,9 +13,8 @@ export interface ApolloContextValue {
 // (which can lead to problems like having an Apollo Client instance added
 // in one context, then attempting to retrieve it from another different
 // context), a single Apollo context is created and tracked in global state.
-const contextKey = canUseSymbol
-  ? Symbol.for("__APOLLO_CONTEXT__")
-  : "__APOLLO_CONTEXT__";
+const contextKey =
+  canUseSymbol ? Symbol.for("__APOLLO_CONTEXT__") : "__APOLLO_CONTEXT__";
 
 export function getApolloContext(): React.Context<ApolloContextValue> {
   invariant(

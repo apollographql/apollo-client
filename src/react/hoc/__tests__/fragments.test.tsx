@@ -55,7 +55,7 @@ describe("fragments", () => {
       );
       throw new Error();
     } catch (e) {
-      expect(e.name).toMatch(/Invariant Violation/);
+      expect((e as Error).name).toMatch(/Invariant Violation/);
     }
   });
 

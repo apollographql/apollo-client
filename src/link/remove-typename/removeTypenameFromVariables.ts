@@ -23,8 +23,9 @@ export function removeTypenameFromVariables(
     const { query, variables } = operation;
 
     if (variables) {
-      operation.variables = except
-        ? maybeStripTypenameUsingConfig(query, variables, except)
+      operation.variables =
+        except ?
+          maybeStripTypenameUsingConfig(query, variables, except)
         : stripTypename(variables);
     }
 
@@ -45,8 +46,9 @@ function maybeStripTypenameUsingConfig(
       const typename = variableDefinitions[key];
       const typenameConfig = config[typename];
 
-      keyVal[1] = typenameConfig
-        ? maybeStripTypename(value, typenameConfig)
+      keyVal[1] =
+        typenameConfig ?
+          maybeStripTypename(value, typenameConfig)
         : stripTypename(value);
 
       return keyVal;
@@ -81,8 +83,9 @@ function maybeStripTypename(
 
       const fieldConfig = config[key];
 
-      modified[key] = fieldConfig
-        ? maybeStripTypename(child, fieldConfig)
+      modified[key] =
+        fieldConfig ?
+          maybeStripTypename(child, fieldConfig)
         : stripTypename(child);
     });
 

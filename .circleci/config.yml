@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  secops: apollo/circleci-secops-orb@2.0.7
+
 jobs:
   # Filesize:
   #   docker:
@@ -12,16 +15,24 @@ jobs:
 
   Lint:
     docker:
-      - image: cimg/node:20.5.1
+      - image: cimg/node:21.5.0
     steps:
       - checkout
       - run: npm version
       - run: npm ci
       - run: npm run lint
 
+  Formatting:
+    docker:
+      - image: cimg/node:21.5.0
+    steps:
+      - checkout
+      - run: npm ci
+      - run: npm run check:format
+
   Tests:
     docker:
-      - image: cimg/node:20.5.1
+      - image: cimg/node:21.5.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -39,7 +50,7 @@ jobs:
 
   BuildTarball:
     docker:
-      - image: cimg/node:20.5.1
+      - image: cimg/node:21.5.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -56,7 +67,7 @@ jobs:
       framework:
         type: string
     docker:
-      - image: cimg/node:20.5.1
+      - image: cimg/node:21.5.0
     steps:
       - checkout
       - attach_workspace:
@@ -83,6 +94,7 @@ workflows:
     jobs:
       # - Filesize
       - Tests
+      - Formatting
       - Lint
       - BuildTarball
       - IntegrationTests:
@@ -100,3 +112,17 @@ workflows:
                 - vite
                 - vite-swc
                 # -browser-esm would need a package publish to npm/CDNs
+  security-scans:
+    jobs:
+      - secops/gitleaks:
+          context:
+            - platform-docker-ro
+            - github-orb
+            - secops-oidc
+          git-base-revision: <<#pipeline.git.base_revision>><<pipeline.git.base_revision>><</pipeline.git.base_revision >>
+          git-revision: << pipeline.git.revision >>
+      - secops/semgrep:
+          context:
+            - secops-oidc
+            - github-orb
+          git-base-revision: <<#pipeline.git.base_revision>><<pipeline.git.base_revision>><</pipeline.git.base_revision >>

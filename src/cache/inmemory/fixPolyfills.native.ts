@@ -20,7 +20,7 @@ if (testSet.add(3) !== testSet) {
 }
 
 const frozen = {};
-if (typeof Object.freeze === 'function') {
+if (typeof Object.freeze === "function") {
   Object.freeze(frozen);
 }
 
@@ -33,21 +33,24 @@ try {
   // https://github.com/apollographql/react-apollo/issues/2442#issuecomment-426489517
   testMap.set(frozen, frozen).delete(frozen);
 } catch {
-  const wrap = (method: <T>(obj: T) => T): typeof method => {
-    return method && (obj => {
-      try {
-        // If .set succeeds, also call .delete to avoid leaking memory.
-        testMap.set(obj, obj).delete(obj);
-      } finally {
-        // If .set or .delete fails, the exception will be silently swallowed
-        // by this return-from-finally statement:
-        return method.call(Object, obj);
-      }
-    });
+  const wrap = <M extends <T>(obj: T) => T>(method: M): M => {
+    return (
+      method &&
+      (((obj) => {
+        try {
+          // If .set succeeds, also call .delete to avoid leaking memory.
+          testMap.set(obj, obj).delete(obj);
+        } finally {
+          // If .set or .delete fails, the exception will be silently swallowed
+          // by this return-from-finally statement:
+          return method.call(Object, obj);
+        }
+      }) as M)
+    );
   };
   Object.freeze = wrap(Object.freeze);
   Object.seal = wrap(Object.seal);
   Object.preventExtensions = wrap(Object.preventExtensions);
 }
 
-export {}
+export {};

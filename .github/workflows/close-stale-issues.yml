@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Close Stale Issues
-        uses: actions/stale@v8.0.0
+        uses: actions/stale@v9.0.0
         with:
           # # Token for the repository. Can be passed in using `{{ secrets.GITHUB_TOKEN }}`.
           # repo-token: # optional, default is ${{ github.token }}

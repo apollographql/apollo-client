@@ -1,8 +1,9 @@
-import React, { Fragment, StrictMode, Suspense } from "react";
+import React, { ComponentProps, Fragment, StrictMode, Suspense } from "react";
 import {
   act,
   render,
   screen,
+  screen as _screen,
   renderHook,
   RenderHookOptions,
   waitFor,
@@ -38,6 +39,7 @@ import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
+  cloneDeep,
 } from "../../../utilities";
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { useReadQuery } from "../useReadQuery";
@@ -51,6 +53,7 @@ import {
 import equal from "@wry/equality";
 import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
+import { profile, spyOnConsole } from "../../../testing/internal";
 
 function renderIntegrationTest({
   client,
@@ -128,7 +131,9 @@ function renderIntegrationTest({
       <ApolloProvider client={_client}>
         <ErrorBoundary {...errorBoundaryProps}>
           <Suspense fallback={<SuspenseFallback />}>
-            {variables ? <ParentWithVariables /> : <Parent />}
+            {variables ?
+              <ParentWithVariables />
+            : <Parent />}
           </Suspense>
         </ErrorBoundary>
       </ApolloProvider>
@@ -151,17 +156,15 @@ interface VariablesCaseVariables {
 }
 
 function useVariablesIntegrationTestCase() {
-  const query: TypedDocumentNode<
-    VariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
+  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+    gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
       }
-    }
-  `;
+    `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
   let mocks = [...CHARACTERS].map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
@@ -205,11 +208,11 @@ function renderVariablesIntegrationTest({
             character: {
               ...result.data.character,
               name:
-                index > 3
-                  ? index > 7
-                    ? `${result.data.character.name} (updated again)`
-                    : `${result.data.character.name} (updated)`
-                  : result.data.character.name,
+                index > 3 ?
+                  index > 7 ?
+                    `${result.data.character.name} (updated again)`
+                  : `${result.data.character.name} (updated)`
+                : result.data.character.name,
             },
           },
         },
@@ -271,7 +274,9 @@ function renderVariablesIntegrationTest({
 
     return (
       <div>
-        {error ? <div>{error.message}</div> : null}
+        {error ?
+          <div>{error.message}</div>
+        : null}
         <button
           onClick={() => {
             refetch(variables);
@@ -329,13 +334,27 @@ function renderVariablesIntegrationTest({
     );
   }
 
+  const ProfiledApp = profile<Renders, ComponentProps<typeof App>>({
+    Component: App,
+    snapshotDOM: true,
+    onRender: ({ replaceSnapshot }) => replaceSnapshot(cloneDeep(renders)),
+  });
+
   const { ...rest } = render(
-    <App errorPolicy={errorPolicy} variables={variables} />
+    <ProfiledApp errorPolicy={errorPolicy} variables={variables} />
   );
   const rerender = ({ variables }: { variables: VariablesCaseVariables }) => {
     return rest.rerender(<App variables={variables} />);
   };
-  return { ...rest, query, rerender, client, renders, mocks: mocks || _mocks };
+  return {
+    ...rest,
+    ProfiledApp,
+    query,
+    rerender,
+    client,
+    renders,
+    mocks: mocks || _mocks,
+  };
 }
 
 function renderPaginatedIntegrationTest({
@@ -415,23 +434,11 @@ function renderPaginatedIntegrationTest({
     suspenseCount: number;
     count: number;
   }
-  const renders: Renders = {
-    errors: [],
-    errorCount: 0,
-    suspenseCount: 0,
-    count: 0,
-  };
-
-  const errorBoundaryProps: ErrorBoundaryProps = {
-    fallback: <div>Error</div>,
-    onError: (error) => {
-      renders.errorCount++;
-      renders.errors.push(error);
-    },
-  };
 
   function SuspenseFallback() {
-    renders.suspenseCount++;
+    ProfiledApp.mergeSnapshot(({ suspenseCount }) => ({
+      suspenseCount: suspenseCount + 1,
+    }));
     return <div>loading</div>;
   }
 
@@ -444,10 +451,14 @@ function renderPaginatedIntegrationTest({
   }) {
     const { data, error } = useReadQuery(queryRef);
     // count renders in the child component
-    renders.count++;
+    ProfiledApp.mergeSnapshot(({ count }) => ({
+      count: count + 1,
+    }));
     return (
       <div>
-        {error ? <div>{error.message}</div> : null}
+        {error ?
+          <div>{error.message}</div>
+        : null}
         <button
           onClick={() => {
             const fetchMoreOpts: FetchMoreQueryOptions<Variables, QueryData> & {
@@ -492,7 +503,15 @@ function renderPaginatedIntegrationTest({
   function App() {
     return (
       <ApolloProvider client={client}>
-        <ErrorBoundary {...errorBoundaryProps}>
+        <ErrorBoundary
+          fallback={<div>Error</div>}
+          onError={(error) => {
+            ProfiledApp.mergeSnapshot(({ errorCount, errors }) => ({
+              errorCount: errorCount + 1,
+              errors: errors.concat(error),
+            }));
+          }}
+        >
           <Suspense fallback={<SuspenseFallback />}>
             <ParentWithVariables />
           </Suspense>
@@ -501,8 +520,18 @@ function renderPaginatedIntegrationTest({
     );
   }
 
-  const { ...rest } = render(<App />);
-  return { ...rest, data, query, client, renders };
+  const ProfiledApp = profile({
+    Component: App,
+    snapshotDOM: true,
+    initialSnapshot: {
+      errors: [],
+      errorCount: 0,
+      suspenseCount: 0,
+      count: 0,
+    } as Renders,
+  });
+  const { ...rest } = render(<ProfiledApp />);
+  return { ...rest, ProfiledApp, data, query, client };
 }
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
@@ -2384,11 +2413,9 @@ describe("useBackgroundQuery", () => {
     function Greeting({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data, error } = useReadQuery(queryRef);
 
-      return error ? (
-        <div data-testid="error">{error.message}</div>
-      ) : (
-        <div data-testid="greeting">{data.greeting}</div>
-      );
+      return error ?
+          <div data-testid="error">{error.message}</div>
+        : <div data-testid="greeting">{data.greeting}</div>;
     }
 
     function App() {
@@ -2990,7 +3017,7 @@ describe("useBackgroundQuery", () => {
     });
 
     // Because we switched to a `no-cache` fetch policy, we should not see the
-    // newly fetched data in the cache after the fetch occured.
+    // newly fetched data in the cache after the fetch occurred.
     expect(cache.readQuery({ query })).toEqual({
       character: {
         __typename: "Character",
@@ -3095,11 +3122,9 @@ describe("useBackgroundQuery", () => {
     function Character({ queryRef }: { queryRef: QueryReference<Data> }) {
       const { data, error } = useReadQuery(queryRef);
 
-      return error ? (
-        <div data-testid="error">{error.message}</div>
-      ) : (
-        <span data-testid="character">{data.character.name}</span>
-      );
+      return error ?
+          <div data-testid="error">{error.message}</div>
+        : <span data-testid="character">{data.character.name}</span>;
     }
 
     function App() {
@@ -3137,26 +3162,41 @@ describe("useBackgroundQuery", () => {
 
   describe("refetch", () => {
     it("re-suspends when calling `refetch`", async () => {
-      const { renders } = renderVariablesIntegrationTest({
+      const { ProfiledApp } = renderVariablesIntegrationTest({
         variables: { id: "1" },
       });
 
-      expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText("loading")).toBeInTheDocument();
+      {
+        const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(1);
+        expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      }
 
-      expect(await screen.findByText("1 - Spider-Man")).toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        expect(withinDOM().getByText("1 - Spider-Man")).toBeInTheDocument();
+      }
 
       const button = screen.getByText("Refetch");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
-      expect(renders.count).toBe(2);
+      {
+        // parent component re-suspends
+        const { snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(2);
+      }
+      {
+        const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        // @jerelmiller can you please verify that this is still in the spirit of the test?
+        // This seems to have moved onto the next render - or before the test skipped one.
+        expect(snapshot.count).toBe(2);
+        expect(
+          withinDOM().getByText("1 - Spider-Man (updated)")
+        ).toBeInTheDocument();
+      }
 
-      expect(
-        await screen.findByText("1 - Spider-Man (updated)")
-      ).toBeInTheDocument();
+      expect(ProfiledApp).not.toRerender();
     });
     it("re-suspends when calling `refetch` with new variables", async () => {
       interface QueryData {
@@ -3271,7 +3311,7 @@ describe("useBackgroundQuery", () => {
       ).toBeInTheDocument();
     });
     it("throws errors when errors are returned after calling `refetch`", async () => {
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+      using _consoleSpy = spyOnConsole("error");
       interface QueryData {
         character: {
           id: string;
@@ -3327,8 +3367,6 @@ describe("useBackgroundQuery", () => {
           graphQLErrors: [new GraphQLError("Something went wrong")],
         }),
       ]);
-
-      consoleSpy.mockRestore();
     });
     it('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
       interface QueryData {
@@ -3503,6 +3541,252 @@ describe("useBackgroundQuery", () => {
         },
       ]);
     });
+
+    it("can refetch after error is encountered", async () => {
+      type Variables = {
+        id: string;
+      };
+
+      interface Data {
+        todo: {
+          id: string;
+          name: string;
+          completed: boolean;
+        };
+      }
+      const user = userEvent.setup();
+
+      const query: TypedDocumentNode<Data, Variables> = gql`
+        query TodoItemQuery($id: ID!) {
+          todo(id: $id) {
+            id
+            name
+            completed
+          }
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query, variables: { id: "1" } },
+          result: {
+            data: null,
+            errors: [new GraphQLError("Oops couldn't fetch")],
+          },
+          delay: 10,
+        },
+        {
+          request: { query, variables: { id: "1" } },
+          result: {
+            data: { todo: { id: "1", name: "Clean room", completed: true } },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache: new InMemoryCache(),
+      });
+
+      function App() {
+        return (
+          <ApolloProvider client={client}>
+            <Parent />
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [queryRef, { refetch }] = useBackgroundQuery(query, {
+          variables: { id: "1" },
+        });
+
+        return (
+          <Suspense fallback={<SuspenseFallback />}>
+            <ErrorBoundary
+              onReset={() => refetch()}
+              fallbackRender={({ error, resetErrorBoundary }) => (
+                <>
+                  <button onClick={resetErrorBoundary}>Retry</button>
+                  <div>{error.message}</div>
+                </>
+              )}
+            >
+              <Todo queryRef={queryRef} />
+            </ErrorBoundary>
+          </Suspense>
+        );
+      }
+
+      function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
+        const {
+          data: { todo },
+        } = useReadQuery(queryRef);
+
+        return (
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        );
+      }
+
+      render(<App />);
+
+      // Disable error message shown in the console due to an uncaught error.
+      // TODO: need to determine why the error message is logged to the console
+      // as an uncaught error since other tests do not require this.
+      {
+        using _consoleSpy = spyOnConsole("error");
+
+        expect(screen.getByText("Loading")).toBeInTheDocument();
+
+        expect(
+          await screen.findByText("Oops couldn't fetch")
+        ).toBeInTheDocument();
+      }
+
+      const button = screen.getByText("Retry");
+
+      await act(() => user.click(button));
+
+      expect(screen.getByText("Loading")).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("todo")).toHaveTextContent(
+          "Clean room (completed)"
+        );
+      });
+    });
+
+    it("throws errors on refetch after error is encountered after first fetch with error", async () => {
+      type Variables = {
+        id: string;
+      };
+
+      interface Data {
+        todo: {
+          id: string;
+          name: string;
+          completed: boolean;
+        };
+      }
+      const user = userEvent.setup();
+
+      const query: TypedDocumentNode<Data, Variables> = gql`
+        query TodoItemQuery($id: ID!) {
+          todo(id: $id) {
+            id
+            name
+            completed
+          }
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query, variables: { id: "1" } },
+          result: {
+            data: null,
+            errors: [new GraphQLError("Oops couldn't fetch")],
+          },
+          delay: 10,
+        },
+        {
+          request: { query, variables: { id: "1" } },
+          result: {
+            data: null,
+            errors: [new GraphQLError("Oops couldn't fetch again")],
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        link: new MockLink(mocks),
+        cache: new InMemoryCache(),
+      });
+
+      function App() {
+        return (
+          <ApolloProvider client={client}>
+            <Parent />
+          </ApolloProvider>
+        );
+      }
+
+      function SuspenseFallback() {
+        return <p>Loading</p>;
+      }
+
+      function Parent() {
+        const [queryRef, { refetch }] = useBackgroundQuery(query, {
+          variables: { id: "1" },
+        });
+
+        return (
+          <Suspense fallback={<SuspenseFallback />}>
+            <ErrorBoundary
+              onReset={() => refetch()}
+              fallbackRender={({ error, resetErrorBoundary }) => (
+                <>
+                  <button onClick={resetErrorBoundary}>Retry</button>
+                  <div>{error.message}</div>
+                </>
+              )}
+            >
+              <Todo queryRef={queryRef} />
+            </ErrorBoundary>
+          </Suspense>
+        );
+      }
+
+      function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
+        const {
+          data: { todo },
+        } = useReadQuery(queryRef);
+
+        return (
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        );
+      }
+
+      render(<App />);
+
+      // Disable error message shown in the console due to an uncaught error.
+      // TODO: need to determine why the error message is logged to the console
+      // as an uncaught error since other tests do not require this.
+      using _consoleSpy = spyOnConsole("error");
+
+      expect(screen.getByText("Loading")).toBeInTheDocument();
+
+      expect(
+        await screen.findByText("Oops couldn't fetch")
+      ).toBeInTheDocument();
+
+      const button = screen.getByText("Retry");
+
+      await act(() => user.click(button));
+
+      expect(screen.getByText("Loading")).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Oops couldn't fetch again")
+        ).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+    });
+
     it("`refetch` works with startTransition to allow React to show stale UI until finished suspending", async () => {
       type Variables = {
         id: string;
@@ -3611,17 +3895,23 @@ describe("useBackgroundQuery", () => {
         );
       }
 
-      render(<App />);
+      const ProfiledApp = profile({ Component: App, snapshotDOM: true });
 
-      expect(screen.getByText("Loading")).toBeInTheDocument();
+      render(<ProfiledApp />);
 
-      expect(await screen.findByTestId("todo")).toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+      }
 
-      const todo = screen.getByTestId("todo");
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        const todo = withinDOM().getByTestId("todo");
+        expect(todo).toBeInTheDocument();
+        expect(todo).toHaveTextContent("Clean room");
+      }
+
       const button = screen.getByText("Refresh");
-
-      expect(todo).toHaveTextContent("Clean room");
-
       await act(() => user.click(button));
 
       // startTransition will avoid rendering the suspense fallback for already
@@ -3631,103 +3921,145 @@ describe("useBackgroundQuery", () => {
       // Here we should not see the suspense fallback while the component suspends
       // until the todo is finished loading. Seeing the suspense fallback is an
       // indication that we are suspending the component too late in the process.
-      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        const todo = withinDOM().getByTestId("todo");
+        expect(withinDOM().queryByText("Loading")).not.toBeInTheDocument();
 
-      // We can ensure this works with isPending from useTransition in the process
-      expect(todo).toHaveAttribute("aria-busy", "true");
+        // We can ensure this works with isPending from useTransition in the process
+        expect(todo).toHaveAttribute("aria-busy", "true");
 
-      // Ensure we are showing the stale UI until the new todo has loaded
-      expect(todo).toHaveTextContent("Clean room");
+        // Ensure we are showing the stale UI until the new todo has loaded
+        expect(todo).toHaveTextContent("Clean room");
+      }
 
       // Eventually we should see the updated todo content once its done
       // suspending.
-      await waitFor(() => {
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        const todo = withinDOM().getByTestId("todo");
         expect(todo).toHaveTextContent("Clean room (completed)");
-      });
+      }
     });
   });
 
   describe("fetchMore", () => {
-    function getItemTexts() {
+    function getItemTexts(
+      screen: Pick<typeof _screen, "getAllByTestId"> = _screen
+    ) {
       return screen.getAllByTestId(/letter/).map(
         // eslint-disable-next-line testing-library/no-node-access
         (li) => li.firstChild!.textContent
       );
     }
+
     it("re-suspends when calling `fetchMore` with different variables", async () => {
-      const { renders } = renderPaginatedIntegrationTest();
+      const { ProfiledApp } = renderPaginatedIntegrationTest();
 
-      expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText("loading")).toBeInTheDocument();
+      {
+        const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(1);
+        expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      }
 
-      const items = await screen.findAllByTestId(/letter/i);
-      expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(["A", "B"]);
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        const items = await screen.findAllByTestId(/letter/i);
+        expect(items).toHaveLength(2);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B"]);
+      }
 
       const button = screen.getByText("Fetch more");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
-      await waitFor(() => {
-        expect(renders.count).toBe(2);
-      });
+      {
+        // parent component re-suspends
+        const { snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(2);
+      }
+      {
+        // parent component re-suspends
+        const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        expect(snapshot.count).toBe(2);
 
-      expect(getItemTexts()).toStrictEqual(["C", "D"]);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["C", "D"]);
+      }
     });
+
     it("properly uses `updateQuery` when calling `fetchMore`", async () => {
-      const { renders } = renderPaginatedIntegrationTest({
+      const { ProfiledApp } = renderPaginatedIntegrationTest({
         updateQuery: true,
       });
 
-      expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText("loading")).toBeInTheDocument();
+      {
+        const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(1);
+        expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      }
 
-      const items = await screen.findAllByTestId(/letter/i);
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
 
-      expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(["A", "B"]);
+        const items = withinDOM().getAllByTestId(/letter/i);
+
+        expect(items).toHaveLength(2);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B"]);
+      }
 
       const button = screen.getByText("Fetch more");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
-      await waitFor(() => {
-        expect(renders.count).toBe(2);
-      });
+      {
+        const { snapshot } = await ProfiledApp.takeRender();
+        // parent component re-suspends
+        expect(snapshot.suspenseCount).toBe(2);
+      }
+      {
+        const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        expect(snapshot.count).toBe(2);
 
-      const moreItems = await screen.findAllByTestId(/letter/i);
-      expect(moreItems).toHaveLength(4);
-      expect(getItemTexts()).toStrictEqual(["A", "B", "C", "D"]);
+        const moreItems = withinDOM().getAllByTestId(/letter/i);
+        expect(moreItems).toHaveLength(4);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B", "C", "D"]);
+      }
     });
     it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
-      const { renders } = renderPaginatedIntegrationTest({
+      const { ProfiledApp } = renderPaginatedIntegrationTest({
         fieldPolicies: true,
       });
-      expect(renders.suspenseCount).toBe(1);
-      expect(screen.getByText("loading")).toBeInTheDocument();
 
-      const items = await screen.findAllByTestId(/letter/i);
+      {
+        const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        expect(snapshot.suspenseCount).toBe(1);
+        expect(withinDOM().getByText("loading")).toBeInTheDocument();
+      }
 
-      expect(items).toHaveLength(2);
-      expect(getItemTexts()).toStrictEqual(["A", "B"]);
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        const items = withinDOM().getAllByTestId(/letter/i);
+        expect(items).toHaveLength(2);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B"]);
+      }
 
       const button = screen.getByText("Fetch more");
       const user = userEvent.setup();
       await act(() => user.click(button));
 
-      // parent component re-suspends
-      expect(renders.suspenseCount).toBe(2);
-      await waitFor(() => {
-        expect(renders.count).toBe(2);
-      });
+      {
+        const { snapshot } = await ProfiledApp.takeRender();
+        // parent component re-suspends
+        expect(snapshot.suspenseCount).toBe(2);
+      }
 
-      const moreItems = await screen.findAllByTestId(/letter/i);
-      expect(moreItems).toHaveLength(4);
-      expect(getItemTexts()).toStrictEqual(["A", "B", "C", "D"]);
+      {
+        const { snapshot, withinDOM } = await ProfiledApp.takeRender();
+        expect(snapshot.count).toBe(2);
+        const moreItems = await screen.findAllByTestId(/letter/i);
+        expect(moreItems).toHaveLength(4);
+        expect(getItemTexts(withinDOM())).toStrictEqual(["A", "B", "C", "D"]);
+      }
     });
     it("`fetchMore` works with startTransition to allow React to show stale UI until finished suspending", async () => {
       type Variables = {
@@ -3861,43 +4193,57 @@ describe("useBackgroundQuery", () => {
         );
       }
 
-      render(<App />);
+      const ProfiledApp = profile({ Component: App, snapshotDOM: true });
+      render(<ProfiledApp />);
 
-      expect(screen.getByText("Loading")).toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        expect(withinDOM().getByText("Loading")).toBeInTheDocument();
+      }
 
-      expect(await screen.findByTestId("todos")).toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        expect(withinDOM().getByTestId("todos")).toBeInTheDocument();
+        expect(withinDOM().getByTestId("todo:1")).toBeInTheDocument();
+      }
 
-      const todos = screen.getByTestId("todos");
-      const todo1 = screen.getByTestId("todo:1");
       const button = screen.getByText("Load more");
-
-      expect(todo1).toBeInTheDocument();
-
       await act(() => user.click(button));
 
-      // startTransition will avoid rendering the suspense fallback for already
-      // revealed content if the state update inside the transition causes the
-      // component to suspend.
-      //
-      // Here we should not see the suspense fallback while the component suspends
-      // until the todo is finished loading. Seeing the suspense fallback is an
-      // indication that we are suspending the component too late in the process.
-      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        // startTransition will avoid rendering the suspense fallback for already
+        // revealed content if the state update inside the transition causes the
+        // component to suspend.
+        //
+        // Here we should not see the suspense fallback while the component suspends
+        // until the todo is finished loading. Seeing the suspense fallback is an
+        // indication that we are suspending the component too late in the process.
+        expect(withinDOM().queryByText("Loading")).not.toBeInTheDocument();
 
-      // We can ensure this works with isPending from useTransition in the process
-      expect(todos).toHaveAttribute("aria-busy", "true");
+        // We can ensure this works with isPending from useTransition in the process
+        expect(withinDOM().getByTestId("todos")).toHaveAttribute(
+          "aria-busy",
+          "true"
+        );
 
-      // Ensure we are showing the stale UI until the new todo has loaded
-      expect(todo1).toHaveTextContent("Clean room");
+        // Ensure we are showing the stale UI until the new todo has loaded
+        expect(withinDOM().getByTestId("todo:1")).toHaveTextContent(
+          "Clean room"
+        );
+      }
 
-      // Eventually we should see the updated todos content once its done
-      // suspending.
-      await waitFor(() => {
-        expect(screen.getByTestId("todo:2")).toHaveTextContent(
+      {
+        const { withinDOM } = await ProfiledApp.takeRender();
+        // Eventually we should see the updated todos content once its done
+        // suspending.
+        expect(withinDOM().getByTestId("todo:2")).toHaveTextContent(
           "Take out trash (completed)"
         );
-        expect(todo1).toHaveTextContent("Clean room");
-      });
+        expect(withinDOM().getByTestId("todo:1")).toHaveTextContent(
+          "Clean room"
+        );
+      }
     });
 
     it('honors refetchWritePolicy set to "merge"', async () => {
@@ -4468,7 +4814,7 @@ describe("useBackgroundQuery", () => {
     });
 
     it('suspends when partial data is in the cache and using a "no-cache" fetch policy with returnPartialData', async () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+      using _consoleSpy = spyOnConsole("warn");
       interface Data {
         character: {
           id: string;
@@ -4595,12 +4941,10 @@ describe("useBackgroundQuery", () => {
           error: undefined,
         },
       ]);
-
-      consoleSpy.mockRestore();
     });
 
     it('warns when using returnPartialData with a "no-cache" fetch policy', async () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+      using _consoleSpy = spyOnConsole("warn");
 
       const query: TypedDocumentNode<SimpleQueryData> = gql`
         query UserQuery {
@@ -4627,8 +4971,6 @@ describe("useBackgroundQuery", () => {
       expect(console.warn).toHaveBeenCalledWith(
         "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
       );
-
-      consoleSpy.mockRestore();
     });
 
     it('does not suspend when partial data is in the cache and using a "cache-and-network" fetch policy with returnPartialData', async () => {
@@ -4855,17 +5197,18 @@ describe("useBackgroundQuery", () => {
 
       // We are intentionally writing partial data to the cache. Supress console
       // warnings to avoid unnecessary noise in the test.
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-      cache.writeQuery({
-        query,
-        data: {
-          greeting: {
-            __typename: "Greeting",
-            recipient: { __typename: "Person", name: "Cached Alice" },
+      {
+        using _consoleSpy = spyOnConsole("error");
+        cache.writeQuery({
+          query,
+          data: {
+            greeting: {
+              __typename: "Greeting",
+              recipient: { __typename: "Person", name: "Cached Alice" },
+            },
           },
-        },
-      });
-      consoleSpy.mockRestore();
+        });
+      }
 
       interface Renders {
         errors: Error[];

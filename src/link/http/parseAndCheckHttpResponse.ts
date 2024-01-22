@@ -1,10 +1,8 @@
 import { responseIterator } from "./responseIterator.js";
 import type { Operation } from "../core/index.js";
 import { throwServerError } from "../utils/index.js";
-import { PROTOCOL_ERRORS_SYMBOL } from '../../errors/index.js';
-import {
-  isApolloPayloadResult
-} from '../../utilities/common/incrementalResult.js';
+import { PROTOCOL_ERRORS_SYMBOL } from "../../errors/index.js";
+import { isApolloPayloadResult } from "../../utilities/common/incrementalResult.js";
 import type { SubscriptionObserver } from "zen-observable-ts";
 
 const { hasOwnProperty } = Object.prototype;
@@ -16,7 +14,7 @@ export type ServerParseError = Error & {
 };
 
 export async function readMultipartBody<
-  T extends object = Record<string, unknown>
+  T extends object = Record<string, unknown>,
 >(response: Response, nextValue: (value: T) => void) {
   if (TextDecoder === undefined) {
     throw new Error(
@@ -31,8 +29,9 @@ export async function readMultipartBody<
   // https://www.rfc-editor.org/rfc/rfc9110.html#name-parameters
   // e.g. multipart/mixed;boundary="graphql";deferSpec=20220824
   // if no boundary is specified, default to -
-  const boundaryVal = contentType?.includes(delimiter)
-    ? contentType
+  const boundaryVal =
+    contentType?.includes(delimiter) ?
+      contentType
         ?.substring(contentType?.indexOf(delimiter) + delimiter.length)
         .replace(/['"]/g, "")
         .replace(/\;(.*)/gm, "")
@@ -91,8 +90,8 @@ export async function readMultipartBody<
               next = {
                 ...next,
                 extensions: {
-                  ...("extensions" in next ? next.extensions : null as any),
-                  [PROTOCOL_ERRORS_SYMBOL]: result.errors
+                  ...("extensions" in next ? next.extensions : (null as any)),
+                  [PROTOCOL_ERRORS_SYMBOL]: result.errors,
                 },
               };
             }
@@ -206,14 +205,6 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
       .text()
       .then((bodyText) => parseJsonBody(response, bodyText))
       .then((result: any) => {
-        if (response.status >= 300) {
-          // Network error
-          throwServerError(
-            response,
-            result,
-            `Response not successful: Received status code ${response.status}`
-          );
-        }
         if (
           !Array.isArray(result) &&
           !hasOwnProperty.call(result, "data") &&
@@ -224,9 +215,9 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
             response,
             result,
             `Server response was missing for query '${
-              Array.isArray(operations)
-                ? operations.map((op) => op.operationName)
-                : operations.operationName
+              Array.isArray(operations) ?
+                operations.map((op) => op.operationName)
+              : operations.operationName
             }'.`
           );
         }

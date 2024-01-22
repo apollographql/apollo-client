@@ -7,22 +7,11 @@ exports[`@client @export tests should NOT refetch if an @export variable has not
       "Missing field '%s' while writing result %o",
       "postCount",
       Object {
-        "currentAuthorId": 101,
-      },
-    ],
-    Array [
-      "Missing field '%s' while writing result %o",
-      "postCount",
-      Object {
         "currentAuthorId": 100,
       },
     ],
   ],
   "results": Array [
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
     Object {
       "type": "return",
       "value": undefined,
@@ -62,103 +51,18 @@ exports[`@client @export tests should refetch if an @export variable changes, th
       "Missing field '%s' while writing result %o",
       "postCount",
       Object {
-        "appContainer": Object {
-          "__typename": "AppContainer",
-          "systemDetails": Object {
-            "__typename": "SystemDetails",
-            "currentAuthor": Object {
-              "__typename": "Author",
-              "authorId": 100,
-              "name": "John Smith",
-            },
-          },
-        },
-      },
-    ],
-    Array [
-      "Missing field '%s' while writing result %o",
-      "title",
-      Object {
-        "__typename": "Post",
-        "id": 10,
-        "loggedInReviewerId": 100,
-      },
-    ],
-    Array [
-      "Missing field '%s' while writing result %o",
-      "reviewerDetails",
-      Object {
-        "postRequiringReview": Object {
-          "__typename": "Post",
-          "id": 10,
-          "loggedInReviewerId": 100,
-        },
-      },
-    ],
-    Array [
-      "Missing field '%s' while writing result %o",
-      "id",
-      Object {
-        "__typename": "Post",
-      },
-    ],
-    Array [
-      "Missing field '%s' while writing result %o",
-      "title",
-      Object {
-        "__typename": "Post",
-      },
-    ],
-    Array [
-      "Missing field '%s' while writing result %o",
-      "reviewerDetails",
-      Object {
-        "postRequiringReview": Object {
-          "__typename": "Post",
-        },
-      },
-    ],
-    Array [
-      "Missing field '%s' while writing result %o",
-      "post",
-      Object {
-        "primaryReviewerId": 100,
-        "secondaryReviewerId": 200,
+        "currentAuthorId": 100,
       },
     ],
     Array [
       "Missing field '%s' while writing result %o",
       "postCount",
       Object {
-        "currentAuthorId": 100,
+        "currentAuthorId": 101,
       },
     ],
   ],
   "results": Array [
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
-    Object {
-      "type": "return",
-      "value": undefined,
-    },
     Object {
       "type": "return",
       "value": undefined,

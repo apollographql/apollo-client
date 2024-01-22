@@ -21,7 +21,6 @@ import type {
   WatchQueryOptions,
   WatchQueryFetchPolicy,
 } from "../../core/index.js";
-import type { SuspenseCache } from "../cache/index.js";
 
 /* QueryReference type */
 
@@ -38,7 +37,7 @@ export type CommonOptions<TOptions> = TOptions & {
 /* Query types */
 
 export interface BaseQueryOptions<
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends Omit<WatchQueryOptions<TVariables>, "query"> {
   ssr?: boolean;
   client?: ApolloClient<any>;
@@ -47,7 +46,7 @@ export interface BaseQueryOptions<
 
 export interface QueryFunctionOptions<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables> {
   skip?: boolean;
   onCompleted?: (data: TData) => void;
@@ -63,7 +62,7 @@ export interface QueryFunctionOptions<
 
 export type ObservableQueryFields<
   TData,
-  TVariables extends OperationVariables
+  TVariables extends OperationVariables,
 > = Pick<
   ObservableQuery<TData, TVariables>,
   | "startPolling"
@@ -78,7 +77,7 @@ export type ObservableQueryFields<
 
 export interface QueryResult<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends ObservableQueryFields<TData, TVariables> {
   client: ApolloClient<any>;
   observable: ObservableQuery<TData, TVariables>;
@@ -92,7 +91,7 @@ export interface QueryResult<
 
 export interface QueryDataOptions<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {
   children?: (result: QueryResult<TData, TVariables>) => ReactNode;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -100,17 +99,17 @@ export interface QueryDataOptions<
 
 export interface QueryHookOptions<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {}
 
 export interface LazyQueryHookOptions<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends Omit<QueryHookOptions<TData, TVariables>, "skip"> {}
 
 export interface LazyQueryHookExecOptions<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends LazyQueryHookOptions<TData, TVariables> {
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -122,7 +121,7 @@ export type SuspenseQueryHookFetchPolicy = Extract<
 
 export interface SuspenseQueryHookOptions<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends Pick<
     QueryHookOptions<TData, TVariables>,
     | "client"
@@ -134,7 +133,6 @@ export interface SuspenseQueryHookOptions<
     | "refetchWritePolicy"
   > {
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
-  suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
 
   /**
@@ -160,7 +158,7 @@ export type BackgroundQueryHookFetchPolicy = Extract<
 
 export interface BackgroundQueryHookOptions<
   TData = unknown,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends Pick<
     QueryHookOptions<TData, TVariables>,
     | "client"
@@ -172,7 +170,6 @@ export interface BackgroundQueryHookOptions<
     | "refetchWritePolicy"
   > {
   fetchPolicy?: BackgroundQueryHookFetchPolicy;
-  suspenseCache?: SuspenseCache;
   queryKey?: string | number | any[];
 
   /**
@@ -204,7 +201,7 @@ export interface QueryLazyOptions<TVariables> {
  */
 export type LazyQueryResult<
   TData,
-  TVariables extends OperationVariables
+  TVariables extends OperationVariables,
 > = QueryResult<TData, TVariables>;
 
 /**
@@ -212,19 +209,19 @@ export type LazyQueryResult<
  */
 export type QueryTuple<
   TData,
-  TVariables extends OperationVariables
+  TVariables extends OperationVariables,
 > = LazyQueryResultTuple<TData, TVariables>;
 
 export type LazyQueryExecFunction<
   TData,
-  TVariables extends OperationVariables
+  TVariables extends OperationVariables,
 > = (
   options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
 ) => Promise<QueryResult<TData, TVariables>>;
 
 export type LazyQueryResultTuple<
   TData,
-  TVariables extends OperationVariables
+  TVariables extends OperationVariables,
 > = [LazyQueryExecFunction<TData, TVariables>, QueryResult<TData, TVariables>];
 
 /* Mutation types */
@@ -237,7 +234,7 @@ export interface BaseMutationOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends Omit<
     MutationOptions<TData, TVariables, TContext, TCache>,
     "mutation"
@@ -253,7 +250,7 @@ export interface MutationFunctionOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -271,7 +268,7 @@ export declare type MutationFunction<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > = (
   options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
 ) => Promise<FetchResult<TData>>;
@@ -280,14 +277,14 @@ export interface MutationHookOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {}
 
 export interface MutationDataOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -296,14 +293,14 @@ export type MutationTuple<
   TData,
   TVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>
+  TCache extends ApolloCache<any> = ApolloCache<any>,
 > = [
   (
     options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
     // TODO This FetchResult<TData> seems strange here, as opposed to an
     // ApolloQueryResult<TData>
   ) => Promise<FetchResult<TData>>,
-  MutationResult<TData>
+  MutationResult<TData>,
 ];
 
 /* Subscription types */
@@ -320,7 +317,7 @@ export interface OnSubscriptionDataOptions<TData = any> {
 
 export interface BaseSubscriptionOptions<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > {
   variables?: TVariables;
   fetchPolicy?: FetchPolicy;
@@ -354,12 +351,12 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
 
 export interface SubscriptionHookOptions<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {}
 
 export interface SubscriptionDataOptions<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
   children?: null | ((result: SubscriptionResult<TData>) => JSX.Element | null);

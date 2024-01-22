@@ -23,12 +23,14 @@ import {
   MockSubscriptionLink,
   mockSingleLink,
   subscribeAndCount,
+  MockedResponse,
 } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
+import { profileHook, spyOnConsole } from "../../../testing/internal";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -227,7 +229,7 @@ describe("useMutation Hook", () => {
     });
 
     it("should not call setResult on an unmounted component", async () => {
-      const errorSpy = jest.spyOn(console, "error");
+      using consoleSpies = spyOnConsole("error");
       const variables = {
         description: "Get milk!",
       };
@@ -260,8 +262,7 @@ describe("useMutation Hook", () => {
         await result.current.reset();
       });
 
-      expect(errorSpy).not.toHaveBeenCalled();
-      errorSpy.mockRestore();
+      expect(consoleSpies.error).not.toHaveBeenCalled();
     });
 
     it("should resolve mutate function promise with mutation results", async () => {
@@ -496,9 +497,7 @@ describe("useMutation Hook", () => {
       });
 
       it(`should ignore errors when errorPolicy is 'ignore'`, async () => {
-        const errorMock = jest
-          .spyOn(console, "error")
-          .mockImplementation(() => {});
+        using consoleSpy = spyOnConsole("error");
         const variables = {
           description: "Get milk!",
         };
@@ -531,9 +530,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(fetchResult).toEqual({});
-        expect(errorMock).toHaveBeenCalledTimes(1);
-        expect(errorMock.mock.calls[0][0]).toMatch("Missing field");
-        errorMock.mockRestore();
+        expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+        expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
       });
 
       it(`should not call onError when errorPolicy is 'ignore'`, async () => {
@@ -721,6 +719,90 @@ describe("useMutation Hook", () => {
         },
         { interval: 1 }
       );
+    });
+
+    it("resetting while a mutation is running: ensure that the result doesn't end up in the hook", async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: "Low",
+          description: "Get milk!",
+          __typename: "Todo",
+        },
+      };
+
+      const mocks: MockedResponse[] = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables: {
+              priority: "Low",
+              description: "Get milk.",
+            },
+          },
+          result: {
+            data: CREATE_TODO_DATA,
+          },
+          delay: 20,
+        },
+      ];
+
+      const ProfiledHook = profileHook(() =>
+        useMutation<
+          { createTodo: Todo },
+          { priority: string; description: string }
+        >(CREATE_TODO_MUTATION)
+      );
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
+
+      let createTodo: Awaited<ReturnType<typeof ProfiledHook.takeSnapshot>>[0];
+      let reset: Awaited<
+        ReturnType<typeof ProfiledHook.takeSnapshot>
+      >[1]["reset"];
+
+      {
+        const [mutate, result] = await ProfiledHook.takeSnapshot();
+        createTodo = mutate;
+        reset = result.reset;
+        //initial value
+        expect(result.data).toBe(undefined);
+        expect(result.loading).toBe(false);
+        expect(result.called).toBe(false);
+      }
+
+      let fetchResult: any;
+      act(() => {
+        fetchResult = createTodo({
+          variables: { priority: "Low", description: "Get milk." },
+        });
+      });
+
+      {
+        const [, result] = await ProfiledHook.takeSnapshot();
+        // started loading
+        expect(result.data).toBe(undefined);
+        expect(result.loading).toBe(true);
+        expect(result.called).toBe(true);
+      }
+
+      act(() => reset());
+
+      {
+        const [, result] = await ProfiledHook.takeSnapshot();
+        // reset to initial value
+        expect(result.data).toBe(undefined);
+        expect(result.loading).toBe(false);
+        expect(result.called).toBe(false);
+      }
+
+      expect(await fetchResult).toEqual({ data: CREATE_TODO_DATA });
+
+      await expect(ProfiledHook).not.toRerender();
     });
   });
 
@@ -2207,8 +2289,9 @@ describe("useMutation Hook", () => {
                 const oldData = cache.readQuery({ query: NumbersQuery });
                 cache.writeQuery({
                   query: NumbersQuery,
-                  data: oldData
-                    ? {
+                  data:
+                    oldData ?
+                      {
                         ...oldData,
                         numbers: {
                           ...oldData.numbers,
@@ -2498,7 +2581,7 @@ describe("useMutation Hook", () => {
       description: "Get milk!",
     };
     it("resolves a deferred mutation with the full result", async () => {
-      const errorSpy = jest.spyOn(console, "error");
+      using consoleSpies = spyOnConsole("error");
       const link = new MockSubscriptionLink();
 
       const client = new ApolloClient({
@@ -2579,11 +2662,10 @@ describe("useMutation Hook", () => {
           __typename: "Todo",
         },
       });
-      expect(errorSpy).not.toHaveBeenCalled();
-      errorSpy.mockRestore();
+      expect(consoleSpies.error).not.toHaveBeenCalled();
     });
     it("resolves with resulting errors and calls onError callback", async () => {
-      const errorSpy = jest.spyOn(console, "error");
+      using consoleSpies = spyOnConsole("error");
       const link = new MockSubscriptionLink();
 
       const client = new ApolloClient({
@@ -2653,12 +2735,11 @@ describe("useMutation Hook", () => {
         expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
       });
       await waitFor(() => {
-        expect(errorSpy).not.toHaveBeenCalled();
+        expect(consoleSpies.error).not.toHaveBeenCalled();
       });
-      errorSpy.mockRestore();
     });
     it("calls the update function with the final merged result data", async () => {
-      const errorSpy = jest.spyOn(console, "error");
+      using consoleSpies = spyOnConsole("error");
       const link = new MockSubscriptionLink();
       const update = jest.fn();
       const client = new ApolloClient({
@@ -2738,10 +2819,8 @@ describe("useMutation Hook", () => {
         expect.objectContaining({ variables })
       );
       await waitFor(() => {
-        expect(errorSpy).not.toHaveBeenCalled();
+        expect(consoleSpies.error).not.toHaveBeenCalled();
       });
-
-      errorSpy.mockRestore();
     });
   });
 });

@@ -448,8 +448,7 @@ Starting with Apollo Client `3.9.0`, you can use `useLoadableQuery` to start loa
 Let's update our example to start loading the dog's details as a result of selecting from a dropdown.
 
 ```tsx
-function App() {
-  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
+function App({ dogs }) {
   const [queryRef, loadDog] = useLoadableQuery(GET_DOG_QUERY)
 
   return (
@@ -457,7 +456,7 @@ function App() {
       <select
         onChange={(e) => loadDog({ id: e.target.value })}
       >
-        {data.dogs.map(({ id, name }) => (
+        {dogs.map(({ id, name }) => (
           <option key={id} value={id}>
             {name}
           </option>

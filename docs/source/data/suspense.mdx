@@ -447,8 +447,9 @@ Starting with Apollo Client `3.9.0`, you can use `useLoadableQuery` to start loa
 
 Let's update our example to start loading the dog's details as a result of selecting from a dropdown.
 
-```tsx
-function App({ dogs }) {
+```tsx {3,8,17,24}
+function App() {
+  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
   const [queryRef, loadDog] = useLoadableQuery(GET_DOG_QUERY)
 
   return (
@@ -456,7 +457,7 @@ function App({ dogs }) {
       <select
         onChange={(e) => loadDog({ id: e.target.value })}
       >
-        {dogs.map(({ id, name }) => (
+        {data.dogs.map(({ id, name }) => (
           <option key={id} value={id}>
             {name}
           </option>
@@ -484,6 +485,129 @@ function Dog({ queryRef }) {
 > It's important to note that the `queryRef` is `null` until the query loading function is called for the first time. You should conditionally render the child component when the query has not yet been loaded.
 
 We begin fetching our `GET_DOG_QUERY` as soon as a new dog is selected rather than waiting for our `Dog` component to re-render. When the `Dog` component renders, it reads data from the `GET_DOG_QUERY`, and if not ready, will suspend. As a result of this change, we've also removed the need to track the selected dog ID as part of React state!
+
+<MinVersion version="3.9.0">
+
+### Initiating queries outside React
+
+</MinVersion>
+
+Starting with Apollo Client `3.9.0`, it is possible to start loading queries outside React. This avoids the need to wait for React to render your components before the query begins loading, providing a nice performance benefit.
+
+<ExperimentalFeature>
+
+This API is experimental in `3.9.0` and may change in `3.10.0`. We are specifically looking for user feedback on the API design choices. The underlying behavior is otherwise fully implemented. If you'd like to provide feedback for this feature before it is stabilized in `3.10.0`, please [open an issue](https://github.com/apollographql/apollo-client/issues/new).
+
+</ExperimentalFeature>
+
+To begin loading data immediately, you first need to create a preloading function with `createQueryPreloader`. `createQueryPreloader` is given the `client` as an argument and returns a function that when called, will begin fetching the query. The preload function returns a `queryRef` that can then be passed to `useReadQuery` to read the query data, and if still loading, suspend that component.
+
+Let's update our example to start loading the `GET_DOGS_QUERY` before our app is rendered.
+
+```tsx {1-2,5,28,30}
+const preloadQuery = createQueryPreloader(client);
+const dogsQueryRef = preloadQuery(GET_DOGS_QUERY);
+
+function App() {
+  const { data } = useReadQuery(dogsQueryRef);
+  const [queryRef, loadDog] = useLoadableQuery(GET_DOG_QUERY)
+
+  return (
+    <>
+      <select
+        onChange={(e) => loadDog({ id: e.target.value })}
+      >
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>{name}</option>
+        ))}
+      </select>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Dog queryRef={queryRef} />
+      </Suspense>
+    </>
+  );
+}
+
+const root = createRoot(document.getElementById('app'));
+
+root.render(
+  <ApolloProvider client={client}>
+    <Suspense fallback={<div>Loading...</div>}>
+      <App />
+    </Suspense>
+  </ApolloProvider>
+);
+```
+
+We begin loading data as soon as our `preloadQuery` function is called. We no longer need to wait for React to render our `<App />` component before our `GET_DOGS_QUERY` begins loading, but still get the benefit of suspense!
+
+#### Usage with routers
+
+Popular routers such as [React Router](https://reactrouter.com/en/main) and [TanStack Router](https://tanstack.com/router) include APIs to start loading data before the route component renders (e.g. such as the [`loader` function](https://reactrouter.com/en/main/route/route#loader) from React Router). These APIs have the benefit that they can begin loading data in parallel without the need to wait for the route component to render. This is especially useful for nested routes where a parent route would otherwise suspend and create request waterfalls for child routes.
+
+The `preloadQuery` API pairs nicely with these router APIs as it lets you take advantage of the optimizations these routers provide without sacrificing the ability to respond to cache updates in your route components.
+
+Let's update our example using React Router's `loader` function to begin loading data when we transition to our route.
+
+```ts
+import { useLoaderData } from 'react-router-dom';
+
+export function loader() {
+  return preloadQuery(GET_DOGS_QUERY);
+}
+
+export function RouteComponent() {
+  const queryRef = useLoaderData();
+  const { data } = useReadQuery(queryRef);
+
+  return (
+    // ...
+  );
+}
+```
+
+> Note: The `loader` function is only available in React Router versions 6.4 and above.
+
+We load our query as soon as React Router calls our `loader` function. This starts fetching before our route component is rendered. When our route component renders, we can get access to the `queryRef`, which is passed to `useReadQuery` to read the data. This means our route component has the ability to update itself when our cache is updated!
+
+<Note>
+
+The `preloadQuery` API only works with client-side routing. The `queryRef` returned from `preloadQuery` is not serializable across the wire and as such, will not work with routers that render on the server, such as [Remix](https://remix.run/).
+  
+</Note>
+
+#### Preventing route transitions until the query is loaded
+
+By default, `preloadQuery` works similar to a [deferred loader](https://reactrouter.com/en/main/guides/deferred) in that routes will transition immediately and suspend with `useReadQuery` until the query is loaded. You may instead want to prevent the route from transitioning until the data is fully loaded. Use the `toPromise` method on the `queryRef` to get a promise that resolves when the query is loaded. This promise resolves with the `queryRef` itself, making it easy to use with hooks such as `useLoaderData`.
+
+```ts
+export async function loader() {
+  const queryRef = await preloadQuery(GET_DOGS_QUERY).toPromise();
+
+  return queryRef;
+}
+
+// You may also return the promise directly from loader. 
+// This is equivalent to the above.
+export async function loader() {
+  return preloadQuery(GET_DOGS_QUERY).toPromise();
+}
+
+export function RouteComponent() {
+  const queryRef = useLoaderData();
+  const { data } = useReadQuery(queryRef);
+
+  // ...
+}
+```
+
+This instructs React Router to wait for the query to finish loading before the route transitions. When the route does transition, the data will be rendered immediately without the need to show a loading fallback in the route component.
+
+#### Why prevent access to `data` in `toPromise`?
+
+You may be wondering why we resolve `toPromise` with the `queryRef` itself, rather than the data loaded from the query. This is because we want to encourage you to leverage `useReadQuery` to avoid missing out on cache updates for your query. If `data` were available, it would be tempting to consume it in your `loader` functions and expose it to your route components. Doing so means missing out on cache updates.
+
+If you need access to raw query data in your `loader` functions, use [`client.query()`](../api/core/ApolloClient#query) directly.
 
 ### Refetching and pagination
 

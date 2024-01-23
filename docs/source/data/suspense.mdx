@@ -561,7 +561,7 @@ The `preloadQuery` API pairs nicely with these router APIs as it lets you take a
 
 Let's update our example using React Router's `loader` function to begin loading data when we transition to our route.
 
-```ts
+```ts {4,8-9}
 import { useLoaderData } from 'react-router-dom';
 
 export function loader() {

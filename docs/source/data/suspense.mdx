@@ -822,6 +822,12 @@ function Dog({ id, queryRef }: DogProps) {
 // ...
 ```
 
+<Note>
+
+Using the handlers returned from `useQueryRefHandlers` does not prevent you from using the handlers produced by query ref hooks. You can use the handlers in both locations, with or without React transitions to produce the desired result.
+
+</Note>
+
 ## Distinguishing between queries with `queryKey`
 
 Apollo Client uses the combination of `query` and `variables` to uniquely identify each query when using Apollo's Suspense data fetching hooks.

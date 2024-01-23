@@ -26,11 +26,7 @@ export function EnumDetails({
         canonicalReference={canonicalReference}
         headingLevel={headingLevel}
       />
-      <DocBlock
-        canonicalReference={canonicalReference}
-        heading
-        headingLevel={3}
-      />
+      <DocBlock canonicalReference={canonicalReference} />
 
       <GridItem className="row">
         <SectionHeading>Enumeration Members</SectionHeading>

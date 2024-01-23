@@ -553,7 +553,7 @@ root.render(
 
 We begin loading data as soon as our `preloadQuery` function is called. We no longer need to wait for React to render our `<App />` component before our `GET_DOGS_QUERY` begins loading, but still get the benefit of suspense!
 
-#### Usage with routers
+#### Usage with data loading routers
 
 Popular routers such as [React Router](https://reactrouter.com/en/main) and [TanStack Router](https://tanstack.com/router) include APIs to start loading data before the route component renders (e.g. such as the [`loader` function](https://reactrouter.com/en/main/route/route#loader) from React Router). These APIs have the benefit that they can begin loading data in parallel without the need to wait for the route component to render. This is especially useful for nested routes where a parent route would otherwise suspend and create request waterfalls for child routes.
 

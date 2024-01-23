@@ -14,7 +14,6 @@ export function EnumDetails({
 }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
-  console.log(item);
 
   const sortedMembers = useMemo(
     () => item.members.map(getItem).sort(sortWithCustomOrder(customOrder)),

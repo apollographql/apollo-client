@@ -584,7 +584,7 @@ We load our query as soon as React Router calls our `loader` function. This star
 
 <Note>
 
-The `preloadQuery` API only works with client-side routing. The `queryRef` returned from `preloadQuery` is not serializable across the wire and as such, will not work with routers that render on the server, such as [Remix](https://remix.run/).
+The `preloadQuery` API only works with client-side routing. The `queryRef` returned from `preloadQuery` is not serializable across the wire and as such, will not work with routers that fetch on the server such as [Remix](https://remix.run/).
   
 </Note>
 

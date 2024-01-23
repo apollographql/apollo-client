@@ -580,7 +580,7 @@ export function RouteComponent() {
 
 > Note: The `loader` function is available in React Router versions 6.4 and above.
 
-We load our query as soon as React Router calls our `loader` function. This starts fetching before our route component is rendered. When our route component renders, we can get access to the `queryRef`, which is passed to `useReadQuery` to read the data. This means our route component has the ability to update itself when our cache is updated!
+We load our query as soon as React Router calls our `loader` function. This starts fetching before our route component is rendered. When our route component renders, we can get access to the `queryRef` created by our `preloadQuery` function via the `useLoaderData` hook, which is then passed to `useReadQuery` to read the data. We get the benefit of loading our data early in the routing lifecycle, while our route component has the ability to update itself when the cache is updated!
 
 <Note>
 

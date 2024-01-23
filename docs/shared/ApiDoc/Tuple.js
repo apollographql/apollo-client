@@ -2,6 +2,7 @@ import React from "react";
 import { useMDXComponents } from "@mdx-js/react";
 import { useApiDocContext, PropertySignatureTable } from ".";
 import PropTypes from "prop-types";
+
 export function ManualTuple({ elements = [], idPrefix = "" }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();

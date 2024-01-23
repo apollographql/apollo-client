@@ -5,22 +5,10 @@ import { Box, Text } from "@chakra-ui/react";
 import { FunctionSignature } from ".";
 import { useApiDocContext } from "./Context";
 
-export function Heading({
-  headingLevel,
-  link,
-  children,
-  as,
-  minVersion,
-  ...props
-}) {
+export function Heading({ headingLevel, children, as, minVersion, ...props }) {
   const MDX = useMDXComponents();
   let heading = children;
 
-  if (link) {
-    heading = (
-      <MDX.PrimaryLink href={`#${props.id}`}>{heading}</MDX.PrimaryLink>
-    );
-  }
   if (as != undefined && headingLevel != undefined) {
     throw new Error(
       "Heading: Cannot specify both `as` and `headingLevel` at the same time."
@@ -30,7 +18,7 @@ export function Heading({
 
   return (
     <Tag {...props}>
-      {heading}
+      <MDX.PrimaryLink href={`#${props.id}`}>{heading}</MDX.PrimaryLink>
       {minVersion ?
         <MDX.MinVersionTag minVersion={minVersion} />
       : null}
@@ -39,30 +27,19 @@ export function Heading({
 }
 Heading.propTypes = {
   headingLevel: PropTypes.number,
-  link: PropTypes.bool,
   children: PropTypes.node.isRequired,
   id: PropTypes.string,
   as: PropTypes.any,
   minVersion: PropTypes.string,
 };
 
-export function SubHeading({
-  canonicalReference,
-  headingLevel,
-  link = typeof headingLevel === "number" && headingLevel <= 4,
-  ...props
-}) {
+export function SubHeading({ canonicalReference, headingLevel, ...props }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
 
   return (
     <Heading
-      id={
-        link ?
-          `${item.displayName}-${props.title || props.children}`.toLowerCase()
-        : undefined
-      }
-      link={link}
+      id={`${item.displayName}-${props.title || props.children}`.toLowerCase()}
       headingLevel={headingLevel}
       {...props}
     />
@@ -76,7 +53,6 @@ SubHeading.propTypes = {
 export function ApiDocHeading({
   canonicalReference,
   headingLevel,
-  link = typeof headingLevel === "number" && headingLevel <= 4,
   signature = false,
   since = false,
   prefix = "",
@@ -103,8 +79,7 @@ export function ApiDocHeading({
     <Box pt={typeof headingLevel === "number" && headingLevel <= 4 ? 4 : 0}>
       <Heading
         headingLevel={headingLevel}
-        id={link ? item.displayName.toLowerCase() : undefined}
-        link={link}
+        id={item.displayName.toLowerCase()}
         minVersion={
           since && item.comment?.since ? item.comment.since : undefined
         }
@@ -120,7 +95,6 @@ export function ApiDocHeading({
 ApiDocHeading.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   headingLevel: PropTypes.number,
-  link: PropTypes.bool,
   signature: PropTypes.bool,
   since: PropTypes.bool,
   prefix: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),

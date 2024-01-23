@@ -108,7 +108,11 @@ export function ApiDocHeading({
     </Heading>
   );
 
-  return <Box pt="4">{heading}</Box>;
+  return (
+    <Box pt={typeof headingLevel === "number" && headingLevel <= 4 ? 4 : 0}>
+      {heading}
+    </Box>
+  );
 }
 ApiDocHeading.propTypes = {
   canonicalReference: PropTypes.string.isRequired,

@@ -21,6 +21,11 @@ export function Heading({
       <MDX.PrimaryLink href={`#${props.id}`}>{heading}</MDX.PrimaryLink>
     );
   }
+  if (as != undefined && headingLevel != undefined) {
+    throw new Error(
+      "Heading: Cannot specify both `as` and `headingLevel` at the same time."
+    );
+  }
   const Tag = as ? as : MDX[`h${headingLevel}`];
 
   return (

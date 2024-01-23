@@ -470,10 +470,14 @@ export class QueryManager<TStore> {
         });
       }
     }
+    const shouldRefetchQueries =
+      Array.isArray(mutation.refetchQueries) ?
+        mutation.refetchQueries.length > 0
+      : Boolean(mutation.refetchQueries);
 
     if (
       cacheWrites.length > 0 ||
-      mutation.refetchQueries ||
+      shouldRefetchQueries ||
       mutation.update ||
       mutation.onQueryUpdated ||
       mutation.removeOptimistic

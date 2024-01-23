@@ -110,14 +110,17 @@ export function FunctionDetails({
         since
       />
       <DocBlock canonicalReference={canonicalReference} deprecated remarks />
-      <Example canonicalReference={canonicalReference}>
-        <SubHeading
-          canonicalReference={canonicalReference}
-          headingLevel={headingLevel + 1}
-        >
-          Example
-        </SubHeading>
-      </Example>
+      {item.comment?.examples.length == 0 ? null : (
+        <>
+          <SubHeading
+            canonicalReference={canonicalReference}
+            headingLevel={headingLevel + 1}
+          >
+            Example
+          </SubHeading>
+          <Example canonicalReference={canonicalReference} />
+        </>
+      )}
       <SubHeading
         canonicalReference={canonicalReference}
         headingLevel={headingLevel + 1}

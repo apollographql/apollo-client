@@ -111,7 +111,6 @@ export function Example({
   canonicalReference,
   collapsible = false,
   index = 0,
-  children,
 }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
@@ -120,7 +119,6 @@ export function Example({
   if (!value) return null;
   return (
     <>
-      {children}
       <MaybeCollapsible collapsible={collapsible}>
         {value && <MDX.MDXRenderer>{value}</MDX.MDXRenderer>}
       </MaybeCollapsible>

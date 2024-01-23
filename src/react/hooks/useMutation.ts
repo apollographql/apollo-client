@@ -66,7 +66,7 @@ import { useApolloClient } from "./useApolloClient.js";
  * @since 3.0.0
  * @param mutation - A GraphQL mutation document parsed into an AST by `gql`.
  * @param options - Options to control how the mutation is executed.
- * @returns A tuple in the form of `[executeMutation, mutationResult]`
+ * @returns A tuple in the form of `[mutate, result]`
  */
 export function useMutation<
   TData = any,

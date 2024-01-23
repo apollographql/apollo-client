@@ -175,7 +175,7 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
 };
 
 /**
- * @deprecated Use MutationUpdaterFunction instead.
+ * @deprecated Use `MutationUpdaterFunction` instead.
  */
 export type MutationUpdaterFn<T = { [key: string]: any }> = (
   // The MutationUpdaterFn type is broken because it mistakenly uses the same

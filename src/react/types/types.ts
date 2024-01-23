@@ -360,13 +360,13 @@ export interface MutationFunctionOptions<
 export interface MutationResult<TData = any> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   data?: TData | null;
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
   error?: ApolloError;
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
   loading: boolean;
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
   called: boolean;
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#client:member} */
   client: ApolloClient<object>;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member} */
   reset(): void;

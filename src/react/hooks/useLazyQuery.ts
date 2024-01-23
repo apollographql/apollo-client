@@ -58,7 +58,7 @@ const EAGER_METHODS = [
  *
  * @param query - A GraphQL query document parsed into an AST by `gql`.
  * @param options - Default options to control how the query is executed.
- * @returns A tuple in the form of `[executeLazyQuery, queryResult]`
+ * @returns A tuple in the form of `[execute, result]`
  */
 export function useLazyQuery<
   TData = any,

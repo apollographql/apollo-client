@@ -447,7 +447,12 @@ Starting with Apollo Client `3.9.0`, you can use `useLoadableQuery` to start loa
 
 Let's update our example to start loading the dog's details as a result of selecting from a dropdown.
 
-```tsx {3,8,17,24}
+```tsx {3,8,13,22,29}
+import {
+  // ...
+  useLoadableQuery
+} from '@apollo/client';
+
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
   const [queryRef, loadDog] = useLoadableQuery(GET_DOG_QUERY)
@@ -504,7 +509,12 @@ To begin loading data immediately, you first need to create a preloading functio
 
 Let's update our example to start loading the `GET_DOGS_QUERY` before our app is rendered.
 
-```tsx {1-2,5,28,30}
+```tsx {3,6-7,10,33,35}
+import {
+  // ...
+  createQueryPreloader
+} from '@apollo/client';
+
 const preloadQuery = createQueryPreloader(client);
 const dogsQueryRef = preloadQuery(GET_DOGS_QUERY);
 

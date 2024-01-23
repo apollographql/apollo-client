@@ -99,23 +99,21 @@ export function ApiDocHeading({
       />
     : <MDX.inlineCode>{item.displayName}</MDX.inlineCode>;
 
-  heading = (
-    <Heading
-      headingLevel={headingLevel}
-      id={link ? item.displayName.toLowerCase() : undefined}
-      link={link}
-      minVersion={since && item.comment?.since ? item.comment.since : undefined}
-      {...props}
-    >
-      {prefix}
-      {heading}
-      {suffix}
-    </Heading>
-  );
-
   return (
     <Box pt={typeof headingLevel === "number" && headingLevel <= 4 ? 4 : 0}>
-      {heading}
+      <Heading
+        headingLevel={headingLevel}
+        id={link ? item.displayName.toLowerCase() : undefined}
+        link={link}
+        minVersion={
+          since && item.comment?.since ? item.comment.since : undefined
+        }
+        {...props}
+      >
+        {prefix}
+        {heading}
+        {suffix}
+      </Heading>
     </Box>
   );
 }

@@ -555,7 +555,7 @@ We begin loading data as soon as our `preloadQuery` function is called. We no lo
 
 #### Usage with data loading routers
 
-Popular routers such as [React Router](https://reactrouter.com/en/main) and [TanStack Router](https://tanstack.com/router) include APIs to start loading data before the route component renders (e.g. such as the [`loader` function](https://reactrouter.com/en/main/route/route#loader) from React Router). These APIs have the benefit that they can begin loading data in parallel without the need to wait for the route component to render. This is especially useful for nested routes where a parent route would otherwise suspend and create request waterfalls for child routes.
+Popular routers such as [React Router](https://reactrouter.com/en/main) and [TanStack Router](https://tanstack.com/router) include APIs to start loading data before the route component renders (e.g. such as the [`loader` function](https://reactrouter.com/en/main/route/route#loader) from React Router). These APIs have the benefit that they can begin loading data in parallel without the need to wait for the route components to render. This is especially useful for nested routes where a parent route might otherwise suspend and create request waterfalls for child routes.
 
 The `preloadQuery` API pairs nicely with these router APIs as it lets you take advantage of the optimizations these routers provide without sacrificing the ability to respond to cache updates in your route components.
 

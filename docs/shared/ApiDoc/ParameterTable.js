@@ -24,7 +24,7 @@ export function ParameterTable({ canonicalReference }) {
         <GridItem className="first cell heading">Name / Type</GridItem>
         <GridItem className="cell heading">Description</GridItem>
 
-        {item.parameters.map((parameter, idx) => {
+        {item.parameters.map((parameter) => {
           const interfaceReference = getInterfaceReference(
             parameter.type,
             item,
@@ -33,7 +33,7 @@ export function ParameterTable({ canonicalReference }) {
           const id = `${item.displayName.toLowerCase()}-parameters-${parameter.name.toLowerCase()}`;
 
           return (
-            <React.Fragment key={idx}>
+            <React.Fragment key={id}>
               <GridItem
                 className="first cell"
                 fontSize="md"

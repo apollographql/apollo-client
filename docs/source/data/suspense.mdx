@@ -689,6 +689,127 @@ function Breeds({ queryRef, isPending }: BreedsProps) {
 
 In this example, our `App` component renders a `Dog` component that fetches a single dog's record via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache can't fulfill the request for the `GetDog` query, so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest `Suspense` boundary _above_ the suspended component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for the dog whose `id="3"`: Mozzarella the Corgi.
 
+#### Usage with query preloading
+
+When loading queries [outside React](#initiating-queries-outside-react), the `preloadQuery` function returns a `queryRef` with no access to `refetch` or `fetchMore` functions. This presents a challenge if you need to refresh or paginate on the data returned by the query ref.
+
+You can gain access to `refetch` and `fetchMore` functions by using the `useQueryRefHandlers` hook. This hook integrates with React transitions, giving you the ability to update without suspending.
+
+Let's update our example to preload our `GET_BREEDS_QUERY` outside React and utilize `useQueryRefHandlers` to refetch our query.
+
+```tsx {4,7-8,12}
+// ...
+import {
+  // ...
+  useQueryRefHandlers,
+} from "@apollo/client";
+
+const preloadQuery = createQueryPreloader(client);
+const queryRef = preloadQuery(GET_BREEDS_QUERY); 
+
+function App() {
+  const [isPending, startTransition] = useTransition();
+  const { refetch } = useQueryRefHandlers(queryRef);
+
+  function handleRefetch() {
+    startTransition(() => {
+      refetch();
+    });
+  };
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dog
+        id="3"
+        isPending={isPending}
+        onRefetch={handleRefetch}
+      />
+    </Suspense>
+  );
+}
+
+function Dog({
+  id,
+  isPending,
+  onRefetch,
+}: DogProps) {
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { id },
+  });
+
+  return (
+    <>
+      Name: {data.dog.name}
+      <Suspense fallback={<div>Loading breeds...</div>}>
+        <Breeds isPending={isPending} />
+      </Suspense>
+      <button onClick={onRefetch}>Refetch!</button>
+    </>
+  );
+}
+
+function Breeds({ isPending }: BreedsProps) {
+  const { data } = useReadQuery(queryRef);
+
+  return data.breeds.map(({ characteristics }) =>
+    characteristics.map((characteristic) => (
+      <div
+        style={{ opacity: isPending ? 0.5 : 1 }}
+        key={characteristic}
+      >
+        {characteristic}
+      </div>
+    ))
+  );
+}
+```
+
+We begin loading `GET_BREEDS_QUERY` outside of React with the `preloadQuery` function. We use the `useQueryRefHandlers` hook to get access to the `refetch` function which lets us reload the query when the button is clicked.
+
+#### Accessing query ref handlers produced from other hooks
+
+`useQueryRefHandlers` is not limited to the `preloadQuery` API and can be used with any hook that produces a `queryRef` such as `useBackgroundQuery` or `useLoadableQuery`. This can be useful in situations where you may need access to the `refetch` and `fetchMore` functions in components where the `queryRef` was passed through deeply.
+
+Let's update our last example back to `useBackgroundQuery` and get access to `refetch` in our `Dog` component instead without needing to pass it from the parent.
+
+```tsx {12,16,18-22,30}
+function App() {
+  const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dog id="3" queryRef={queryRef} />
+    </Suspense>
+  );
+}
+
+function Dog({ id, queryRef }: DogProps) {
+  const [isPending, startTransition] = useTransition();
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { id },
+  });
+  const { refetch } = useQueryRefHandlers(queryRef);
+
+  function handleRefetch() {
+    startTransition(() => {
+      refetch();
+    });
+  };
+
+  return (
+    <>
+      Name: {data.dog.name}
+      <Suspense fallback={<div>Loading breeds...</div>}>
+        <Breeds queryRef={queryRef} isPending={isPending} />
+      </Suspense>
+      <button onClick={handleRefetch}>Refetch!</button>
+    </>
+  );
+}
+
+// ...
+```
+
 ## Distinguishing between queries with `queryKey`
 
 Apollo Client uses the combination of `query` and `variables` to uniquely identify each query when using Apollo's Suspense data fetching hooks.

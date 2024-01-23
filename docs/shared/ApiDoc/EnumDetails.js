@@ -34,32 +34,31 @@ export function EnumDetails({
 
       <ResponsiveGrid columns="1fr">
         {sortedMembers.map((member) => (
-          <React.Fragment key={member.id}>
-            <GridItem
-              className="cell"
-              fontSize="md"
-              sx={{ code: { bg: "none", p: 0 } }}
-            >
-              <ApiDocHeading
-                canonicalReference={member.canonicalReference}
-                fontSize="lg"
-                mb="1"
-                mr="1"
-                as={Text}
-                since
-                link
-                id={`${item.displayName.toLowerCase()}-member-${member.displayName.toLowerCase()}`}
-              />
-              <DocBlock
-                canonicalReference={member.canonicalReference}
-                summary
-                remarks
-                remarksCollapsible
-                example
-                deprecated
-              />
-            </GridItem>
-          </React.Fragment>
+          <GridItem
+            className="cell"
+            fontSize="md"
+            sx={{ code: { bg: "none", p: 0 } }}
+            key={member.id}
+          >
+            <ApiDocHeading
+              canonicalReference={member.canonicalReference}
+              fontSize="lg"
+              mb="1"
+              mr="1"
+              as={Text}
+              since
+              link
+              id={`${item.displayName.toLowerCase()}-member-${member.displayName.toLowerCase()}`}
+            />
+            <DocBlock
+              canonicalReference={member.canonicalReference}
+              summary
+              remarks
+              remarksCollapsible
+              example
+              deprecated
+            />
+          </GridItem>
         ))}
       </ResponsiveGrid>
     </>

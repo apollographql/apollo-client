@@ -705,7 +705,7 @@ In this example, our `App` component renders a `Dog` component that fetches a si
 
 When loading queries [outside React](#initiating-queries-outside-react), the `preloadQuery` function returns a `queryRef` with no access to `refetch` or `fetchMore` functions. This presents a challenge if you need to refresh or paginate on the data returned by the query ref.
 
-You can gain access to `refetch` and `fetchMore` functions by using the `useQueryRefHandlers` hook. This hook integrates with React transitions, giving you the ability to update without suspending.
+You can gain access to `refetch` and `fetchMore` functions by using the `useQueryRefHandlers` hook. This hook integrates with React transitions, giving you the ability to refetch or paginate without showing the loading fallback.
 
 Let's update our example to preload our `GET_BREEDS_QUERY` outside React and utilize `useQueryRefHandlers` to refetch our query.
 
@@ -776,13 +776,13 @@ function Breeds({ isPending }: BreedsProps) {
 }
 ```
 
-We begin loading `GET_BREEDS_QUERY` outside of React with the `preloadQuery` function. We use the `useQueryRefHandlers` hook to get access to the `refetch` function which lets us reload the query when the button is clicked.
+We begin loading `GET_BREEDS_QUERY` outside of React with the `preloadQuery` function. We use the `useQueryRefHandlers` hook to get access to the `refetch` function which lets us refetch the query when the button is clicked.
 
 #### Accessing query ref handlers produced from other hooks
 
 `useQueryRefHandlers` is not limited to the `preloadQuery` API and can be used with any hook that produces a `queryRef` such as `useBackgroundQuery` or `useLoadableQuery`. This can be useful in situations where you may need access to the `refetch` and `fetchMore` functions in components where the `queryRef` was passed through deeply.
 
-Let's update our last example back to `useBackgroundQuery` and get access to `refetch` in our `Dog` component instead without needing to pass it from the parent.
+Let's update our last example back to `useBackgroundQuery` and get access to `refetch` from `useQueryRefHandlers` in our `Dog` component without passing the `refetch` function from the parent.
 
 ```tsx {12,16,18-22,30}
 function App() {

@@ -124,25 +124,6 @@ ApiDocHeading.propTypes = {
   suffix: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
 };
 
-export function SourceLink({ canonicalReference }) {
-  const MDX = useMDXComponents();
-  const getItem = useApiDocContext();
-  const item = getItem(canonicalReference);
-  return item.file ?
-      <Text fontWeight="normal" size="sm">
-        <MDX.PrimaryLink
-          href={`https://github.com/apollographql/apollo-client/blob/main/${item.file}`}
-          isExternal
-        >
-          ({item.file})
-        </MDX.PrimaryLink>
-      </Text>
-    : null;
-}
-SourceLink.propTypes = {
-  canonicalReference: PropTypes.string.isRequired,
-};
-
 export function SectionHeading(props) {
   return (
     <Text

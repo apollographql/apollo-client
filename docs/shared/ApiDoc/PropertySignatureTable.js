@@ -39,11 +39,6 @@ export function PropertySignatureTable({
 
   return (
     <>
-      {showHeaders ?
-        <GridItem className="row">
-          <SectionHeading>Properties</SectionHeading>
-        </GridItem>
-      : null}
       {item.childrenIncomplete ?
         <GridItem className="row">
           <br />

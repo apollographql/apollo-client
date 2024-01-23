@@ -11,7 +11,7 @@ import {
 } from ".";
 import { ResponsiveGrid } from "./ResponsiveGrid";
 
-export function ParameterTable({ canonicalReference, showHeaders = false }) {
+export function ParameterTable({ canonicalReference }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
@@ -20,11 +20,6 @@ export function ParameterTable({ canonicalReference, showHeaders = false }) {
 
   return (
     <>
-      {showHeaders ?
-        <GridItem className="row">
-          <SectionHeading>Parameters</SectionHeading>
-        </GridItem>
-      : null}
       <ResponsiveGrid>
         <GridItem className="first cell heading">Name / Type</GridItem>
         <GridItem className="cell heading">Description</GridItem>

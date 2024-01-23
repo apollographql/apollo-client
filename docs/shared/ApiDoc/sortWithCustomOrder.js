@@ -22,7 +22,7 @@ export function sortWithCustomOrder(customOrder = []) {
         : Number.MAX_SAFE_INTEGER - 1;
     }
     if (aIndex === bIndex) {
-      return a.displayName.localeCompare(b.displayName);
+      return sortLocally(a.displayName, b.displayName);
     } else {
       return aIndex - bIndex;
     }

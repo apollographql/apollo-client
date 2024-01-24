@@ -564,7 +564,7 @@ root.render(
 );
 ```
 
-We begin loading data as soon as our `preloadQuery` function is called. We no longer need to wait for React to render our `<App />` component before our `GET_DOGS_QUERY` begins loading, but still get the benefit of suspense!
+We begin loading data as soon as our `preloadQuery` function is called rather than waiting for React to render our `<App />` component. Because the `preloadedQueryRef` is passed to `useReadQuery` in our `App` component, we still get the benefit of suspense and cache updates!
 
 #### Usage with data loading routers
 

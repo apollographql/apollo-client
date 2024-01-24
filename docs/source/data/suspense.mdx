@@ -513,6 +513,12 @@ Before you can preload queries, you first need to create a preload function with
 
 The preload function returns a `queryRef` that is passed to `useReadQuery` to read the query data and suspend the component while loading. `useReadQuery` will ensure that your component is kept up-to-date with cache updates for the preloaded query.
 
+<Note>
+
+It is safe to unmount components that contain preloaded queries. Doing so puts the `queryRef` in a dormant state until the component is mounted again. Any cache updates that may have happened while dormant will be read immediately as if the preloaded query had never been unmounted.
+
+</Note>
+
 Let's update our example to start loading the `GET_DOGS_QUERY` before our app is rendered.
 
 ```tsx {3,6-7,10,33,35}

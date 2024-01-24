@@ -9,6 +9,7 @@ jobs:
     permissions:
       issues: write
     runs-on: ubuntu-latest
+    if: github.repository == 'apollographql/apollo-client'
     steps:
       - run: |
           if [ "$STATE_REASON" == "completed" ]; then

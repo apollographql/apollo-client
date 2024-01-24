@@ -2,9 +2,10 @@
 title: Document transforms
 description: Make custom modifications to your GraphQL documents
 minVersion: 3.8.0
+api_doc:
+  - "@apollo/client!~DocumentTransformOptions:interface"
 ---
-
-import DocumentTransformOptions from '../../shared/document-transform-options.mdx';
+import { InterfaceDetails } from '../../shared/ApiDoc';
 
 > This article assumes you're familiar with the [anatomy of a GraphQL query](https://www.apollographql.com/blog/graphql/basics/the-anatomy-of-a-graphql-query/) and the concept of an [abstract syntax tree (AST)](https://en.wikipedia.org/wiki/Abstract_syntax_tree). To explore a GraphQL AST, visit [AST Explorer](https://astexplorer.net/).
 
@@ -29,7 +30,7 @@ const client = new ApolloClient({
 });
 ```
 
-### Lifecycle 
+### Lifecycle
 
 Apollo Client runs document transforms before every GraphQL request for all operations. This extends to any API that performs a network request, such as the [`useQuery`](/react/api/react/hooks#usequery) hook or the [`refetch`](/react/api/core/ObservableQuery#refetch) function on [`ObservableQuery`](/react/api/core/ObservableQuery).
 
@@ -111,11 +112,11 @@ const transformedDocument = visit(document, {
 ```
 > Returning `undefined` from our `Field` visitor tells the `visit` function to leave the node unchanged.
 
-Now that we've determined we are working with the `currentUser` field, we need to figure out if our `id` field is already part of the `currentUser` field's selection set. This ensures we don't accidentally select the field twice in our query. 
+Now that we've determined we are working with the `currentUser` field, we need to figure out if our `id` field is already part of the `currentUser` field's selection set. This ensures we don't accidentally select the field twice in our query.
 
 To do so, let's get the field's `selectionSet` property and loop over its `selections` property to determine if the `id` field is included.
 
-It's important to note that a `selectionSet` may contain `selections` of both fields and fragments. Our implementation only needs to perform checks against fields, so we also check the selection's `kind` property. If we find a match on a field named `id`, we can stop traversal of the AST. 
+It's important to note that a `selectionSet` may contain `selections` of both fields and fragments. Our implementation only needs to perform checks against fields, so we also check the selection's `kind` property. If we find a match on a field named `id`, we can stop traversal of the AST.
 
 We will bring in both the [`Kind`](https://graphql.org/graphql-js/language/#kind) enum from `graphql-js`, which allows us to compare against the selection's `kind` property, and the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinel, which directs the `visit` function to stop traversal of the AST.
 
@@ -160,7 +161,7 @@ const transformedDocument = visit(document, {
   Field(field) {
     // ...
     const idField = {
-      // ... 
+      // ...
     };
 
     return {
@@ -224,7 +225,7 @@ const documentTransform = new DocumentTransform((document) => {
 
 ### Check our document transform
 
-We can check our custom document transform by calling the `transformDocument` function and passing a GraphQL query to it. 
+We can check our custom document transform by calling the `transformDocument` function and passing a GraphQL query to it.
 
 ```ts
 import { print } from 'graphql';
@@ -331,7 +332,7 @@ Here `documentTransform1` is combined with `documentTransform2` into a single do
 
 #### A note about performance
 
-Combining multiple transforms is a powerful feature that makes it easy to split up transform logic, which can boost maintainability. Depending on the implementation of your visitor, this can result in the traversal of the GraphQL document AST multiple times. Most of the time, this shouldn't be an issue. We recommend using the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinel from `graphql-js` to prevent unnecessary traversal. 
+Combining multiple transforms is a powerful feature that makes it easy to split up transform logic, which can boost maintainability. Depending on the implementation of your visitor, this can result in the traversal of the GraphQL document AST multiple times. Most of the time, this shouldn't be an issue. We recommend using the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinel from `graphql-js` to prevent unnecessary traversal.
 
 Suppose you are sending very large queries that require several traversals and have already optimized your visitors with the `BREAK` sentinel. In that case, it's best to combine the transforms into a single visitor that traverses the AST once.
 
@@ -464,7 +465,7 @@ const documentTransform = new DocumentTransform(
     getCacheKey: (document) => {
       // Always run the transform function when `shouldCache` is `false`
       if (shouldCache(document)) {
-        return [document] 
+        return [document]
       }
     }
   }
@@ -507,7 +508,7 @@ const nonCachedTransform = new DocumentTransform(transform, {
   cache: false
 });
 
-const documentTransform = 
+const documentTransform =
   cachedTransform
     .concat(varyingTransform)
     .concat(conditionalCachedTransform)
@@ -527,7 +528,7 @@ Thankfully, GraphQL Code Generator provides a [document transform](https://the-g
 ```ts title="codegen.ts" {2,12-18}
 import type { CodegenConfig } from '@graphql-codegen/cli';
 import { documentTransform } from './path/to/your/transform';
- 
+
 const config: CodegenConfig = {
   schema: 'https://localhost:4000/graphql',
   documents: ['src/**/*.tsx'],
@@ -574,7 +575,7 @@ Here is an example that uses a DSL-like directive that depends on a feature flag
 ```ts
 const query = gql`
   query MyQuery {
-    myCustomField @feature(name: "custom", version: 2)  
+    myCustomField @feature(name: "custom", version: 2)
   }
 `;
 
@@ -584,7 +585,7 @@ const documentTransform = new DocumentTransform((document) => {
 
 documentTransform.transformDocument(query);
 // query MyQuery($feature_custom_v2: Boolean!) {
-//   myCustomField @include(if: $feature_custom_v2)  
+//   myCustomField @include(if: $feature_custom_v2)
 // }
 ```
 
@@ -592,4 +593,4 @@ documentTransform.transformDocument(query);
 
 ### Options
 
-<DocumentTransformOptions />
+<InterfaceDetails canonicalReference="@apollo/client!~DocumentTransformOptions:interface" headingLevel={3} />

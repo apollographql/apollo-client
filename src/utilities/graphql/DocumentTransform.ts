@@ -12,7 +12,19 @@ export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 type TransformFn = (document: DocumentNode) => DocumentNode;
 
 interface DocumentTransformOptions {
+  /**
+   * Determines whether to cache the transformed GraphQL document. Caching can speed up repeated calls to the document transform for the same input document. Set to `false` to completely disable caching for the document transform. When disabled, this option takes precedence over the [`getCacheKey`](#getcachekey) option.
+   *
+   * The default value is `true`.
+   */
   cache?: boolean;
+  /**
+   * Defines a custom cache key for a GraphQL document that will determine whether to re-run the document transform when given the same input GraphQL document. Returns an array that defines the cache key. Return `undefined` to disable caching for that GraphQL document.
+   *
+   * > **Note:** The items in the array may be any type, but also need to be referentially stable to guarantee a stable cache key.
+   *
+   * The default implementation of this function returns the `document` as the cache key.
+   */
   getCacheKey?: (
     document: DocumentNode
   ) => DocumentTransformCacheKey | undefined;

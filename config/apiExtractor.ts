@@ -9,7 +9,7 @@ import { parseArgs } from "node:util";
 import fs from "node:fs";
 
 // @ts-ignore
-import { map } from "./entryPoints.js";
+import { map, buildDocEntryPoints } from "./entryPoints.js";
 import { readFileSync } from "fs";
 
 const parsed = parseArgs({
@@ -47,12 +47,8 @@ try {
     console.log(
       "\n\nCreating API extractor docmodel for the a combination of all entry points"
     );
-    const dist = path.resolve(__dirname, "../dist");
-    const entryPoints = map((entryPoint: { dirs: string[] }) => {
-      return `export * from "${dist}/${entryPoint.dirs.join("/")}/index.d.ts";`;
-    }).join("\n");
     const entryPointFile = path.join(tempDir, "entry.d.ts");
-    fs.writeFileSync(entryPointFile, entryPoints);
+    fs.writeFileSync(entryPointFile, buildDocEntryPoints());
 
     buildReport(entryPointFile, "docModel");
   }

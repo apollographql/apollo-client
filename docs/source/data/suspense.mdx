@@ -509,7 +509,7 @@ This API is experimental in `3.9.0` and may change in `3.10.0`. We are specifica
 
 </ExperimentalFeature>
 
-To begin loading data immediately, you first need to create a preload function with `createQueryPreloader`. `createQueryPreloader` is given an `ApolloClient` instance as an argument and returns a function that when called, will begin fetching the query. By making `createQueryPreloader` a [curried](https://en.wikipedia.org/wiki/Currying) function, this makes it easy to export your preload function alongside any `ApolloClient` instance you create.
+Before you can preload queries, you first need to create a preload function with `createQueryPreloader`. `createQueryPreloader` is given an `ApolloClient` instance as an argument and returns a function that when called, will begin fetching the query. By making `createQueryPreloader` a [curried](https://en.wikipedia.org/wiki/Currying) function, this makes it easy to export your preload function alongside any `ApolloClient` instance you create.
 
 The preload function returns a `queryRef` that can then be passed to `useReadQuery` to read the query data and suspend the component while loading. `useReadQuery` will also ensure that your component containing the preloaded query will be kept up-to-date with any cache updates for that query.
 

@@ -630,7 +630,7 @@ This instructs React Router to wait for the query to finish loading before the r
 
 #### Why prevent access to `data` in `toPromise`?
 
-You may be wondering why we resolve `toPromise` with the `queryRef` itself, rather than the data loaded from the query. This is because we want to encourage you to leverage `useReadQuery` to avoid missing out on cache updates for your query. If `data` were available, it would be tempting to consume it in your `loader` functions and expose it to your route components. Doing so means missing out on cache updates.
+You may be wondering why we resolve `toPromise` with the `queryRef` itself, rather than the data loaded from the query. We want to encourage you to leverage `useReadQuery` to avoid missing out on cache updates for your query. If `data` were available, it would be tempting to consume it in your `loader` functions and expose it to your route components. Doing so means missing out on cache updates.
 
 If you need access to raw query data in your `loader` functions, use [`client.query()`](../api/core/ApolloClient#query) directly.
 

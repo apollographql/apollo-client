@@ -477,7 +477,7 @@ export class QueryManager<TStore> {
 
     if (
       cacheWrites.length > 0 ||
-      shouldRefetchQueries ||
+      (mutation.refetchQueries || "").length > 0 ||
       mutation.update ||
       mutation.onQueryUpdated ||
       mutation.removeOptimistic

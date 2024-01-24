@@ -763,7 +763,7 @@ We begin loading `GET_BREEDS_QUERY` outside of React with the `preloadQuery` fun
 
 Let's update our last example back to `useBackgroundQuery` and get access to `refetch` from `useQueryRefHandlers` in our `Dog` component without passing the `refetch` function from the parent.
 
-```tsx {12,16,18-22,30}
+```tsx {15,16,18-22,30}
 function App() {
   const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
 
@@ -775,10 +775,10 @@ function App() {
 }
 
 function Dog({ id, queryRef }: DogProps) {
-  const [isPending, startTransition] = useTransition();
   const { data } = useSuspenseQuery(GET_DOG_QUERY, {
     variables: { id },
   });
+  const [isPending, startTransition] = useTransition();
   const { refetch } = useQueryRefHandlers(queryRef);
 
   function handleRefetch() {

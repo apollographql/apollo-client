@@ -521,12 +521,15 @@ It is safe to unmount components that contain preloaded queries. Doing so puts t
 
 Let's update our example to start loading the `GET_DOGS_QUERY` before our app is rendered.
 
-```tsx {3,6-7,10,33,35}
+```tsx {3,9-10,13,36,38}
 import {
   // ...
   createQueryPreloader
 } from '@apollo/client';
 
+// This `preloadQuery` function does not have to be created each time you 
+// need to preload a new query. You may prefer to export this function 
+// alongside your client instead. 
 const preloadQuery = createQueryPreloader(client);
 const preloadedQueryRef = preloadQuery(GET_DOGS_QUERY);
 

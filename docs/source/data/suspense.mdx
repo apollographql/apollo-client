@@ -722,14 +722,13 @@ You can gain access to `refetch` and `fetchMore` functions by using the `useQuer
 
 Let's update our example to preload our `GET_BREEDS_QUERY` outside React and use the `useQueryRefHandlers` hook to refetch our query.
 
-```tsx {4,7-8,12}
+```tsx {4,7,11}
 // ...
 import {
   // ...
   useQueryRefHandlers,
 } from "@apollo/client";
 
-const preloadQuery = createQueryPreloader(client);
 const queryRef = preloadQuery(GET_BREEDS_QUERY); 
 
 function App() {
@@ -753,40 +752,7 @@ function App() {
   );
 }
 
-function Dog({
-  id,
-  isPending,
-  onRefetch,
-}: DogProps) {
-  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
-    variables: { id },
-  });
-
-  return (
-    <>
-      Name: {data.dog.name}
-      <Suspense fallback={<div>Loading breeds...</div>}>
-        <Breeds isPending={isPending} />
-      </Suspense>
-      <button onClick={onRefetch}>Refetch!</button>
-    </>
-  );
-}
-
-function Breeds({ isPending }: BreedsProps) {
-  const { data } = useReadQuery(queryRef);
-
-  return data.breeds.map(({ characteristics }) =>
-    characteristics.map((characteristic) => (
-      <div
-        style={{ opacity: isPending ? 0.5 : 1 }}
-        key={characteristic}
-      >
-        {characteristic}
-      </div>
-    ))
-  );
-}
+// ...
 ```
 
 We begin loading `GET_BREEDS_QUERY` outside of React with the `preloadQuery` function. We use the `useQueryRefHandlers` hook to get access to the `refetch` function which lets us refetch the query when the button is clicked.

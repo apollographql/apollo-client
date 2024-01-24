@@ -443,7 +443,13 @@ The `useBackgroundQuery` hook used in a parent component is responsible for kick
 
 Starting with Apollo Client `3.9.0`, you can use `useLoadableQuery` to start loading data in response to user interaction. This is not only more ergonomic, but starts loading the query immediately, providing a nice performance benefit.
 
-`useLoadableQuery` returns a function that when called will begin fetching the query with the provided variables. Like `useBackgroundQuery`, you get access to a `queryRef` that is passed to `useReadQuery` to read the data in a child component. When the child component renders before the query has finished loading, the child component suspends.
+`useLoadableQuery` returns a both an execution function and `queryRef`. The execution function begins fetching the query when called with the provided variables. Like `useBackgroundQuery`, passing the `queryRef` to `useReadQuery` in a child component suspends the child component until the query finishes loading.
+
+<Note>
+
+The `queryRef` is `null` until the execution function is called for the first time. You should conditionally render the child component when the query has not yet been loaded.
+
+</Note>
 
 Let's update our example to start loading the dog's details as a result of selecting from a dropdown.
 
@@ -487,7 +493,6 @@ function Dog({ queryRef }) {
 }
 ```
 
-> It's important to note that the `queryRef` is `null` until the query loading function is called for the first time. You should conditionally render the child component when the query has not yet been loaded.
 
 We begin fetching our `GET_DOG_QUERY` as soon as a new dog is selected rather than waiting for our `Dog` component to re-render. When the `Dog` component renders, it reads data from the `GET_DOG_QUERY`, and if not ready, will suspend. As a result of this change, we've also removed the need to track the selected dog ID as part of React state!
 

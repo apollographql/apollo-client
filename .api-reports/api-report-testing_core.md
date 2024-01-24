@@ -184,7 +184,6 @@ interface ApolloClientOptions<TCacheShape> {
     documentTransform?: DocumentTransform;
     // (undocumented)
     fragmentMatcher?: FragmentMatcher;
-    // (undocumented)
     headers?: Record<string, string>;
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloLink"
     link?: ApolloLink;

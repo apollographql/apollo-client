@@ -857,8 +857,8 @@ This could cause additional (usually avoidable) network requests to fetch data t
 
 To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
 
-  existing: %s
-  incoming: %s
+  existing: %o
+  incoming: %o
 
 For more information about these options, please refer to the documentation:
 

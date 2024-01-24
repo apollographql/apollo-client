@@ -71,7 +71,7 @@ export interface ApolloClientOptions<TCacheShape> {
    */
   ssrForceFetchDelay?: number;
   /**
-   * When using Apollo Client for [server-side rendering](https://www.apollographql.com/docs/react//performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
+   * When using Apollo Client for [server-side rendering](https://www.apollographql.com/docs/react/performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
    *
    * @defaultValue `false`
    */

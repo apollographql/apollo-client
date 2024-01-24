@@ -593,11 +593,11 @@ export function RouteComponent() {
 
 > The `loader` function is available in React Router versions 6.4 and above.
 
-We load our query as soon as React Router calls our `loader` function. This starts fetching before our route component is rendered. When our route component renders, we can get access to the `queryRef` created by our `preloadQuery` function via the `useLoaderData` hook, which is then passed to `useReadQuery` to read the data. We get the benefit of loading our data early in the routing lifecycle, while our route component has the ability to update itself when the cache is updated!
+React Router calls the `loader` function which we use to begin loading the `GET_DOG_QUERY` query by calling the `preloadQuery` function. The `queryRef` created by `preloadQuery` is returned from the `loader` function making it accessible in the route component. When the route component renders, we access the `queryRef` from the `useLoaderData` hook, which is then passed to `useReadQuery`. We get the benefit of loading our data early in the routing lifecycle, while our route component maintains the ability to rerender with cache updates!
 
 <Note>
 
-The `preloadQuery` API only works with client-side routing. The `queryRef` returned from `preloadQuery` is not serializable across the wire and as such, will not work with routers that fetch on the server such as [Remix](https://remix.run/).
+The `preloadQuery` function only works with client-side routing. The `queryRef` returned from `preloadQuery` is not serializable across the wire and as such, will not work with routers that fetch on the server such as [Remix](https://remix.run/).
   
 </Note>
 

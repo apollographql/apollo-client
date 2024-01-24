@@ -493,8 +493,7 @@ function Dog({ queryRef }) {
 }
 ```
 
-
-We begin fetching our `GET_DOG_QUERY` as soon as a new dog is selected rather than waiting for our `Dog` component to re-render. When the `Dog` component renders, it reads data from the `GET_DOG_QUERY`, and if not ready, will suspend. As a result of this change, we've also removed the need to track the selected dog ID as part of React state!
+We begin fetching our `GET_DOG_QUERY` as soon as a dog is selected by calling the `loadDog` function. When the `Dog` component renders, `useReadQuery` suspends the component while the `GET_DOG_QUERY` loads, then provides `data` to the component. As a result of this change, we've also removed the need to track the selected dog ID as part of React state!
 
 <MinVersion version="3.9.0">
 

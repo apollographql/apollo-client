@@ -716,11 +716,11 @@ In this example, our `App` component renders a `Dog` component that fetches a si
 
 #### Usage with query preloading
 
-When loading queries [outside React](#initiating-queries-outside-react), the `preloadQuery` function returns a `queryRef` with no access to `refetch` or `fetchMore` functions. This presents a challenge if you need to refresh or paginate on the data returned by the query ref.
+When loading queries [outside React](#initiating-queries-outside-react), the `preloadQuery` function returns a `queryRef` with no access to `refetch` or `fetchMore` functions. This presents a challenge when you need to refetch or paginate the preloaded query.
 
 You can gain access to `refetch` and `fetchMore` functions by using the `useQueryRefHandlers` hook. This hook integrates with React transitions, giving you the ability to refetch or paginate without showing the loading fallback.
 
-Let's update our example to preload our `GET_BREEDS_QUERY` outside React and utilize `useQueryRefHandlers` to refetch our query.
+Let's update our example to preload our `GET_BREEDS_QUERY` outside React and use the `useQueryRefHandlers` hook to refetch our query.
 
 ```tsx {4,7-8,12}
 // ...

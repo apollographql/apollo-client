@@ -1634,13 +1634,12 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
 //
 // @public
 interface QueryReference<TData = unknown, TVariables = unknown> {
-    // (undocumented)
+    // @internal (undocumented)
     [PROMISE_SYMBOL]: QueryRefPromise<TData>;
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReference" needs to be exported by the entry point index.d.ts
     //
-    // (undocumented)
+    // @internal (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-    // (undocumented)
     toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 

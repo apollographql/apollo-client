@@ -1398,11 +1398,10 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
 //
 // @public
 export interface QueryReference<TData = unknown, TVariables = unknown> {
-    // (undocumented)
+    // @internal (undocumented)
     [PROMISE_SYMBOL]: QueryRefPromise<TData>;
-    // (undocumented)
+    // @internal (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-    // (undocumented)
     toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 

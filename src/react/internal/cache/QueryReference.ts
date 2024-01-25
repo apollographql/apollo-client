@@ -40,8 +40,8 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
   /** @internal */
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
   /**
-   * Returns a promise that resolves when the query has finished loading. The
-   * promise resolves with the `QueryReference` itself.
+   * A function that returns a promise that resolves when the query has finished
+   * loading. The promise resolves with the `QueryReference` itself.
    *
    * @remarks
    * This method is useful for preloading queries in data loading routers, such

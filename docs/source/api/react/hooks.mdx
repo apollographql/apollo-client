@@ -10,6 +10,7 @@ api_doc:
   - "@apollo/client!useSubscription:function(1)"
   - "@apollo/client!useApolloClient:function(1)"
   - "@apollo/client!useReactiveVar:function(1)"
+  - "@apollo/client!useLoadableQuery:function(1)"
 ---
 
 import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
@@ -477,3 +478,5 @@ const { data } = useSuspenseQuery(
 In this case, it becomes apparent for TypeScript that there is a direct connection between skipping and the `variables` option - and it will work without unsafe workarounds.
 
 </blockquote>
+
+<FunctionDetails canonicalReference="@apollo/client!useLoadableQuery:function(1)" headingLevel={2} />

@@ -161,6 +161,7 @@ export interface PreloadQueryFunction {
  * ```js
  * const preloadQuery = createQueryPreloader(client);
  * ```
+ * @since 3.9.0
  * @experimental
  */
 export function createQueryPreloader(

@@ -35,7 +35,9 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
  * suspend until the promise resolves.
  */
 export interface QueryReference<TData = unknown, TVariables = unknown> {
+  /** @internal */
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+  /** @internal */
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
   toPromise(): Promise<QueryReference<TData, TVariables>>;
 }

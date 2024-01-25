@@ -153,7 +153,7 @@ export interface PreloadQueryFunction {
  * when you want to start loading a query as early as possible outside of a
  * React component.
  *
- * @param client - The ApolloClient instance that will be used to load queries
+ * @param client - The `ApolloClient` instance that will be used to load queries
  * from the returned `preloadQuery` function.
  * @returns The `preloadQuery` function.
  *

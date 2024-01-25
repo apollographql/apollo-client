@@ -527,9 +527,9 @@ import {
   createQueryPreloader
 } from '@apollo/client';
 
-// This `preloadQuery` function does not have to be created each time you 
-// need to preload a new query. You may prefer to export this function 
-// alongside your client instead. 
+// This `preloadQuery` function does not have to be created each time you
+// need to preload a new query. You may prefer to export this function
+// alongside your client instead.
 const preloadQuery = createQueryPreloader(client);
 const preloadedQueryRef = preloadQuery(GET_DOGS_QUERY);
 
@@ -598,7 +598,7 @@ React Router calls the `loader` function which we use to begin loading the `GET_
 <Note>
 
 The `preloadQuery` function only works with client-side routing. The `queryRef` returned from `preloadQuery` is not serializable across the wire and as such, will not work with routers that fetch on the server such as [Remix](https://remix.run/).
-  
+
 </Note>
 
 #### Preventing route transitions until the query is loaded
@@ -612,7 +612,7 @@ export async function loader() {
   return queryRef;
 }
 
-// You may also return the promise directly from loader. 
+// You may also return the promise directly from loader.
 // This is equivalent to the above.
 export async function loader() {
   return preloadQuery(GET_DOGS_QUERY).toPromise();
@@ -729,7 +729,7 @@ import {
   useQueryRefHandlers,
 } from "@apollo/client";
 
-const queryRef = preloadQuery(GET_BREEDS_QUERY); 
+const queryRef = preloadQuery(GET_BREEDS_QUERY);
 
 function App() {
   const [isPending, startTransition] = useTransition();

@@ -12,7 +12,7 @@ import type {
 
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import type { OperationVariables } from "../../core/index.js";
+import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
 import { useDeepMemo, useLazyRef } from "./internal/index.js";
 
@@ -28,6 +28,7 @@ export interface UseFragmentOptions<TData, TVars>
   from: StoreObject | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
+  client?: ApolloClient;
 }
 
 export type UseFragmentResult<TData> =
@@ -45,7 +46,7 @@ export type UseFragmentResult<TData> =
 export function useFragment<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
-  const { cache } = useApolloClient();
+  const { cache } = useApolloClient(options.client);
 
   const diffOptions = useDeepMemo<Cache.DiffOptions<TData, TVars>>(() => {
     const {
@@ -117,3 +118,4 @@ function diffToResult<TData>(
 
   return result;
 }
+

@@ -441,7 +441,7 @@ The `useBackgroundQuery` hook used in a parent component is responsible for kick
 
 `useSuspenseQuery` and `useBackgroundQuery` are useful for loading data as soon as the component calling the hook mounts. But what about loading a query in response to user interaction? For example, we may want to start loading some data when a user hovers on a link.
 
-Starting with Apollo Client `3.9.0`, you can use `useLoadableQuery` to start loading data in response to user interaction. This avoids adding additional component state to trigger rerenders and provides a more ergonomic experience.
+Available as of Apollo Client `3.9.0`, the `useLoadableQuery` hook initiates a network request in response to user interaction.
 
 `useLoadableQuery` returns a both an execution function and `queryRef`. The execution function begins fetching the query when called with the provided variables. Like `useBackgroundQuery`, passing the `queryRef` to `useReadQuery` in a child component suspends the child component until the query finishes loading.
 

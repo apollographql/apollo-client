@@ -407,6 +407,40 @@ function useReadQuery<TData>(
 
 <UseReadQueryResult />
 
+<FunctionDetails canonicalReference="@apollo/client!useLoadableQuery:function(1)" headingLevel={2}
+result={<div>
+<pre><code class="language-ts">
+[loadQuery: LoadQueryFunction&lt;TVariables&gt;, queryRef: QueryReference&lt;TData, TVariables&gt;, handlers: UseLoadableQueryHandlers&lt;TData, TVariables&gt;]
+</code></pre>
+
+A tuple of three values:
+
+<ManualTuple
+  idPrefix="usepreloadedquery-result"
+  elements={[
+    {
+      name: "loadQuery",
+      type: "LoadQueryFunction<TVariables>",
+      description: "A function used to imperatively load a query. Calling this function will create or update the `queryRef` returned by `useLoadableQuery`, which should be passed to `useReadQuery`."
+    },
+    {
+      name: "queryRef",
+      type: "QueryReference<TData, TVariables>",
+      description: "The `queryRef` used by `useReadQuery` to read the query result."
+      canonicalReference: "@apollo/client!QueryReference:interface"
+    },
+    {
+      name: "handlers",
+      type: "UseLoadableQueryHandlers<TData, TVariables>",
+      description: "",
+      canonicalReference: "@apollo/client!UseLoadableQueryHandlers:interface"
+    }
+  ]}
+/>
+</div>}
+/>
+<FunctionDetails canonicalReference="@apollo/client!useQueryRefHandlers:function(1)" headingLevel={2} />
+
 <MinVersion version="3.8.0">
 
 ## `skipToken`
@@ -479,6 +513,3 @@ const { data } = useSuspenseQuery(
 In this case, it becomes apparent for TypeScript that there is a direct connection between skipping and the `variables` option - and it will work without unsafe workarounds.
 
 </blockquote>
-
-<FunctionDetails canonicalReference="@apollo/client!useLoadableQuery:function(1)" headingLevel={2} />
-<FunctionDetails canonicalReference="@apollo/client!useQueryRefHandlers:function(1)" headingLevel={2} />

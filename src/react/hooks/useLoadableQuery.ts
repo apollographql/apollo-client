@@ -50,6 +50,51 @@ export type UseLoadableQueryResult<
   },
 ];
 
+/**
+ * A hook for imperatively loading a query, such as responding to a user
+ * interaction.
+ *
+ * > Refer to the [Suspense - Fetching in response to user interaction](https://www.apollographql.com/docs/react/data/suspense#fetching-in-response-to-user-interaction) section for a more in-depth overview of `useLoadableQuery`.
+ *
+ * @example
+ * ```jsx
+ * import { gql, useLoadableQuery } from "@apollo/client";
+ *
+ * const GET_GREETING = gql`
+ *   query GetGreeting($language: String!) {
+ *     greeting(language: $language) {
+ *       message
+ *     }
+ *   }
+ * `;
+ *
+ * function App() {
+ *   const [loadGreeting, queryRef] = useLoadableQuery(GET_GREETING);
+ *
+ *   return (
+ *     <>
+ *       <button onClick={() => loadGreeting({ language: "english" })}>
+ *         Load greeting
+ *       </button>
+ *       <Suspense fallback={<div>Loading...</div>}>
+ *         {queryRef && <Hello queryRef={queryRef} />}
+ *       </Suspense>
+ *     </>
+ *   );
+ * }
+ *
+ * function Hello({ queryRef }) {
+ *   const { data } = useReadQuery(queryRef);
+ *
+ *   return <div>{data.greeting.message}</div>;
+ * }
+ * ```
+ *
+ * @since 3.9.0
+ * @param query - A GraphQL query document parsed into an AST by `gql`.
+ * @param options - Options to control how the query is executed.
+ * @returns A tuple in the form of `[loadQuery, queryRef, handlers]`
+ */
 export function useLoadableQuery<
   TData,
   TVariables extends OperationVariables,
@@ -106,51 +151,6 @@ export function useLoadableQuery<
   options?: LoadableQueryHookOptions
 ): UseLoadableQueryResult<TData, TVariables>;
 
-/**
- * A hook for imperatively loading a query, such as responding to a user
- * interaction.
- *
- * > Refer to the [Suspense - Fetching in response to user interaction](https://www.apollographql.com/docs/react/data/suspense#fetching-in-response-to-user-interaction) section for a more in-depth overview of `useLoadableQuery`.
- *
- * @example
- * ```jsx
- * import { gql, useLoadableQuery } from "@apollo/client";
- *
- * const GET_GREETING = gql`
- *   query GetGreeting($language: String!) {
- *     greeting(language: $language) {
- *       message
- *     }
- *   }
- * `;
- *
- * function App() {
- *   const [loadGreeting, queryRef] = useLoadableQuery(GET_GREETING);
- *
- *   return (
- *     <>
- *       <button onClick={() => loadGreeting({ language: "english" })}>
- *         Load greeting
- *       </button>
- *       <Suspense fallback={<div>Loading...</div>}>
- *         {queryRef && <Hello queryRef={queryRef} />}
- *       </Suspense>
- *     </>
- *   );
- * }
- *
- * function Hello({ queryRef }) {
- *   const { data } = useReadQuery(queryRef);
- *
- *   return <div>{data.greeting.message}</div>;
- * }
- * ```
- *
- * @since 3.9.0
- * @param query - A GraphQL query document parsed into an AST by `gql`.
- * @param options - Options to control how the query is executed.
- * @returns A tuple in the form of `[loadQuery, queryRef, handlers]`
- */
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

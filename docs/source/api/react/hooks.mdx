@@ -10,7 +10,7 @@ api_doc:
   - "@apollo/client!useSubscription:function(1)"
   - "@apollo/client!useApolloClient:function(1)"
   - "@apollo/client!useReactiveVar:function(1)"
-  - "@apollo/client!useLoadableQuery:function(1)"
+  - "@apollo/client!useLoadableQuery:function(5)"
   - "@apollo/client!useQueryRefHandlers:function(1)"
 ---
 
@@ -21,6 +21,7 @@ import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx'
 import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
 import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
 import { FunctionDetails, PropertySignatureTable, ManualTuple, InterfaceDetails } from '../../../shared/ApiDoc';
+import { UseLoadableQueryResult } from '../../../shared/Overrides/UseLoadableQueryResult'
 
 ## The `ApolloProvider` component
 
@@ -407,38 +408,12 @@ function useReadQuery<TData>(
 
 <UseReadQueryResult />
 
-<FunctionDetails canonicalReference="@apollo/client!useLoadableQuery:function(1)" headingLevel={2}
-result={<div>
-<pre><code class="language-ts">
-[loadQuery: LoadQueryFunction&lt;TVariables&gt;, queryRef: QueryReference&lt;TData, TVariables&gt;, handlers: UseLoadableQueryHandlers&lt;TData, TVariables&gt;]
-</code></pre>
-
-A tuple of three values:
-
-<ManualTuple
-  idPrefix="useloadablequery-result"
-  elements={[
-    {
-      name: "loadQuery",
-      type: "LoadQueryFunction<TVariables>",
-      description: "A function used to imperatively load a query. Calling this function will create or update the `queryRef` returned by `useLoadableQuery`, which should be passed to `useReadQuery`."
-    },
-    {
-      name: "queryRef",
-      type: "QueryReference<TData, TVariables>",
-      description: "The `queryRef` used by `useReadQuery` to read the query result.",
-      canonicalReference: "@apollo/client!QueryReference:interface"
-    },
-    {
-      name: "handlers",
-      type: "UseLoadableQueryHandlers<TData, TVariables>",
-      description: "",
-      canonicalReference: "@apollo/client!UseLoadableQueryHandlers:interface"
-    }
-  ]}
+<FunctionDetails
+  canonicalReference="@apollo/client!useLoadableQuery:function(5)"
+  headingLevel={2}
+  result={<UseLoadableQueryResult />}
 />
-</div>}
-/>
+
 <FunctionDetails canonicalReference="@apollo/client!useQueryRefHandlers:function(1)" headingLevel={2} />
 
 <MinVersion version="3.8.0">

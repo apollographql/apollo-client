@@ -10,7 +10,7 @@ const HANDLERS = `{
 
 const RETURN_VALUE = `[
   loadQuery: LoadQueryFunction<TVariables>,
-  queryRef: QueryReference<TData, TVariables>,
+  queryRef: QueryReference<TData, TVariables> | null,
   {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
@@ -38,7 +38,7 @@ export function UseLoadableQueryResult() {
           },
           {
             name: "queryRef",
-            type: "QueryReference<TData, TVariables>",
+            type: "QueryReference<TData, TVariables> | null",
             description:
               "The `queryRef` used by `useReadQuery` to read the query result.",
             canonicalReference: "@apollo/client!QueryReference:interface",

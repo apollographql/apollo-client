@@ -7,7 +7,6 @@ import {
   FunctionSignature,
   useApiDocContext,
   ApiDocHeading,
-  SectionHeading,
 } from ".";
 import { GridItem, Text } from "@chakra-ui/react";
 import { ResponsiveGrid } from "./ResponsiveGrid";
@@ -20,6 +19,7 @@ export function PropertySignatureTable({
   display = "parent",
   customOrder = [],
   idPrefix = "",
+  genericNames,
 }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
@@ -36,6 +36,29 @@ export function PropertySignatureTable({
       item.childrenIncompleteDetails
     );
   }
+
+  const replaceGenericNames = React.useMemo(() => {
+    if (!genericNames) return (str) => str;
+
+    const replacements = {};
+    item.typeParameters.forEach((p, i) => {
+      if (genericNames[i] === p.name) return;
+      replacements[p.name] = genericNames[i];
+    });
+    if (!Object.values(replacements).length) return (str) => str;
+
+    const genericReplacementRegex = new RegExp(
+      `\\b(${Object.keys(replacements).join("|")})\\b`,
+      "g"
+    );
+    function replace(match) {
+      console.log({ match, replacement: replacements[match] });
+      return replacements[match] || match;
+    }
+    return function replaceGenericNames(str) {
+      return str.replace(genericReplacementRegex, replace);
+    };
+  });
 
   return (
     <>
@@ -56,7 +79,7 @@ export function PropertySignatureTable({
         : null}
         {Object.entries(groupedProperties).map(
           ([groupName, sortedProperties]) => (
-            <>
+            <React.Fragment key={groupName}>
               {groupName ?
                 <GridItem className="row heading">{groupName}</GridItem>
               : null}
@@ -94,7 +117,7 @@ export function PropertySignatureTable({
                           parameterTypes
                           arrow
                         />
-                      : property.type}
+                      : replaceGenericNames(property.type)}
                     </MDX.inlineCode>
                   </GridItem>
                   <GridItem className="cell" fontSize="md" lineHeight="base">
@@ -108,7 +131,7 @@ export function PropertySignatureTable({
                   </GridItem>
                 </React.Fragment>
               ))}
-            </>
+            </React.Fragment>
           )
         )}
       </Wrapper>
@@ -123,4 +146,5 @@ PropertySignatureTable.propTypes = {
   display: PropTypes.oneOf(["parent", "child"]),
   customOrder: PropTypes.arrayOf(PropTypes.string),
   idPrefix: PropTypes.string,
+  genericNames: PropTypes.arrayOf(PropTypes.string),
 };

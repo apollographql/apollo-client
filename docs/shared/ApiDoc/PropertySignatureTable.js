@@ -104,6 +104,7 @@ export function PropertySignatureTable({
                       summary
                       remarks
                       remarkCollapsible
+                      releaseTag
                     />
                   </GridItem>
                 </React.Fragment>

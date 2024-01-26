@@ -547,7 +547,7 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 export interface Context extends Record<string, any> {
 }
 
-// @public
+// @alpha
 export function createQueryPreloader(client: ApolloClient<any>): PreloadQueryFunction;
 
 // @public (undocumented)
@@ -2231,7 +2231,7 @@ export type UseFragmentResult<TData> = {
 // @public
 export function useLazyQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>): LazyQueryResultTuple<TData, TVariables>;
 
-// @public (undocumented)
+// @public
 export function useLoadableQuery<TData, TVariables extends OperationVariables, TOptions extends LoadableQueryHookOptions>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: LoadableQueryHookOptions & TOptions): UseLoadableQueryResult<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData, TVariables>;
 
 // @public (undocumented)
@@ -2254,14 +2254,18 @@ export function useLoadableQuery<TData = unknown, TVariables extends OperationVa
 export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: LoadableQueryHookOptions): UseLoadableQueryResult<TData, TVariables>;
 
 // @public (undocumented)
-export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = [
-LoadQueryFunction<TVariables>,
-QueryReference<TData, TVariables> | null,
-    {
+export interface UseLoadableQueryHandlers<TData, TVariables extends OperationVariables> {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
+    // Warning: (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
     reset: ResetFunction;
 }
+
+// @public (undocumented)
+export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = [
+loadQuery: LoadQueryFunction<TVariables>,
+queryRef: QueryReference<TData, TVariables> | null,
+handlers: UseLoadableQueryHandlers<TData, TVariables>
 ];
 
 // @public
@@ -2397,7 +2401,6 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:29:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useLoadableQuery.ts:49:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

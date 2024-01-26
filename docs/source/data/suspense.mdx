@@ -443,7 +443,7 @@ The `useBackgroundQuery` hook used in a parent component is responsible for kick
 
 Available as of Apollo Client `3.9.0`, the `useLoadableQuery` hook initiates a network request in response to user interaction.
 
-`useLoadableQuery` returns a both an execution function and `queryRef`. The execution function begins fetching the query when called with the provided variables. Like `useBackgroundQuery`, passing the `queryRef` to `useReadQuery` in a child component suspends the child component until the query finishes loading.
+`useLoadableQuery` returns both an execution function and a `queryRef`. The execution function initiates a network request when called with the provided variables. Like `useBackgroundQuery`, passing the `queryRef` to `useReadQuery` in a child component suspends the child component until the query finishes loading.
 
 <Note>
 

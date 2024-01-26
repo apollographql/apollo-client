@@ -501,7 +501,7 @@ We begin fetching our `GET_DOG_QUERY` by calling the `loadDog` function inside o
 
 </MinVersion>
 
-Starting with Apollo Client `3.9.0`, it is possible to start loading queries outside React. This avoids the need to wait for React to render your components before the query begins loading, providing a nice performance benefit.
+Starting with Apollo Client `3.9.0`, queries can be initiated outside of React. This allows your app to begin fetching data _before_ React renders your components, and can provide performance benefits.
 
 <ExperimentalFeature>
 

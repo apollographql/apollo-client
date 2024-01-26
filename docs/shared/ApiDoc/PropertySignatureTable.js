@@ -80,7 +80,6 @@ export function PropertySignatureTable({
                         : null
                       }
                       suffix={property.optional ? <em> (optional)</em> : null}
-                      link={!!idPrefix}
                       id={
                         idPrefix ?
                           `${idPrefix}-${property.displayName.toLowerCase()}`

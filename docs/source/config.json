@@ -80,6 +80,7 @@
       },
       "React": {
         "Hooks": "/api/react/hooks",
+        "Preloading": "/api/react/preloading",
         "Testing": "/api/react/testing",
         "SSR": "/api/react/ssr",
         "Components (deprecated)": "/api/react/components",

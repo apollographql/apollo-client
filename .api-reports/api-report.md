@@ -2329,6 +2329,7 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
     //
     // @internal (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+    // @alpha
     toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 

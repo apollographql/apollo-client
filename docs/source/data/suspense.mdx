@@ -765,7 +765,7 @@ function App() {
 // ...
 ```
 
-We begin loading `GET_BREEDS_QUERY` outside of React with the `preloadQuery` function. We use the `useQueryRefHandlers` hook to get the `refetch` function which refetches the query when the button is clicked.
+We begin loading our `GET_BREEDS_QUERY` outside of React with the `preloadQuery` function. We pass the `queryRef` returned from `preloadQuery` to the `useQueryRefHandlers` hook which provides us with a `refetch` function we can use to refetch the query when the button is clicked.
 
 #### Accessing query ref handlers produced from other hooks
 

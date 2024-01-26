@@ -481,7 +481,7 @@ function App() {
   );
 }
 
-function Dog({ queryRef }) {
+function Dog({ queryRef }: DogProps) {
   const { data } = useReadQuery(queryRef)
 
   return (

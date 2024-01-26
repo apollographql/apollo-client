@@ -21,7 +21,8 @@ export function FunctionSignature({
 }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
-  const { displayName, parameters, returnType, typeParameters } = getItem(canonicalReference);
+  const { displayName, parameters, returnType, typeParameters } =
+    getItem(canonicalReference);
 
   let paramSignature = parameters
     .map((p) => {
@@ -40,11 +41,16 @@ export function FunctionSignature({
     paramSignature = "\n  " + paramSignature + "\n";
   }
 
-  const genericSignature = typeParameters?.length ?`<${typeParameters.map(p => p.name).join(', ')}>` : ""
+  const genericSignature =
+    typeParameters?.length ?
+      `<${typeParameters.map((p) => p.name).join(", ")}>`
+    : "";
 
   const signature = `${arrow ? "" : "function "}${
     name ? displayName : ""
-  }${genericSignature}(${paramSignature})${arrow ? " =>" : ":"} ${returnType.type}`;
+  }${genericSignature}(${paramSignature})${arrow ? " =>" : ":"} ${
+    returnType.type
+  }`;
 
   return highlight ?
       <MDX.pre language="ts">
@@ -72,7 +78,7 @@ export function ReturnType({ canonicalReference }) {
       <MDX.pre language="ts">
         <code className="language-ts">{item.returnType.type}</code>
       </MDX.pre>
-      {item.returnType.primaryCanonicalReference?.endsWith(':interface') ?
+      {item.returnType.primaryCanonicalReference?.endsWith(":interface") ?
         <details>
           <GridItem as="summary" className="row">
             Show/hide child attributes
@@ -145,7 +151,8 @@ export function FunctionDetails({
         </>
       )}
       {(
-        result === false || (result === undefined && item.returnType.type === "void")
+        result === false ||
+        (result === undefined && item.returnType.type === "void")
       ) ?
         null
       : <>

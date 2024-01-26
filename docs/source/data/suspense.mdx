@@ -603,7 +603,11 @@ The `preloadQuery` function only works with client-side routing. The `queryRef` 
 
 #### Preventing route transitions until the query is loaded
 
-By default, `preloadQuery` works similar to a [deferred loader](https://reactrouter.com/en/main/guides/deferred) in that routes will transition immediately and suspend with `useReadQuery` until the query is loaded. You may instead want to prevent the route from transitioning until the data is fully loaded. Use the `toPromise` method on the `queryRef` to get a promise that resolves when the query is loaded. This promise resolves with the `queryRef` itself, making it easy to use with hooks such as `useLoaderData`.
+By default, `preloadQuery` works similar to a [deferred loader](https://reactrouter.com/en/main/guides/deferred): the route will transition immediately and the incoming page that's attempting to read the data via `useReadQuery` will suspend until the network request finishes.
+
+But what if we want to prevent the route from transitioning until the data is fully loaded? The `toPromise` method on a `queryRef` provides access to a promise that resolves when the network request has completed. This promise resolves with the `queryRef` itself, making it easy to use with hooks such as `useLoaderData`.
+
+Here's an example:
 
 ```ts
 export async function loader() {

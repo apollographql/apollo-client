@@ -29,6 +29,8 @@
 /docs/shared/**
 !/docs/shared/ApiDoc
 !/docs/shared/ApiDoc/**
+!/docs/shared/Overrides
+!/docs/shared/Overrides/**
 
 node_modules/
 .yalc/

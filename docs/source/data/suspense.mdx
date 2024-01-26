@@ -771,7 +771,7 @@ We begin loading `GET_BREEDS_QUERY` outside of React with the `preloadQuery` fun
 
 `useQueryRefHandlers` can also be used in combination with any hook that returns a `queryRef`, such as `useBackgroundQuery` or `useLoadableQuery`. This is useful when you need access to the `refetch` and `fetchMore` functions in components where the `queryRef` is passed through deeply.
 
-Let's update our last example back to `useBackgroundQuery` and get the `refetch` function from the `useQueryRefHandlers` hook in the `Dog` component.
+Let's update our example to use `useBackgroundQuery` again and see how we can access a `refetch` function in our `Dog` component using `useQueryRefHandlers`:
 
 ```tsx {15,16,18-22,30}
 function App() {

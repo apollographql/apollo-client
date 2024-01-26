@@ -35,8 +35,47 @@ const PROMISE_SYMBOL: unique symbol = Symbol();
  * suspend until the promise resolves.
  */
 export interface QueryReference<TData = unknown, TVariables = unknown> {
+  /** @internal */
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+  /** @internal */
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
+  /**
+   * A function that returns a promise that resolves when the query has finished
+   * loading. The promise resolves with the `QueryReference` itself.
+   *
+   * @remarks
+   * This method is useful for preloading queries in data loading routers, such
+   * as [React Router](https://reactrouter.com/en/main) or [TanStack Router](https://tanstack.com/router),
+   * to prevent routes from transitioning until the query has finished loading.
+   * `data` is not exposed on the promise to discourage using the data in
+   * `loader` functions and exposing it to your route components. Instead, we
+   * prefer you rely on `useReadQuery` to access the data to ensure your
+   * component can rerender with cache updates. If you need to access raw query
+   * data, use `client.query()` directly.
+   *
+   * @example
+   * Here's an example using React Router's `loader` function:
+   * ```ts
+   * import { createQueryPreloader } from "@apollo/client";
+   *
+   * const preloadQuery = createQueryPreloader(client);
+   *
+   * export async function loader() {
+   *   const queryRef = preloadQuery(GET_DOGS_QUERY);
+   *
+   *   return queryRef.toPromise();
+   * }
+   *
+   * export function RouteComponent() {
+   *   const queryRef = useLoaderData();
+   *   const { data } = useReadQuery(queryRef);
+   *
+   *   // ...
+   * }
+   * ```
+   *
+   * @alpha
+   */
   toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 

@@ -10,6 +10,8 @@ api_doc:
   - "@apollo/client!useSubscription:function(1)"
   - "@apollo/client!useApolloClient:function(1)"
   - "@apollo/client!useReactiveVar:function(1)"
+  - "@apollo/client!useLoadableQuery:function(5)"
+  - "@apollo/client!useQueryRefHandlers:function(1)"
 ---
 
 import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
@@ -19,6 +21,7 @@ import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx'
 import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
 import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
 import { FunctionDetails, PropertySignatureTable, ManualTuple, InterfaceDetails } from '../../../shared/ApiDoc';
+import { UseLoadableQueryResult } from '../../../shared/Overrides/UseLoadableQueryResult'
 
 ## The `ApolloProvider` component
 
@@ -404,6 +407,14 @@ function useReadQuery<TData>(
 ### Result
 
 <UseReadQueryResult />
+
+<FunctionDetails
+  canonicalReference="@apollo/client!useLoadableQuery:function(5)"
+  headingLevel={2}
+  result={<UseLoadableQueryResult />}
+/>
+
+<FunctionDetails canonicalReference="@apollo/client!useQueryRefHandlers:function(1)" headingLevel={2} />
 
 <MinVersion version="3.8.0">
 

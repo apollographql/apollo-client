@@ -544,7 +544,7 @@ export const concat: typeof ApolloLink.concat;
 // @public (undocumented)
 export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
 
-// @public
+// @alpha
 export function createQueryPreloader(client: ApolloClient<any>): PreloadQueryFunction;
 
 // @public @deprecated (undocumented)
@@ -2323,13 +2323,13 @@ export { QueryOptions }
 //
 // @public
 export interface QueryReference<TData = unknown, TVariables = unknown> {
-    // (undocumented)
+    // @internal (undocumented)
     [PROMISE_SYMBOL]: QueryRefPromise<TData>;
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReference" needs to be exported by the entry point index.d.ts
     //
-    // (undocumented)
+    // @internal (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-    // (undocumented)
+    // @alpha
     toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 
@@ -2904,13 +2904,13 @@ export function useLoadableQuery<TData = unknown, TVariables extends OperationVa
     returnPartialData: true;
 }): UseLoadableQueryResult<DeepPartial<TData>, TVariables>;
 
-// @public (undocumented)
+// @public
 export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: LoadableQueryHookOptions): UseLoadableQueryResult<TData, TVariables>;
 
 // @public (undocumented)
 export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = [
-LoadQueryFunction<TVariables>,
-QueryReference<TData, TVariables> | null,
+loadQuery: LoadQueryFunction<TVariables>,
+queryRef: QueryReference<TData, TVariables> | null,
     {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
@@ -3077,7 +3077,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:29:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useLoadableQuery.ts:49:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useLoadableQuery.ts:106:1 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

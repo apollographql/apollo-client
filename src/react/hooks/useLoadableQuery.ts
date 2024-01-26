@@ -37,17 +37,22 @@ export type LoadQueryFunction<TVariables extends OperationVariables> = (
 
 type ResetFunction = () => void;
 
+export interface UseLoadableQueryHandlers<
+  TData,
+  TVariables extends OperationVariables,
+> {
+  fetchMore: FetchMoreFunction<TData, TVariables>;
+  refetch: RefetchFunction<TData, TVariables>;
+  reset: ResetFunction;
+}
+
 export type UseLoadableQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = [
-  LoadQueryFunction<TVariables>,
-  QueryReference<TData, TVariables> | null,
-  {
-    fetchMore: FetchMoreFunction<TData, TVariables>;
-    refetch: RefetchFunction<TData, TVariables>;
-    reset: ResetFunction;
-  },
+  loadQuery: LoadQueryFunction<TVariables>,
+  queryRef: QueryReference<TData, TVariables> | null,
+  handlers: UseLoadableQueryHandlers<TData, TVariables>,
 ];
 
 /**

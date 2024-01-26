@@ -14,6 +14,7 @@ export { useBackgroundQuery } from "./useBackgroundQuery.js";
 export type {
   LoadQueryFunction,
   UseLoadableQueryResult,
+  UseLoadableQueryHandlers,
 } from "./useLoadableQuery.js";
 export { useLoadableQuery } from "./useLoadableQuery.js";
 export type { UseQueryRefHandlersResult } from "./useQueryRefHandlers.js";

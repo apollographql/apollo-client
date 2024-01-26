@@ -505,7 +505,7 @@ Starting with Apollo Client `3.9.0`, it is possible to start loading queries out
 
 <ExperimentalFeature>
 
-This API is experimental in `3.9.0` and may change in `3.10.0`. We are specifically looking for user feedback on the API design choices. The underlying behavior is otherwise fully implemented. If you'd like to provide feedback for this feature before it is stabilized in `3.10.0`, please visit [#11519](https://github.com/apollographql/apollo-client/issues/11519) and add a comment.
+This feature is in [alpha stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) for version `3.9.0` and may be subject to change before `3.10.0`. We consider this feature production-ready, but may be subject to change depending on feedback. If you'd like to provide feedback for this feature before it is stabilized in `3.10.0`, please visit [#11519](https://github.com/apollographql/apollo-client/issues/11519) and add a comment.
 
 </ExperimentalFeature>
 
@@ -627,6 +627,12 @@ export function RouteComponent() {
 ```
 
 This instructs React Router to wait for the query to finish loading before the route transitions. When the route transitions after the promise resolves, the data is rendered immediately without the need to show a loading fallback in the route component.
+
+<ExperimentalFeature>
+
+`queryRef.toPromise` is [experimental](https://www.apollographql.com/docs/resources/product-launch-stages/#experimental-features) for version `3.9.0` and may be subject to breaking changes before `3.10.0`. If you'd like to provide feedback for this feature before it is stabilized in `3.10.0`, please visit [#11519](https://github.com/apollographql/apollo-client/issues/11519) and add a comment.
+
+</ExperimentalFeature>
 
 #### Why prevent access to `data` in `toPromise`?
 

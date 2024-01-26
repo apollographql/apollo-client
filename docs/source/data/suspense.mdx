@@ -774,7 +774,7 @@ function App() {
 
 We begin loading our `GET_BREEDS_QUERY` outside of React with the `preloadQuery` function. We pass the `queryRef` returned from `preloadQuery` to the `useQueryRefHandlers` hook which provides us with a `refetch` function we can use to refetch the query when the button is clicked.
 
-#### Accessing query ref handlers produced from other hooks
+#### Using `useQueryRefHandlers` with query refs produced from other Suspense hooks
 
 `useQueryRefHandlers` can also be used in combination with any hook that returns a `queryRef`, such as `useBackgroundQuery` or `useLoadableQuery`. This is useful when you need access to the `refetch` and `fetchMore` functions in components where the `queryRef` is passed through deeply.
 

@@ -7,7 +7,6 @@ import {
   FunctionSignature,
   useApiDocContext,
   ApiDocHeading,
-  SectionHeading,
 } from ".";
 import { GridItem, Text } from "@chakra-ui/react";
 import { ResponsiveGrid } from "./ResponsiveGrid";

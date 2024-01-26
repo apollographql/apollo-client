@@ -37,27 +37,22 @@ export type LoadQueryFunction<TVariables extends OperationVariables> = (
 
 type ResetFunction = () => void;
 
-export interface UseLoadableQueryHandlers<
-  TData,
-  TVariables extends OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-  fetchMore: FetchMoreFunction<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-  refetch: RefetchFunction<TData, TVariables>;
-  /**
-   * A function that resets the `queryRef` back to `null`.
-   */
-  reset: ResetFunction;
-}
-
 export type UseLoadableQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = [
   loadQuery: LoadQueryFunction<TVariables>,
   queryRef: QueryReference<TData, TVariables> | null,
-  handlers: UseLoadableQueryHandlers<TData, TVariables>,
+  {
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+    refetch: RefetchFunction<TData, TVariables>;
+    /**
+     * A function that resets the `queryRef` back to `null`.
+     */
+    reset: ResetFunction;
+  },
 ];
 
 /**

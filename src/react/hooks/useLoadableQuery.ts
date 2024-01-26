@@ -41,8 +41,13 @@ export interface UseLoadableQueryHandlers<
   TData,
   TVariables extends OperationVariables,
 > {
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: RefetchFunction<TData, TVariables>;
+  /**
+   * A function that resets the `queryRef` back to `null`.
+   */
   reset: ResetFunction;
 }
 

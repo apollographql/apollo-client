@@ -109,7 +109,12 @@ export function FunctionDetails({
         headingLevel={headingLevel}
         since
       />
-      <DocBlock canonicalReference={canonicalReference} deprecated remarks />
+      <DocBlock
+        canonicalReference={canonicalReference}
+        deprecated
+        remarks
+        releaseTag
+      />
       {item.comment?.examples.length == 0 ? null : (
         <>
           <SubHeading

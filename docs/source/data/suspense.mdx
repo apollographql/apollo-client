@@ -447,7 +447,7 @@ Available as of Apollo Client `3.9.0`, the `useLoadableQuery` hook initiates a n
 
 <Note>
 
-The `queryRef` is `null` until the execution function is called for the first time. You should conditionally render the child component when the query has not yet been loaded.
+The `queryRef` is `null` until the execution function is called for the first time. For this reason, any child components attempting to read data using the `queryRef` should be conditionally rendered.
 
 </Note>
 

@@ -515,7 +515,7 @@ The preload function returns a `queryRef` that is passed to `useReadQuery` to re
 
 <Note>
 
-Unmounting components that contain preloaded queries is safe and puts the `queryRef` in a dormant state. Once the component re-mounts, any cache updates that occurred in the interim are read immediately as if the preloaded query had never been unmounted.
+Unmounting components that contain preloaded queries is safe and diposes of the `queryRef`. When the component re-mounts, `useReadQuery` automatically resubscribes to the `queryRef` and any cache updates that occurred in the interim are read immediately as if the preloaded query had never been unmounted.
 
 </Note>
 

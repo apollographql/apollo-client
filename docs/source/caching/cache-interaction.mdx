@@ -12,7 +12,9 @@ Apollo Client supports multiple strategies for interacting with cached data:
 | [Using GraphQL fragments](#using-graphql-fragments) | `readFragment` / `writeFragment` / `updateFragment` / `useFragment` | Access the fields of any cached object without composing an entire query to reach that object.  |
 | [Directly modifying cached fields](#using-cachemodify) | `cache.modify` | Manipulate cached data without using GraphQL at all. |
 
- You can use whichever combination of strategies and methods are most helpful for your use case.
+You can use whichever combination of strategies and methods are most helpful for your use case.
+
+Bear in mind the difference between fields that contain references to other objects in the cache and fields that contain literal values.  References are objects that contain a `__ref` field—see the [example](./overview/#example) in the caching overview.  Modifying a reference will not change the values contained in the object to which the reference points.  So avoid updating an object from something like `{__ref: '5'}` to `{__ref: '5', completed: true}`.
 
 > All code samples below assume that you have initialized an instance of `ApolloClient` and that you have imported the `gql` function from `@apollo/client`. If you haven't, [get started](../get-started).
 >
@@ -338,7 +340,7 @@ cache.modify({
 
 When you define a modifier function for a field that contains a scalar, an enum, or a list of these base types, the modifier function is passed the exact existing value for the field. For example, if you define a modifier function for an object's `quantity` field that has current value `5`, your modifier function is passed the value `5`.
 
-**However**, when you define a modifier function for a field that contains an object type or a list of objects, those objects are represented as **references**. Each reference points to its corresponding object in the cache by its cache ID. If you return a _different_ reference in your modifier function, you change _which_ other cached object is contained in this field. You _don't_ modify the original cached object's data.
+**However**, when you define a modifier function for a field that contains an object type or a list of objects, those objects are represented as **references**. Each reference points to its corresponding object in the cache by its cache ID. If you return a _different_ reference in your modifier function, you change _which_ other cached object is contained in this field. You _don't_ modify the original cached object's data. Additionally, modifying a field (or adding a new one) in a reference will only take effect for the location you're modifying.
 
 ### Modifier function utilities
 

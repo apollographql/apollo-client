@@ -30,7 +30,7 @@ jobs:
 
       - name: Check for pre.json file existence
         id: check_files
-        uses: andstor/file-existence-action@v2.0.0
+        uses: andstor/file-existence-action@v3.0.0
         with:
           files: ".changeset/pre.json"
 

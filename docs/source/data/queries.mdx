@@ -24,7 +24,7 @@ The `useQuery` [React hook](https://react.dev/reference/react) is the primary AP
 
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
-```jsx title="index.js"
+```js title="index.js"
 import { gql, useQuery } from '@apollo/client';
 
 const GET_DOGS = gql`

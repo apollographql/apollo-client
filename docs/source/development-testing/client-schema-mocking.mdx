@@ -26,7 +26,7 @@ Our client application can define a [client-side schema](../local-state/client-s
 
 This client-side schema extends the `Rocket` type to add a `description` field (make sure to name the variable `typeDefs` as shown):
 
-```jsx title="main.jsx"
+```js title="index.js"
 const typeDefs = gql`
   extend type Rocket {
     description: String
@@ -36,7 +36,7 @@ const typeDefs = gql`
 
 We can then provide this schema to the `ApolloClient` constructor, like so:
 
-```jsx {4} title="main.jsx"
+```js {4} title="index.js"
 const client = new ApolloClient({
   uri: 'http://localhost:4000/graphql',
   cache: new InMemoryCache(),
@@ -50,7 +50,7 @@ Our client app doesn't yet know how to populate the `Rocket.description` field. 
 
 Let's define our `read` function in the configuration object we provide to the `InMemoryCache` constructor:
 
-```jsx {5-9} title="main.jsx"
+```js {5-9} title="index.js"
 const cache = new InMemoryCache({
   typePolicies: {
     Rocket: {
@@ -68,7 +68,7 @@ const cache = new InMemoryCache({
 
 This enables us to query the field, but we might not want to show the same boilerplate description for every rocket. To add variety to our mocked output, we can use a library like [faker.js](https://github.com/faker-js/faker):
 
-```jsx title="main.jsx"
+```js title="index.js"
 import { faker } from "@faker-js/faker";
 
 // Returns 1 or 2 sentences of Lorem Ipsum

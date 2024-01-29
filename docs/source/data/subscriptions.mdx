@@ -111,7 +111,7 @@ npm install graphql-ws
 
 Import and initialize a `GraphQLWsLink` object in the same project file where you initialize `ApolloClient`:
 
-```jsx title="main.jsx"
+```js title="index.js"
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 
@@ -130,7 +130,7 @@ To support this, the `@apollo/client` library provides a `split` function that l
 
 The following example expands on the previous one by initializing both a `GraphQLWsLink` _and_ an `HttpLink`. It then uses the `split` function to combine those two `Link`s into a _single_ `Link` that uses one or the other according to the type of operation being executed.
 
-```jsx title="main.jsx"
+```js title="index.js"
 import { split, HttpLink } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
@@ -168,7 +168,7 @@ Using this logic, queries and mutations will use HTTP as normal, and subscriptio
 
 After you define your link chain, you provide it to Apollo Client via the `link` constructor option:
 
-```jsx {6} title="main.jsx"
+```js {6} title="index.js"
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 // ...code from the above example goes here...

@@ -16,6 +16,41 @@
 
   Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore. A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
 
+- [#11254](https://github.com/apollographql/apollo-client/pull/11254) [`d08970d`](https://github.com/apollographql/apollo-client/commit/d08970d348cf4ad6d80c6baf85b4a4cd4034a3bb) Thanks [@benjamn](https://github.com/benjamn)! - Decouple `canonicalStringify` from `ObjectCanon` for better time and memory performance.
+
+- [#11356](https://github.com/apollographql/apollo-client/pull/11356) [`cc4ac7e`](https://github.com/apollographql/apollo-client/commit/cc4ac7e1917f046bcd177882727864eed40b910e) Thanks [@phryneas](https://github.com/phryneas)! - Fix a potential memory leak in `FragmentRegistry.transform` and `FragmentRegistry.findFragmentSpreads` that would hold on to passed-in `DocumentNodes` for too long.
+
+- [#11370](https://github.com/apollographql/apollo-client/pull/11370) [`25e2cb4`](https://github.com/apollographql/apollo-client/commit/25e2cb431c76ec5aa88202eaacbd98fad42edc7f) Thanks [@phryneas](https://github.com/phryneas)! - `parse` function: improve memory management
+
+  - use LRU `WeakCache` instead of `Map` to keep a limited number of parsed results
+  - cache is initiated lazily, only when needed
+  - expose `parse.resetCache()` method
+
+- [#11389](https://github.com/apollographql/apollo-client/pull/11389) [`139acd1`](https://github.com/apollographql/apollo-client/commit/139acd1153afa1445b69dcb4e139668ab8c5889a) Thanks [@phryneas](https://github.com/phryneas)! - `documentTransform`: use `optimism` and `WeakCache` instead of directly storing data on the `Trie`
+
+- [#11358](https://github.com/apollographql/apollo-client/pull/11358) [`7d939f8`](https://github.com/apollographql/apollo-client/commit/7d939f80fbc2c419c58a6c55b6a35ee7474d0379) Thanks [@phryneas](https://github.com/phryneas)! - Fixes a potential memory leak in `Concast` that might have been triggered when `Concast` was used outside of Apollo Client.
+
+- [#11344](https://github.com/apollographql/apollo-client/pull/11344) [`bd26676`](https://github.com/apollographql/apollo-client/commit/bd2667619700139af32a45364794d11f845ab6cf) Thanks [@phryneas](https://github.com/phryneas)! - Add a `resetCache` method to `DocumentTransform` and hook `InMemoryCache.addTypenameTransform` up to `InMemoryCache.gc`
+
+- [#11367](https://github.com/apollographql/apollo-client/pull/11367) [`30d17bf`](https://github.com/apollographql/apollo-client/commit/30d17bfebe44dbfa7b78c8982cfeb49afd37129c) Thanks [@phryneas](https://github.com/phryneas)! - `print`: use `WeakCache` instead of `WeakMap`
+
+- [#11387](https://github.com/apollographql/apollo-client/pull/11387) [`4dce867`](https://github.com/apollographql/apollo-client/commit/4dce8673b1757d8a3a4edd2996d780e86fad14e3) Thanks [@phryneas](https://github.com/phryneas)! - `QueryManager.transformCache`: use `WeakCache` instead of `WeakMap`
+
+- [#11369](https://github.com/apollographql/apollo-client/pull/11369) [`2a47164`](https://github.com/apollographql/apollo-client/commit/2a471646616e3af1b5c039e961f8d5717fad8f32) Thanks [@phryneas](https://github.com/phryneas)! - Persisted Query Link: improve memory management
+
+  - use LRU `WeakCache` instead of `WeakMap` to keep a limited number of hash results
+  - hash cache is initiated lazily, only when needed
+  - expose `persistedLink.resetHashCache()` method
+  - reset hash cache if the upstream server reports it doesn't accept persisted queries
+
+- [#10804](https://github.com/apollographql/apollo-client/pull/10804) [`221dd99`](https://github.com/apollographql/apollo-client/commit/221dd99ffd1990f8bd0392543af35e9b08d0fed8) Thanks [@phryneas](https://github.com/phryneas)! - use WeakMap in React Native with Hermes
+
+- [#11355](https://github.com/apollographql/apollo-client/pull/11355) [`7d8e184`](https://github.com/apollographql/apollo-client/commit/7d8e18493cd13134726c6643cbf0fadb08be2d37) Thanks [@phryneas](https://github.com/phryneas)! - InMemoryCache.gc now also triggers FragmentRegistry.resetCaches (if there is a FragmentRegistry)
+
+- [#11409](https://github.com/apollographql/apollo-client/pull/11409) [`2e7203b`](https://github.com/apollographql/apollo-client/commit/2e7203b3a9618952ddb522627ded7cceabd7f250) Thanks [@phryneas](https://github.com/phryneas)! - Adds an experimental `ApolloClient.getMemoryInternals` helper
+
+- [#11343](https://github.com/apollographql/apollo-client/pull/11343) [`776631d`](https://github.com/apollographql/apollo-client/commit/776631de4500d56252f6f5fdaf29a81c41dfbdc7) Thanks [@phryneas](https://github.com/phryneas)! - Add `reset` method to `print`, hook up to `InMemoryCache.gc`
+
 #### Suspense-enabled data fetching on user interaction with `useLoadableQuery`
 
 - [#11300](https://github.com/apollographql/apollo-client/pull/11300) [`a815873`](https://github.com/apollographql/apollo-client/commit/a8158733cfa3e65180ec23518d657ea41894bb2b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduces a new `useLoadableQuery` hook. This hook works similarly to `useBackgroundQuery` in that it returns a `queryRef` that can be used to suspend a component via the `useReadQuery` hook. It provides a more ergonomic way to load the query during a user interaction (for example when wanting to preload some data) that would otherwise be clunky with `useBackgroundQuery`.
@@ -225,8 +260,6 @@
 <details open>
   <summary><h3>Patch Changes</h3></summary>
 
-- [#11254](https://github.com/apollographql/apollo-client/pull/11254) [`d08970d`](https://github.com/apollographql/apollo-client/commit/d08970d348cf4ad6d80c6baf85b4a4cd4034a3bb) Thanks [@benjamn](https://github.com/benjamn)! - Decouple `canonicalStringify` from `ObjectCanon` for better time and memory performance.
-
 - [#11275](https://github.com/apollographql/apollo-client/pull/11275) [`3862f9b`](https://github.com/apollographql/apollo-client/commit/3862f9ba9086394c4cf4c2ecd99e8e0f6cf44885) Thanks [@phryneas](https://github.com/phryneas)! - Add a `defaultContext` option and property on `ApolloClient`, e.g. for keeping track of changing auth tokens or dependency injection.
 
   This can be used e.g. in authentication scenarios, where a new token might be generated outside of the link chain and should passed into the link chain.
@@ -264,27 +297,9 @@
 - [#11443](https://github.com/apollographql/apollo-client/pull/11443) [`ff5a332`](https://github.com/apollographql/apollo-client/commit/ff5a332ff8b190c418df25371e36719d70061ebe) Thanks [@phryneas](https://github.com/phryneas)! - Adds a deprecation warning to the HOC and render prop APIs.
 
   The HOC and render prop APIs have already been deprecated since 2020,
-  but we previously didn't have a @deprecated tag in the DocBlocks.
-
-- [#11356](https://github.com/apollographql/apollo-client/pull/11356) [`cc4ac7e`](https://github.com/apollographql/apollo-client/commit/cc4ac7e1917f046bcd177882727864eed40b910e) Thanks [@phryneas](https://github.com/phryneas)! - Fix a potential memory leak in `FragmentRegistry.transform` and `FragmentRegistry.findFragmentSpreads` that would hold on to passed-in `DocumentNodes` for too long.
-
-- [#11370](https://github.com/apollographql/apollo-client/pull/11370) [`25e2cb4`](https://github.com/apollographql/apollo-client/commit/25e2cb431c76ec5aa88202eaacbd98fad42edc7f) Thanks [@phryneas](https://github.com/phryneas)! - `parse` function: improve memory management
-
-  - use LRU `WeakCache` instead of `Map` to keep a limited number of parsed results
-  - cache is initiated lazily, only when needed
-  - expose `parse.resetCache()` method
-
-- [#11389](https://github.com/apollographql/apollo-client/pull/11389) [`139acd1`](https://github.com/apollographql/apollo-client/commit/139acd1153afa1445b69dcb4e139668ab8c5889a) Thanks [@phryneas](https://github.com/phryneas)! - `documentTransform`: use `optimism` and `WeakCache` instead of directly storing data on the `Trie`
-
-- [#11358](https://github.com/apollographql/apollo-client/pull/11358) [`7d939f8`](https://github.com/apollographql/apollo-client/commit/7d939f80fbc2c419c58a6c55b6a35ee7474d0379) Thanks [@phryneas](https://github.com/phryneas)! - Fixes a potential memory leak in `Concast` that might have been triggered when `Concast` was used outside of Apollo Client.
-
-- [#11344](https://github.com/apollographql/apollo-client/pull/11344) [`bd26676`](https://github.com/apollographql/apollo-client/commit/bd2667619700139af32a45364794d11f845ab6cf) Thanks [@phryneas](https://github.com/phryneas)! - Add a `resetCache` method to `DocumentTransform` and hook `InMemoryCache.addTypenameTransform` up to `InMemoryCache.gc`
-
-- [#11367](https://github.com/apollographql/apollo-client/pull/11367) [`30d17bf`](https://github.com/apollographql/apollo-client/commit/30d17bfebe44dbfa7b78c8982cfeb49afd37129c) Thanks [@phryneas](https://github.com/phryneas)! - `print`: use `WeakCache` instead of `WeakMap`
+  but we previously didn't have a `@deprecated` tag in the DocBlocks.
 
 - [#11385](https://github.com/apollographql/apollo-client/pull/11385) [`d9ca4f0`](https://github.com/apollographql/apollo-client/commit/d9ca4f0821c66ae4f03cf35a7ac93fe604cc6de3) Thanks [@phryneas](https://github.com/phryneas)! - ensure `defaultContext` is also used for mutations and subscriptions
-
-- [#11387](https://github.com/apollographql/apollo-client/pull/11387) [`4dce867`](https://github.com/apollographql/apollo-client/commit/4dce8673b1757d8a3a4edd2996d780e86fad14e3) Thanks [@phryneas](https://github.com/phryneas)! - `QueryManager.transformCache`: use `WeakCache` instead of `WeakMap`
 
 - [#11503](https://github.com/apollographql/apollo-client/pull/11503) [`67f62e3`](https://github.com/apollographql/apollo-client/commit/67f62e359bc471787d066319326e5582b4a635c8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Release changes from [`v3.8.10`](https://github.com/apollographql/apollo-client/releases/tag/v3.8.10)
 
@@ -293,21 +308,6 @@
 - [#11439](https://github.com/apollographql/apollo-client/pull/11439) [`33454f0`](https://github.com/apollographql/apollo-client/commit/33454f0a40a05ea2b00633bda20a84d0ec3a4f4d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Address bundling issue introduced in [#11412](https://github.com/apollographql/apollo-client/pull/11412) where the `react/cache` internals ended up duplicated in the bundle. This was due to the fact that we had a `react/hooks` entrypoint that imported these files along with the newly introduced `createQueryPreloader` function, which lived outside of the `react/hooks` folder.
 
 - [#11371](https://github.com/apollographql/apollo-client/pull/11371) [`ebd8fe2`](https://github.com/apollographql/apollo-client/commit/ebd8fe2c1b8b50bfeb2da20aeca5671300fb5564) Thanks [@phryneas](https://github.com/phryneas)! - Clarify types of `EntityStore.makeCacheKey`.
-
-- [#11369](https://github.com/apollographql/apollo-client/pull/11369) [`2a47164`](https://github.com/apollographql/apollo-client/commit/2a471646616e3af1b5c039e961f8d5717fad8f32) Thanks [@phryneas](https://github.com/phryneas)! - Persisted Query Link: improve memory management
-
-  - use LRU `WeakCache` instead of `WeakMap` to keep a limited number of hash results
-  - hash cache is initiated lazily, only when needed
-  - expose `persistedLink.resetHashCache()` method
-  - reset hash cache if the upstream server reports it doesn't accept persisted queries
-
-- [#10804](https://github.com/apollographql/apollo-client/pull/10804) [`221dd99`](https://github.com/apollographql/apollo-client/commit/221dd99ffd1990f8bd0392543af35e9b08d0fed8) Thanks [@phryneas](https://github.com/phryneas)! - use WeakMap in React Native with Hermes
-
-- [#11355](https://github.com/apollographql/apollo-client/pull/11355) [`7d8e184`](https://github.com/apollographql/apollo-client/commit/7d8e18493cd13134726c6643cbf0fadb08be2d37) Thanks [@phryneas](https://github.com/phryneas)! - InMemoryCache.gc now also triggers FragmentRegistry.resetCaches (if there is a FragmentRegistry)
-
-- [#11409](https://github.com/apollographql/apollo-client/pull/11409) [`2e7203b`](https://github.com/apollographql/apollo-client/commit/2e7203b3a9618952ddb522627ded7cceabd7f250) Thanks [@phryneas](https://github.com/phryneas)! - Adds an experimental `ApolloClient.getMemoryInternals` helper
-
-- [#11343](https://github.com/apollographql/apollo-client/pull/11343) [`776631d`](https://github.com/apollographql/apollo-client/commit/776631de4500d56252f6f5fdaf29a81c41dfbdc7) Thanks [@phryneas](https://github.com/phryneas)! - Add `reset` method to `print`, hook up to `InMemoryCache.gc`
 
 </details>
 

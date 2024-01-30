@@ -54,15 +54,16 @@ A community plugin called [React Native Apollo devtools](https://github.com/razo
    2. Go to add plugin and search for `react-native-apollo-devtools` and install it
    3. Add `react-native-flipper` and `react-native-apollo-devtools-client` as dev dependecy to react native app.
    4. Initialize the plugin with flipper on client side
-      
-      ```  
+
+      ```ts
         import { apolloDevToolsInit } from 'react-native-apollo-devtools-client';
+
         const client = new ApolloClient({
-            // ...
-        })
-        
-        if(__DEV__){
-            apolloDevToolsInit(client);
+          // ...
+        });
+
+        if (__DEV__) {
+          apolloDevToolsInit(client);
         }
       ```
 

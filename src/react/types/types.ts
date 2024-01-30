@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type * as ReactTypes from "react";
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -13,18 +13,26 @@ import type {
   ApolloClient,
   DefaultContext,
   FetchPolicy,
-  MutationOptions,
   NetworkStatus,
   ObservableQuery,
   OperationVariables,
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
+  SubscribeToMoreOptions,
+  ApolloQueryResult,
+  FetchMoreQueryOptions,
+  ErrorPolicy,
+  RefetchWritePolicy,
 } from "../../core/index.js";
+import type {
+  MutationSharedOptions,
+  SharedWatchQueryOptions,
+} from "../../core/watchQueryOptions.js";
 
 /* QueryReference type */
 
-export type { QueryReference } from "../cache/QueryReference.js";
+export type { QueryReference } from "../internal/index.js";
 
 /* Common types */
 
@@ -38,18 +46,25 @@ export type CommonOptions<TOptions> = TOptions & {
 
 export interface BaseQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
-> extends Omit<WatchQueryOptions<TVariables>, "query"> {
+  TData = any,
+> extends SharedWatchQueryOptions<TVariables, TData> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
   ssr?: boolean;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient<any>;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
 }
 
 export interface QueryFunctionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends BaseQueryOptions<TVariables> {
+> extends BaseQueryOptions<TVariables, TData> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
   skip?: boolean;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
   onCompleted?: (data: TData) => void;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
 
   // Default WatchQueryOptions for this useQuery, providing initial values for
@@ -57,35 +72,81 @@ export interface QueryFunctionOptions<
   // by option, not whole), but never overriding options previously passed to
   // useQuery (or options added/modified later by other means).
   // TODO What about about default values that are expensive to evaluate?
+  /** @internal */
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 
-export type ObservableQueryFields<
+export interface ObservableQueryFields<
   TData,
   TVariables extends OperationVariables,
-> = Pick<
-  ObservableQuery<TData, TVariables>,
-  | "startPolling"
-  | "stopPolling"
-  | "subscribeToMore"
-  | "updateQuery"
-  | "refetch"
-  | "reobserve"
-  | "variables"
-  | "fetchMore"
->;
+> {
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
+  startPolling(pollInterval: number): void;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
+  stopPolling(): void;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
+  subscribeToMore<
+    TSubscriptionData = TData,
+    TSubscriptionVariables extends OperationVariables = TVariables,
+  >(
+    options: SubscribeToMoreOptions<
+      TData,
+      TSubscriptionVariables,
+      TSubscriptionData
+    >
+  ): () => void;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
+  updateQuery<TVars extends OperationVariables = TVariables>(
+    mapFn: (
+      previousQueryResult: TData,
+      options: Pick<WatchQueryOptions<TVars, TData>, "variables">
+    ) => TData
+  ): void;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+  refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>>;
+  /** @internal */
+  reobserve(
+    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
+    newNetworkStatus?: NetworkStatus
+  ): Promise<ApolloQueryResult<TData>>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+  variables: TVariables | undefined;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+  fetchMore<
+    TFetchData = TData,
+    TFetchVars extends OperationVariables = TVariables,
+  >(
+    fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+      updateQuery?: (
+        previousQueryResult: TData,
+        options: {
+          fetchMoreResult: TFetchData;
+          variables: TFetchVars;
+        }
+      ) => TData;
+    }
+  ): Promise<ApolloQueryResult<TFetchData>>;
+}
 
 export interface QueryResult<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends ObservableQueryFields<TData, TVariables> {
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
   client: ApolloClient<any>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
   observable: ObservableQuery<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
   data: TData | undefined;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
   previousData?: TData;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ApolloError;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
   networkStatus: NetworkStatus;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#called:member} */
   called: boolean;
 }
 
@@ -93,7 +154,8 @@ export interface QueryDataOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {
-  children?: (result: QueryResult<TData, TVariables>) => ReactNode;
+  children?: (result: QueryResult<TData, TVariables>) => ReactTypes.ReactNode;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
@@ -105,8 +167,15 @@ export interface QueryHookOptions<
 export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends Omit<QueryHookOptions<TData, TVariables>, "skip"> {}
+> extends BaseQueryOptions<TVariables, TData> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
+  onCompleted?: (data: TData) => void;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
+  onError?: (error: ApolloError) => void;
 
+  /** @internal */
+  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+}
 export interface LazyQueryHookExecOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
@@ -122,24 +191,28 @@ export type SuspenseQueryHookFetchPolicy = Extract<
 export interface SuspenseQueryHookOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-> extends Pick<
-    QueryHookOptions<TData, TVariables>,
-    | "client"
-    | "variables"
-    | "errorPolicy"
-    | "context"
-    | "canonizeResults"
-    | "returnPartialData"
-    | "refetchWritePolicy"
-  > {
+> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+  client?: ApolloClient<any>;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+  context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+  variables?: TVariables;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
+  canonizeResults?: boolean;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+  returnPartialData?: boolean;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: SuspenseQueryHookFetchPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
   queryKey?: string | number | any[];
 
   /**
-   * If `true`, the query is not executed. The default value is `false`.
-   *
-   * @deprecated We recommend using `skipToken` in place of the `skip` option as
-   * it is more type-safe.
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
    *
    * @example Recommended usage of `skipToken`:
    * ```ts
@@ -173,10 +246,7 @@ export interface BackgroundQueryHookOptions<
   queryKey?: string | number | any[];
 
   /**
-   * If `true`, the query is not executed. The default value is `false`.
-   *
-   * @deprecated We recommend using `skipToken` in place of the `skip` option as
-   * it is more type-safe.
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
    *
    * @example Recommended usage of `skipToken`:
    * ```ts
@@ -188,16 +258,42 @@ export interface BackgroundQueryHookOptions<
   skip?: boolean;
 }
 
+export type LoadableQueryHookFetchPolicy = Extract<
+  WatchQueryFetchPolicy,
+  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
+>;
+
+export interface LoadableQueryHookOptions {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
+  canonizeResults?: boolean;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+  client?: ApolloClient<any>;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+  context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+  fetchPolicy?: LoadableQueryHookFetchPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
+  queryKey?: string | number | any[];
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+  returnPartialData?: boolean;
+}
+
 /**
- * @deprecated TODO Delete this unused interface.
+ * @deprecated This type will be removed in the next major version of Apollo Client
  */
 export interface QueryLazyOptions<TVariables> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: TVariables;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
 }
 
 /**
- * @deprecated TODO Delete this unused type alias.
+ * @deprecated This type will be removed in the next major version of Apollo Client
  */
 export type LazyQueryResult<
   TData,
@@ -205,7 +301,7 @@ export type LazyQueryResult<
 > = QueryResult<TData, TVariables>;
 
 /**
- * @deprecated TODO Delete this unused type alias.
+ * @deprecated This type will be removed in the next major version of Apollo Client
  */
 export type QueryTuple<
   TData,
@@ -222,7 +318,10 @@ export type LazyQueryExecFunction<
 export type LazyQueryResultTuple<
   TData,
   TVariables extends OperationVariables,
-> = [LazyQueryExecFunction<TData, TVariables>, QueryResult<TData, TVariables>];
+> = [
+  execute: LazyQueryExecFunction<TData, TVariables>,
+  result: QueryResult<TData, TVariables>,
+];
 
 /* Mutation types */
 
@@ -235,14 +334,16 @@ export interface BaseMutationOptions<
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-> extends Omit<
-    MutationOptions<TData, TVariables, TContext, TCache>,
-    "mutation"
-  > {
+> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
   client?: ApolloClient<object>;
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
   notifyOnNetworkStatusChange?: boolean;
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
   onCompleted?: (data: TData, clientOptions?: BaseMutationOptions) => void;
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member} */
   ignoreResults?: boolean;
 }
 
@@ -252,15 +353,22 @@ export interface MutationFunctionOptions<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface MutationResult<TData = any> {
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   data?: TData | null;
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
   error?: ApolloError;
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
   loading: boolean;
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
   called: boolean;
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#client:member} */
   client: ApolloClient<object>;
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member} */
   reset(): void;
 }
 
@@ -295,12 +403,12 @@ export type MutationTuple<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > = [
-  (
+  mutate: (
     options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
     // TODO This FetchResult<TData> seems strange here, as opposed to an
     // ApolloQueryResult<TData>
   ) => Promise<FetchResult<TData>>,
-  MutationResult<TData>,
+  result: MutationResult<TData>,
 ];
 
 /* Subscription types */
@@ -319,33 +427,44 @@ export interface BaseSubscriptionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > {
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#variables:member} */
   variables?: TVariables;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: FetchPolicy;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#shouldResubscribe:member} */
   shouldResubscribe?:
     | boolean
     | ((options: BaseSubscriptionOptions<TData, TVariables>) => boolean);
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#client:member} */
   client?: ApolloClient<object>;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#skip:member} */
   skip?: boolean;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
   context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onComplete:member} */
   onComplete?: () => void;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onData:member} */
   onData?: (options: OnDataOptions<TData>) => any;
-  /**
-   * @deprecated Use onData instead
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionData:member} */
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
-  /**
-   * @deprecated Use onComplete instead
-   */
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
   onSubscriptionComplete?: () => void;
 }
 
 export interface SubscriptionResult<TData = any, TVariables = any> {
+  /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
   loading: boolean;
+  /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */
   data?: TData;
+  /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
   error?: ApolloError;
   // This was added by the legacy useSubscription type, and is tested in unit
   // tests, but probably shouldn’t be added to the result.
+  /**
+   * @internal
+   */
   variables?: TVariables;
 }
 

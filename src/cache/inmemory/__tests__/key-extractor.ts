@@ -1,5 +1,5 @@
 import { KeySpecifier } from "../policies";
-import { canonicalStringify } from "../object-canon";
+import { canonicalStringify } from "../../../utilities";
 import {
   getSpecifierPaths,
   collectSpecifierPaths,

@@ -34,6 +34,7 @@ import wrap from "../../testing/core/wrap";
 import { resetStore } from "./QueryManager";
 import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
+import { ObservableStream } from "../../testing/internal";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
@@ -1085,6 +1086,98 @@ describe("ObservableQuery", () => {
         });
       }
     );
+
+    it("calling refetch with different variables before the query itself resolved will only yield the result for the new variables", async () => {
+      const observers: SubscriptionObserver<FetchResult<typeof dataOne>>[] = [];
+      const queryManager = new QueryManager({
+        cache: new InMemoryCache(),
+        link: new ApolloLink((operation, forward) => {
+          return new Observable((observer) => {
+            observers.push(observer);
+          });
+        }),
+      });
+      const observableQuery = queryManager.watchQuery({
+        query,
+        variables: { id: 1 },
+      });
+      const stream = new ObservableStream(observableQuery);
+
+      observableQuery.refetch({ id: 2 });
+
+      observers[0].next({ data: dataOne });
+      observers[0].complete();
+
+      observers[1].next({ data: dataTwo });
+      observers[1].complete();
+
+      {
+        const result = await stream.takeNext();
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: dataTwo,
+        });
+      }
+      expect(stream.take()).rejects.toThrow(/Timeout/i);
+    });
+
+    it("calling refetch multiple times with different variables will return only results for the most recent variables", async () => {
+      const observers: SubscriptionObserver<FetchResult<typeof dataOne>>[] = [];
+      const queryManager = new QueryManager({
+        cache: new InMemoryCache(),
+        link: new ApolloLink((operation, forward) => {
+          return new Observable((observer) => {
+            observers.push(observer);
+          });
+        }),
+      });
+      const observableQuery = queryManager.watchQuery({
+        query,
+        variables: { id: 1 },
+      });
+      const stream = new ObservableStream(observableQuery);
+
+      observers[0].next({ data: dataOne });
+      observers[0].complete();
+
+      {
+        const result = await stream.takeNext();
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: dataOne,
+        });
+      }
+
+      observableQuery.refetch({ id: 2 });
+      observableQuery.refetch({ id: 3 });
+
+      observers[1].next({ data: dataTwo });
+      observers[1].complete();
+
+      observers[2].next({
+        data: {
+          people_one: {
+            name: "SomeOneElse",
+          },
+        },
+      });
+      observers[2].complete();
+
+      {
+        const result = await stream.takeNext();
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            people_one: {
+              name: "SomeOneElse",
+            },
+          },
+        });
+      }
+    });
 
     itAsync(
       "calls fetchRequest with fetchPolicy `no-cache` when using `no-cache` fetch policy",

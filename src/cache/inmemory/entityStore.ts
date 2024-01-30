@@ -32,6 +32,7 @@ import type {
   DeleteModifier,
   ModifierDetails,
 } from "../core/types/common.js";
+import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 
 const DELETE: DeleteModifier = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;
@@ -522,6 +523,27 @@ export abstract class EntityStore implements NormalizedCache {
   }
 
   // Used to compute cache keys specific to this.group.
+  /** overload for `InMemoryCache.maybeBroadcastWatch` */
+  public makeCacheKey(
+    document: DocumentNode,
+    callback: Cache.WatchCallback<any>,
+    details: string
+  ): object;
+  /** overload for `StoreReader.executeSelectionSet` */
+  public makeCacheKey(
+    selectionSet: SelectionSetNode,
+    parent: string /* = ( Reference.__ref ) */ | StoreObject,
+    varString: string | undefined,
+    canonizeResults: boolean
+  ): object;
+  /** overload for `StoreReader.executeSubSelectedArray` */
+  public makeCacheKey(
+    field: FieldNode,
+    array: readonly any[],
+    varString: string | undefined
+  ): object;
+  /** @deprecated This is only meant for internal usage,
+   * in your own code please use a `Trie` instance instead. */
   public makeCacheKey(...args: any[]): object;
   public makeCacheKey() {
     return this.group.keyMaker.lookupArray(arguments);

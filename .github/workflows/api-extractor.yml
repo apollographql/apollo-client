@@ -19,8 +19,6 @@ jobs:
       - name: Install dependencies (with cache)
         uses: bahmutov/npm-install@v1
 
-      - name: Run build
-        run: npm run build
-
+        # Builds the library and runs the api extractor
       - name: Run Api-Extractor
         run: npm run extract-api

@@ -89,6 +89,24 @@ jobs:
           command: npm run test --workspace=<< parameters.framework >>
           working_directory: integration-tests
 
+  TestPeerDepTypes:
+    parameters:
+      externalPackage:
+        type: string
+    docker:
+      - image: cimg/node:20.6.1
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          working_directory: integration-tests/peerdeps-tsc
+          command: |
+            npm install
+            npm install @apollo/client@/tmp/workspace/apollo-client.tgz
+            npm install << parameters.externalPackage >>
+            npm test
+
 workflows:
   Build and Test:
     jobs:
@@ -112,6 +130,20 @@ workflows:
                 - vite
                 - vite-swc
                 # -browser-esm would need a package publish to npm/CDNs
+      - TestPeerDepTypes:
+          name: Test external types for << matrix.externalPackage >>
+          requires:
+            - BuildTarball
+          matrix:
+            parameters:
+              externalPackage:
+                - "graphql@15"
+                - "graphql@16"
+                - "graphql@^17.0.0-alpha"
+                - "@types/react@16.8 @types/react-dom@16.8"
+                - "@types/react@17 @types/react-dom@17"
+                - "@types/react@18 @types/react-dom@18"
+                - "typescript@next"
   security-scans:
     jobs:
       - secops/gitleaks:

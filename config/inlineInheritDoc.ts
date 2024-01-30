@@ -24,9 +24,12 @@
 /** End file docs */
 
 // @ts-ignore
+import { buildDocEntryPoints } from "./entryPoints.js";
+// @ts-ignore
 import { Project, ts, printNode, Node } from "ts-morph";
 import { ApiModel, ApiDocumentedItem } from "@microsoft/api-extractor-model";
 import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference";
+import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
 
 import fs from "node:fs";
 import path from "node:path";
@@ -53,7 +56,12 @@ function getCommentFor(canonicalReference: string) {
       `Could not resolve canonical reference "${canonicalReference}"`
     );
   if (apiItem instanceof ApiDocumentedItem) {
-    return apiItem.tsdocComment?.emitAsTsdoc();
+    if (!apiItem.tsdocComment) return "";
+    const stringBuilder = new StringBuilder();
+    const emitter = new TSDocEmitter();
+    emitter["_emitCommentFraming"] = false;
+    emitter["_renderCompleteObject"](stringBuilder, apiItem.tsdocComment);
+    return stringBuilder.toString();
   } else {
     throw new Error(
       `"${canonicalReference}" is not documented, so no documentation can be inherited.`
@@ -64,6 +72,9 @@ function getCommentFor(canonicalReference: string) {
 function loadApiModel() {
   const tempDir = fs.mkdtempSync("api-model");
   try {
+    const entryPointFile = path.join(tempDir, "entry.d.ts");
+    fs.writeFileSync(entryPointFile, buildDocEntryPoints());
+
     // Load and parse the api-extractor.json file
     const configObjectFullPath = path.resolve(
       __dirname,
@@ -73,6 +84,7 @@ function loadApiModel() {
     const tempModelFile = path.join(tempDir, "client.api.json");
 
     const configObject = ExtractorConfig.loadFile(configObjectFullPath);
+    configObject.mainEntryPointFilePath = entryPointFile;
     configObject.docModel = {
       ...configObject.docModel,
       enabled: true,
@@ -128,21 +140,32 @@ function processComments() {
   const sourceFiles = project.addSourceFilesAtPaths("dist/**/*.d.ts");
   for (const file of sourceFiles) {
     file.forEachDescendant((node) => {
-      if (Node.isPropertySignature(node)) {
+      if (
+        Node.isPropertySignature(node) ||
+        Node.isMethodSignature(node) ||
+        Node.isCallSignatureDeclaration(node)
+      ) {
         const docsNode = node.getJsDocs()[0];
         if (!docsNode) return;
         const oldText = docsNode.getInnerText();
-        const newText = oldText.replace(
-          inheritDocRegex,
-          (_, canonicalReference) => {
-            return getCommentFor(canonicalReference) || "";
-          }
-        );
+        let newText = oldText;
+        while (inheritDocRegex.test(newText)) {
+          newText = newText.replace(
+            inheritDocRegex,
+            (_, canonicalReference) => {
+              return getCommentFor(canonicalReference) || "";
+            }
+          );
+        }
         if (oldText !== newText) {
-          docsNode.replaceWithText(newText);
+          docsNode.replaceWithText(frameComment(newText)) as any;
         }
       }
     });
     file.saveSync();
   }
+}
+
+function frameComment(text: string) {
+  return `/**\n * ${text.trim().replace(/\n/g, "\n * ")}\n */`;
 }

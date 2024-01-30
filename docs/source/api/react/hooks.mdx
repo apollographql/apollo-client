@@ -1,25 +1,27 @@
 ---
 title: Hooks
 description: Apollo Client react hooks API reference
+minVersion: 3.0.0
+api_doc:
+  - "@apollo/client!SuspenseQueryHookOptions:interface"
+  - "@apollo/client!useQuery:function(1)"
+  - "@apollo/client!useLazyQuery:function(1)"
+  - "@apollo/client!useMutation:function(1)"
+  - "@apollo/client!useSubscription:function(1)"
+  - "@apollo/client!useApolloClient:function(1)"
+  - "@apollo/client!useReactiveVar:function(1)"
+  - "@apollo/client!useLoadableQuery:function(5)"
+  - "@apollo/client!useQueryRefHandlers:function(1)"
 ---
 
-import QueryOptions3 from '../../../shared/query-options.mdx';
-import QueryResult3 from '../../../shared/query-result.mdx';
-import MutationOptions3 from '../../../shared/mutation-options.mdx';
-import MutationResult3 from '../../../shared/mutation-result.mdx';
-import SubscriptionOptions3 from '../../../shared/subscription-options.mdx';
-import SubscriptionResult3 from '../../../shared/subscription-result.mdx';
 import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
 import UseFragmentResult from '../../../shared/useFragment-result.mdx';
-import UseSuspenseQueryOptions from '../../../shared/useSuspenseQuery-options.mdx';
 import UseBackgroundQueryOptions from '../../../shared/useBackgroundQuery-options.mdx';
 import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx';
 import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
 import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
-
-## Installation
-
-Apollo Client >= 3 includes React hooks functionality out of the box. You don't need to install any additional packages.
+import { FunctionDetails, PropertySignatureTable, ManualTuple, InterfaceDetails } from '../../../shared/ApiDoc';
+import { UseLoadableQueryResult } from '../../../shared/Overrides/UseLoadableQueryResult'
 
 ## The `ApolloProvider` component
 
@@ -69,350 +71,93 @@ function WithApolloClient() {
 }
 ```
 
-## `useQuery`
+<FunctionDetails canonicalReference="@apollo/client!useQuery:function(1)" headingLevel={2} />
 
-### Example
+<FunctionDetails canonicalReference="@apollo/client!useLazyQuery:function(1)" headingLevel={2}
+result={<div>
+<pre><code class="language-ts">
+[execute: LazyQueryExecFunction&lt;TData, TVariables&gt;, result: QueryResult&lt;TData, TVariables&gt;]
+</code></pre>
 
-```jsx
-import { gql, useQuery } from '@apollo/client';
+A tuple of two values:
 
-const GET_GREETING = gql`
-  query GetGreeting($language: String!) {
-    greeting(language: $language) {
-      message
-    }
+<ManualTuple idPrefix="uselazyquery-result" elements={[
+  {
+    name: "execute",
+    type: "(options?: LazyQueryHookOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>",
+    description: "Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails."
+  },
+  {
+    name: "result",
+    type: "QueryResult<TData, TVariables>",
+    description: "The result of the query. See the `useQuery` hook for more details.",
+    canonicalReference: "@apollo/client!QueryResult:interface"
   }
-`;
+]}/>
+</div>}
+/>
 
-function Hello() {
-  const { loading, error, data } = useQuery(GET_GREETING, {
-    variables: { language: 'english' },
-  });
-  if (loading) return <p>Loading ...</p>;
-  return <h1>Hello {data.greeting.message}!</h1>;
-}
-```
-
-> Refer to the [Queries](../../data/queries/) section for a more in-depth overview of `useQuery`.
-
-### Signature
-
-```ts
-function useQuery<TData = any, TVariables = OperationVariables>(
-  query: DocumentNode,
-  options?: QueryHookOptions<TData, TVariables>,
-): QueryResult<TData, TVariables> {}
-```
-
-### Params
-
-#### `query`
-
-| Param   | Type         | Description                                                   |
-| ------- | ------------ | ------------------------------------------------------------- |
-| `query` | DocumentNode | A GraphQL query document parsed into an AST by `gql`. |
-
-#### `options`
-
-<QueryOptions3 />
-
-### Result
-
-<QueryResult3 />
-
-## `useLazyQuery`
-
-### Example
-
-```jsx
-import { gql, useLazyQuery } from "@apollo/client";
-
-const GET_GREETING = gql`
-  query GetGreeting($language: String!) {
-    greeting(language: $language) {
-      message
-    }
-  }
-`;
-
-function Hello() {
-  const [loadGreeting, { called, loading, data }] = useLazyQuery(
-    GET_GREETING,
-    { variables: { language: "english" } }
-  );
-  if (called && loading) return <p>Loading ...</p>
-  if (!called) {
-    return <button onClick={() => loadGreeting()}>Load greeting</button>
-  }
-  return <h1>Hello {data.greeting.message}!</h1>;
-}
-```
-
-> Refer to the [Queries](../../data/queries/) section for a more in-depth overview of `useLazyQuery`.
-
-### Signature
-
-```ts
-function useLazyQuery<TData = any, TVariables = OperationVariables>(
-  query: DocumentNode,
-  options?: LazyQueryHookOptions<TData, TVariables>,
-): [
-  (options?: LazyQueryHookOptions<TData, TVariables>) => Promise<LazyQueryResult<TData, TVariables>>,
-  LazyQueryResult<TData, TVariables>
-] {}
-```
-
-### Params
-
-#### `query`
-
-| Param   | Type         | Description                                                   |
-| ------- | ------------ | ------------------------------------------------------------- |
-| `query` | DocumentNode | A GraphQL query document parsed into an AST by `gql`. |
-
-#### `options`
-
-<QueryOptions3 />
-
-### Result tuple
-
-**Execute function (first tuple item)**
-
-| Param            | Type                                                  | Description                                                                                                                     |
-| ---------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Execute function | `(options?: LazyQueryHookOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>` | Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails. |
-
-**`LazyQueryResult<TData, TVariables>` object (second tuple item)**
-
-<QueryResult3 />
-
-## `useMutation`
-
-### Example
-
-```jsx
-import { gql, useMutation } from '@apollo/client';
-
-const ADD_TODO = gql`
-  mutation AddTodo($type: String!) {
-    addTodo(type: $type) {
-      id
-      type
-    }
-  }
-`;
-
-function AddTodo() {
-  let input;
-  const [addTodo, { data }] = useMutation(ADD_TODO);
-
-  return (
+<FunctionDetails
+  canonicalReference="@apollo/client!useMutation:function(1)"
+  headingLevel={2}
+  result={
     <div>
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          addTodo({ variables: { type: input.value } });
-          input.value = '';
-        }}
-      >
-        <input
-          ref={node => {
-            input = node;
-          }}
-        />
-        <button type="submit">Add Todo</button>
-      </form>
+      <pre>
+        <code class="language-ts">
+        {`[
+  mutate: (options?: MutationFunctionOptions<TData, TVariables>) => Promise<FetchResult<TData>>,
+  result: MutationResult<TData>
+]`}
+        </code>
+      </pre>
+      A tuple of two values:
+      <ManualTuple
+        idPrefix="usemutation-result"
+        elements={[
+          {
+            name: "mutate",
+            type: `(
+    options?: MutationFunctionOptions<TData, TVariables>
+  ) => Promise<FetchResult<TData>>`,
+            description: <div>
+A function to trigger the mutation from your UI. You can optionally pass this function any of the following options:
+
+<ul>
+<li><code>awaitRefetchQueries</code></li>
+<li><code>context</code></li>
+<li><code>fetchPolicy</code></li>
+<li><code>onCompleted</code></li>
+<li><code>onError</code></li>
+<li><code>optimisticResponse</code></li>
+<li><code>refetchQueries</code></li>
+<li><code>onQueryUpdated</code></li>
+<li><code>update</code></li>
+<li><code>variables</code></li>
+<li><code>client</code></li>
+</ul>
+
+Any option you pass here overrides any existing value for that option that you passed to <code>useMutation</code>.
+
+The mutate function returns a promise that fulfills with your mutation result.
+</div>,
+          },
+          {
+            name: "result",
+            type: "MutationResult<TData>",
+            description: "The result of the mutation.",
+            canonicalReference: "@apollo/client!MutationResult:interface",
+          },
+        ]}
+      />
     </div>
-  );
-}
-```
-
-> Refer to the [Mutations](../../data/mutations/) section for a more in-depth overview of `useMutation`.
-
-### Signature
-
-```ts
-function useMutation<TData = any, TVariables = OperationVariables>(
-  mutation: DocumentNode,
-  options?: MutationHookOptions<TData, TVariables>,
-): MutationTuple<TData, TVariables> {}
-```
-
-### Params
-
-#### `mutation`
-
-| Param      | Type         | Description                                                      |
-| ---------- | ------------ | ---------------------------------------------------------------- |
-| `mutation` | DocumentNode | A GraphQL mutation document parsed into an AST by `gql`. |
-
-#### `options`
-
-<MutationOptions3 />
-
-### `MutationTuple<TData, TVariables>` result tuple
-
-<MutationResult3 />
-
-## `useSubscription`
-
-### Example
-
-```jsx
-const COMMENTS_SUBSCRIPTION = gql`
-  subscription OnCommentAdded($repoFullName: String!) {
-    commentAdded(repoFullName: $repoFullName) {
-      id
-      content
-    }
   }
-`;
+/>
 
-function DontReadTheComments({ repoFullName }) {
-  const {
-    data: { commentAdded },
-    loading,
-  } = useSubscription(COMMENTS_SUBSCRIPTION, { variables: { repoFullName } });
-  return <h4>New comment: {!loading && commentAdded.content}</h4>;
-}
-```
+<FunctionDetails canonicalReference="@apollo/client!useSubscription:function(1)" headingLevel={2} />
 
-> Refer to the [Subscriptions](../../data/subscriptions/) section for a more in-depth overview of `useSubscription`.
+<FunctionDetails canonicalReference="@apollo/client!useApolloClient:function(1)" headingLevel={2} />
 
-#### Subscriptions and React 18 Automatic Batching
-
-With React 18's [automatic batching](https://react.dev/blog/2022/03/29/react-v18#new-feature-automatic-batching), multiple state updates may be grouped into a single re-render for better performance.
-
-If your subscription API sends multiple messages at the same time or in very fast succession (within fractions of a millisecond), it is likely that only the last message received in that narrow time frame will result in a re-render.
-
-Consider the following component:
-
-```jsx
-export function Subscriptions() {
-  const { data, error, loading } = useSubscription(query);
-  const [accumulatedData, setAccumulatedData] = useState([]);
-
-  useEffect(() => {
-    setAccumulatedData((prev) => [...prev, data]);
-  }, [data]);
-
-  return (
-    <>
-      {loading && <p>Loading...</p>}
-      {JSON.stringify(accumulatedData, undefined, 2)}
-    </>
-  );
-}
-```
-
-If your subscription back-end emits two messages with the same timestamp, only the last message received by Apollo Client will be rendered. This is because React 18 will batch these two state updates into a single re-render.
-
-Since the component above is using `useEffect` to push `data` into a piece of local state on each `Subscriptions` re-render, the first message will never be added to the `accumulatedData` array since its render was skipped.
-
-Instead of using `useEffect` here, we can re-write this component to use the `onData` callback function accepted in `useSubscription`'s `options` object:
-
-```jsx
-export function Subscriptions() {
-  const [accumulatedData, setAccumulatedData] = useState([]);
-  const { data, error, loading } = useSubscription(
-    query,
-    {
-      onData({ data }) {
-        setAccumulatedData((prev) => [...prev, data])
-      }
-    }
-  );
-
-  return (
-    <>
-      {loading && <p>Loading...</p>}
-      {JSON.stringify(accumulatedData, undefined, 2)}
-    </>
-  );
-}
-```
-
-> ⚠️ **Note:** The `useSubscription` option `onData` is available in Apollo Client >= 3.7. In previous versions, the equivalent option is named `onSubscriptionData`.
-
-Now, the first message will be added to the `accumulatedData` array since `onData` is called _before_ the component re-renders. React 18 automatic batching is still in effect and results in a single re-render, but with `onData` we can guarantee each message received after the component mounts is added to `accumulatedData`.
-
-### Signature
-
-```ts
-function useSubscription<TData = any, TVariables = OperationVariables>(
-  subscription: DocumentNode,
-  options?: SubscriptionHookOptions<TData, TVariables>,
-): {
-  variables: TVariables;
-  loading: boolean;
-  data?: TData;
-  error?: ApolloError;
-} {}
-```
-
-### Params
-
-#### `subscription`
-
-| Param          | Type         | Description                                                          |
-| -------------- | ------------ | -------------------------------------------------------------------- |
-| `subscription` | DocumentNode | A GraphQL subscription document parsed into an AST by `gql`. |
-
-#### `options`
-
-<SubscriptionOptions3 />
-
-### Result
-
-<SubscriptionResult3 />
-
-## `useApolloClient`
-
-### Example
-
-```jsx
-import { useApolloClient } from '@apollo/client';
-
-function SomeComponent() {
-  const client = useApolloClient();
-  // `client` is now set to the `ApolloClient` instance being used by the
-  // application (that was configured using something like `ApolloProvider`)
-}
-```
-
-### Signature
-
-```ts
-function useApolloClient(): ApolloClient<object> {}
-```
-
-### Result
-
-| Param                  | Type                       | Description                                                |
-| ---------------------- | -------------------------- | ---------------------------------------------------------- |
-| Apollo Client instance | ApolloClient&lt;object&gt; | The `ApolloClient` instance being used by the application. |
-
-
-## `useReactiveVar`
-
-Reads the value of a [reactive variable](../../local-state/reactive-variables/) and re-renders the containing component whenever that variable's value changes. This enables a reactive variable to trigger changes _without_ relying on the `useQuery` hook.
-
-### Example
-
-```jsx
-import { makeVar, useReactiveVar } from "@apollo/client";
-export const cartItemsVar = makeVar([]);
-
-export function Cart() {
-  const cartItems = useReactiveVar(cartItemsVar);
-  // ...
-```
-
-### Signature
-
-```tsx
-function useReactiveVar<T>(rv: ReactiveVar<T>): T {}
-```
+<FunctionDetails canonicalReference="@apollo/client!useReactiveVar:function(1)" headingLevel={2} />
 
 <MinVersion version="3.8.0">
 
@@ -443,7 +188,6 @@ function useFragment<
   optimistic?: boolean;
   variables?: TVars;
   returnPartialData?: boolean;
-  canonizeResults?: boolean;
 }): UseFragmentResult<TData> {}
 ```
 
@@ -521,7 +265,11 @@ function useSuspenseQuery<TData, TVariables>(
 
 Instead of passing a `SuspenseQueryHookOptions` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
 
-<UseSuspenseQueryOptions />
+<InterfaceDetails
+  canonicalReference="@apollo/client!SuspenseQueryHookOptions:interface"
+  customPropertyOrder={["variables", "errorPolicy", "skip"]}
+  headingLevel={3}
+/>
 
 ### Result
 
@@ -659,6 +407,14 @@ function useReadQuery<TData>(
 ### Result
 
 <UseReadQueryResult />
+
+<FunctionDetails
+  canonicalReference="@apollo/client!useLoadableQuery:function(5)"
+  headingLevel={2}
+  result={<UseLoadableQueryResult />}
+/>
+
+<FunctionDetails canonicalReference="@apollo/client!useQueryRefHandlers:function(1)" headingLevel={2} />
 
 <MinVersion version="3.8.0">
 

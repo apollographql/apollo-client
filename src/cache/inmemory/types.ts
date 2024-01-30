@@ -119,6 +119,13 @@ export type ReadQueryOptions = {
   query: DocumentNode;
   variables?: Object;
   previousResult?: any;
+  /**
+   * @deprecated
+   * Using `canonizeResults` can result in memory leaks so we generally do not
+   * recommend using this option anymore.
+   * A future version of Apollo Client will contain a similar feature without
+   * the risk of memory leaks.
+   */
   canonizeResults?: boolean;
   rootId?: string;
   config?: ApolloReducerConfig;
@@ -137,7 +144,17 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
   possibleTypes?: PossibleTypesMap;
   typePolicies?: TypePolicies;
+  /**
+   * @deprecated
+   * Please use `cacheSizes` instead.
+   */
   resultCacheMaxSize?: number;
+  /**
+   * @deprecated
+   * Using `canonizeResults` can result in memory leaks so we generally do not
+   * recommend using this option anymore.
+   * A future version of Apollo Client will contain a similar feature.
+   */
   canonizeResults?: boolean;
   fragments?: FragmentRegistryAPI;
 }

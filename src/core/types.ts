@@ -139,7 +139,7 @@ export type { QueryOptions as PureQueryOptions };
 
 export type OperationVariables = Record<string, any>;
 
-export type ApolloQueryResult<T> = {
+export interface ApolloQueryResult<T> {
   data: T;
   /**
    * A list of any errors that occurred during server-side execution of a GraphQL operation.
@@ -158,7 +158,7 @@ export type ApolloQueryResult<T> = {
   // result.partial will be true. Otherwise, result.partial will be falsy
   // (usually because the property is absent from the result object).
   partial?: boolean;
-};
+}
 
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (
@@ -174,7 +174,9 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
 
-// @deprecated Use MutationUpdaterFunction instead.
+/**
+ * @deprecated Use `MutationUpdaterFunction` instead.
+ */
 export type MutationUpdaterFn<T = { [key: string]: any }> = (
   // The MutationUpdaterFn type is broken because it mistakenly uses the same
   // type parameter T for both the cache and the mutationResult. Do not use this

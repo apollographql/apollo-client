@@ -634,6 +634,7 @@ describe("HttpLink", () => {
         expect(subscriber.next).toHaveBeenCalledTimes(2);
         expect(subscriber.complete).toHaveBeenCalledTimes(2);
         expect(subscriber.error).not.toHaveBeenCalled();
+        expect(fetchMock.calls().length).toBe(2);
         resolve();
       }, 50);
     });

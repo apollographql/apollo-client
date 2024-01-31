@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2024-01-16**
+**Last updated: 2024-01-29**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -15,9 +15,9 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ## [3.9.0](https://github.com/apollographql/apollo-client/milestone/32)
 
-_Currently in beta phase_
+_Currently in RC phase_
 
-  Tentative rc date: Jan 17, 2024
+  Tentative date: Jan 31, 2024
 
 Features include:
 

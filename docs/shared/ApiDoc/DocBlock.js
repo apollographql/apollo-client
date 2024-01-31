@@ -11,10 +11,12 @@ export function DocBlock({
   example = false,
   remarksCollapsible = false,
   deprecated = false,
+  releaseTag = false,
 }) {
   return (
     <Stack spacing="4">
       {deprecated && <Deprecated canonicalReference={canonicalReference} />}
+      {releaseTag && <ReleaseTag canonicalReference={canonicalReference} />}
       {summary && <Summary canonicalReference={canonicalReference} />}
       {remarks && (
         <Remarks
@@ -129,4 +131,31 @@ Example.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   collapsible: PropTypes.bool,
   index: PropTypes.number,
+};
+
+export function ReleaseTag({ canonicalReference }) {
+  const getItem = useApiDocContext();
+  const item = getItem(canonicalReference);
+  const MDX = useMDXComponents();
+
+  if (item.releaseTag === "Public") {
+    return null;
+  }
+
+  return (
+    <MDX.ExperimentalFeature>
+      This is in{" "}
+      <MDX.PrimaryLink
+        href="https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta"
+        target="_blank"
+      >
+        {item.releaseTag.toLowerCase()} stage
+      </MDX.PrimaryLink>{" "}
+      and is subject to breaking changes.
+    </MDX.ExperimentalFeature>
+  );
+}
+
+ReleaseTag.propTypes = {
+  canonicalReference: PropTypes.string.isRequired,
 };

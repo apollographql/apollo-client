@@ -92,7 +92,12 @@ describe("RetryLink", () => {
     expect(unsubscribeStub).toHaveBeenCalledTimes(1);
   });
 
-  it("supports multiple subscribers to the same request", async () => {
+  it("multiple subscribers will trigger multiple requests", async () => {
+    const subscriber = {
+      next: jest.fn(console.log),
+      error: jest.fn(console.error),
+      complete: jest.fn(console.info),
+    };
     const retry = new RetryLink({
       delay: { initial: 1 },
       attempts: { max: 5 },
@@ -102,13 +107,19 @@ describe("RetryLink", () => {
     stub.mockReturnValueOnce(fromError(standardError));
     stub.mockReturnValueOnce(fromError(standardError));
     stub.mockReturnValueOnce(Observable.of(data));
+    stub.mockReturnValueOnce(fromError(standardError));
+    stub.mockReturnValueOnce(fromError(standardError));
+    stub.mockReturnValueOnce(Observable.of(data));
     const link = ApolloLink.from([retry, stub]);
 
     const observable = execute(link, { query });
-    const [result1, result2] = (await waitFor(observable, observable)) as any;
-    expect(result1.values).toEqual([data]);
-    expect(result2.values).toEqual([data]);
-    expect(stub).toHaveBeenCalledTimes(3);
+    observable.subscribe(subscriber);
+    observable.subscribe(subscriber);
+    await new Promise((resolve) => setTimeout(resolve, 3500));
+    expect(subscriber.next).toHaveBeenNthCalledWith(1, data);
+    expect(subscriber.next).toHaveBeenNthCalledWith(2, data);
+    expect(subscriber.complete).toHaveBeenCalledTimes(2);
+    expect(stub).toHaveBeenCalledTimes(6);
   });
 
   it("retries independently for concurrent requests", async () => {

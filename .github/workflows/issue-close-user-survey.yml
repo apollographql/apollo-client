@@ -1,0 +1,27 @@
+name: Issue Close User Survey
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  user-survey-comment:
+    permissions:
+      issues: write
+    runs-on: ubuntu-latest
+    if: github.repository == 'apollographql/apollo-client'
+    steps:
+      - run: |
+          if [ "$STATE_REASON" == "completed" ] || [ "$SENDER" != "github-actions" ]; then
+            gh issue comment "$NUMBER" --body "$BODY"
+          else
+            echo "Issue was closed as not planned, skipping comment."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          STATE_REASON: ${{ github.event.issue.state_reason }}
+          SENDER: ${{ github.event.sender.login }}
+          BODY: >
+            Do you have any feedback for the maintainers? Please tell us by taking a [one-minute survey](https://docs.google.com/forms/d/e/1FAIpQLSczNDXfJne3ZUOXjk9Ursm9JYvhTh1_nFTDfdq3XBAFWCzplQ/viewform?usp=pp_url&entry.1170701325=Apollo+Client&entry.204965213=GitHub+Issue). Your responses will help us understand Apollo Client usage and allow us to serve you better.

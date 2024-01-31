@@ -2,8 +2,14 @@ import { wrap } from "optimism";
 import type { DocumentNode, TypeNode } from "graphql";
 import { Kind, visit } from "graphql";
 import { ApolloLink } from "../core/index.js";
-import { stripTypename, isPlainObject } from "../../utilities/index.js";
+import {
+  stripTypename,
+  isPlainObject,
+  cacheSizes,
+  defaultCacheSizes,
+} from "../../utilities/index.js";
 import type { OperationVariables } from "../../core/index.js";
+import { WeakCache } from "@wry/caches";
 
 export const KEEP = "__KEEP";
 
@@ -18,19 +24,32 @@ export interface RemoveTypenameFromVariablesOptions {
 export function removeTypenameFromVariables(
   options: RemoveTypenameFromVariablesOptions = Object.create(null)
 ) {
-  return new ApolloLink((operation, forward) => {
-    const { except } = options;
-    const { query, variables } = operation;
+  return Object.assign(
+    new ApolloLink((operation, forward) => {
+      const { except } = options;
+      const { query, variables } = operation;
 
-    if (variables) {
-      operation.variables =
-        except ?
-          maybeStripTypenameUsingConfig(query, variables, except)
-        : stripTypename(variables);
-    }
+      if (variables) {
+        operation.variables =
+          except ?
+            maybeStripTypenameUsingConfig(query, variables, except)
+          : stripTypename(variables);
+      }
 
-    return forward(operation);
-  });
+      return forward(operation);
+    }),
+    __DEV__ ?
+      {
+        getMemoryInternals() {
+          return {
+            removeTypenameFromVariables: {
+              getVariableDefinitions: getVariableDefinitions?.size ?? 0,
+            },
+          };
+        },
+      }
+    : {}
+  );
 }
 
 function maybeStripTypenameUsingConfig(
@@ -95,17 +114,25 @@ function maybeStripTypename(
   return value;
 }
 
-const getVariableDefinitions = wrap((document: DocumentNode) => {
-  const definitions: Record<string, string> = {};
+const getVariableDefinitions = wrap(
+  (document: DocumentNode) => {
+    const definitions: Record<string, string> = {};
 
-  visit(document, {
-    VariableDefinition(node) {
-      definitions[node.variable.name.value] = unwrapType(node.type);
-    },
-  });
+    visit(document, {
+      VariableDefinition(node) {
+        definitions[node.variable.name.value] = unwrapType(node.type);
+      },
+    });
 
-  return definitions;
-});
+    return definitions;
+  },
+  {
+    max:
+      cacheSizes["removeTypenameFromVariables.getVariableDefinitions"] ||
+      defaultCacheSizes["removeTypenameFromVariables.getVariableDefinitions"],
+    cache: WeakCache,
+  }
+);
 
 function unwrapType(node: TypeNode): string {
   switch (node.kind) {

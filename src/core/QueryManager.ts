@@ -8,6 +8,7 @@ import { equal } from "@wry/equality";
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
 import {
+  defaultCacheSizes,
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
@@ -27,7 +28,6 @@ import {
   hasClientExports,
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
-  canUseWeakMap,
   Observable,
   asyncMap,
   isNonEmptyArray,
@@ -62,6 +62,7 @@ import type {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueriesMap,
+  DefaultContext,
 } from "./types.js";
 import { LocalState } from "./LocalState.js";
 
@@ -74,9 +75,12 @@ import {
 import type { ApolloErrorOptions } from "../errors/index.js";
 import { PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
 import { print } from "../utilities/index.js";
+import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { TODO } from "../utilities/types/TODO.js";
 
 const { hasOwnProperty } = Object.prototype;
+
+const IGNORE: IgnoreModifier = Object.create(null);
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -98,6 +102,8 @@ interface TransformCacheEntry {
 }
 
 import type { DefaultOptions } from "./ApolloClient.js";
+import { Trie } from "@wry/trie";
+import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -107,6 +113,7 @@ export class QueryManager<TStore> {
   public readonly assumeImmutableResults: boolean;
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
+  public readonly defaultContext: Partial<DefaultContext>;
 
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
@@ -138,6 +145,7 @@ export class QueryManager<TStore> {
     clientAwareness = {},
     localState,
     assumeImmutableResults = !!cache.assumeImmutableResults,
+    defaultContext,
   }: {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
@@ -149,6 +157,7 @@ export class QueryManager<TStore> {
     clientAwareness?: Record<string, string>;
     localState?: LocalState<TStore>;
     assumeImmutableResults?: boolean;
+    defaultContext?: Partial<DefaultContext>;
   }) {
     const defaultDocumentTransform = new DocumentTransform(
       (document) => this.cache.transformDocument(document),
@@ -174,10 +183,20 @@ export class QueryManager<TStore> {
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform;
+    this.defaultContext = defaultContext || Object.create(null);
 
     if ((this.onBroadcast = onBroadcast)) {
       this.mutationStore = Object.create(null);
     }
+
+    // TODO: remove before we release 3.9
+    Object.defineProperty(this.inFlightLinkObservables, "get", {
+      value: () => {
+        throw new Error(
+          "This version of Apollo Client requires at least @apollo/experimental-nextjs-app-support version 0.5.2."
+        );
+      },
+    });
   }
 
   /**
@@ -253,7 +272,8 @@ export class QueryManager<TStore> {
         error: null,
       } as MutationStoreValue);
 
-    if (optimisticResponse) {
+    const isOptimistic =
+      optimisticResponse &&
       this.markMutationOptimistic<TData, TVariables, TContext, TCache>(
         optimisticResponse,
         {
@@ -268,7 +288,6 @@ export class QueryManager<TStore> {
           keepRootFields,
         }
       );
-    }
 
     this.broadcastQueries();
 
@@ -280,7 +299,7 @@ export class QueryManager<TStore> {
           mutation,
           {
             ...context,
-            optimisticResponse,
+            optimisticResponse: isOptimistic ? optimisticResponse : void 0,
           },
           variables,
           false
@@ -320,7 +339,7 @@ export class QueryManager<TStore> {
             updateQueries,
             awaitRefetchQueries,
             refetchQueries,
-            removeOptimistic: optimisticResponse ? mutationId : void 0,
+            removeOptimistic: isOptimistic ? mutationId : void 0,
             onQueryUpdated,
             keepRootFields,
           });
@@ -345,7 +364,7 @@ export class QueryManager<TStore> {
             mutationStoreValue.error = err;
           }
 
-          if (optimisticResponse) {
+          if (isOptimistic) {
             self.cache.removeOptimistic(mutationId);
           }
 
@@ -595,10 +614,14 @@ export class QueryManager<TStore> {
   ) {
     const data =
       typeof optimisticResponse === "function" ?
-        optimisticResponse(mutation.variables)
+        optimisticResponse(mutation.variables, { IGNORE })
       : optimisticResponse;
 
-    return this.cache.recordOptimisticTransaction((cache) => {
+    if (data === IGNORE) {
+      return false;
+    }
+
+    this.cache.recordOptimisticTransaction((cache) => {
       try {
         this.markMutationResult<TData, TVariables, TContext, TCache>(
           {
@@ -611,6 +634,8 @@ export class QueryManager<TStore> {
         invariant.error(error);
       }
     }, mutation.mutationId);
+
+    return true;
   }
 
   public fetchQuery<TData, TVars extends OperationVariables>(
@@ -647,10 +672,13 @@ export class QueryManager<TStore> {
     return this.documentTransform.transformDocument(document);
   }
 
-  private transformCache = new (canUseWeakMap ? WeakMap : Map)<
+  private transformCache = new AutoCleanedWeakCache<
     DocumentNode,
     TransformCacheEntry
-  >();
+  >(
+    cacheSizes["queryManager.getDocumentInfo"] ||
+      defaultCacheSizes["queryManager.getDocumentInfo"]
+  );
 
   public getDocumentInfo(document: DocumentNode) {
     const { transformCache } = this;
@@ -1061,10 +1089,9 @@ export class QueryManager<TStore> {
 
   // Use protected instead of private field so
   // @apollo/experimental-nextjs-app-support can access type info.
-  protected inFlightLinkObservables = new Map<
-    string,
-    Map<string, Observable<FetchResult>>
-  >();
+  protected inFlightLinkObservables = new Trie<{
+    observable?: Observable<FetchResult<any>>;
+  }>(false);
 
   private getObservableFromLink<T = any>(
     query: DocumentNode,
@@ -1074,7 +1101,7 @@ export class QueryManager<TStore> {
     deduplication: boolean = context?.queryDeduplication ??
       this.queryDeduplication
   ): Observable<FetchResult<T>> {
-    let observable: Observable<FetchResult<T>>;
+    let observable: Observable<FetchResult<T>> | undefined;
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
     if (serverQuery) {
@@ -1094,24 +1121,22 @@ export class QueryManager<TStore> {
 
       if (deduplication) {
         const printedServerQuery = print(serverQuery);
-        const byVariables =
-          inFlightLinkObservables.get(printedServerQuery) || new Map();
-        inFlightLinkObservables.set(printedServerQuery, byVariables);
-
         const varJson = canonicalStringify(variables);
-        observable = byVariables.get(varJson);
 
+        const entry = inFlightLinkObservables.lookup(
+          printedServerQuery,
+          varJson
+        );
+
+        observable = entry.observable;
         if (!observable) {
           const concast = new Concast([
             execute(link, operation) as Observable<FetchResult<T>>,
           ]);
-
-          byVariables.set(varJson, (observable = concast));
+          observable = entry.observable = concast;
 
           concast.beforeNext(() => {
-            if (byVariables.delete(varJson) && byVariables.size < 1) {
-              inFlightLinkObservables.delete(printedServerQuery);
-            }
+            inFlightLinkObservables.remove(printedServerQuery, varJson);
           });
         }
       } else {
@@ -1178,7 +1203,7 @@ export class QueryManager<TStore> {
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
           // ones used to obtain it from the link.
-          queryInfo.markResult(
+          result = queryInfo.markResult(
             result,
             linkDocument,
             options,
@@ -1671,6 +1696,7 @@ export class QueryManager<TStore> {
   private prepareContext(context = {}) {
     const newContext = this.localState.prepareContext(context);
     return {
+      ...this.defaultContext,
       ...newContext,
       clientAwareness: this.clientAwareness,
     };

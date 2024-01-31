@@ -73,6 +73,51 @@ As this example shows, the value of `optimisticResponse` is an object that match
 
 5. Apollo Client notifies all affected queries again. The associated components re-render, but if the server's response matches our `optimisticResponse`, this is invisible to the user.
 
+## Bailing out of an optimistic update
+
+In some cases you may want to skip an optimistic update. For example, you may want to perform an optimistic update _only_ when certain variables are passed to the mutation. To skip an update, pass a function to the `optimisticResponse` option and return the `IGNORE` sentinel object available on the second argument to bail out of the optimistic update.
+
+Consider this example:
+
+```tsx
+const UPDATE_COMMENT = gql`
+  mutation UpdateComment($commentId: ID!, $commentContent: String!) {
+    updateComment(commentId: $commentId, content: $commentContent) {
+      id
+      __typename
+      content
+    }
+  }
+`;
+
+function CommentPageWithData() {
+  const [mutate] = useMutation(UPDATE_COMMENT);
+
+  return (
+    <Comment
+      updateComment={({ commentId, commentContent }) =>
+        mutate({
+          variables: { commentId, commentContent },
+          optimisticResponse: (vars, { IGNORE }) => {
+            if (commentContent === "foo") {
+              // conditionally bail out of optimistic updates
+              return IGNORE;
+            }
+            return {
+              updateComment: {
+                id: commentId,
+                __typename: "Comment",
+                content: commentContent
+              }
+            }
+          },
+        })
+      }
+    />
+  );
+}
+```
+
 ## Example: Adding a new object to a list
 
 The previous example shows how to provide an optimistic result for an object that's _already_ in the Apollo Client cache. But what about a mutation that creates a _new_ object? This works similarly.

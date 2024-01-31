@@ -1,4 +1,5 @@
 import type { DocumentNode } from "graphql";
+import type * as ReactTypes from "react";
 
 import { parser, DocumentType } from "../parser/index.js";
 import { withQuery } from "./query-hoc.js";
@@ -7,6 +8,11 @@ import { withSubscription } from "./subscription-hoc.js";
 import type { OperationOption, DataProps, MutateProps } from "./types.js";
 import type { OperationVariables } from "../../core/index.js";
 
+/**
+ * @deprecated
+ * Official support for React Apollo higher order components ended in March 2020.
+ * This library is still included in the `@apollo/client` package, but it no longer receives feature updates or bug fixes.
+ */
 export function graphql<
   TProps extends TGraphQLVariables | {} = {},
   TData extends object = {},
@@ -22,8 +28,8 @@ export function graphql<
     TChildProps
   > = {}
 ): (
-  WrappedComponent: React.ComponentType<TProps & TChildProps>
-) => React.ComponentClass<TProps> {
+  WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>
+) => ReactTypes.ComponentClass<TProps> {
   switch (parser(document).type) {
     case DocumentType.Mutation:
       return withMutation(document, operationOptions);

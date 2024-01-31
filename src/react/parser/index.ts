@@ -6,6 +6,12 @@ import type {
   VariableDefinitionNode,
   OperationDefinitionNode,
 } from "graphql";
+import {
+  AutoCleanedWeakCache,
+  cacheSizes,
+  defaultCacheSizes,
+} from "../../utilities/index.js";
+import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
 
 export enum DocumentType {
   Query,
@@ -19,7 +25,16 @@ export interface IDocumentDefinition {
   variables: ReadonlyArray<VariableDefinitionNode>;
 }
 
-const cache = new Map();
+let cache:
+  | undefined
+  | AutoCleanedWeakCache<
+      DocumentNode,
+      {
+        name: string;
+        type: DocumentType;
+        variables: readonly VariableDefinitionNode[];
+      }
+    >;
 
 export function operationName(type: DocumentType) {
   let name;
@@ -39,6 +54,11 @@ export function operationName(type: DocumentType) {
 
 // This parser is mostly used to safety check incoming documents.
 export function parser(document: DocumentNode): IDocumentDefinition {
+  if (!cache) {
+    cache = new AutoCleanedWeakCache(
+      cacheSizes.parser || defaultCacheSizes.parser
+    );
+  }
   const cached = cache.get(document);
   if (cached) return cached;
 
@@ -128,6 +148,14 @@ export function parser(document: DocumentNode): IDocumentDefinition {
   const payload = { name, type, variables };
   cache.set(document, payload);
   return payload;
+}
+
+parser.resetCache = () => {
+  cache = undefined;
+};
+
+if (__DEV__) {
+  registerGlobalCache("parser", () => (cache ? cache.size : 0));
 }
 
 export function verifyDocumentType(document: DocumentNode, type: DocumentType) {

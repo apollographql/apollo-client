@@ -1,27 +1,26 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { Stack } from "@chakra-ui/react";
-import { mdToReact } from "./mdToReact";
 import { useApiDocContext } from ".";
+import { useMDXComponents } from "@mdx-js/react";
 
 export function DocBlock({
   canonicalReference,
   summary = true,
   remarks = false,
   example = false,
-  remarkCollapsible = true,
-  since = true,
-  deprecated = true,
+  remarksCollapsible = false,
+  deprecated = false,
+  releaseTag = false,
 }) {
   return (
     <Stack spacing="4">
-      {/** TODO: @since, @deprecated etc. */}
       {deprecated && <Deprecated canonicalReference={canonicalReference} />}
-      {since && <Since canonicalReference={canonicalReference} />}
+      {releaseTag && <ReleaseTag canonicalReference={canonicalReference} />}
       {summary && <Summary canonicalReference={canonicalReference} />}
       {remarks && (
         <Remarks
-          collapsible={remarkCollapsible}
+          collapsible={remarksCollapsible}
           canonicalReference={canonicalReference}
         />
       )}
@@ -35,8 +34,7 @@ DocBlock.propTypes = {
   summary: PropTypes.bool,
   remarks: PropTypes.bool,
   example: PropTypes.bool,
-  remarkCollapsible: PropTypes.bool,
-  since: PropTypes.bool,
+  remarksCollapsible: PropTypes.bool,
   deprecated: PropTypes.bool,
 };
 
@@ -57,17 +55,18 @@ MaybeCollapsible.propTypes = {
   children: PropTypes.node,
 };
 
-/**
- * Might still need more work on the Gatsby side to get this to work.
- */
 export function Deprecated({ canonicalReference, collapsible = false }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
+  const MDX = useMDXComponents();
   const value = item.comment?.deprecated;
   if (!value) return null;
   return (
     <MaybeCollapsible collapsible={collapsible}>
-      <b>{mdToReact(value)}</b>
+      <MDX.blockquote>
+        <p>⚠️ Deprecated</p>
+        <MDX.MDXRenderer>{value}</MDX.MDXRenderer>
+      </MDX.blockquote>
     </MaybeCollapsible>
   );
 }
@@ -76,33 +75,15 @@ Deprecated.propTypes = {
   collapsible: PropTypes.bool,
 };
 
-/**
- * Might still need more work on the Gatsby side to get this to work.
- */
-export function Since({ canonicalReference, collapsible = false }) {
-  const getItem = useApiDocContext();
-  const item = getItem(canonicalReference);
-  const value = item.comment?.since;
-  if (!value) return null;
-  return (
-    <MaybeCollapsible collapsible={collapsible}>
-      <i>Added to Apollo Client in version {value}</i>
-    </MaybeCollapsible>
-  );
-}
-Since.propTypes = {
-  canonicalReference: PropTypes.string.isRequired,
-  collapsible: PropTypes.bool,
-};
-
 export function Summary({ canonicalReference, collapsible = false }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
+  const MDX = useMDXComponents();
   const value = item.comment?.summary;
   if (!value) return null;
   return (
     <MaybeCollapsible collapsible={collapsible}>
-      {mdToReact(value)}
+      {value && <MDX.MDXRenderer>{value}</MDX.MDXRenderer>}
     </MaybeCollapsible>
   );
 }
@@ -114,11 +95,12 @@ Summary.propTypes = {
 export function Remarks({ canonicalReference, collapsible = false }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
+  const MDX = useMDXComponents();
   const value = item.comment?.remarks?.replace(/^@remarks/g, "");
   if (!value) return null;
   return (
     <MaybeCollapsible collapsible={collapsible}>
-      {mdToReact(value)}
+      {value && <MDX.MDXRenderer>{value}</MDX.MDXRenderer>}
     </MaybeCollapsible>
   );
 }
@@ -134,16 +116,46 @@ export function Example({
 }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
+  const MDX = useMDXComponents();
   const value = item.comment?.examples[index];
   if (!value) return null;
   return (
-    <MaybeCollapsible collapsible={collapsible}>
-      <b>{mdToReact(value)}</b>
-    </MaybeCollapsible>
+    <>
+      <MaybeCollapsible collapsible={collapsible}>
+        {value && <MDX.MDXRenderer>{value}</MDX.MDXRenderer>}
+      </MaybeCollapsible>
+    </>
   );
 }
 Example.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
   collapsible: PropTypes.bool,
   index: PropTypes.number,
+};
+
+export function ReleaseTag({ canonicalReference }) {
+  const getItem = useApiDocContext();
+  const item = getItem(canonicalReference);
+  const MDX = useMDXComponents();
+
+  if (item.releaseTag === "Public") {
+    return null;
+  }
+
+  return (
+    <MDX.ExperimentalFeature>
+      This is in{" "}
+      <MDX.PrimaryLink
+        href="https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta"
+        target="_blank"
+      >
+        {item.releaseTag.toLowerCase()} stage
+      </MDX.PrimaryLink>{" "}
+      and is subject to breaking changes.
+    </MDX.ExperimentalFeature>
+  );
+}
+
+ReleaseTag.propTypes = {
+  canonicalReference: PropTypes.string.isRequired,
 };

@@ -119,17 +119,21 @@
         "logLevel": "none"
       },
 
+      "ae-internal-missing-underscore": {
+        "logLevel": "none",
+        "addToApiReportFile": false
+      },
+
       "ae-unresolved-link": {
         "logLevel": "warning",
         "addToApiReportFile": true
       }
+    },
+    "tsdocMessageReporting": {
+      "tsdoc-escape-greater-than": {
+        "logLevel": "none",
+        "addToApiReportFile": false
+      }
     }
-
-    // "ae-extra-release-tag": {
-    //   "logLevel": "warning",
-    //   "addToApiReportFile": true
-    // },
-    //
-    // . . .
   }
 }

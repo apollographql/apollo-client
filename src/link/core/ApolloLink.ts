@@ -45,19 +45,21 @@ export class ApolloLink {
     const leftLink = toLink(left);
     const rightLink = toLink(right || new ApolloLink(passthrough));
 
+    let ret: ApolloLink;
     if (isTerminating(leftLink) && isTerminating(rightLink)) {
-      return new ApolloLink((operation) => {
+      ret = new ApolloLink((operation) => {
         return test(operation) ?
             leftLink.request(operation) || Observable.of()
           : rightLink.request(operation) || Observable.of();
       });
     } else {
-      return new ApolloLink((operation, forward) => {
+      ret = new ApolloLink((operation, forward) => {
         return test(operation) ?
             leftLink.request(operation, forward) || Observable.of()
           : rightLink.request(operation, forward) || Observable.of();
       });
     }
+    return Object.assign(ret, { left: leftLink, right: rightLink });
   }
 
   public static execute(
@@ -88,8 +90,9 @@ export class ApolloLink {
     }
     const nextLink = toLink(second);
 
+    let ret: ApolloLink;
     if (isTerminating(nextLink)) {
-      return new ApolloLink(
+      ret = new ApolloLink(
         (operation) =>
           firstLink.request(
             operation,
@@ -97,7 +100,7 @@ export class ApolloLink {
           ) || Observable.of()
       );
     } else {
-      return new ApolloLink((operation, forward) => {
+      ret = new ApolloLink((operation, forward) => {
         return (
           firstLink.request(operation, (op) => {
             return nextLink.request(op, forward) || Observable.of();
@@ -105,6 +108,7 @@ export class ApolloLink {
         );
       });
     }
+    return Object.assign(ret, { left: firstLink, right: nextLink });
   }
 
   constructor(request?: RequestHandler) {
@@ -154,4 +158,21 @@ export class ApolloLink {
     this.onError = fn;
     return this;
   }
+
+  /**
+   * @internal
+   * Used to iterate through all links that are concatenations or `split` links.
+   */
+  readonly left?: ApolloLink;
+  /**
+   * @internal
+   * Used to iterate through all links that are concatenations or `split` links.
+   */
+  readonly right?: ApolloLink;
+
+  /**
+   * @internal
+   * Can be provided by a link that has an internal cache to report it's memory details.
+   */
+  getMemoryInternals?: () => unknown;
 }

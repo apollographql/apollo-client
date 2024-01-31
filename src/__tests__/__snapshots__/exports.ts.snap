@@ -20,6 +20,7 @@ Array [
   "checkFetcher",
   "concat",
   "createHttpLink",
+  "createQueryPreloader",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
   "defaultPrinter",
@@ -59,8 +60,10 @@ Array [
   "useBackgroundQuery",
   "useFragment",
   "useLazyQuery",
+  "useLoadableQuery",
   "useMutation",
   "useQuery",
+  "useQueryRefHandlers",
   "useReactiveVar",
   "useReadQuery",
   "useSubscription",
@@ -264,6 +267,7 @@ Array [
   "ApolloConsumer",
   "ApolloProvider",
   "DocumentType",
+  "createQueryPreloader",
   "getApolloContext",
   "operationName",
   "parser",
@@ -273,8 +277,10 @@ Array [
   "useBackgroundQuery",
   "useFragment",
   "useLazyQuery",
+  "useLoadableQuery",
   "useMutation",
   "useQuery",
+  "useQueryRefHandlers",
   "useReactiveVar",
   "useReadQuery",
   "useSubscription",
@@ -316,12 +322,25 @@ Array [
   "useBackgroundQuery",
   "useFragment",
   "useLazyQuery",
+  "useLoadableQuery",
   "useMutation",
   "useQuery",
+  "useQueryRefHandlers",
   "useReactiveVar",
   "useReadQuery",
   "useSubscription",
   "useSuspenseQuery",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/react/internal 1`] = `
+Array [
+  "InternalQueryReference",
+  "getSuspenseCache",
+  "getWrappedPromise",
+  "unwrapQueryRef",
+  "updateWrappedQueryRef",
+  "wrapQueryRef",
 ]
 `;
 
@@ -380,6 +399,8 @@ Array [
 
 exports[`exports of public entry points @apollo/client/utilities 1`] = `
 Array [
+  "AutoCleanedStrongCache",
+  "AutoCleanedWeakCache",
   "Concast",
   "DEV",
   "DeepMerger",
@@ -389,12 +410,14 @@ Array [
   "argumentsObjectFromField",
   "asyncMap",
   "buildQueryFromSelectionSet",
+  "cacheSizes",
   "canUseAsyncIteratorSymbol",
   "canUseDOM",
   "canUseLayoutEffect",
   "canUseSymbol",
   "canUseWeakMap",
   "canUseWeakSet",
+  "canonicalStringify",
   "checkDocument",
   "cloneDeep",
   "compact",
@@ -475,5 +498,11 @@ Array [
   "invariant",
   "maybe",
   "newInvariantError",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/subscriptions/urql 1`] = `
+Array [
+  "createFetchMultipartSubscription",
 ]
 `;

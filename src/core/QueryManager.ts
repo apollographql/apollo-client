@@ -946,7 +946,7 @@ export class QueryManager<TStore> {
           invariant.warn(
             typeof nameOrDoc === "string" ?
               `Unknown query named "%s" requested in refetchQueries options.include array`
-            : `Unknown query %s requested in refetchQueries options.include array`,
+            : `Unknown query %o requested in refetchQueries options.include array`,
             nameOrDoc
           );
         }

@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.9.1
+
+### Patch Changes
+
+- [#11516](https://github.com/apollographql/apollo-client/pull/11516) [`8390fea`](https://github.com/apollographql/apollo-client/commit/8390fea13175bada8361ba5f0df2e43197085aba) Thanks [@phryneas](https://github.com/phryneas)! - Fix an incorrect string substitution in a warning message.
+
+- [#11515](https://github.com/apollographql/apollo-client/pull/11515) [`c9bf93b`](https://github.com/apollographql/apollo-client/commit/c9bf93bdc2816f7fdba96961e1435f463f440bd1) Thanks [@vladar](https://github.com/vladar)! - Avoid redundant refetchQueries call for mutation with no-cache policy (fixes #10238)
+
+- [#11545](https://github.com/apollographql/apollo-client/pull/11545) [`84a6bea`](https://github.com/apollographql/apollo-client/commit/84a6beaeae69acdffea49ba6b8242752cc188172) Thanks [@alessbell](https://github.com/alessbell)! - Remove error thrown by `inFlightLinkObservables` intended to be removed before 3.9 release.
+
 ## 3.9.0
 
 ### Minor Changes

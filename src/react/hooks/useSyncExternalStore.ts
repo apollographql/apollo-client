@@ -81,6 +81,8 @@ export const useSyncExternalStore: RealUseSESHookType =
           // Force a re-render.
           forceUpdate({ inst });
         }
+        // React Hook React.useLayoutEffect has a missing dependency: 'inst'. Either include it or remove the dependency array.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [subscribe, value, getSnapshot]);
     } else {
       Object.assign(inst, { value, getSnapshot });
@@ -108,6 +110,8 @@ export const useSyncExternalStore: RealUseSESHookType =
           forceUpdate({ inst });
         }
       });
+      // React Hook React.useEffect has a missing dependency: 'inst'. Either include it or remove the dependency array.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [subscribe]);
 
     return value;

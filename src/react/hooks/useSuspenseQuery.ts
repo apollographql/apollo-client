@@ -235,6 +235,10 @@ export function useSuspenseQuery<
   }, [queryRef.result]);
 
   const result = fetchPolicy === "standby" ? skipResult : __use(promise);
+  // eslint incorrectly reports
+  // React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.
+  // seems to be a parsing error because of the `satisfies as`
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const fetchMore = React.useCallback(
     ((options) => {
       const promise = queryRef.fetchMore(options);

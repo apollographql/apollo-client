@@ -64,7 +64,7 @@ export function useReadQuery<TData>(
           forceUpdate();
         });
       },
-      [internalQueryRef]
+      [internalQueryRef, queryRef]
     ),
     getPromise,
     getPromise

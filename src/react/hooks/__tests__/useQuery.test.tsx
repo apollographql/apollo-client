@@ -1,4 +1,4 @@
-import React, { Fragment, ReactNode, useEffect, useState } from "react";
+import React, { Fragment, ReactNode, useEffect, useRef, useState } from "react";
 import { DocumentNode, GraphQLError } from "graphql";
 import gql from "graphql-tag";
 import { act } from "react-dom/test-utils";
@@ -27,6 +27,7 @@ import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import { profileHook, spyOnConsole } from "../../../testing/internal";
+import { useApolloClient } from "../useApolloClient";
 
 describe("useQuery Hook", () => {
   describe("General use", () => {
@@ -2091,6 +2092,200 @@ describe("useQuery Hook", () => {
 
       unmount();
       result.current.stopPolling();
+    });
+
+    describe("should prevent fetches when `skipPollAttempt` returns `false`", () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+      });
+
+      afterEach(() => {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
+      });
+
+      it("when defined as a global default option", async () => {
+        const skipPollAttempt = jest.fn().mockImplementation(() => false);
+
+        const query = gql`
+          {
+            hello
+          }
+        `;
+        const link = mockSingleLink(
+          {
+            request: { query },
+            result: { data: { hello: "world 1" } },
+          },
+          {
+            request: { query },
+            result: { data: { hello: "world 2" } },
+          },
+          {
+            request: { query },
+            result: { data: { hello: "world 3" } },
+          }
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+          defaultOptions: {
+            watchQuery: {
+              skipPollAttempt,
+            },
+          },
+        });
+
+        const wrapper = ({ children }: any) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        );
+
+        const { result } = renderHook(
+          () => useQuery(query, { pollInterval: 10 }),
+          { wrapper }
+        );
+
+        expect(result.current.loading).toBe(true);
+        expect(result.current.data).toBe(undefined);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 1" });
+          },
+          { interval: 1 }
+        );
+
+        expect(result.current.loading).toBe(false);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 2" });
+          },
+          { interval: 1 }
+        );
+
+        skipPollAttempt.mockImplementation(() => true);
+        expect(result.current.loading).toBe(false);
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        skipPollAttempt.mockImplementation(() => false);
+        expect(result.current.loading).toBe(false);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 3" });
+          },
+          { interval: 1 }
+        );
+      });
+
+      it("when defined for a single query", async () => {
+        const skipPollAttempt = jest.fn().mockImplementation(() => false);
+
+        const query = gql`
+          {
+            hello
+          }
+        `;
+        const mocks = [
+          {
+            request: { query },
+            result: { data: { hello: "world 1" } },
+          },
+          {
+            request: { query },
+            result: { data: { hello: "world 2" } },
+          },
+          {
+            request: { query },
+            result: { data: { hello: "world 3" } },
+          },
+        ];
+
+        const cache = new InMemoryCache();
+        const wrapper = ({ children }: any) => (
+          <MockedProvider mocks={mocks} cache={cache}>
+            {children}
+          </MockedProvider>
+        );
+
+        const { result } = renderHook(
+          () =>
+            useQuery(query, {
+              pollInterval: 10,
+              skipPollAttempt,
+            }),
+          { wrapper }
+        );
+
+        expect(result.current.loading).toBe(true);
+        expect(result.current.data).toBe(undefined);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 1" });
+          },
+          { interval: 1 }
+        );
+
+        expect(result.current.loading).toBe(false);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 2" });
+          },
+          { interval: 1 }
+        );
+
+        skipPollAttempt.mockImplementation(() => true);
+        expect(result.current.loading).toBe(false);
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        await jest.advanceTimersByTime(12);
+        await waitFor(
+          () => expect(result.current.data).toEqual({ hello: "world 2" }),
+          { interval: 1 }
+        );
+
+        skipPollAttempt.mockImplementation(() => false);
+        expect(result.current.loading).toBe(false);
+
+        await waitFor(
+          () => {
+            expect(result.current.data).toEqual({ hello: "world 3" });
+          },
+          { interval: 1 }
+        );
+      });
     });
   });
 
@@ -4300,6 +4495,138 @@ describe("useQuery Hook", () => {
         });
       });
     });
+
+    it("keeps cache consistency when a call to refetchQueries is interrupted with another query caused by changing variables and the second query returns before the first one", async () => {
+      const CAR_QUERY_BY_ID = gql`
+        query Car($id: Int) {
+          car(id: $id) {
+            make
+            model
+          }
+        }
+      `;
+
+      const mocks = {
+        1: [
+          {
+            car: {
+              make: "Audi",
+              model: "A4",
+              __typename: "Car",
+            },
+          },
+          {
+            car: {
+              make: "Audi",
+              model: "A3", // Changed
+              __typename: "Car",
+            },
+          },
+        ],
+        2: [
+          {
+            car: {
+              make: "Audi",
+              model: "RS8",
+              __typename: "Car",
+            },
+          },
+        ],
+      };
+
+      const link = new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            if (operation.variables.id === 1) {
+              // Queries for this ID return after a delay
+              setTimeout(() => {
+                const data = mocks[1].splice(0, 1).pop();
+                observer.next({ data });
+                observer.complete();
+              }, 100);
+            } else if (operation.variables.id === 2) {
+              // Queries for this ID return immediately
+              const data = mocks[2].splice(0, 1).pop();
+              observer.next({ data });
+              observer.complete();
+            } else {
+              observer.error(new Error("Unexpected query"));
+            }
+          })
+      );
+
+      const hookResponse = jest.fn().mockReturnValue(null);
+
+      function Component({ children, id }: any) {
+        const result = useQuery(CAR_QUERY_BY_ID, {
+          variables: { id },
+          notifyOnNetworkStatusChange: true,
+          fetchPolicy: "network-only",
+        });
+        const client = useApolloClient();
+        const hasRefetchedRef = useRef(false);
+
+        useEffect(() => {
+          if (
+            result.networkStatus === NetworkStatus.ready &&
+            !hasRefetchedRef.current
+          ) {
+            client.reFetchObservableQueries();
+            hasRefetchedRef.current = true;
+          }
+        }, [result.networkStatus]);
+
+        return children(result);
+      }
+
+      const { rerender } = render(
+        <Component id={1}>{hookResponse}</Component>,
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider link={link}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+      await waitFor(() => {
+        // Resolves as soon as reFetchObservableQueries is
+        // called, but before the result is returned
+        expect(hookResponse).toHaveBeenCalledTimes(3);
+      });
+
+      rerender(<Component id={2}>{hookResponse}</Component>);
+
+      await waitFor(() => {
+        // All results are returned
+        expect(hookResponse).toHaveBeenCalledTimes(5);
+      });
+
+      expect(hookResponse.mock.calls.map((call) => call[0].data)).toEqual([
+        undefined,
+        {
+          car: {
+            __typename: "Car",
+            make: "Audi",
+            model: "A4",
+          },
+        },
+        {
+          car: {
+            __typename: "Car",
+            make: "Audi",
+            model: "A4",
+          },
+        },
+        undefined,
+        {
+          car: {
+            __typename: "Car",
+            make: "Audi",
+            model: "RS8",
+          },
+        },
+      ]);
+    });
   });
 
   describe("Callbacks", () => {
@@ -5690,7 +6017,10 @@ describe("useQuery Hook", () => {
         },
         { interval: 1 }
       );
-      expect(result.current.data).toEqual(carData);
+      const { vine, ...carDataWithoutVine } = carData.cars[0];
+      expect(result.current.data).toEqual({
+        cars: [carDataWithoutVine],
+      });
       expect(result.current.error).toBeUndefined();
 
       expect(consoleSpy.error).toHaveBeenCalled();

@@ -7,7 +7,7 @@ import { mergeIncrementalData } from "../utilities/index.js";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
-import type { QueryListener, MethodKeys } from "./types.js";
+import type { QueryListener } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
 import {
   isNonEmptyArray,
@@ -36,10 +36,11 @@ const destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)<
 
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,
-  methodName: MethodKeys<ApolloCache<any>>
+  methodName: "evict" | "modify" | "reset"
 ) {
   const original = cache[methodName];
   if (typeof original === "function") {
+    // @ts-expect-error this is just too generic to be typed correctly
     cache[methodName] = function () {
       destructiveMethodCounts.set(
         cache,
@@ -154,6 +155,10 @@ export class QueryInfo {
   reset() {
     cancelNotifyTimeout(this);
     this.dirty = false;
+  }
+
+  resetDiff() {
+    this.lastDiff = void 0;
   }
 
   getDiff(): Cache.DiffResult<any> {
@@ -359,7 +364,8 @@ export class QueryInfo {
       "variables" | "fetchPolicy" | "errorPolicy"
     >,
     cacheWriteBehavior: CacheWriteBehavior
-  ) {
+  ): typeof result {
+    result = { ...result };
     const merger = new DeepMerger();
     const graphQLErrors =
       isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
@@ -405,7 +411,10 @@ export class QueryInfo {
             });
 
             this.lastWrite = {
-              result,
+              // Make a shallow defensive copy of the result object, in case we
+              // later later modify result.data in place, since we don't want
+              // that mutation affecting the saved lastWrite.result.data.
+              result: { ...result },
               variables: options.variables,
               dmCount: destructiveMethodCounts.get(this.cache),
             };
@@ -467,20 +476,19 @@ export class QueryInfo {
             this.updateWatch(options.variables);
           }
 
-          // If we're allowed to write to the cache, and we can read a
-          // complete result from the cache, update result.data to be the
-          // result from the cache, rather than the raw network result.
-          // Set without setDiff to avoid triggering a notify call, since
-          // we have other ways of notifying for this result.
+          // If we're allowed to write to the cache, update result.data to be
+          // the result as re-read from the cache, rather than the raw network
+          // result. Set without setDiff to avoid triggering a notify call,
+          // since we have other ways of notifying for this result.
           this.updateLastDiff(diff, diffOptions);
-          if (diff.complete) {
-            result.data = diff.result;
-          }
+          result.data = diff.result;
         });
       } else {
         this.lastWrite = void 0;
       }
     }
+
+    return result;
   }
 
   public markReady() {

@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import type {
   DocumentNode,
   FetchMoreQueryOptions,
@@ -7,16 +7,19 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { wrapQueryRef } from "../cache/QueryReference.js";
-import type { QueryReference } from "../cache/QueryReference.js";
+import {
+  getSuspenseCache,
+  unwrapQueryRef,
+  updateWrappedQueryRef,
+  wrapQueryRef,
+} from "../internal/index.js";
+import type { CacheKey, QueryReference } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { __use } from "./internal/index.js";
-import { getSuspenseCache } from "../cache/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
-import type { CacheKey } from "../cache/types.js";
 import type { SkipToken } from "./constants.js";
 
 export type UseBackgroundQueryResult<
@@ -47,7 +50,8 @@ export function useBackgroundQuery<
             DeepPartial<TData> | undefined
           : TData | undefined
         : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
-        : TData
+        : TData,
+        TVariables
       >
     | (TOptions["skip"] extends boolean ? undefined : never)
   ),
@@ -64,7 +68,7 @@ export function useBackgroundQuery<
     errorPolicy: "ignore" | "all";
   }
 ): [
-  QueryReference<DeepPartial<TData> | undefined>,
+  QueryReference<DeepPartial<TData> | undefined, TVariables>,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -77,7 +81,7 @@ export function useBackgroundQuery<
     errorPolicy: "ignore" | "all";
   }
 ): [
-  QueryReference<TData | undefined>,
+  QueryReference<TData | undefined, TVariables>,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -91,7 +95,7 @@ export function useBackgroundQuery<
     returnPartialData: true;
   }
 ): [
-  QueryReference<DeepPartial<TData>> | undefined,
+  QueryReference<DeepPartial<TData>, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -104,7 +108,7 @@ export function useBackgroundQuery<
     returnPartialData: true;
   }
 ): [
-  QueryReference<DeepPartial<TData>>,
+  QueryReference<DeepPartial<TData>, TVariables>,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -117,7 +121,7 @@ export function useBackgroundQuery<
     skip: boolean;
   }
 ): [
-  QueryReference<TData> | undefined,
+  QueryReference<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -127,7 +131,10 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>
-): [QueryReference<TData>, UseBackgroundQueryResult<TData, TVariables>];
+): [
+  QueryReference<TData, TVariables>,
+  UseBackgroundQueryResult<TData, TVariables>,
+];
 
 export function useBackgroundQuery<
   TData = unknown,
@@ -148,7 +155,7 @@ export function useBackgroundQuery<
         returnPartialData: true;
       })
 ): [
-  QueryReference<DeepPartial<TData>> | undefined,
+  QueryReference<DeepPartial<TData>, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -159,7 +166,7 @@ export function useBackgroundQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SkipToken | BackgroundQueryHookOptionsNoInfer<TData, TVariables>
 ): [
-  QueryReference<TData> | undefined,
+  QueryReference<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -173,7 +180,7 @@ export function useBackgroundQuery<
         Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
     | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(null)
 ): [
-  QueryReference<TData> | undefined,
+  QueryReference<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ] {
   const client = useApolloClient(options.client);
@@ -201,24 +208,22 @@ export function useBackgroundQuery<
     client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
   );
 
-  const [promiseCache, setPromiseCache] = React.useState(
-    () => new Map([[queryRef.key, queryRef.promise]])
+  const [wrappedQueryRef, setWrappedQueryRef] = React.useState(
+    wrapQueryRef(queryRef)
   );
-
+  if (unwrapQueryRef(wrappedQueryRef) !== queryRef) {
+    setWrappedQueryRef(wrapQueryRef(queryRef));
+  }
   if (queryRef.didChangeOptions(watchQueryOptions)) {
     const promise = queryRef.applyOptions(watchQueryOptions);
-    promiseCache.set(queryRef.key, promise);
+    updateWrappedQueryRef(wrappedQueryRef, promise);
   }
-
-  React.useEffect(() => queryRef.retain(), [queryRef]);
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
       const promise = queryRef.fetchMore(options as FetchMoreQueryOptions<any>);
 
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setWrappedQueryRef(wrapQueryRef(queryRef));
 
       return promise;
     },
@@ -229,19 +234,10 @@ export function useBackgroundQuery<
     (variables) => {
       const promise = queryRef.refetch(variables);
 
-      setPromiseCache((promiseCache) =>
-        new Map(promiseCache).set(queryRef.key, queryRef.promise)
-      );
+      setWrappedQueryRef(wrapQueryRef(queryRef));
 
       return promise;
     },
-    [queryRef]
-  );
-
-  queryRef.promiseCache = promiseCache;
-
-  const wrappedQueryRef = React.useMemo(
-    () => wrapQueryRef(queryRef),
     [queryRef]
   );
 

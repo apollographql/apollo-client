@@ -10,7 +10,6 @@ import type { ExecutionResult } from 'graphql';
 import type { GraphQLError } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
-import { print as print_3 } from 'graphql';
 
 // @public (undocumented)
 class ApolloLink {
@@ -30,12 +29,18 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -208,7 +213,9 @@ interface Operation {
 type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
-const print_2: typeof print_3;
+const print_2: ((ast: ASTNode) => string) & {
+    reset(): void;
+};
 
 // @public (undocumented)
 interface Printer {

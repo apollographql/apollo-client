@@ -188,15 +188,6 @@ export class QueryManager<TStore> {
     if ((this.onBroadcast = onBroadcast)) {
       this.mutationStore = Object.create(null);
     }
-
-    // TODO: remove before we release 3.9
-    Object.defineProperty(this.inFlightLinkObservables, "get", {
-      value: () => {
-        throw new Error(
-          "This version of Apollo Client requires at least @apollo/experimental-nextjs-app-support version 0.5.2."
-        );
-      },
-    });
   }
 
   /**
@@ -492,7 +483,7 @@ export class QueryManager<TStore> {
 
     if (
       cacheWrites.length > 0 ||
-      mutation.refetchQueries ||
+      (mutation.refetchQueries || "").length > 0 ||
       mutation.update ||
       mutation.onQueryUpdated ||
       mutation.removeOptimistic
@@ -946,7 +937,7 @@ export class QueryManager<TStore> {
           invariant.warn(
             typeof nameOrDoc === "string" ?
               `Unknown query named "%s" requested in refetchQueries options.include array`
-            : `Unknown query %s requested in refetchQueries options.include array`,
+            : `Unknown query %o requested in refetchQueries options.include array`,
             nameOrDoc
           );
         }

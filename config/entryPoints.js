@@ -22,11 +22,14 @@ const entryPoints = [
   { dirs: ["react", "context"] },
   { dirs: ["react", "hoc"] },
   { dirs: ["react", "hooks"] },
+  { dirs: ["react", "internal"] },
   { dirs: ["react", "parser"] },
   { dirs: ["react", "ssr"] },
   { dirs: ["testing"], extensions: [".js", ".jsx"] },
   { dirs: ["testing", "core"] },
   { dirs: ["utilities"] },
+  { dirs: ["utilities", "subscriptions", "relay"] },
+  { dirs: ["utilities", "subscriptions", "urql"] },
   { dirs: ["utilities", "globals"], sideEffects: true },
 ];
 
@@ -123,3 +126,14 @@ function arraysEqualUpTo(a, b, end) {
   }
   return true;
 }
+
+exports.buildDocEntryPoints = () => {
+  const dist = path.resolve(__dirname, "../dist");
+  const entryPoints = exports.map((entryPoint) => {
+    return `export * from "${dist}/${entryPoint.dirs.join("/")}/index.d.ts";`;
+  });
+  entryPoints.push(
+    `export * from "${dist}/react/types/types.documentation.ts";`
+  );
+  return entryPoints.join("\n");
+};

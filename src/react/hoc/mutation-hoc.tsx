@@ -1,4 +1,5 @@
-import * as React from "react";
+import * as React from "rehackt";
+import type * as ReactTypes from "react";
 import type { DocumentNode } from "graphql";
 import hoistNonReactStatics from "hoist-non-react-statics";
 
@@ -20,6 +21,11 @@ import {
 import type { OperationOption, OptionProps, MutateProps } from "./types.js";
 import type { ApolloCache } from "../../core/index.js";
 
+/**
+ * @deprecated
+ * Official support for React Apollo higher order components ended in March 2020.
+ * This library is still included in the `@apollo/client` package, but it no longer receives feature updates or bug fixes.
+ */
 export function withMutation<
   TProps extends TGraphQLVariables | {} = {},
   TData extends Record<string, any> = {},
@@ -56,8 +62,8 @@ export function withMutation<
       >;
 
   return (
-    WrappedComponent: React.ComponentType<TProps & TChildProps>
-  ): React.ComponentClass<TProps> => {
+    WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>
+  ): ReactTypes.ComponentClass<TProps> => {
     const graphQLDisplayName = `${alias}(${getDisplayName(WrappedComponent)})`;
     class GraphQL extends GraphQLBase<TProps, TChildProps> {
       static displayName = graphQLDisplayName;

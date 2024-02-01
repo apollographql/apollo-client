@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import { equal } from "@wry/equality";
 
 import type { DeepPartial } from "../../utilities/index.js";

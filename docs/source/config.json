@@ -28,6 +28,7 @@
       "Reading and writing": "/caching/cache-interaction",
       "Garbage collection and eviction": "/caching/garbage-collection",
       "Customizing field behavior": "/caching/cache-field-behavior",
+      "Memory Management": "/caching/memory-management",
       "Advanced topics": "/caching/advanced-topics"
     },
     "Pagination": {
@@ -79,6 +80,7 @@
       },
       "React": {
         "Hooks": "/api/react/hooks",
+        "Preloading": "/api/react/preloading",
         "Testing": "/api/react/testing",
         "SSR": "/api/react/ssr",
         "Components (deprecated)": "/api/react/components",

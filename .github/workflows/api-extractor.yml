@@ -11,16 +11,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 18.x
+      - name: Setup Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 20.x
 
       - name: Install dependencies (with cache)
         uses: bahmutov/npm-install@v1
 
-      - name: Run build
-        run: npm run build
-
+        # Builds the library and runs the api extractor
       - name: Run Api-Extractor
         run: npm run extract-api

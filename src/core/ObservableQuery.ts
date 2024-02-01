@@ -80,6 +80,9 @@ export class ObservableQuery<
 
   // Computed shorthand for this.options.variables, preserved for
   // backwards compatibility.
+  /**
+   * An object containing the variables that were provided for the query.
+   */
   public get variables(): TVariables | undefined {
     return this.options.variables;
   }
@@ -223,6 +226,11 @@ export class ObservableQuery<
       };
       const subscription = this.subscribe(observer);
     });
+  }
+
+  /** @internal */
+  public resetDiff() {
+    this.queryInfo.resetDiff();
   }
 
   public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
@@ -412,6 +420,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve(reobserveOptions, NetworkStatus.refetch);
   }
 
+  /**
+   * A function that helps you fetch the next set of results for a [paginated list field](https://www.apollographql.com/docs/react/pagination/core-api/).
+   */
   public fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
@@ -540,6 +551,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   // XXX the subscription variables are separate from the query variables.
   // if you want to update subscription variables, right now you have to do that separately,
   // and you can only do it by stopping the subscription and then subscribing again with new variables.
+  /**
+   * A function that enables you to execute a [subscription](https://www.apollographql.com/docs/react/data/subscriptions/), usually to subscribe to specific fields that were included in the query.
+   *
+   * This function returns _another_ function that you can call to terminate the subscription.
+   */
   public subscribeToMore<
     TSubscriptionData = TData,
     TSubscriptionVariables extends OperationVariables = TVariables,
@@ -645,6 +661,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     );
   }
 
+  /**
+   * A function that enables you to update the query's cached result without executing a followup GraphQL operation.
+   *
+   * See [using updateQuery and updateFragment](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for additional information.
+   */
   public updateQuery<TVars extends OperationVariables = TVariables>(
     mapFn: (
       previousQueryResult: TData,
@@ -674,11 +695,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   }
 
+  /**
+   * A function that instructs the query to begin re-executing at a specified interval (in milliseconds).
+   */
   public startPolling(pollInterval: number) {
     this.options.pollInterval = pollInterval;
     this.updatePolling();
   }
 
+  /**
+   * A function that instructs the query to stop polling after a previous call to `startPolling`.
+   */
   public stopPolling() {
     this.options.pollInterval = 0;
     this.updatePolling();
@@ -776,7 +803,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const maybeFetch = () => {
       if (this.pollingInfo) {
-        if (!isNetworkRequestInFlight(this.queryInfo.networkStatus)) {
+        if (
+          !isNetworkRequestInFlight(this.queryInfo.networkStatus) &&
+          !this.options.skipPollAttempt?.()
+        ) {
           this.reobserve(
             {
               // Most fetchPolicy options don't make sense to use in a polling context, as
@@ -898,12 +928,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { concast, fromLink } = this.fetch(options, newNetworkStatus, query);
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result) => {
-        finishWaitingForOwnResult();
-        this.reportResult(result, variables);
+        if (equal(this.variables, variables)) {
+          finishWaitingForOwnResult();
+          this.reportResult(result, variables);
+        }
       },
       error: (error) => {
-        finishWaitingForOwnResult();
-        this.reportError(error, variables);
+        if (equal(this.variables, variables)) {
+          finishWaitingForOwnResult();
+          this.reportError(error, variables);
+        }
       },
     };
 

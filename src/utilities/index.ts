@@ -98,6 +98,7 @@ export type {
 } from "./observables/Observable.js";
 export { Observable } from "./observables/Observable.js";
 
+export type { PromiseWithState } from "./promises/decoration.js";
 export {
   isStatefulPromise,
   createFulfilledPromise,
@@ -122,9 +123,19 @@ export * from "./common/stringifyForDisplay.js";
 export * from "./common/mergeOptions.js";
 export * from "./common/incrementalResult.js";
 
+export { canonicalStringify } from "./common/canonicalStringify.js";
 export { omitDeep } from "./common/omitDeep.js";
 export { stripTypename } from "./common/stripTypename.js";
 
 export * from "./types/IsStrictlyAny.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
 export type { DeepPartial } from "./types/DeepPartial.js";
+export type { OnlyRequiredProperties } from "./types/OnlyRequiredProperties.js";
+
+export {
+  AutoCleanedStrongCache,
+  AutoCleanedWeakCache,
+  cacheSizes,
+  defaultCacheSizes,
+} from "./caching/index.js";
+export type { CacheSizes } from "./caching/index.js";

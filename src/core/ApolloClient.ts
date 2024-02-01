@@ -51,6 +51,11 @@ export interface ApolloClientOptions<TCacheShape> {
    */
   uri?: string | UriFunction;
   credentials?: string;
+  /**
+   * An object representing headers to include in every HTTP request, such as `{Authorization: 'Bearer 1234'}`
+   *
+   * This value will be ignored when using the `link` option.
+   */
   headers?: Record<string, string>;
   /**
    * You can provide an {@link ApolloLink} instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
@@ -71,7 +76,7 @@ export interface ApolloClientOptions<TCacheShape> {
    */
   ssrForceFetchDelay?: number;
   /**
-   * When using Apollo Client for [server-side rendering](https://www.apollographql.com/docs/react//performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
+   * When using Apollo Client for [server-side rendering](https://www.apollographql.com/docs/react/performance/server-side-rendering/), set this to `true` so that the [`getDataFromTree` function](../react/ssr/#getdatafromtree) can work effectively.
    *
    * @defaultValue `false`
    */
@@ -94,6 +99,7 @@ export interface ApolloClientOptions<TCacheShape> {
    * See this [example object](https://www.apollographql.com/docs/react/api/core/ApolloClient#example-defaultoptions-object).
    */
   defaultOptions?: DefaultOptions;
+  defaultContext?: Partial<DefaultContext>;
   /**
    * If `true`, Apollo Client will assume results read from the cache are never mutated by application code, which enables substantial performance optimizations.
    *
@@ -121,6 +127,7 @@ export interface ApolloClientOptions<TCacheShape> {
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
 import { mergeOptions } from "../utilities/index.js";
+import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
 export { mergeOptions };
 
 /**
@@ -195,6 +202,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         __DEV__,
       queryDeduplication = true,
       defaultOptions,
+      defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
       resolvers,
       typeDefs,
@@ -243,6 +251,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       cache: this.cache,
       link: this.link,
       defaultOptions: this.defaultOptions,
+      defaultContext,
       documentTransform,
       queryDeduplication,
       ssrMode,
@@ -739,4 +748,94 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public setLink(newLink: ApolloLink) {
     this.link = this.queryManager.link = newLink;
   }
+
+  public get defaultContext() {
+    return this.queryManager.defaultContext;
+  }
+
+  /**
+   * @experimental
+   * This is not a stable API - it is used in development builds to expose
+   * information to the DevTools.
+   * Use at your own risk!
+   * For more details, see [Memory Management](https://www.apollographql.com/docs/react/caching/memory-management/#measuring-cache-usage)
+   *
+   * @example
+   * ```ts
+   * console.log(client.getMemoryInternals())
+   * ```
+   * Logs output in the following JSON format:
+   * @example
+   * ```json
+   *{
+   *  limits:     {
+   *    parser: 1000,
+   *    canonicalStringify: 1000,
+   *    print: 2000,
+   *    'documentTransform.cache': 2000,
+   *    'queryManager.getDocumentInfo': 2000,
+   *    'PersistedQueryLink.persistedQueryHashes': 2000,
+   *    'fragmentRegistry.transform': 2000,
+   *    'fragmentRegistry.lookup': 1000,
+   *    'fragmentRegistry.findFragmentSpreads': 4000,
+   *    'cache.fragmentQueryDocuments': 1000,
+   *    'removeTypenameFromVariables.getVariableDefinitions': 2000,
+   *    'inMemoryCache.maybeBroadcastWatch': 5000,
+   *    'inMemoryCache.executeSelectionSet': 10000,
+   *    'inMemoryCache.executeSubSelectedArray': 5000
+   *  },
+   *  sizes: {
+   *    parser: 26,
+   *    canonicalStringify: 4,
+   *    print: 14,
+   *    addTypenameDocumentTransform: [
+   *      {
+   *        cache: 14,
+   *      },
+   *    ],
+   *    queryManager: {
+   *      getDocumentInfo: 14,
+   *      documentTransforms: [
+   *        {
+   *          cache: 14,
+   *        },
+   *        {
+   *          cache: 14,
+   *        },
+   *      ],
+   *    },
+   *    fragmentRegistry: {
+   *      findFragmentSpreads: 34,
+   *      lookup: 20,
+   *      transform: 14,
+   *    },
+   *    cache: {
+   *      fragmentQueryDocuments: 22,
+   *    },
+   *    inMemoryCache: {
+   *      executeSelectionSet: 4345,
+   *      executeSubSelectedArray: 1206,
+   *      maybeBroadcastWatch: 32,
+   *    },
+   *    links: [
+   *      {
+   *        PersistedQueryLink: {
+   *          persistedQueryHashes: 14,
+   *        },
+   *      },
+   *      {
+   *        removeTypenameFromVariables: {
+   *          getVariableDefinitions: 14,
+   *        },
+   *      },
+   *    ],
+   *  },
+   * }
+   *```
+   */
+  public getMemoryInternals?: typeof getApolloClientMemoryInternals;
+}
+
+if (__DEV__) {
+  ApolloClient.prototype.getMemoryInternals = getApolloClientMemoryInternals;
 }

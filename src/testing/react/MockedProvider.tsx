@@ -11,7 +11,7 @@ import type { Resolvers } from "../../core/index.js";
 import type { ApolloCache } from "../../cache/index.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
-  mocks?: ReadonlyArray<MockedResponse>;
+  mocks?: ReadonlyArray<MockedResponse<any, any>>;
   addTypename?: boolean;
   defaultOptions?: DefaultOptions;
   cache?: ApolloCache<TSerializedCache>;

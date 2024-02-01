@@ -1,10 +1,12 @@
 ---
 title: Queries
 description: Fetch data with the useQuery hook
+api_doc:
+  - "@apollo/client!QueryHookOptions:interface"
+  - "@apollo/client!QueryResult:interface"
 ---
 
-import QueryOptions from '../../shared/query-options.mdx';
-import QueryResult from '../../shared/query-result.mdx';
+import { PropertySignatureTable } from '../../shared/ApiDoc';
 
 This article shows how to fetch GraphQL data in React with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies data management code by tracking error and loading states for you.
 
@@ -24,7 +26,7 @@ The `useQuery` [React hook](https://react.dev/reference/react) is the primary AP
 
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
-```jsx title="index.js"
+```js title="index.js"
 import { gql, useQuery } from '@apollo/client';
 
 const GET_DOGS = gql`
@@ -504,13 +506,13 @@ Most calls to `useQuery` can omit the majority of these options, but it's useful
 
 The `useQuery` hook accepts the following options:
 
-<QueryOptions />
+<PropertySignatureTable canonicalReference="@apollo/client!QueryHookOptions:interface" />
 
 ### Result
 
 After being called, the `useQuery` hook returns a result object with the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
 
-<QueryResult />
+<PropertySignatureTable canonicalReference="@apollo/client!QueryResult:interface" />
 
 ## Next steps
 

@@ -81,9 +81,11 @@ export interface ObservableQueryFields<
   TVariables extends OperationVariables,
 > {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
-  startPolling(pollInterval: number): void;
+  // startPolling(pollInterval: number): void;
+  startPolling: ObservableQuery<TData, TVariables>["startPolling"];
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
-  stopPolling(): void;
+  stopPolling: ObservableQuery<TData, TVariables>["stopPolling"];
+  // stopPolling(): void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
   subscribeToMore<
     TSubscriptionData = TData,

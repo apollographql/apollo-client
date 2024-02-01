@@ -1484,7 +1484,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   // https://github.com/apollographql/apollo-client/issues/9448
-  it("does not issue multiple network calls when calling execute again without variables", async () => {
+  it("does not issue multiple network calls when calling execute again without variables using no-cache fetch policy", async () => {
     interface Data {
       user: { id: string; name: string };
     }

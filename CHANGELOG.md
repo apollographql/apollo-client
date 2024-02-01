@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.9.2
+
+### Patch Changes
+
+- [#11552](https://github.com/apollographql/apollo-client/pull/11552) [`6ac2b0c`](https://github.com/apollographql/apollo-client/commit/6ac2b0ce4d999c63478d85b40ad56ccda9624797) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix import in `useLazyRef` causing import issues in the nextjs package.
+
 ## 3.9.1
 
 ### Patch Changes

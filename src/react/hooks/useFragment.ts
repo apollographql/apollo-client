@@ -28,6 +28,14 @@ export interface UseFragmentOptions<TData, TVars>
   from: StoreObject | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
+  /**
+   * The instance of {@link ApolloClient} to use to lookup the fragment.
+   *
+   * By default, the instance that's passed down via context is used, but you
+   * can provide a different instance here.
+   *
+   * @docGroup 1. Operation options
+   */
   client?: ApolloClient;
 }
 

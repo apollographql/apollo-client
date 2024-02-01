@@ -358,10 +358,11 @@ describe("useFragment", () => {
       return <>{data.text}</>;
     }
 
-    // Not providing MockProvider (client must be specified)
-    render(<Component />);
-
-    // would throw if client is not provided
+    // Without a MockedProvider supplying the client via context,
+    // the client must be passed directly to the hook or an error is thrown
+    expect(() => render(<Component />)).not.toThrow(/pass an ApolloClient/);
+    
+    // Item #1 is rendered
     screen.getByText(/Item #1/);
   });
 

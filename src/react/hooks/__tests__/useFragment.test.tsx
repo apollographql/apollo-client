@@ -1765,6 +1765,7 @@ describe.skip("Type Tests", () => {
       optimistic?: boolean;
       variables?: TVars;
       canonizeResults?: boolean;
+      client?: ApolloClient<any>;
     }>();
   });
 });

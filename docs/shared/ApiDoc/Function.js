@@ -10,6 +10,7 @@ import {
   PropertySignatureTable,
   SourceLink,
   Example,
+  getInterfaceReference,
 } from ".";
 import { GridItem } from "@chakra-ui/react";
 export function FunctionSignature({
@@ -21,8 +22,7 @@ export function FunctionSignature({
 }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
-  const { displayName, parameters, returnType, typeParameters } =
-    getItem(canonicalReference);
+  const { displayName, parameters, returnType } = getItem(canonicalReference);
 
   let paramSignature = parameters
     .map((p) => {
@@ -41,16 +41,9 @@ export function FunctionSignature({
     paramSignature = "\n  " + paramSignature + "\n";
   }
 
-  const genericSignature =
-    typeParameters?.length ?
-      `<${typeParameters.map((p) => p.name).join(", ")}>`
-    : "";
-
   const signature = `${arrow ? "" : "function "}${
     name ? displayName : ""
-  }${genericSignature}(${paramSignature})${arrow ? " =>" : ":"} ${
-    returnType.type
-  }`;
+  }(${paramSignature})${arrow ? " =>" : ":"} ${returnType}`;
 
   return highlight ?
       <MDX.pre language="ts">
@@ -72,20 +65,24 @@ export function ReturnType({ canonicalReference }) {
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
 
+  const interfaceReference = getInterfaceReference(
+    item.returnType,
+    item,
+    getItem
+  );
   return (
     <>
       {item.comment?.returns}
       <MDX.pre language="ts">
-        <code className="language-ts">{item.returnType.type}</code>
+        <code className="language-ts">{item.returnType}</code>
       </MDX.pre>
-      {item.returnType.primaryCanonicalReference?.endsWith(":interface") ?
+      {interfaceReference ?
         <details>
           <GridItem as="summary" className="row">
             Show/hide child attributes
           </GridItem>
           <PropertySignatureTable
-            canonicalReference={item.returnType.primaryCanonicalReference}
-            genericNames={item.returnType.primaryGenericArguments}
+            canonicalReference={interfaceReference.canonicalReference}
             idPrefix={`${item.displayName.toLowerCase()}-result`}
           />
         </details>
@@ -156,8 +153,7 @@ export function FunctionDetails({
         </>
       )}
       {(
-        result === false ||
-        (result === undefined && item.returnType.type === "void")
+        result === false || (result === undefined && item.returnType === "void")
       ) ?
         null
       : <>

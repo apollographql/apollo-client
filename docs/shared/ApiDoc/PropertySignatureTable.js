@@ -52,7 +52,6 @@ export function PropertySignatureTable({
       "g"
     );
     function replace(match) {
-      console.log({ match, replacement: replacements[match] });
       return replacements[match] || match;
     }
     return function replaceGenericNames(str) {

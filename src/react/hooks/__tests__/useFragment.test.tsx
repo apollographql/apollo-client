@@ -374,7 +374,11 @@ describe("useFragment", () => {
       return <>{data.text}</>;
     }
 
-    expect(() => render(<Component />)).toThrow(/pass an ApolloClient/);
+    // silence the console error
+    {
+      using _spy = spyOnConsole("error");
+      expect(() => render(<Component />)).toThrow(/pass an ApolloClient/);
+    }
   });
 
   it.each<TypedDocumentNode<{ list: Item[] }>>([

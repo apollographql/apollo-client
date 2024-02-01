@@ -57,7 +57,7 @@ export function ResponsiveGridStyles() {
   );
 }
 
-export function ResponsiveGrid({ children }) {
+export function ResponsiveGrid({ children, columns = 2 }) {
   /*
         responsiveness not regarding screen width, but actual available space:
         if less than 350px, show only one column
@@ -66,7 +66,11 @@ export function ResponsiveGrid({ children }) {
 
   return (
     <Grid
-      templateColumns="repeat(auto-fit, minmax(max(350px, 45%), 1fr))"
+      templateColumns={
+        columns == 2 ?
+          "repeat(auto-fit, minmax(max(350px, 45%), 1fr))"
+        : columns
+      }
       className="responsive-grid"
       borderWidth="1px"
       rounded="md"

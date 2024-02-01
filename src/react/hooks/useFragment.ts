@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import { equal } from "@wry/equality";
 
 import type { DeepPartial } from "../../utilities/index.js";
@@ -29,7 +29,7 @@ export interface UseFragmentOptions<TData, TVars>
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
   /**
-   * The instance of {@link ApolloClient} to use to lookup the fragment.
+   * The instance of {@link ApolloClient} to use to look up the fragment.
    *
    * By default, the instance that's passed down via context is used, but you
    * can provide a different instance here.

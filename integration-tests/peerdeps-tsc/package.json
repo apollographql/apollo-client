@@ -1,0 +1,20 @@
+{
+  "name": "peerdeps-tsc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "graphql": "^16.0.0",
+    "graphql-ws": "^5.5.5",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "subscriptions-transport-ws": "^0.11.0",
+    "typescript": "latest"
+  }
+}

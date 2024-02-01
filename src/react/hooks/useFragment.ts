@@ -36,7 +36,7 @@ export interface UseFragmentOptions<TData, TVars>
    *
    * @docGroup 1. Operation options
    */
-  client?: ApolloClient;
+  client?: ApolloClient<any>;
 }
 
 export type UseFragmentResult<TData> =

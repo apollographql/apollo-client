@@ -333,6 +333,50 @@ describe("useFragment", () => {
     screen.getByText(/Item #1/);
   });
 
+  it("allows the client to be overriden", () => {
+    const ItemFragment: TypedDocumentNode<Item> = gql`
+      fragment ItemFragment on Item {
+        id
+        text
+      }
+    `;
+    const cache = new InMemoryCache();
+    const item = { __typename: "Item", id: 1, text: "Item #1" };
+    cache.writeFragment({
+      fragment: ItemFragment,
+      data: item,
+    });
+    const client = new ApolloClient({
+      cache,
+    });
+    function Component() {
+      const { data } = useFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 1 },
+        client,
+      });
+      return <>{data.text}</>;
+    }
+
+    // Not providing MockProvider (client must be specified)
+    render(<Component />);
+
+    // would throw if client is not provided
+    screen.getByText(/Item #1/);
+  });
+
+  it("throws if no client is provided", () => {
+    function Component() {
+      const { data } = useFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 1 },
+      });
+      return <>{data.text}</>;
+    }
+
+    expect(() => render(<Component />)).toThrow(/pass an ApolloClient/);
+  });
+
   it.each<TypedDocumentNode<{ list: Item[] }>>([
     // This query uses a basic field-level @nonreactive directive.
     gql`

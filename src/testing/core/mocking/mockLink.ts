@@ -19,16 +19,22 @@ import {
   print,
 } from "../../../utilities/index.js";
 
-export type ResultFunction<T> = () => T;
+export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
+
+export type VariableMatcher<V = Record<string, any>> = (
+  variables: V
+) => boolean;
 
 export interface MockedResponse<
   TData = Record<string, any>,
   TVariables = Record<string, any>,
 > {
   request: GraphQLRequest<TVariables>;
-  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>>;
+  maxUsageCount?: number;
+  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;
   error?: Error;
   delay?: number;
+  variableMatcher?: VariableMatcher<TVariables>;
   newData?: ResultFunction<FetchResult>;
 }
 
@@ -51,7 +57,7 @@ export class MockLink extends ApolloLink {
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
-    mockedResponses: ReadonlyArray<MockedResponse>,
+    mockedResponses: ReadonlyArray<MockedResponse<any, any>>,
     addTypename: Boolean = true,
     options: MockLinkOptions = Object.create(null)
   ) {
@@ -94,6 +100,9 @@ export class MockLink extends ApolloLink {
           if (equal(requestVariables, mockedResponseVars)) {
             return true;
           }
+          if (res.variableMatcher && res.variableMatcher(operation.variables)) {
+            return true;
+          }
           unmatchedVars.push(mockedResponseVars);
           return false;
         })
@@ -101,6 +110,12 @@ export class MockLink extends ApolloLink {
 
     const response =
       responseIndex >= 0 ? mockedResponses[responseIndex] : void 0;
+
+    // There have been platform- and engine-dependent differences with
+    // setInterval(fn, Infinity), so we pass 0 instead (but detect
+    // Infinity where we call observer.error or observer.next to pend
+    // indefinitely in those cases.)
+    const delay = response?.delay === Infinity ? 0 : response?.delay ?? 0;
 
     let configError: Error;
 
@@ -128,11 +143,14 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
         );
       }
     } else {
-      mockedResponses.splice(responseIndex, 1);
-
+      if (response.maxUsageCount && response.maxUsageCount > 1) {
+        response.maxUsageCount--;
+      } else {
+        mockedResponses.splice(responseIndex, 1);
+      }
       const { newData } = response;
       if (newData) {
-        response.result = newData();
+        response.result = newData(operation.variables);
         mockedResponses.push(response);
       }
 
@@ -144,38 +162,35 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
     }
 
     return new Observable((observer) => {
-      const timer = setTimeout(
-        () => {
-          if (configError) {
-            try {
-              // The onError function can return false to indicate that
-              // configError need not be passed to observer.error. For
-              // example, the default implementation of onError calls
-              // observer.error(configError) and then returns false to
-              // prevent this extra (harmless) observer.error call.
-              if (this.onError(configError, observer) !== false) {
-                throw configError;
-              }
-            } catch (error) {
-              observer.error(error);
+      const timer = setTimeout(() => {
+        if (configError) {
+          try {
+            // The onError function can return false to indicate that
+            // configError need not be passed to observer.error. For
+            // example, the default implementation of onError calls
+            // observer.error(configError) and then returns false to
+            // prevent this extra (harmless) observer.error call.
+            if (this.onError(configError, observer) !== false) {
+              throw configError;
             }
-          } else if (response) {
-            if (response.error) {
-              observer.error(response.error);
-            } else {
-              if (response.result) {
-                observer.next(
-                  typeof response.result === "function" ?
-                    (response.result as ResultFunction<FetchResult>)()
-                  : response.result
-                );
-              }
-              observer.complete();
-            }
+          } catch (error) {
+            observer.error(error);
           }
-        },
-        (response && response.delay) || 0
-      );
+        } else if (response && response.delay !== Infinity) {
+          if (response.error) {
+            observer.error(response.error);
+          } else {
+            if (response.result) {
+              observer.next(
+                typeof response.result === "function" ?
+                  response.result(operation.variables)
+                : response.result
+              );
+            }
+            observer.complete();
+          }
+        }
+      }, delay);
 
       return () => {
         clearTimeout(timer);
@@ -196,7 +211,33 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
     if (query) {
       newMockedResponse.request.query = query;
     }
+
+    mockedResponse.maxUsageCount = mockedResponse.maxUsageCount ?? 1;
+    invariant(
+      mockedResponse.maxUsageCount > 0,
+      `Mock response maxUsageCount must be greater than 0, %s given`,
+      mockedResponse.maxUsageCount
+    );
+
+    this.normalizeVariableMatching(newMockedResponse);
     return newMockedResponse;
+  }
+
+  private normalizeVariableMatching(mockedResponse: MockedResponse) {
+    const variables = mockedResponse.request.variables;
+    if (mockedResponse.variableMatcher && variables) {
+      throw new Error(
+        "Mocked response should contain either variableMatcher or request.variables"
+      );
+    }
+
+    if (!mockedResponse.variableMatcher) {
+      mockedResponse.variableMatcher = (vars) => {
+        const requestVariables = vars || {};
+        const mockedResponseVariables = variables || {};
+        return equal(requestVariables, mockedResponseVariables);
+      };
+    }
   }
 }
 

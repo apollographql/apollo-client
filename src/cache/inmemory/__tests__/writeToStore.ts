@@ -2047,7 +2047,43 @@ describe("writing to the store", () => {
     });
   });
 
-  describe('"Cache data maybe lost..." warnings', () => {
+  describe('"Cache data may be lost..." warnings', () => {
+    it('should warn "Cache data may be lost..." message', () => {
+      using _consoleSpy = spyOnConsole.takeSnapshots("warn");
+      const cache = new InMemoryCache();
+
+      const query = gql`
+        query {
+          someJSON {
+            name
+            age
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          someJSON: {
+            name: "Tom",
+          },
+        },
+      });
+
+      expect(cache.extract()).toMatchSnapshot();
+
+      cache.writeQuery({
+        query,
+        data: {
+          someJSON: {
+            age: 20,
+          },
+        },
+      });
+
+      expect(cache.extract()).toMatchSnapshot();
+    });
+
     it("should not warn when scalar fields are updated", () => {
       using _consoleSpy = spyOnConsole.takeSnapshots("warn");
       const cache = new InMemoryCache();

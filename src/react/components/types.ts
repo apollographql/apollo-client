@@ -1,6 +1,8 @@
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
+import type * as ReactTypes from "react";
+
 import type {
   OperationVariables,
   DefaultContext,
@@ -20,7 +22,9 @@ export interface QueryComponentOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {
-  children: (result: QueryResult<TData, TVariables>) => JSX.Element | null;
+  children: (
+    result: QueryResult<TData, TVariables>
+  ) => ReactTypes.JSX.Element | null;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
@@ -34,13 +38,16 @@ export interface MutationComponentOptions<
   children: (
     mutateFunction: MutationFunction<TData, TVariables, TContext>,
     result: MutationResult<TData>
-  ) => JSX.Element | null;
+  ) => ReactTypes.JSX.Element | null;
 }
 
 export interface SubscriptionComponentOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#query:member} */
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  children?: null | ((result: SubscriptionResult<TData>) => JSX.Element | null);
+  children?:
+    | null
+    | ((result: SubscriptionResult<TData>) => ReactTypes.JSX.Element | null);
 }

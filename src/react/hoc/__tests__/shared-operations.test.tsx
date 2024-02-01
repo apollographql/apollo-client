@@ -90,7 +90,7 @@ describe("shared operations", () => {
       people: DataValue<PeopleData>;
     }
 
-    // Since we want to test decorators usage, and this does not play well with Typescript,
+    // Since we want to test decorators usage, and this does not play well with TypeScript,
     // we resort to setting everything as any to avoid type checking.
     const withPeople: any = graphql<{}, PeopleData, {}, PeopleChildProps>(
       peopleQuery,

@@ -634,6 +634,7 @@ describe("HttpLink", () => {
         expect(subscriber.next).toHaveBeenCalledTimes(2);
         expect(subscriber.complete).toHaveBeenCalledTimes(2);
         expect(subscriber.error).not.toHaveBeenCalled();
+        expect(fetchMock.calls().length).toBe(2);
         resolve();
       }, 50);
     });
@@ -887,10 +888,7 @@ describe("HttpLink", () => {
 
     itAsync("allows uri to be a function", (resolve, reject) => {
       const variables = { params: "stub" };
-      const customFetch: WindowOrWorkerGlobalScope["fetch"] = (
-        uri,
-        options
-      ) => {
+      const customFetch: typeof fetch = (uri, options) => {
         const { operationName } = convertBatchedBody(options!.body);
         try {
           expect(operationName).toBe("SampleQuery");

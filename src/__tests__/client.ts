@@ -2686,6 +2686,35 @@ describe("client", () => {
     spy.mockRestore();
   });
 
+  // See https://github.com/apollographql/apollo-client/issues/10238
+  it("does not call QueryManager.refetchQueries for mutations with no-cache policy", async () => {
+    const mutation = gql`
+      mutation {
+        noop
+      }
+    `;
+    const link = mockSingleLink({
+      request: { query: mutation },
+      result: { data: { noop: false } },
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const spy = jest.spyOn(client["queryManager"], "refetchQueries");
+    spy.mockImplementation(() => new Map());
+
+    await client.mutate({
+      mutation,
+      fetchPolicy: "no-cache",
+    });
+
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
   it("has a getObservableQueries method which calls QueryManager", async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
@@ -2920,7 +2949,10 @@ describe("client", () => {
       return client
         .query({ query })
         .then(({ data }) => {
-          expect(data).toEqual(result.data);
+          const { price, ...todoWithoutPrice } = data.todos[0];
+          expect(data).toEqual({
+            todos: [todoWithoutPrice],
+          });
         })
         .then(resolve, reject);
     });

@@ -3642,8 +3642,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(client.getObservableQueries().size).toBe(0);
+    await waitFor(() => expect(client.getObservableQueries().size).toBe(0));
   });
 
   it('throws network errors when errorPolicy is set to "none"', async () => {
@@ -9929,6 +9928,53 @@ describe("useSuspenseQuery", () => {
         "Take out trash (completed)"
       );
       expect(todo1).toHaveTextContent("Clean room");
+    });
+  });
+
+  it("updates networkStatus when a network request returns the same cached data with 'cache-and-network' fetchPolicy", async () => {
+    const { query } = useSimpleQueryCase();
+
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { greeting: "Hello" } });
+          observer.complete();
+        }, 10);
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    // preloaded cache
+    await client.writeQuery({ query, data: { greeting: "Hello" } });
+
+    const { result } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          fetchPolicy: "cache-and-network",
+        }),
+      { client }
+    );
+
+    await waitFor(() => {
+      // We should see the cached greeting while the network request is in flight
+      // and the network status should be set to `loading`.
+      expect(result.current).toMatchObject({
+        data: { greeting: "Hello" },
+        networkStatus: NetworkStatus.loading,
+      });
+    });
+
+    await waitFor(() => {
+      // We should see the updated greeting once the network request finishes
+      // and the network status should be set to `ready`.
+      expect(result.current).toMatchObject({
+        data: { greeting: "Hello" },
+        networkStatus: NetworkStatus.ready,
+      });
     });
   });
 

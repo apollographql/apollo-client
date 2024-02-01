@@ -25,6 +25,7 @@ import {
   addTypenameToDocument,
   isNonEmptyArray,
   argumentsObjectFromField,
+  canonicalStringify,
 } from "../../utilities/index.js";
 
 import type {
@@ -44,7 +45,6 @@ import type { StoreReader } from "./readFromStore.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { EntityStore } from "./entityStore.js";
 import type { Cache } from "../../core/index.js";
-import { canonicalStringify } from "./object-canon.js";
 import { normalizeReadFieldOptions } from "./policies.js";
 import type { ReadFieldFunction } from "../core/types/common.js";
 
@@ -857,8 +857,8 @@ This could cause additional (usually avoidable) network requests to fetch data t
 
 To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
 
-  existing: %s
-  incoming: %s
+  existing: %o
+  incoming: %o
 
 For more information about these options, please refer to the documentation:
 

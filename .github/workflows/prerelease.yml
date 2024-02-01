@@ -38,17 +38,17 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Setup Node.js 18.x
+      - name: Setup Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 20.x
 
       - name: Install dependencies with cache
         uses: bahmutov/npm-install@v1
 
       - name: Check for pre.json file existence
         id: check_files
-        uses: andstor/file-existence-action@v2.0.0
+        uses: andstor/file-existence-action@v3.0.0
         with:
           files: ".changeset/pre.json"
 
@@ -59,6 +59,7 @@ jobs:
         run: npx changeset pre enter alpha
 
       - name: Create prerelease PR
+        if: steps.check_files.outputs.files_exists == 'true'
         uses: changesets/action@v1
         with:
           version: npm run changeset-version
@@ -85,7 +86,7 @@ jobs:
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success'
         id: slack
-        uses: slackapi/slack-github-action@v1.24.0
+        uses: slackapi/slack-github-action@v1.25.0
         with:
           # Slack channel id, channel name, or user id to post message
           # See also: https://api.slack.com/methods/chat.postMessage#channels

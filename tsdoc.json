@@ -1,0 +1,24 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+
+  // Inherit the TSDoc configuration for API Extractor
+  "extends": ["@microsoft/api-extractor/extends/tsdoc-base.json"],
+
+  "tagDefinitions": [
+    {
+      "tagName": "@since",
+      "syntaxKind": "block",
+      "allowMultiple": false
+    },
+    {
+      "tagName": "@docGroup",
+      "syntaxKind": "block",
+      "allowMultiple": false
+    }
+  ],
+
+  "supportForTags": {
+    "@since": true,
+    "@docGroup": true
+  }
+}

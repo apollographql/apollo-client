@@ -1186,8 +1186,6 @@ describe("mutation results", () => {
 
       subscribeAndCount(reject, watchedQuery, (count, result) => {
         if (count === 1) {
-          expect(result.data).toEqual({ echo: "a" });
-        } else if (count === 2) {
           expect(result.data).toEqual({ echo: "b" });
           client.mutate({
             mutation: resetMutation,
@@ -1197,7 +1195,7 @@ describe("mutation results", () => {
               },
             },
           });
-        } else if (count === 3) {
+        } else if (count === 2) {
           expect(result.data).toEqual({ echo: "0" });
           resolve();
         }

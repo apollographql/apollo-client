@@ -1,10 +1,12 @@
 ---
 title: Subscriptions
 description: Get real-time updates from your GraphQL server
+api_doc:
+  - "@apollo/client!SubscriptionHookOptions:interface"
+  - "@apollo/client!SubscriptionResult:interface"
 ---
 
-import SubscriptionOptions from '../../shared/subscription-options.mdx';
-import SubscriptionResult from '../../shared/subscription-result.mdx';
+import { PropertySignatureTable } from '../../shared/ApiDoc';
 
 In addition to [queries](./queries/) and [mutations](./mutations/), GraphQL supports a third operation type: **subscriptions**.
 
@@ -48,6 +50,51 @@ The [WebSocket setup](#websocket-setup) section below uses `graphql-ws`. If your
 To use Apollo Client with a GraphQL endpoint that supports [multipart subscriptions over HTTP](https://github.com/graphql/graphql-over-http/blob/main/rfcs/IncrementalDelivery.md), make sure you're using version `3.7.11` or later.
 
 Aside from updating your client version, no additional configuration is required! Apollo Client automatically sends the required headers with the request if the terminating `HTTPLink` is passed a subscription operation.
+
+#### Usage with Relay or urql
+
+To consume a multipart subscription over HTTP in an app using Relay or urql, Apollo Client provides network layer adapters that handle the parsing of the multipart response format.
+
+##### Relay
+
+```ts
+import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/relay";
+import { Environment, Network, RecordSource, Store } from "relay-runtime";
+
+const fetchMultipartSubs = createFetchMultipartSubscription(
+  "https://api.example.com"
+);
+
+const network = Network.create(fetchQuery, fetchMultipartSubs);
+
+export const RelayEnvironment = new Environment({
+  network,
+  store: new Store(new RecordSource()),
+});
+```
+
+#### urql
+
+```ts
+import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/urql";
+import { Client, fetchExchange, subscriptionExchange } from "@urql/core";
+
+const url = "https://api.example.com";
+
+const multipartSubscriptionForwarder = createFetchMultipartSubscription(
+  url
+);
+
+const client = new Client({
+  url,
+  exchanges: [
+    fetchExchange,
+    subscriptionExchange({
+      forwardSubscription: multipartSubscriptionForwarder,
+    }),
+  ],
+});
+```
 
 ## Defining a subscription
 
@@ -328,13 +375,13 @@ export function CommentsPage({subscribeToNewComments}) {
 
 The `useSubscription` Hook accepts the following options:
 
-<SubscriptionOptions />
+<PropertySignatureTable canonicalReference="@apollo/client!SubscriptionHookOptions:interface" />
 
 ### Result
 
 After being called, the `useSubscription` Hook returns a result object with the following properties:
 
-<SubscriptionResult />
+<PropertySignatureTable canonicalReference="@apollo/client!SubscriptionResult:interface" />
 
 ## The older `subscriptions-transport-ws` library
 

@@ -1484,78 +1484,81 @@ describe("useLazyQuery Hook", () => {
   });
 
   // https://github.com/apollographql/apollo-client/issues/9448
-  it("does not issue multiple network calls when calling execute again without variables using no-cache fetch policy", async () => {
-    interface Data {
-      user: { id: string; name: string };
-    }
+  it.each(["network-only", "no-cache", "cache-and-network"] as const)(
+    "does not issue multiple network calls when calling execute again without variables with a %s fetch policy",
+    async (fetchPolicy) => {
+      interface Data {
+        user: { id: string; name: string };
+      }
 
-    interface Variables {
-      id?: string;
-    }
+      interface Variables {
+        id?: string;
+      }
 
-    const query: TypedDocumentNode<Data, Variables> = gql`
-      query UserQuery($id: ID) {
-        user(id: $id) {
-          id
-          name
+      const query: TypedDocumentNode<Data, Variables> = gql`
+        query UserQuery($id: ID) {
+          user(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
-    let fetchCount = 0;
+      let fetchCount = 0;
 
-    const link = new ApolloLink((operation) => {
-      fetchCount++;
-      return new Observable((observer) => {
-        setTimeout(() => {
-          observer.next({
-            data: {
-              user: { id: operation.variables.id || null, name: "John Doe" },
-            },
-          });
-          observer.complete();
-        }, 20);
+      const link = new ApolloLink((operation) => {
+        fetchCount++;
+        return new Observable((observer) => {
+          setTimeout(() => {
+            observer.next({
+              data: {
+                user: { id: operation.variables.id || null, name: "John Doe" },
+              },
+            });
+            observer.complete();
+          }, 20);
+        });
       });
-    });
 
-    const client = new ApolloClient({
-      link,
-      cache: new InMemoryCache(),
-    });
-
-    const { result } = renderHook(
-      () => useLazyQuery(query, { fetchPolicy: "no-cache" }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    const [execute] = result.current;
-
-    await act(() => execute({ variables: { id: "2" } }));
-
-    expect(fetchCount).toBe(1);
-
-    await waitFor(() => {
-      expect(result.current[1].data).toEqual({
-        user: { id: "2", name: "John Doe" },
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
       });
-    });
 
-    expect(fetchCount).toBe(1);
+      const { result } = renderHook(
+        () => useLazyQuery(query, { fetchPolicy }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
-    await act(() => execute());
+      const [execute] = result.current;
 
-    await waitFor(() => {
-      expect(result.current[1].data).toEqual({
-        user: { id: "2", name: "John Doe" },
+      await act(() => execute({ variables: { id: "2" } }));
+
+      expect(fetchCount).toBe(1);
+
+      await waitFor(() => {
+        expect(result.current[1].data).toEqual({
+          user: { id: expect.anything(), name: "John Doe" },
+        });
       });
-    });
 
-    expect(fetchCount).toBe(2);
-  });
+      expect(fetchCount).toBe(1);
+
+      await act(() => execute());
+
+      await waitFor(() => {
+        expect(result.current[1].data).toEqual({
+          user: { id: "2", name: "John Doe" },
+        });
+      });
+
+      expect(fetchCount).toBe(2);
+    }
+  );
 
   describe("network errors", () => {
     async function check(errorPolicy: ErrorPolicy) {

@@ -126,4 +126,3 @@ function diffToResult<TData>(
 
   return result;
 }
-

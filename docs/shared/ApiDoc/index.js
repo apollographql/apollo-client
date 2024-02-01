@@ -15,5 +15,4 @@ export { ParameterTable } from "./ParameterTable";
 export { PropertyDetails } from "./PropertyDetails";
 export { EnumDetails } from "./EnumDetails";
 export { ManualTuple } from "./Tuple";
-export { getInterfaceReference } from "./getInterfaceReference";
 export { SourceLink } from "./SourceLink";

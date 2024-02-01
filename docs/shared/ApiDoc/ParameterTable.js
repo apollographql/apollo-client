@@ -3,12 +3,7 @@ import { useMDXComponents } from "@mdx-js/react";
 import PropTypes from "prop-types";
 import React from "react";
 import { GridItem, Text } from "@chakra-ui/react";
-import {
-  PropertySignatureTable,
-  SectionHeading,
-  getInterfaceReference,
-  useApiDocContext,
-} from ".";
+import { PropertySignatureTable, useApiDocContext } from ".";
 import { ResponsiveGrid } from "./ResponsiveGrid";
 
 export function ParameterTable({ canonicalReference }) {
@@ -25,11 +20,10 @@ export function ParameterTable({ canonicalReference }) {
         <GridItem className="cell heading">Description</GridItem>
 
         {item.parameters.map((parameter) => {
-          const interfaceReference = getInterfaceReference(
-            parameter.type,
-            item,
-            getItem
-          );
+          const interfaceReference =
+            parameter.primaryCanonicalReference?.endsWith(":interface") ?
+              parameter.primaryCanonicalReference
+            : undefined;
           const id = `${item.displayName.toLowerCase()}-parameters-${parameter.name.toLowerCase()}`;
 
           return (
@@ -68,7 +62,8 @@ export function ParameterTable({ canonicalReference }) {
                     Show/hide child attributes
                   </GridItem>
                   <PropertySignatureTable
-                    canonicalReference={interfaceReference.canonicalReference}
+                    canonicalReference={interfaceReference}
+                    genericNames={parameter.primaryGenericArguments}
                     display="child"
                     idPrefix={id}
                   />

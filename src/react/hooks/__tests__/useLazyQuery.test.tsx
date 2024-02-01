@@ -1521,14 +1521,16 @@ describe("useLazyQuery Hook", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      defaultOptions: { watchQuery: { fetchPolicy: "no-cache" } },
     });
 
-    const { result } = renderHook(() => useLazyQuery(query), {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
+    const { result } = renderHook(
+      () => useLazyQuery(query, { fetchPolicy: "no-cache" }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     const [execute] = result.current;
 

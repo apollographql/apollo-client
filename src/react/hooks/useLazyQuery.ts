@@ -13,6 +13,7 @@ import type {
 } from "../types/types.js";
 import { useInternalState } from "./useQuery.js";
 import { useApolloClient } from "./useApolloClient.js";
+import { useDeepMemo } from "./internal/index.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -73,6 +74,7 @@ export function useLazyQuery<
   const queryRef = React.useRef<
     DocumentNode | TypedDocumentNode<TData, TVariables>
   >();
+  const stableOptions = useDeepMemo(() => options, [options]);
   const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
 
@@ -130,7 +132,7 @@ export function useLazyQuery<
           }
         : { fetchPolicy: initialFetchPolicy };
 
-      const options = mergeOptions(optionsRef.current, {
+      const options = mergeOptions(stableOptions, {
         query: queryRef.current,
         ...execOptionsRef.current,
       });
@@ -145,7 +147,7 @@ export function useLazyQuery<
 
       return promise;
     },
-    []
+    [stableOptions]
   );
 
   return [execute, result];

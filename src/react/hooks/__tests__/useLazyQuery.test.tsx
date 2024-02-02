@@ -1606,6 +1606,8 @@ describe("useLazyQuery Hook", () => {
 
     let countRef = { current: 0 };
 
+    const trackClosureValue = jest.fn();
+
     const { result, rerender } = renderHook(
       () => {
         let count = countRef.current;
@@ -1614,23 +1616,17 @@ describe("useLazyQuery Hook", () => {
           fetchPolicy: "cache-first",
           variables: { id: "1" },
           onCompleted: () => {
-            // Test to ensure we don't have stale closures
-            expect(count).toEqual(countRef.current);
+            trackClosureValue("onCompleted", count);
           },
           onError: () => {
-            // Test to ensure we don't have stale closures
-            expect(count).toEqual(countRef.current);
+            trackClosureValue("onError", count);
           },
           skipPollAttempt: () => {
-            console.log("skipPollAttempt", count, countRef.current);
-            // Test to ensure we don't have stale closures
-            expect(count).toEqual(countRef.current);
+            trackClosureValue("skipPollAttempt", count);
             return false;
           },
           nextFetchPolicy: (currentFetchPolicy) => {
-            console.log("nextFetchPolicy", count, countRef.current);
-            // Test to ensure we don't have stale closures
-            expect(count).toEqual(countRef.current);
+            trackClosureValue("nextFetchPolicy", count);
             return currentFetchPolicy;
           },
         });
@@ -1649,9 +1645,6 @@ describe("useLazyQuery Hook", () => {
 
     expect(result.current[0]).toBe(execute);
 
-    // Stale closures with nextFetchPolicy are implicitly tested for each of
-    // these executions
-
     // Check for stale closures with onCompleted
     await act(() => result.current[0]());
     await waitFor(() => {
@@ -1659,6 +1652,11 @@ describe("useLazyQuery Hook", () => {
         user: { id: "1", name: "John Doe" },
       });
     });
+
+    // after fetch
+    expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 1);
+    expect(trackClosureValue).toHaveBeenNthCalledWith(2, "onCompleted", 1);
+    trackClosureValue.mockClear();
 
     countRef.current++;
     rerender();
@@ -1673,6 +1671,13 @@ describe("useLazyQuery Hook", () => {
       );
     });
 
+    // variables changed
+    expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 2);
+    // after fetch
+    expect(trackClosureValue).toHaveBeenNthCalledWith(2, "nextFetchPolicy", 2);
+    expect(trackClosureValue).toHaveBeenNthCalledWith(3, "onError", 2);
+    trackClosureValue.mockClear();
+
     countRef.current++;
     rerender();
 
@@ -1683,10 +1688,19 @@ describe("useLazyQuery Hook", () => {
       });
     });
 
+    // variables changed
+    expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 3);
+    // after fetch
+    expect(trackClosureValue).toHaveBeenNthCalledWith(2, "nextFetchPolicy", 3);
+    expect(trackClosureValue).toHaveBeenNthCalledWith(3, "onCompleted", 3);
+    trackClosureValue.mockClear();
+
     // Test for stale closures for skipPollAttempt
     result.current[1].startPolling(20);
     await wait(50);
     result.current[1].stopPolling();
+
+    expect(trackClosureValue).toHaveBeenCalledWith("skipPollAttempt", 3);
   });
 
   it("changes execute function identity when changing options", async () => {

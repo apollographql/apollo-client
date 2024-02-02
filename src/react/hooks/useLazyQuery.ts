@@ -74,12 +74,32 @@ export function useLazyQuery<
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
 
-  // Due to the way onCompleted and onError are implemented in useQuery, we
-  // only need to get stable callbacks for skipPollAttempt and nextFetchPolicy.
-  // The other 2 do not suffer from stale closure issues.
   const skipPollAttempt = useStableCallback(() => {
     return options?.skipPollAttempt?.() ?? false;
   });
+
+  const onCompleted = useStableCallback(
+    (
+      ...args: Parameters<
+        Extract<
+          LazyQueryHookOptions<TData, TVariables>["onCompleted"],
+          Function
+        >
+      >
+    ) => {
+      options?.onCompleted?.(...args);
+    }
+  );
+
+  const onError = useStableCallback(
+    (
+      ...args: Parameters<
+        Extract<LazyQueryHookOptions<TData, TVariables>["onError"], Function>
+      >
+    ) => {
+      options?.onError?.(...args);
+    }
+  );
 
   const nextFetchPolicy = useStableCallback(function (
     this: WatchQueryOptions<TVariables, TData>,
@@ -94,13 +114,18 @@ export function useLazyQuery<
       return options.nextFetchPolicy.apply(this, args);
     }
 
-    // current fetch policy
     return options?.nextFetchPolicy ?? args[0];
   });
 
   const stableOptions = useDeepMemo<LazyQueryHookOptions<TData, TVariables>>(
-    () => ({ ...options, skipPollAttempt, nextFetchPolicy }),
-    [options, skipPollAttempt, nextFetchPolicy]
+    () => ({
+      ...options,
+      skipPollAttempt,
+      nextFetchPolicy,
+      onCompleted,
+      onError,
+    }),
+    [options, skipPollAttempt, nextFetchPolicy, onCompleted, onError]
   );
 
   const merged = mergeOptions(stableOptions, execOptionsRef.current || {});

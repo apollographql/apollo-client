@@ -1509,10 +1509,15 @@ describe("useLazyQuery Hook", () => {
       const link = new ApolloLink((operation) => {
         fetchCount++;
         return new Observable((observer) => {
+          const { id } = operation.variables;
+
           setTimeout(() => {
             observer.next({
               data: {
-                user: { id: operation.variables.id || null, name: "John Doe" },
+                user:
+                  id ?
+                    { id, name: "John Doe" }
+                  : { id: null, name: "John Default" },
               },
             });
             observer.complete();

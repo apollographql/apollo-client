@@ -1,11 +1,11 @@
-import { DocumentNode, ExecutionResult, GraphQLError } from "graphql";
-export { DocumentNode };
+import type { ExecutionResult, GraphQLError } from "graphql";
+import type { DocumentNode } from "graphql";
+import type { DefaultContext } from "../../core/index.js";
+export type { DocumentNode };
 
-import { Observable } from "../../utilities";
+import type { Observable } from "../../utilities/index.js";
 
 export type Path = ReadonlyArray<string | number>;
-type Data<T> = T | null | undefined;
-
 
 interface ExecutionPatchResultBase {
   hasNext?: boolean;
@@ -13,22 +13,19 @@ interface ExecutionPatchResultBase {
 
 export interface ExecutionPatchInitialResult<
   TData = Record<string, any>,
-  TExtensions = Record<string, any>
+  TExtensions = Record<string, any>,
 > extends ExecutionPatchResultBase {
   // if data is present, incremental is not
-  data: Data<TData>;
+  data: TData | null | undefined;
   incremental?: never;
   errors?: ReadonlyArray<GraphQLError>;
   extensions?: TExtensions;
 }
 
-export interface IncrementalPayload<
-  TData,
-  TExtensions,
-> {
+export interface IncrementalPayload<TData, TExtensions> {
   // data and path must both be present
   // https://github.com/graphql/graphql-spec/pull/742/files#diff-98d0cd153b72b63c417ad4238e8cc0d3385691ccbde7f7674bc0d2a718b896ecR288-R293
-  data: Data<TData>;
+  data: TData | null;
   label?: string;
   path: Path;
   errors?: ReadonlyArray<GraphQLError>;
@@ -37,7 +34,7 @@ export interface IncrementalPayload<
 
 export interface ExecutionPatchIncrementalResult<
   TData = Record<string, any>,
-  TExtensions = Record<string, any>
+  TExtensions = Record<string, any>,
 > extends ExecutionPatchResultBase {
   // the reverse is also true: if incremental is present,
   // data (and errors and extensions) are not
@@ -49,18 +46,28 @@ export interface ExecutionPatchIncrementalResult<
   extensions?: never;
 }
 
+export interface ApolloPayloadResult<
+  TData = Record<string, any>,
+  TExtensions = Record<string, any>,
+> {
+  payload: SingleExecutionResult | ExecutionPatchResult | null;
+  // Transport layer errors (as distinct from GraphQL or NetworkErrors),
+  // these are fatal errors that will include done: true.
+  errors?: ReadonlyArray<Error | string>;
+}
+
 export type ExecutionPatchResult<
   TData = Record<string, any>,
-  TExtensions = Record<string, any>
+  TExtensions = Record<string, any>,
 > =
   | ExecutionPatchInitialResult<TData, TExtensions>
   | ExecutionPatchIncrementalResult<TData, TExtensions>;
 
-export interface GraphQLRequest {
+export interface GraphQLRequest<TVariables = Record<string, any>> {
   query: DocumentNode;
-  variables?: Record<string, any>;
+  variables?: TVariables;
   operationName?: string;
-  context?: Record<string, any>;
+  context?: DefaultContext;
   extensions?: Record<string, any>;
 }
 
@@ -69,24 +76,24 @@ export interface Operation {
   variables: Record<string, any>;
   operationName: string;
   extensions: Record<string, any>;
-  setContext: (context: Record<string, any>) => Record<string, any>;
-  getContext: () => Record<string, any>;
+  setContext: (context: DefaultContext) => DefaultContext;
+  getContext: () => DefaultContext;
 }
 
 export interface SingleExecutionResult<
   TData = Record<string, any>,
-  TContext = Record<string, any>,
-  TExtensions = Record<string, any>
+  TContext = DefaultContext,
+  TExtensions = Record<string, any>,
 > extends ExecutionResult<TData, TExtensions> {
   // data might be undefined if errorPolicy was set to 'ignore'
-  data?: Data<TData>;
+  data?: TData | null;
   context?: TContext;
 }
 
 export type FetchResult<
   TData = Record<string, any>,
   TContext = Record<string, any>,
-  TExtensions = Record<string, any>
+  TExtensions = Record<string, any>,
 > =
   | SingleExecutionResult<TData, TContext, TExtensions>
   | ExecutionPatchResult<TData, TExtensions>;

@@ -1,0 +1,596 @@
+---
+title: Document transforms
+description: Make custom modifications to your GraphQL documents
+minVersion: 3.8.0
+api_doc:
+  - "@apollo/client!~DocumentTransformOptions:interface"
+---
+import { InterfaceDetails } from '../../shared/ApiDoc';
+
+> This article assumes you're familiar with the [anatomy of a GraphQL query](https://www.apollographql.com/blog/graphql/basics/the-anatomy-of-a-graphql-query/) and the concept of an [abstract syntax tree (AST)](https://en.wikipedia.org/wiki/Abstract_syntax_tree). To explore a GraphQL AST, visit [AST Explorer](https://astexplorer.net/).
+
+Have you noticed that Apollo Client modifies your queries—such as adding the `__typename` field—before sending those queries to your GraphQL server? It does this through **document transforms**, functions that modify GraphQL documents before query execution.
+
+Apollo Client provides an advanced capability that lets you define your own GraphQL document transforms to modify your GraphQL queries. This article explains how to make and use custom GraphQL document transforms.
+
+## Overview
+
+Document transforms allow you to programmatically modify GraphQL documents used to query data in your application. A GraphQL document is an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) that defines one or more operations and fragments, parsed from a raw GraphQL query string using the `gql` function. You can create your own document transforms using the `DocumentTransform` class. The created transform is then passed to the `ApolloClient` constructor.
+
+```ts
+import { DocumentTransform } from '@apollo/client';
+
+const documentTransform = new DocumentTransform((document) => {
+  // modify the document
+  return transformedDocument;
+});
+
+const client = new ApolloClient({
+  documentTransform
+});
+```
+
+### Lifecycle
+
+Apollo Client runs document transforms before every GraphQL request for all operations. This extends to any API that performs a network request, such as the [`useQuery`](/react/api/react/hooks#usequery) hook or the [`refetch`](/react/api/core/ObservableQuery#refetch) function on [`ObservableQuery`](/react/api/core/ObservableQuery).
+
+Document transforms are run early in the request's lifecycle. This makes it possible for the cache to see modifications to GraphQL documents—an essential distinction from document modifications made to GraphQL documents in an [Apollo Link](/react/api/link/introduction). Since document transforms are run early in the request lifecycle, this makes it possible to add [`@client`](/react/data/directives#client) directives to fields in your document transform to turn the field into a [local-only field](/react/local-state/managing-state-with-field-policies), or to add fragment selections for fragments defined in the [fragment registry](/react/data/fragments#registering-named-fragments-using-createfragmentregistry).
+
+### Interacting with built-in transforms
+
+Apollo Client ships with built-in document transforms that are essential to the client's functionality.
+
+- The `__typename` field is added to every selection set in a query to identify the type of all objects returned by the GraphQL operation.
+- GraphQL documents that use fragments defined in the [fragment registry](/react/data/fragments#registering-named-fragments-using-createfragmentregistry) are added to the document before the request is sent over the network (requires Apollo Client 3.7 or later).
+
+It's crucial for custom document transforms to interact with these built-in features. To make the most of your custom document transform, Apollo Client runs these built-in transforms twice: once before and once after your transform.
+
+Running the built-in transforms before your custom transform allows your transform to both see the `__typename` fields added to each field's selection set and modify fragment definitions defined in the fragment registry. Apollo Client understands that your transform may add new selection sets or new fragment selections to the GraphQL document. Because of this, Apollo Client reruns the built-in transforms after your custom transforms.
+
+Running built-in transforms twice is a convenient capability because it means that you don't have to remember to include the `__typename` field for any added selection sets. Nor do you need to look up fragment definitions in the fragment registry for fragment selections added to the GraphQL document.
+
+## Write your own document transform
+
+As an example, let's write a document transform that ensures an `id` field is selected anytime `currentUser` is queried. We will use several helper functions and utilities provided by the [`graphql-js`](https://graphql.org/graphql-js/) library to help us traverse the AST and modify the GraphQL document.
+
+First, we must create a new document transform using the `DocumentTransform` class provided by Apollo Client. The `DocumentTransform` constructor takes a callback function that runs for each GraphQL document transformed. The GraphQL `document` is passed as the only argument to this callback function.
+
+```ts
+import { DocumentTransform } from '@apollo/client';
+
+const documentTransform = new DocumentTransform((document) => {
+  // Modify the document
+});
+```
+
+To modify the document, we bring in the [`visit`](https://graphql.org/graphql-js/language/#visit) function from `graphql-js` that walks the AST and allows us to modify its nodes. The `visit` function takes a GraphQL AST as the first argument and a visitor as the second argument. The `visit` function returns our modified or unmodified GraphQL document, which we return from our document transform callback function.
+
+```ts {5-9}
+import { DocumentTransform } from '@apollo/client';
+import { visit } from 'graphql';
+
+const documentTransform = new DocumentTransform((document) => {
+  const transformedDocument = visit(document, {
+    // visitor
+  });
+
+  return transformedDocument;
+});
+```
+
+Visitors allow you to visit many types of nodes in the AST, such as directives, fragments, and fields. In our example, we only care about visiting fields since we want to modify the `currentUser` field in our queries. To visit a field, we need to define a `Field` callback function that will be called whenever the traversal encounters one.
+
+```ts {2-4}
+const transformedDocument = visit(document, {
+  Field(field) {
+    // ...
+  }
+});
+```
+
+> This example uses the shorthand visitor syntax, which defines the `enter` function on this node for us. This is equivalent to the following:
+> ```ts
+> visit(document, {
+>   Field: {
+>     enter(field) {
+>       // ...
+>     }
+>   }
+> });
+> ```
+
+Our document transform only needs to modify a field named `currentUser`, so we need to check the field's `name` property to determine if we are working with the `currentUser` field. Let's add a conditional check and return early if we encounter any field not named `currentUser`.
+
+```ts
+const transformedDocument = visit(document, {
+  Field(field) {
+    if (field.name.value !== 'currentUser') {
+      return;
+    }
+  }
+});
+```
+> Returning `undefined` from our `Field` visitor tells the `visit` function to leave the node unchanged.
+
+Now that we've determined we are working with the `currentUser` field, we need to figure out if our `id` field is already part of the `currentUser` field's selection set. This ensures we don't accidentally select the field twice in our query.
+
+To do so, let's get the field's `selectionSet` property and loop over its `selections` property to determine if the `id` field is included.
+
+It's important to note that a `selectionSet` may contain `selections` of both fields and fragments. Our implementation only needs to perform checks against fields, so we also check the selection's `kind` property. If we find a match on a field named `id`, we can stop traversal of the AST.
+
+We will bring in both the [`Kind`](https://graphql.org/graphql-js/language/#kind) enum from `graphql-js`, which allows us to compare against the selection's `kind` property, and the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinel, which directs the `visit` function to stop traversal of the AST.
+
+```ts {1,6-15}
+import { visit, Kind, BREAK } from 'graphql';
+
+const transformedDocument = visit(document, {
+  Field(field) {
+    // ...
+    const selections = field.selectionSet?.selections ?? [];
+
+    for (const selection of selections) {
+      if (
+        selection.kind === Kind.FIELD &&
+        selection.name.value === 'id'
+      ) {
+        return BREAK;
+      }
+    }
+  }
+});
+```
+
+> To keep our document transform simple, it does not traverse fragments within the `currentUser` field to determine if those fragments contain an `id` field. A more complete version of this document transform might perform this check.
+
+Now that we know the `id` field is missing, we can add it to our `currentUser` field's selection set. To do so, let's create a new field and give it a name of `id`. This is represented as a plain object with the `kind` property set to `Kind.FIELD` and a `name` node that defines the field's name.
+
+```ts
+const idField = {
+  kind: Kind.FIELD,
+  name: {
+    kind: Kind.NAME,
+    value: 'id',
+  },
+};
+```
+
+We now return a modified field from our visitor that adds the `id` field to the `currentUser` field's `selectionSet`. This updates our GraphQL document.
+
+```ts {8-14}
+const transformedDocument = visit(document, {
+  Field(field) {
+    // ...
+    const idField = {
+      // ...
+    };
+
+    return {
+      ...field,
+      selectionSet: {
+        ...field.selectionSet,
+        selections: [...selections, idField],
+      },
+    };
+  }
+});
+```
+
+> This example adds the `id` field to the end of the selection set. Order doesn't matter—you may prefer to put the field elsewhere in the `selections` array.
+
+Hooray! We now have a working document transform that ensures the `id` field is selected whenever a query containing the `currentUser` field is sent to our server. For completeness, here is the full definition of our custom document transform after completing this example.
+
+```ts
+import { DocumentTransform } from '@apollo/client';
+import { visit, Kind, BREAK } from 'graphql';
+
+const documentTransform = new DocumentTransform((document) => {
+  const transformedDocument = visit(document, {
+    Field(field) {
+      if (field.name.value !== 'currentUser') {
+        return;
+      }
+
+      const selections = field.selectionSet?.selections ?? [];
+
+      for (const selection of selections) {
+        if (
+          selection.kind === Kind.FIELD &&
+          selection.name.value === 'id'
+        ) {
+          return BREAK;
+        }
+      }
+
+      const idField = {
+        kind: Kind.FIELD,
+        name: {
+          kind: Kind.NAME,
+          value: 'id',
+        },
+      };
+
+      return {
+        ...field,
+        selectionSet: {
+          ...field.selectionSet,
+          selections: [...selections, idField],
+        },
+      };
+    },
+  });
+
+  return transformedDocument;
+});
+```
+
+### Check our document transform
+
+We can check our custom document transform by calling the `transformDocument` function and passing a GraphQL query to it.
+
+```ts
+import { print } from 'graphql';
+
+const query = gql`
+  query TestQuery {
+    currentUser {
+      name
+    }
+  }
+`;
+
+const documentTransform = new DocumentTransform((document) => {
+  // ...
+});
+
+const modifiedQuery = documentTransform.transformDocument(query);
+
+console.log(print(modifiedQuery));
+// query TestQuery {
+//   currentUser {
+//     name
+//     id
+//   }
+// }
+```
+
+> We use the [`print`](https://graphql.org/graphql-js/language/#print) function exported by `graphql-js` to make the query human-readable.
+
+Similarly, we can verify that passing a query that _doesn't_ query for `currentUser` is unaffected by our transform.
+
+```ts
+const query = gql`
+  query TestQuery {
+    user {
+      name
+    }
+  }
+`;
+
+const modifiedQuery = documentTransform.transformDocument(query);
+
+console.log(print(modifiedQuery));
+// query TestQuery {
+//   user {
+//     name
+//   }
+// }
+```
+
+### Query your server using the document transform
+
+The `transformDocument` function is useful to spot check your document transform. In practice, however, this will be done for you by Apollo Client.
+
+Let's add our document transform to Apollo Client and send a query to the server. The network request will contain the updated GraphQL query and the data returned from the server will include the `id` field.
+
+```ts
+import { ApolloClient, DocumentTransform } from '@apollo/client';
+
+const query = gql`
+  query TestQuery {
+    currentUser {
+      name
+    }
+  }
+`;
+
+const documentTransform = new DocumentTransform((document) => {
+  // ...
+});
+
+const client = new ApolloClient({
+  // ...
+  documentTransform
+});
+
+const result = await client.query({ query });
+
+console.log(result.data);
+// {
+//   currentUser: {
+//     id: "...",
+//     name: "..."
+//   }
+// }
+```
+
+## Composing document transforms
+
+You may have noticed that the `ApolloClient` constructor only takes a single `documentTransform` option. As you add new capabilities to your document transforms, it may grow unwieldy. The `DocumentTransform` class makes it easy to split and compose multiple transforms into a single one.
+
+### Combining multiple document transforms
+
+You can combine multiple document transforms together using the `concat()` function. This forms a "chain" of document transforms that are run one right after the other.
+
+```ts
+const documentTransform1 = new DocumentTransform(transform1);
+const documentTransform2 = new DocumentTransform(transform2);
+
+const documentTransform = documentTransform1.concat(documentTransform2);
+```
+
+Here `documentTransform1` is combined with `documentTransform2` into a single document transform. Calling the `transformDocument()` function on `documentTransform` runs the GraphQL document through `documentTransform1` and then through `documentTransform2`. Changes made to the GraphQL document in `documentTransform1` are seen by `documentTransform2`.
+
+#### A note about performance
+
+Combining multiple transforms is a powerful feature that makes it easy to split up transform logic, which can boost maintainability. Depending on the implementation of your visitor, this can result in the traversal of the GraphQL document AST multiple times. Most of the time, this shouldn't be an issue. We recommend using the [`BREAK`](https://graphql.org/graphql-js/language/#break) sentinel from `graphql-js` to prevent unnecessary traversal.
+
+Suppose you are sending very large queries that require several traversals and have already optimized your visitors with the `BREAK` sentinel. In that case, it's best to combine the transforms into a single visitor that traverses the AST once.
+
+See the section on [document caching](#document-caching) to learn how Apollo Client applies optimizations to individual document transforms to mitigate the performance impact when transforming the same GraphQL document multiple times.
+
+### Conditionally running document transforms
+
+At times, you may need to conditionally run a document transform depending on the GraphQL document. You can conditionally run a transform by calling the `split()` static function on the `DocumentTransform` constructor.
+
+```ts
+import { isSubscriptionOperation } from '@apollo/client/utilities';
+
+const subscriptionTransform = new DocumentTransform(transform);
+
+const documentTransform = DocumentTransform.split(
+  (document) => isSubscriptionOperation(document),
+  subscriptionTransform
+);
+```
+
+> This example uses the `isSubscriptionOperation` utility function added to Apollo Client in 3.8. Similarly, `isQueryOperation` and `isMutationOperation` utility functions are available for use.
+
+Here the `subscriptionTransform` is only run for subscription operations. For all other operations, no modifications are made to the GraphQL document. The resulting document transform will first check to see if the `document` is a subscription operation, and if so, proceed to run `subscriptionTransform`. If not, `subscriptionTransform` is bypassed, and the GraphQL document is returned as-is.
+
+The `split` function also allows you to pass a second document transform to its function, allowing you to replicate an if/else condition.
+
+```ts
+const subscriptionTransform = new DocumentTransform(transform1);
+const defaultTransform = new DocumentTransform(transform2)
+
+const documentTransform = DocumentTransform.split(
+  (document) => isSubscriptionOperation(document),
+  subscriptionTransform,
+  defaultTransform
+);
+```
+
+Here the `subscriptionTransform` is only run for subscription operations. For all other operations, the GraphQL document is run through the `defaultTransform`.
+
+#### Why should I use the `split()` function instead of a conditional check inside of the transform function?
+
+Sometimes, using the `split()` function is more efficient than running a conditional check inside the transform function.
+
+For example, you can run a transform by adding a conditional check inside the transform function itself:
+
+```ts
+const documentTransform = new DocumentTransform((document) => {
+  if (shouldTransform(document)) {
+    // ...
+    return transformedDocument
+  }
+
+  return document
+});
+```
+
+Consider the case where you've combined multiple document transforms using the `concat()` function:
+
+```ts
+const documentTransform1 = new DocumentTransform(transform1);
+const documentTransform2 = new DocumentTransform(transform2);
+const documentTransform3 = new DocumentTransform(transform3);
+
+const documentTransform = documentTransform1
+  .concat(documentTransform2)
+  .concat(documentTransform3);
+```
+
+The `split()` function makes skipping the _entire_ chain of document transforms easier.
+
+```ts
+const documentTransform = DocumentTransform.split(
+  (document) => shouldTransform(document),
+  documentTransform1
+    .concat(documentTransform2)
+    .concat(documentTransform3)
+);
+```
+
+## Document caching
+
+You should strive to make your document transforms deterministic. This means the document transform should always output the same transformed GraphQL document when given the same input GraphQL document. The `DocumentTransform` class optimizes for this case by caching the transformed result for each input GraphQL document. This speeds up repeated calls to the document transform to avoid unnecessary work.
+
+The `DocumentTransform` class takes this further and records all transformed documents. That means that passing an _already_ transformed document to the document transform will immediately return the GraphQL document.
+
+```ts
+const transformed1 = documentTransform.transformDocument(document);
+const transformed2 = documentTransform.transformDocument(transformed1);
+
+transformed1 === transformed2; // => true
+```
+
+> In practice, this optimization is invisible to you. Apollo Client calls the `transformDocument` function on the document transform for you. This optimization primarily benefits the internals of Apollo Client where the transformed document is passed around several areas of the code base.
+
+### Non-deterministic document transforms
+
+In rare circumstances, you may need to rely on a runtime condition from outside the transform function that changes the result of the document transform. Due to the automatic caching of the document transform, this becomes a problem when that runtime condition changes between calls to your document transform.
+
+Instead of completely disabling the document cache in these situations, you can provide a custom cache key that will be used to cache the result of the document transform. This ensures your transform is only called as often as necessary while maintaining the flexibility of the runtime condition.
+
+To customize the cache key, pass the `getCacheKey` function as an option to the second argument of the `DocumentTransform` constructor. This function receives the `document` that will be passed to your transform function and is expected to return an array.
+
+As an example, here is a document transform that depends on whether the user is connected to the network.
+
+```ts
+const documentTransform = new DocumentTransform(
+  (document) => {
+    if (window.navigator.onLine) {
+      // Transform the document when the user is online
+    } else {
+      // Transform the document when the user is offline
+    }
+  },
+  {
+    getCacheKey: (document) => [document, window.navigator.onLine]
+  }
+);
+```
+
+> ⚠️ **It is highly recommended you use the `document` as part of your cache key.** In this example, if the `document` is omitted from the cache key, the document transform will only output two transformed documents: one for the `true` condition and one for the `false` condition. Using the `document` in the cache key ensures that each unique document in your application will be transformed accordingly.
+
+You may conditionally disable the cache for select GraphQL documents by returning `undefined` from the `getCacheKey` function. This will force the document transform to run, regardless of whether the input GraphQL document has been seen.
+
+```ts
+const documentTransform = new DocumentTransform(
+  (document) => {
+    // ...
+  },
+  {
+    getCacheKey: (document) => {
+      // Always run the transform function when `shouldCache` is `false`
+      if (shouldCache(document)) {
+        return [document]
+      }
+    }
+  }
+);
+```
+
+As a last resort, you may completely disable document caching to force your transform function to run each time your document transform is used. Set the `cache` option to `false` to disable the cache.
+
+```ts
+const documentTransform = new DocumentTransform(
+  (document) => {
+    // ...
+  },
+  {
+    cache: false
+  }
+);
+```
+
+### Caching within combined transforms
+
+When you combine multiple document transforms using the `concat()` function, each document transform's cache configuration is honored. This allows you to mix and match transforms that contain varying cache configurations and be confident the resulting GraphQL document is correctly transformed.
+
+```ts
+const cachedTransform = new DocumentTransform(transform);
+
+const varyingTransform = new DocumentTransform(transform, {
+  getCacheKey: (document) => [document, window.navigator.onLine]
+});
+
+const conditionalCachedTransform = new DocumentTransform(transform, {
+  getCacheKey: (document) => {
+    if (shouldCache(document)) {
+      return [document]
+    }
+  }
+});
+
+const nonCachedTransform = new DocumentTransform(transform, {
+  cache: false
+});
+
+const documentTransform =
+  cachedTransform
+    .concat(varyingTransform)
+    .concat(conditionalCachedTransform)
+    .concat(nonCachedTransform);
+```
+
+> We recommend adding non-cached document transforms to the end of the `concat()` chain. Document caching relies on referential equality to determine if the GraphQL document has been seen. If a non-cached document transform is defined before a cached transform, the cached transform will store new GraphQL documents created by the non-cached document transform each run. This could result in a memory leak.
+
+## TypeScript and GraphQL Code Generator
+
+[GraphQL Code Generator](https://the-guild.dev/graphql/codegen) is a popular tool that generates TypeScript types for your GraphQL documents. It does this by statically analyzing your code to search for GraphQL query strings.
+
+Document transforms present a challenge for this tool. Because document transforms are used at runtime, there's no way for static analysis to understand the changes applied to GraphQL documents from within document transforms.
+
+Thankfully, GraphQL Code Generator provides a [document transform](https://the-guild.dev/graphql/codegen/docs/advanced/document-transform) feature that allows you to connect Apollo Client document transforms to GraphQL Code Generator. Use your document transform inside the `transform` function passed to the GraphQL Code Generator config:
+
+```ts title="codegen.ts" {2,12-18}
+import type { CodegenConfig } from '@graphql-codegen/cli';
+import { documentTransform } from './path/to/your/transform';
+
+const config: CodegenConfig = {
+  schema: 'https://localhost:4000/graphql',
+  documents: ['src/**/*.tsx'],
+  generates: {
+    './src/gql/': {
+      preset: 'client',
+      documentTransforms: [
+        {
+          transform: ({ documents }) => {
+            return documents.map((documentFile) => {
+              documentFile.document = documentTransform
+                .transformDocument(documentFile.document);
+
+              return documentFile;
+            });
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+## You might not need document transforms
+
+Document transforms are a powerful feature of Apollo Client. After reading this article, you may be rushing to find as many use cases for this feature as possible. While we encourage you to use this feature where it makes sense in your application, there can be a hidden cost to using it.
+
+Consider what happens when working in a large production application that spans many teams within your organization. Document transforms are typically defined in the code base far from where GraphQL queries are defined. Not all developers may be aware of their existence nor understand their impact on the final GraphQL document.
+
+Document transforms can make endless modifications to GraphQL documents before they are sent to the network. You may find yourself in a position where the result returned from the GraphQL operation does not match the original GraphQL document. This can get especially confusing when document transforms remove fields or make other destructive changes.
+
+Consider leaning on existing techniques as a first resort, such as linting. For example, if you require that every selection set in your GraphQL document should include an `id` field, you may find it more useful to create a lint rule that complains when you forget to include it. This makes it more obvious exactly what to expect from your GraphQL queries since the lint rule is applied where your GraphQL queries are defined. Adding an `id` via a document transform makes this relationship an implicit one.
+
+We encourage you to document your own document transforms to create a shared knowledge base to help avoid confusion. This doesn't mean we consider this feature dangerous. After all, Apollo Client has been performing document transformations for nearly its entire existence and they are necessary for its core functionality.
+
+### Can I use this to define my own custom directives?
+
+At a glance, document transforms seem like a great place to create and define custom directives since they can detect their presence in the GraphQL document. Document transforms, however, don't have access to the cache, nor can they interact with the data returned from your GraphQL server. If your custom directive needs access to these features in Apollo Client, you will have difficulty finding ways to make this work.
+
+**Custom directives are limited to use cases that depend on modifications to the GraphQL document itself.**
+
+Here is an example that uses a DSL-like directive that depends on a feature flagging system to conditionally include fields in queries. The document transform modifies a custom `@feature` directive to a regular `@include` directive and adds a variable definition to the query.
+
+```ts
+const query = gql`
+  query MyQuery {
+    myCustomField @feature(name: "custom", version: 2)
+  }
+`;
+
+const documentTransform = new DocumentTransform((document) => {
+  // convert `@feature` directives to `@include` directives and update variable definitions
+});
+
+documentTransform.transformDocument(query);
+// query MyQuery($feature_custom_v2: Boolean!) {
+//   myCustomField @include(if: $feature_custom_v2)
+// }
+```
+
+## API Reference
+
+### Options
+
+<InterfaceDetails canonicalReference="@apollo/client!~DocumentTransformOptions:interface" headingLevel={3} />

@@ -1,6 +1,6 @@
-import { DocumentNode, Kind, print } from 'graphql';
-import gql from 'graphql-tag';
-import { disableFragmentWarnings } from 'graphql-tag';
+import { DocumentNode, Kind, print } from "graphql";
+import gql from "graphql-tag";
+import { disableFragmentWarnings } from "graphql-tag";
 
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
@@ -12,11 +12,11 @@ import {
   removeArgumentsFromDocument,
   removeFragmentSpreadFromDocument,
   removeClientSetsFromDocument,
-} from '../transform';
-import { getQueryDefinition } from '../getFromAST';
+} from "../transform";
+import { getQueryDefinition } from "../getFromAST";
 
-describe('removeArgumentsFromDocument', () => {
-  it('should remove a single variable', () => {
+describe("removeArgumentsFromDocument", () => {
+  it("should remove a single variable", () => {
     const query = gql`
       query Simple($variable: String!) {
         field(usingVariable: $variable) {
@@ -35,11 +35,11 @@ describe('removeArgumentsFromDocument', () => {
         network
       }
     `;
-    const doc = removeArgumentsFromDocument([{ name: 'variable' }], query)!;
+    const doc = removeArgumentsFromDocument([{ name: "variable" }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove a single variable and the field from the query', () => {
+  it("should remove a single variable and the field from the query", () => {
     const query = gql`
       query Simple($variable: String!) {
         field(usingVariable: $variable) {
@@ -55,14 +55,14 @@ describe('removeArgumentsFromDocument', () => {
       }
     `;
     const doc = removeArgumentsFromDocument(
-      [{ name: 'variable', remove: true }],
-      query,
+      [{ name: "variable", remove: true }],
+      query
     )!;
     expect(print(doc)).toBe(print(expected));
   });
 });
-describe('removeFragmentSpreadFromDocument', () => {
-  it('should remove a named fragment spread', () => {
+describe("removeFragmentSpreadFromDocument", () => {
+  it("should remove a named fragment spread", () => {
     const query = gql`
       query Simple {
         ...FragmentSpread
@@ -95,14 +95,47 @@ describe('removeFragmentSpreadFromDocument', () => {
       }
     `;
     const doc = removeFragmentSpreadFromDocument(
-      [{ name: 'FragmentSpread', remove: true }],
-      query,
+      [{ name: "FragmentSpread", remove: true }],
+      query
     )!;
     expect(print(doc)).toBe(print(expected));
   });
 });
-describe('removeDirectivesFromDocument', () => {
-  it('should not remove unused variable definitions unless the field is removed', () => {
+describe("removeDirectivesFromDocument", () => {
+  it("should remove inline fragments using a directive", () => {
+    const query = gql`
+      query Simple {
+        networkField
+        field {
+          ... on TypeA {
+            typeAThing
+          }
+          ... on TypeB @client {
+            typeBThing @client
+          }
+        }
+      }
+    `;
+
+    const expected = gql`
+      query Simple {
+        networkField
+        field {
+          ... on TypeA {
+            typeAThing
+          }
+        }
+      }
+    `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    )!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should not remove unused variable definitions unless the field is removed", () => {
     const query = gql`
       query Simple($variable: String!) {
         field(usingVariable: $variable) @client
@@ -117,11 +150,11 @@ describe('removeDirectivesFromDocument', () => {
       }
     `;
 
-    const doc = removeDirectivesFromDocument([{ name: 'client' }], query)!;
+    const doc = removeDirectivesFromDocument([{ name: "client" }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove unused variable definitions associated with the removed directive', () => {
+  it("should remove unused variable definitions associated with the removed directive", () => {
     const query = gql`
       query Simple($variable: String!) {
         field(usingVariable: $variable) @client
@@ -136,13 +169,13 @@ describe('removeDirectivesFromDocument', () => {
     `;
 
     const doc = removeDirectivesFromDocument(
-      [{ name: 'client', remove: true }],
-      query,
+      [{ name: "client", remove: true }],
+      query
     )!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should not remove used variable definitions', () => {
+  it("should not remove used variable definitions", () => {
     const query = gql`
       query Simple($variable: String!) {
         field(usingVariable: $variable) @client
@@ -157,13 +190,13 @@ describe('removeDirectivesFromDocument', () => {
     `;
 
     const doc = removeDirectivesFromDocument(
-      [{ name: 'client', remove: true }],
-      query,
+      [{ name: "client", remove: true }],
+      query
     )!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove fragment spreads and definitions associated with the removed directive', () => {
+  it("should remove fragment spreads and definitions associated with the removed directive", () => {
     const query = gql`
       query Simple {
         networkField
@@ -185,13 +218,13 @@ describe('removeDirectivesFromDocument', () => {
     `;
 
     const doc = removeDirectivesFromDocument(
-      [{ name: 'client', remove: true }],
-      query,
+      [{ name: "client", remove: true }],
+      query
     )!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should not remove fragment spreads and definitions used without the removed directive', () => {
+  it("should not remove fragment spreads and definitions used without the removed directive", () => {
     const query = gql`
       query Simple {
         networkField {
@@ -222,13 +255,13 @@ describe('removeDirectivesFromDocument', () => {
     `;
 
     const doc = removeDirectivesFromDocument(
-      [{ name: 'client', remove: true }],
-      query,
+      [{ name: "client", remove: true }],
+      query
     )!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove a simple directive', () => {
+  it("should remove a simple directive", () => {
     const query = gql`
       query Simple {
         field @storage(if: true)
@@ -240,11 +273,11 @@ describe('removeDirectivesFromDocument', () => {
         field
       }
     `;
-    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query)!;
+    const doc = removeDirectivesFromDocument([{ name: "storage" }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove a simple directive [test function]', () => {
+  it("should remove a simple directive [test function]", () => {
     const query = gql`
       query Simple {
         field @storage(if: true)
@@ -256,12 +289,12 @@ describe('removeDirectivesFromDocument', () => {
         field
       }
     `;
-    const test = ({ name: { value } }: { name: any }) => value === 'storage';
+    const test = ({ name: { value } }: { name: any }) => value === "storage";
     const doc = removeDirectivesFromDocument([{ test }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove only the wanted directive', () => {
+  it("should remove only the wanted directive", () => {
     const query = gql`
       query Simple {
         maybe @skip(if: false)
@@ -275,11 +308,11 @@ describe('removeDirectivesFromDocument', () => {
         field
       }
     `;
-    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query)!;
+    const doc = removeDirectivesFromDocument([{ name: "storage" }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove only the wanted directive [test function]', () => {
+  it("should remove only the wanted directive [test function]", () => {
     const query = gql`
       query Simple {
         maybe @skip(if: false)
@@ -293,12 +326,12 @@ describe('removeDirectivesFromDocument', () => {
         field
       }
     `;
-    const test = ({ name: { value } }: { name: any }) => value === 'storage';
+    const test = ({ name: { value } }: { name: any }) => value === "storage";
     const doc = removeDirectivesFromDocument([{ test }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove multiple directives in the query', () => {
+  it("should remove multiple directives in the query", () => {
     const query = gql`
       query Simple {
         field @storage(if: true)
@@ -312,11 +345,11 @@ describe('removeDirectivesFromDocument', () => {
         other: field
       }
     `;
-    const doc = removeDirectivesFromDocument([{ name: 'storage' }], query)!;
+    const doc = removeDirectivesFromDocument([{ name: "storage" }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove multiple directives of different kinds in the query', () => {
+  it("should remove multiple directives of different kinds in the query", () => {
     const query = gql`
       query Simple {
         maybe @skip(if: false)
@@ -333,16 +366,16 @@ describe('removeDirectivesFromDocument', () => {
       }
     `;
     const removed = [
-      { name: 'storage' },
+      { name: "storage" },
       {
-        test: (directive: any) => directive.name.value === 'client',
+        test: (directive: any) => directive.name.value === "client",
       },
     ];
     const doc = removeDirectivesFromDocument(removed, query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove a simple directive and its field if needed', () => {
+  it("should remove a simple directive and its field if needed", () => {
     const query = gql`
       query Simple {
         field @storage(if: true)
@@ -356,13 +389,13 @@ describe('removeDirectivesFromDocument', () => {
       }
     `;
     const doc = removeDirectivesFromDocument(
-      [{ name: 'storage', remove: true }],
-      query,
+      [{ name: "storage", remove: true }],
+      query
     )!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove a simple directive [test function]', () => {
+  it("should remove a simple directive [test function]", () => {
     const query = gql`
       query Simple {
         field @storage(if: true)
@@ -375,12 +408,12 @@ describe('removeDirectivesFromDocument', () => {
         keep
       }
     `;
-    const test = ({ name: { value } }: { name: any }) => value === 'storage';
+    const test = ({ name: { value } }: { name: any }) => value === "storage";
     const doc = removeDirectivesFromDocument([{ test, remove: true }], query)!;
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should return null if the query is no longer valid', () => {
+  it("should return null if the query is no longer valid", () => {
     const query = gql`
       query Simple {
         field @storage(if: true)
@@ -388,26 +421,26 @@ describe('removeDirectivesFromDocument', () => {
     `;
 
     const doc = removeDirectivesFromDocument(
-      [{ name: 'storage', remove: true }],
-      query,
+      [{ name: "storage", remove: true }],
+      query
     );
 
     expect(doc).toBe(null);
   });
 
-  it('should return null if the query is no longer valid [test function]', () => {
+  it("should return null if the query is no longer valid [test function]", () => {
     const query = gql`
       query Simple {
         field @storage(if: true)
       }
     `;
 
-    const test = ({ name: { value } }: { name: any }) => value === 'storage';
+    const test = ({ name: { value } }: { name: any }) => value === "storage";
     const doc = removeDirectivesFromDocument([{ test, remove: true }], query);
     expect(doc).toBe(null);
   });
 
-  it('should return null only if the query is not valid', () => {
+  it("should return null only if the query is not valid", () => {
     const query = gql`
       query Simple {
         ...fragmentSpread
@@ -419,13 +452,13 @@ describe('removeDirectivesFromDocument', () => {
     `;
 
     const doc = removeDirectivesFromDocument(
-      [{ name: 'storage', remove: true }],
-      query,
+      [{ name: "storage", remove: true }],
+      query
     )!;
     expect(print(doc)).toBe(print(query));
   });
 
-  it('should return null only if the query is not valid through nested fragments', () => {
+  it("should return null only if the query is not valid through nested fragments", () => {
     const query = gql`
       query Simple {
         ...fragmentSpread
@@ -441,14 +474,14 @@ describe('removeDirectivesFromDocument', () => {
     `;
 
     const doc = removeDirectivesFromDocument(
-      [{ name: 'storage', remove: true }],
-      query,
+      [{ name: "storage", remove: true }],
+      query
     );
 
     expect(doc).toBe(null);
   });
 
-  it('should only remove values asked through nested fragments', () => {
+  it("should only remove values asked through nested fragments", () => {
     const query = gql`
       query Simple {
         ...fragmentSpread
@@ -478,13 +511,13 @@ describe('removeDirectivesFromDocument', () => {
       }
     `;
     const doc = removeDirectivesFromDocument(
-      [{ name: 'storage', remove: true }],
-      query,
+      [{ name: "storage", remove: true }],
+      query
     )!;
     expect(print(doc)).toBe(print(expectedQuery));
   });
 
-  it('should return null even through fragments if needed', () => {
+  it("should return null even through fragments if needed", () => {
     const query = gql`
       query Simple {
         ...fragmentSpread
@@ -496,14 +529,14 @@ describe('removeDirectivesFromDocument', () => {
     `;
 
     const doc = removeDirectivesFromDocument(
-      [{ name: 'storage', remove: true }],
-      query,
+      [{ name: "storage", remove: true }],
+      query
     );
 
     expect(doc).toBe(null);
   });
 
-  it('should not throw in combination with addTypenameToDocument', () => {
+  it("should not throw in combination with addTypenameToDocument", () => {
     const query = gql`
       query Simple {
         ...fragmentSpread
@@ -520,15 +553,15 @@ describe('removeDirectivesFromDocument', () => {
 
     expect(() => {
       removeDirectivesFromDocument(
-        [{ name: 'storage', remove: true }],
-        addTypenameToDocument(query),
+        [{ name: "storage", remove: true }],
+        addTypenameToDocument(query)
       );
     }).not.toThrow();
   });
 });
 
-describe('query transforms', () => {
-  it('should correctly add typenames', () => {
+describe("query transforms", () => {
+  it("should correctly add typenames", () => {
     let testQuery = gql`
       query {
         author {
@@ -558,7 +591,7 @@ describe('query transforms', () => {
     expect(print(newQueryDoc)).toBe(expectedQueryStr);
   });
 
-  it('should not add duplicates', () => {
+  it("should not add duplicates", () => {
     let testQuery = gql`
       query {
         author {
@@ -589,7 +622,7 @@ describe('query transforms', () => {
     expect(print(newQueryDoc)).toBe(expectedQueryStr);
   });
 
-  it('should not screw up on a FragmentSpread within the query AST', () => {
+  it("should not screw up on a FragmentSpread within the query AST", () => {
     const testQuery = gql`
       query withFragments {
         user(id: 4) {
@@ -614,7 +647,7 @@ describe('query transforms', () => {
     expect(print(expectedQuery)).toBe(print(getQueryDefinition(modifiedQuery)));
   });
 
-  it('should modify all definitions in a document', () => {
+  it("should modify all definitions in a document", () => {
     const testQuery = gql`
       query withFragments {
         user(id: 4) {
@@ -653,7 +686,7 @@ describe('query transforms', () => {
     expect(print(expectedQuery)).toBe(print(newQueryDoc));
   });
 
-  it('should be capable of modifying any ASTNode', () => {
+  it("should be capable of modifying any ASTNode", () => {
     const originalQuery = gql`
       query withFragments {
         user(id: 4) {
@@ -671,7 +704,7 @@ describe('query transforms', () => {
 
     const fragmentSubtree: DocumentNode = {
       ...originalQuery,
-      definitions: originalQuery.definitions.map(def => {
+      definitions: originalQuery.definitions.map((def) => {
         if (def.kind === Kind.FRAGMENT_DEFINITION) {
           return addTypenameToDocument(def);
         }
@@ -679,31 +712,33 @@ describe('query transforms', () => {
       }),
     };
 
-    expect(print(fragmentSubtree)).toEqual(print(gql`
-      query withFragments {
-        user(id: 4) {
-          friends(first: 10) {
-            ...friendFields
+    expect(print(fragmentSubtree)).toEqual(
+      print(gql`
+        query withFragments {
+          user(id: 4) {
+            friends(first: 10) {
+              ...friendFields
+            }
           }
         }
-      }
 
-      fragment friendFields on User {
-        firstName
-        lastName
-        __typename
-      }
-    `));
+        fragment friendFields on User {
+          firstName
+          lastName
+          __typename
+        }
+      `)
+    );
 
     const userFieldSubtree: DocumentNode = {
       ...originalQuery,
-      definitions: originalQuery.definitions.map(def => {
+      definitions: originalQuery.definitions.map((def) => {
         if (def.kind === Kind.OPERATION_DEFINITION) {
           return {
             ...def,
             selectionSet: {
               ...def.selectionSet,
-              selections: def.selectionSet.selections.map(selection => {
+              selections: def.selectionSet.selections.map((selection) => {
                 if (
                   selection.kind === Kind.FIELD &&
                   selection.name.value === "user"
@@ -719,22 +754,24 @@ describe('query transforms', () => {
       }),
     };
 
-    expect(print(userFieldSubtree)).toEqual(print(gql`
-      query withFragments {
-        user(id: 4) {
-          friends(first: 10) {
-            ...friendFields
+    expect(print(userFieldSubtree)).toEqual(
+      print(gql`
+        query withFragments {
+          user(id: 4) {
+            friends(first: 10) {
+              ...friendFields
+              __typename
+            }
             __typename
           }
-          __typename
         }
-      }
 
-      fragment friendFields on User {
-        firstName
-        lastName
-      }
-    `));
+        fragment friendFields on User {
+          firstName
+          lastName
+        }
+      `)
+    );
 
     const wholeQueryFromJustTheFragment =
       addTypenameToDocument(userFieldSubtree);
@@ -742,32 +779,32 @@ describe('query transforms', () => {
     const wholeQueryFromUserFieldSubtree =
       addTypenameToDocument(fragmentSubtree);
 
-    expect(
-      print(wholeQueryFromUserFieldSubtree)
-    ).toEqual(
+    expect(print(wholeQueryFromUserFieldSubtree)).toEqual(
       print(wholeQueryFromJustTheFragment)
     );
 
-    expect(print(wholeQueryFromUserFieldSubtree)).toEqual(print(gql`
-      query withFragments {
-        user(id: 4) {
-          friends(first: 10) {
-            ...friendFields
+    expect(print(wholeQueryFromUserFieldSubtree)).toEqual(
+      print(gql`
+        query withFragments {
+          user(id: 4) {
+            friends(first: 10) {
+              ...friendFields
+              __typename
+            }
             __typename
           }
+        }
+
+        fragment friendFields on User {
+          firstName
+          lastName
           __typename
         }
-      }
-
-      fragment friendFields on User {
-        firstName
-        lastName
-        __typename
-      }
-    `));
+      `)
+    );
   });
 
-  it('should be able to apply a QueryTransformer correctly', () => {
+  it("should be able to apply a QueryTransformer correctly", () => {
     const testQuery = gql`
       query {
         author {
@@ -791,7 +828,7 @@ describe('query transforms', () => {
     expect(print(expectedQuery)).toBe(print(getQueryDefinition(modifiedQuery)));
   });
 
-  it('should be able to apply a MutationTransformer correctly', () => {
+  it("should be able to apply a MutationTransformer correctly", () => {
     const testQuery = gql`
       mutation {
         createAuthor(firstName: "John", lastName: "Smith") {
@@ -814,7 +851,7 @@ describe('query transforms', () => {
     expect(print(expectedQuery)).toBe(print(modifiedQuery));
   });
 
-  it('should add typename fields correctly on this one query', () => {
+  it("should add typename fields correctly on this one query", () => {
     const testQuery = gql`
       query Feed($type: FeedType!) {
         # Eventually move this into a no fetch query right on the entry
@@ -885,7 +922,7 @@ describe('query transforms', () => {
     expect(print(expectedQuery)).toBe(print(getQueryDefinition(modifiedQuery)));
   });
 
-  it('should correctly remove connections', () => {
+  it("should correctly remove connections", () => {
     let testQuery = gql`
       query {
         author {
@@ -914,8 +951,8 @@ describe('query transforms', () => {
   });
 });
 
-describe('removeClientSetsFromDocument', () => {
-  it('should remove @client fields from document', () => {
+describe("removeClientSetsFromDocument", () => {
+  it("should remove @client fields from document", () => {
     const query = gql`
       query Author {
         name
@@ -932,7 +969,7 @@ describe('removeClientSetsFromDocument', () => {
     expect(print(doc)).toBe(print(expected));
   });
 
-  it('should remove @client fields from fragments', () => {
+  it("should remove @client fields from fragments", () => {
     const query = gql`
       fragment authorInfo on Author {
         name
@@ -945,6 +982,336 @@ describe('removeClientSetsFromDocument', () => {
         name
       }
     `;
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should remove @client and __typename only fragment when query precedes fragment", () => {
+    const query = gql`
+      query {
+        author {
+          name
+          ...toBeRemoved
+        }
+      }
+
+      fragment toBeRemoved on Author {
+        __typename
+        isLoggedIn @client
+      }
+    `;
+
+    const expected = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should remove @client and __typename only fragment when fragment precedes query", () => {
+    const query = gql`
+      fragment toBeRemoved on Author {
+        __typename
+        isLoggedIn @client
+      }
+
+      query {
+        author {
+          name
+          ...toBeRemoved
+        }
+      }
+    `;
+
+    const expected = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should not remove __typename-only fragment (without @client) when query precedes fragment", () => {
+    const query = gql`
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+
+      fragment authorInfo on Author {
+        __typename
+      }
+    `;
+
+    const expected = query;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should not remove __typename-only fragment (without @client) when fragment precedes query", () => {
+    const query = gql`
+      fragment authorInfo on Author {
+        __typename
+      }
+
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+    `;
+
+    const expected = query;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should not remove fragment referenced by fragment used by operation", () => {
+    const query = gql`
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+
+      fragment authorInfo on Author {
+        __typename
+        ...moreAuthorInfo
+      }
+
+      fragment moreAuthorInfo on Author {
+        extraDetails
+        isLoggedIn @client
+      }
+    `;
+
+    const expected = gql`
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+
+      fragment authorInfo on Author {
+        __typename
+        ...moreAuthorInfo
+      }
+
+      fragment moreAuthorInfo on Author {
+        extraDetails
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should remove __typename only fragment after @client removal", () => {
+    const query = gql`
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+
+      fragment authorInfo on Author {
+        __typename
+        ...moreAuthorInfo @client
+      }
+
+      fragment moreAuthorInfo on Author {
+        extraDetails
+        isLoggedIn @client
+      }
+    `;
+
+    const expected = gql`
+      query {
+        author {
+          name
+        }
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+
+    const queryInAnotherOrder = gql`
+      fragment moreAuthorInfo on Author {
+        extraDetails
+        isLoggedIn @client
+      }
+
+      fragment authorInfo on Author {
+        __typename
+        ...moreAuthorInfo @client
+      }
+
+      query {
+        author {
+          name
+          ...authorInfo
+        }
+      }
+    `;
+
+    const docInAnotherOrder =
+      removeClientSetsFromDocument(queryInAnotherOrder)!;
+    expect(print(docInAnotherOrder)).toBe(print(expected));
+  });
+
+  it("should keep moreAuthorInfo fragment if used elsewhere", () => {
+    const query = gql`
+      query {
+        author {
+          name
+          ...authorInfo
+          ...moreAuthorInfo
+        }
+      }
+
+      fragment authorInfo on Author {
+        __typename
+        ...moreAuthorInfo @client
+      }
+
+      fragment moreAuthorInfo on Author {
+        extraDetails
+        isLoggedIn @client
+      }
+    `;
+
+    const expected = gql`
+      query {
+        author {
+          name
+          ...moreAuthorInfo
+        }
+      }
+
+      fragment moreAuthorInfo on Author {
+        extraDetails
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+
+    const queryInAnotherOrder = gql`
+      fragment authorInfo on Author {
+        ...moreAuthorInfo @client
+        __typename
+      }
+
+      query {
+        author {
+          name
+          ...authorInfo
+          ...moreAuthorInfo
+        }
+      }
+
+      fragment moreAuthorInfo on Author {
+        isLoggedIn @client
+        extraDetails
+      }
+    `;
+
+    const docInAnotherOrder =
+      removeClientSetsFromDocument(queryInAnotherOrder)!;
+    expect(print(docInAnotherOrder)).toBe(print(expected));
+  });
+
+  it("should remove unused variables in nested fragments", () => {
+    const query = gql`
+      query SomeQuery($someVar: String) {
+        someField {
+          ...SomeFragment
+        }
+      }
+
+      fragment SomeFragment on SomeType {
+        firstField {
+          ...SomeOtherFragment
+        }
+      }
+
+      fragment SomeOtherFragment on SomeType {
+        someField @client(someArg: $someVar)
+      }
+    `;
+
+    const expected = gql`
+      query SomeQuery {
+        someField {
+          ...SomeFragment
+        }
+      }
+
+      fragment SomeFragment on SomeType {
+        firstField
+      }
+    `;
+
+    const doc = removeClientSetsFromDocument(query)!;
+    expect(print(doc)).toBe(print(expected));
+  });
+
+  it("should not remove variables used in unremoved parts of query", () => {
+    const query = gql`
+      query SomeQuery($someVar: String) {
+        someField {
+          ...SomeFragment
+        }
+      }
+
+      fragment SomeFragment on SomeType {
+        firstField {
+          ...SomeOtherFragment
+        }
+      }
+
+      fragment SomeOtherFragment on SomeType {
+        someField(someArg: $someVar) @client
+        yetAnotherField(someArg: $someVar)
+      }
+    `;
+
+    const expected = gql`
+      query SomeQuery($someVar: String) {
+        someField {
+          ...SomeFragment
+        }
+      }
+
+      fragment SomeFragment on SomeType {
+        firstField {
+          ...SomeOtherFragment
+        }
+      }
+
+      fragment SomeOtherFragment on SomeType {
+        yetAnotherField(someArg: $someVar)
+      }
+    `;
+
     const doc = removeClientSetsFromDocument(query)!;
     expect(print(doc)).toBe(print(expected));
   });

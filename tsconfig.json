@@ -7,7 +7,6 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "removeComments": true,
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
@@ -16,11 +15,10 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "outDir": "./dist",
-    "lib": ["es2015", "esnext.asynciterable", "dom"],
-    "jsx": "react"
+    "lib": ["es2015", "esnext.asynciterable"],
+    "jsx": "react",
+    "strict": true
   },
-  "include": ["src/**/*.ts"],
-  "exclude": [
-    "src/**/__tests__/**/*"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/__tests__/**/*"]
 }

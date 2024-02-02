@@ -1,0 +1,208 @@
+<table class="field-table api-ref">
+
+<thead>
+  <tr>
+    <td>Name /<br/>Type</td>
+    <td>Description</td>
+  </tr>
+</thead>
+<tbody>
+
+<tr>
+<td colspan="2">
+
+**Operation options**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `variables`
+
+`{ [key: string]: any }`
+
+</td>
+
+<td>
+
+An object containing all of the GraphQL variables your query requires to execute.
+
+Each key in the object corresponds to a variable name, and that key's value corresponds to the variable value.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `errorPolicy`
+
+`ErrorPolicy`
+
+</td>
+
+<td>
+
+Specifies how the query handles a response that returns both GraphQL errors and partial results.
+
+For details, see [GraphQL error policies](/react/data/error-handling/#graphql-error-policies).
+
+The default value is `none`, which causes the `useReadQuery` hook to throw the error.
+
+</td>
+</tr>
+
+<tr>
+<td colspan="2">
+
+**Networking options**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `context`
+
+`Record<string, any>`
+
+</td>
+
+<td>
+
+If you're using [Apollo Link](/react/api/link/introduction/), this object is the initial value of the `context` object that's passed along your link chain.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `canonizeResults`
+
+`Boolean`
+
+</td>
+
+<td>
+
+> **⚠️ Deprecated**:
+> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
+> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
+
+If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
+
+The default value is `false`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `client`
+
+`ApolloClient`
+
+</td>
+
+<td>
+
+The instance of `ApolloClient` to use to execute the query.
+
+By default, the instance that's passed down via context is used, but you can provide a different instance here.
+
+</td>
+</tr>
+
+<tr>
+<td colspan="2">
+
+**Caching options**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `fetchPolicy`
+
+`SuspenseQueryHookFetchPolicy`
+
+</td>
+
+<td>
+
+Specifies how the query interacts with the Apollo Client cache during execution (for example, whether it checks the cache for results before sending a request to the server).
+
+For details, see [Setting a fetch
+policy](/react/data/queries/#setting-a-fetch-policy). This hook only supports
+the `cache-first`, `network-only`, `no-cache`, and `cache-and-network` fetch
+policies.
+
+The default value is `cache-first`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `returnPartialData`
+
+`boolean`
+
+</td>
+
+<td>
+
+If `true`, the query can return _partial_ results from the cache if the cache doesn't contain results for _all_ queried fields.
+
+The default value is `false`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `refetchWritePolicy`
+
+`"merge" | "overwrite"`
+
+</td>
+
+<td>
+
+Watched queries must opt into overwriting existing data on refetch, by passing `refetchWritePolicy: "overwrite"` in their `WatchQueryOptions`.
+
+The default value is `"overwrite"`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `skip` (deprecated)
+
+`boolean`
+</td>
+
+<td>
+
+If `true`, the query is not executed. The default value is `false`.
+
+This option is deprecated and only supported to ease the migration from `useQuery`. It will be removed in a future release.
+Please use [`skipToken`](/react/api/react/hooks#skiptoken`) instead of the `skip` option as it is more type-safe.
+
+</td>
+</tr>
+
+</tbody>
+
+</table>

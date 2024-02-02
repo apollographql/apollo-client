@@ -1,0 +1,31 @@
+name: "Lock Threads"
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: lock
+
+jobs:
+  lock:
+    if: github.repository == 'apollographql/apollo-client'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dessant/lock-threads@v5
+        with:
+          github-token: ${{ github.token }}
+          log-output: true
+          issue-inactive-days: "30"
+          exclude-any-issue-labels: "discussion"
+          issue-comment: >
+            This issue has been automatically locked since there has not been any recent activity after it was closed. Please open a new issue for related bugs.
+
+            For general questions, we recommend using [StackOverflow](https://stackoverflow.com/questions/tagged/apollo-client) or our [discord server](https://discord.gg/graphos).
+
+          pr-inactive-days: "30"
+          exclude-any-pr-labels: "discussion"

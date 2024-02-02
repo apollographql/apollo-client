@@ -1,12 +1,14 @@
-import { validate, execute, GraphQLSchema } from 'graphql';
+import type { GraphQLSchema } from "graphql";
+import { validate, execute } from "graphql";
 
-import { ApolloLink, Operation, FetchResult } from '../core';
-import { Observable } from '../../utilities';
+import type { Operation, FetchResult } from "../core/index.js";
+import { ApolloLink } from "../core/index.js";
+import { Observable } from "../../utilities/index.js";
 
 export namespace SchemaLink {
   export type ResolverContext = Record<string, any>;
   export type ResolverContextFunction = (
-    operation: Operation,
+    operation: Operation
   ) => ResolverContext | PromiseLike<ResolverContext>;
 
   export interface Options {
@@ -48,39 +50,42 @@ export class SchemaLink extends ApolloLink {
   }
 
   public request(operation: Operation): Observable<FetchResult> {
-    return new Observable<FetchResult>(observer => {
-      new Promise<SchemaLink.ResolverContext>(
-        resolve => resolve(
-          typeof this.context === 'function'
-            ? this.context(operation)
-            : this.context
+    return new Observable<FetchResult>((observer) => {
+      new Promise<SchemaLink.ResolverContext>((resolve) =>
+        resolve(
+          typeof this.context === "function" ?
+            this.context(operation)
+          : this.context
         )
-      ).then(context => {
-        if (this.validate) {
-          const validationErrors = validate(this.schema, operation.query);
-          if (validationErrors.length > 0) {
-            return { errors: validationErrors };
+      )
+        .then((context) => {
+          if (this.validate) {
+            const validationErrors = validate(this.schema, operation.query);
+            if (validationErrors.length > 0) {
+              return { errors: validationErrors };
+            }
           }
-        }
 
-        return execute({
-          schema: this.schema,
-          document: operation.query,
-          rootValue: this.rootValue,
-          contextValue: context,
-          variableValues: operation.variables,
-          operationName: operation.operationName,
+          return execute({
+            schema: this.schema,
+            document: operation.query,
+            rootValue: this.rootValue,
+            contextValue: context,
+            variableValues: operation.variables,
+            operationName: operation.operationName,
+          });
+        })
+        .then((data) => {
+          if (!observer.closed) {
+            observer.next(data);
+            observer.complete();
+          }
+        })
+        .catch((error) => {
+          if (!observer.closed) {
+            observer.error(error);
+          }
         });
-      }).then(data => {
-        if (!observer.closed) {
-          observer.next(data);
-          observer.complete();
-        }
-      }).catch(error => {
-        if (!observer.closed) {
-          observer.error(error);
-        }
-      });
     });
   }
 }

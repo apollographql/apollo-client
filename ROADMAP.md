@@ -1,10 +1,10 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: Nov 2022**
+**Last updated: 2024-01-29**
 
-For up to date release notes, refer to the project's [Change Log](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
+For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
-> **Please note:** This is an approximation of **larger effort** work planned for the next 6 - 12 months. It does not cover all new functionality that will be added, and nothing here is set in stone. Also note that each of these releases, and several patch releases in-between, will include bug fixes (based on issue triaging) and community submitted PR's.
+> **Please note:** This is an approximation of **larger effort** work planned for the next 6 - 12 months. It does not cover all new functionality that will be added, and nothing here is set in stone. Also note that each of these releases, and several patch releases in-between, will include bug fixes (based on issue triaging) and community submitted PRs.
 
 ## ✋ Community feedback & prioritization
 
@@ -13,20 +13,35 @@ For up to date release notes, refer to the project's [Change Log](https://github
 
 ---
 
-## 3.8
+## [3.9.0](https://github.com/apollographql/apollo-client/milestone/32)
 
-- `Release 3.8` will focus on adding a new experimental hook: `useBackgroundQuery` as well as adding experimental support for React 18 `Suspense` and will also offer better support for React 18's `SSR` architecture.
-- These different features will be introduced in a series of Alpha releases so they can be tested and adopted incrementally.  Eventually these features be will be moving to Beta and then to RC and GA status.
-- As we release each new feature we'll be looking for feedback from the community on performance, usage and developer experience of adopting and implementing these new concepts in your applications.
+_Currently in RC phase_
 
-## 3.9
+  Tentative date: Jan 31, 2024
 
-- TBD
+Features include:
 
-## 3.10
+- Ability to preload a query via a `createQueryPreloader`/`preloadQuery` function outside of a React component that can be used with `useReadQuery` to suspend while loading
+- Introduce a new `useLoadableQuery` hook
+- Introduce a new `useQueryRefHandlers` hook
+- `<MockedProvider />` improvements
+- Optimizing memory usage
 
-- TBD
+## Future 3.x releases
+
+## [3.10.0](https://github.com/apollographql/apollo-client/milestone/33)
+
+_Currently in planning phase_
+
+Features include:
+
+- schema-driven testing utilities
+- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
+- Data masking
+- leaner client (under alternate entry point)
+- Better types for `useQuery`/`useMutation`/`useSubscription`
+- Core `watchFragment` API to provide `useFragment`-like functionality for non-React envs
 
 ## 4.0
 
-- Release 4.0 will be our next major release of the Client and is still in `pre-planning` phases. See Github [4.0 Milestone](https://github.com/apollographql/apollo-client/milestone/31) for more details.
+- `Release 4.0` will be our next major release of the Client and is still in early planning.  See Github [4.0 Milestone](https://github.com/apollographql/apollo-client/milestone/31) for more details.

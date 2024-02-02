@@ -1,10 +1,12 @@
 ---
 title: Queries
 description: Fetch data with the useQuery hook
+api_doc:
+  - "@apollo/client!QueryHookOptions:interface"
+  - "@apollo/client!QueryResult:interface"
 ---
 
-import QueryOptions from '../../shared/query-options.mdx';
-import QueryResult from '../../shared/query-result.mdx';
+import { PropertySignatureTable } from '../../shared/ApiDoc';
 
 This article shows how to fetch GraphQL data in React with the `useQuery` hook and attach the result to your UI. You'll also learn how Apollo Client simplifies data management code by tracking error and loading states for you.
 
@@ -18,11 +20,13 @@ This article also assumes that you've already set up Apollo Client and have wrap
 
 ## Executing a query
 
-The `useQuery` [React hook](https://reactjs.org/docs/hooks-intro.html) is the primary API for executing queries in an Apollo application. To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
+The `useQuery` [React hook](https://react.dev/reference/react) is the primary API for executing queries in an Apollo application. To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
+
+> **Note:** in Apollo Client >= 3.8, Suspense data fetching hooks are available for querying data within `<Suspense />` boundaries using React 18's new concurrent rendering model. For more information see Apollo Client's [Suspense docs](./suspense/).
 
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
-```tsx title="index.js"
+```js title="index.js"
 import { gql, useQuery } from '@apollo/client';
 
 const GET_DOGS = gql`
@@ -37,7 +41,7 @@ const GET_DOGS = gql`
 
 Next, we'll create a component named `Dogs`. Inside it, we'll pass our `GET_DOGS` query to the `useQuery` hook:
 
-```tsx title="index.js"
+```jsx title="index.js"
 function Dogs({ onDogSelected }) {
   const { loading, error, data } = useQuery(GET_DOGS);
 
@@ -153,7 +157,7 @@ function DogPhoto({ breed }) {
   return (
     <div>
       <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
-      <button onClick={() => refetch({ breed: 'new_dog_breed' })}>
+      <button onClick={() => refetch()}>
         Refetch new breed!
       </button>
     </div>
@@ -209,7 +213,7 @@ function DogPhoto({ breed }) {
   return (
     <div>
       <img src={data.dog.displayImage} style={{ height: 100, width: 100 }} />
-      <button onClick={() => refetch({ breed: 'new_dog_breed' })}>
+      <button onClick={() => refetch()}>
         Refetch!
       </button>
     </div>
@@ -278,8 +282,11 @@ const { loading, error, data } = useQuery(GET_DOGS, {
   fetchPolicy: 'network-only', // Doesn't check cache before making a network request
 });
 ```
+<MinVersion version="3.1">
 
 ### `nextFetchPolicy`
+
+</MinVersion>
 
 You can _also_ specify a query's `nextFetchPolicy`. If you do, `fetchPolicy` is used for the query's _first_ execution, and `nextFetchPolicy` is used to determine how the query responds to future cache updates:
 
@@ -499,13 +506,13 @@ Most calls to `useQuery` can omit the majority of these options, but it's useful
 
 The `useQuery` hook accepts the following options:
 
-<QueryOptions />
+<PropertySignatureTable canonicalReference="@apollo/client!QueryHookOptions:interface" />
 
 ### Result
 
 After being called, the `useQuery` hook returns a result object with the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
 
-<QueryResult />
+<PropertySignatureTable canonicalReference="@apollo/client!QueryResult:interface" />
 
 ## Next steps
 

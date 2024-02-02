@@ -140,6 +140,10 @@ By specifying the ID of another cached object, you can query arbitrary cached da
 </td>
 <td>
 
+> **⚠️ Deprecated**:
+> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
+> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
+
 If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
 
 The default value is `false`.
@@ -304,9 +308,11 @@ writeQuery<TData = any, TVariables = any>(
 ): Reference | undefined
 ```
 
+<MinVersion version="3.5">
+
 ## `updateQuery`
 
-> This method is available in Apollo Client 3.5 and later.
+</MinVersion>
 
 Fetches data from the cache in the shape of a provided GraphQL query, then _updates_ that cached data according to a provided update function.
 
@@ -432,6 +438,8 @@ The default value is `false`.
 The update function of `updateQuery` takes a query's current cached value and returns the value that should replace it (or `undefined` if no change should be made).
 
 The returned value is automatically passed to [`writeQuery`](#writequery), which modifies the cached data.
+
+Please note the `update` function has to calculate the new value in an immutable way. You can read more about immutable updates in the [React documentation](https://beta.reactjs.org/learn/updating-objects-in-state).
 
 ### Signature
 
@@ -586,6 +594,10 @@ A map of any GraphQL variable names and values required by `fragment`.
 `Boolean`
 </td>
 <td>
+
+> **⚠️ Deprecated**:
+> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
+> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
 
 If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
 
@@ -756,10 +768,11 @@ writeFragment<TData = any, TVariables = any>(
   options: Cache.WriteFragmentOptions<TData, TVariables>,
 ): Reference | undefined
 ```
+<MinVersion version="3.5">
 
 ## `updateFragment`
 
-> This method is available in Apollo Client 3.5 and later.
+</MinVersion>
 
 Fetches data from the cache in the shape of a provided GraphQL fragment, then _updates_ that cached data according to a provided update function.
 
@@ -891,6 +904,8 @@ The default value is `false`.
 The update function of `updateFragment` takes a fragment's current cached value and returns the value that should replace it (or `undefined` if no change should be made).
 
 The returned value is automatically passed to [`writeFragment`](#writefragment), which modifies the cached data.
+
+Please note the `update` function has to calculate the new value in an immutable way. You can read more about immutable updates in the [React documentation](https://beta.reactjs.org/learn/updating-objects-in-state).
 
 ### Signature
 
@@ -1085,7 +1100,7 @@ The full key for the field used internally, including serialized key arguments.
 </td>
 <td>
 
-A helper function for reading other fields within the current object.
+A helper function for reading other fields on the object passed to the modifier function as the first parameter.
 </td>
 </tr>
 

@@ -372,7 +372,7 @@ Note that even if you _do_ store local data as fields in the Apollo Client cache
 
 By default, neither a reactive variable nor the `InMemoryCache` persists its state across sessions (for example, if a user refreshes their browser). To persist this state, you need to add logic to do so.
 
-The `apollo-3-cache-persist` library helps you persist and rehydrate the Apollo Client cache between sessions. For details, see [Persisting the cache](../caching/advanced-topics/#persisting-the-cache).
+The `apollo3-cache-persist` library helps you persist and rehydrate the Apollo Client cache between sessions. For details, see [Persisting the cache](../caching/advanced-topics/#persisting-the-cache).
 
 There is currently no built-in API for persisting reactive variables, but you can write variable values to `localStorage` (or another store) whenever they're modified, and initialize those variables with their stored value (if any) on app load.
 

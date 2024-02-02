@@ -1,41 +1,90 @@
-import { DocumentNode } from 'graphql';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { useCallback, useMemo, useRef } from 'react';
+import type { DocumentNode } from "graphql";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import * as React from "rehackt";
 
-import { OperationVariables } from '../../core';
-import { mergeOptions } from '../../utilities';
-import {
+import type { OperationVariables } from "../../core/index.js";
+import { mergeOptions } from "../../utilities/index.js";
+import type {
+  LazyQueryHookExecOptions,
   LazyQueryHookOptions,
   LazyQueryResultTuple,
+  NoInfer,
   QueryResult,
-} from '../types/types';
-import { useInternalState } from './useQuery';
-import { useApolloClient } from './useApolloClient';
+} from "../types/types.js";
+import { useInternalState } from "./useQuery.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
 const EAGER_METHODS = [
-  'refetch',
-  'reobserve',
-  'fetchMore',
-  'updateQuery',
-  'startPolling',
-  'subscribeToMore',
+  "refetch",
+  "reobserve",
+  "fetchMore",
+  "updateQuery",
+  "startPolling",
+  "subscribeToMore",
 ] as const;
 
-export function useLazyQuery<TData = any, TVariables = OperationVariables>(
+/**
+ * A hook for imperatively executing queries in an Apollo application, e.g. in response to user interaction.
+ *
+ * > Refer to the [Queries - Manual execution with useLazyQuery](https://www.apollographql.com/docs/react/data/queries#manual-execution-with-uselazyquery) section for a more in-depth overview of `useLazyQuery`.
+ *
+ * @example
+ * ```jsx
+ * import { gql, useLazyQuery } from "@apollo/client";
+ *
+ * const GET_GREETING = gql`
+ *   query GetGreeting($language: String!) {
+ *     greeting(language: $language) {
+ *       message
+ *     }
+ *   }
+ * `;
+ *
+ * function Hello() {
+ *   const [loadGreeting, { called, loading, data }] = useLazyQuery(
+ *     GET_GREETING,
+ *     { variables: { language: "english" } }
+ *   );
+ *   if (called && loading) return <p>Loading ...</p>
+ *   if (!called) {
+ *     return <button onClick={() => loadGreeting()}>Load greeting</button>
+ *   }
+ *   return <h1>Hello {data.greeting.message}!</h1>;
+ * }
+ * ```
+ * @since 3.0.0
+ *
+ * @param query - A GraphQL query document parsed into an AST by `gql`.
+ * @param options - Default options to control how the query is executed.
+ * @returns A tuple in the form of `[execute, result]`
+ */
+export function useLazyQuery<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LazyQueryHookOptions<TData, TVariables>
+  options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
-  const internalState = useInternalState(
-    useApolloClient(options && options.client),
-    query,
-  );
+  const execOptionsRef =
+    React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
+  const optionsRef = React.useRef<LazyQueryHookOptions<TData, TVariables>>();
+  const queryRef = React.useRef<
+    DocumentNode | TypedDocumentNode<TData, TVariables>
+  >();
+  const merged = mergeOptions(options, execOptionsRef.current || {});
+  const document = merged?.query ?? query;
 
-  const execOptionsRef = useRef<Partial<LazyQueryHookOptions<TData, TVariables>>>();
-  const merged = execOptionsRef.current
-    ? mergeOptions(options, execOptionsRef.current)
-    : options;
+  // Use refs to track options and the used query to ensure the `execute`
+  // function remains referentially stable between renders.
+  optionsRef.current = merged;
+  queryRef.current = document;
+
+  const internalState = useInternalState<TData, TVariables>(
+    useApolloClient(options && options.client),
+    document
+  );
 
   const useQueryResult = internalState.useQuery({
     ...merged,
@@ -46,13 +95,12 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
     useQueryResult.observable.options.initialFetchPolicy ||
     internalState.getDefaultFetchPolicy();
 
-  const result: QueryResult<TData, TVariables> =
-    Object.assign(useQueryResult, {
-      called: !!execOptionsRef.current,
-    });
+  const result: QueryResult<TData, TVariables> = Object.assign(useQueryResult, {
+    called: !!execOptionsRef.current,
+  });
 
   // We use useMemo here to make sure the eager methods have a stable identity.
-  const eagerMethods = useMemo(() => {
+  const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
       const method = result[key];
@@ -60,8 +108,9 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
         if (!execOptionsRef.current) {
           execOptionsRef.current = Object.create(null);
           // Only the first time populating execOptionsRef.current matters here.
-          internalState.forceUpdate();
+          internalState.forceUpdateState();
         }
+        // @ts-expect-error this is just too generic to type
         return method.apply(this, arguments);
       };
     }
@@ -71,26 +120,35 @@ export function useLazyQuery<TData = any, TVariables = OperationVariables>(
 
   Object.assign(result, eagerMethods);
 
-  const execute = useCallback<
-    LazyQueryResultTuple<TData, TVariables>[0]
-  >(executeOptions => {
-    execOptionsRef.current = executeOptions ? {
-      ...executeOptions,
-      fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
-    } : {
-      fetchPolicy: initialFetchPolicy,
-    };
+  const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
+    (executeOptions) => {
+      execOptionsRef.current =
+        executeOptions ?
+          {
+            ...executeOptions,
+            fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
+          }
+        : {
+            fetchPolicy: initialFetchPolicy,
+          };
 
-    const promise = internalState
-      .asyncUpdate() // Like internalState.forceUpdate, but returns a Promise.
-      .then(queryResult => Object.assign(queryResult, eagerMethods));
+      const options = mergeOptions(optionsRef.current, {
+        query: queryRef.current,
+        ...execOptionsRef.current,
+      });
 
-    // Because the return value of `useLazyQuery` is usually floated, we need
-    // to catch the promise to prevent unhandled rejections.
-    promise.catch(() => {});
+      const promise = internalState
+        .executeQuery({ ...options, skip: false })
+        .then((queryResult) => Object.assign(queryResult, eagerMethods));
 
-    return promise;
-  }, []);
+      // Because the return value of `useLazyQuery` is usually floated, we need
+      // to catch the promise to prevent unhandled rejections.
+      promise.catch(() => {});
+
+      return promise;
+    },
+    []
+  );
 
   return [execute, result];
 }

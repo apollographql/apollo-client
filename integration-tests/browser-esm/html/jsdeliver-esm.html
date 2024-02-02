@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head></head>
+  <script type="module">
+    // give playwright time to load
+    await new Promise((r) => setTimeout(r, 100));
+
+    import {
+      ApolloClient,
+      InMemoryCache,
+      gql,
+    } from "https://cdn.jsdelivr.net/npm/@apollo/client@0.0.0-pr-10915-20230616125401/+esm";
+    const client = new ApolloClient({
+      uri: "https://main--hack-the-e-commerce.apollographos.net/graphql",
+      cache: new InMemoryCache(),
+    });
+    client
+      .query({
+        query: gql`
+          query {
+            products {
+              id
+              title
+            }
+          }
+        `,
+      })
+      .then((r) => {
+        const main = document.querySelector("main");
+        const ul = document.createElement("ul");
+        main.replaceChildren(ul);
+        r.data.products.forEach((p) => {
+          const li = document.createElement("li");
+          li.textContent = p.title;
+          ul.appendChild(li);
+        });
+      })
+      .catch(console.error);
+  </script>
+
+  <body>
+    <h1>https://cdn.jsdelivr.net/npm/@apollo/client/+esm</h1>
+    <main>
+      <p>loading</p>
+    </main>
+  </body>
+</html>

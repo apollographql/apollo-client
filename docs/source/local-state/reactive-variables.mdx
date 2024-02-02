@@ -40,15 +40,19 @@ To modify the value of your reactive variable, call the function returned by `ma
 
 ```js
 const cartItemsVar = makeVar([]);
+const cartItemIds = [100, 101, 102];
 
-cartItemsVar([100, 101, 102]);
+cartItemsVar(cartItemIds);
 
 // Output: [100, 101, 102]
 console.log(cartItemsVar());
 
-cartItemsVar([456]);
+// Don't mutate an existing object or array.
+// cartItemIds.push(456) will not trigger an update.
+// Instead, pass a new copy:
+cartItemsVar([...cartItemIds, 456]);
 
-// Output: [456]
+// Output: [100, 101, 102, 456]
 console.log(cartItemsVar());
 ```
 
@@ -66,7 +70,7 @@ The `useReactiveVar` hook can be used to read from a reactive variable in a way 
 
 Previously, the only way for a reactive variable to trigger a React component re-render was through the use of `useQuery`. Now you don't have to be using `useQuery` to benefit from the reactivity that `ReactiveVar<T>` provides.
 
-```tsx
+```jsx
 import { makeVar, useReactiveVar } from "@apollo/client";
 export const cartItemsVar = makeVar([]);
 

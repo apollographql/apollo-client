@@ -1,0 +1,139 @@
+/**
+ * Config file for API Extractor.  For more info, please visit: https://api-extractor.com
+ */
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  "projectFolder": ".",
+  "mainEntryPointFilePath": "<projectFolder>/dist/index.d.ts",
+  "bundledPackages": [],
+  "newlineKind": "lf",
+  "enumMemberOrder": "preserve",
+
+  /**
+   * Set to true when invoking API Extractor's test harness. When `testMode` is true, the `toolVersion` field in the
+   * .api.json file is assigned an empty string to prevent spurious diffs in output files tracked for tests.
+   *
+   * DEFAULT VALUE: "false"
+   */
+  // "testMode": false,
+
+  /**
+   * Determines how the TypeScript compiler engine will be invoked by API Extractor.
+   */
+  "compiler": {
+    "tsconfigFilePath": "<projectFolder>/tsconfig.json",
+    "overrideTsconfig": {},
+    "skipLibCheck": true
+  },
+
+  /**
+   * Configures how the API report file (*.api.md) will be generated.
+   */
+  "apiReport": {
+    "enabled": true,
+    "reportFileName": "<unscopedPackageName>.api.md",
+    "reportFolder": "<projectFolder>/.api-reports/",
+    "reportTempFolder": "<projectFolder>/.api-reports/temp/",
+    "includeForgottenExports": true
+  },
+
+  "docModel": {
+    "enabled": false,
+    "apiJsonFilePath": "<projectFolder>/docs/public/<unscopedPackageName>.api.json",
+    "includeForgottenExports": true
+  },
+
+  "dtsRollup": {
+    "enabled": false
+  },
+  "tsdocMetadata": {
+    "enabled": false,
+    "tsdocMetadataFilePath": "<projectFolder>/docs/public/tsdoc-metadata.json"
+  },
+
+  /**
+   * Configures how API Extractor reports error and warning messages produced during analysis.
+   *
+   * There are three sources of messages:  compiler messages, API Extractor messages, and TSDoc messages.
+   */
+  "messages": {
+    /**
+     * Configures handling of diagnostic messages reported by the TypeScript compiler engine while analyzing
+     * the input .d.ts files.
+     *
+     * TypeScript message identifiers start with "TS" followed by an integer.  For example: "TS2551"
+     *
+     * DEFAULT VALUE:  A single "default" entry with logLevel=warning.
+     */
+    "compilerMessageReporting": {
+      /**
+       * Configures the default routing for messages that don't match an explicit rule in this table.
+       */
+      "default": {
+        /**
+         * Specifies whether the message should be written to the the tool's output log.  Note that
+         * the "addToApiReportFile" property may supersede this option.
+         *
+         * Possible values: "error", "warning", "none"
+         *
+         * Errors cause the build to fail and return a nonzero exit code.  Warnings cause a production build fail
+         * and return a nonzero exit code.  For a non-production build (e.g. when "api-extractor run" includes
+         * the "--local" option), the warning is displayed but the build will not fail.
+         *
+         * DEFAULT VALUE: "warning"
+         */
+        "logLevel": "warning"
+
+        /**
+         * When addToApiReportFile is true:  If API Extractor is configured to write an API report file (.api.md),
+         * then the message will be written inside that file; otherwise, the message is instead logged according to
+         * the "logLevel" option.
+         *
+         * DEFAULT VALUE: false
+         */
+        // "addToApiReportFile": false
+      }
+
+      // "TS2551": {
+      //   "logLevel": "warning",
+      //   "addToApiReportFile": true
+      // },
+      //
+      // . . .
+    },
+
+    /**
+     * Configures handling of messages reported by API Extractor during its analysis.
+     *
+     * API Extractor message identifiers start with "ae-".  For example: "ae-extra-release-tag"
+     *
+     * DEFAULT VALUE: See api-extractor-defaults.json for the complete table of extractorMessageReporting mappings
+     */
+    "extractorMessageReporting": {
+      "default": {
+        "logLevel": "warning"
+        // "addToApiReportFile": false
+      },
+
+      "ae-missing-release-tag": {
+        "logLevel": "none"
+      },
+
+      "ae-internal-missing-underscore": {
+        "logLevel": "none",
+        "addToApiReportFile": false
+      },
+
+      "ae-unresolved-link": {
+        "logLevel": "warning",
+        "addToApiReportFile": true
+      }
+    },
+    "tsdocMessageReporting": {
+      "tsdoc-escape-greater-than": {
+        "logLevel": "none",
+        "addToApiReportFile": false
+      }
+    }
+  }
+}

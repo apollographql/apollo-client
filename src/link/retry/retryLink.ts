@@ -1,15 +1,12 @@
-import { ApolloLink, Operation, FetchResult, NextLink } from '../core';
-import { Observable, Observer, ObservableSubscription } from '../../utilities';
-import {
-  DelayFunction,
-  DelayFunctionOptions,
-  buildDelayFunction,
-} from './delayFunction';
-import {
-  RetryFunction,
-  RetryFunctionOptions,
-  buildRetryFunction,
-} from './retryFunction';
+import type { Operation, FetchResult, NextLink } from "../core/index.js";
+import { ApolloLink } from "../core/index.js";
+import type { ObservableSubscription } from "../../utilities/index.js";
+import { Observable } from "../../utilities/index.js";
+import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
+import { buildDelayFunction } from "./delayFunction.js";
+import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
+import { buildRetryFunction } from "./retryFunction.js";
+import type { SubscriptionObserver } from "zen-observable-ts";
 
 export namespace RetryLink {
   export interface Options {
@@ -28,78 +25,18 @@ export namespace RetryLink {
 /**
  * Tracking and management of operations that may be (or currently are) retried.
  */
-class RetryableOperation<TValue = any> {
+class RetryableOperation {
   private retryCount: number = 0;
-  private values: any[] = [];
-  private error: any;
-  private complete = false;
-  private canceled = false;
-  private observers: (Observer<TValue> | null)[] = [];
   private currentSubscription: ObservableSubscription | null = null;
   private timerId: number | undefined;
 
   constructor(
+    private observer: SubscriptionObserver<FetchResult>,
     private operation: Operation,
-    private nextLink: NextLink,
+    private forward: NextLink,
     private delayFor: DelayFunction,
-    private retryIf: RetryFunction,
-  ) {}
-
-  /**
-   * Register a new observer for this operation.
-   *
-   * If the operation has previously emitted other events, they will be
-   * immediately triggered for the observer.
-   */
-  public subscribe(observer: Observer<TValue>) {
-    if (this.canceled) {
-      throw new Error(
-        `Subscribing to a retryable link that was canceled is not supported`,
-      );
-    }
-    this.observers.push(observer);
-
-    // If we've already begun, catch this observer up.
-    for (const value of this.values) {
-      observer.next!(value);
-    }
-
-    if (this.complete) {
-      observer.complete!();
-    } else if (this.error) {
-      observer.error!(this.error);
-    }
-  }
-
-  /**
-   * Remove a previously registered observer from this operation.
-   *
-   * If no observers remain, the operation will stop retrying, and unsubscribe
-   * from its downstream link.
-   */
-  public unsubscribe(observer: Observer<TValue>) {
-    const index = this.observers.indexOf(observer);
-    if (index < 0) {
-      throw new Error(
-        `RetryLink BUG! Attempting to unsubscribe unknown observer!`,
-      );
-    }
-    // Note that we are careful not to change the order of length of the array,
-    // as we are often mid-iteration when calling this method.
-    this.observers[index] = null;
-
-    // If this is the last observer, we're done.
-    if (this.observers.every(o => o === null)) {
-      this.cancel();
-    }
-  }
-
-  /**
-   * Start the initial request.
-   */
-  public start() {
-    if (this.currentSubscription) return; // Already started.
-
+    private retryIf: RetryFunction
+  ) {
     this.try();
   }
 
@@ -113,32 +50,15 @@ class RetryableOperation<TValue = any> {
     clearTimeout(this.timerId);
     this.timerId = undefined;
     this.currentSubscription = null;
-    this.canceled = true;
   }
 
   private try() {
-    this.currentSubscription = this.nextLink(this.operation).subscribe({
-      next: this.onNext,
+    this.currentSubscription = this.forward(this.operation).subscribe({
+      next: this.observer.next.bind(this.observer),
       error: this.onError,
-      complete: this.onComplete,
+      complete: this.observer.complete.bind(this.observer),
     });
   }
-
-  private onNext = (value: any) => {
-    this.values.push(value);
-    for (const observer of this.observers) {
-      if (!observer) continue;
-      observer.next!(value);
-    }
-  };
-
-  private onComplete = () => {
-    this.complete = true;
-    for (const observer of this.observers) {
-      if (!observer) continue;
-      observer.complete!();
-    }
-  };
 
   private onError = async (error: any) => {
     this.retryCount += 1;
@@ -147,18 +67,14 @@ class RetryableOperation<TValue = any> {
     const shouldRetry = await this.retryIf(
       this.retryCount,
       this.operation,
-      error,
+      error
     );
     if (shouldRetry) {
       this.scheduleRetry(this.delayFor(this.retryCount, this.operation, error));
       return;
     }
 
-    this.error = error;
-    for (const observer of this.observers) {
-      if (!observer) continue;
-      observer.error!(error);
-    }
+    this.observer.error(error);
   };
 
   private scheduleRetry(delay: number) {
@@ -166,10 +82,10 @@ class RetryableOperation<TValue = any> {
       throw new Error(`RetryLink BUG! Encountered overlapping retries`);
     }
 
-    this.timerId = (setTimeout(() => {
+    this.timerId = setTimeout(() => {
       this.timerId = undefined;
       this.try();
-    }, delay) as any) as number;
+    }, delay) as any as number;
   }
 }
 
@@ -181,27 +97,25 @@ export class RetryLink extends ApolloLink {
     super();
     const { attempts, delay } = options || ({} as RetryLink.Options);
     this.delayFor =
-      typeof delay === 'function' ? delay : buildDelayFunction(delay);
+      typeof delay === "function" ? delay : buildDelayFunction(delay);
     this.retryIf =
-      typeof attempts === 'function' ? attempts : buildRetryFunction(attempts);
+      typeof attempts === "function" ? attempts : buildRetryFunction(attempts);
   }
 
   public request(
     operation: Operation,
-    nextLink: NextLink,
+    nextLink: NextLink
   ): Observable<FetchResult> {
-    const retryable = new RetryableOperation(
-      operation,
-      nextLink,
-      this.delayFor,
-      this.retryIf,
-    );
-    retryable.start();
-
-    return new Observable(observer => {
-      retryable.subscribe(observer);
+    return new Observable((observer) => {
+      const retryable = new RetryableOperation(
+        observer,
+        operation,
+        nextLink,
+        this.delayFor,
+        this.retryIf
+      );
       return () => {
-        retryable.unsubscribe(observer);
+        retryable.cancel();
       };
     });
   }

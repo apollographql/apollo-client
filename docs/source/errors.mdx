@@ -1,0 +1,36 @@
+---
+title: Error code details
+description: For Apollo Client
+toc: false
+---
+import DisplayClientError from '../shared/DisplayClientError.js';
+
+<DisplayClientError />
+
+## What is this page?
+
+Beginning with version 3.8, Apollo Client _omits_ error messages from its core bundle to reduce its bundle size. Instead, errors direct you to this page to view details.
+
+**If you prefer, you can add Apollo Client error messages to your app:**
+
+```js title="App.js"
+import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
+
+if (__DEV__) {  // Adds messages only in a dev environment
+  loadDevMessages();
+  loadErrorMessages();
+}
+```
+
+- `loadDevMessages()` loads messages for errors that are raised _only in a development environment_.
+- `loadErrorMessages()` loads messages for errors that are raised in _all_ environments.
+
+You can call either or both of these methods on application load.
+
+<blockquote>
+
+**Note:** The example above checks for the presence of the `__DEV__` variable and loads error messages only if it's present (indicating a dev environment). This can provide a helpful development experience while minimizing your bundle size in production.
+
+The `__DEV__` variable isn't available in all environments. As an alternative, you can check whether `process.env.NODE_ENV !== "production"`.
+
+</blockquote>

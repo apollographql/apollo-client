@@ -1,10 +1,11 @@
-import { ASTNode, print } from 'graphql';
+import type { ASTNode } from "graphql";
+import { print } from "../../utilities/index.js";
 
-import { Operation } from '../core';
+import type { Operation } from "../core/index.js";
 
 export interface Printer {
-  (node: ASTNode, originalPrint: typeof print): string
-};
+  (node: ASTNode, originalPrint: typeof print): string;
+}
 
 export interface UriFunction {
   (operation: Operation): string;
@@ -35,16 +36,16 @@ export interface HttpOptions {
   /**
    * A `fetch`-compatible API to use when making requests.
    */
-  fetch?: WindowOrWorkerGlobalScope['fetch'];
+  fetch?: typeof fetch;
 
   /**
    * An object representing values to be sent as headers on the request.
    */
-  headers?: any;
+  headers?: Record<string, string>;
 
   /**
-   * If set to true, header names won't be automatically normalized to 
-   * lowercase. This allows for non-http-spec-compliant servers that might 
+   * If set to true, header names won't be automatically normalized to
+   * lowercase. This allows for non-http-spec-compliant servers that might
    * expect capitalized header names.
    */
   preserveHeaderCase?: boolean;
@@ -80,7 +81,7 @@ export interface HttpOptions {
    * A function to substitute for the default query print function. Can be
    * used to apply changes to the results of the print function.
    */
-   print?: Printer;
+  print?: Printer;
 }
 
 export interface HttpQueryOptions {
@@ -92,7 +93,7 @@ export interface HttpQueryOptions {
 export interface HttpConfig {
   http?: HttpQueryOptions;
   options?: any;
-  headers?: any;
+  headers?: Record<string, string>;
   credentials?: any;
 }
 
@@ -104,7 +105,7 @@ const defaultHttpOptions: HttpQueryOptions = {
 
 const defaultHeaders = {
   // headers are case insensitive (https://stackoverflow.com/a/5259004)
-  accept: '*/*',
+  accept: "*/*",
   // The content-type header describes the type of the body of the request, and
   // so it typically only is sent with requests that actually have bodies. One
   // could imagine that Apollo Client would remove this header when constructing
@@ -117,11 +118,11 @@ const defaultHeaders = {
   // with CSRF prevention enabled might block your GET request. See
   // https://www.apollographql.com/docs/apollo-server/security/cors/#preventing-cross-site-request-forgery-csrf
   // for more details.
-  'content-type': 'application/json',
+  "content-type": "application/json",
 };
 
 const defaultOptions = {
-  method: 'POST',
+  method: "POST",
 };
 
 export const fallbackHttpConfig = {
@@ -141,7 +142,7 @@ export function selectHttpOptionsAndBody(
   return selectHttpOptionsAndBodyInternal(
     operation,
     defaultPrinter,
-    ...configs,
+    ...configs
   );
 }
 
@@ -153,14 +154,14 @@ export function selectHttpOptionsAndBodyInternal(
   let options = {} as HttpConfig & Record<string, any>;
   let http = {} as HttpQueryOptions;
 
-  configs.forEach(config => {
+  configs.forEach((config) => {
     options = {
       ...options,
       ...config.options,
       headers: {
         ...options.headers,
         ...config.headers,
-      }
+      },
     };
 
     if (config.credentials) {
@@ -173,7 +174,12 @@ export function selectHttpOptionsAndBodyInternal(
     };
   });
 
-  options.headers = removeDuplicateHeaders(options.headers, http.preserveHeaderCase);
+  if (options.headers) {
+    options.headers = removeDuplicateHeaders(
+      options.headers,
+      http.preserveHeaderCase
+    );
+  }
 
   //The body depends on the http options
   const { operationName, extensions, variables, query } = operation;
@@ -188,36 +194,38 @@ export function selectHttpOptionsAndBodyInternal(
     options,
     body,
   };
-};
+}
 
 // Remove potential duplicate header names, preserving last (by insertion order).
-// This is done to prevent unintentionally duplicating a header instead of 
+// This is done to prevent unintentionally duplicating a header instead of
 // overwriting it (See #8447 and #8449).
 function removeDuplicateHeaders(
   headers: Record<string, string>,
   preserveHeaderCase: boolean | undefined
 ): typeof headers {
-
   // If we're not preserving the case, just remove duplicates w/ normalization.
   if (!preserveHeaderCase) {
     const normalizedHeaders = Object.create(null);
-    Object.keys(Object(headers)).forEach(name => {
+    Object.keys(Object(headers)).forEach((name) => {
       normalizedHeaders[name.toLowerCase()] = headers[name];
     });
-    return normalizedHeaders; 
+    return normalizedHeaders;
   }
 
   // If we are preserving the case, remove duplicates w/ normalization,
   // preserving the original name.
-  // This allows for non-http-spec-compliant servers that expect intentionally 
+  // This allows for non-http-spec-compliant servers that expect intentionally
   // capitalized header names (See #6741).
   const headerData = Object.create(null);
-  Object.keys(Object(headers)).forEach(name => {
-    headerData[name.toLowerCase()] = { originalName: name, value: headers[name] }
+  Object.keys(Object(headers)).forEach((name) => {
+    headerData[name.toLowerCase()] = {
+      originalName: name,
+      value: headers[name],
+    };
   });
 
   const normalizedHeaders = Object.create(null);
-  Object.keys(headerData).forEach(name => {
+  Object.keys(headerData).forEach((name) => {
     normalizedHeaders[headerData[name].originalName] = headerData[name].value;
   });
   return normalizedHeaders;

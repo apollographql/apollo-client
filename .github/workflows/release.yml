@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Changesets Release
+    # Prevents action from creating a PR on forks
+    if: github.repository == 'apollographql/apollo-client'
+    runs-on: ubuntu-latest
+    # Permissions necessary for Changesets to push a new branch and open PRs
+    # (for automated Version Packages PRs), and request the JWT for provenance.
+    # More info: https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#adding-permissions-settings
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          # Fetch entire git history so  Changesets can generate changelogs
+          # with the correct commits
+          fetch-depth: 0
+
+      - name: Check for pre.json file existence
+        id: check_files
+        uses: andstor/file-existence-action@v3.0.0
+        with:
+          files: ".changeset/pre.json"
+
+      - name: Append NPM token to .npmrc
+        run: |
+          cat << EOF > "$HOME/.npmrc"
+            provenance=true
+            //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          EOF
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install dependencies (with cache)
+        uses: bahmutov/npm-install@v1
+
+      - name: Create release PR or publish to npm + GitHub
+        id: changesets
+        if: steps.check_files.outputs.files_exists == 'false'
+        uses: changesets/action@v1
+        with:
+          version: npm run changeset-version
+          publish: npm run changeset-publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Send a Slack notification on publish
+        if: steps.changesets.outcome == 'success' && steps.changesets.outputs.published == 'true'
+        id: slack
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          # Slack channel id, channel name, or user id to post message
+          # See also: https://api.slack.com/methods/chat.postMessage#channels
+          # You can pass in multiple channels to post to by providing
+          # a comma-delimited list of channel IDs
+          channel-id: "C01PS0CB41G"
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "A new version of `@apollo/client` was released :rocket:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Version:*\n`${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Tag:*\n`latest`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*GitHub release:*\n<https://github.com/apollographql/apollo-client/releases/tag/v${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}|link>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*npm releases:*\n<https://www.npmjs.com/package/@apollo/client?activeTab=versions|link>"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

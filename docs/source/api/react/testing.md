@@ -14,7 +14,7 @@ api_reference: true
 import { MockedProvider } from "@apollo/client/testing";
 ```
 
-The `MockedProvider` component is a mocked version of [`ApolloProvider`](./hooks/#the-apolloprovider-component) that doesn't send network requests to your API. Instead, you to specify the exact response payload for a given GraphQL operation. This enables you to test your application's operations without communicating with a server.
+The `MockedProvider` component is a mocked version of [`ApolloProvider`](./hooks/#the-apolloprovider-component) that doesn't send network requests to your API. Instead, it allows you to specify the exact response payload for a given GraphQL operation. This enables you to test your application's operations without communicating with a server.
 
 #### Props
 
@@ -115,6 +115,22 @@ By default, `MockedProvider` creates an `InMemoryCache` with default configurati
 <td>
 
 Props to pass down to the `MockedProvider`'s child.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `showWarnings`
+
+`boolean`
+</td>
+<td>
+
+When a request fails to match a mock, a warning is logged to the console to indicate the mismatch. Set this to `false` to silence these warnings.
+
+The default value is `true`.
 
 </td>
 </tr>

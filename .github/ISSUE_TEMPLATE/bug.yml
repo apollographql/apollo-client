@@ -1,0 +1,31 @@
+name: Bug
+description: File a bug report
+body:
+  - type: markdown
+    attributes:
+      value: "Hello from the Apollo Client team! Hopefully we can help resolve your issue. To increase the chances of us being able to help, please take the time to fill out the form as completely as possible. A minimal, runnable reproduction is the best way to get us to help you quickly and in many cases we simply cannot help without one."
+  - type: textarea
+    attributes:
+      label: Issue Description
+      description: Describe the issue you are experiencing.
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: Link to Reproduction
+      description: "A link with runnable reproduction. For web projects, you can fork our `react-apollo-error-template` to create one via [GitHub repository](https://github.com/apollographql/react-apollo-error-template) or [CodeSandbox](https://codesandbox.io/s/github/apollographql/react-apollo-error-template). For React Native projects, you can fork our `rn-apollo-client-testbed` via [GitHub respository](https://github.com/apollographql/rn-apollo-client-testbed). Make sure this includes everything necessary (`package.json`, `tsconfig.json`, etc.) so we don't have to guess anything! If a minimal reproduction can't be created, please share a [Replay](https://docs.replay.io/workflows/recording-bug-reports) of the bug (note: you don't have to grant Replay access to a private repo to create a recording, but it will contain source maps for your JavaScript code).  Feel free to ask for an email address to send Replays to if they contain sensitive information."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction Steps
+      description: Please provide any additional non-trivial steps required to reproduce the issue.
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: "`@apollo/client` version"
+      description: "What version of Apollo Client are you running?"
+      placeholder: "ex: 3.8.10"
+    validations:
+      required: true

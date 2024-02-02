@@ -1,7 +1,9 @@
-import { responseIterator } from "./responseIterator";
-import { Operation } from "../core";
-import { throwServerError } from "../utils";
-import { Observer } from "../../utilities";
+import { responseIterator } from "./responseIterator.js";
+import type { Operation } from "../core/index.js";
+import { throwServerError } from "../utils/index.js";
+import { PROTOCOL_ERRORS_SYMBOL } from "../../errors/index.js";
+import { isApolloPayloadResult } from "../../utilities/common/incrementalResult.js";
+import type { SubscriptionObserver } from "zen-observable-ts";
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -11,32 +13,32 @@ export type ServerParseError = Error & {
   bodyText: string;
 };
 
-export async function readMultipartBody<T = Record<string, unknown>>(
-  response: Response,
-  observer: Observer<T>
-) {
+export async function readMultipartBody<
+  T extends object = Record<string, unknown>,
+>(response: Response, nextValue: (value: T) => void) {
   if (TextDecoder === undefined) {
     throw new Error(
       "TextDecoder must be defined in the environment: please import a polyfill."
     );
   }
   const decoder = new TextDecoder("utf-8");
-  const contentType = response.headers?.get('content-type');
+  const contentType = response.headers?.get("content-type");
   const delimiter = "boundary=";
 
   // parse boundary value and ignore any subsequent name/value pairs after ;
   // https://www.rfc-editor.org/rfc/rfc9110.html#name-parameters
   // e.g. multipart/mixed;boundary="graphql";deferSpec=20220824
   // if no boundary is specified, default to -
-  const boundaryVal = contentType?.includes(delimiter)
-    ? contentType
+  const boundaryVal =
+    contentType?.includes(delimiter) ?
+      contentType
         ?.substring(contentType?.indexOf(delimiter) + delimiter.length)
         .replace(/['"]/g, "")
         .replace(/\;(.*)/gm, "")
         .trim()
     : "-";
 
-  let boundary = `--${boundaryVal}`;
+  const boundary = `\r\n--${boundaryVal}`;
   let buffer = "";
   const iterator = responseIterator(response);
   let running = true;
@@ -44,9 +46,10 @@ export async function readMultipartBody<T = Record<string, unknown>>(
   while (running) {
     const { value, done } = await iterator.next();
     const chunk = typeof value === "string" ? value : decoder.decode(value);
+    const searchFrom = buffer.length - boundary.length + 1;
     running = !done;
     buffer += chunk;
-    let bi = buffer.indexOf(boundary);
+    let bi = buffer.indexOf(boundary, searchFrom);
 
     while (bi > -1) {
       let message: string;
@@ -54,38 +57,63 @@ export async function readMultipartBody<T = Record<string, unknown>>(
         buffer.slice(0, bi),
         buffer.slice(bi + boundary.length),
       ];
-      if (message.trim()) {
-        const i = message.indexOf("\r\n\r\n");
-        const headers = parseHeaders(message.slice(0, i));
-        const contentType = headers["content-type"];
-        if (
-          contentType &&
-          contentType.toLowerCase().indexOf("application/json") === -1
-        ) {
-          throw new Error("Unsupported patch content type: application/json is required.");
-        }
-        const body = message.slice(i);
+      const i = message.indexOf("\r\n\r\n");
+      const headers = parseHeaders(message.slice(0, i));
+      const contentType = headers["content-type"];
+      if (
+        contentType &&
+        contentType.toLowerCase().indexOf("application/json") === -1
+      ) {
+        throw new Error(
+          "Unsupported patch content type: application/json is required."
+        );
+      }
+      // nb: Technically you'd want to slice off the beginning "\r\n" but since
+      // this is going to be `JSON.parse`d there is no need.
+      const body = message.slice(i);
 
-        try {
-          const result = parseJsonBody<T>(response, body.replace("\r\n", ""));
-          if (
-            Object.keys(result).length > 1 ||
-            "data" in result ||
-            "incremental" in result ||
-            "errors" in result
-          ) {
-            // for the last chunk with only `hasNext: false`,
+      if (body) {
+        const result = parseJsonBody<T>(response, body);
+        if (
+          Object.keys(result).length > 1 ||
+          "data" in result ||
+          "incremental" in result ||
+          "errors" in result ||
+          "payload" in result
+        ) {
+          if (isApolloPayloadResult(result)) {
+            let next = {};
+            if ("payload" in result) {
+              next = { ...result.payload };
+            }
+            if ("errors" in result) {
+              next = {
+                ...next,
+                extensions: {
+                  ...("extensions" in next ? next.extensions : (null as any)),
+                  [PROTOCOL_ERRORS_SYMBOL]: result.errors,
+                },
+              };
+            }
+            nextValue(next as T);
+          } else {
+            // for the last chunk with only `hasNext: false`
             // we don't need to call observer.next as there is no data/errors
-            observer.next?.(result);
+            nextValue(result);
           }
-        } catch (err) {
-          handleError(err, observer);
+        } else if (
+          // If the chunk contains only a "hasNext: false", we can call
+          // observer.complete() immediately.
+          Object.keys(result).length === 1 &&
+          "hasNext" in result &&
+          !result.hasNext
+        ) {
+          return;
         }
       }
       bi = buffer.indexOf(boundary);
     }
   }
-  observer.complete?.();
 }
 
 export function parseHeaders(headerText: string): Record<string, string> {
@@ -105,17 +133,17 @@ export function parseHeaders(headerText: string): Record<string, string> {
 export function parseJsonBody<T>(response: Response, bodyText: string): T {
   if (response.status >= 300) {
     // Network error
-    const getResult = () => {
+    const getResult = (): Record<string, unknown> | string => {
       try {
         return JSON.parse(bodyText);
       } catch (err) {
-        return bodyText
+        return bodyText;
       }
-    }
+    };
     throwServerError(
       response,
       getResult(),
-      `Response not successful: Received status code ${response.status}`,
+      `Response not successful: Received status code ${response.status}`
     );
   }
 
@@ -131,8 +159,7 @@ export function parseJsonBody<T>(response: Response, bodyText: string): T {
   }
 }
 
-export function handleError(err: any, observer: Observer<any>) {
-  if (err.name === "AbortError") return;
+export function handleError(err: any, observer: SubscriptionObserver<any>) {
   // if it is a network error, BUT there is graphql result info fire
   // the next observer before calling error this gives apollo-client
   // (and react-apollo) the `graphqlErrors` and `networkErrors` to
@@ -166,23 +193,10 @@ export function handleError(err: any, observer: Observer<any>) {
     // status code of above would be a 401
     // in the UI you want to show data where you can, errors as data where you can
     // and use correct http status codes
-    observer.next?.(err.result);
+    observer.next(err.result);
   }
 
-  observer.error?.(err);
-}
-
-export function readJsonBody<T = Record<string, unknown>>(
-  response: Response,
-  operation: Operation,
-  observer: Observer<T>
-) {
-  parseAndCheckHttpResponse(operation)(response)
-    .then((result) => {
-      observer.next?.(result);
-      observer.complete?.();
-    })
-    .catch((err) => handleError(err, observer));
+  observer.error(err);
 }
 
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
@@ -191,14 +205,6 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
       .text()
       .then((bodyText) => parseJsonBody(response, bodyText))
       .then((result: any) => {
-        if (response.status >= 300) {
-          // Network error
-          throwServerError(
-            response,
-            result,
-            `Response not successful: Received status code ${response.status}`
-          );
-        }
         if (
           !Array.isArray(result) &&
           !hasOwnProperty.call(result, "data") &&
@@ -209,9 +215,9 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
             response,
             result,
             `Server response was missing for query '${
-              Array.isArray(operations)
-                ? operations.map((op) => op.operationName)
-                : operations.operationName
+              Array.isArray(operations) ?
+                operations.map((op) => op.operationName)
+              : operations.operationName
             }'.`
           );
         }

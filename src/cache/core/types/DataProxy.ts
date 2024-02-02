@@ -1,7 +1,8 @@
-import { DocumentNode } from 'graphql'; // eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentNode } from "graphql"; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import { MissingFieldError } from './common';
+import type { MissingFieldError } from "./common.js";
+import type { Reference } from "../../../utilities/index.js";
 
 export namespace DataProxy {
   export interface Query<TVariables, TData> {
@@ -67,11 +68,7 @@ export namespace DataProxy {
      * readQuery method can be omitted. Defaults to false.
      */
     optimistic?: boolean;
-    /**
-     * Whether to canonize cache results before returning them. Canonization
-     * takes some extra time, but it speeds up future deep equality comparisons.
-     * Defaults to false.
-     */
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
     canonizeResults?: boolean;
   }
 
@@ -88,11 +85,7 @@ export namespace DataProxy {
      * readQuery method can be omitted. Defaults to false.
      */
     optimistic?: boolean;
-    /**
-     * Whether to canonize cache results before returning them. Canonization
-     * takes some extra time, but it speeds up future deep equality comparisons.
-     * Defaults to false.
-     */
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
     canonizeResults?: boolean;
   }
 
@@ -113,29 +106,33 @@ export namespace DataProxy {
   }
 
   export interface WriteQueryOptions<TData, TVariables>
-    extends Query<TVariables, TData>, WriteOptions<TData> {}
+    extends Query<TVariables, TData>,
+      WriteOptions<TData> {}
 
   export interface WriteFragmentOptions<TData, TVariables>
-    extends Fragment<TVariables, TData>, WriteOptions<TData> {}
+    extends Fragment<TVariables, TData>,
+      WriteOptions<TData> {}
 
   export interface UpdateQueryOptions<TData, TVariables>
-    extends Omit<(
+    extends Omit<
       ReadQueryOptions<TData, TVariables> &
-      WriteQueryOptions<TData, TVariables>
-    ), 'data'> {}
+        WriteQueryOptions<TData, TVariables>,
+      "data"
+    > {}
 
   export interface UpdateFragmentOptions<TData, TVariables>
-    extends Omit<(
+    extends Omit<
       ReadFragmentOptions<TData, TVariables> &
-      WriteFragmentOptions<TData, TVariables>
-    ), 'data'> {}
+        WriteFragmentOptions<TData, TVariables>,
+      "data"
+    > {}
 
   export type DiffResult<T> = {
     result?: T;
     complete?: boolean;
     missing?: MissingFieldError[];
     fromOptimisticTransaction?: boolean;
-  }
+  };
 }
 
 /**
@@ -150,7 +147,7 @@ export interface DataProxy {
    */
   readQuery<QueryType, TVariables = any>(
     options: DataProxy.ReadQueryOptions<QueryType, TVariables>,
-    optimistic?: boolean,
+    optimistic?: boolean
   ): QueryType | null;
 
   /**
@@ -160,15 +157,15 @@ export interface DataProxy {
    */
   readFragment<FragmentType, TVariables = any>(
     options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>,
-    optimistic?: boolean,
+    optimistic?: boolean
   ): FragmentType | null;
 
   /**
    * Writes a GraphQL query to the root query id.
    */
   writeQuery<TData = any, TVariables = any>(
-    options: DataProxy.WriteQueryOptions<TData, TVariables>,
-  ): void;
+    options: DataProxy.WriteQueryOptions<TData, TVariables>
+  ): Reference | undefined;
 
   /**
    * Writes a GraphQL fragment to any arbitrary id. If there is more than
@@ -176,6 +173,6 @@ export interface DataProxy {
    * provided to select the correct fragment.
    */
   writeFragment<TData = any, TVariables = any>(
-    options: DataProxy.WriteFragmentOptions<TData, TVariables>,
-  ): void;
+    options: DataProxy.WriteFragmentOptions<TData, TVariables>
+  ): Reference | undefined;
 }

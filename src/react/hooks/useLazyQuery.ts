@@ -138,7 +138,7 @@ export function useLazyQuery<
 
       return promise;
     },
-    [stableOptions, query]
+    [stableOptions, query, initialFetchPolicy]
   );
 
   return [execute, result];

@@ -5,6 +5,7 @@ import { act, render, renderHook, waitFor } from "@testing-library/react";
 
 import {
   ApolloClient,
+  ApolloError,
   ApolloLink,
   ErrorPolicy,
   InMemoryCache,
@@ -19,6 +20,7 @@ import {
   wait,
   tick,
   MockSubscriptionLink,
+  MockLink,
 } from "../../../testing";
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
@@ -1562,6 +1564,181 @@ describe("useLazyQuery Hook", () => {
       expect(fetchCount).toBe(2);
     }
   );
+
+  it("maintains stable execute function when passing in dynamic function options", async () => {
+    interface Data {
+      user: { id: string; name: string };
+    }
+
+    interface Variables {
+      id: string;
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const link = new MockLink([
+      {
+        request: { query, variables: { id: "1" } },
+        result: { data: { user: { id: "1", name: "John Doe" } } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { id: "2" } },
+        result: { errors: [new GraphQLError("Oops")] },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { id: "3" } },
+        result: { data: { user: { id: "3", name: "Johnny Three" } } },
+        delay: 20,
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+    let countRef = { current: 0 };
+
+    const { result, rerender } = renderHook(
+      () => {
+        let count = countRef.current;
+
+        return useLazyQuery(query, {
+          fetchPolicy: "cache-first",
+          variables: { id: "1" },
+          onCompleted: () => {
+            // Test to ensure we don't have stale closures
+            expect(count).toEqual(countRef.current);
+          },
+          onError: () => {
+            // Test to ensure we don't have stale closures
+            expect(count).toEqual(countRef.current);
+          },
+          skipPollAttempt: () => {
+            console.log("skipPollAttempt", count, countRef.current);
+            // Test to ensure we don't have stale closures
+            expect(count).toEqual(countRef.current);
+            return false;
+          },
+          nextFetchPolicy: (currentFetchPolicy) => {
+            console.log("nextFetchPolicy", count, countRef.current);
+            // Test to ensure we don't have stale closures
+            expect(count).toEqual(countRef.current);
+            return currentFetchPolicy;
+          },
+        });
+      },
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const [execute] = result.current;
+
+    countRef.current++;
+    rerender();
+
+    expect(result.current[0]).toBe(execute);
+
+    // Stale closures with nextFetchPolicy are implicitly tested for each of
+    // these executions
+
+    // Check for stale closures with onCompleted
+    await act(() => result.current[0]());
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual({
+        user: { id: "1", name: "John Doe" },
+      });
+    });
+
+    countRef.current++;
+    rerender();
+
+    expect(result.current[0]).toBe(execute);
+
+    // Check for stale closures with onError
+    await act(() => result.current[0]({ variables: { id: "2" } }));
+    await waitFor(() => {
+      expect(result.current[1].error).toEqual(
+        new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] })
+      );
+    });
+
+    countRef.current++;
+    rerender();
+
+    await act(() => result.current[0]({ variables: { id: "3" } }));
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual({
+        user: { id: "3", name: "Johnny Three" },
+      });
+    });
+
+    // Test for stale closures for skipPollAttempt
+    result.current[1].startPolling(20);
+    await wait(50);
+    result.current[1].stopPolling();
+  });
+
+  it("changes execute function identity when changing options", async () => {
+    interface Data {
+      user: { id: string; name: string };
+    }
+
+    interface Variables {
+      id: string;
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      fetchCount++;
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({
+            data: { user: { id: operation.variables.id, name: "John Doe" } },
+          });
+          observer.complete();
+        }, 20);
+      });
+    });
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+    const { result, rerender } = renderHook(
+      ({ id }) => useLazyQuery(query, { variables: { id } }),
+      {
+        initialProps: { id: "1" },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const [execute] = result.current;
+
+    rerender({ id: "2" });
+
+    expect(result.current[0]).not.toBe(execute);
+  });
 
   describe("network errors", () => {
     async function check(errorPolicy: ErrorPolicy) {

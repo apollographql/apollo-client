@@ -2,7 +2,10 @@ import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import * as React from "rehackt";
 
-import type { OperationVariables } from "../../core/index.js";
+import type {
+  OperationVariables,
+  WatchQueryOptions,
+} from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
 import type {
   LazyQueryHookExecOptions,
@@ -13,7 +16,7 @@ import type {
 } from "../types/types.js";
 import { useInternalState } from "./useQuery.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { useDeepMemo } from "./internal/index.js";
+import { useDeepMemo, useStableCallback } from "./internal/index.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -70,8 +73,37 @@ export function useLazyQuery<
 ): LazyQueryResultTuple<TData, TVariables> {
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
-  const stableOptions = useDeepMemo(() => options, [options]);
-  const merged = mergeOptions(options, execOptionsRef.current || {});
+
+  // Due to the way onCompleted and onError are implemented in useQuery, we
+  // only need to get stable callbacks for skipPollAttempt and nextFetchPolicy.
+  // The other 2 do not suffer from stale closure issues.
+  const skipPollAttempt = useStableCallback(() => {
+    return options?.skipPollAttempt?.() ?? false;
+  });
+
+  const nextFetchPolicy = useStableCallback(function (
+    this: WatchQueryOptions<TVariables, TData>,
+    ...args: Parameters<
+      Extract<
+        LazyQueryHookOptions<TData, TVariables>["nextFetchPolicy"],
+        Function
+      >
+    >
+  ) {
+    if (typeof options?.nextFetchPolicy === "function") {
+      return options.nextFetchPolicy.apply(this, args);
+    }
+
+    // current fetch policy
+    return options?.nextFetchPolicy ?? args[0];
+  });
+
+  const stableOptions = useDeepMemo<LazyQueryHookOptions<TData, TVariables>>(
+    () => ({ ...options, skipPollAttempt, nextFetchPolicy }),
+    [options, skipPollAttempt, nextFetchPolicy]
+  );
+
+  const merged = mergeOptions(stableOptions, execOptionsRef.current || {});
   const document = merged?.query ?? query;
 
   const internalState = useInternalState<TData, TVariables>(

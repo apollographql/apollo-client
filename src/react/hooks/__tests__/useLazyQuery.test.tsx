@@ -1638,12 +1638,12 @@ describe("useLazyQuery Hook", () => {
       }
     );
 
-    const [execute] = result.current;
+    const [originalExecute] = result.current;
 
     countRef.current++;
     rerender();
 
-    expect(result.current[0]).toBe(execute);
+    expect(result.current[0]).toBe(originalExecute);
 
     // Check for stale closures with onCompleted
     await act(() => result.current[0]());
@@ -1661,7 +1661,7 @@ describe("useLazyQuery Hook", () => {
     countRef.current++;
     rerender();
 
-    expect(result.current[0]).toBe(execute);
+    expect(result.current[0]).toBe(originalExecute);
 
     // Check for stale closures with onError
     await act(() => result.current[0]({ variables: { id: "2" } }));
@@ -1680,6 +1680,8 @@ describe("useLazyQuery Hook", () => {
 
     countRef.current++;
     rerender();
+
+    expect(result.current[0]).toBe(originalExecute);
 
     await act(() => result.current[0]({ variables: { id: "3" } }));
     await waitFor(() => {

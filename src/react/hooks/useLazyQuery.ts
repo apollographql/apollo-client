@@ -70,7 +70,6 @@ export function useLazyQuery<
 ): LazyQueryResultTuple<TData, TVariables> {
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
-  const optionsRef = React.useRef<LazyQueryHookOptions<TData, TVariables>>();
   const queryRef = React.useRef<
     DocumentNode | TypedDocumentNode<TData, TVariables>
   >();
@@ -80,7 +79,6 @@ export function useLazyQuery<
 
   // Use refs to track options and the used query to ensure the `execute`
   // function remains referentially stable between renders.
-  optionsRef.current = merged;
   queryRef.current = document;
 
   const internalState = useInternalState<TData, TVariables>(

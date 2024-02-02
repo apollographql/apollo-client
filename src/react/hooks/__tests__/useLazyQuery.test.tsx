@@ -1539,9 +1539,7 @@ describe("useLazyQuery Hook", () => {
         }
       );
 
-      const [execute] = result.current;
-
-      await act(() => execute({ variables: { id: "2" } }));
+      await act(() => result.current[0]({ variables: { id: "2" } }));
 
       expect(fetchCount).toBe(1);
 
@@ -1553,7 +1551,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(fetchCount).toBe(1);
 
-      await act(() => execute());
+      await act(() => result.current[0]());
 
       await waitFor(() => {
         expect(result.current[1].data).toEqual({

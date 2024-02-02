@@ -1829,7 +1829,7 @@ describe("mutation results", () => {
             () =>
               new Observable<FetchResult<{ foo: string }>>((observer) => {
                 observer.next({
-                  data: undefined,
+                  errors: [new GraphQLError("Oops")],
                 });
                 observer.complete();
               })
@@ -1848,6 +1848,7 @@ describe("mutation results", () => {
 
         expect(ignoreErrorsResult).toEqual({
           data: undefined,
+          errors: undefined,
         });
 
         resolve();

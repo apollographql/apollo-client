@@ -83,8 +83,9 @@ export function useLazyQuery<
   // between renders from these callbacks alone. Its nicer DX to be able to just
   // pass a function to useLazyQuery without first having to wrap it in a
   // useCallback, but doing so means we either change identity on every render,
-  // or we suffer from stale closures. useStableCallback gives us a stable
-  // function, but that means we need to wrap every callback.
+  // or we suffer from stale closures. `useStableCallback` gives us a stable
+  // function that keeps it up to date with the latest props to avoid stale
+  // closures.
   //
   // We have users that tend to call the execute function in a `useEffect`, and
   // we want to try and be good citizens by not causing unnecessary re-renders

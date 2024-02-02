@@ -269,6 +269,12 @@ The first item in `useLazyQuery`'s return tuple is the query function, and the s
 
 As shown above, you can pass options to the query function just like you pass them to `useLazyQuery` itself. If you pass a particular option to _both_, the value you pass to the query function takes precedence. This is a handy way to pass _default_ options to `useLazyQuery` and then customize those options in the query function.
 
+<Note>
+
+Variables are merged by taking the `variables` passed as options to the hook and merging them with the `variables` passed to the query function. If you do not pass `variables` to the query function, only the `variables` passed to the hook are used in the query execution.
+
+</Note>
+
 For a full list of supported options, see the [API reference](../api/react/hooks/#uselazyquery).
 
 ## Setting a fetch policy

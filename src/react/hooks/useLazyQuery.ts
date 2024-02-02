@@ -70,16 +70,9 @@ export function useLazyQuery<
 ): LazyQueryResultTuple<TData, TVariables> {
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
-  const queryRef = React.useRef<
-    DocumentNode | TypedDocumentNode<TData, TVariables>
-  >();
   const stableOptions = useDeepMemo(() => options, [options]);
   const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
-
-  // Use refs to track options and the used query to ensure the `execute`
-  // function remains referentially stable between renders.
-  queryRef.current = document;
 
   const internalState = useInternalState<TData, TVariables>(
     useApolloClient(options && options.client),
@@ -131,7 +124,7 @@ export function useLazyQuery<
         : { fetchPolicy: initialFetchPolicy };
 
       const options = mergeOptions(stableOptions, {
-        query: queryRef.current,
+        query,
         ...execOptionsRef.current,
       });
 
@@ -145,7 +138,7 @@ export function useLazyQuery<
 
       return promise;
     },
-    [stableOptions]
+    [stableOptions, query]
   );
 
   return [execute, result];

@@ -1723,10 +1723,7 @@ describe("useLazyQuery Hook", () => {
       }
     `;
 
-    let fetchCount = 0;
-
     const link = new ApolloLink((operation) => {
-      fetchCount++;
       return new Observable((observer) => {
         setTimeout(() => {
           observer.next({

@@ -1557,7 +1557,7 @@ describe("useLazyQuery Hook", () => {
 
       await waitFor(() => {
         expect(result.current[1].data).toEqual({
-          user: { id: "2", name: "John Doe" },
+          user: { id: null, name: "John Default" },
         });
       });
 

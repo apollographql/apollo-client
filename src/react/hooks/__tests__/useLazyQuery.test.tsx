@@ -1705,7 +1705,7 @@ describe("useLazyQuery Hook", () => {
     expect(trackClosureValue).toHaveBeenCalledWith("skipPollAttempt", 3);
   });
 
-  it("changes execute function identity when changing options", async () => {
+  it("changes execute function identity when changing non-callback options", async () => {
     interface Data {
       user: { id: string; name: string };
     }

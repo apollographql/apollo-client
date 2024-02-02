@@ -78,6 +78,18 @@ export function useLazyQuery<
     return options?.skipPollAttempt?.() ?? false;
   });
 
+  // We need to define "stable" functions for each of the callback options so
+  // that we can return an execute function that does not change identity
+  // between renders from these callbacks alone. Its nicer DX to be able to just
+  // pass a function to useLazyQuery without first having to wrap it in a
+  // useCallback, but doing so means we either change identity on every render,
+  // or we suffer from stale closures. useStableCallback gives us a stable
+  // function, but that means we need to wrap every callback.
+  //
+  // We have users that tend to call the execute function in a `useEffect`, and
+  // we want to try and be good citizens by not causing unnecessary re-renders
+  // in their components. In the event other options change, we are ok changing
+  // the identity of the execute function.
   const onCompleted = useStableCallback(
     (
       ...args: Parameters<

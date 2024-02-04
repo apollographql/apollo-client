@@ -51,6 +51,10 @@ exports.map = function map(callback, context) {
   return entryPoints.map(callback, context);
 };
 
+exports.reduce = function (callback, context) {
+  return entryPoints.reduce(callback, context);
+};
+
 const path = require("path").posix;
 
 exports.check = function (id, parentId) {

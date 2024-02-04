@@ -38,6 +38,27 @@ delete packageJson.scripts;
 delete packageJson.bundlesize;
 delete packageJson.engines;
 
+packageJson.exports = {
+  ".": {
+    types: packageJson.types,
+    import: packageJson.module,
+    require: packageJson.main,
+  },
+  "./package.json": {
+    default: "./package.json",
+  },
+  ...entryPoints.reduce((acc, { dirs, bundleName = dirs[dirs.length - 1] }) => {
+    if (!dirs.length) return acc;
+    const path = `./${dirs.join("/")}`;
+    acc[path] = {
+      types: `${path}/index.d.ts`,
+      import: `${path}/index.js`,
+      require: `${path}/${bundleName}.cjs`,
+    };
+    return acc;
+  }, {}),
+}
+
 // The root package.json points to the CJS/ESM source in "dist", to support
 // on-going package development (e.g. running tests, supporting npm link, etc.).
 // When publishing from "dist" however, we need to update the package.json

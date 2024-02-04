@@ -44,11 +44,11 @@ packageJson.exports = {
     import: packageJson.module,
     require: packageJson.main,
   },
-  [`./index.js`]: {
+  "./index.js": {
     types: packageJson.types,
     default: packageJson.module,
   },
-  [`./main.cjs`]: {
+  "./main.cjs": {
     types: packageJson.types,
     default: packageJson.main,
   },

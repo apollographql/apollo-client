@@ -68,9 +68,9 @@ packageJson.exports = {
       require: `${path}/${bundleName}.cjs`,
     };
 
-    // this works like a wildcard, so that deep imports will continue to work
+    // wildcard, so that deep imports will continue to work
     // such as `import * as ApolloClientCore from '@apollo/client/core/core.cjs';`
-    acc[`${path}/`] = `${path}/`;
+    acc[`${path}/*`] = `${path}/*`;
 
     return acc;
   }, {}),

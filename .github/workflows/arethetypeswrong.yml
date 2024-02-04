@@ -25,5 +25,5 @@ jobs:
         run: npm run build
       - name: Run AreTheTypesWrong
         id: attw
-        # only include the entrypoints
-        run: ./node_modules/.bin/attw --format ascii --pack --include-entrypoints $(node -e 'console.log(require("./config/entryPoints.js").map(ep=>ep.dirs.join("/")).filter(Boolean).join(" "))') dist > $GITHUB_STEP_SUMMARY
+        # ignore legacy cjs files
+        run: ./node_modules/.bin/attw --format ascii --pack dist --exclude-entrypoints main.cjs apollo-client.cjs > $GITHUB_STEP_SUMMARY

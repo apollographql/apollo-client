@@ -25,4 +25,5 @@ jobs:
         run: npm run build
       - name: Run AreTheTypesWrong
         id: attw
-        run: ./node_modules/.bin/attw --format ascii --pack dist > $GITHUB_STEP_SUMMARY
+        # we exclude apollo-client.cjs because it's only a workaround for older bundlers (issue #8605)
+        run: ./node_modules/.bin/attw --format ascii --pack dist --exclude-entrypoints apollo-client.cjs > $GITHUB_STEP_SUMMARY

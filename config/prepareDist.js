@@ -44,8 +44,17 @@ packageJson.exports = {
     import: packageJson.module,
     require: packageJson.main,
   },
+  "./index.js": {
+    types: packageJson.types,
+    import: packageJson.module,
+    require: packageJson.main,
+  },
   "./package.json": {
     default: "./package.json",
+  },
+  // related to issue #8605
+  "./apollo-client.cjs": {
+    require: "./apollo-client.cjs",
   },
   ...entryPoints.reduce((acc, { dirs, bundleName = dirs[dirs.length - 1] }) => {
     if (!dirs.length) return acc;

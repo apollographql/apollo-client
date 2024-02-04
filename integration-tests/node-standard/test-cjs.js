@@ -31,8 +31,11 @@ for (let [fn, name, category] of entries) {
 
 const moduleNames = [
   ["@apollo/client", "/main.cjs"],
+  ["@apollo/client/main.cjs", "/main.cjs"],
   ["@apollo/client/react", "/react/react.cjs"],
+  ["@apollo/client/react/react.cjs", "/react/react.cjs"],
   ["@apollo/client/link/http", "/link/http/http.cjs"],
+  ["@apollo/client/link/http/http.cjs", "/link/http/http.cjs"],
 ];
 
 for (let [moduleName, expectedFilename] of moduleNames) {

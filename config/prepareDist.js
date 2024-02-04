@@ -65,11 +65,10 @@ packageJson.exports = {
       require: `${path}/${bundleName}.cjs`,
     };
 
-    // allows imports like `import { ApolloClient } from "@apollo/client/index.js";`
-    acc[`${path}/index.js`] = {
-      types: `${path}/index.d.ts`,
-      default: `${path}/index.js`,
-    };
+    // this works like a wildcard, so that deep imports will continue to work
+    // such as `import * as ApolloClientCore from '@apollo/client/core/core.cjs';`
+    acc[`${path}/`] = `${path}/`;
+
     return acc;
   }, {}),
 };

@@ -35,7 +35,9 @@ for (let [fn, name, category] of entries) {
 }
 
 const moduleNames = [
+  ["@apollo/client", "/index.js"],
   ["@apollo/client/index.js", "/index.js"],
+  ["@apollo/client/react", "/react/index.js"],
   ["@apollo/client/react/index.js", "/react/index.js"],
   ["@apollo/client/link/http/index.js", "/link/http/index.js"],
 ];

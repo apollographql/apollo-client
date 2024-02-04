@@ -55,9 +55,15 @@ packageJson.exports = {
       import: `${path}/index.js`,
       require: `${path}/${bundleName}.cjs`,
     };
+
+    // allows imports like `import { ApolloClient } from "@apollo/client/index.js";`
+    acc[`${path}/index.js`] = {
+      types: `${path}/index.d.ts`,
+      default: `${path}/index.js`,
+    };
     return acc;
   }, {}),
-}
+};
 
 // The root package.json points to the CJS/ESM source in "dist", to support
 // on-going package development (e.g. running tests, supporting npm link, etc.).

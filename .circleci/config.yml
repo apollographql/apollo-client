@@ -94,7 +94,7 @@ jobs:
       externalPackage:
         type: string
     docker:
-      - image: cimg/node:20.6.1
+      - image: cimg/node:21.6.1
     steps:
       - checkout
       - attach_workspace:

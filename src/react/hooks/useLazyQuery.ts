@@ -192,7 +192,9 @@ export function useLazyQuery<
             fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
           }
         : { fetchPolicy: initialFetchPolicy };
-
+        : {
+            fetchPolicy: initialFetchPolicy,
+          };
       const options = mergeOptions(stableOptions, {
         query,
         ...execOptionsRef.current,

@@ -81,11 +81,11 @@ export interface ObservableQueryFields<
   TVariables extends OperationVariables,
 > {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
-  startPolling(pollInterval: number): void;
+  startPolling: (pollInterval: number) => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
-  stopPolling(): void;
+  stopPolling: () => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-  subscribeToMore<
+  subscribeToMore: <
     TSubscriptionData = TData,
     TSubscriptionVariables extends OperationVariables = TVariables,
   >(
@@ -94,25 +94,27 @@ export interface ObservableQueryFields<
       TSubscriptionVariables,
       TSubscriptionData
     >
-  ): () => void;
+  ) => () => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
-  updateQuery<TVars extends OperationVariables = TVariables>(
+  updateQuery: <TVars extends OperationVariables = TVariables>(
     mapFn: (
       previousQueryResult: TData,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">
     ) => TData
-  ): void;
+  ) => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-  refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<TData>>;
+  refetch: (
+    variables?: Partial<TVariables>
+  ) => Promise<ApolloQueryResult<TData>>;
   /** @internal */
-  reobserve(
+  reobserve: (
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ): Promise<ApolloQueryResult<TData>>;
+  ) => Promise<ApolloQueryResult<TData>>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
   variables: TVariables | undefined;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-  fetchMore<
+  fetchMore: <
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
   >(
@@ -125,7 +127,7 @@ export interface ObservableQueryFields<
         }
       ) => TData;
     }
-  ): Promise<ApolloQueryResult<TFetchData>>;
+  ) => Promise<ApolloQueryResult<TFetchData>>;
 }
 
 export interface QueryResult<

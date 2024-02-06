@@ -1194,7 +1194,7 @@ export class QueryManager<TStore> {
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
           // ones used to obtain it from the link.
-          result = queryInfo.markResult(
+          queryInfo.markResult(
             result,
             linkDocument,
             options,

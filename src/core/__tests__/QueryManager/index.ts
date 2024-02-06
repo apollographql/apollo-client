@@ -67,6 +67,14 @@ export function resetStore(qm: QueryManager<any>) {
 }
 
 describe("QueryManager", () => {
+  // Standard "get id from object" method.
+  const dataIdFromObject = (object: any) => {
+    if (object.__typename && object.id) {
+      return object.__typename + "__" + object.id;
+    }
+    return undefined;
+  };
+
   // Helper method that serves as the constructor method for
   // QueryManager but has defaults that make sense for these
   // tests.
@@ -2218,6 +2226,107 @@ describe("QueryManager", () => {
   );
 
   itAsync(
+    "should not return stale data when we orphan a real-id node in the store with a real-id node",
+    (resolve, reject) => {
+      const query1 = gql`
+        query {
+          author {
+            name {
+              firstName
+              lastName
+            }
+            age
+            id
+            __typename
+          }
+        }
+      `;
+      const query2 = gql`
+        query {
+          author {
+            name {
+              firstName
+            }
+            id
+            __typename
+          }
+        }
+      `;
+      const data1 = {
+        author: {
+          name: {
+            firstName: "John",
+            lastName: "Smith",
+          },
+          age: 18,
+          id: "187",
+          __typename: "Author",
+        },
+      };
+      const data2 = {
+        author: {
+          name: {
+            firstName: "John",
+          },
+          id: "197",
+          __typename: "Author",
+        },
+      };
+      const reducerConfig = { dataIdFromObject };
+      const queryManager = createQueryManager({
+        link: mockSingleLink(
+          {
+            request: { query: query1 },
+            result: { data: data1 },
+          },
+          {
+            request: { query: query2 },
+            result: { data: data2 },
+          },
+          {
+            request: { query: query1 },
+            result: { data: data1 },
+          }
+        ).setOnError(reject),
+        config: reducerConfig,
+      });
+
+      const observable1 = queryManager.watchQuery<any>({ query: query1 });
+      const observable2 = queryManager.watchQuery<any>({ query: query2 });
+
+      // I'm not sure the waiting 60 here really is required, but the test used to do it
+      return Promise.all([
+        observableToPromise(
+          {
+            observable: observable1,
+            wait: 60,
+          },
+          (result) => {
+            expect(result).toEqual({
+              data: data1,
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+            });
+          }
+        ),
+        observableToPromise(
+          {
+            observable: observable2,
+            wait: 60,
+          },
+          (result) => {
+            expect(result).toEqual({
+              data: data2,
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+            });
+          }
+        ),
+      ]).then(resolve, reject);
+    }
+  );
+
+  itAsync(
     "should return partial data when configured when we orphan a real-id node in the store with a real-id node",
     (resolve, reject) => {
       const query1 = gql`
@@ -2411,7 +2520,9 @@ describe("QueryManager", () => {
             loading: false,
             networkStatus: NetworkStatus.ready,
             data: {
-              info: {},
+              info: {
+                a: "ay",
+              },
             },
           });
           setTimeout(resolve, 100);

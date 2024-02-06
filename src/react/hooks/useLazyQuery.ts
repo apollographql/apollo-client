@@ -16,7 +16,7 @@ import type {
 } from "../types/types.js";
 import { useInternalState } from "./useQuery.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { useDeepMemo, useStableCallback } from "./internal/index.js";
+import { useDeepMemo, useEvent } from "./internal/index.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -74,7 +74,7 @@ export function useLazyQuery<
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
 
-  const skipPollAttempt = useStableCallback(() => {
+  const skipPollAttempt = useEvent(() => {
     return options?.skipPollAttempt?.() ?? false;
   });
 
@@ -91,7 +91,7 @@ export function useLazyQuery<
   // we want to try and be good citizens by not causing unnecessary re-renders
   // in their components. In the event other options change, we are ok changing
   // the identity of the execute function.
-  const onCompleted = useStableCallback(
+  const onCompleted = useEvent(
     (
       ...args: Parameters<
         Extract<
@@ -104,7 +104,7 @@ export function useLazyQuery<
     }
   );
 
-  const onError = useStableCallback(
+  const onError = useEvent(
     (
       ...args: Parameters<
         Extract<LazyQueryHookOptions<TData, TVariables>["onError"], Function>
@@ -114,7 +114,7 @@ export function useLazyQuery<
     }
   );
 
-  const nextFetchPolicy = useStableCallback(function (
+  const nextFetchPolicy = useEvent(function (
     this: WatchQueryOptions<TVariables, TData>,
     ...args: Parameters<
       Extract<

@@ -8,7 +8,7 @@ import React from "rehackt";
  *
  * @param unstableCallback - A callback function
  */
-export function useStableCallback<TArgs extends unknown[], TReturn>(
+export function useEvent<TArgs extends unknown[], TReturn>(
   unstableCallback: (...args: TArgs) => TReturn
 ) {
   const callbackRef = React.useRef(unstableCallback);

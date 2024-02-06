@@ -1705,7 +1705,7 @@ describe("useLazyQuery Hook", () => {
     expect(trackClosureValue).toHaveBeenCalledWith("skipPollAttempt", 3);
   });
 
-  it("changes execute function identity when changing non-callback options", async () => {
+  it("maintains stable execute function identity when changing non-callback options", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -1750,7 +1750,7 @@ describe("useLazyQuery Hook", () => {
 
     rerender({ id: "2" });
 
-    expect(result.current[0]).not.toBe(execute);
+    expect(result.current[0]).toBe(execute);
   });
 
   describe("network errors", () => {

@@ -2,10 +2,7 @@ import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import * as React from "rehackt";
 
-import type {
-  OperationVariables,
-  WatchQueryOptions,
-} from "../../core/index.js";
+import type { OperationVariables } from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
 import type {
   LazyQueryHookExecOptions,
@@ -16,7 +13,7 @@ import type {
 } from "../types/types.js";
 import { useInternalState } from "./useQuery.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { useDeepMemo, useEvent } from "./internal/index.js";
+import { useEvent } from "./internal/index.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -74,10 +71,6 @@ export function useLazyQuery<
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
 
-  const skipPollAttempt = useEvent(() => {
-    return options?.skipPollAttempt?.() ?? false;
-  });
-
   // We need to define "stable" functions for each of the callback options so
   // that we can return an execute function that does not change identity
   // between renders from these callbacks alone. Its nicer DX to be able to just
@@ -91,57 +84,8 @@ export function useLazyQuery<
   // we want to try and be good citizens by not causing unnecessary re-renders
   // in their components. In the event other options change, we are ok changing
   // the identity of the execute function.
-  const onCompleted = useEvent(
-    (
-      ...args: Parameters<
-        Extract<
-          LazyQueryHookOptions<TData, TVariables>["onCompleted"],
-          Function
-        >
-      >
-    ) => {
-      options?.onCompleted?.(...args);
-    }
-  );
 
-  const onError = useEvent(
-    (
-      ...args: Parameters<
-        Extract<LazyQueryHookOptions<TData, TVariables>["onError"], Function>
-      >
-    ) => {
-      options?.onError?.(...args);
-    }
-  );
-
-  const nextFetchPolicy = useEvent(function (
-    this: WatchQueryOptions<TVariables, TData>,
-    ...args: Parameters<
-      Extract<
-        LazyQueryHookOptions<TData, TVariables>["nextFetchPolicy"],
-        Function
-      >
-    >
-  ) {
-    if (typeof options?.nextFetchPolicy === "function") {
-      return options.nextFetchPolicy.apply(this, args);
-    }
-
-    return options?.nextFetchPolicy ?? args[0];
-  });
-
-  const stableOptions = useDeepMemo<LazyQueryHookOptions<TData, TVariables>>(
-    () => ({
-      ...options,
-      skipPollAttempt,
-      nextFetchPolicy,
-      onCompleted,
-      onError,
-    }),
-    [options, skipPollAttempt, nextFetchPolicy, onCompleted, onError]
-  );
-
-  const merged = mergeOptions(stableOptions, execOptionsRef.current || {});
+  const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
 
   const internalState = useInternalState<TData, TVariables>(
@@ -183,7 +127,7 @@ export function useLazyQuery<
 
   Object.assign(result, eagerMethods);
 
-  const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
+  const execute = useEvent<LazyQueryResultTuple<TData, TVariables>[0]>(
     (executeOptions) => {
       execOptionsRef.current =
         executeOptions ?
@@ -192,16 +136,14 @@ export function useLazyQuery<
             fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
           }
         : { fetchPolicy: initialFetchPolicy };
-        : {
-            fetchPolicy: initialFetchPolicy,
-          };
-      const options = mergeOptions(stableOptions, {
+
+      const opts = mergeOptions(options, {
         query,
         ...execOptionsRef.current,
       });
 
       const promise = internalState
-        .executeQuery({ ...options, skip: false })
+        .executeQuery({ ...opts, skip: false })
         .then((queryResult) => Object.assign(queryResult, eagerMethods));
 
       // Because the return value of `useLazyQuery` is usually floated, we need
@@ -209,8 +151,7 @@ export function useLazyQuery<
       promise.catch(() => {});
 
       return promise;
-    },
-    [stableOptions, query, initialFetchPolicy]
+    }
   );
 
   return [execute, result];

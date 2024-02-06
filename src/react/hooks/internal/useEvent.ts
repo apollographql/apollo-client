@@ -8,16 +8,15 @@ import React from "rehackt";
  *
  * @param unstableCallback - A callback function
  */
-export function useEvent<TArgs extends unknown[], TReturn>(
-  unstableCallback: (...args: TArgs) => TReturn
-) {
+export function useEvent<T extends Function>(unstableCallback: T): T;
+export function useEvent(unstableCallback: (...args: unknown[]) => unknown) {
   const callbackRef = React.useRef(unstableCallback);
 
   React.useLayoutEffect(() => {
     callbackRef.current = unstableCallback;
   });
 
-  return React.useCallback((...args: TArgs): TReturn => {
+  return React.useCallback((...args: unknown[]) => {
     const fn = callbackRef.current;
     return fn(...args);
   }, []);

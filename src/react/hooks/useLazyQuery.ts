@@ -73,10 +73,11 @@ export function useLazyQuery<
   const queryRef = React.useRef<
     DocumentNode | TypedDocumentNode<TData, TVariables>
   >();
-
   const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
 
+  // Use refs to track options and the used query to ensure the `execute`
+  // function remains referentially stable between renders.
   optionsRef.current = options;
   queryRef.current = document;
 

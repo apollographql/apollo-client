@@ -13,7 +13,6 @@ import type {
 } from "../types/types.js";
 import { useInternalState } from "./useQuery.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { useEvent } from "./internal/index.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -70,9 +69,16 @@ export function useLazyQuery<
 ): LazyQueryResultTuple<TData, TVariables> {
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();
+  const optionsRef = React.useRef<LazyQueryHookOptions<TData, TVariables>>();
+  const queryRef = React.useRef<
+    DocumentNode | TypedDocumentNode<TData, TVariables>
+  >();
 
   const merged = mergeOptions(options, execOptionsRef.current || {});
   const document = merged?.query ?? query;
+
+  optionsRef.current = options;
+  queryRef.current = document;
 
   const internalState = useInternalState<TData, TVariables>(
     useApolloClient(options && options.client),
@@ -113,7 +119,7 @@ export function useLazyQuery<
 
   Object.assign(result, eagerMethods);
 
-  const execute = useEvent<LazyQueryResultTuple<TData, TVariables>[0]>(
+  const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
     (executeOptions) => {
       execOptionsRef.current =
         executeOptions ?
@@ -123,13 +129,13 @@ export function useLazyQuery<
           }
         : { fetchPolicy: initialFetchPolicy };
 
-      const opts = mergeOptions(options, {
-        query,
+      const options = mergeOptions(optionsRef.current, {
+        query: queryRef.current,
         ...execOptionsRef.current,
       });
 
       const promise = internalState
-        .executeQuery({ ...opts, skip: false })
+        .executeQuery({ ...options, skip: false })
         .then((queryResult) => Object.assign(queryResult, eagerMethods));
 
       // Because the return value of `useLazyQuery` is usually floated, we need
@@ -137,7 +143,8 @@ export function useLazyQuery<
       promise.catch(() => {});
 
       return promise;
-    }
+    },
+    []
   );
 
   return [execute, result];

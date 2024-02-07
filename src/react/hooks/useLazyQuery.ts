@@ -78,7 +78,7 @@ export function useLazyQuery<
 
   // Use refs to track options and the used query to ensure the `execute`
   // function remains referentially stable between renders.
-  optionsRef.current = merged;
+  optionsRef.current = options;
   queryRef.current = document;
 
   const internalState = useInternalState<TData, TVariables>(

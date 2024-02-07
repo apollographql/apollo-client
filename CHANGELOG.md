@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.9.4
+
+### Patch Changes
+
+- [#11403](https://github.com/apollographql/apollo-client/pull/11403) [`b0c4f3a`](https://github.com/apollographql/apollo-client/commit/b0c4f3ad8198981a229b46dc430345a76e577e9c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue in `useLazyQuery` that results in a double network call when calling the execute function with no arguments after having called it previously with another set of arguments.
+
+- [#11576](https://github.com/apollographql/apollo-client/pull/11576) [`e855d00`](https://github.com/apollographql/apollo-client/commit/e855d00447e4d9ae478d98f6796d842ef6cc76d1) Thanks [@alessbell](https://github.com/alessbell)! - Revert PR [#11202](https://github.com/apollographql/apollo-client/pull/11202) to fix caching bug reported in [#11560](https://github.com/apollographql/apollo-client/issues/11560)
+
 ## 3.9.3
 
 ### Patch Changes

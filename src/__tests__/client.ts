@@ -2949,10 +2949,7 @@ describe("client", () => {
       return client
         .query({ query })
         .then(({ data }) => {
-          const { price, ...todoWithoutPrice } = data.todos[0];
-          expect(data).toEqual({
-            todos: [todoWithoutPrice],
-          });
+          expect(data).toEqual(result.data);
         })
         .then(resolve, reject);
     });

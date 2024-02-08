@@ -26,8 +26,13 @@ import {
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
-import { profileHook, spyOnConsole } from "../../../testing/internal";
+import {
+  createProfiler,
+  profileHook,
+  spyOnConsole,
+} from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
+import { useLazyQuery } from "../useLazyQuery";
 
 describe("useQuery Hook", () => {
   describe("General use", () => {
@@ -4016,6 +4021,200 @@ describe("useQuery Hook", () => {
       );
       expect(result.current.data).toEqual({ countries });
     });
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/11400
+  it("does not return partial data unexpectedly when one query errors, then another succeeds with overlapping data", async () => {
+    interface Query1 {
+      person: {
+        __typename: "Person";
+        id: number;
+        firstName: string;
+        alwaysFails: boolean;
+      } | null;
+    }
+
+    interface Query2 {
+      person: { __typename: "Person"; id: number; lastName: string } | null;
+    }
+
+    interface Variables {
+      id: number;
+    }
+
+    const user = userEvent.setup();
+
+    const query1: TypedDocumentNode<Query1, Variables> = gql`
+      query PersonQuery1($id: ID!) {
+        person(id: $id) {
+          id
+          firstName
+          alwaysFails
+        }
+      }
+    `;
+
+    const query2: TypedDocumentNode<Query2, Variables> = gql`
+      query PersonQuery2($id: ID!) {
+        person(id: $id) {
+          id
+          lastName
+        }
+      }
+    `;
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        useQueryResult: null as QueryResult<Query1, Variables> | null,
+        useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
+      },
+    });
+
+    const client = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query: query1, variables: { id: 1 } },
+          result: {
+            data: { person: null },
+            errors: [new GraphQLError("Intentional error")],
+          },
+          maxUsageCount: Number.POSITIVE_INFINITY,
+        },
+        {
+          request: { query: query2, variables: { id: 1 } },
+          result: {
+            data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+          },
+        },
+      ]),
+      cache: new InMemoryCache(),
+    });
+
+    function App() {
+      const useQueryResult = useQuery(query1, {
+        variables: { id: 1 },
+        // This is necessary to reproduce the behavior
+        notifyOnNetworkStatusChange: true,
+      });
+
+      const [execute, useLazyQueryResult] = useLazyQuery(query2, {
+        variables: { id: 1 },
+      });
+
+      Profiler.replaceSnapshot({ useQueryResult, useLazyQueryResult });
+
+      return <button onClick={() => execute()}>Run 2nd query</button>;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        called: true,
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: false,
+        data: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: false,
+        data: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Run 2nd query")));
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: true,
+        data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    // Since we write data to the cache that does not contain all the data to
+    // fulfill the first query, it will try and fetch again
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: true,
+        data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: true,
+        data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
   });
 
   describe("Refetching", () => {

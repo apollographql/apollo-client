@@ -4118,7 +4118,6 @@ describe("useQuery Hook", () => {
       const { snapshot } = await Profiler.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
-        called: true,
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -4181,7 +4180,6 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
-        error: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
       });

@@ -21,6 +21,7 @@ import {
   tick,
   MockSubscriptionLink,
   MockLink,
+  MockedResponse,
 } from "../../../testing";
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
@@ -1751,6 +1752,85 @@ describe("useLazyQuery Hook", () => {
     rerender({ id: "2" });
 
     expect(result.current[0]).toBe(execute);
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/10369
+  it("reports data as undefined when executing query that returns errors multiple times with network-only fetch policy", async () => {
+    const query = gql`
+      query ($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks: MockedResponse[] = [
+      {
+        request: { query, variables: { id: 0 } },
+        result: { errors: [new GraphQLError("Oops")] },
+        delay: 20,
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ];
+
+    const ProfiledHook = profileHook(() =>
+      useLazyQuery(query, {
+        notifyOnNetworkStatusChange: true,
+        fetchPolicy: "network-only",
+      })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
+      ),
+    });
+
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    }
+
+    await act(() =>
+      ProfiledHook.getCurrentSnapshot()[0]({ variables: { id: 0 } })
+    );
+
+    // there should be an additional render here for the loading state :/
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        error: new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] }),
+      });
+    }
+
+    await act(() =>
+      ProfiledHook.getCurrentSnapshot()[0]({ variables: { id: 0 } })
+    );
+
+    // there should be an additional render here for the loading state :/
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        error: new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] }),
+      });
+    }
+
+    await expect(ProfiledHook).not.toRerender();
   });
 
   describe("network errors", () => {

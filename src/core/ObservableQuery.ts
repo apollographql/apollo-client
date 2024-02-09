@@ -248,6 +248,10 @@ export class ObservableQuery<
       networkStatus,
     } as ApolloQueryResult<TData>;
 
+    if (equal(result.data, {})) {
+      result.data = void 0 as any;
+    }
+
     const { fetchPolicy = "cache-first" } = this.options;
     if (
       // These fetch policies should never deliver data from the cache, unless
@@ -270,10 +274,6 @@ export class ObservableQuery<
 
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;
-      }
-
-      if (equal(result.data, {})) {
-        result.data = void 0 as any;
       }
 
       if (diff.complete) {

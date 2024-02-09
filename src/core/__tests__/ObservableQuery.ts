@@ -3512,3 +3512,81 @@ test("handles changing variables in rapid succession before other request is com
     networkStatus: NetworkStatus.ready,
   });
 });
+
+test("does not return partial cache data when `returnPartialData` is false and new variables are passed in", async () => {
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: ApolloLink.empty(),
+  });
+
+  const query = gql`
+    query MyCar($id: ID) {
+      car(id: $id) {
+        id
+        make
+      }
+    }
+  `;
+
+  const partialQuery = gql`
+    query MyCar($id: ID) {
+      car(id: $id) {
+        id
+        make
+        model
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: { id: 1 },
+    data: {
+      car: {
+        __typename: "Car",
+        id: 1,
+        make: "Ford",
+        model: "Pinto",
+      },
+    },
+  });
+
+  cache.writeQuery({
+    query: partialQuery,
+    variables: { id: 2 },
+    data: {
+      car: {
+        __typename: "Car",
+        id: 2,
+        make: "Ford",
+        model: "Bronco",
+      },
+    },
+  });
+
+  const observable = client.watchQuery({
+    query: partialQuery,
+    variables: { id: 2 },
+    returnPartialData: false,
+    notifyOnNetworkStatusChange: true,
+  });
+
+  const stream = new ObservableStream(observable);
+
+  expect(await stream.takeNext()).toEqual({
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    data: {
+      car: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" },
+    },
+  });
+
+  observable.reobserve({ variables: { id: 1 } });
+
+  expect(await stream.takeNext()).toEqual({
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    data: undefined,
+  });
+});

@@ -248,6 +248,10 @@ export class ObservableQuery<
       networkStatus,
     } as ApolloQueryResult<TData>;
 
+    if (result.partial && !this.options.returnPartialData) {
+      result.data = void 0 as any;
+    }
+
     const { fetchPolicy = "cache-first" } = this.options;
     if (
       // These fetch policies should never deliver data from the cache, unless

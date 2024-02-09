@@ -1802,7 +1802,16 @@ describe("useLazyQuery Hook", () => {
       ProfiledHook.getCurrentSnapshot()[0]({ variables: { id: 0 } })
     );
 
-    // there should be an additional render here for the loading state :/
+    if (React.version.startsWith("17")) {
+      const [, result] = await ProfiledHook.takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+    }
+
     {
       const [, result] = await ProfiledHook.takeSnapshot();
 
@@ -1818,7 +1827,16 @@ describe("useLazyQuery Hook", () => {
       ProfiledHook.getCurrentSnapshot()[0]({ variables: { id: 0 } })
     );
 
-    // there should be an additional render here for the loading state :/
+    if (React.version.startsWith("17")) {
+      const [, result] = await ProfiledHook.takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+    }
+
     {
       const [, result] = await ProfiledHook.takeSnapshot();
 

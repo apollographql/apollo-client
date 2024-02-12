@@ -3722,7 +3722,19 @@ test("does not return partial cache data when `returnPartialData` is false and n
     data: undefined,
   });
 
+  expect(observable.getCurrentResult()).toEqual({
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    data: undefined,
+  });
+
   expect(await stream.takeNext()).toEqual({
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    data: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },
+  });
+
+  expect(observable.getCurrentResult()).toEqual({
     loading: false,
     networkStatus: NetworkStatus.ready,
     data: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },

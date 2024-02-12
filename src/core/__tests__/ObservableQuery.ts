@@ -3643,7 +3643,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
     link: ApolloLink.empty(),
   });
 
-  const query = gql`
+  const partialQuery = gql`
     query MyCar($id: ID) {
       car(id: $id) {
         id
@@ -3652,7 +3652,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
     }
   `;
 
-  const partialQuery = gql`
+  const query = gql`
     query MyCar($id: ID) {
       car(id: $id) {
         id
@@ -3663,7 +3663,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
   `;
 
   cache.writeQuery({
-    query,
+    query: partialQuery,
     variables: { id: 1 },
     data: {
       car: {
@@ -3676,7 +3676,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
   });
 
   cache.writeQuery({
-    query: partialQuery,
+    query,
     variables: { id: 2 },
     data: {
       car: {
@@ -3689,7 +3689,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
   });
 
   const observable = client.watchQuery({
-    query: partialQuery,
+    query,
     variables: { id: 2 },
     returnPartialData: false,
     notifyOnNetworkStatusChange: true,
@@ -3709,7 +3709,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
 
   expect(await stream.takeNext()).toEqual({
     loading: true,
-    networkStatus: NetworkStatus.loading,
+    networkStatus: NetworkStatus.setVariables,
     data: undefined,
   });
 });

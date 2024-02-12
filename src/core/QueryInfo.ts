@@ -211,6 +211,17 @@ export class QueryInfo {
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.lastDiff && this.lastDiff.diff;
     this.updateLastDiff(diff);
+
+    // If we do not tolerate partial results, skip this update to prevent it
+    // from being reported unnecessarily.
+    if (
+      diff &&
+      !diff.complete &&
+      !this.observableQuery?.options.returnPartialData
+    ) {
+      return;
+    }
+
     if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
       this.dirty = true;
       if (!this.notifyTimeout) {

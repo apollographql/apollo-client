@@ -209,9 +209,6 @@ export class QueryInfo {
   }
 
   setDiff(diff: Cache.DiffResult<any> | null) {
-    const oldDiff = this.lastDiff && this.lastDiff.diff;
-    this.updateLastDiff(diff);
-
     // If we do not tolerate partial results, skip this update to prevent it
     // from being reported.
     if (
@@ -221,6 +218,9 @@ export class QueryInfo {
     ) {
       return;
     }
+
+    const oldDiff = this.lastDiff && this.lastDiff.diff;
+    this.updateLastDiff(diff);
 
     if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
       this.dirty = true;

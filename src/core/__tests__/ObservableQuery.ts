@@ -3637,12 +3637,6 @@ test("handles changing variables in rapid succession before other request is com
 });
 
 test("does not return partial cache data when `returnPartialData` is false and new variables are passed in", async () => {
-  const cache = new InMemoryCache();
-  const client = new ApolloClient({
-    cache,
-    link: ApolloLink.empty(),
-  });
-
   const partialQuery = gql`
     query MyCar($id: ID) {
       car(id: $id) {
@@ -3661,6 +3655,21 @@ test("does not return partial cache data when `returnPartialData` is false and n
       }
     }
   `;
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink([
+      {
+        request: { query, variables: { id: 2 } },
+        result: {
+          data: {
+            car: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" },
+          },
+        },
+      },
+    ]),
+  });
 
   cache.writeQuery({
     query: partialQuery,
@@ -3711,5 +3720,11 @@ test("does not return partial cache data when `returnPartialData` is false and n
     loading: true,
     networkStatus: NetworkStatus.setVariables,
     data: undefined,
+  });
+
+  expect(await stream.takeNext()).toEqual({
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    data: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },
   });
 });

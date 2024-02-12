@@ -10,8 +10,7 @@ As we only use this file in our internal tests, we can safely ignore it.
 */
 
 import { within, screen } from "@testing-library/dom";
-import { JSDOM, VirtualConsole } from "jsdom";
-import { applyStackTrace, captureStackTrace } from "./traces.js";
+import { Window } from "happy-dom";
 
 /** @internal */
 export interface BaseRender {
@@ -93,35 +92,24 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
 
   private _domSnapshot: HTMLElement | undefined;
   get domSnapshot() {
-    if (this._domSnapshot) return this._domSnapshot;
+    if (this._domSnapshot) return this._domSnapshot as HTMLElement;
     if (!this.stringifiedDOM) {
       throw new Error(
         "DOM snapshot is not available - please set the `snapshotDOM` option"
       );
     }
 
-    const virtualConsole = new VirtualConsole();
-    const stackTrace = captureStackTrace("RenderInstance.get");
-    virtualConsole.on("jsdomError", (error) => {
-      throw applyStackTrace(error, stackTrace);
-    });
+    let window = new Window({});
+    const document = window.document;
+    document.body.innerHTML =
+      this.stringifiedDOM +
+      `
+    <script type="text/javascript">
+      ${errorOnDomInteraction.toString()};
+      ${errorOnDomInteraction.name}();
+    </script>`;
 
-    const snapDOM = new JSDOM(this.stringifiedDOM, {
-      runScripts: "dangerously",
-      virtualConsole,
-    });
-    const document = snapDOM.window.document;
-    const body = document.body;
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.text = `
-        ${errorOnDomInteraction.toString()};
-        ${errorOnDomInteraction.name}();
-      `;
-    body.appendChild(script);
-    body.removeChild(script);
-
-    return (this._domSnapshot = body);
+    return (this._domSnapshot = document.body as unknown as HTMLElement);
   }
 
   get withinDOM() {
@@ -139,7 +127,7 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
         screen.logTestingPlaygroundURL(dom, ...rest);
       },
     });
-    return () => snapScreen;
+    return () => snapScreen as any;
   }
 }
 /** @internal */

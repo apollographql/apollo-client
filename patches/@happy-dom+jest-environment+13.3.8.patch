@@ -1,0 +1,12 @@
+diff --git a/node_modules/@happy-dom/jest-environment/lib/index.js b/node_modules/@happy-dom/jest-environment/lib/index.js
+index 3d3b08d..0e4474c 100644
+--- a/node_modules/@happy-dom/jest-environment/lib/index.js
++++ b/node_modules/@happy-dom/jest-environment/lib/index.js
+@@ -73,6 +73,7 @@ class HappyDOMEnvironment {
+         JestUtil.installCommonGlobals(this.window, globals);
+         // For some reason Jest removes the global setImmediate, so we need to add it back.
+         this.global.setImmediate = global.setImmediate;
++        this.global.clearImmediate = global.clearImmediate;
+         if (options && options.console) {
+             this.global.console = options.console;
+             this.global.window['console'] = options.console;

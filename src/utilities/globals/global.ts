@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import { maybe } from "./maybe.js";
 
 declare global {

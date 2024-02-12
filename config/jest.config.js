@@ -1,7 +1,8 @@
 const defaults = {
   rootDir: "src",
   preset: "ts-jest",
-  testEnvironment: "jsdom",
+  //testEnvironment: "jsdom",
+  testEnvironment: "@happy-dom/jest-environment",
   setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
   globals: {
     __DEV__: true,

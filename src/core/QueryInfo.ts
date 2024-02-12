@@ -213,7 +213,7 @@ export class QueryInfo {
     this.updateLastDiff(diff);
 
     // If we do not tolerate partial results, skip this update to prevent it
-    // from being reported unnecessarily.
+    // from being reported.
     if (
       diff &&
       !diff.complete &&

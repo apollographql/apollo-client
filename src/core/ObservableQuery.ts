@@ -248,13 +248,6 @@ export class ObservableQuery<
       networkStatus,
     } as ApolloQueryResult<TData>;
 
-    // QueryInfo calls cache.watch with returnPartialData set to `true` always,
-    // which means that cache broadcasts for some queries will store the
-    // lastResult with partial data even though we don't tolerate it.
-    if (result.partial && !this.options.returnPartialData) {
-      result.data = void 0 as any;
-    }
-
     const { fetchPolicy = "cache-first" } = this.options;
     if (
       // These fetch policies should never deliver data from the cache, unless

@@ -154,9 +154,9 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
         mockedResponses.push(response);
       }
 
-      if (!response.result && !response.error) {
+      if (!response.result && !response.error && response.delay !== Infinity) {
         configError = new Error(
-          `Mocked response should contain either result or error: ${key}`
+          `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: ${key}`
         );
       }
     }

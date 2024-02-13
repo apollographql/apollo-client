@@ -210,7 +210,6 @@ export class QueryInfo {
 
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.lastDiff && this.lastDiff.diff;
-    this.updateLastDiff(diff);
 
     // If we do not tolerate partial results, skip this update to prevent it
     // from being reported. This prevents a situtuation where a query that
@@ -228,11 +227,14 @@ export class QueryInfo {
       // schedule a notification to send a network request (this.oqListener) to
       // go and fetch the missing data.
       if (oldDiff?.complete) {
+        this.updateLastDiff(diff);
         this.scheduleNotify();
       }
 
       return;
     }
+
+    this.updateLastDiff(diff);
 
     if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
       this.scheduleNotify();

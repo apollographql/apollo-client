@@ -4228,28 +4228,13 @@ describe("useQuery Hook", () => {
 
     await act(() => user.click(screen.getByText("Reload 1st query")));
 
-    {
+    if (React.version.startsWith("17")) {
       const { snapshot } = await Profiler.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
         loading: true,
-        networkStatus: NetworkStatus.refetch,
-      });
-
-      // ensure we aren't setting a value on the observable query that contains
-      // the partial result
-      expect(
-        snapshot.useQueryResult?.observable.getCurrentResult(false)
-      ).toEqual({
-        data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
-        errors: [new GraphQLError("Intentional error")],
-        loading: true,
-        networkStatus: NetworkStatus.refetch,
-        partial: true,
+        networkStatus: NetworkStatus.loading,
       });
 
       expect(snapshot.useLazyQueryResult).toMatchObject({

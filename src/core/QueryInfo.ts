@@ -209,6 +209,9 @@ export class QueryInfo {
   }
 
   setDiff(diff: Cache.DiffResult<any> | null) {
+    const oldDiff = this.lastDiff && this.lastDiff.diff;
+    this.updateLastDiff(diff);
+
     // If we do not tolerate partial results, skip this update to prevent it
     // from being reported.
     if (
@@ -216,17 +219,25 @@ export class QueryInfo {
       !diff.complete &&
       !this.observableQuery?.options.returnPartialData
     ) {
+      // In the case of a cache eviction, the diff will become partial so we
+      // schedule a notification to send a network request (this.oqListener) to
+      // go and fetch the missing data.
+      if (!diff.complete && oldDiff?.complete) {
+        this.scheduleNotify();
+      }
+
       return;
     }
 
-    const oldDiff = this.lastDiff && this.lastDiff.diff;
-    this.updateLastDiff(diff);
-
     if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
-      this.dirty = true;
-      if (!this.notifyTimeout) {
-        this.notifyTimeout = setTimeout(() => this.notify(), 0);
-      }
+      this.scheduleNotify();
+    }
+  }
+
+  private scheduleNotify() {
+    this.dirty = true;
+    if (!this.notifyTimeout) {
+      this.notifyTimeout = setTimeout(() => this.notify(), 0);
     }
   }
 

@@ -213,7 +213,12 @@ export class QueryInfo {
     this.updateLastDiff(diff);
 
     // If we do not tolerate partial results, skip this update to prevent it
-    // from being reported.
+    // from being reported. This prevents a situtuation where a query that
+    // errors and another succeeds with overlapping data does not report the
+    // partial data result to the errored query.
+    //
+    // See https://github.com/apollographql/apollo-client/issues/11400 for more
+    // information on this issue.
     if (
       diff &&
       !diff.complete &&

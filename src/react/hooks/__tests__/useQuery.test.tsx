@@ -4103,7 +4103,21 @@ describe("useQuery Hook", () => {
 
       Profiler.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
-      return <button onClick={() => execute()}>Run 2nd query</button>;
+      return (
+        <>
+          <button onClick={() => execute()}>Run 2nd query</button>
+          <button
+            onClick={() => {
+              // Intentionally use reobserve here as opposed to refetch to
+              // ensure we check against reported cache results with cache-first
+              // and notifyOnNetworkStatusChange
+              useQueryResult.observable.reobserve();
+            }}
+          >
+            Reload 1st query
+          </button>
+        </>
+      );
     }
 
     render(<App />, {
@@ -4177,21 +4191,23 @@ describe("useQuery Hook", () => {
       }
     }
 
-    const { snapshot } = await Profiler.takeRender();
+    {
+      const { snapshot } = await Profiler.takeRender();
 
-    expect(snapshot.useQueryResult).toMatchObject({
-      data: undefined,
-      error: new ApolloError({
-        graphQLErrors: [new GraphQLError("Intentional error")],
-      }),
-      loading: false,
-      networkStatus: NetworkStatus.error,
-    });
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      });
 
-    // ensure we aren't setting a value on the observable query that contains
-    // the partial result
-    expect(snapshot.useQueryResult?.observable.getCurrentResult(false)).toEqual(
-      {
+      // ensure we aren't setting a value on the observable query that contains
+      // the partial result
+      expect(
+        snapshot.useQueryResult?.observable.getCurrentResult(false)
+      ).toEqual({
         data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
@@ -4200,15 +4216,84 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
-      }
-    );
+      });
 
-    expect(snapshot.useLazyQueryResult).toMatchObject({
-      called: true,
-      data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-    });
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: true,
+        data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Reload 1st query")));
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+      });
+
+      // ensure we aren't setting a value on the observable query that contains
+      // the partial result
+      expect(
+        snapshot.useQueryResult?.observable.getCurrentResult(false)
+      ).toEqual({
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        errors: [new GraphQLError("Intentional error")],
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: true,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: true,
+        data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        loading: false,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        networkStatus: NetworkStatus.error,
+      });
+
+      // ensure we aren't setting a value on the observable query that contains
+      // the partial result
+      expect(
+        snapshot.useQueryResult?.observable.getCurrentResult(false)
+      ).toEqual({
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        errors: [new GraphQLError("Intentional error")],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: true,
+        data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
 
     await expect(Profiler).not.toRerender();
   });

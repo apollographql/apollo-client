@@ -2414,18 +2414,16 @@ describe("ObservableQuery", () => {
       const obs = client.watchQuery({ query });
       const stream = new ObservableStream(obs);
 
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              greeting: {
-                message: "Hello world",
-                __typename: "Greeting",
-              },
+      link.simulateResult({
+        result: {
+          data: {
+            greeting: {
+              message: "Hello world",
+              __typename: "Greeting",
             },
-            hasNext: true,
           },
-        });
+          hasNext: true,
+        },
       });
 
       {
@@ -2452,28 +2450,26 @@ describe("ObservableQuery", () => {
         },
       });
 
-      setTimeout(() => {
-        link.simulateResult(
-          {
-            result: {
-              incremental: [
-                {
-                  data: {
-                    recipient: {
-                      name: "Alice",
-                      __typename: "Person",
-                    },
-                    __typename: "Greeting",
+      link.simulateResult(
+        {
+          result: {
+            incremental: [
+              {
+                data: {
+                  recipient: {
+                    name: "Alice",
+                    __typename: "Person",
                   },
-                  path: ["greeting"],
+                  __typename: "Greeting",
                 },
-              ],
-              hasNext: false,
-            },
+                path: ["greeting"],
+              },
+            ],
+            hasNext: false,
           },
-          true
-        );
-      });
+        },
+        true
+      );
 
       {
         const result = await stream.takeNext();

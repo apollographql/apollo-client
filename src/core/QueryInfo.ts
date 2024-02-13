@@ -222,7 +222,7 @@ export class QueryInfo {
       // In the case of a cache eviction, the diff will become partial so we
       // schedule a notification to send a network request (this.oqListener) to
       // go and fetch the missing data.
-      if (!diff.complete && oldDiff?.complete) {
+      if (oldDiff?.complete) {
         this.scheduleNotify();
       }
 

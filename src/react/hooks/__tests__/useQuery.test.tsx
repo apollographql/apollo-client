@@ -4175,45 +4175,25 @@ describe("useQuery Hook", () => {
           networkStatus: NetworkStatus.loading,
         });
       }
-
-      {
-        const { snapshot } = await Profiler.takeRender();
-
-        expect(snapshot.useQueryResult).toMatchObject({
-          data: undefined,
-          error: new ApolloError({
-            graphQLErrors: [new GraphQLError("Intentional error")],
-          }),
-          loading: false,
-          networkStatus: NetworkStatus.error,
-        });
-
-        expect(snapshot.useLazyQueryResult).toMatchObject({
-          called: true,
-          data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-        });
-      }
-    } else {
-      const { snapshot } = await Profiler.takeRender();
-
-      expect(snapshot.useQueryResult).toMatchObject({
-        data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
-        loading: false,
-        networkStatus: NetworkStatus.error,
-      });
-
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: true,
-        data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-      });
     }
+
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.useQueryResult).toMatchObject({
+      data: undefined,
+      error: new ApolloError({
+        graphQLErrors: [new GraphQLError("Intentional error")],
+      }),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+    });
+
+    expect(snapshot.useLazyQueryResult).toMatchObject({
+      called: true,
+      data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
 
     await expect(Profiler).not.toRerender();
   });

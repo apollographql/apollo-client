@@ -35,7 +35,7 @@ export interface MockedResponse<
   error?: Error;
   delay?: number;
   variableMatcher?: VariableMatcher<TVariables>;
-  newData?: ResultFunction<FetchResult>;
+  newData?: ResultFunction<FetchResult<TData>, TVariables>;
 }
 
 export interface MockLinkOptions {

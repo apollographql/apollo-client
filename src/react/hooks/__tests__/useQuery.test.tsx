@@ -4188,6 +4188,21 @@ describe("useQuery Hook", () => {
       networkStatus: NetworkStatus.error,
     });
 
+    // ensure we aren't setting a value on the observable query that contains
+    // the partial result
+    expect(snapshot.useQueryResult?.observable.getCurrentResult(false)).toEqual(
+      {
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        errors: [new GraphQLError("Intentional error")],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      }
+    );
+
     expect(snapshot.useLazyQueryResult).toMatchObject({
       called: true,
       data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },

@@ -221,19 +221,12 @@ export class QueryInfo {
     if (
       diff &&
       !diff.complete &&
-      !this.observableQuery?.options.returnPartialData
-    ) {
+      !this.observableQuery?.options.returnPartialData &&
       // In the case of a cache eviction, the diff will become partial so we
       // schedule a notification to send a network request (this.oqListener) to
       // go and fetch the missing data.
-      if (oldDiff?.complete) {
-        this.updateLastDiff(diff);
-
-        if (!this.dirty) {
-          this.scheduleNotify();
-        }
-      }
-
+      !(oldDiff && oldDiff.complete)
+    ) {
       return;
     }
 

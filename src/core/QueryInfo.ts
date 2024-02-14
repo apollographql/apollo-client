@@ -228,7 +228,10 @@ export class QueryInfo {
       // go and fetch the missing data.
       if (oldDiff?.complete) {
         this.updateLastDiff(diff);
-        this.scheduleNotify();
+
+        if (!this.dirty) {
+          this.scheduleNotify();
+        }
       }
 
       return;

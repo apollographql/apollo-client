@@ -99,7 +99,7 @@
     "hoist-non-react-statics": "^3.3.2",
     "optimism": "^0.18.0",
     "prop-types": "^15.7.2",
-    "rehackt": "0.0.4",
+    "rehackt": "0.0.5",
     "response-iterator": "^0.2.6",
     "symbol-observable": "^4.0.0",
     "ts-invariant": "^0.10.3",

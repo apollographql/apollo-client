@@ -4079,12 +4079,14 @@ describe("useQuery Hook", () => {
             errors: [new GraphQLError("Intentional error")],
           },
           maxUsageCount: Number.POSITIVE_INFINITY,
+          delay: 20,
         },
         {
           request: { query: query2, variables: { id: 1 } },
           result: {
             data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
           },
+          delay: 20,
         },
       ]),
       cache: new InMemoryCache(),
@@ -4167,28 +4169,24 @@ describe("useQuery Hook", () => {
 
     await act(() => user.click(screen.getByText("Run 2nd query")));
 
-    if (React.version.startsWith("17")) {
-      {
-        const { snapshot } = await Profiler.takeRender();
+    {
+      const { snapshot } = await Profiler.takeRender();
 
-        expect(snapshot.useQueryResult).toMatchObject({
-          data: undefined,
-          error: new ApolloError({
-            graphQLErrors: [new GraphQLError("Intentional error")],
-          }),
-          loading: false,
-          networkStatus: NetworkStatus.error,
-        });
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      });
 
-        // React 17 contains this additional render that we do not see on React
-        // 18
-        expect(snapshot.useLazyQueryResult).toMatchObject({
-          called: true,
-          data: undefined,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-        });
-      }
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: true,
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
     }
 
     {
@@ -4228,7 +4226,7 @@ describe("useQuery Hook", () => {
 
     await act(() => user.click(screen.getByText("Reload 1st query")));
 
-    if (React.version.startsWith("17")) {
+    {
       const { snapshot } = await Profiler.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({

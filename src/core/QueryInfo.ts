@@ -233,14 +233,10 @@ export class QueryInfo {
     this.updateLastDiff(diff);
 
     if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
-      this.scheduleNotify();
-    }
-  }
-
-  private scheduleNotify() {
-    this.dirty = true;
-    if (!this.notifyTimeout) {
-      this.notifyTimeout = setTimeout(() => this.notify(), 0);
+      this.dirty = true;
+      if (!this.notifyTimeout) {
+        this.notifyTimeout = setTimeout(() => this.notify(), 0);
+      }
     }
   }
 

@@ -1,5 +1,19 @@
 # @apollo/client
 
+## 3.9.5
+
+### Patch Changes
+
+- [#11595](https://github.com/apollographql/apollo-client/pull/11595) [`8c20955`](https://github.com/apollographql/apollo-client/commit/8c20955874562e5b2ab35557325e047b059bc4fc) Thanks [@phryneas](https://github.com/phryneas)! - Bumps the dependency `rehackt` to 0.0.5
+
+- [#11592](https://github.com/apollographql/apollo-client/pull/11592) [`1133469`](https://github.com/apollographql/apollo-client/commit/1133469bd91ff76b9815e815a454a79d8e23a9bc) Thanks [@Stephen2](https://github.com/Stephen2)! - Strengthen `MockedResponse.newData` type
+
+- [#11579](https://github.com/apollographql/apollo-client/pull/11579) [`1ba2fd9`](https://github.com/apollographql/apollo-client/commit/1ba2fd919f79dfdc7b9d3f7d1a7aa5918e648349) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where partial data is reported to `useQuery` when using `notifyOnNetworkStatusChange` after it errors while another overlapping query succeeds.
+
+- [#11579](https://github.com/apollographql/apollo-client/pull/11579) [`1ba2fd9`](https://github.com/apollographql/apollo-client/commit/1ba2fd919f79dfdc7b9d3f7d1a7aa5918e648349) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a partial cache write for an errored query would result in automatically refetching that query.
+
+- [#11562](https://github.com/apollographql/apollo-client/pull/11562) [`65ab695`](https://github.com/apollographql/apollo-client/commit/65ab695470741e8dcaef1ebd7742c3c397526354) Thanks [@mspiess](https://github.com/mspiess)! - Mocks with an infinite delay no longer require result or error
+
 ## 3.9.4
 
 ### Patch Changes

@@ -210,7 +210,28 @@ export class QueryInfo {
 
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.lastDiff && this.lastDiff.diff;
+
+    // If we do not tolerate partial results, skip this update to prevent it
+    // from being reported. This prevents a situtuation where a query that
+    // errors and another succeeds with overlapping data does not report the
+    // partial data result to the errored query.
+    //
+    // See https://github.com/apollographql/apollo-client/issues/11400 for more
+    // information on this issue.
+    if (
+      diff &&
+      !diff.complete &&
+      !this.observableQuery?.options.returnPartialData &&
+      // In the case of a cache eviction, the diff will become partial so we
+      // schedule a notification to send a network request (this.oqListener) to
+      // go and fetch the missing data.
+      !(oldDiff && oldDiff.complete)
+    ) {
+      return;
+    }
+
     this.updateLastDiff(diff);
+
     if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
       this.dirty = true;
       if (!this.notifyTimeout) {

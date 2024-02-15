@@ -933,7 +933,7 @@ export interface MockedResponse<TData = Record<string, any>, TVariables = Record
     // (undocumented)
     maxUsageCount?: number;
     // (undocumented)
-    newData?: ResultFunction<FetchResult>;
+    newData?: ResultFunction<FetchResult<TData>, TVariables>;
     // (undocumented)
     request: GraphQLRequest<TVariables>;
     // (undocumented)

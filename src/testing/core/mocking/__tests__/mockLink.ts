@@ -6,21 +6,32 @@ describe("MockedResponse.newData", () => {
   const setup = () => {
     const weaklyTypedMockResponse: MockedResponse = {
       request: {
-        query: gql`query A { a }`,
+        query: gql`
+          query A {
+            a
+          }
+        `,
       },
     };
 
-    const stronglyTypedMockResponse: MockedResponse<{ a: string }, { input: string }> = {
+    const stronglyTypedMockResponse: MockedResponse<
+      { a: string },
+      { input: string }
+    > = {
       request: {
-        query: gql`query A { a }`,
-      }
+        query: gql`
+          query A {
+            a
+          }
+        `,
+      },
     };
 
     return {
       weaklyTypedMockResponse,
       stronglyTypedMockResponse,
     };
-  }
+  };
 
   test("returned 'data' can be any object with untyped response", () => {
     const { weaklyTypedMockResponse } = setup();
@@ -38,8 +49,8 @@ describe("MockedResponse.newData", () => {
     // @ts-expect-error return type does not match `TData`
     stronglyTypedMockResponse.newData = () => ({
       data: {
-        a: 123
-      }
+        a: 123,
+      },
     });
   });
 
@@ -49,8 +60,8 @@ describe("MockedResponse.newData", () => {
     // @ts-expect-error unknown variables
     stronglyTypedMockResponse.newData = ({ fake: { faker } }) => ({
       data: {
-        a: faker
-      }
+        a: faker,
+      },
     });
   });
 });

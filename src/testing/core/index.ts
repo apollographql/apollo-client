@@ -12,4 +12,5 @@ export { createMockClient } from "./mocking/mockClient.js";
 export { default as subscribeAndCount } from "./subscribeAndCount.js";
 export { itAsync } from "./itAsync.js";
 export { wait, tick } from "./wait.js";
+export { proxiedSchema } from "./schemaProxy.js";
 export * from "./withConsoleSpy.js";

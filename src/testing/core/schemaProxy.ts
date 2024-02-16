@@ -23,7 +23,9 @@ const proxiedSchema = (
             },
           }));
       }
+      // @ts-expect-error
       if (typeof targetSchema[p] === "function") {
+        // @ts-expect-error
         return targetSchema[p].bind(targetSchema);
       }
       return Reflect.get(target, p);

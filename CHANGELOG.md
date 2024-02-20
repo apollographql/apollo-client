@@ -127,6 +127,25 @@
 
 - [#11412](https://github.com/apollographql/apollo-client/pull/11412) [`58db5c3`](https://github.com/apollographql/apollo-client/commit/58db5c3295b88162f91019f0898f6baa4b9cced6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to start preloading a query outside React to begin fetching as early as possible. Call `createQueryPreloader` to create a `preloadQuery` function which can be called to start fetching a query. This returns a `queryRef` which is passed to `useReadQuery` and suspended until the query is done fetching.
 
+  ```tsx
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef = preloadQuery(QUERY, { variables, ...otherOptions });
+
+  function App() {
+    return {
+      <Suspense fallback={<div>Loading</div>}>
+        <MyQuery />
+      </Suspense>
+    }
+  }
+
+  function MyQuery() {
+    const { data } = useReadQuery(queryRef);
+
+    // do something with data
+  }
+  ```
+
 #### Testing utility improvements
 
 - [#11178](https://github.com/apollographql/apollo-client/pull/11178) [`4d64a6f`](https://github.com/apollographql/apollo-client/commit/4d64a6fa2ad5abe6f7f172c164f5e1fc2cb89829) Thanks [@sebakerckhof](https://github.com/sebakerckhof)! - Support re-using of mocks in the MockedProvider
@@ -192,25 +211,6 @@
   ```
 
   The `IGNORE` sentinel can be destructured from the second parameter in the callback function signature passed to `optimisticResponse`.
-
-  ```tsx
-  const preloadQuery = createQueryPreloader(client);
-  const queryRef = preloadQuery(QUERY, { variables, ...otherOptions });
-
-  function App() {
-    return {
-      <Suspense fallback={<div>Loading</div>}>
-        <MyQuery />
-      </Suspense>
-    }
-  }
-
-  function MyQuery() {
-    const { data } = useReadQuery(queryRef);
-
-    // do something with data
-  }
-  ```
 
 #### Network adapters for multipart subscriptions usage with Relay and urql
 

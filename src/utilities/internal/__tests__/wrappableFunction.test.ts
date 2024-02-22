@@ -1,4 +1,4 @@
-import { createWrappableFunction, wrapFunction } from "./wrappableFunction";
+import { createWrappableFunction, wrapFunction } from "../wrappableFunction";
 
 console.log(createWrappableFunction.toString());
 

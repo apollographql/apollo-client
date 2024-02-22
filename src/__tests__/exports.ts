@@ -33,6 +33,7 @@ import * as testing from "../testing";
 import * as testingCore from "../testing/core";
 import * as utilities from "../utilities";
 import * as utilitiesGlobals from "../utilities/globals";
+import * as utilitiesInternal from "../utilities/internal";
 import * as urqlUtilities from "../utilities/subscriptions/urql";
 
 const entryPoints = require("../../config/entryPoints.js");
@@ -79,6 +80,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/testing/core", testingCore);
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
+  check("@apollo/client/utilities/internal", utilitiesInternal);
   check("@apollo/client/utilities/subscriptions/urql", urqlUtilities);
 
   it("completeness", () => {

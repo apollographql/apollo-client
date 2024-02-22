@@ -501,6 +501,13 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/utilities/internal 1`] = `
+Array [
+  "createWrappableFunction",
+  "wrapFunction",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/utilities/subscriptions/urql 1`] = `
 Array [
   "createFetchMultipartSubscription",

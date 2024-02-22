@@ -31,6 +31,7 @@ const entryPoints = [
   { dirs: ["utilities", "subscriptions", "relay"] },
   { dirs: ["utilities", "subscriptions", "urql"] },
   { dirs: ["utilities", "globals"], sideEffects: true },
+  { dirs: ["utilities", "internal"] },
 ];
 
 const lookupTrie = Object.create(null);

@@ -30,8 +30,18 @@ import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
 import { profile, spyOnConsole } from "../../../testing/internal";
+import { wrapFunction } from "../../../utilities/internal";
 
 describe("useFragment", () => {
+  it("should be a wrappable function", () => {
+    try {
+      wrapFunction(useFragment, () => () => "wrapped" as any);
+      expect((useFragment as any)()).toBe("wrapped");
+    } finally {
+      wrapFunction(useFragment, (orig) => orig);
+    }
+  });
+
   it("is importable and callable", () => {
     expect(typeof useFragment).toBe("function");
   });

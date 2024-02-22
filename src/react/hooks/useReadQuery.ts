@@ -10,6 +10,7 @@ import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
 import type { NetworkStatus } from "../../core/index.js";
+import { createWrappableFunction } from "../../utilities/internal/index.js";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**
@@ -80,3 +81,5 @@ export function useReadQuery<TData>(
     };
   }, [result]);
 }
+// @ts-ignore this is actually valid JS
+useReadQuery = /*#__PURE__*/ createWrappableFunction(useReadQuery);

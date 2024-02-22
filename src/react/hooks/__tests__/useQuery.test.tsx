@@ -33,8 +33,18 @@ import {
 } from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
+import { wrapFunction } from "../../../utilities/internal";
 
 describe("useQuery Hook", () => {
+  it("should be a wrappable function", () => {
+    try {
+      wrapFunction(useQuery, () => () => "wrapped" as any);
+      expect((useQuery as any)()).toBe("wrapped");
+    } finally {
+      wrapFunction(useQuery, (orig) => orig);
+    }
+  });
+
   describe("General use", () => {
     it("should handle a simple query", async () => {
       const query = gql`

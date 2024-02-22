@@ -21,6 +21,7 @@ import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import type { SkipToken } from "./constants.js";
+import { createWrappableFunction } from "../../utilities/internal/index.js";
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -246,3 +247,5 @@ export function useBackgroundQuery<
     { fetchMore, refetch },
   ];
 }
+// @ts-ignore this is actually valid JS
+useBackgroundQuery = /*#__PURE__*/ createWrappableFunction(useBackgroundQuery);

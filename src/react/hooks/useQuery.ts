@@ -36,6 +36,7 @@ import {
   isNonEmptyArray,
   maybeDeepFreeze,
 } from "../../utilities/index.js";
+import { createWrappableFunction } from "../../utilities/internal/index.js";
 
 const {
   prototype: { hasOwnProperty },
@@ -89,6 +90,8 @@ export function useQuery<
     options
   );
 }
+// @ts-ignore this is actually valid JS
+useQuery = /*#__PURE__*/ createWrappableFunction(useQuery);
 
 export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,

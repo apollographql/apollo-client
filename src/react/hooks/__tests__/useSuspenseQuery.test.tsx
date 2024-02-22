@@ -52,6 +52,7 @@ import {
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions";
 import { profile, spyOnConsole } from "../../../testing/internal";
+import { wrapFunction } from "../../../utilities/internal";
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -277,6 +278,15 @@ function wait(delay: number) {
 }
 
 describe("useSuspenseQuery", () => {
+  it("should be a wrappable function", () => {
+    try {
+      wrapFunction(useSuspenseQuery, () => () => "wrapped" as any);
+      expect((useSuspenseQuery as any)()).toBe("wrapped");
+    } finally {
+      wrapFunction(useSuspenseQuery, (orig) => orig);
+    }
+  });
+
   it("validates the GraphQL query as a query", () => {
     using _consoleSpy = spyOnConsole("error");
 

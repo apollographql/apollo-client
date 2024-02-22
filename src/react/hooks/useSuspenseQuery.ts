@@ -26,6 +26,7 @@ import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
 import type { CacheKey, QueryKey } from "../internal/index.js";
+import { createWrappableFunction } from "../../utilities/internal/index.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -280,6 +281,9 @@ export function useSuspenseQuery<
     };
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
+
+// @ts-ignore this is actually valid JS
+useSuspenseQuery = /*#__PURE__*/ createWrappableFunction(useSuspenseQuery);
 
 function validateOptions(options: WatchQueryOptions) {
   const { query, fetchPolicy, returnPartialData } = options;

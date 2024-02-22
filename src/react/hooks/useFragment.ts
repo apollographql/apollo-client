@@ -15,6 +15,7 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
 import { useDeepMemo, useLazyRef } from "./internal/index.js";
+import { createWrappableFunction } from "../../utilities/internal/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -111,6 +112,9 @@ export function useFragment<TData = any, TVars = OperationVariables>(
     getSnapshot
   );
 }
+
+// @ts-ignore this is actually valid JS
+useFragment = /*#__PURE__*/ createWrappableFunction(useFragment);
 
 function diffToResult<TData>(
   diff: Cache.DiffResult<TData>

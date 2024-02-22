@@ -54,6 +54,7 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
+import { wrapFunction } from "../../../utilities/internal";
 
 afterEach(() => {
   jest.useRealTimers();
@@ -118,6 +119,24 @@ function createDefaultProfiler<TData = unknown>() {
     },
   });
 }
+
+it("`useBackgroundQuery` should be a wrappable function", () => {
+  try {
+    wrapFunction(useBackgroundQuery, () => () => "wrapped" as any);
+    expect((useBackgroundQuery as any)()).toBe("wrapped");
+  } finally {
+    wrapFunction(useBackgroundQuery, (orig) => orig);
+  }
+});
+
+test("`useReadQuery` should be a wrappable function", () => {
+  try {
+    wrapFunction(useReadQuery, () => () => "wrapped" as any);
+    expect((useReadQuery as any)()).toBe("wrapped");
+  } finally {
+    wrapFunction(useReadQuery, (orig) => orig);
+  }
+});
 
 it("fetches a simple query with minimal config", async () => {
   const { query, mocks } = setupSimpleCase();

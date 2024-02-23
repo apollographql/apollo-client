@@ -11,24 +11,43 @@ const proxiedSchema = (
     resolvers,
   });
 
+  const fns = {
+    addResolvers: (newResolvers: typeof resolvers) =>
+      (targetSchema = addResolversToSchema({
+        schema: targetSchema,
+        resolvers: {
+          ...resolvers,
+          ...newResolvers,
+        },
+      })),
+    // could also just create a fn that just forks and doesn't take resolvers
+    withResolvers: (newResolvers: typeof resolvers) => {
+      return proxiedSchema(targetSchema, newResolvers);
+    },
+    fork: () => {
+      return proxiedSchema(targetSchema, {});
+    },
+    reset: () => {
+      targetSchema = addResolversToSchema({
+        schema: schemaWithMocks,
+        resolvers,
+      });
+    },
+  };
+
+  // Usage notes:
+  // You'd want to fork aka call withResolvers e.g. in a describe block and
+  // call addResolvers after/in a single test file, you shouldn't
   const schema = new Proxy(targetSchema, {
-    get(target, p) {
-      if (p === "use") {
-        return (newResolvers: typeof resolvers) =>
-          (targetSchema = addResolversToSchema({
-            schema: schemaWithMocks,
-            resolvers: {
-              ...resolvers,
-              ...newResolvers,
-            },
-          }));
+    get(_target, p) {
+      if (p in fns) {
+        return Reflect.get(fns, p);
       }
-      // @ts-expect-error
+
       if (typeof targetSchema[p] === "function") {
-        // @ts-expect-error
         return targetSchema[p].bind(targetSchema);
       }
-      return Reflect.get(target, p);
+      return Reflect.get(targetSchema, p);
     },
   });
 
@@ -36,3 +55,9 @@ const proxiedSchema = (
 };
 
 export { proxiedSchema };
+
+// const schema = proxiedSchema(schema, { mocks, resolvers });
+
+// export {
+//   schema
+// };

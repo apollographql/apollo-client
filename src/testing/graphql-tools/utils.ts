@@ -103,6 +103,7 @@ const createMockSchema = (
         );
       } else if (typeof mock === "function") {
         const mockRes = mock();
+
         if (mockRes === null) return null;
 
         if (!isNonNullObject(mockRes)) {
@@ -209,6 +210,8 @@ const createMockSchema = (
       }
 
       const typeResolver = (typename: string) => {
+        console.log({ typename });
+        // TODO: throw here if typename is undefined/null with more descriptive error message
         return typename;
       };
 

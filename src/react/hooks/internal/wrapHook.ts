@@ -73,7 +73,7 @@ export function makeHookWrappable<Name extends keyof WrappableHooks>(
       client = useApolloClient(clientFromOptions.apply(this, args));
     } catch {
       /*
-      Not wrapped in a `Prodiver`.
+      Not wrapped in a `Provider`.
       This is valid for `useReadableQuery`.
       Other hooks will error on their own.
      */

@@ -2,7 +2,7 @@ import * as React from "rehackt";
 import type * as ReactTypes from "react";
 import { getApolloContext } from "../context/index.js";
 import { RenderPromises } from "./RenderPromises.js";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup } from "react-dom/server.js";
 
 export function getDataFromTree(
   tree: ReactTypes.ReactNode,

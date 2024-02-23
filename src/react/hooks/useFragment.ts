@@ -119,7 +119,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
 const wrapped = /*#__PURE__*/ makeHookWrappable(
   "useFragment",
   useFragment,
-  (options) => options.client
+  (options) => useApolloClient(options.client)
 );
 // @ts-expect-error Cannot assign to 'useFragment' because it is a function.ts(2630)
 useFragment = wrapped;

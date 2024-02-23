@@ -1,5 +1,3 @@
-import type { ApolloClient } from "../../../core/index.js";
-import { useApolloClient } from "../useApolloClient.js";
 import type {
   useQuery,
   useSuspenseQuery,
@@ -7,6 +5,9 @@ import type {
   useReadQuery,
   useFragment,
 } from "../index.js";
+import type { QueryManager } from "../../../core/QueryManager.js";
+import type { ApolloClient } from "../../../core/ApolloClient.js";
+import type { ObservableQuery } from "../../../core/ObservableQuery.js";
 
 const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
 
@@ -29,7 +30,7 @@ export type HookWrappers = {
   ) => WrappableHooks[K];
 };
 
-interface ApolloClientWithWrappers<T> extends ApolloClient<T> {
+interface QueryManagerWithWrappers<T> extends QueryManager<T> {
   [wrapperSymbol]?: HookWrappers;
 }
 
@@ -62,23 +63,20 @@ interface ApolloClientWithWrappers<T> extends ApolloClient<T> {
 export function makeHookWrappable<Name extends keyof WrappableHooks>(
   hookName: Name,
   useHook: WrappableHooks[Name],
-  clientFromOptions: (
+  getClientFromOptions: (
     ...args: Parameters<WrappableHooks[Name]>
-  ) => ApolloClientWithWrappers<any> | undefined
+  ) => ObservableQuery<any> | ApolloClient<any>
 ): WrappableHooks[Name] {
   return function (this: any) {
     const args = arguments as unknown as Parameters<WrappableHooks[Name]>;
-    let client: ApolloClientWithWrappers<any> | undefined;
-    try {
-      client = useApolloClient(clientFromOptions.apply(this, args));
-    } catch {
-      /*
-      Not wrapped in a `Provider`.
-      This is valid for `useReadableQuery`.
-      Other hooks will error on their own.
-     */
-    }
-    const wrappers = client && client[wrapperSymbol];
+    const queryManager = (
+      getClientFromOptions.apply(this, args) as unknown as {
+        // both `ApolloClient` and `ObservableQuery` have a `queryManager` property
+        // but they're both `private`, so we have to cast around for a bit here.
+        queryManager: QueryManagerWithWrappers<any>;
+      }
+    )["queryManager"];
+    const wrappers = queryManager && queryManager[wrapperSymbol];
     const wrapper = wrappers && wrappers[hookName];
     const wrappedHook: WrappableHooks[Name] =
       wrapper ? wrapper(useHook) : useHook;

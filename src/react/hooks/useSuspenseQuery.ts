@@ -284,7 +284,8 @@ export function useSuspenseQuery<
 const wrapped = /*#__PURE__*/ makeHookWrappable(
   "useSuspenseQuery",
   useSuspenseQuery,
-  (_, options) => (typeof options === "object" ? options.client : undefined)
+  (_, options) =>
+    useApolloClient(typeof options === "object" ? options.client : undefined)
 );
 // @ts-expect-error Cannot assign to 'useSuspenseQuery' because it is a function.ts(2630)
 useSuspenseQuery = wrapped;

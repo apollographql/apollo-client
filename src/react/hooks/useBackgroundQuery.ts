@@ -250,7 +250,8 @@ export function useBackgroundQuery<
 const wrapped = /*#__PURE__*/ makeHookWrappable(
   "useBackgroundQuery",
   useBackgroundQuery,
-  (_, options) => (typeof options === "object" ? options.client : undefined)
+  (_, options) =>
+    useApolloClient(typeof options === "object" ? options.client : undefined)
 );
 // @ts-expect-error Cannot assign to 'useBackgroundQuery' because it is a function.ts(2630)
 useBackgroundQuery = wrapped;

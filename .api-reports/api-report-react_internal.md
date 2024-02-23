@@ -200,14 +200,6 @@ interface ApolloClientOptions<TCacheShape> {
     version?: string;
 }
 
-// Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-interface ApolloClientWithWrappers<T> extends ApolloClient<T> {
-    // (undocumented)
-    [wrapperSymbol]?: HookWrappers;
-}
-
 // @public (undocumented)
 class ApolloError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ApolloErrorOptions" needs to be exported by the entry point index.d.ts
@@ -345,6 +337,7 @@ type BackgroundQueryHookOptionsNoInfer<TData, TVariables extends OperationVariab
 //
 // @public (undocumented)
 interface BaseQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends SharedWatchQueryOptions<TVariables, TData> {
+    // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloClient"
     client?: ApolloClient<any>;
     context?: DefaultContext;
@@ -837,7 +830,7 @@ interface GraphQLRequest<TVariables = Record<string, any>> {
 
 // Warning: (ae-forgotten-export) The symbol "WrappableHooks" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @internal
 export type HookWrappers = {
     [K in keyof WrappableHooks]?: (originalHook: WrappableHooks[K]) => WrappableHooks[K];
 };
@@ -1007,11 +1000,6 @@ type LocalStateOptions<TCacheShape> = {
     resolvers?: Resolvers | Resolvers[];
     fragmentMatcher?: FragmentMatcher;
 };
-
-// Warning: (ae-forgotten-export) The symbol "ApolloClientWithWrappers" needs to be exported by the entry point index.d.ts
-//
-// @internal
-export function makeHookWrappable<Name extends keyof WrappableHooks>(hookName: Name, useHook: WrappableHooks[Name], clientFromOptions: (...args: Parameters<WrappableHooks[Name]>) => ApolloClientWithWrappers<any> | undefined): WrappableHooks[Name];
 
 // @public (undocumented)
 type MaybeAsync<T> = T | PromiseLike<T>;
@@ -2068,9 +2056,6 @@ interface WrappableHooks {
 }
 
 // @public (undocumented)
-const wrapperSymbol: unique symbol;
-
-// @public (undocumented)
 export function wrapQueryRef<TData, TVariables extends OperationVariables>(internalQueryRef: InternalQueryReference<TData>): QueryReference<TData, TVariables>;
 
 // Warnings were encountered during analysis:
@@ -2091,8 +2076,8 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(inter
 // src/core/types.ts:203:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:31:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:29:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

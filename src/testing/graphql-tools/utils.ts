@@ -210,8 +210,6 @@ const createMockSchema = (
       }
 
       const typeResolver = (typename: string) => {
-        console.log({ typename });
-        // TODO: throw here if typename is undefined/null with more descriptive error message
         return typename;
       };
 

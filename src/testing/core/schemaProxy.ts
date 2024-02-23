@@ -21,12 +21,12 @@ const proxiedSchema = (
         },
       })),
     // could also just create a fn that just forks and doesn't take resolvers
-    withResolvers: (newResolvers: typeof resolvers) => {
+    forkWithResolvers: (newResolvers: typeof resolvers) => {
       return proxiedSchema(targetSchema, newResolvers);
     },
-    fork: () => {
-      return proxiedSchema(targetSchema, {});
-    },
+    // fork: () => {
+    //   return proxiedSchema(targetSchema, {});
+    // },
     reset: () => {
       targetSchema = addResolversToSchema({
         schema: schemaWithMocks,

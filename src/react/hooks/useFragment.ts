@@ -14,7 +14,11 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
-import { useDeepMemo, useLazyRef } from "./internal/index.js";
+import {
+  useDeepMemo,
+  useLazyRef,
+  makeHookWrappable,
+} from "./internal/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -111,6 +115,14 @@ export function useFragment<TData = any, TVars = OperationVariables>(
     getSnapshot
   );
 }
+
+const wrapped = /*#__PURE__*/ makeHookWrappable(
+  "useFragment",
+  useFragment,
+  (options) => options.client
+);
+// @ts-expect-error Cannot assign to 'useFragment' because it is a function.ts(2630)
+useFragment = wrapped;
 
 function diffToResult<TData>(
   diff: Cache.DiffResult<TData>

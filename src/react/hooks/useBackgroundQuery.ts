@@ -15,7 +15,7 @@ import {
 } from "../internal/index.js";
 import type { CacheKey, QueryReference } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
-import { __use } from "./internal/index.js";
+import { __use, makeHookWrappable } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
@@ -246,3 +246,11 @@ export function useBackgroundQuery<
     { fetchMore, refetch },
   ];
 }
+
+const wrapped = /*#__PURE__*/ makeHookWrappable(
+  "useBackgroundQuery",
+  useBackgroundQuery,
+  (_, options) => (typeof options === "object" ? options.client : undefined)
+);
+// @ts-expect-error Cannot assign to 'useBackgroundQuery' because it is a function.ts(2630)
+useBackgroundQuery = wrapped;

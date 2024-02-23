@@ -36,6 +36,7 @@ import {
   isNonEmptyArray,
   maybeDeepFreeze,
 } from "../../utilities/index.js";
+import { makeHookWrappable } from "./internal/index.js";
 
 const {
   prototype: { hasOwnProperty },
@@ -89,6 +90,14 @@ export function useQuery<
     options
   );
 }
+
+const wrapped = /*#__PURE__*/ makeHookWrappable(
+  "useQuery",
+  useQuery,
+  (_, options) => options && options.client
+);
+// @ts-expect-error Cannot assign to 'useQuery' because it is a function.ts(2630)
+useQuery = wrapped;
 
 export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,

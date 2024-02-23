@@ -5,7 +5,7 @@ import {
   updateWrappedQueryRef,
 } from "../internal/index.js";
 import type { QueryReference } from "../internal/index.js";
-import { __use } from "./internal/index.js";
+import { __use, makeHookWrappable } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
@@ -80,3 +80,10 @@ export function useReadQuery<TData>(
     };
   }, [result]);
 }
+const wrapped = /*#__PURE__*/ makeHookWrappable(
+  "useReadQuery",
+  useReadQuery,
+  () => undefined
+);
+// @ts-expect-error Cannot assign to 'useReadQuery' because it is a function.ts(2630)
+useReadQuery = wrapped;

@@ -20,7 +20,7 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from "../types/types.js";
-import { __use, useDeepMemo } from "./internal/index.js";
+import { __use, useDeepMemo, makeHookWrappable } from "./internal/index.js";
 import { getSuspenseCache } from "../internal/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
@@ -280,6 +280,14 @@ export function useSuspenseQuery<
     };
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
+
+const wrapped = /*#__PURE__*/ makeHookWrappable(
+  "useSuspenseQuery",
+  useSuspenseQuery,
+  (_, options) => (typeof options === "object" ? options.client : undefined)
+);
+// @ts-expect-error Cannot assign to 'useSuspenseQuery' because it is a function.ts(2630)
+useSuspenseQuery = wrapped;
 
 function validateOptions(options: WatchQueryOptions) {
   const { query, fetchPolicy, returnPartialData } = options;

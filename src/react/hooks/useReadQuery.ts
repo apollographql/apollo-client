@@ -83,7 +83,7 @@ export function useReadQuery<TData>(
 const wrapped = /*#__PURE__*/ makeHookWrappable(
   "useReadQuery",
   useReadQuery,
-  () => undefined
+  (): undefined => {}
 );
 // @ts-expect-error Cannot assign to 'useReadQuery' because it is a function.ts(2630)
 useReadQuery = wrapped;

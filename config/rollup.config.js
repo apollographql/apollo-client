@@ -8,7 +8,7 @@ import cleanup from "rollup-plugin-cleanup";
 const entryPoints = require("./entryPoints");
 const distDir = "./dist";
 
-const removeComments = cleanup({});
+const removeComments = cleanup({ comments: ["some", /#__PURE__/] });
 
 function isExternal(id, parentId, entryPointsAreExternal = true) {
   let posixId = toPosixPath(id);

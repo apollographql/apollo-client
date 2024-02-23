@@ -68,10 +68,17 @@ export function makeHookWrappable<Name extends keyof WrappableHooks>(
 ): WrappableHooks[Name] {
   return function (this: any) {
     const args = arguments as unknown as Parameters<WrappableHooks[Name]>;
-    const client: ApolloClientWithWrappers<any> = useApolloClient(
-      clientFromOptions.apply(this, args)
-    );
-    const wrappers = client[wrapperSymbol];
+    let client: ApolloClientWithWrappers<any> | undefined;
+    try {
+      client = useApolloClient(clientFromOptions.apply(this, args));
+    } catch {
+      /*
+      Not wrapped in a `Prodiver`.
+      This is valid for `useReadableQuery`.
+      Other hooks will error on their own.
+     */
+    }
+    const wrappers = client && client[wrapperSymbol];
     const wrapper = wrappers && wrappers[hookName];
     const wrappedHook: WrappableHooks[Name] =
       wrapper ? wrapper(useHook) : useHook;

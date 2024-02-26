@@ -45,12 +45,24 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
  * // this is already done in `@apollo/client` for all wrappable hooks (see `WrappableHooks`)
  * const wrappedUseQuery = makeHookWrappable('useQuery', useQuery, (_, options) => options.client);
  *
+ * // although for tree-shaking purposes, in reality it looks more like
+ * function useQuery() {
+ *   useQuery = makeHookWrappable('useQuery', (_, options) => options.client, _useQuery);
+ *   return useQuery.apply(null, arguments as any);
+ * }
+ * function _useQuery() {
+ *   // original implementation
+ * }
+ *
  * // this is what a library like `@apollo/client-react-streaming` would do
  * class ApolloClientWithStreaming extends ApolloClient {
- *   [Symbol.for("apollo.hook.wrappers")] = {
- *     useQuery: (original) => (query, options) => {
- *       console.log("useQuery was called with options", options);
- *       return original(query, options);
+ *   constructor(options) {
+ *     super(options);
+ *     this.queryManager[Symbol.for("apollo.hook.wrappers")] = {
+ *       useQuery: (original) => (query, options) => {
+ *         console.log("useQuery was called with options", options);
+ *         return original(query, options);
+ *       }
  *     }
  *   }
  * }

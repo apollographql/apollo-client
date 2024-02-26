@@ -60,6 +60,7 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
  * wrappedUseQuery(query, { client });
  * ```
  */
+/*#__NO_SIDE_EFFECTS__*/
 export function makeHookWrappable<Name extends keyof WrappableHooks>(
   hookName: Name,
   useHook: WrappableHooks[Name],

@@ -5,7 +5,7 @@ import type {
   TypedDocumentNode,
   WatchQueryOptions,
 } from "../../../core/index.js";
-import { useDeepMemo } from "../index.js";
+import { useDeepMemo } from "./index.js";
 import { SkipToken, skipToken } from "../constants.js";
 import { validateOptions } from "../useSuspenseQuery.js";
 import { SuspenseQueryHookOptions } from "../../types/types.js";

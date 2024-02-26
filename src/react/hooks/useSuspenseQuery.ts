@@ -9,8 +9,9 @@ import type {
   WatchQueryFetchPolicy,
   FetchMoreQueryOptions,
   WatchQueryOptions,
+  ApolloError,
 } from "../../core/index.js";
-import { ApolloError, NetworkStatus } from "../../core/index.js";
+import { NetworkStatus } from "../../core/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { DocumentType, verifyDocumentType } from "../parser/index.js";

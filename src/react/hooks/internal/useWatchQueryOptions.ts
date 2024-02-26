@@ -6,9 +6,10 @@ import type {
   WatchQueryOptions,
 } from "../../../core/index.js";
 import { useDeepMemo } from "./index.js";
-import { SkipToken, skipToken } from "../constants.js";
+import type { SkipToken } from "../constants.js";
+import { skipToken } from "../constants.js";
 import { validateOptions } from "../useSuspenseQuery.js";
-import { SuspenseQueryHookOptions } from "../../types/types.js";
+import type { SuspenseQueryHookOptions } from "../../types/types.js";
 
 export function useWatchQueryOptions<
   TData,

@@ -93,8 +93,8 @@ export function useQuery<
 
 const wrapped = /*#__PURE__*/ makeHookWrappable(
   "useQuery",
-  useQuery,
-  (_, options) => useApolloClient(options && options.client)
+  (_, options) => useApolloClient(options && options.client),
+  useQuery
 );
 // @ts-expect-error Cannot assign to 'useQuery' because it is a function.ts(2630)
 useQuery = wrapped;

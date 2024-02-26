@@ -63,10 +63,10 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
 /*#__NO_SIDE_EFFECTS__*/
 export function makeHookWrappable<Name extends keyof WrappableHooks>(
   hookName: Name,
-  useHook: WrappableHooks[Name],
   getClientFromOptions: (
     ...args: Parameters<WrappableHooks[Name]>
-  ) => ObservableQuery<any> | ApolloClient<any>
+  ) => ObservableQuery<any> | ApolloClient<any>,
+  useHook: WrappableHooks[Name]
 ): WrappableHooks[Name] {
   return function (this: any) {
     const args = arguments as unknown as Parameters<WrappableHooks[Name]>;

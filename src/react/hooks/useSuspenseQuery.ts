@@ -166,7 +166,18 @@ export function useSuspenseQuery<
     | SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
-export function useSuspenseQuery<
+export function useSuspenseQuery() {
+  // @ts-expect-error Cannot assign to 'useSuspenseQuery' because it is a function. ts(2630)
+  useSuspenseQuery = makeHookWrappable(
+    "useSuspenseQuery",
+    (_, options) =>
+      useApolloClient(typeof options === "object" ? options.client : undefined),
+    _useSuspenseQuery
+  );
+  return useSuspenseQuery.apply(null, arguments as any);
+}
+
+function _useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -280,15 +291,6 @@ export function useSuspenseQuery<
     };
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
-
-const wrapped = /*#__PURE__*/ makeHookWrappable(
-  "useSuspenseQuery",
-  (_, options) =>
-    useApolloClient(typeof options === "object" ? options.client : undefined),
-  useSuspenseQuery
-);
-// @ts-expect-error Cannot assign to 'useSuspenseQuery' because it is a function.ts(2630)
-useSuspenseQuery = wrapped;
 
 function validateOptions(options: WatchQueryOptions) {
   const { query, fetchPolicy, returnPartialData } = options;

@@ -81,23 +81,33 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+): QueryResult<TData, TVariables>;
+
+export function useQuery() {
+  // @ts-expect-error Cannot assign to 'useQuery' because it is a function. ts(2630)
+  useQuery = makeHookWrappable(
+    "useQuery",
+    (_, options) => useApolloClient(options && options.client),
+    _useQuery
+  );
+  return useQuery.apply(null, arguments as any);
+}
+
+function _useQuery<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<
     NoInfer<TData>,
     NoInfer<TVariables>
   > = Object.create(null)
-): QueryResult<TData, TVariables> {
+) {
   return useInternalState(useApolloClient(options.client), query).useQuery(
     options
   );
 }
-
-const wrapped = /*#__PURE__*/ makeHookWrappable(
-  "useQuery",
-  (_, options) => useApolloClient(options && options.client),
-  useQuery
-);
-// @ts-expect-error Cannot assign to 'useQuery' because it is a function.ts(2630)
-useQuery = wrapped;
 
 export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,

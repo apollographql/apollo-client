@@ -57,6 +57,21 @@ export type UseFragmentResult<TData> =
 
 export function useFragment<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
+): UseFragmentResult<TData>;
+
+export function useFragment<TData = any, TVars = OperationVariables>() {
+  // @ts-expect-error Cannot assign to 'useFragment' because it is a function.ts(2630)
+  useFragment = makeHookWrappable(
+    "useFragment",
+    (options) => useApolloClient(options.client),
+    _useFragment
+  );
+
+  return useFragment.apply(null, arguments as any);
+}
+
+function _useFragment<TData = any, TVars = OperationVariables>(
+  options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient(options.client);
 
@@ -115,14 +130,6 @@ export function useFragment<TData = any, TVars = OperationVariables>(
     getSnapshot
   );
 }
-
-const wrapped = /*#__PURE__*/ makeHookWrappable(
-  "useFragment",
-  (options) => useApolloClient(options.client),
-  useFragment
-);
-// @ts-expect-error Cannot assign to 'useFragment' because it is a function.ts(2630)
-useFragment = wrapped;
 
 function diffToResult<TData>(
   diff: Cache.DiffResult<TData>

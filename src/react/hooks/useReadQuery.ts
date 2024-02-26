@@ -38,6 +38,20 @@ export interface UseReadQueryResult<TData = unknown> {
 
 export function useReadQuery<TData>(
   queryRef: QueryReference<TData>
+): UseReadQueryResult<TData>;
+
+export function useReadQuery() {
+  // @ts-expect-error Cannot assign to 'useReadQuery' because it is a function.ts(2630)
+  useReadQuery = makeHookWrappable(
+    "useReadQuery",
+    (ref) => unwrapQueryRef(ref)["observable"],
+    _useReadQuery
+  );
+  return useReadQuery.apply(null, arguments as any);
+}
+
+function _useReadQuery<TData>(
+  queryRef: QueryReference<TData>
 ): UseReadQueryResult<TData> {
   const internalQueryRef = React.useMemo(
     () => unwrapQueryRef(queryRef),
@@ -80,10 +94,3 @@ export function useReadQuery<TData>(
     };
   }, [result]);
 }
-const wrapped = /*#__PURE__*/ makeHookWrappable(
-  "useReadQuery",
-  (ref) => unwrapQueryRef(ref)["observable"],
-  useReadQuery
-);
-// @ts-expect-error Cannot assign to 'useReadQuery' because it is a function.ts(2630)
-useReadQuery = wrapped;

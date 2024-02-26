@@ -170,7 +170,19 @@ export function useBackgroundQuery<
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
-export function useBackgroundQuery<
+export function useBackgroundQuery() {
+  // @ts-expect-error Cannot assign to 'useBackgroundQuery' because it is a function.ts(2630)
+  useBackgroundQuery = makeHookWrappable(
+    "useBackgroundQuery",
+    (_, options) =>
+      useApolloClient(typeof options === "object" ? options.client : undefined),
+    _useBackgroundQuery as any
+  );
+
+  return useBackgroundQuery.apply(null, arguments as any);
+}
+
+function _useBackgroundQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -246,12 +258,3 @@ export function useBackgroundQuery<
     { fetchMore, refetch },
   ];
 }
-
-const wrapped = /*#__PURE__*/ makeHookWrappable(
-  "useBackgroundQuery",
-  (_, options) =>
-    useApolloClient(typeof options === "object" ? options.client : undefined),
-  useBackgroundQuery
-);
-// @ts-expect-error Cannot assign to 'useBackgroundQuery' because it is a function.ts(2630)
-useBackgroundQuery = wrapped;

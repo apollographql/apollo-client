@@ -16,7 +16,7 @@ import {
 import type { CacheKey, QueryReference } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { __use, makeHookWrappable } from "./internal/index.js";
-import { useWatchQueryOptions } from "./useSuspenseQuery.js";
+import { useWatchQueryOptions } from "./internal/useWatchQueryOptions.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";

@@ -6,7 +6,7 @@ import {
 } from "../internal/index.js";
 import type { QueryReference } from "../internal/index.js";
 import { __use, makeHookWrappable } from "./internal/index.js";
-import { toApolloError } from "./useSuspenseQuery.js";
+import { toApolloError } from "./internal/toApolloError.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
 import type { NetworkStatus } from "../../core/index.js";

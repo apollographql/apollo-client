@@ -12,7 +12,6 @@ import type {
 } from "../../core/index.js";
 import { ApolloError, NetworkStatus } from "../../core/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
-import { isNonEmptyArray } from "../../utilities/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import type {
@@ -20,12 +19,13 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from "../types/types.js";
-import { __use, useDeepMemo, makeHookWrappable } from "./internal/index.js";
+import { __use, makeHookWrappable } from "./internal/index.js";
 import { getSuspenseCache } from "../internal/index.js";
 import { canonicalStringify } from "../../cache/index.js";
-import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
 import type { CacheKey, QueryKey } from "../internal/index.js";
+import { toApolloError } from "./internal/toApolloError.js";
+import { useWatchQueryOptions } from "./internal/useWatchQueryOptions.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -290,7 +290,7 @@ const wrapped = /*#__PURE__*/ makeHookWrappable(
 // @ts-expect-error Cannot assign to 'useSuspenseQuery' because it is a function.ts(2630)
 useSuspenseQuery = wrapped;
 
-function validateOptions(options: WatchQueryOptions) {
+export function validateOptions(options: WatchQueryOptions) {
   const { query, fetchPolicy, returnPartialData } = options;
 
   verifyDocumentType(query, DocumentType.Query);
@@ -324,62 +324,4 @@ function validatePartialDataReturn(
       "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
     );
   }
-}
-
-export function toApolloError(result: ApolloQueryResult<any>) {
-  return isNonEmptyArray(result.errors) ?
-      new ApolloError({ graphQLErrors: result.errors })
-    : result.error;
-}
-
-interface UseWatchQueryOptionsHookOptions<
-  TData,
-  TVariables extends OperationVariables,
-> {
-  client: ApolloClient<unknown>;
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  options: SkipToken | SuspenseQueryHookOptions<TData, TVariables>;
-}
-
-export function useWatchQueryOptions<
-  TData,
-  TVariables extends OperationVariables,
->({
-  client,
-  query,
-  options,
-}: UseWatchQueryOptionsHookOptions<TData, TVariables>): WatchQueryOptions<
-  TVariables,
-  TData
-> {
-  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
-    if (options === skipToken) {
-      return { query, fetchPolicy: "standby" };
-    }
-
-    const fetchPolicy =
-      options.fetchPolicy ||
-      client.defaultOptions.watchQuery?.fetchPolicy ||
-      "cache-first";
-
-    const watchQueryOptions = {
-      ...options,
-      fetchPolicy,
-      query,
-      notifyOnNetworkStatusChange: false,
-      nextFetchPolicy: void 0,
-    };
-
-    if (__DEV__) {
-      validateOptions(watchQueryOptions);
-    }
-
-    // Assign the updated fetch policy after our validation since `standby` is
-    // not a supported fetch policy on its own without the use of `skip`.
-    if (options.skip) {
-      watchQueryOptions.fetchPolicy = "standby";
-    }
-
-    return watchQueryOptions;
-  }, [client, options, query]);
 }

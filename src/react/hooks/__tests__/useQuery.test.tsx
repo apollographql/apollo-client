@@ -11,6 +11,7 @@ import {
   OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
+  WatchQueryOptions,
 } from "../../../core";
 import { InMemoryCache } from "../../../cache";
 import { ApolloProvider } from "../../context";
@@ -6221,6 +6222,138 @@ describe("useQuery Hook", () => {
       await reobservePromise;
 
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
+    });
+
+    it.only("should prioritize a `nextFetchPolicy` function over a `fetchPolicy` option when changing variables", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const link = new MockLink([
+        {
+          request: { query, variables: { id: 1 } },
+          result: { data: { hello: "from link" } },
+          delay: 10,
+        },
+        {
+          request: { query, variables: { id: 2 } },
+          result: { data: { hello: "from link2" } },
+          delay: 10,
+        },
+      ]);
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      const fetchQueryByPolicySpy = jest.spyOn(
+        client["queryManager"] as any as {
+          fetchQueryByPolicy(
+            info: {},
+            options: { fetchPolicy: WatchQueryFetchPolicy }
+          ): unknown;
+        },
+        "fetchQueryByPolicy"
+      );
+      const expectQueryTriggered = (
+        nth: number,
+        fetchPolicy: WatchQueryFetchPolicy
+      ) => {
+        expect(fetchQueryByPolicySpy).toHaveBeenCalledTimes(nth);
+        expect(fetchQueryByPolicySpy).toHaveBeenNthCalledWith(
+          nth,
+          expect.anything(),
+          expect.objectContaining({ fetchPolicy }),
+          expect.any(Number)
+        );
+      };
+      let nextFetchPolicy: WatchQueryOptions<
+        OperationVariables,
+        any
+      >["nextFetchPolicy"] = (_, context) => {
+        if (context.reason === "variables-changed") {
+          return "cache-and-network";
+        } else if (context.reason === "after-fetch") {
+          return "cache-only";
+        }
+        throw new Error("should never happen");
+      };
+      nextFetchPolicy = jest.fn(nextFetchPolicy);
+
+      const { result, rerender } = renderHook<
+        QueryResult,
+        {
+          variables: { id: number };
+        }
+      >(
+        ({ variables }) =>
+          useQuery(query, {
+            fetchPolicy: "network-only",
+            variables,
+            notifyOnNetworkStatusChange: true,
+            nextFetchPolicy,
+          }),
+        {
+          initialProps: {
+            variables: { id: 1 },
+          },
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+      // first network request triggers with initial fetchPolicy
+      expectQueryTriggered(1, "network-only");
+
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      });
+
+      expect(nextFetchPolicy).toHaveBeenCalledTimes(1);
+      expect(nextFetchPolicy).toHaveBeenNthCalledWith(
+        1,
+        "network-only",
+        expect.objectContaining({
+          reason: "after-fetch",
+        })
+      );
+      // `nextFetchPolicy(..., {reason: "after-fetch"})` changed it to
+      // cache-only
+      expect(result.current.observable.options.fetchPolicy).toBe("cache-only");
+
+      rerender({
+        variables: { id: 2 },
+      });
+
+      expect(nextFetchPolicy).toHaveBeenNthCalledWith(
+        2,
+        // has been reset to the initial `fetchPolicy` of "network-only" because
+        // we changed variables, then `nextFetchPolicy` is called
+        "network-only",
+        expect.objectContaining({
+          reason: "variables-changed",
+        })
+      );
+      // the return value of `nextFetchPolicy(..., {reason: "variables-changed"})`
+      expectQueryTriggered(2, "cache-and-network");
+
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      });
+
+      expect(nextFetchPolicy).toHaveBeenCalledTimes(3);
+      expect(nextFetchPolicy).toHaveBeenNthCalledWith(
+        3,
+        "cache-and-network",
+        expect.objectContaining({
+          reason: "after-fetch",
+        })
+      );
+      // `nextFetchPolicy(..., {reason: "after-fetch"})` changed it to
+      // cache-only
+      expect(result.current.observable.options.fetchPolicy).toBe("cache-only");
     });
   });
 

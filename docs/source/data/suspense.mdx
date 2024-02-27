@@ -273,7 +273,7 @@ function App() {
 }
 
 function Dog({ id }: DogProps) {
-  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+  const { data } = useSuspenseQuery(PARTIAL_GET_DOG_QUERY, {
     variables: { id },
     returnPartialData: true,
   });

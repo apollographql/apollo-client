@@ -6224,7 +6224,7 @@ describe("useQuery Hook", () => {
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
     });
 
-    it.only("should prioritize a `nextFetchPolicy` function over a `fetchPolicy` option when changing variables", async () => {
+    it("should prioritize a `nextFetchPolicy` function over a `fetchPolicy` option when changing variables", async () => {
       const query = gql`
         {
           hello

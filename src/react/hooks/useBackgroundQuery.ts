@@ -15,7 +15,7 @@ import {
 } from "../internal/index.js";
 import type { CacheKey, QueryReference } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
-import { __use, makeHookWrappable } from "./internal/index.js";
+import { __use, wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
@@ -170,16 +170,24 @@ export function useBackgroundQuery<
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
-export function useBackgroundQuery() {
-  // @ts-expect-error Cannot assign to 'useBackgroundQuery' because it is a function.ts(2630)
-  useBackgroundQuery = makeHookWrappable(
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | (SkipToken &
+        Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
+    | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(null)
+): [
+  QueryReference<TData, TVariables> | undefined,
+  UseBackgroundQueryResult<TData, TVariables>,
+] {
+  return wrapHook(
     "useBackgroundQuery",
-    (_, options) =>
-      useApolloClient(typeof options === "object" ? options.client : undefined),
-    _useBackgroundQuery as any
-  );
-
-  return useBackgroundQuery.apply(null, arguments as any);
+    _useBackgroundQuery,
+    useApolloClient(typeof options === "object" ? options.client : undefined)
+  )(query, options);
 }
 
 function _useBackgroundQuery<
@@ -190,7 +198,7 @@ function _useBackgroundQuery<
   options:
     | (SkipToken &
         Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
-    | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(null)
+    | BackgroundQueryHookOptionsNoInfer<TData, TVariables>
 ): [
   QueryReference<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,

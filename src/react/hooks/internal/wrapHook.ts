@@ -47,10 +47,9 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
  *
  * // although for tree-shaking purposes, in reality it looks more like
  * function useQuery() {
- *   useQuery = makeHookWrappable('useQuery', (_, options) => options.client, _useQuery);
- *   return useQuery.apply(null, arguments as any);
+ *   return wrapHook('useQuery', _useQuery, options.client)(query, options);
  * }
- * function _useQuery() {
+ * function _useQuery(query, options) {
  *   // original implementation
  * }
  *
@@ -73,26 +72,19 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
  * ```
  */
 /*#__NO_SIDE_EFFECTS__*/
-export function makeHookWrappable<Name extends keyof WrappableHooks>(
-  hookName: Name,
-  getClientFromOptions: (
-    ...args: Parameters<WrappableHooks[Name]>
-  ) => ObservableQuery<any> | ApolloClient<any>,
-  useHook: WrappableHooks[Name]
-): WrappableHooks[Name] {
-  return function (this: any) {
-    const args = arguments as unknown as Parameters<WrappableHooks[Name]>;
-    const queryManager = (
-      getClientFromOptions.apply(this, args) as unknown as {
-        // both `ApolloClient` and `ObservableQuery` have a `queryManager` property
-        // but they're both `private`, so we have to cast around for a bit here.
-        queryManager: QueryManagerWithWrappers<any>;
-      }
-    )["queryManager"];
-    const wrappers = queryManager && queryManager[wrapperSymbol];
-    const wrapper = wrappers && wrappers[hookName];
-    const wrappedHook: WrappableHooks[Name] =
-      wrapper ? wrapper(useHook) : useHook;
-    return (wrappedHook as any).apply(this, args);
-  } as any;
+export function wrapHook<Hook extends (...args: any[]) => any>(
+  hookName: keyof WrappableHooks,
+  useHook: Hook,
+  clientOrObsQuery: ObservableQuery<any> | ApolloClient<any>
+): Hook {
+  const queryManager = (
+    clientOrObsQuery as unknown as {
+      // both `ApolloClient` and `ObservableQuery` have a `queryManager` property
+      // but they're both `private`, so we have to cast around for a bit here.
+      queryManager: QueryManagerWithWrappers<any>;
+    }
+  )["queryManager"];
+  const wrappers = queryManager && queryManager[wrapperSymbol];
+  const wrapper: (wrap: Hook) => Hook = wrappers && (wrappers[hookName] as any);
+  return wrapper ? wrapper(useHook) : useHook;
 }

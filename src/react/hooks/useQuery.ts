@@ -36,7 +36,7 @@ import {
   isNonEmptyArray,
   maybeDeepFreeze,
 } from "../../utilities/index.js";
-import { makeHookWrappable } from "./internal/index.js";
+import { wrapHook } from "./internal/index.js";
 
 const {
   prototype: { hasOwnProperty },
@@ -81,17 +81,16 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
-): QueryResult<TData, TVariables>;
-
-export function useQuery() {
-  // @ts-expect-error Cannot assign to 'useQuery' because it is a function. ts(2630)
-  useQuery = makeHookWrappable(
+  options: QueryHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>
+  > = Object.create(null)
+): QueryResult<TData, TVariables> {
+  return wrapHook(
     "useQuery",
-    (_, options) => useApolloClient(options && options.client),
-    _useQuery
-  );
-  return useQuery.apply(null, arguments as any);
+    _useQuery,
+    useApolloClient(options && options.client)
+  )(query, options);
 }
 
 function _useQuery<
@@ -99,10 +98,7 @@ function _useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = Object.create(null)
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   return useInternalState(useApolloClient(options.client), query).useQuery(
     options

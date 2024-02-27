@@ -14,11 +14,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
-import {
-  useDeepMemo,
-  useLazyRef,
-  makeHookWrappable,
-} from "./internal/index.js";
+import { useDeepMemo, useLazyRef, wrapHook } from "./internal/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -57,17 +53,12 @@ export type UseFragmentResult<TData> =
 
 export function useFragment<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
-): UseFragmentResult<TData>;
-
-export function useFragment<TData = any, TVars = OperationVariables>() {
-  // @ts-expect-error Cannot assign to 'useFragment' because it is a function.ts(2630)
-  useFragment = makeHookWrappable(
+): UseFragmentResult<TData> {
+  return wrapHook(
     "useFragment",
-    (options) => useApolloClient(options.client),
-    _useFragment
-  );
-
-  return useFragment.apply(null, arguments as any);
+    _useFragment,
+    useApolloClient(options.client)
+  )(options);
 }
 
 function _useFragment<TData = any, TVars = OperationVariables>(

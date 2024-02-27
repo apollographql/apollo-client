@@ -20,7 +20,7 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from "../types/types.js";
-import { __use, useDeepMemo, makeHookWrappable } from "./internal/index.js";
+import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
 import { getSuspenseCache } from "../internal/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
@@ -166,15 +166,20 @@ export function useSuspenseQuery<
     | SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
-export function useSuspenseQuery() {
-  // @ts-expect-error Cannot assign to 'useSuspenseQuery' because it is a function. ts(2630)
-  useSuspenseQuery = makeHookWrappable(
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
+    | SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
+): UseSuspenseQueryResult<TData | undefined, TVariables> {
+  return wrapHook(
     "useSuspenseQuery",
-    (_, options) =>
-      useApolloClient(typeof options === "object" ? options.client : undefined),
-    _useSuspenseQuery
-  );
-  return useSuspenseQuery.apply(null, arguments as any);
+    _useSuspenseQuery,
+    useApolloClient(typeof options === "object" ? options.client : undefined)
+  )(query, options);
 }
 
 function _useSuspenseQuery<
@@ -184,7 +189,7 @@ function _useSuspenseQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
-    | SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
+    | SuspenseQueryHookOptions<TData, TVariables>
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);

@@ -257,7 +257,7 @@ const PARTIAL_GET_DOG_QUERY: TypedDocumentNode<
 // Write partial data for Buck to the cache
 // so it is available when Dog renders
 client.writeQuery({
-  query: GET_DOG_QUERY_PARTIAL,
+  query: PARTIAL_GET_DOG_QUERY,
   variables: { id: "1" },
   data: { dog: { id: "1", name: "Buck" } },
 });

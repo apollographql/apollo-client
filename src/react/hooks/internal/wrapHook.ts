@@ -21,8 +21,8 @@ interface WrappableHooks {
 
 /**
  * @internal
- * Can be used to correctly type the [Symbol.for("apollo.hook.wrappers")] of
- * a class that extends `ApolloClient`, to override/wrap hook functionality.
+ * Can be used to correctly type the [Symbol.for("apollo.hook.wrappers")] property of
+ * `QueryManager`, to override/wrap hook functionality.
  */
 export type HookWrappers = {
   [K in keyof WrappableHooks]?: (
@@ -43,9 +43,7 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
  * @example
  * ```tsx
  * // this is already done in `@apollo/client` for all wrappable hooks (see `WrappableHooks`)
- * const wrappedUseQuery = makeHookWrappable('useQuery', useQuery, (_, options) => options.client);
- *
- * // although for tree-shaking purposes, in reality it looks more like
+ * // following this pattern
  * function useQuery() {
  *   return wrapHook('useQuery', _useQuery, options.client)(query, options);
  * }
@@ -68,10 +66,9 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
  *
  * // this will now log the options and then call the original `useQuery`
  * const client = new ApolloClientWithStreaming({ ... });
- * wrappedUseQuery(query, { client });
+ * useQuery(query, { client });
  * ```
  */
-/*#__NO_SIDE_EFFECTS__*/
 export function wrapHook<Hook extends (...args: any[]) => any>(
   hookName: keyof WrappableHooks,
   useHook: Hook,

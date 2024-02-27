@@ -82,6 +82,7 @@ export function wrapHook<Hook extends (...args: any[]) => any>(
     }
   )["queryManager"];
   const wrappers = queryManager && queryManager[wrapperSymbol];
-  const wrapper: (wrap: Hook) => Hook = wrappers && (wrappers[hookName] as any);
+  const wrapper: undefined | ((wrap: Hook) => Hook) =
+    wrappers && (wrappers[hookName] as any);
   return wrapper ? wrapper(useHook) : useHook;
 }

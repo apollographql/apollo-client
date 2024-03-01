@@ -252,7 +252,8 @@ export class ObservableQuery<
     if (
       // These fetch policies should never deliver data from the cache, unless
       // redelivering a previously delivered result.
-      skipCacheDataFor(fetchPolicy) ||
+      (skipCacheDataFor(fetchPolicy) &&
+        !(fetchPolicy === "network-only" && !this.waitForOwnResult)) ||
       // If this.options.query has @client(always: true) fields, we cannot
       // trust diff.result, since it was read from the cache without running
       // local resolvers (and it's too late to run resolvers now, since we must

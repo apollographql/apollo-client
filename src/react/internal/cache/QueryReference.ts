@@ -379,10 +379,12 @@ export class InternalQueryReference<TData = unknown> {
     // promise is resolved correctly.
     returnedPromise
       .then((result) => {
-        if (this.promise.status === "pending") {
-          this.result = result;
-          this.resolve?.(result);
-        }
+        setTimeout(() => {
+          if (this.promise.status === "pending") {
+            this.result = result;
+            this.resolve?.(result);
+          }
+        });
       })
       .catch(() => {});
 

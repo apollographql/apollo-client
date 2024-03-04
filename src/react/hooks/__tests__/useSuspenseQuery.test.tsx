@@ -9987,7 +9987,7 @@ describe("useSuspenseQuery", () => {
   });
 
   // https://github.com/apollographql/apollo-client/issues/11315
-  it.only("fetchMore does not cause extra render", async () => {
+  it("fetchMore does not cause extra render", async () => {
     const { query, link } = setupPaginatedCase();
 
     const user = userEvent.setup();

@@ -385,7 +385,7 @@ export class InternalQueryReference<TData = unknown> {
         // the timing is different, we accidentally run this update twice
         // causing an additional re-render with the `fetchMore` result by
         // itself. By wrapping in `setTimeout`, this should provide a short
-        // delay to allow the `QueryInfo.notify` handler to run before this the
+        // delay to allow the `QueryInfo.notify` handler to run before this
         // promise is checked.
         // See https://github.com/apollographql/apollo-client/issues/11315 for
         // more information

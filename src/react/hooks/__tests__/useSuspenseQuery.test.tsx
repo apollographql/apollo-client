@@ -10082,7 +10082,7 @@ describe("useSuspenseQuery", () => {
       const { snapshot, renderedComponents } = await Profiler.takeRender();
 
       expect(renderedComponents).toStrictEqual([App]);
-      expect(screen.getByText('Fetch next')).toBeDisabled();
+      expect(screen.getByText("Fetch next")).toBeDisabled();
       expect(snapshot.result?.data).toEqual({
         letters: [
           { __typename: "Letter", letter: "A", position: 1 },

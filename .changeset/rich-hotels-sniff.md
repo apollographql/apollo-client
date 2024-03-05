@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-Fix issue where calling `fetchMore` inside a `startTransition` from `useSuspenseQuery` causes an additional rerender.
+Fix issue where calling `fetchMore` from a suspense-enabled hook inside `startTransition` caused an unnecessary rerender.

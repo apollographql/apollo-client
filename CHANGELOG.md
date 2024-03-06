@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.9.6
+
+### Patch Changes
+
+- [#11617](https://github.com/apollographql/apollo-client/pull/11617) [`f1d8bc4`](https://github.com/apollographql/apollo-client/commit/f1d8bc40c3d8e39340f721f4f1c3fd0ed77b8a6b) Thanks [@phryneas](https://github.com/phryneas)! - Allow Apollo Client instance to intercept hook functionality
+
+- [#11638](https://github.com/apollographql/apollo-client/pull/11638) [`bf93ada`](https://github.com/apollographql/apollo-client/commit/bf93adaa0321b573db0ea8fc3a5c364e1fdfeef3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where calling `fetchMore` from a suspense-enabled hook inside `startTransition` caused an unnecessary rerender.
+
 ## 3.9.5
 
 ### Patch Changes

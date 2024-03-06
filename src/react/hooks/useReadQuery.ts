@@ -5,7 +5,7 @@ import {
   updateWrappedQueryRef,
 } from "../internal/index.js";
 import type { QueryReference } from "../internal/index.js";
-import { __use } from "./internal/index.js";
+import { __use, wrapHook } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
@@ -37,6 +37,16 @@ export interface UseReadQueryResult<TData = unknown> {
 }
 
 export function useReadQuery<TData>(
+  queryRef: QueryReference<TData>
+): UseReadQueryResult<TData> {
+  return wrapHook(
+    "useReadQuery",
+    _useReadQuery,
+    unwrapQueryRef(queryRef)["observable"]
+  )(queryRef);
+}
+
+function _useReadQuery<TData>(
   queryRef: QueryReference<TData>
 ): UseReadQueryResult<TData> {
   const internalQueryRef = React.useMemo(

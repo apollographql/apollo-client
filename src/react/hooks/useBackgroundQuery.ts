@@ -15,7 +15,7 @@ import {
 } from "../internal/index.js";
 import type { CacheKey, QueryReference } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
-import { __use } from "./internal/index.js";
+import { __use, wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
@@ -179,6 +179,26 @@ export function useBackgroundQuery<
     | (SkipToken &
         Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
     | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(null)
+): [
+  QueryReference<TData, TVariables> | undefined,
+  UseBackgroundQueryResult<TData, TVariables>,
+] {
+  return wrapHook(
+    "useBackgroundQuery",
+    _useBackgroundQuery,
+    useApolloClient(typeof options === "object" ? options.client : undefined)
+  )(query, options);
+}
+
+function _useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | (SkipToken &
+        Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
+    | BackgroundQueryHookOptionsNoInfer<TData, TVariables>
 ): [
   QueryReference<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,

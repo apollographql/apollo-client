@@ -4927,25 +4927,6 @@ describe("fetchMore", () => {
       expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
     }
 
-    // TODO: Determine why we have this extra render here.
-    // Possibly related: https://github.com/apollographql/apollo-client/issues/11315
-    {
-      const { snapshot } = await Profiler.takeRender();
-
-      expect(snapshot.result).toEqual({
-        data: {
-          letters: [
-            { __typename: "Letter", position: 1, letter: "A" },
-            { __typename: "Letter", position: 2, letter: "B" },
-            { __typename: "Letter", position: 3, letter: "C" },
-            { __typename: "Letter", position: 4, letter: "D" },
-          ],
-        },
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      });
-    }
-
     {
       const { snapshot } = await Profiler.takeRender();
 
@@ -5032,25 +5013,6 @@ describe("fetchMore", () => {
       const { renderedComponents } = await Profiler.takeRender();
 
       expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
-    }
-
-    // TODO: Determine why we have this extra render here.
-    // Possibly related: https://github.com/apollographql/apollo-client/issues/11315
-    {
-      const { snapshot } = await Profiler.takeRender();
-
-      expect(snapshot.result).toEqual({
-        data: {
-          letters: [
-            { __typename: "Letter", position: 1, letter: "A" },
-            { __typename: "Letter", position: 2, letter: "B" },
-            { __typename: "Letter", position: 3, letter: "C" },
-            { __typename: "Letter", position: 4, letter: "D" },
-          ],
-        },
-        error: undefined,
-        networkStatus: NetworkStatus.ready,
-      });
     }
 
     {
@@ -5236,39 +5198,6 @@ describe("fetchMore", () => {
                 id: "1",
                 name: "Clean room",
                 completed: false,
-              },
-            ],
-          },
-          error: undefined,
-          networkStatus: NetworkStatus.ready,
-        },
-      });
-    }
-
-    // TODO: Determine why we have this extra render here. This should mimic
-    // the update in the next render where we see <App /> included in the
-    // rerendered components.
-    // Possibly related: https://github.com/apollographql/apollo-client/issues/11315
-    {
-      const { snapshot, renderedComponents } = await Profiler.takeRender();
-
-      expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-      expect(snapshot).toEqual({
-        isPending: false,
-        result: {
-          data: {
-            todos: [
-              {
-                __typename: "Todo",
-                id: "1",
-                name: "Clean room",
-                completed: false,
-              },
-              {
-                __typename: "Todo",
-                id: "2",
-                name: "Take out trash",
-                completed: true,
               },
             ],
           },

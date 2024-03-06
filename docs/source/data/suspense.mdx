@@ -1,6 +1,6 @@
 ---
 title: Suspense
-description: Using React 18 Suspense features with Apollo Client
+description: Use React 18 Suspense features with Apollo Client
 minVersion: 3.8.0
 ---
 
@@ -70,13 +70,21 @@ function Dog({ id }: DogProps) {
 }
 ```
 
-> **Note:** This example manually defines TypeScript interfaces for `Data` and `Variables` as well as the type for `GET_DOG_QUERY` using `TypedDocumentNode`. [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) is a popular tool that creates these type definitions automatically for you. See the reference on [Using TypeScript](../development-testing/static-typing) for more information on integrating GraphQL Code Generator with Apollo Client.
+<Note>
+
+This example manually defines TypeScript interfaces for `Data` and `Variables` as well as the type for `GET_DOG_QUERY` using `TypedDocumentNode`. [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) is a popular tool that creates these type definitions automatically for you. See the reference on [Using TypeScript](../development-testing/static-typing) for more information on integrating GraphQL Code Generator with Apollo Client.
+
+</Note>
 
 In this example, our `App` component renders a `Dog` component which fetches the record for a single dog via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache is unable to fulfill the request for the `GetDog` query, so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest `Suspense` boundary _above_ the suspended component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for Mozzarella the Corgi.
 
 You may have noticed that `useSuspenseQuery` does not return a `loading` boolean. That's because the component calling `useSuspenseQuery` always suspends when fetching data. A corollary is that when it _does_ render, `data` is always defined! In the Suspense paradigm, fallbacks that exist **outside of suspended components** replace the loading states components were previously responsible for rendering themselves.
 
-> **Note for TypeScript users**: Since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic type argument, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` has the shape `{ id: string; name: string; breed: string; }`.
+<Note>
+
+**For TypeScript users**: Since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic type argument, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` has the shape `{ id: string; name: string; breed: string; }`.
+
+</Note>
 
 ### Changing variables
 
@@ -230,7 +238,11 @@ function App() {
 
 When the cache contains partial data, you may prefer to render that data immediately without suspending. To do this, use the `returnPartialData` option.
 
-> **Note:** This option only works when combined with either the `cache-first` (default) or `cache-and-network` fetch policy. `cache-only` is not currently supported by `useSuspenseQuery`. For details on these fetch policies, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
+<Note>
+
+This option only works when combined with either the `cache-first` (default) or `cache-and-network` fetch policy. `cache-only` isn't currently supported by `useSuspenseQuery`. For details on these fetch policies, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
+
+</Note>
 
 Let's update our example to use the partial cache data and render immediately:
 
@@ -291,13 +303,21 @@ In this example, we write partial data to the cache for Buck in order to show th
 
 On first render, Buck's name is displayed after the `Name` label, followed by the `Breed` label with no value. Once the missing fields have loaded, `useSuspenseQuery` triggers a re-render and Buck's breed is displayed.
 
-> **Note for TypeScript users**: With `returnPartialData` set to `true`, the returned type for the `data` property marks all fields in the query type as [optional](https://www.typescriptlang.org/docs/handbook/2/objects.html#optional-properties). Apollo Client cannot accurately determine which fields are present in the cache at any given time when returning partial data.
+<Note>
+
+**For TypeScript users**: With `returnPartialData` set to `true`, the returned type for the `data` property marks all fields in the query type as [optional](https://www.typescriptlang.org/docs/handbook/2/objects.html#optional-properties). Apollo Client cannot accurately determine which fields are present in the cache at any given time when returning partial data.
+
+</Note>
 
 ### Error handling
 
 By default, both network errors and GraphQL errors are thrown by `useSuspenseQuery`. These errors are caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror).
 
-> **Note:** An error boundary is a **class component** that implements `static getDerivedStateFromError`. For more information, see the React docs for [catching rendering errors with an error boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+<Note>
+
+An error boundary is a **class component** that implements `static getDerivedStateFromError`. For more information, see the React docs for [catching rendering errors with an error boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+</Note>
 
 Let's create a basic error boundary that renders an error UI when errors are thrown by our query:
 
@@ -322,7 +342,11 @@ class ErrorBoundary extends React.Component {
 }
 ```
 
-> **Note:** In a real application, your error boundary might need a more robust implementation. Consider using a library like [`react-error-boundary`](https://github.com/bvaughn/react-error-boundary) when you need a high degree of flexibility and reusability.
+<Note>
+
+In a real application, your error boundary might need a more robust implementation. Consider using a library like [`react-error-boundary`](https://github.com/bvaughn/react-error-boundary) when you need a high degree of flexibility and reusability.
+
+</Note>
 
 When the `GET_DOG_QUERY` inside of the `Dog` component returns a GraphQL error or a network error, `useSuspenseQuery` throws the error and the nearest error boundary renders its fallback component.
 
@@ -360,7 +384,11 @@ function App() {
 
 Here, we're using our `ErrorBoundary` component and placing it **outside** of our `Dog` component. Now, when the `useSuspenseQuery` hook inside the `Dog` component throws an error, the `ErrorBoundary` catches it and displays the `fallback` element we've provided.
 
-> **Note:** When working with many React frameworks, you may see an error dialog overlay in development mode when errors are thrown, even _with_ an error boundary. This is done to avoid the error being missed by developers.
+<Note>
+
+When working with many React frameworks, you may see an error dialog overlay in development mode when errors are thrown, even _with_ an error boundary. This is done to avoid the error being missed by developers.
+
+</Note>
 
 #### Rendering partial data alongside errors
 
@@ -427,7 +455,11 @@ We begin fetching our `GET_BREEDS_QUERY` when the `App` component renders. The n
 
 When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsuspends and continues rendering, reaching the `Breeds` component. Since our `GET_BREEDS_QUERY` request was initiated higher up in our component tree using `useBackgroundQuery`, the network request for `GET_BREEDS_QUERY` **has already completed**! When the `Breeds` component reads the data from the `queryRef` provided by `useBackgroundQuery`, it avoids suspending and renders immediately with the fetched data.
 
-> **Note:** When the `GET_BREEDS_QUERY` takes _longer_ to fetch than our `GET_DOG_QUERY`, `useReadQuery` suspends and the Suspense fallback inside of the `Dog` component is rendered instead.
+<Note>
+
+When the `GET_BREEDS_QUERY` takes _longer_ to fetch than our `GET_DOG_QUERY`, `useReadQuery` suspends and the Suspense fallback inside of the `Dog` component is rendered instead.
+
+</Note>
 
 #### A note about performance
 
@@ -439,7 +471,7 @@ The `useBackgroundQuery` hook used in a parent component is responsible for kick
 
 </MinVersion>
 
-`useSuspenseQuery` and `useBackgroundQuery` are useful for loading data as soon as the component calling the hook mounts. But what about loading a query in response to user interaction? For example, we may want to start loading some data when a user hovers on a link.
+The `useSuspenseQuery` and `useBackgroundQuery` hooks let us load data as soon as the component calling the hook mounts. But what about loading a query in response to user interaction? For example, we may want to start loading some data when a user hovers on a link.
 
 Available as of Apollo Client `3.9.0`, the `useLoadableQuery` hook initiates a network request in response to user interaction.
 
@@ -493,7 +525,9 @@ function Dog({ queryRef }: DogProps) {
 }
 ```
 
-We begin fetching our `GET_DOG_QUERY` by calling the `loadDog` function inside of the `onChange` handler function when a dog is selected. Once the network request is initiated, the `queryRef` is no longer `null` which renders the `Dog` component. In the `Dog` component, `useReadQuery` suspends the component while the network request finishes, then returns `data` to the component. As a result of this change, we've also eliminated the need to track the selected dog `id` in component state!
+We begin fetching our `GET_DOG_QUERY` by calling the `loadDog` function inside of the `onChange` handler function when a dog is selected. Once the network request is initiated, the `queryRef` is no longer `null`, rendering the `Dog` component.
+
+`useReadQuery` suspends the `Dog` component while the network request finishes, then returns `data` to the component. As a result of this change, we've also eliminated the need to track the selected dog `id` in component state.
 
 <MinVersion version="3.9.0">
 
@@ -503,11 +537,11 @@ We begin fetching our `GET_DOG_QUERY` by calling the `loadDog` function inside o
 
 <ExperimentalFeature>
 
-This feature is in [alpha stage](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) for version `3.9.0` and may be subject to change before `3.10.0`. We consider this feature production-ready, but may be subject to change depending on feedback. If you'd like to provide feedback for this feature before it is stabilized in `3.10.0`, please visit [#11519](https://github.com/apollographql/apollo-client/issues/11519) and add a comment.
+This feature is in [alpha](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in version `3.9.0` and is subject to change before `3.10.0`. We consider this feature production-ready, but it may change depending on feedback. If you'd like to provide feedback before it is stabilized in `3.10.0`, please comment on [#11519](https://github.com/apollographql/apollo-client/issues/11519).
 
 </ExperimentalFeature>
 
-Starting with Apollo Client `3.9.0`, queries can be initiated outside of React. This allows your app to begin fetching data _before_ React renders your components, and can provide performance benefits.
+Starting with Apollo Client `3.9.0`, queries can be initiated outside of React. This allows your app to begin fetching data before React renders your components, and can provide performance benefits.
 
 To preload queries, you first need to create a preload function with `createQueryPreloader`. `createQueryPreloader` takes an `ApolloClient` instance as an argument and returns a function that, when called, initiates a network request.
 
@@ -517,7 +551,7 @@ Consider exporting your preload function along with your `ApolloClient` instance
 
 </Tip>
 
-The preload function returns a `queryRef` that is passed to `useReadQuery` to read the query data and suspend the component while loading. `useReadQuery` will ensure that your component is kept up-to-date with cache updates for the preloaded query.
+The preload function returns a `queryRef` that is passed to `useReadQuery` to read the query data and suspend the component while loading. `useReadQuery` ensures that your component is kept up-to-date with cache updates for the preloaded query.
 
 
 Let's update our example to start loading the `GET_DOGS_QUERY` before our app is rendered.
@@ -565,7 +599,7 @@ root.render(
 );
 ```
 
-We begin loading data as soon as our `preloadQuery` function is called rather than waiting for React to render our `<App />` component. Because the `preloadedQueryRef` is passed to `useReadQuery` in our `App` component, we still get the benefit of suspense and cache updates!
+We begin loading data as soon as our `preloadQuery` function is called rather than waiting for React to render our `<App />` component. Because the `preloadedQueryRef` is passed to `useReadQuery` in our `App` component, we still get the benefit of suspense and cache updates.
 
 <Note>
 
@@ -575,9 +609,11 @@ Unmounting components that contain preloaded queries is safe and disposes of the
 
 #### Usage with data loading routers
 
-Popular routers such as [React Router](https://reactrouter.com/en/main) and [TanStack Router](https://tanstack.com/router) provide APIs to load data before route components are rendered (e.g. such as the [`loader` function](https://reactrouter.com/en/main/route/route#loader) from React Router). This is especially useful for nested routes where data loading is parallelized and prevents situtations where parent route components might otherwise suspend and create request waterfalls for child route components.
+Popular routers such as [React Router](https://reactrouter.com/en/main) and [TanStack Router](https://tanstack.com/router) provide APIs to load data before route components are rendered. One example is the [`loader` function](https://reactrouter.com/en/main/route/route#loader) from React Router.
 
-`preloadQuery` pairs nicely with these router APIs as it lets you take advantage of those optimizations without sacrificing the ability to rerender with cache updates in your route components.
+Loading data before rendering route components is especially useful for nested routes where data loading is parallelized. It prevents situations where parent route components might otherwise suspend and create request waterfalls for child route components.
+
+`preloadQuery` pairs nicely with these router APIs as it lets you take advantage of those optimizations without sacrificing the ability to rerender cache updates in your route components.
 
 Let's update our example using React Router's `loader` function to begin loading data when we transition to our route.
 
@@ -600,19 +636,21 @@ export function RouteComponent() {
 
 > The `loader` function is available in React Router versions 6.4 and above.
 
-React Router calls the `loader` function which we use to begin loading the `GET_DOG_QUERY` query by calling the `preloadQuery` function. The `queryRef` created by `preloadQuery` is returned from the `loader` function making it accessible in the route component. When the route component renders, we access the `queryRef` from the `useLoaderData` hook, which is then passed to `useReadQuery`. We get the benefit of loading our data early in the routing lifecycle, while our route component maintains the ability to rerender with cache updates!
+React Router calls the `loader` function which we use to begin loading the `GET_DOG_QUERY` query by calling the `preloadQuery` function. The `queryRef` created by `preloadQuery` is returned from the `loader` function making it accessible in the route component.
+
+When the route component renders, we access the `queryRef` from the `useLoaderData` hook, which is then passed to `useReadQuery`. We get the benefit of loading our data early in the routing lifecycle, and the route component maintains the ability to rerender with cache updates.
 
 <Note>
 
-The `preloadQuery` function only works with client-side routing. The `queryRef` returned from `preloadQuery` is not serializable across the wire and as such, will not work with routers that fetch on the server such as [Remix](https://remix.run/).
+The `preloadQuery` function only works with client-side routing. The `queryRef` returned from `preloadQuery` isn't serializable across the wire and as such, won't work with routers that fetch on the server such as [Remix](https://remix.run/).
 
 </Note>
 
 #### Preventing route transitions until the query is loaded
 
-By default, `preloadQuery` works similar to a [deferred loader](https://reactrouter.com/en/main/guides/deferred): the route will transition immediately and the incoming page that's attempting to read the data via `useReadQuery` will suspend until the network request finishes.
+By default, `preloadQuery` works similarly to a [deferred loader](https://reactrouter.com/en/main/guides/deferred): the route transitions immediately and the incoming page that's attempting to read the data via `useReadQuery` suspends until the network request finishes.
 
-But what if we want to prevent the route from transitioning until the data is fully loaded? The `toPromise` method on a `queryRef` provides access to a promise that resolves when the network request has completed. This promise resolves with the `queryRef` itself, making it easy to use with hooks such as `useLoaderData`.
+But what if we want to prevent the route from transitioning until the data is fully loaded? `queryRef`'s `toPromise` method provides access to a promise that resolves when the network request has completed. This promise resolves with the `queryRef` itself, making it easy to use with hooks such as `useLoaderData`.
 
 Here's an example:
 
@@ -641,7 +679,7 @@ This instructs React Router to wait for the query to finish loading before the r
 
 <ExperimentalFeature>
 
-`queryRef.toPromise` is [experimental](https://www.apollographql.com/docs/resources/product-launch-stages/#experimental-features) for version `3.9.0` and may be subject to breaking changes before `3.10.0`. If you'd like to provide feedback for this feature before it is stabilized in `3.10.0`, please visit [#11519](https://github.com/apollographql/apollo-client/issues/11519) and add a comment.
+`queryRef.toPromise` is [experimental](https://www.apollographql.com/docs/resources/product-launch-stages/#experimental-features) in version `3.9.0` and is subject to breaking changes before `3.10.0`. If you'd like to provide feedback for this feature before it is stabilized in `3.10.0`, please comment on [#11519](https://github.com/apollographql/apollo-client/issues/11519).
 
 </ExperimentalFeature>
 

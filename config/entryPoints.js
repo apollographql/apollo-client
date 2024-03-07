@@ -1,6 +1,7 @@
 const entryPoints = [
   { dirs: [], bundleName: "main" },
   { dirs: ["cache"] },
+  { dirs: ["cache", "devtools"] },
   { dirs: ["core"] },
   { dirs: ["dev"] },
   { dirs: ["errors"] },

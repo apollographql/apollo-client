@@ -3,17 +3,19 @@ import { sendToDevtools } from "../../devtools/index.js";
 
 interface MakeVarOptions {
   displayName?: string;
+  connectToDevTools?: boolean;
 }
 
 let idCounter = 0;
 
 export function makeVar<T>(
   value: T,
-  options: MakeVarOptions = Object.create(null)
+  { displayName, connectToDevTools = __DEV__ }: MakeVarOptions = Object.create(
+    null
+  )
 ) {
-  if (__DEV__) {
+  if (connectToDevTools) {
     const id = ++idCounter;
-    const { displayName } = options;
 
     sendToDevtools({
       type: "reactiveVar.register",

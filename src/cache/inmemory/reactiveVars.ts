@@ -5,9 +5,15 @@ import type { ApolloCache } from "../../core/index.js";
 
 export interface ReactiveVar<T> {
   (newValue?: T): T;
+  displayName: string | undefined;
   onNextChange(listener: ReactiveListener<T>): () => void;
   attachCache(cache: ApolloCache<any>): this;
   forgetCache(cache: ApolloCache<any>): boolean;
+}
+
+export interface MakeVarOptions {
+  connectToDevTools?: boolean;
+  displayName?: string;
 }
 
 export type ReactiveListener<T> = (value: T) => any;
@@ -54,7 +60,12 @@ export function recallCache(cache: ApolloCache<any>) {
   getCacheInfo(cache).vars.forEach((rv) => rv.attachCache(cache));
 }
 
-export function makeVar<T>(value: T): ReactiveVar<T> {
+export function makeVar<T>(
+  value: T,
+  { connectToDevTools = __DEV__, displayName }: MakeVarOptions = Object.create(
+    null
+  )
+): ReactiveVar<T> {
   const caches = new Set<ApolloCache<any>>();
   const listeners = new Set<ReactiveListener<T>>();
 
@@ -104,8 +115,11 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
   });
 
   rv.forgetCache = (cache) => caches.delete(cache);
+  rv.displayName = displayName;
 
-  getDevtoolsConnector().push(rv);
+  if (connectToDevTools) {
+    getDevtoolsConnector().push(rv);
+  }
 
   return rv;
 }

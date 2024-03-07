@@ -20,6 +20,7 @@ import { equal } from "@wry/equality";
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import { ApolloError } from "../../errors/index.js";
 import { useApolloClient } from "./useApolloClient.js";
+import { wrapHook } from "./internal/index.js";
 
 /**
  *
@@ -69,6 +70,27 @@ import { useApolloClient } from "./useApolloClient.js";
  * @returns A tuple in the form of `[mutate, result]`
  */
 export function useMutation<
+  TData = any,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
+>(
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: MutationHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>,
+    TContext,
+    TCache
+  >
+): MutationTuple<TData, TVariables, TContext, TCache> {
+  return wrapHook(
+    "useMutation",
+    _useMutation,
+    useApolloClient(options && options.client)
+  )(mutation, options);
+}
+
+function _useMutation<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,

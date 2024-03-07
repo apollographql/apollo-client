@@ -128,6 +128,7 @@ export interface ApolloClientOptions<TCacheShape> {
 // solution is to reexport mergeOptions where it was previously declared (here).
 import { mergeOptions } from "../utilities/index.js";
 import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
+import { getDevtoolsConnector } from "../devtools/index.js";
 export { mergeOptions };
 
 /**
@@ -283,19 +284,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   private connectToDevTools() {
     if (typeof window === "object") {
-      type DevToolsConnector = {
-        push(client: ApolloClient<any>): void;
-      };
-      const windowWithDevTools = window as Window & {
-        [devtoolsSymbol]?: DevToolsConnector;
+      const connector = getDevtoolsConnector();
+      const windowWithClient = window as Window & {
         __APOLLO_CLIENT__?: ApolloClient<any>;
       };
-      const devtoolsSymbol = Symbol.for("apollo.devtools");
-      (windowWithDevTools[devtoolsSymbol] =
-        windowWithDevTools[devtoolsSymbol] || ([] as DevToolsConnector)).push(
-        this
-      );
-      windowWithDevTools.__APOLLO_CLIENT__ = this;
+      connector.push(this);
+      windowWithClient.__APOLLO_CLIENT__ = this;
     }
 
     /**

@@ -105,7 +105,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
 
   rv.forgetCache = (cache) => caches.delete(cache);
 
-  getDevtoolsConnector().add(rv);
+  getDevtoolsConnector().push(rv);
 
   return rv;
 }
@@ -124,7 +124,7 @@ function broadcast(cache: Broadcastable) {
 
 function getDevtoolsConnector() {
   type DevToolsConnector = {
-    add: (rv: ReactiveVar<any>) => void;
+    push: (rv: ReactiveVar<any>) => void;
   };
 
   const devtoolsSymbol = Symbol.for("apollo.devtools.reactiveVars");
@@ -133,7 +133,7 @@ function getDevtoolsConnector() {
   };
 
   windowWithDevtools[devtoolsSymbol] =
-    windowWithDevtools[devtoolsSymbol] || (new WeakSet() as DevToolsConnector);
+    windowWithDevtools[devtoolsSymbol] || ([] as unknown as DevToolsConnector);
 
   return windowWithDevtools[devtoolsSymbol];
 }

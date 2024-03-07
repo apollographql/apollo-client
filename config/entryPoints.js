@@ -4,6 +4,7 @@ const entryPoints = [
   { dirs: ["cache", "devtools"] },
   { dirs: ["core"] },
   { dirs: ["dev"] },
+  { dirs: ["devtools"] },
   { dirs: ["errors"] },
   { dirs: ["link", "batch"] },
   { dirs: ["link", "batch-http"] },

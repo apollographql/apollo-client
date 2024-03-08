@@ -19,7 +19,7 @@ import { __use, wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
-import type { DeepPartial } from "../../utilities/index.js";
+import type { DeepPartial } from "#utilities";
 import type { SkipToken } from "./constants.js";
 
 export type UseBackgroundQueryResult<

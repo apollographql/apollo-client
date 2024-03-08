@@ -5,7 +5,7 @@ import {
   DeepMerger,
   isNonEmptyArray,
   isNonNullObject,
-} from "../../utilities/index.js";
+} from "#utilities";
 
 import { hasOwn, isArray } from "./helpers.js";
 import type {

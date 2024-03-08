@@ -3,11 +3,7 @@ import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
 
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type {
-  Concast,
-  Observer,
-  ObservableSubscription,
-} from "../utilities/index.js";
+import type { Concast, Observer, ObservableSubscription } from "#utilities";
 import {
   cloneDeep,
   compact,
@@ -16,7 +12,7 @@ import {
   iterateObserversSafely,
   fixObservableSubclass,
   getQueryDefinition,
-} from "../utilities/index.js";
+} from "#utilities";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {

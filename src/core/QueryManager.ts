@@ -13,14 +13,11 @@ import {
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
   removeDirectivesFromDocument,
-} from "../utilities/index.js";
+} from "#utilities";
 import type { Cache, ApolloCache } from "../cache/index.js";
 import { canonicalStringify } from "../cache/index.js";
 
-import type {
-  ObservableSubscription,
-  ConcastSourcesArray,
-} from "../utilities/index.js";
+import type { ObservableSubscription, ConcastSourcesArray } from "#utilities";
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -36,7 +33,7 @@ import {
   isDocumentNode,
   isNonNullObject,
   DocumentTransform,
-} from "../utilities/index.js";
+} from "#utilities";
 import { mergeIncrementalData } from "../utilities/common/incrementalResult.js";
 import {
   ApolloError,
@@ -74,7 +71,7 @@ import {
 } from "./QueryInfo.js";
 import type { ApolloErrorOptions } from "../errors/index.js";
 import { PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
-import { print } from "../utilities/index.js";
+import { print } from "#utilities";
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { TODO } from "../utilities/types/TODO.js";
 
@@ -103,7 +100,7 @@ interface TransformCacheEntry {
 
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
-import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
+import { AutoCleanedWeakCache, cacheSizes } from "#utilities";
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;

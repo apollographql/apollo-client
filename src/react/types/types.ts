@@ -2,10 +2,7 @@ import type * as ReactTypes from "react";
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import type {
-  Observable,
-  ObservableSubscription,
-} from "../../utilities/index.js";
+import type { Observable, ObservableSubscription } from "#utilities";
 import type { FetchResult } from "../../link/core/index.js";
 import type { ApolloError } from "../../errors/index.js";
 import type {

@@ -1,11 +1,7 @@
 import type { DocumentNode, FieldNode } from "graphql";
 
 import type { Transaction } from "../core/cache.js";
-import type {
-  StoreObject,
-  StoreValue,
-  Reference,
-} from "../../utilities/index.js";
+import type { StoreObject, StoreValue, Reference } from "#utilities";
 import type { FieldValueGetter } from "./entityStore.js";
 import type {
   TypePolicies,

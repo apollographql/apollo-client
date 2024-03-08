@@ -72,13 +72,13 @@ export type {
   ObservableSubscription,
   Reference,
   StoreObject,
-} from "../utilities/index.js";
+} from "#utilities";
 export {
   DocumentTransform,
   Observable,
   isReference,
   makeReference,
-} from "../utilities/index.js";
+} from "#utilities";
 
 /* Supporting */
 

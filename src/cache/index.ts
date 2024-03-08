@@ -13,12 +13,8 @@ export type {
 } from "./core/types/common.js";
 export { MissingFieldError } from "./core/types/common.js";
 
-export type { Reference } from "../utilities/index.js";
-export {
-  isReference,
-  makeReference,
-  canonicalStringify,
-} from "../utilities/index.js";
+export type { Reference } from "#utilities";
+export { isReference, makeReference, canonicalStringify } from "#utilities";
 
 export { EntityStore } from "./inmemory/entityStore.js";
 export {

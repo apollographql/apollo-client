@@ -12,7 +12,7 @@ import type {
   StoreValue,
   StoreObject,
   Reference,
-} from "../../utilities/index.js";
+} from "#utilities";
 import {
   storeKeyNameFromField,
   argumentsObjectFromField,
@@ -20,7 +20,7 @@ import {
   getStoreKeyName,
   isNonNullObject,
   stringifyForDisplay,
-} from "../../utilities/index.js";
+} from "#utilities";
 import type {
   IdGetter,
   MergeInfo,

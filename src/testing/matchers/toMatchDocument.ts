@@ -1,4 +1,4 @@
-import { checkDocument, print } from "../../utilities/index.js";
+import { checkDocument, print } from "#utilities";
 import type { DocumentNode } from "../../core/index.js";
 import type { MatcherFunction } from "expect";
 

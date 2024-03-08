@@ -1,7 +1,7 @@
 import { newInvariantError, invariant } from "../../utilities/globals/index.js";
 
-import type { Observer } from "../../utilities/index.js";
-import { Observable } from "../../utilities/index.js";
+import type { Observer } from "#utilities";
+import { Observable } from "#utilities";
 import type {
   NextLink,
   Operation,

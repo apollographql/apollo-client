@@ -15,7 +15,7 @@ import type {
   MutationOptions,
   OperationVariables,
 } from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
+import { mergeOptions } from "#utilities";
 import { equal } from "@wry/equality";
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import { ApolloError } from "../../errors/index.js";

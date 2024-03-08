@@ -1,8 +1,8 @@
 import * as React from "rehackt";
 import { equal } from "@wry/equality";
 
-import type { DeepPartial } from "../../utilities/index.js";
-import { mergeDeepArray } from "../../utilities/index.js";
+import type { DeepPartial } from "#utilities";
+import { mergeDeepArray } from "#utilities";
 import type {
   Cache,
   Reference,

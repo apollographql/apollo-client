@@ -17,7 +17,7 @@ import {
   cloneDeep,
   stringifyForDisplay,
   print,
-} from "../../../utilities/index.js";
+} from "#utilities";
 
 export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
 

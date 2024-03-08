@@ -1,5 +1,5 @@
-import path, { resolve, dirname } from "path";
-import { promises as fs } from "fs";
+import path, { resolve, dirname, join } from "path";
+import { promises as fs, realpathSync } from "fs";
 
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { terser as minify } from "rollup-plugin-terser";
@@ -7,6 +7,27 @@ import cleanup from "rollup-plugin-cleanup";
 
 const entryPoints = require("./entryPoints");
 const distDir = "./dist";
+
+function removeIndex(filename) {
+  if (filename.endsWith(`${path.sep}index.js`)) {
+    return filename.slice(0, -`${path.sep}index.js`.length);
+  }
+  return filename;
+}
+
+const imports = require("../package.json").imports;
+function resolveImport(id) {
+  return join(__dirname, "..", imports[id].replace(/^src/, "dist"));
+}
+const resolveImportsPlugin = {
+  name: "resolve-imports",
+  resolveId(id) {
+    if (id[0] == "#") {
+      return { id: removeIndex(resolveImport(id)), external: "relative" };
+    }
+    return null;
+  },
+};
 
 const removeComments = cleanup({
   comments: ["some", /#__PURE__/, /#__NO_SIDE_EFFECTS__/],
@@ -68,7 +89,7 @@ function prepareCJS(input, output) {
       exports: "named",
       externalLiveBindings: false,
     },
-    plugins: [nodeResolve(), removeComments],
+    plugins: [resolveImportsPlugin, nodeResolve(), removeComments],
   };
 }
 
@@ -80,6 +101,7 @@ function prepareCJSMinified(input) {
       format: "cjs",
     },
     plugins: [
+      resolveImportsPlugin,
       minify({
         mangle: {
           toplevel: true,
@@ -120,17 +142,13 @@ function prepareBundle({
     },
     plugins: [
       removeComments,
+      resolveImportsPlugin,
       {
         name: "externalize-dependency",
         resolveId(id, parentId) {
+          // TODO
           if (!parentId) {
             return null;
-          }
-          function removeIndex(filename) {
-            if (filename.endsWith(`${path.sep}index.js`)) {
-              return filename.slice(0, -`${path.sep}index.js`.length);
-            }
-            return filename;
           }
 
           const external = isExternal(id, parentId, true);

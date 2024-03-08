@@ -2,8 +2,8 @@ import type { DocumentNode, GraphQLError } from "graphql";
 import { equal } from "@wry/equality";
 
 import type { Cache, ApolloCache } from "../cache/index.js";
-import { DeepMerger } from "../utilities/index.js";
-import { mergeIncrementalData } from "../utilities/index.js";
+import { DeepMerger } from "#utilities";
+import { mergeIncrementalData } from "#utilities";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
@@ -13,7 +13,7 @@ import {
   isNonEmptyArray,
   graphQLResultHasError,
   canUseWeakMap,
-} from "../utilities/index.js";
+} from "#utilities";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";

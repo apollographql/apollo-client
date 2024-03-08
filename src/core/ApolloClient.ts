@@ -5,7 +5,7 @@ import type { ExecutionResult, DocumentNode } from "graphql";
 import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
 import { ApolloLink, execute } from "../link/core/index.js";
 import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
-import type { DocumentTransform, Observable } from "../utilities/index.js";
+import type { DocumentTransform, Observable } from "#utilities";
 import { version } from "../version.js";
 import type { UriFunction } from "../link/http/index.js";
 import { HttpLink } from "../link/http/index.js";
@@ -126,7 +126,7 @@ export interface ApolloClientOptions<TCacheShape> {
 // previously declared and exported from this module, and then reexported from
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
-import { mergeOptions } from "../utilities/index.js";
+import { mergeOptions } from "#utilities";
 import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
 export { mergeOptions };
 

@@ -3,7 +3,7 @@ import {
   canUseWeakMap,
   canUseWeakSet,
   isNonNullObject as isObjectOrArray,
-} from "../../utilities/index.js";
+} from "#utilities";
 import { isArray } from "./helpers.js";
 
 function shallowCopy<T>(value: T): T {

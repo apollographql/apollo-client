@@ -1,7 +1,7 @@
 import * as React from "rehackt";
 import type * as ReactTypes from "react";
 import type { ApolloClient } from "../../core/index.js";
-import { canUseSymbol } from "../../utilities/index.js";
+import { canUseSymbol } from "#utilities";
 import type { RenderPromises } from "../ssr/index.js";
 import { invariant } from "../../utilities/globals/index.js";
 

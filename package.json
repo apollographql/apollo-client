@@ -196,5 +196,8 @@
     "**/*.js.map",
     "**/*.d.ts",
     "**/*.json"
-  ]
+  ],
+  "imports": {
+    "#utilities": "src/utilities/index.js"
+  }
 }

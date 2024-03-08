@@ -3,7 +3,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import * as React from "rehackt";
 
 import type { OperationVariables } from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
+import { mergeOptions } from "#utilities";
 import type {
   LazyQueryHookExecOptions,
   LazyQueryHookOptions,

@@ -1,7 +1,7 @@
 import { invariant } from "../../utilities/globals/index.js";
 import * as React from "rehackt";
 
-import { canUseLayoutEffect } from "../../utilities/index.js";
+import { canUseLayoutEffect } from "#utilities";
 
 let didWarnUncachedGetSnapshot = false;
 

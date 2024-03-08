@@ -16,7 +16,7 @@ import type {
 import { visit, BREAK, isSelectionNode } from "graphql";
 
 import type { ApolloCache } from "../cache/index.js";
-import type { FragmentMap, StoreObject } from "../utilities/index.js";
+import type { FragmentMap, StoreObject } from "#utilities";
 import {
   argumentsObjectFromField,
   buildQueryFromSelectionSet,
@@ -31,7 +31,7 @@ import {
   removeClientSetsFromDocument,
   resultKeyNameFromField,
   shouldInclude,
-} from "../utilities/index.js";
+} from "#utilities";
 import type { ApolloClient } from "./ApolloClient.js";
 import type { Resolvers, OperationVariables } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";

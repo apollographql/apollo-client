@@ -1,5 +1,5 @@
 import type { ObservableQuery, ApolloQueryResult } from "../../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
+import type { ObservableSubscription } from "#utilities";
 
 export interface Options {
   /**

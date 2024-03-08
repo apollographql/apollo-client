@@ -19,10 +19,7 @@ import { __use, useRenderGuard } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
-import type {
-  DeepPartial,
-  OnlyRequiredProperties,
-} from "../../utilities/index.js";
+import type { DeepPartial, OnlyRequiredProperties } from "#utilities";
 import { invariant } from "../../utilities/globals/index.js";
 
 export type LoadQueryFunction<TVariables extends OperationVariables> = (

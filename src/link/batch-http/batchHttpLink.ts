@@ -4,7 +4,7 @@ import {
   Observable,
   hasDirectives,
   removeClientSetsFromDocument,
-} from "../../utilities/index.js";
+} from "#utilities";
 import { fromError } from "../utils/index.js";
 import type { HttpOptions } from "../http/index.js";
 import {

@@ -6,7 +6,7 @@ import type {
   StoreValue,
   isReference,
   AsStoreObject,
-} from "../../../utilities/index.js";
+} from "#utilities";
 
 import type { StorageType } from "../../inmemory/policies.js";
 

@@ -1,12 +1,12 @@
 import type { DocumentNode } from "graphql";
 import { wrap } from "optimism";
 
-import type { StoreObject, Reference } from "../../utilities/index.js";
+import type { StoreObject, Reference } from "#utilities";
 import {
   cacheSizes,
   defaultCacheSizes,
   getFragmentQueryDocument,
-} from "../../utilities/index.js";
+} from "#utilities";
 import type { DataProxy } from "./types/DataProxy.js";
 import type { Cache } from "./types/Cache.js";
 import { WeakCache } from "@wry/caches";

@@ -10,7 +10,7 @@ import type {
   StoreObject,
   FragmentMap,
   FragmentMapFunction,
-} from "../../utilities/index.js";
+} from "#utilities";
 import {
   isField,
   resultKeyNameFromField,
@@ -31,7 +31,7 @@ import {
   canonicalStringify,
   cacheSizes,
   defaultCacheSizes,
-} from "../../utilities/index.js";
+} from "#utilities";
 import type { Cache } from "../core/types/Cache.js";
 import type {
   DiffQueryAgainstStoreOptions,

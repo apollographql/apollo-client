@@ -9,7 +9,7 @@ import type { Resolver } from "./LocalState.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
 import type { Cache } from "../cache/index.js";
-import type { IsStrictlyAny } from "../utilities/index.js";
+import type { IsStrictlyAny } from "#utilities";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 

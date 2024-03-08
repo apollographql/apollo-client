@@ -9,10 +9,7 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "../../core/index.js";
-import type {
-  DeepPartial,
-  OnlyRequiredProperties,
-} from "../../utilities/index.js";
+import type { DeepPartial, OnlyRequiredProperties } from "#utilities";
 import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
 import type { QueryReference } from "../internal/index.js";
 import type { NoInfer } from "../index.js";

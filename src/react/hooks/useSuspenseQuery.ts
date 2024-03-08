@@ -11,8 +11,8 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { ApolloError, NetworkStatus } from "../../core/index.js";
-import type { DeepPartial } from "../../utilities/index.js";
-import { isNonEmptyArray } from "../../utilities/index.js";
+import type { DeepPartial } from "#utilities";
+import { isNonEmptyArray } from "#utilities";
 import { useApolloClient } from "./useApolloClient.js";
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import type {

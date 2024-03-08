@@ -1,7 +1,7 @@
 import type { ExecutionResult } from "graphql";
 
 import type { NetworkError, GraphQLErrors } from "../../errors/index.js";
-import { Observable } from "../../utilities/index.js";
+import { Observable } from "#utilities";
 import type { Operation, FetchResult, NextLink } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
 

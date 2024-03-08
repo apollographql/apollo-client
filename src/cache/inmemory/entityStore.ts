@@ -4,11 +4,7 @@ import { dep } from "optimism";
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
 
-import type {
-  StoreValue,
-  StoreObject,
-  Reference,
-} from "../../utilities/index.js";
+import type { StoreValue, StoreObject, Reference } from "#utilities";
 import {
   isReference,
   makeReference,
@@ -16,7 +12,7 @@ import {
   maybeDeepFreeze,
   canUseWeakMap,
   isNonNullObject,
-} from "../../utilities/index.js";
+} from "#utilities";
 import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
 import { hasOwn, fieldNameFromStoreName } from "./helpers.js";
 import type { Policies, StorageType } from "./policies.js";

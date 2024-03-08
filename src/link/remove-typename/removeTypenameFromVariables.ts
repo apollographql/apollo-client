@@ -7,7 +7,7 @@ import {
   isPlainObject,
   cacheSizes,
   defaultCacheSizes,
-} from "../../utilities/index.js";
+} from "#utilities";
 import type { OperationVariables } from "../../core/index.js";
 import { WeakCache } from "@wry/caches";
 

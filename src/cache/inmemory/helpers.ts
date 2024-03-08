@@ -15,7 +15,7 @@ import type {
   StoreObject,
   FragmentMap,
   FragmentMapFunction,
-} from "../../utilities/index.js";
+} from "#utilities";
 import {
   isReference,
   isField,
@@ -27,7 +27,7 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   isArray,
-} from "../../utilities/index.js";
+} from "#utilities";
 
 export const { hasOwnProperty: hasOwn } = Object.prototype;
 

@@ -8,7 +8,7 @@ import type {
   OperationVariables,
   WatchQueryFetchPolicy,
 } from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
+import { mergeOptions } from "#utilities";
 import type { ApolloContextValue } from "../context/index.js";
 import { getApolloContext } from "../context/index.js";
 import { ApolloError } from "../../errors/index.js";
@@ -35,7 +35,7 @@ import {
   compact,
   isNonEmptyArray,
   maybeDeepFreeze,
-} from "../../utilities/index.js";
+} from "#utilities";
 import { wrapHook } from "./internal/index.js";
 
 const {

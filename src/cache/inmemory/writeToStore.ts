@@ -10,7 +10,7 @@ import type {
   StoreValue,
   StoreObject,
   Reference,
-} from "../../utilities/index.js";
+} from "#utilities";
 import {
   getFragmentFromSelection,
   getDefaultValues,
@@ -26,7 +26,7 @@ import {
   isNonEmptyArray,
   argumentsObjectFromField,
   canonicalStringify,
-} from "../../utilities/index.js";
+} from "#utilities";
 
 import type {
   NormalizedCache,

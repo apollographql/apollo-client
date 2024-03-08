@@ -11,7 +11,7 @@ import { equal } from "@wry/equality";
 import { ApolloCache } from "../core/cache.js";
 import type { Cache } from "../core/types/Cache.js";
 import { MissingFieldError } from "../core/types/common.js";
-import type { StoreObject, Reference } from "../../utilities/index.js";
+import type { StoreObject, Reference } from "#utilities";
 import {
   addTypenameToDocument,
   isReference,
@@ -20,7 +20,7 @@ import {
   print,
   cacheSizes,
   defaultCacheSizes,
-} from "../../utilities/index.js";
+} from "#utilities";
 import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
 import { StoreReader } from "./readFromStore.js";
 import { StoreWriter } from "./writeToStore.js";

@@ -3,7 +3,7 @@ import { invariant } from "../../utilities/globals/index.js";
 import type { DefinitionNode } from "graphql";
 
 import { ApolloLink } from "../core/index.js";
-import { Observable, hasDirectives } from "../../utilities/index.js";
+import { Observable, hasDirectives } from "#utilities";
 import { serializeFetchParameter } from "./serializeFetchParameter.js";
 import { selectURI } from "./selectURI.js";
 import {
@@ -24,7 +24,7 @@ import {
   maybe,
   getMainDefinition,
   removeClientSetsFromDocument,
-} from "../../utilities/index.js";
+} from "#utilities";
 
 const backupFetch = maybe(() => fetch);
 

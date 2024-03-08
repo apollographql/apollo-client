@@ -1,4 +1,4 @@
-import React, { Fragment, StrictMode, Suspense } from "react";
+import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import {
   act,
   screen,
@@ -51,7 +51,15 @@ import {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions";
-import { profile, spyOnConsole } from "../../../testing/internal";
+import {
+  PaginatedCaseData,
+  PaginatedCaseVariables,
+  createProfiler,
+  profile,
+  setupPaginatedCase,
+  spyOnConsole,
+  useTrackRenders,
+} from "../../../testing/internal";
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -9976,6 +9984,129 @@ describe("useSuspenseQuery", () => {
         networkStatus: NetworkStatus.ready,
       });
     });
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/11315
+  it("fetchMore does not cause extra render", async () => {
+    const { query, link } = setupPaginatedCase();
+
+    const user = userEvent.setup();
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              letters: offsetLimitPagination(),
+            },
+          },
+        },
+      }),
+      link,
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<
+          PaginatedCaseData,
+          PaginatedCaseVariables
+        > | null,
+      },
+    });
+
+    function SuspenseFallback() {
+      useTrackRenders();
+
+      return <div>Loading...</div>;
+    }
+
+    function App() {
+      useTrackRenders();
+      const [isPending, startTransition] = useTransition();
+      const result = useSuspenseQuery(query, {
+        variables: { offset: 0, limit: 2 },
+      });
+      const { data, fetchMore } = result;
+
+      Profiler.mergeSnapshot({ result });
+
+      return (
+        <button
+          disabled={isPending}
+          onClick={() =>
+            startTransition(() => {
+              fetchMore({
+                variables: {
+                  offset: data.letters.length,
+                  limit: data.letters.length + 1,
+                },
+              });
+            })
+          }
+        >
+          Fetch next
+        </button>
+      );
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+        ],
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Fetch next")));
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(screen.getByText("Fetch next")).toBeDisabled();
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+        ],
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
+          { __typename: "Letter", letter: "E", position: 5 },
+        ],
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
   });
 
   describe.skip("type tests", () => {

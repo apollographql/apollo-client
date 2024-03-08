@@ -1,5 +1,27 @@
 # @apollo/client
 
+## 3.9.6
+
+### Patch Changes
+
+- [#11617](https://github.com/apollographql/apollo-client/pull/11617) [`f1d8bc4`](https://github.com/apollographql/apollo-client/commit/f1d8bc40c3d8e39340f721f4f1c3fd0ed77b8a6b) Thanks [@phryneas](https://github.com/phryneas)! - Allow Apollo Client instance to intercept hook functionality
+
+- [#11638](https://github.com/apollographql/apollo-client/pull/11638) [`bf93ada`](https://github.com/apollographql/apollo-client/commit/bf93adaa0321b573db0ea8fc3a5c364e1fdfeef3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where calling `fetchMore` from a suspense-enabled hook inside `startTransition` caused an unnecessary rerender.
+
+## 3.9.5
+
+### Patch Changes
+
+- [#11595](https://github.com/apollographql/apollo-client/pull/11595) [`8c20955`](https://github.com/apollographql/apollo-client/commit/8c20955874562e5b2ab35557325e047b059bc4fc) Thanks [@phryneas](https://github.com/phryneas)! - Bumps the dependency `rehackt` to 0.0.5
+
+- [#11592](https://github.com/apollographql/apollo-client/pull/11592) [`1133469`](https://github.com/apollographql/apollo-client/commit/1133469bd91ff76b9815e815a454a79d8e23a9bc) Thanks [@Stephen2](https://github.com/Stephen2)! - Strengthen `MockedResponse.newData` type
+
+- [#11579](https://github.com/apollographql/apollo-client/pull/11579) [`1ba2fd9`](https://github.com/apollographql/apollo-client/commit/1ba2fd919f79dfdc7b9d3f7d1a7aa5918e648349) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where partial data is reported to `useQuery` when using `notifyOnNetworkStatusChange` after it errors while another overlapping query succeeds.
+
+- [#11579](https://github.com/apollographql/apollo-client/pull/11579) [`1ba2fd9`](https://github.com/apollographql/apollo-client/commit/1ba2fd919f79dfdc7b9d3f7d1a7aa5918e648349) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a partial cache write for an errored query would result in automatically refetching that query.
+
+- [#11562](https://github.com/apollographql/apollo-client/pull/11562) [`65ab695`](https://github.com/apollographql/apollo-client/commit/65ab695470741e8dcaef1ebd7742c3c397526354) Thanks [@mspiess](https://github.com/mspiess)! - Mocks with an infinite delay no longer require result or error
+
 ## 3.9.4
 
 ### Patch Changes
@@ -113,6 +135,25 @@
 
 - [#11412](https://github.com/apollographql/apollo-client/pull/11412) [`58db5c3`](https://github.com/apollographql/apollo-client/commit/58db5c3295b88162f91019f0898f6baa4b9cced6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to start preloading a query outside React to begin fetching as early as possible. Call `createQueryPreloader` to create a `preloadQuery` function which can be called to start fetching a query. This returns a `queryRef` which is passed to `useReadQuery` and suspended until the query is done fetching.
 
+  ```tsx
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef = preloadQuery(QUERY, { variables, ...otherOptions });
+
+  function App() {
+    return {
+      <Suspense fallback={<div>Loading</div>}>
+        <MyQuery />
+      </Suspense>
+    }
+  }
+
+  function MyQuery() {
+    const { data } = useReadQuery(queryRef);
+
+    // do something with data
+  }
+  ```
+
 #### Testing utility improvements
 
 - [#11178](https://github.com/apollographql/apollo-client/pull/11178) [`4d64a6f`](https://github.com/apollographql/apollo-client/commit/4d64a6fa2ad5abe6f7f172c164f5e1fc2cb89829) Thanks [@sebakerckhof](https://github.com/sebakerckhof)! - Support re-using of mocks in the MockedProvider
@@ -178,25 +219,6 @@
   ```
 
   The `IGNORE` sentinel can be destructured from the second parameter in the callback function signature passed to `optimisticResponse`.
-
-  ```tsx
-  const preloadQuery = createQueryPreloader(client);
-  const queryRef = preloadQuery(QUERY, { variables, ...otherOptions });
-
-  function App() {
-    return {
-      <Suspense fallback={<div>Loading</div>}>
-        <MyQuery />
-      </Suspense>
-    }
-  }
-
-  function MyQuery() {
-    const { data } = useReadQuery(queryRef);
-
-    // do something with data
-  }
-  ```
 
 #### Network adapters for multipart subscriptions usage with Relay and urql
 

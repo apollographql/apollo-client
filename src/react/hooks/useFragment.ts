@@ -14,7 +14,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
-import { useDeepMemo, useLazyRef } from "./internal/index.js";
+import { useDeepMemo, useLazyRef, wrapHook } from "./internal/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -52,6 +52,16 @@ export type UseFragmentResult<TData> =
     };
 
 export function useFragment<TData = any, TVars = OperationVariables>(
+  options: UseFragmentOptions<TData, TVars>
+): UseFragmentResult<TData> {
+  return wrapHook(
+    "useFragment",
+    _useFragment,
+    useApolloClient(options.client)
+  )(options);
+}
+
+function _useFragment<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient(options.client);

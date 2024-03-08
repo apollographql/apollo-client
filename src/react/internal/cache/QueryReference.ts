@@ -379,10 +379,22 @@ export class InternalQueryReference<TData = unknown> {
     // promise is resolved correctly.
     returnedPromise
       .then((result) => {
-        if (this.promise.status === "pending") {
-          this.result = result;
-          this.resolve?.(result);
-        }
+        // In the case of `fetchMore`, this promise is resolved before a cache
+        // result is emitted due to the fact that `fetchMore` sets a `no-cache`
+        // fetch policy and runs `cache.batch` in its `.then` handler. Because
+        // the timing is different, we accidentally run this update twice
+        // causing an additional re-render with the `fetchMore` result by
+        // itself. By wrapping in `setTimeout`, this should provide a short
+        // delay to allow the `QueryInfo.notify` handler to run before this
+        // promise is checked.
+        // See https://github.com/apollographql/apollo-client/issues/11315 for
+        // more information
+        setTimeout(() => {
+          if (this.promise.status === "pending") {
+            this.result = result;
+            this.resolve?.(result);
+          }
+        });
       })
       .catch(() => {});
 

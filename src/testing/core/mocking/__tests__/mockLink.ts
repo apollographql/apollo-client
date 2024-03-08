@@ -1,6 +1,70 @@
 import gql from "graphql-tag";
-import { MockLink } from "../mockLink";
+import { MockLink, MockedResponse } from "../mockLink";
 import { execute } from "../../../../link/core/execute";
+
+describe("MockedResponse.newData", () => {
+  const setup = () => {
+    const weaklyTypedMockResponse: MockedResponse = {
+      request: {
+        query: gql`
+          query A {
+            a
+          }
+        `,
+      },
+    };
+
+    const stronglyTypedMockResponse: MockedResponse<
+      { a: string },
+      { input: string }
+    > = {
+      request: {
+        query: gql`
+          query A {
+            a
+          }
+        `,
+      },
+    };
+
+    return {
+      weaklyTypedMockResponse,
+      stronglyTypedMockResponse,
+    };
+  };
+
+  test("returned 'data' can be any object with untyped response", () => {
+    const { weaklyTypedMockResponse } = setup();
+
+    weaklyTypedMockResponse.newData = ({ fake: { faker } }) => ({
+      data: {
+        pretend: faker,
+      },
+    });
+  });
+
+  test("can't return output that doesn't match TData", () => {
+    const { stronglyTypedMockResponse } = setup();
+
+    // @ts-expect-error return type does not match `TData`
+    stronglyTypedMockResponse.newData = () => ({
+      data: {
+        a: 123,
+      },
+    });
+  });
+
+  test("can't use input variables that don't exist in TVariables", () => {
+    const { stronglyTypedMockResponse } = setup();
+
+    // @ts-expect-error unknown variables
+    stronglyTypedMockResponse.newData = ({ fake: { faker } }) => ({
+      data: {
+        a: faker,
+      },
+    });
+  });
+});
 
 /*
 We've chosen this value as the MAXIMUM_DELAY since values that don't fit into a 32-bit signed int cause setTimeout to fire immediately

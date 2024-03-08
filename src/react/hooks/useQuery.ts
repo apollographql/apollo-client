@@ -36,6 +36,7 @@ import {
   isNonEmptyArray,
   maybeDeepFreeze,
 } from "../../utilities/index.js";
+import { wrapHook } from "./internal/index.js";
 
 const {
   prototype: { hasOwnProperty },
@@ -85,6 +86,20 @@ export function useQuery<
     NoInfer<TVariables>
   > = Object.create(null)
 ): QueryResult<TData, TVariables> {
+  return wrapHook(
+    "useQuery",
+    _useQuery,
+    useApolloClient(options && options.client)
+  )(query, options);
+}
+
+function _useQuery<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+) {
   return useInternalState(useApolloClient(options.client), query).useQuery(
     options
   );

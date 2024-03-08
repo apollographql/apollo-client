@@ -24,6 +24,7 @@ import {
   itAsync,
   MockLink,
   mockSingleLink,
+  MockSubscriptionLink,
   subscribeAndCount,
   wait,
 } from "../../testing";
@@ -2388,6 +2389,124 @@ describe("ObservableQuery", () => {
         });
       }
     );
+
+    it("handles multiple calls to getCurrentResult without losing data", async () => {
+      const query = gql`
+        {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const obs = client.watchQuery({ query });
+      const stream = new ObservableStream(obs);
+
+      link.simulateResult({
+        result: {
+          data: {
+            greeting: {
+              message: "Hello world",
+              __typename: "Greeting",
+            },
+          },
+          hasNext: true,
+        },
+      });
+
+      {
+        const result = await stream.takeNext();
+        expect(result.data).toEqual({
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+          },
+        });
+      }
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+        },
+      });
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+        },
+      });
+
+      link.simulateResult(
+        {
+          result: {
+            incremental: [
+              {
+                data: {
+                  recipient: {
+                    name: "Alice",
+                    __typename: "Person",
+                  },
+                  __typename: "Greeting",
+                },
+                path: ["greeting"],
+              },
+            ],
+            hasNext: false,
+          },
+        },
+        true
+      );
+
+      {
+        const result = await stream.takeNext();
+        expect(result.data).toEqual({
+          greeting: {
+            message: "Hello world",
+            recipient: {
+              name: "Alice",
+              __typename: "Person",
+            },
+            __typename: "Greeting",
+          },
+        });
+      }
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          recipient: {
+            name: "Alice",
+            __typename: "Person",
+          },
+          __typename: "Greeting",
+        },
+      });
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          recipient: {
+            name: "Alice",
+            __typename: "Person",
+          },
+          __typename: "Greeting",
+        },
+      });
+    });
 
     {
       type Result = Partial<ApolloQueryResult<{ hello: string }>>;

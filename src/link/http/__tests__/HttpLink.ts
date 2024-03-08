@@ -1940,6 +1940,10 @@ describe("HttpLink", () => {
         "Content-Type: application/json",
         "",
         '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"blue","roll":2,"sides":5}}}}}',
+        "---",
+        "Content-Type: application/json",
+        "",
+        '{"payload": null}',
         "-----",
       ].join("\r\n");
 

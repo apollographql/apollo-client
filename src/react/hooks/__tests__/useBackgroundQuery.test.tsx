@@ -446,6 +446,77 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
   await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
+it("disposes of the queryRef when unmounting before it is used by useReadQuery", async () => {
+  const { query, mocks } = setupSimpleCase();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+
+  function App() {
+    useTrackRenders();
+    useBackgroundQuery(query);
+
+    return null;
+  }
+
+  const { unmount } = renderWithClient(<App />, { client, wrapper: Profiler });
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+  }
+
+  unmount();
+  await wait(0);
+
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
+it("does not prematurely dispose of the queryRef when using strict mode", async () => {
+  const { query, mocks } = setupSimpleCase();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+
+  function App() {
+    useTrackRenders();
+    useBackgroundQuery(query);
+
+    return null;
+  }
+
+  renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => (
+      <React.StrictMode>
+        <Profiler>{children}</Profiler>
+      </React.StrictMode>
+    ),
+  });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+  }
+
+  await wait(10);
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+});
+
 it("allows the client to be overridden", async () => {
   const { query } = setupSimpleCase();
 

@@ -480,6 +480,51 @@ it("disposes of the queryRef when unmounting before it is used by useReadQuery",
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 });
 
+it("disposes of old queryRefs when changing variables before the queryRef is used by useReadQuery", async () => {
+  const { query, mocks } = setupVariablesCase();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+
+  function App({ id }: { id: string }) {
+    useTrackRenders();
+    useBackgroundQuery(query, { variables: { id } });
+
+    return null;
+  }
+
+  const { rerender } = renderWithClient(<App id="1" />, {
+    client,
+    wrapper: Profiler,
+  });
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query, {
+    variables: { id: "1" },
+  });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+  }
+
+  rerender(<App id="2" />);
+
+  await wait(0);
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query, {
+    variables: { id: "2" },
+  });
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query, {
+    variables: { id: "1" },
+  });
+});
+
 it("does not prematurely dispose of the queryRef when using strict mode", async () => {
   const { query, mocks } = setupSimpleCase();
   const client = new ApolloClient({

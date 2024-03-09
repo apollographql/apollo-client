@@ -34,3 +34,13 @@ You can call either or both of these methods on application load.
 The `__DEV__` variable isn't available in all environments. As an alternative, you can check whether `process.env.NODE_ENV !== "production"`.
 
 </blockquote>
+
+**You can also silence the error messages completely:**
+
+```js title="App.js"
+import { setVerbosity } from "@apollo/client/dev";
+
+if (!__DEV__) {  // Silence messages when not in a dev environment
+  setVerbosity("silent");
+}
+```

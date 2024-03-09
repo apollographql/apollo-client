@@ -1,4 +1,4 @@
-import { loadErrorMessageHandler } from "../../../dev";
+import { loadErrorMessageHandler, setVerbosity } from "../../../dev";
 import { spyOnConsole, withCleanup } from "../../../testing/internal";
 import {
   ApolloErrorMessageHandler,
@@ -24,6 +24,16 @@ function mockErrorMessageHandler() {
 
   return withCleanup({ original }, ({ original }) => {
     window[ApolloErrorMessageHandler] = original;
+  });
+}
+
+function restoreVerbosity() {
+  return withCleanup({}, () => {
+    /**
+     * This is the default verbosity level of "ts-invariant"
+     * @see https://github.com/apollographql/invariant-packages/blob/885d687b654102a8ff1fb5419c94461795909f96/packages/ts-invariant/src/invariant.ts#L34
+     */
+    setVerbosity("log");
   });
 }
 
@@ -116,4 +126,12 @@ test("base invariant(false, 6, ...), raises fallback", () => {
         )
     )
   );
+});
+
+test("setVerbosity('silent') disables logging to console", () => {
+  using _ = restoreVerbosity();
+  using consoleSpy = spyOnConsole("log");
+  setVerbosity("silent");
+  invariant.log(5, "string", 1, 1.1, { a: 1 });
+  expect(consoleSpy.log).not.toHaveBeenCalled();
 });

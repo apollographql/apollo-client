@@ -4,6 +4,23 @@ import global from "./global.js";
 import type { ErrorCodes } from "../../invariantErrorCodes.js";
 import { stringifyForDisplay } from "../common/stringifyForDisplay.js";
 
+const ApolloErrorMessageHandler = Symbol.for(
+  "ApolloErrorMessageHandler_" + version
+);
+
+const ApolloSuppressErrorMessages = Symbol.for(
+  "ApolloSuppressErrorMessages_" + version
+);
+
+declare global {
+  interface Window {
+    [ApolloErrorMessageHandler]?: {
+      (message: string | number, args: unknown[]): string | undefined;
+    } & ErrorCodes;
+    [ApolloSuppressErrorMessages]?: true;
+  }
+}
+
 function wrap(fn: (msg?: string, ...args: any[]) => void) {
   return function (message?: string | number, ...args: any[]) {
     if (typeof message === "number") {
@@ -14,6 +31,7 @@ function wrap(fn: (msg?: string, ...args: any[]) => void) {
         args = [];
       }
     }
+    if (ApolloSuppressErrorMessages in global) return;
     fn(...[message].concat(args));
   };
 }
@@ -105,17 +123,6 @@ function newInvariantError(
   );
 }
 
-const ApolloErrorMessageHandler = Symbol.for(
-  "ApolloErrorMessageHandler_" + version
-);
-declare global {
-  interface Window {
-    [ApolloErrorMessageHandler]?: {
-      (message: string | number, args: unknown[]): string | undefined;
-    } & ErrorCodes;
-  }
-}
-
 function stringify(arg: any) {
   return typeof arg == "string" ? arg : (
       stringifyForDisplay(arg, 2).slice(0, 1000)
@@ -152,4 +159,5 @@ export {
   InvariantError,
   newInvariantError,
   ApolloErrorMessageHandler,
+  ApolloSuppressErrorMessages,
 };

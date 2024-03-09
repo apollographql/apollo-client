@@ -1,7 +1,8 @@
-import { loadErrorMessageHandler } from "../../../dev";
+import { loadErrorMessageHandler, suppressErrorMessages } from "../../../dev";
 import { spyOnConsole, withCleanup } from "../../../testing/internal";
 import {
   ApolloErrorMessageHandler,
+  ApolloSuppressErrorMessages,
   InvariantError,
   invariant,
 } from "../invariantWrappers";
@@ -24,6 +25,17 @@ function mockErrorMessageHandler() {
 
   return withCleanup({ original }, ({ original }) => {
     window[ApolloErrorMessageHandler] = original;
+  });
+}
+
+function mockSuppressErrorMessages() {
+  const original = window[ApolloSuppressErrorMessages];
+  return withCleanup({ original }, ({ original }) => {
+    if (original) {
+      window[ApolloSuppressErrorMessages] = original;
+    } else {
+      delete window[ApolloSuppressErrorMessages];
+    }
   });
 }
 
@@ -116,4 +128,12 @@ test("base invariant(false, 6, ...), raises fallback", () => {
         )
     )
   );
+});
+
+test("suppressErrorMessages() disables logging to console", () => {
+  using _ = mockSuppressErrorMessages();
+  using consoleSpy = spyOnConsole("log");
+  suppressErrorMessages();
+  invariant.log(5, "string", 1, 1.1, { a: 1 });
+  expect(consoleSpy.log).not.toHaveBeenCalled();
 });

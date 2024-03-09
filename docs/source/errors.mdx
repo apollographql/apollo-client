@@ -34,3 +34,13 @@ You can call either or both of these methods on application load.
 The `__DEV__` variable isn't available in all environments. As an alternative, you can check whether `process.env.NODE_ENV !== "production"`.
 
 </blockquote>
+
+**You can also suppress the error messages completely:**
+
+```js title="App.js"
+import { suppressErrorMessages } from "@apollo/client/dev";
+
+if (process.env.NODE_ENV === "production") {  // Suppress messages only in production
+  suppressErrorMessages();
+}
+```

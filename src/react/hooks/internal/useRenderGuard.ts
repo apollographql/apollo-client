@@ -16,7 +16,7 @@ export function useRenderGuard() {
 
   return React.useCallback(() => {
     return (
-      RenderDispatcher !== null && RenderDispatcher === getRenderDispatcher()
+      RenderDispatcher != null && RenderDispatcher === getRenderDispatcher()
     );
   }, []);
 }

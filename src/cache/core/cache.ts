@@ -208,6 +208,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         immediate: true,
         query: this.getFragmentDoc(fragment, fragmentName),
         callback(diff) {
+          if (equal(diff, latestDiff)) {
+            return;
+          }
+
           const result = {
             data: diff.result as DeepPartial<TData>,
             complete: !!diff.complete,
@@ -218,10 +222,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
               diff.missing.map((error) => error.missing)
             );
           }
-          if (!equal(diff, latestDiff)) {
-            latestDiff = diff;
-            observer.next(result);
-          }
+
+          latestDiff = diff;
+          observer.next(result);
         },
       });
     });

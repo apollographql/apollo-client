@@ -73,7 +73,11 @@ As this example shows, the value of `optimisticResponse` is an object that match
 
 5. Apollo Client notifies all affected queries again. The associated components re-render, but if the server's response matches our `optimisticResponse`, this is invisible to the user.
 
+<MinVersion version="3.9.0">
+
 ## Bailing out of an optimistic update
+
+</MinVersion>
 
 In some cases you may want to skip an optimistic update. For example, you may want to perform an optimistic update _only_ when certain variables are passed to the mutation. To skip an update, pass a function to the `optimisticResponse` option and return the `IGNORE` sentinel object available on the second argument to bail out of the optimistic update.
 

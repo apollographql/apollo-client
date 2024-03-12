@@ -2175,14 +2175,14 @@ describe("ApolloClient", () => {
     );
   });
 
-  describe.only("watchFragment", () => {
+  describe("watchFragment", () => {
     type Item = {
       __typename: string;
       id: number;
       text?: string;
     };
 
-    it.only("if all data is available, `complete` is `true`", async () => {
+    it("if all data is available, `complete` is `true`", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
@@ -2298,47 +2298,47 @@ describe("ApolloClient", () => {
 
       expect(handleNext).toHaveBeenCalledTimes(0);
     });
-    // it.only("does not react to updates to @nonreactive fields", async () => {
-    //   const cache = new InMemoryCache();
-    //   const client = new ApolloClient({
-    //     cache,
-    //     link: ApolloLink.empty(),
-    //   });
-    //   const ItemFragment = gql`
-    //     fragment ItemFragment on Item {
-    //       id
-    //       text @nonreactive
-    //     }
-    //   `;
+    it("does not react to updates to @nonreactive fields", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text @nonreactive
+        }
+      `;
 
-    //   const observable = client.watchFragment({
-    //     fragment: ItemFragment,
-    //     from: { __typename: "Item", id: 5 },
-    //   });
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+      });
 
-    //   const handleNext = jest.fn();
+      const handleNext = jest.fn();
 
-    //   observable.subscribe(handleNext);
+      observable.subscribe(handleNext);
 
-    //   cache.writeFragment({
-    //     fragment: ItemFragment,
-    //     data: {
-    //       __typename: "Item",
-    //       id: 5,
-    //       text: "Item #5",
-    //     },
-    //   });
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+      });
 
-    //   expect(handleNext).toHaveBeenCalledTimes(1);
-    //   expect(handleNext).toHaveBeenLastCalledWith({
-    //     data: {
-    //       __typename: "Item",
-    //       id: 5,
-    //       text: "Item #5",
-    //     },
-    //     complete: true,
-    //   });
-    // });
+      expect(handleNext).toHaveBeenCalledTimes(1);
+      expect(handleNext).toHaveBeenLastCalledWith({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        complete: true,
+      });
+    });
     it.each<TypedDocumentNode<{ list: Item[] }>>([
       // This query uses a basic field-level @nonreactive directive.
       gql`

@@ -26,7 +26,6 @@ import type { MissingTree } from "./types/common.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
-// todo: confirm we can start with this limited set of options
 export interface WatchFragmentOptions<TData, TVars> {
   fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
   from: StoreObject | Reference | string;
@@ -201,13 +200,12 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       optimistic,
     };
 
-    // let latestDiff: DataProxy.DiffResult<TData> | undefined = undefined;
-    let latestDiff: DataProxy.DiffResult<TData> = this.diff<TData>(diffOptions);
+    let latestDiff = this.diff<TData>(diffOptions);
 
     return new Observable((observer) => {
       return this.watch<TData, TVars>({
         ...diffOptions,
-        immediate: true, // is this necessary? tests pass without it
+        immediate: true,
         query: this.getFragmentDoc(fragment, fragmentName),
         callback(diff) {
           const result = {

@@ -1,5 +1,4 @@
 import * as React from "rehackt";
-
 import type { DeepPartial } from "../../utilities/index.js";
 import { mergeDeepArray } from "../../utilities/index.js";
 import type {
@@ -13,7 +12,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
-import { useDeepMemo, useLazyRef, wrapHook } from "./internal/index.js";
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -83,12 +82,11 @@ function _useFragment<TData = any, TVars = OperationVariables>(
     };
   }, [options]);
 
-  // TODO: use regular useRef here and set the value inside of useMemo
-  const resultRef = useLazyRef<UseFragmentResult<TData>>(() =>
+  const resultRef = React.useRef<UseFragmentResult<TData>>(
     diffToResult(cache.diff<TData>(diffOptions))
   );
-  // explain the timing issue: since next is async, we need to make sure that we
-  // get the correct diff on next render given new diffOptions
+  // Since .next is async, we need to make sure that we
+  // get the correct diff on the next render given new diffOptions
   React.useMemo(() => {
     resultRef.current = diffToResult(cache.diff<TData>(diffOptions));
   }, [diffOptions, cache]);

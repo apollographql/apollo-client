@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.9.7
+
+### Patch Changes
+
+- [#11659](https://github.com/apollographql/apollo-client/pull/11659) [`652a61e`](https://github.com/apollographql/apollo-client/commit/652a61e96db0f0e27d0a22fafae1df388f3fdf36) Thanks [@phryneas](https://github.com/phryneas)! - Make `useRenderGuard` more resilient to changes in React internals.
+
+- [#11594](https://github.com/apollographql/apollo-client/pull/11594) [`50b1097`](https://github.com/apollographql/apollo-client/commit/50b10970ca0efa290ae415ef801650327a89ab8e) Thanks [@alessbell](https://github.com/alessbell)! - Adds a fix for multipart subscriptions that terminate with payload: null
+
 ## 3.9.6
 
 ### Patch Changes

@@ -16,7 +16,11 @@ export function mask(
   return { data: masked };
 }
 
-function maskSelection(data: any, selectionSet: SelectionSetNode) {
+function maskSelection(data: any, selectionSet: SelectionSetNode): any {
+  if (Array.isArray(data)) {
+    return data.map((item) => maskSelection(item, selectionSet));
+  }
+
   return selectionSet.selections.reduce(
     (masked, selection) => {
       switch (selection.kind) {

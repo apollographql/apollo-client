@@ -41,7 +41,7 @@ test("strips fragment data from nested object", () => {
   expect(data).toEqual({ user: { __typename: "User", id: 1 } });
 });
 
-test.skip("strips fragment data from arrays", () => {
+test("strips fragment data from arrays", () => {
   const query = gql`
     query {
       users {

@@ -13,7 +13,6 @@ import { Observable } from "../utilities";
 import { ApolloLink } from "../link/core";
 import { HttpLink } from "../link/http";
 import { InMemoryCache } from "../cache";
-import { concatPagination } from "../utilities";
 import { itAsync } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
@@ -2176,12 +2175,6 @@ describe("ApolloClient", () => {
   });
 
   describe("watchFragment", () => {
-    type Item = {
-      __typename: string;
-      id: number;
-      text?: string;
-    };
-
     it("if all data is available, `complete` is `true`", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({

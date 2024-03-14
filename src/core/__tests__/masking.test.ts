@@ -238,25 +238,21 @@ test("does not strip inline fragments", () => {
   });
 });
 
-test.skip("does nothing if there are no fragments to mask", () => {
+test("does nothing if there are no fragments to mask", () => {
   const query = gql`
     query {
       user {
+        __typename
         id
         name
       }
     }
   `;
 
-  const originalData = {
-    user: {
-      __typename: "User",
-      id: 1,
-      name: "Test User",
-    },
-  };
-
-  const { data } = mask(originalData, query);
+  const { data } = mask(
+    { user: { __typename: "User", id: 1, name: "Test User" } },
+    query
+  );
 
   expect(data).toEqual({
     user: { __typename: "User", id: 1, name: "Test User" },

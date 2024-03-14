@@ -58,7 +58,7 @@ export interface ApolloClientOptions<TCacheShape> {
    */
   headers?: Record<string, string>;
   /**
-   * You can provide an {@link ApolloLink} instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
+   * You can provide an `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
    *
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
    */
@@ -128,14 +128,17 @@ export interface ApolloClientOptions<TCacheShape> {
 // solution is to reexport mergeOptions where it was previously declared (here).
 import { mergeOptions } from "../utilities/index.js";
 import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
-import type { WatchFragmentOptions } from "../cache/core/cache.js";
+import type {
+  WatchFragmentOptions,
+  WatchFragmentResult,
+} from "../cache/core/cache.js";
 export { mergeOptions };
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries
- * and mutations) to a GraphQL spec-compliant server over an {@link ApolloLink} instance,
+ * and mutations) to a GraphQL spec-compliant server over an `ApolloLink` instance,
  * receive results from the server and cache the results in a store. It also delivers updates
- * to GraphQL queries through {@link Observable} instances.
+ * to GraphQL queries through `Observable` instances.
  */
 export class ApolloClient<TCacheShape> implements DataProxy {
   public link: ApolloLink;
@@ -153,7 +156,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   private localState: LocalState<TCacheShape>;
 
   /**
-   * Constructs an instance of {@link ApolloClient}.
+   * Constructs an instance of `ApolloClient`.
    *
    * @example
    * ```js
@@ -355,7 +358,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * This watches the cache store of the query according to the options specified and
-   * returns an {@link ObservableQuery}. We can subscribe to this {@link ObservableQuery} and
+   * returns an `ObservableQuery`. We can subscribe to this `ObservableQuery` and
    * receive updated results through a GraphQL observer when the cache store changes.
    *
    * Note that this method is not an implementation of GraphQL subscriptions. Rather,
@@ -397,7 +400,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * returns a `Promise` which is either resolved with the resulting data
    * or rejected with an error.
    *
-   * @param options - An object of type {@link QueryOptions} that allows us to
+   * @param options - An object of type `QueryOptions` that allows us to
    * describe how this query should be treated e.g. whether it should hit the
    * server at all or just resolve from the cache, etc.
    */
@@ -450,7 +453,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * This subscribes to a graphql subscription according to the options specified and returns an
-   * {@link Observable} which either emits received data or an error.
+   * `Observable` which either emits received data or an error.
    */
   public subscribe<
     T = any,
@@ -477,8 +480,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * Watches the cache store of the fragment according to the options specified
-   * and returns an {@link Observable}. We can subscribe to this
-   * {@link Observable} and receive updated results through a GraphQL
+   * and returns an Observable. We can subscribe to this
+   * Observable and receive updated results through a GraphQL
    * observer when the cache store changes.
    *
    * You must pass in a GraphQL document with a single fragment or a document
@@ -486,7 +489,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    *
-   * @param options - An object of type {@link WatchFragmentOptions} that allows
+   * @since 3.10.0
+   * @param options - An object of type `WatchFragmentOptions` that allows
    * the cache to identify the fragment and optionally specify whether to react
    * to optimistic updates.
    */
@@ -494,7 +498,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public watchFragment<
     TFragmentData = unknown,
     TVariables = OperationVariables,
-  >(options: WatchFragmentOptions<TFragmentData, TVariables>) {
+  >(
+    options: WatchFragmentOptions<TFragmentData, TVariables>
+  ): Observable<WatchFragmentResult<TFragmentData>> {
     return this.cache.watchFragment<TFragmentData, TVariables>(options);
   }
 

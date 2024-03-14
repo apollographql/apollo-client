@@ -188,6 +188,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
+  /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
   public watchFragment<TData = any, TVars = OperationVariables>(
     options: WatchFragmentOptions<TData, TVars>
   ): Observable<WatchFragmentResult<TData>> {

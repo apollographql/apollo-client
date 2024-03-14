@@ -30,7 +30,7 @@ function maskSelection(data: any, selectionSet: SelectionSetNode): any {
 
           masked[keyName] =
             childSelectionSet ?
-              maskSelection({ ...data[keyName] }, childSelectionSet)
+              maskSelection(data[keyName], childSelectionSet)
             : data[keyName];
 
           return masked;

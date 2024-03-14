@@ -74,7 +74,7 @@ test("strips fragment data from arrays", () => {
   });
 });
 
-test.skip("strips multiple fragments in the same selection set", () => {
+test("strips multiple fragments in the same selection set", () => {
   const query = gql`
     query {
       user {
@@ -111,7 +111,7 @@ test.skip("strips multiple fragments in the same selection set", () => {
   });
 });
 
-test.skip("strips multiple fragments across different selection sets", () => {
+test("strips multiple fragments across different selection sets", () => {
   const query = gql`
     query {
       user {
@@ -157,7 +157,7 @@ test.skip("strips multiple fragments across different selection sets", () => {
   });
 });
 
-test.skip("leaves overlapping fields in query", () => {
+test("leaves overlapping fields in query", () => {
   const query = gql`
     query {
       user {

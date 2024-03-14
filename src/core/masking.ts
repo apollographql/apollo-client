@@ -30,10 +30,13 @@ function maskSelection(data: any, selectionSet: SelectionSetNode): any {
 
           masked[keyName] =
             childSelectionSet ?
-              maskSelection(data[keyName], childSelectionSet)
+              maskSelection({ ...data[keyName] }, childSelectionSet)
             : data[keyName];
 
           return masked;
+        }
+        case Kind.INLINE_FRAGMENT: {
+          return { ...masked, ...maskSelection(data, selection.selectionSet) };
         }
         default:
           return masked;

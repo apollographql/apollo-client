@@ -191,7 +191,7 @@ test.skip("leaves overlapping fields in query", () => {
   });
 });
 
-test.skip("does not strip inline fragments", () => {
+test("does not strip inline fragments", () => {
   const query = gql`
     query {
       user {
@@ -226,7 +226,15 @@ test.skip("does not strip inline fragments", () => {
   );
 
   expect(data).toEqual({
-    user: { __typename: "User", id: 1, birthdate: "1990-01-01" },
+    user: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+    },
+    profile: {
+      __typename: "UserProfile",
+      avatarUrl: "https://example.com/avatar.jpg",
+    },
   });
 });
 

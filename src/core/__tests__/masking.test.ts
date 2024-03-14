@@ -22,6 +22,7 @@ test.skip("strips fragment data from nested object", () => {
   const query = gql`
     query {
       user {
+        __typename
         id
         ...UserFields
       }
@@ -44,6 +45,7 @@ test.skip("strips fragment data from arrays", () => {
   const query = gql`
     query {
       users {
+        __typename
         id
         ...UserFields
       }
@@ -76,6 +78,7 @@ test.skip("strips multiple fragments in the same selection set", () => {
   const query = gql`
     query {
       user {
+        __typename
         id
         ...UserProfileFields
         ...UserAvatarFields
@@ -112,10 +115,12 @@ test.skip("strips multiple fragments across different selection sets", () => {
   const query = gql`
     query {
       user {
+        __typename
         id
         ...UserFields
       }
       post {
+        __typename
         id
         ...PostFields
       }
@@ -156,6 +161,7 @@ test.skip("leaves overlapping fields in query", () => {
   const query = gql`
     query {
       user {
+        __typename
         id
         birthdate
         ...UserProfileFields
@@ -189,12 +195,14 @@ test.skip("does not strip inline fragments", () => {
   const query = gql`
     query {
       user {
+        __typename
         id
         ... @defer {
           name
         }
       }
       profile {
+        __typename
         ... on UserProfile {
           avatarUrl
         }
@@ -251,10 +259,12 @@ test.skip("maintains referential equality on subtrees that did not change", () =
   const query = gql`
     query {
       user {
+        __typename
         id
         ...UserFields
       }
       post {
+        __typename
         id
         title
       }
@@ -280,6 +290,7 @@ test.skip("maintains referential equality the entire result if there are no frag
   const query = gql`
     query {
       user {
+        __typename
         id
         name
       }

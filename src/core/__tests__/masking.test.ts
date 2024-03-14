@@ -18,7 +18,7 @@ test("strips top-level fragment data from query", () => {
   expect(data).toEqual({ foo: true });
 });
 
-test.skip("strips fragment data from nested object", () => {
+test("strips fragment data from nested object", () => {
   const query = gql`
     query {
       user {

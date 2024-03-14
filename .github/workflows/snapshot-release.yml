@@ -110,4 +110,8 @@ jobs:
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
-            A new release has been made for this PR. You can install it with `npm i @apollo/client@${{ steps.get-version.outputs.version }}`.
+            A new release has been made for this PR. You can install it with:
+
+            ```
+            npm i @apollo/client@${{ steps.get-version.outputs.version }}
+            ```

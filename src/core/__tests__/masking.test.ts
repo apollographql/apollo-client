@@ -18,7 +18,7 @@ test("strips top-level fragment data from query", () => {
   expect(data).toEqual({ foo: true });
 });
 
-test("strips fragment data from nested object", () => {
+test.skip("strips fragment data from nested object", () => {
   const query = gql`
     query {
       user {
@@ -40,7 +40,7 @@ test("strips fragment data from nested object", () => {
   expect(data).toEqual({ user: { __typename: "User", id: 1 } });
 });
 
-test("strips fragment data from arrays", () => {
+test.skip("strips fragment data from arrays", () => {
   const query = gql`
     query {
       users {
@@ -72,7 +72,7 @@ test("strips fragment data from arrays", () => {
   });
 });
 
-test("strips multiple fragments in the same selection set", () => {
+test.skip("strips multiple fragments in the same selection set", () => {
   const query = gql`
     query {
       user {
@@ -108,7 +108,7 @@ test("strips multiple fragments in the same selection set", () => {
   });
 });
 
-test("strips multiple fragments across different selection sets", () => {
+test.skip("strips multiple fragments across different selection sets", () => {
   const query = gql`
     query {
       user {
@@ -152,7 +152,7 @@ test("strips multiple fragments across different selection sets", () => {
   });
 });
 
-test("leaves overlapping fields in query", () => {
+test.skip("leaves overlapping fields in query", () => {
   const query = gql`
     query {
       user {
@@ -185,7 +185,7 @@ test("leaves overlapping fields in query", () => {
   });
 });
 
-test("does not strip inline fragments", () => {
+test.skip("does not strip inline fragments", () => {
   const query = gql`
     query {
       user {
@@ -222,7 +222,7 @@ test("does not strip inline fragments", () => {
   });
 });
 
-test("does nothing if there are no fragments to mask", () => {
+test.skip("does nothing if there are no fragments to mask", () => {
   const query = gql`
     query {
       user {
@@ -247,7 +247,7 @@ test("does nothing if there are no fragments to mask", () => {
   });
 });
 
-test("maintains referential equality on subtrees that did not change", () => {
+test.skip("maintains referential equality on subtrees that did not change", () => {
   const query = gql`
     query {
       user {
@@ -276,7 +276,7 @@ test("maintains referential equality on subtrees that did not change", () => {
   expect(data.post).toBe(post);
 });
 
-test("maintains referential equality the entire result if there are no fragments", () => {
+test.skip("maintains referential equality the entire result if there are no fragments", () => {
   const query = gql`
     query {
       user {

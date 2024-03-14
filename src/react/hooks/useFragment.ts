@@ -13,6 +13,7 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
 import { useDeepMemo, wrapHook } from "./internal/index.js";
+import equal from "@wry/equality";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -100,6 +101,7 @@ function _useFragment<TData = any, TVars = OperationVariables>(
         let lastTimeout = 0;
         const subscription = cache.watchFragment(options).subscribe({
           next: (result) => {
+            if (equal(result, resultRef.current)) return;
             resultRef.current = result;
             // If we get another update before we've re-rendered, bail out of
             // the update and try again. This ensures that the relative timing

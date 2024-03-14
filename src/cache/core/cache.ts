@@ -48,7 +48,6 @@ export interface WatchFragmentOptions<TData, TVars> {
   canonizeResults?: boolean;
 }
 
-// todo: refactor duplicated type, see UseFragmentResult
 export type WatchFragmentResult<TData> =
   | {
       data: TData;
@@ -201,7 +200,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       optimistic,
     };
 
-    let latestDiff = this.diff<TData>(diffOptions);
+    let latestDiff: DataProxy.DiffResult<TData> | undefined;
 
     return new Observable((observer) => {
       return this.watch<TData, TVars>({

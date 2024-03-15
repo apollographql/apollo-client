@@ -16,6 +16,7 @@
   git clone https://github.com/apollographql/docs --branch main --single-branch monodocs
   cd monodocs
   npm i
+  npm audit fix --force
   cp -r ../docs local
   DOCS_LOCAL=true npm run build \
   """

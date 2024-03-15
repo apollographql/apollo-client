@@ -16,40 +16,56 @@ export function mask(
   return { data: masked };
 }
 
-function maskSelection(
-  data: any,
-  selectionSet: SelectionSetNode,
-  known = new WeakMap<SelectionSetNode, any>()
-): any {
-  if (known.has(selectionSet)) {
-    return known.get(selectionSet)!;
-  }
+function maskSelection(data: any, selectionSet: SelectionSetNode): any {
+  let modified = false;
 
   if (Array.isArray(data)) {
-    return data.map((item) => maskSelection(item, selectionSet));
+    const array: any[] = [];
+
+    data.forEach((value, index) => {
+      const result = maskSelection(value, selectionSet);
+      modified ||= result !== value;
+      array[index] = result;
+    });
+
+    if (modified) {
+      return array;
+    }
+
+    return data;
   }
 
-  return selectionSet.selections.reduce(
-    (masked, selection) => {
-      switch (selection.kind) {
-        case Kind.FIELD: {
-          const keyName = resultKeyNameFromField(selection);
-          const childSelectionSet = selection.selectionSet;
+  const obj = Object.create(Object.getPrototypeOf(data));
+  selectionSet.selections.forEach((selection) => {
+    switch (selection.kind) {
+      case Kind.FIELD: {
+        const keyName = resultKeyNameFromField(selection);
+        const childSelectionSet = selection.selectionSet;
 
-          masked[keyName] =
-            childSelectionSet ?
-              maskSelection(data[keyName], childSelectionSet)
-            : data[keyName];
+        const result =
+          childSelectionSet ?
+            maskSelection(data[keyName], childSelectionSet)
+          : data[keyName];
+        modified ||= result !== data[keyName];
+        obj[keyName] = result;
 
-          return masked;
-        }
-        case Kind.INLINE_FRAGMENT: {
-          return { ...masked, ...maskSelection(data, selection.selectionSet) };
-        }
-        default:
-          return masked;
+        break;
       }
-    },
-    {} as typeof data
-  );
+      case Kind.INLINE_FRAGMENT: {
+        const result = maskSelection(data, selection.selectionSet);
+        modified ||= result !== data;
+        Object.assign(obj, result);
+
+        break;
+      }
+      case Kind.FRAGMENT_SPREAD: {
+        // We are omitting the data in the fragment spread, so this acts as
+        // modifying the original data object
+        modified = true;
+        break;
+      }
+    }
+  });
+
+  return modified ? obj : data;
 }

@@ -259,7 +259,7 @@ test("does nothing if there are no fragments to mask", () => {
   });
 });
 
-test.skip("maintains referential equality on subtrees that did not change", () => {
+test("maintains referential equality on subtrees that did not change", () => {
   const query = gql`
     query {
       user {
@@ -305,7 +305,7 @@ test.skip("maintains referential equality on subtrees that did not change", () =
   expect(data.authors).toBe(authors);
 });
 
-test.skip("maintains referential equality the entire result if there are no fragments", () => {
+test("maintains referential equality the entire result if there are no fragments", () => {
   const query = gql`
     query {
       user {

@@ -16,7 +16,15 @@ export function mask(
   return { data: masked };
 }
 
-function maskSelection(data: any, selectionSet: SelectionSetNode): any {
+function maskSelection(
+  data: any,
+  selectionSet: SelectionSetNode,
+  known = new WeakMap<SelectionSetNode, any>()
+): any {
+  if (known.has(selectionSet)) {
+    return known.get(selectionSet)!;
+  }
+
   if (Array.isArray(data)) {
     return data.map((item) => maskSelection(item, selectionSet));
   }

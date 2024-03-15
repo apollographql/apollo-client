@@ -1703,22 +1703,18 @@ type VariableMatcher<V = Record<string, any>> = (variables: V) => boolean;
 // @public (undocumented)
 export function wait(ms: number): Promise<void>;
 
-// @public (undocumented)
+// @public
 interface WatchFragmentOptions<TData, TVars> {
     // @deprecated (undocumented)
     canonizeResults?: boolean;
-    // (undocumented)
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-    // (undocumented)
     fragmentName?: string;
-    // (undocumented)
     from: StoreObject | Reference | string;
-    // (undocumented)
     optimistic?: boolean;
     variables?: TVars;
 }
 
-// @public (undocumented)
+// @public
 type WatchFragmentResult<TData> = {
     data: TData;
     complete: true;

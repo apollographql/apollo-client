@@ -26,14 +26,38 @@ import type { MissingTree } from "./types/common.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
+/**
+ * Watched fragment options.
+ */
 export interface WatchFragmentOptions<TData, TVars> {
+  /**
+   * **Required.** A GraphQL fragment document parsed into an AST with the `gql`
+   * template literal.
+   */
   fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+  /**
+   * **Required.** An object containing a `__typename` and primary key fields
+   * (such as `id`) identifying the entity object from which the fragment will
+   * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID
+   * (uncommon).
+   */
   from: StoreObject | Reference | string;
   /**
-   * Any variables that the GraphQL query may depend on.
+   * Any variables that the GraphQL fragment may depend on.
    */
   variables?: TVars;
+  /**
+   * The name of the fragment defined in the fragment document.
+   *
+   * **Required** if the fragment document includes more than one fragment,
+   * optional otherwise.
+   */
   fragmentName?: string;
+  /**
+   * If `true`, `watchFragment` returns optimistic results.
+   *
+   * The default value is `true`.
+   */
   optimistic?: boolean;
   /**
    * @deprecated
@@ -48,6 +72,9 @@ export interface WatchFragmentOptions<TData, TVars> {
   canonizeResults?: boolean;
 }
 
+/**
+ * Watched fragment results.
+ */
 export type WatchFragmentResult<TData> =
   | {
       data: TData;

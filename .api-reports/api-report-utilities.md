@@ -2572,22 +2572,18 @@ export function valueToObjectRepresentation(argObj: any, name: NameNode, value: 
 // @public (undocumented)
 export type VariableValue = (node: VariableNode) => any;
 
-// @public (undocumented)
+// @public
 interface WatchFragmentOptions<TData, TVars> {
     // @deprecated (undocumented)
     canonizeResults?: boolean;
-    // (undocumented)
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-    // (undocumented)
     fragmentName?: string;
-    // (undocumented)
     from: StoreObject | Reference | string;
-    // (undocumented)
     optimistic?: boolean;
     variables?: TVars;
 }
 
-// @public (undocumented)
+// @public
 type WatchFragmentResult<TData> = {
     data: TData;
     complete: true;

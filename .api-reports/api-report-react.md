@@ -2367,22 +2367,18 @@ TVariables
     variables: TVariables;
 };
 
-// @public (undocumented)
+// @public
 interface WatchFragmentOptions<TData, TVars> {
     // @deprecated (undocumented)
     canonizeResults?: boolean;
-    // (undocumented)
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-    // (undocumented)
     fragmentName?: string;
-    // (undocumented)
     from: StoreObject | Reference | string;
-    // (undocumented)
     optimistic?: boolean;
     variables?: TVars;
 }
 
-// @public (undocumented)
+// @public
 type WatchFragmentResult<TData> = {
     data: TData;
     complete: true;

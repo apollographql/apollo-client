@@ -1,5 +1,5 @@
 import { mask } from "../masking.js";
-import { gql } from "../index.js";
+import { InMemoryCache, gql } from "../index.js";
 
 test("strips top-level fragment data from query", () => {
   const query = gql`
@@ -13,7 +13,11 @@ test("strips top-level fragment data from query", () => {
     }
   `;
 
-  const { data } = mask({ foo: true, bar: true }, query);
+  const { data } = mask(
+    { foo: true, bar: true },
+    query,
+    new InMemoryCache().policies
+  );
 
   expect(data).toEqual({ foo: true });
 });
@@ -35,7 +39,8 @@ test("strips fragment data from nested object", () => {
 
   const { data } = mask(
     { user: { __typename: "User", id: 1, name: "Test User" } },
-    query
+    query,
+    new InMemoryCache().policies
   );
 
   expect(data).toEqual({ user: { __typename: "User", id: 1 } });
@@ -63,7 +68,8 @@ test("strips fragment data from arrays", () => {
         { __typename: "User", id: 2, name: "Test User 2" },
       ],
     },
-    query
+    query,
+    new InMemoryCache().policies
   );
 
   expect(data).toEqual({
@@ -103,7 +109,8 @@ test("strips multiple fragments in the same selection set", () => {
         avatarUrl: "https://example.com/avatar.jpg",
       },
     },
-    query
+    query,
+    new InMemoryCache().policies
   );
 
   expect(data).toEqual({
@@ -148,7 +155,8 @@ test("strips multiple fragments across different selection sets", () => {
         title: "Test Post",
       },
     },
-    query
+    query,
+    new InMemoryCache().policies
   );
 
   expect(data).toEqual({
@@ -183,7 +191,8 @@ test("leaves overlapping fields in query", () => {
         name: "Test User",
       },
     },
-    query
+    query,
+    new InMemoryCache().policies
   );
 
   expect(data).toEqual({
@@ -291,7 +300,8 @@ test("strips named fragments inside inline fragments", () => {
         industry: { __typename: "TechIndustry", primaryLanguage: "TypeScript" },
       },
     },
-    query
+    query,
+    new InMemoryCache().policies
   );
 
   expect(data).toEqual({
@@ -317,8 +327,18 @@ test("handles overlapping fields inside multiple inline fragments", () => {
         ... @defer {
           amount
         }
-        ... on Latte {
+        ... on Espresso {
           milkType
+          ... on Latte {
+            flavor {
+              __typename
+              name
+              ...FlavorFields
+            }
+          }
+          ... on Cappucinno {
+            roast
+          }
         }
         ... on Latte {
           ... @defer {
@@ -342,32 +362,74 @@ test("handles overlapping fields inside multiple inline fragments", () => {
     fragment HotChocolateFields on HotChocolate {
       chocolateType
     }
+
+    fragment FlavorFields on Flavor {
+      sweetness
+    }
   `;
 
   const { data } = mask(
     {
       drinks: [
-        { __typename: "Latte", id: 1, amount: 12, shots: 2, milkType: "Cow" },
-        { __typename: "Juice", id: 2, amount: 10, fruitBase: "Apple" },
+        {
+          __typename: "Latte",
+          id: 1,
+          amount: 12,
+          shots: 2,
+          milkType: "Cow",
+          flavor: {
+            __typename: "Flavor",
+            name: "Cookie Butter",
+          },
+        },
+        {
+          __typename: "Cappucinno",
+          id: 2,
+          amount: 12,
+          shots: 2,
+          milkType: "Cow",
+          roast: "medium",
+        },
+        { __typename: "Juice", id: 3, amount: 10, fruitBase: "Apple" },
         {
           __typename: "HotChocolate",
-          id: 3,
+          id: 4,
           amount: 8,
           milkType: "Cow",
           chocolateType: "dark",
         },
       ],
     },
-    query
+    query,
+    new InMemoryCache().policies
   );
 
   expect(data).toEqual({
     drinks: [
-      { __typename: "Latte", id: 1, amount: 12, shots: 2, milkType: "Cow" },
-      { __typename: "Juice", id: 2, amount: 10 },
+      {
+        __typename: "Latte",
+        id: 1,
+        amount: 12,
+        shots: 2,
+        milkType: "Cow",
+        flavor: {
+          __typename: "Flavor",
+          name: "Cookie Butter",
+          sweetness: "medium",
+        },
+      },
+      {
+        __typename: "Cappucinno",
+        id: 2,
+        amount: 12,
+        shots: 2,
+        milkType: "Cow",
+        roast: "medium",
+      },
+      { __typename: "Juice", id: 3, amount: 10 },
       {
         __typename: "HotChocolate",
-        id: 3,
+        id: 4,
         amount: 8,
         milkType: "Cow",
       },
@@ -388,7 +450,8 @@ test("does nothing if there are no fragments to mask", () => {
 
   const { data } = mask(
     { user: { __typename: "User", id: 1, name: "Test User" } },
-    query
+    query,
+    new InMemoryCache().policies
   );
 
   expect(data).toEqual({
@@ -466,7 +529,7 @@ test.skip("maintains referential equality on subtrees that did not change", () =
   ];
   const originalData = { user, post, authors, industries };
 
-  const { data } = mask(originalData, query);
+  const { data } = mask(originalData, query, new InMemoryCache().policies);
 
   expect(data).toEqual({
     user: {
@@ -516,7 +579,7 @@ test.skip("maintains referential equality the entire result if there are no frag
     },
   };
 
-  const { data } = mask(originalData, query);
+  const { data } = mask(originalData, query, new InMemoryCache().policies);
 
   expect(data).toBe(originalData);
 });

@@ -1,29 +1,31 @@
 import { Kind } from "graphql";
-import type {
-  FragmentDefinitionNode,
-  InlineFragmentNode,
-  SelectionSetNode,
-} from "graphql";
+import type { SelectionSetNode } from "graphql";
 import {
   getMainDefinition,
   resultKeyNameFromField,
 } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
+import type { Policies } from "../cache/index.js";
 
 export function mask(
   data: Record<string, unknown>,
-  document: TypedDocumentNode<any> | DocumentNode
+  document: TypedDocumentNode<any> | DocumentNode,
+  policies: Policies
 ) {
   const definition = getMainDefinition(document);
-  const masked = maskSelectionSet(data, definition.selectionSet);
+  const masked = maskSelectionSet(data, definition.selectionSet, policies);
 
   return { data: masked };
 }
 
-function maskSelectionSet(data: any, selectionSet: SelectionSetNode): any {
+function maskSelectionSet(
+  data: any,
+  selectionSet: SelectionSetNode,
+  policies: Policies
+): any {
   if (Array.isArray(data)) {
     return data.map((item) => {
-      return maskSelectionSet(item, selectionSet);
+      return maskSelectionSet(item, selectionSet, policies);
     });
   }
 
@@ -36,36 +38,25 @@ function maskSelectionSet(data: any, selectionSet: SelectionSetNode): any {
 
           memo[keyName] =
             childSelectionSet ?
-              maskSelectionSet(data[keyName], childSelectionSet)
+              maskSelectionSet(data[keyName], childSelectionSet, policies)
             : data[keyName];
 
           return memo;
         }
         case Kind.INLINE_FRAGMENT: {
-          if (!matchesTypeCondition(data, selection)) {
+          if (!policies.fragmentMatches(selection, data.__typename, data)) {
             return memo;
           }
 
-          return { ...memo, ...maskSelectionSet(data, selection.selectionSet) };
+          return {
+            ...memo,
+            ...maskSelectionSet(data, selection.selectionSet, policies),
+          };
         }
         default:
           return memo;
       }
     },
     Object.create(Object.getPrototypeOf(data))
-  );
-}
-
-function matchesTypeCondition(
-  data: Record<string, unknown>,
-  fragment: InlineFragmentNode | FragmentDefinitionNode
-) {
-  if (!fragment.typeCondition) {
-    return true;
-  }
-
-  return (
-    "__typename" in data &&
-    data.__typename === fragment.typeCondition.name.value
   );
 }

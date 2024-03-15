@@ -2295,11 +2295,9 @@ describe("ApolloClient", () => {
         });
       }
 
-      const handleNext = jest.fn();
-
-      observable.subscribe(handleNext);
-
-      expect(handleNext).toHaveBeenCalledTimes(0);
+      await expect(stream.takeNext({ timeout: 1000 })).rejects.toEqual(
+        expect.any(Error)
+      );
     });
     it("does not react to updates to @nonreactive fields", async () => {
       const cache = new InMemoryCache();

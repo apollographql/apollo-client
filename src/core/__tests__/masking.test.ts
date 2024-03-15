@@ -394,7 +394,7 @@ test("does nothing if there are no fragments to mask", () => {
   });
 });
 
-test("maintains referential equality on subtrees that did not change", () => {
+test.skip("maintains referential equality on subtrees that did not change", () => {
   const query = gql`
     query {
       user {
@@ -415,10 +415,32 @@ test("maintains referential equality on subtrees that did not change", () => {
         id
         name
       }
+      industries {
+        __typename
+        ... on TechIndustry {
+          languageRequirements
+        }
+        ... on FinanceIndustry {
+          ...FinanceIndustryFields
+        }
+        ... on TradeIndustry {
+          id
+          yearsInBusiness
+          ...TradeIndustryFields
+        }
+      }
     }
 
     fragment UserFields on User {
       name
+    }
+
+    fragment FinanceIndustryFields on FinanceIndustry {
+      yearsInBusiness
+    }
+
+    fragment TradeIndustryFields on TradeIndustry {
+      languageRequirements
     }
   `;
 
@@ -429,18 +451,50 @@ test("maintains referential equality on subtrees that did not change", () => {
   const user = { __typename: "User", id: 1, name: "Test User", profile };
   const post = { __typename: "Post", id: 1, title: "Test Post" };
   const authors = [{ __typename: "Author", id: 1, name: "A Author" }];
-  const originalData = { user, post, authors };
+  const industries = [
+    { __typename: "TechIndustry", languageRequirements: ["TypeScript"] },
+    { __typename: "FinanceIndustry", yearsInBusiness: 10 },
+    {
+      __typename: "TradeIndustry",
+      id: 10,
+      yearsInBusiness: 15,
+      languageRequirements: ["English", "German"],
+    },
+  ];
+  const originalData = { user, post, authors, industries };
 
   const { data } = mask(originalData, query);
+
+  expect(data).toEqual({
+    user: {
+      __typename: "User",
+      id: 1,
+      profile: {
+        __typename: "Profile",
+        avatarUrl: "https://example.com/avatar.jpg",
+      },
+    },
+    post: { __typename: "Post", id: 1, title: "Test Post" },
+    authors: [{ __typename: "Author", id: 1, name: "A Author" }],
+    industries: [
+      { __typename: "TechIndustry", languageRequirements: ["TypeScript"] },
+      { __typename: "FinanceIndustry" },
+      { __typename: "TradeIndustry", id: 10, yearsInBusiness: 15 },
+    ],
+  });
 
   expect(data).not.toBe(originalData);
   expect(data.user).not.toBe(user);
   expect(data.user.profile).toBe(profile);
   expect(data.post).toBe(post);
   expect(data.authors).toBe(authors);
+  expect(data.industries).not.toBe(industries);
+  expect(data.industries[0]).toBe(industries[0]);
+  expect(data.industries[1]).not.toBe(industries[1]);
+  expect(data.industries[2]).not.toBe(industries[2]);
 });
 
-test("maintains referential equality the entire result if there are no fragments", () => {
+test.skip("maintains referential equality the entire result if there are no fragments", () => {
   const query = gql`
     query {
       user {

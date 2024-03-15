@@ -201,6 +201,10 @@ test("leaves overlapping fields in query", () => {
 });
 
 test("does not strip inline fragments", () => {
+  const cache = new InMemoryCache({
+    possibleTypes: { Profile: ["UserProfile"] },
+  });
+
   const query = gql`
     query {
       user {
@@ -231,7 +235,8 @@ test("does not strip inline fragments", () => {
         avatarUrl: "https://example.com/avatar.jpg",
       },
     },
-    query
+    query,
+    cache.policies
   );
 
   expect(data).toEqual({
@@ -248,6 +253,9 @@ test("does not strip inline fragments", () => {
 });
 
 test("strips named fragments inside inline fragments", () => {
+  const cache = new InMemoryCache({
+    possibleTypes: { Industry: ["TechIndustry"], Profile: ["UserProfile"] },
+  });
   const query = gql`
     query {
       user {
@@ -301,7 +309,7 @@ test("strips named fragments inside inline fragments", () => {
       },
     },
     query,
-    new InMemoryCache().policies
+    cache.policies
   );
 
   expect(data).toEqual({
@@ -319,6 +327,12 @@ test("strips named fragments inside inline fragments", () => {
 });
 
 test("handles overlapping fields inside multiple inline fragments", () => {
+  const cache = new InMemoryCache({
+    possibleTypes: {
+      Drink: ["Espresso", "Latte", "Cappucinno", "Juice", "HotChocolate"],
+      Espresso: ["Latte", "Cappucinno"],
+    },
+  });
   const query = gql`
     query {
       drinks {
@@ -380,13 +394,13 @@ test("handles overlapping fields inside multiple inline fragments", () => {
           flavor: {
             __typename: "Flavor",
             name: "Cookie Butter",
+            sweetness: "high",
           },
         },
         {
           __typename: "Cappucinno",
           id: 2,
           amount: 12,
-          shots: 2,
           milkType: "Cow",
           roast: "medium",
         },
@@ -401,7 +415,7 @@ test("handles overlapping fields inside multiple inline fragments", () => {
       ],
     },
     query,
-    new InMemoryCache().policies
+    cache.policies
   );
 
   expect(data).toEqual({
@@ -415,14 +429,12 @@ test("handles overlapping fields inside multiple inline fragments", () => {
         flavor: {
           __typename: "Flavor",
           name: "Cookie Butter",
-          sweetness: "medium",
         },
       },
       {
         __typename: "Cappucinno",
         id: 2,
         amount: 12,
-        shots: 2,
         milkType: "Cow",
         roast: "medium",
       },

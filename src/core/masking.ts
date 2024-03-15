@@ -1,5 +1,9 @@
 import { Kind } from "graphql";
-import type { NamedTypeNode, SelectionSetNode } from "graphql";
+import type {
+  FragmentDefinitionNode,
+  InlineFragmentNode,
+  SelectionSetNode,
+} from "graphql";
 import {
   getMainDefinition,
   resultKeyNameFromField,
@@ -38,10 +42,7 @@ function maskSelectionSet(data: any, selectionSet: SelectionSetNode): any {
           return memo;
         }
         case Kind.INLINE_FRAGMENT: {
-          if (
-            selection.typeCondition &&
-            !matchesTypeCondition(data, selection.typeCondition)
-          ) {
+          if (!matchesTypeCondition(data, selection)) {
             return memo;
           }
 
@@ -57,7 +58,14 @@ function maskSelectionSet(data: any, selectionSet: SelectionSetNode): any {
 
 function matchesTypeCondition(
   data: Record<string, unknown>,
-  node: NamedTypeNode
+  fragment: InlineFragmentNode | FragmentDefinitionNode
 ) {
-  return "__typename" in data && data.__typename === node.name.value;
+  if (!fragment.typeCondition) {
+    return true;
+  }
+
+  return (
+    "__typename" in data &&
+    data.__typename === fragment.typeCondition.name.value
+  );
 }

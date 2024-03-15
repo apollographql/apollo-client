@@ -238,6 +238,141 @@ test("does not strip inline fragments", () => {
   });
 });
 
+test("strips named fragments inside inline fragments", () => {
+  const query = gql`
+    query {
+      user {
+        __typename
+        id
+        ... @defer {
+          name
+          ...UserFields
+        }
+      }
+      profile {
+        __typename
+        ... on UserProfile {
+          avatarUrl
+          ...UserProfileFields
+        }
+        industry {
+          __typename
+          ... on TechIndustry {
+            ...TechIndustryFields
+          }
+        }
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+
+    fragment UserProfileFields on UserProfile {
+      hometown
+    }
+
+    fragment TechIndustryFields on TechIndustry {
+      favoriteLanguage
+    }
+  `;
+
+  const { data } = mask(
+    {
+      user: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+      profile: {
+        __typename: "UserProfile",
+        avatarUrl: "https://example.com/avatar.jpg",
+        industry: { __typename: "TechIndustry", primaryLanguage: "TypeScript" },
+      },
+    },
+    query
+  );
+
+  expect(data).toEqual({
+    user: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+    },
+    profile: {
+      __typename: "UserProfile",
+      avatarUrl: "https://example.com/avatar.jpg",
+      industry: { __typename: "TechIndustry" },
+    },
+  });
+});
+
+test.only("handles overlapping fields inside multiple inline fragments", () => {
+  const query = gql`
+    query {
+      drinks {
+        __typename
+        id
+        ... @defer {
+          amount
+        }
+        ... on Latte {
+          milkType
+        }
+        ... on Latte {
+          shots
+        }
+        ... on Juice {
+          ...JuiceFields
+        }
+        ... on HotChocolate {
+          milkType
+          ...HotChocolateFields
+        }
+      }
+    }
+
+    fragment JuiceFields on Juice {
+      fruitBase
+    }
+
+    fragment HotChocolateFields on HotChocolate {
+      chocolateType
+    }
+  `;
+
+  const { data } = mask(
+    {
+      drinks: [
+        { __typename: "Latte", id: 1, amount: 12, shots: 2, milkType: "Cow" },
+        { __typename: "Juice", id: 2, amount: 10, fruitBase: "Apple" },
+        {
+          __typename: "HotChocolate",
+          id: 3,
+          amount: 8,
+          milkType: "Cow",
+          chocolateType: "dark",
+        },
+      ],
+    },
+    query
+  );
+
+  expect(data).toEqual({
+    drinks: [
+      { __typename: "Latte", id: 1, amount: 12, shots: 2, milkType: "Cow" },
+      { __typename: "Juice", id: 2, amount: 10 },
+      {
+        __typename: "HotChocolate",
+        id: 3,
+        amount: 8,
+        milkType: "Cow",
+      },
+    ],
+  });
+});
+
 test("does nothing if there are no fragments to mask", () => {
   const query = gql`
     query {

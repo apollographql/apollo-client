@@ -403,6 +403,7 @@ test.skip("maintains referential equality on subtrees that did not change", () =
         __typename
         id
         profile {
+          __typename
           avatarUrl
         }
         ...UserFields

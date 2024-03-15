@@ -5,6 +5,9 @@
 [build.environment]
   NODE_VERSION = "18"
 
+[context.deploy-preview.environment]
+  NODE_VERSION = "16"
+
 [context.deploy-preview.build]
   base = "docs"
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF . ../src"
@@ -16,7 +19,6 @@
   git clone https://github.com/apollographql/docs --branch main --single-branch monodocs
   cd monodocs
   npm i
-  npm audit fix --force
   cp -r ../docs local
   DOCS_LOCAL=true npm run build \
   """

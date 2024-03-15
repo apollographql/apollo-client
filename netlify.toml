@@ -2,9 +2,6 @@
   publish = "docs/public"
   command = "npm run typedoc; npm run docmodel > docs/public/log.txt || true"
 
-[build.environment]
-  NODE_VERSION = "18"
-
 [context.deploy-preview.environment]
   NODE_VERSION = "16"
 

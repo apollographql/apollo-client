@@ -329,8 +329,15 @@ test("strips named fragments inside inline fragments", () => {
 test("handles overlapping fields inside multiple inline fragments", () => {
   const cache = new InMemoryCache({
     possibleTypes: {
-      Drink: ["Espresso", "Latte", "Cappucinno", "Juice", "HotChocolate"],
-      Espresso: ["Latte", "Cappucinno"],
+      Drink: [
+        "Espresso",
+        "Latte",
+        "Cappucinno",
+        "Cortado",
+        "Juice",
+        "HotChocolate",
+      ],
+      Espresso: ["Latte", "Cappucinno", "Cortado"],
     },
   });
   const query = gql`
@@ -352,6 +359,9 @@ test("handles overlapping fields inside multiple inline fragments", () => {
           }
           ... on Cappucinno {
             roast
+          }
+          ... on Cortado {
+            ...CortadoFields
           }
         }
         ... on Latte {
@@ -380,6 +390,10 @@ test("handles overlapping fields inside multiple inline fragments", () => {
     fragment FlavorFields on Flavor {
       sweetness
     }
+
+    fragment CortadoFields on Cortado {
+      temperature
+    }
   `;
 
   const { data } = mask(
@@ -404,10 +418,17 @@ test("handles overlapping fields inside multiple inline fragments", () => {
           milkType: "Cow",
           roast: "medium",
         },
-        { __typename: "Juice", id: 3, amount: 10, fruitBase: "Apple" },
+        {
+          __typename: "Cortado",
+          id: 3,
+          amount: 12,
+          milkType: "Cow",
+          temperature: 150,
+        },
+        { __typename: "Juice", id: 4, amount: 10, fruitBase: "Apple" },
         {
           __typename: "HotChocolate",
-          id: 4,
+          id: 5,
           amount: 8,
           milkType: "Cow",
           chocolateType: "dark",
@@ -438,10 +459,16 @@ test("handles overlapping fields inside multiple inline fragments", () => {
         milkType: "Cow",
         roast: "medium",
       },
-      { __typename: "Juice", id: 3, amount: 10 },
+      {
+        __typename: "Cortado",
+        id: 3,
+        amount: 12,
+        milkType: "Cow",
+      },
+      { __typename: "Juice", id: 4, amount: 10 },
       {
         __typename: "HotChocolate",
-        id: 4,
+        id: 5,
         amount: 8,
         milkType: "Cow",
       },

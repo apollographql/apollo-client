@@ -265,6 +265,9 @@ test.skip("maintains referential equality on subtrees that did not change", () =
       user {
         __typename
         id
+        profile {
+          avatarUrl
+        }
         ...UserFields
       }
       post {
@@ -284,7 +287,11 @@ test.skip("maintains referential equality on subtrees that did not change", () =
     }
   `;
 
-  const user = { __typename: "User", id: 1, name: "Test User" };
+  const profile = {
+    __typename: "Profile",
+    avatarUrl: "https://example.com/avatar.jpg",
+  };
+  const user = { __typename: "User", id: 1, name: "Test User", profile };
   const post = { __typename: "Post", id: 1, title: "Test Post" };
   const authors = [{ __typename: "Author", id: 1, name: "A Author" }];
   const originalData = { user, post, authors };
@@ -293,6 +300,7 @@ test.skip("maintains referential equality on subtrees that did not change", () =
 
   expect(data).not.toBe(originalData);
   expect(data.user).not.toBe(user);
+  expect(data.user.profile).toBe(profile);
   expect(data.post).toBe(post);
   expect(data.authors).toBe(authors);
 });

@@ -1,5 +1,5 @@
 import { Kind } from "graphql";
-import type { SelectionSetNode } from "graphql";
+import type { NamedTypeNode, SelectionSetNode } from "graphql";
 import {
   getMainDefinition,
   resultKeyNameFromField,
@@ -7,65 +7,57 @@ import {
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
 
 export function mask(
-  data: any,
+  data: Record<string, unknown>,
   document: TypedDocumentNode<any> | DocumentNode
 ) {
   const definition = getMainDefinition(document);
-  const masked = maskSelection(data, definition.selectionSet);
+  const masked = maskSelectionSet(data, definition.selectionSet);
 
   return { data: masked };
 }
 
-function maskSelection(data: any, selectionSet: SelectionSetNode): any {
-  let modified = false;
-
+function maskSelectionSet(data: any, selectionSet: SelectionSetNode): any {
   if (Array.isArray(data)) {
-    const array: any[] = [];
-
-    data.forEach((value, index) => {
-      const result = maskSelection(value, selectionSet);
-      modified ||= result !== value;
-      array[index] = result;
+    return data.map((item) => {
+      return maskSelectionSet(item, selectionSet);
     });
-
-    if (modified) {
-      return array;
-    }
-
-    return data;
   }
 
-  const obj = Object.create(Object.getPrototypeOf(data));
-  selectionSet.selections.forEach((selection) => {
-    switch (selection.kind) {
-      case Kind.FIELD: {
-        const keyName = resultKeyNameFromField(selection);
-        const childSelectionSet = selection.selectionSet;
+  return selectionSet.selections.reduce(
+    (memo, selection) => {
+      switch (selection.kind) {
+        case Kind.FIELD: {
+          const keyName = resultKeyNameFromField(selection);
+          const childSelectionSet = selection.selectionSet;
 
-        const result =
-          childSelectionSet ?
-            maskSelection(data[keyName], childSelectionSet)
-          : data[keyName];
-        modified ||= result !== data[keyName];
-        obj[keyName] = result;
+          memo[keyName] =
+            childSelectionSet ?
+              maskSelectionSet(data[keyName], childSelectionSet)
+            : data[keyName];
 
-        break;
+          return memo;
+        }
+        case Kind.INLINE_FRAGMENT: {
+          if (
+            selection.typeCondition &&
+            !matchesTypeCondition(data, selection.typeCondition)
+          ) {
+            return memo;
+          }
+
+          return { ...memo, ...maskSelectionSet(data, selection.selectionSet) };
+        }
+        default:
+          return memo;
       }
-      case Kind.INLINE_FRAGMENT: {
-        const result = maskSelection(data, selection.selectionSet);
-        modified ||= result !== data;
-        Object.assign(obj, result);
+    },
+    Object.create(Object.getPrototypeOf(data))
+  );
+}
 
-        break;
-      }
-      case Kind.FRAGMENT_SPREAD: {
-        // We are omitting the data in the fragment spread, so this acts as
-        // modifying the original data object
-        modified = true;
-        break;
-      }
-    }
-  });
-
-  return modified ? obj : data;
+function matchesTypeCondition(
+  data: Record<string, unknown>,
+  node: NamedTypeNode
+) {
+  return "__typename" in data && data.__typename === node.name.value;
 }

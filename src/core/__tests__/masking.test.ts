@@ -308,7 +308,7 @@ test("strips named fragments inside inline fragments", () => {
   });
 });
 
-test.only("handles overlapping fields inside multiple inline fragments", () => {
+test("handles overlapping fields inside multiple inline fragments", () => {
   const query = gql`
     query {
       drinks {
@@ -321,7 +321,9 @@ test.only("handles overlapping fields inside multiple inline fragments", () => {
           milkType
         }
         ... on Latte {
-          shots
+          ... @defer {
+            shots
+          }
         }
         ... on Juice {
           ...JuiceFields

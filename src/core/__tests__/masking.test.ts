@@ -272,6 +272,11 @@ test.skip("maintains referential equality on subtrees that did not change", () =
         id
         title
       }
+      authors {
+        __typename
+        id
+        name
+      }
     }
 
     fragment UserFields on User {
@@ -281,13 +286,15 @@ test.skip("maintains referential equality on subtrees that did not change", () =
 
   const user = { __typename: "User", id: 1, name: "Test User" };
   const post = { __typename: "Post", id: 1, title: "Test Post" };
-  const originalData = { user, post };
+  const authors = [{ __typename: "Author", id: 1, name: "A Author" }];
+  const originalData = { user, post, authors };
 
   const { data } = mask(originalData, query);
 
   expect(data).not.toBe(originalData);
   expect(data.user).not.toBe(user);
   expect(data.post).toBe(post);
+  expect(data.authors).toBe(authors);
 });
 
 test.skip("maintains referential equality the entire result if there are no fragments", () => {

@@ -141,10 +141,10 @@ export function PropertySignatureTable({
 
 PropertySignatureTable.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
+  idPrefix: PropTypes.string.isRequired,
   prefix: PropTypes.string,
   showHeaders: PropTypes.bool,
   display: PropTypes.oneOf(["parent", "child"]),
   customOrder: PropTypes.arrayOf(PropTypes.string),
-  idPrefix: PropTypes.string,
   genericNames: PropTypes.arrayOf(PropTypes.string),
 };

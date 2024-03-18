@@ -2217,6 +2217,70 @@ describe("ApolloClient", () => {
         });
       }
     });
+    it("cache writes emit a new value", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5",
+          },
+          complete: true,
+        });
+      }
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5 (edited)",
+        },
+      });
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5 (edited)",
+          },
+          complete: true,
+        });
+      }
+    });
     it("if only partial data is available, `complete` is `false`", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
@@ -2357,6 +2421,8 @@ describe("ApolloClient", () => {
           data: {
             __typename: "Item",
             id: 5,
+            // The @nonreactive directive can only be used on fields or fragment
+            // spreads in queries, and has no effect here
             text: "Item #5 (edited)",
           },
           complete: true,

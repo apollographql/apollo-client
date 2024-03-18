@@ -1212,7 +1212,7 @@ export class QueryManager<TStore> {
         const aqr: ApolloQueryResult<TData> = {
           data:
             this.dataMasking ?
-              mask(result.data, linkDocument, (this.cache as any).policies)
+              mask(result.data, linkDocument, (this.cache as any).policies).data
             : result.data,
           loading: false,
           networkStatus: NetworkStatus.ready,

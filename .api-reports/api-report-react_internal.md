@@ -333,7 +333,6 @@ type BackgroundQueryHookOptionsNoInfer<TData, TVariables extends OperationVariab
 // @public (undocumented)
 interface BaseQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends SharedWatchQueryOptions<TVariables, TData> {
     // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloClient"
     client?: ApolloClient<any>;
     context?: DefaultContext;
     ssr?: boolean;
@@ -1061,7 +1060,6 @@ interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TCon
     // Warning: (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
     update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
     // Warning: (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "MutationQueryReducersMap"
     updateQueries?: MutationQueryReducersMap<TData>;
     variables?: TVariables;
 }
@@ -1512,9 +1510,6 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
     variables?: TVariables;
 }
 
-// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "useBackgroundQuery"
-// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "useReadQuery"
-//
 // @public
 export interface QueryReference<TData = unknown, TVariables = unknown> {
     // @internal (undocumented)
@@ -1665,7 +1660,6 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
     fetchPolicy?: WatchQueryFetchPolicy;
     initialFetchPolicy?: WatchQueryFetchPolicy;
     // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "FetchPolicy"
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
     notifyOnNetworkStatusChange?: boolean;
     // @deprecated
@@ -1729,7 +1723,6 @@ type SubscribeToMoreOptions<TData = any, TSubscriptionVariables = OperationVaria
 // @public (undocumented)
 interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
     context?: DefaultContext;
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ErrorPolicy"
     errorPolicy?: ErrorPolicy;
     fetchPolicy?: FetchPolicy;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -1758,7 +1751,6 @@ type SuspenseQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first"
 interface SuspenseQueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
     // @deprecated
     canonizeResults?: boolean;
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloClient"
     client?: ApolloClient<any>;
     context?: DefaultContext;
     errorPolicy?: ErrorPolicy;
@@ -1918,7 +1910,6 @@ function useFragment<TData = any, TVars = OperationVariables>(options: UseFragme
 
 // @public (undocumented)
 interface UseFragmentOptions<TData, TVars> extends Omit<Cache_2.DiffOptions<NoInfer<TData>, NoInfer<TVars>>, "id" | "query" | "optimistic" | "previousResult" | "returnPartialData">, Omit<Cache_2.ReadFragmentOptions<TData, TVars>, "id" | "variables" | "returnPartialData"> {
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloClient"
     client?: ApolloClient<any>;
     // (undocumented)
     from: StoreObject | Reference | string;

@@ -29,7 +29,7 @@ import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
-import { profile, spyOnConsole } from "../../../testing/internal";
+import { profile, profileHook, spyOnConsole } from "../../../testing/internal";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -1357,6 +1357,61 @@ describe("useFragment", () => {
         "Item #5",
       ]);
     });
+  });
+
+  it("returns correct data when options change", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+    });
+    type User = { __typename: "User"; id: number; name: string };
+    const fragment: TypedDocumentNode<User> = gql`
+      fragment UserFragment on User {
+        id
+        name
+      }
+    `;
+
+    client.writeFragment({
+      fragment,
+      data: { __typename: "User", id: 1, name: "Alice" },
+    });
+
+    client.writeFragment({
+      fragment,
+      data: { __typename: "User", id: 2, name: "Charlie" },
+    });
+
+    const ProfiledHook = profileHook(({ id }: { id: number }) =>
+      useFragment({ fragment, from: { __typename: "User", id } })
+    );
+
+    const { rerender } = render(<ProfiledHook id={1} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+
+      expect(snapshot).toEqual({
+        complete: true,
+        data: { __typename: "User", id: 1, name: "Alice" },
+      });
+    }
+
+    rerender(<ProfiledHook id={2} />);
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+
+      expect(snapshot).toEqual({
+        complete: true,
+        data: { __typename: "User", id: 2, name: "Charlie" },
+      });
+    }
+
+    await expect(ProfiledHook).not.toRerender();
   });
 
   describe("tests with incomplete data", () => {

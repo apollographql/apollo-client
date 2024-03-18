@@ -5,7 +5,7 @@ import { itAsync, subscribeAndCount } from "../../../testing";
 import type { Observable } from "zen-observable-ts";
 import { ObservableQuery } from "../../../core";
 import { TextEncoder, TextDecoder } from "util";
-import { ReadableStream } from "web-streams-polyfill/ponyfill/es2018";
+import { ReadableStream } from "web-streams-polyfill";
 import { Readable } from "stream";
 
 var Blob = require("blob-polyfill").Blob;

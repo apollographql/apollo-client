@@ -2299,7 +2299,7 @@ describe("ApolloClient", () => {
         expect.any(Error)
       );
     });
-    it("does not react to updates to @nonreactive fields", async () => {
+    it("does not support the @nonreactive directive", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
@@ -2336,6 +2336,28 @@ describe("ApolloClient", () => {
             __typename: "Item",
             id: 5,
             text: "Item #5",
+          },
+          complete: true,
+        });
+      }
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5 (edited)",
+        },
+      });
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5 (edited)",
           },
           complete: true,
         });

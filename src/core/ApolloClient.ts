@@ -359,7 +359,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * This watches the cache store of the query according to the options specified and
    * returns an `ObservableQuery`. We can subscribe to this `ObservableQuery` and
-   * receive updated results through a GraphQL observer when the cache store changes.
+   * receive updated results through an observer when the cache store changes.
    *
    * Note that this method is not an implementation of GraphQL subscriptions. Rather,
    * it uses Apollo's store in order to reactively deliver updates to your query results.
@@ -480,8 +480,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   /**
    * Watches the cache store of the fragment according to the options specified
-   * and returns an Observable. We can subscribe to this
-   * Observable and receive updated results through a GraphQL
+   * and returns an `Observable`. We can subscribe to this
+   * `Observable` and receive updated results through an
    * observer when the cache store changes.
    *
    * You must pass in a GraphQL document with a single fragment or a document

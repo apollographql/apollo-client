@@ -154,20 +154,25 @@ export class InternalQueryReference<TData = unknown> {
   private subscription!: ObservableSubscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
+  private readonly autoDisposeTimeoutMs?: number;
 
   private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
   private references = 0;
+  private nbOfUse = 0;
 
   constructor(
     observable: ObservableQuery<TData, any>,
-    options: InternalQueryReferenceOptions
+    options: InternalQueryReferenceOptions,
+    trackUses: boolean = false
   ) {
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
+    this.autoDisposeTimeoutMs = options.autoDisposeTimeoutMs ?? 30_000;
+    this.nbOfUse = trackUses ? 1 : 0;
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;
@@ -176,23 +181,13 @@ export class InternalQueryReference<TData = unknown> {
     this.setResult();
     this.subscribeToQuery();
 
-    // Start a timer that will automatically dispose of the query if the
-    // suspended resource does not use this queryRef in the given time. This
-    // helps prevent memory leaks when a component has unmounted before the
-    // query has finished loading.
-    const startDisposeTimer = () => {
-      if (!this.references) {
-        this.autoDisposeTimeoutId = setTimeout(
-          this.dispose,
-          options.autoDisposeTimeoutMs ?? 30_000
-        );
-      }
-    };
-
     // We wait until the request has settled to ensure we don't dispose of the
     // query ref before the request finishes, otherwise we would leave the
     // promise in a pending state rendering the suspense boundary indefinitely.
-    this.promise.then(startDisposeTimer, startDisposeTimer);
+    this.promise.then(
+      this.startDisposeTimer.bind(this),
+      this.startDisposeTimer.bind(this)
+    );
   }
 
   get disposed() {
@@ -201,6 +196,19 @@ export class InternalQueryReference<TData = unknown> {
 
   get watchQueryOptions() {
     return this.observable.options;
+  }
+
+  // Start a timer that will automatically dispose of the query if the
+  // suspended resource does not use this queryRef in the given time. This
+  // helps prevent memory leaks when a component has unmounted before the
+  // query has finished loading.
+  startDisposeTimer() {
+    if (!this.references) {
+      this.autoDisposeTimeoutId = setTimeout(
+        this.dispose,
+        this.autoDisposeTimeoutMs ?? 30_000
+      );
+    }
   }
 
   reinitialize() {
@@ -249,6 +257,19 @@ export class InternalQueryReference<TData = unknown> {
         }
       });
     };
+  }
+
+  newUsage() {
+    this.nbOfUse++;
+    clearTimeout(this.autoDisposeTimeoutId);
+    this.startDisposeTimer();
+  }
+
+  disposeOnUnmount() {
+    this.nbOfUse--;
+    if (!this.nbOfUse && !this.references) {
+      this.dispose();
+    }
   }
 
   didChangeOptions(watchQueryOptions: ObservedOptions) {

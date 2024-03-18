@@ -15,7 +15,7 @@ import {
 } from "../internal/index.js";
 import type { CacheKey, QueryReference } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
-import { __use, wrapHook } from "./internal/index.js";
+import { wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
@@ -224,8 +224,10 @@ function _useBackgroundQuery<
     ...([] as any[]).concat(queryKey),
   ];
 
-  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-    client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
+  const queryRef = suspenseCache.getQueryRef(
+    cacheKey,
+    () => client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>),
+    true
   );
 
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(
@@ -260,6 +262,12 @@ function _useBackgroundQuery<
     },
     [queryRef]
   );
+
+  React.useEffect(() => {
+    return () => {
+      queryRef.disposeOnUnmount();
+    };
+  }, [queryRef]);
 
   return [
     didFetchResult.current ? wrappedQueryRef : void 0,

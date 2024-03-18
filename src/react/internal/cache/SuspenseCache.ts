@@ -30,19 +30,26 @@ export class SuspenseCache {
 
   getQueryRef<TData = any>(
     cacheKey: CacheKey,
-    createObservable: () => ObservableQuery<TData>
+    createObservable: () => ObservableQuery<TData>,
+    trackUses: boolean = false
   ) {
     const ref = this.queryRefs.lookupArray(cacheKey) as {
       current?: InternalQueryReference<TData>;
     };
 
     if (!ref.current) {
-      ref.current = new InternalQueryReference(createObservable(), {
-        autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
-        onDispose: () => {
-          delete ref.current;
+      ref.current = new InternalQueryReference(
+        createObservable(),
+        {
+          autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
+          onDispose: () => {
+            delete ref.current;
+          },
         },
-      });
+        trackUses
+      );
+    } else if (trackUses) {
+      ref.current.newUsage();
     }
 
     return ref.current;

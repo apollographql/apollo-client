@@ -115,6 +115,8 @@ export class QueryManager<TStore> {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
 
+  private readonly dataMasking: boolean;
+
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
   private localState: LocalState<TStore>;
@@ -146,6 +148,7 @@ export class QueryManager<TStore> {
     localState,
     assumeImmutableResults = !!cache.assumeImmutableResults,
     defaultContext,
+    dataMasking = false,
   }: {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
@@ -158,6 +161,7 @@ export class QueryManager<TStore> {
     localState?: LocalState<TStore>;
     assumeImmutableResults?: boolean;
     defaultContext?: Partial<DefaultContext>;
+    dataMasking?: boolean;
   }) {
     const defaultDocumentTransform = new DocumentTransform(
       (document) => this.cache.transformDocument(document),
@@ -173,6 +177,7 @@ export class QueryManager<TStore> {
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = assumeImmutableResults;
+    this.dataMasking = dataMasking;
     this.documentTransform =
       documentTransform ?
         defaultDocumentTransform

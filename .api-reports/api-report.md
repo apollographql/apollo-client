@@ -2320,8 +2320,6 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
 export { QueryOptions as PureQueryOptions }
 export { QueryOptions }
 
-// Warning: (ae-unresolved-link) The @link reference could not be resolved: The reference is ambiguous because "useBackgroundQuery" has more than one declaration; you need to add a TSDoc member reference selector
-//
 // @public
 export interface QueryReference<TData = unknown, TVariables = unknown> {
     // @internal (undocumented)

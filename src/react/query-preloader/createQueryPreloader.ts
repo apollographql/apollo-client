@@ -72,7 +72,7 @@ type PreloadQueryOptionsArg<
 
 /**
  * A function that will begin loading a query when called. It's result can be
- * read by {@link useReadQuery} which will suspend until the query is loaded.
+ * read by `useReadQuery` which will suspend until the query is loaded.
  * This is useful when you want to start loading a query as early as possible
  * outside of a React component.
  *

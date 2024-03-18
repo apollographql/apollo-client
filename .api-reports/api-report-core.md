@@ -79,6 +79,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     updateQuery<TData = any, TVariables = any>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: TData | null) => TData | null | void): TData | null;
     // (undocumented)
     abstract watch<TData = any, TVariables = any>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
+    // Warning: (ae-forgotten-export) The symbol "WatchFragmentOptions" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "WatchFragmentResult" needs to be exported by the entry point index.d.ts
+    watchFragment<TData = any, TVars = OperationVariables>(options: WatchFragmentOptions<TData, TVars>): Observable<WatchFragmentResult<TData>>;
     // (undocumented)
     abstract write<TData = any, TVariables = any>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
     // (undocumented)
@@ -87,8 +90,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     writeQuery<TData = any, TVariables = any>({ id, data, ...options }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
-// Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
-//
 // @public
 export class ApolloClient<TCacheShape> implements DataProxy {
     // (undocumented)
@@ -130,12 +131,12 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher): void;
     setResolvers(resolvers: Resolvers | Resolvers[]): void;
     stop(): void;
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
     subscribe<T = any, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, T>): Observable<FetchResult<T>>;
     // (undocumented)
     readonly typeDefs: ApolloClientOptions<TCacheShape>["typeDefs"];
     // (undocumented)
     version: string;
+    watchFragment<TFragmentData = unknown, TVariables = OperationVariables>(options: WatchFragmentOptions<TFragmentData, TVariables>): Observable<WatchFragmentResult<TFragmentData>>;
     watchQuery<T = any, TVariables extends OperationVariables = OperationVariables>(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables>;
     writeFragment<TData = any, TVariables = OperationVariables>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
     writeQuery<TData = any, TVariables = OperationVariables>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
@@ -522,6 +523,40 @@ export interface DataProxy {
     writeFragment<TData = any, TVariables = any>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
     writeQuery<TData = any, TVariables = any>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
+
+// Warning: (ae-forgotten-export) The symbol "DeepPartialPrimitive" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialMap" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlyMap" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialSet" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlySet" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialObject" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type DeepPartial<T> = T extends DeepPartialPrimitive ? T : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue> : T extends ReadonlyMap<infer TKey, infer TValue> ? DeepPartialReadonlyMap<TKey, TValue> : T extends Set<infer TItem> ? DeepPartialSet<TItem> : T extends ReadonlySet<infer TItem> ? DeepPartialReadonlySet<TItem> : T extends (...args: any[]) => unknown ? T | undefined : T extends object ? T extends (ReadonlyArray<infer TItem>) ? TItem[] extends (T) ? readonly TItem[] extends T ? ReadonlyArray<DeepPartial<TItem | undefined>> : Array<DeepPartial<TItem | undefined>> : DeepPartialObject<T> : DeepPartialObject<T> : unknown;
+
+// Warning: (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type DeepPartialMap<TKey, TValue> = {} & Map<DeepPartial<TKey>, DeepPartial<TValue>>;
+
+// @public (undocumented)
+type DeepPartialObject<T extends object> = {
+    [K in keyof T]?: DeepPartial<T[K]>;
+};
+
+// Warning: (ae-forgotten-export) The symbol "Primitive" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type DeepPartialPrimitive = Primitive | Date | RegExp;
+
+// @public (undocumented)
+type DeepPartialReadonlyMap<TKey, TValue> = {} & ReadonlyMap<DeepPartial<TKey>, DeepPartial<TValue>>;
+
+// @public (undocumented)
+type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
+
+// @public (undocumented)
+type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
@@ -1637,6 +1672,9 @@ export type PossibleTypesMap = {
 };
 
 // @public (undocumented)
+type Primitive = null | undefined | string | number | boolean | symbol | bigint;
+
+// @public (undocumented)
 const print_2: ((ast: ASTNode) => string) & {
     reset(): void;
 };
@@ -2173,6 +2211,28 @@ export interface UriFunction {
     // (undocumented)
     (operation: Operation): string;
 }
+
+// @public
+interface WatchFragmentOptions<TData, TVars> {
+    // @deprecated (undocumented)
+    canonizeResults?: boolean;
+    fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+    fragmentName?: string;
+    from: StoreObject | Reference | string;
+    optimistic?: boolean;
+    variables?: TVars;
+}
+
+// @public
+type WatchFragmentResult<TData> = {
+    data: TData;
+    complete: true;
+    missing?: never;
+} | {
+    data: DeepPartial<TData>;
+    complete: false;
+    missing: MissingTree;
+};
 
 // @public (undocumented)
 export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";

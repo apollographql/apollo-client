@@ -78,6 +78,10 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     updateQuery<TData = any, TVariables = any>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: TData | null) => TData | null | void): TData | null;
     // (undocumented)
     abstract watch<TData = any, TVariables = any>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
+    // Warning: (ae-forgotten-export) The symbol "OperationVariables" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "WatchFragmentOptions" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "WatchFragmentResult" needs to be exported by the entry point index.d.ts
+    watchFragment<TData = any, TVars = OperationVariables>(options: WatchFragmentOptions<TData, TVars>): Observable<WatchFragmentResult<TData>>;
     // Warning: (ae-forgotten-export) The symbol "Reference" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -88,14 +92,10 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     writeQuery<TData = any, TVariables = any>({ id, data, ...options }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
-// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloLink"
-// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "Observable"
-//
 // @public
 class ApolloClient<TCacheShape> implements DataProxy {
     // (undocumented)
     __actionHookForDevTools(cb: () => any): void;
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloClient"
     constructor(options: ApolloClientOptions<TCacheShape>);
     // Warning: (ae-forgotten-export) The symbol "GraphQLRequest" needs to be exported by the entry point index.d.ts
     //
@@ -134,7 +134,6 @@ class ApolloClient<TCacheShape> implements DataProxy {
     onResetStore(cb: () => Promise<any>): () => void;
     // Warning: (ae-forgotten-export) The symbol "QueryOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "ApolloQueryResult" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "QueryOptions"
     query<T = any, TVariables extends OperationVariables = OperationVariables>(options: QueryOptions<TVariables, T>): Promise<ApolloQueryResult<T>>;
     // (undocumented)
     queryDeduplication: boolean;
@@ -152,7 +151,6 @@ class ApolloClient<TCacheShape> implements DataProxy {
     setResolvers(resolvers: Resolvers | Resolvers[]): void;
     stop(): void;
     // Warning: (ae-forgotten-export) The symbol "SubscriptionOptions" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "Observable"
     subscribe<T = any, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, T>): Observable<FetchResult<T>>;
     // Warning: (ae-forgotten-export) The symbol "ApolloClientOptions" needs to be exported by the entry point index.d.ts
     //
@@ -160,11 +158,9 @@ class ApolloClient<TCacheShape> implements DataProxy {
     readonly typeDefs: ApolloClientOptions<TCacheShape>["typeDefs"];
     // (undocumented)
     version: string;
-    // Warning: (ae-forgotten-export) The symbol "OperationVariables" needs to be exported by the entry point index.d.ts
+    watchFragment<TFragmentData = unknown, TVariables = OperationVariables>(options: WatchFragmentOptions<TFragmentData, TVariables>): Observable<WatchFragmentResult<TFragmentData>>;
     // Warning: (ae-forgotten-export) The symbol "WatchQueryOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "ObservableQuery" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ObservableQuery"
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ObservableQuery"
     watchQuery<T = any, TVariables extends OperationVariables = OperationVariables>(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables>;
     writeFragment<TData = any, TVariables = OperationVariables>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
     writeQuery<TData = any, TVariables = OperationVariables>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
@@ -185,7 +181,6 @@ interface ApolloClientOptions<TCacheShape> {
     // (undocumented)
     fragmentMatcher?: FragmentMatcher;
     headers?: Record<string, string>;
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@apollo/client" does not have an export "ApolloLink"
     link?: ApolloLink;
     name?: string;
     queryDeduplication?: boolean;
@@ -2022,6 +2017,28 @@ interface UseSuspenseQueryResult<TData = unknown, TVariables extends OperationVa
     // (undocumented)
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
+
+// @public
+interface WatchFragmentOptions<TData, TVars> {
+    // @deprecated (undocumented)
+    canonizeResults?: boolean;
+    fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+    fragmentName?: string;
+    from: StoreObject | Reference | string;
+    optimistic?: boolean;
+    variables?: TVars;
+}
+
+// @public
+type WatchFragmentResult<TData> = {
+    data: TData;
+    complete: true;
+    missing?: never;
+} | {
+    data: DeepPartial<TData>;
+    complete: false;
+    missing: MissingTree;
+};
 
 // @public (undocumented)
 type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";

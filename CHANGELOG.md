@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.10.0-alpha.0
+
+### Minor Changes
+
+- [#11465](https://github.com/apollographql/apollo-client/pull/11465) [`7623da7`](https://github.com/apollographql/apollo-client/commit/7623da7720855b0c19e13ff9124679f426a39725) Thanks [@alessbell](https://github.com/alessbell)! - Add `watchFragment` method to the cache and expose it on ApolloClient, refactor `useFragment` using `watchFragment`.
+
+### Patch Changes
+
+- [#11689](https://github.com/apollographql/apollo-client/pull/11689) [`cb8ffe5`](https://github.com/apollographql/apollo-client/commit/cb8ffe50e903397f741b62a44624bfe69b5f7b75) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where passing a new `from` option to `useFragment` would first render with the previous value before rerendering with the correct value.
+
 ## 3.9.7
 
 ### Patch Changes

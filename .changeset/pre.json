@@ -4,5 +4,8 @@
   "initialVersions": {
     "@apollo/client": "3.9.7"
   },
-  "changesets": []
+  "changesets": [
+    "flat-singers-kiss",
+    "tasty-pillows-ring"
+  ]
 }

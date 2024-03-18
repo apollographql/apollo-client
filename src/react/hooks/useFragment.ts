@@ -12,7 +12,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
-import { useDeepMemo, wrapHook } from "./internal/index.js";
+import { useDeepMemo, useLazyRef, wrapHook } from "./internal/index.js";
 import equal from "@wry/equality";
 
 export interface UseFragmentOptions<TData, TVars>
@@ -83,9 +83,12 @@ function _useFragment<TData = any, TVars = OperationVariables>(
     };
   }, [options]);
 
-  const resultRef = React.useRef<UseFragmentResult<TData>>(
+  const resultRef = useLazyRef<UseFragmentResult<TData>>(() =>
     diffToResult(cache.diff<TData>(diffOptions))
   );
+
+  const stableOptions = useDeepMemo(() => options, [options]);
+
   // Since .next is async, we need to make sure that we
   // get the correct diff on the next render given new diffOptions
   React.useMemo(() => {
@@ -99,7 +102,7 @@ function _useFragment<TData = any, TVars = OperationVariables>(
     React.useCallback(
       (forceUpdate) => {
         let lastTimeout = 0;
-        const subscription = cache.watchFragment(options).subscribe({
+        const subscription = cache.watchFragment(stableOptions).subscribe({
           next: (result) => {
             if (equal(result, resultRef.current)) return;
             resultRef.current = result;
@@ -116,7 +119,7 @@ function _useFragment<TData = any, TVars = OperationVariables>(
           clearTimeout(lastTimeout);
         };
       },
-      [cache, diffOptions]
+      [cache, stableOptions]
     ),
     getSnapshot,
     getSnapshot

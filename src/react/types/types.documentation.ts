@@ -45,7 +45,7 @@ export interface QueryOptionsDocumentation {
   fetchPolicy: unknown;
 
   /**
-   * Specifies the {@link FetchPolicy} to be used after this query has completed.
+   * Specifies the `FetchPolicy` to be used after this query has completed.
    *
    * @docGroup 3. Caching options
    */
@@ -168,7 +168,7 @@ export interface QueryOptionsDocumentation {
   onError: unknown;
 
   /**
-   * The instance of {@link ApolloClient} to use to execute the query.
+   * The instance of `ApolloClient` to use to execute the query.
    *
    * By default, the instance that's passed down via context is used, but you
    * can provide a different instance here.
@@ -358,7 +358,7 @@ export interface MutationOptionsDocumentation {
   optimisticResponse: unknown;
 
   /**
-   * A {@link MutationQueryReducersMap}, which is map from query names to
+   * A `MutationQueryReducersMap`, which is map from query names to
    * mutation query reducers. Briefly, this map defines how to incorporate the
    * results of the mutation into the results of queries that are currently
    * being watched by your application.
@@ -517,7 +517,7 @@ export interface SubscriptionOptionsDocumentation {
   variables: unknown;
 
   /**
-   * Specifies the {@link ErrorPolicy} to be used for this operation
+   * Specifies the `ErrorPolicy` to be used for this operation
    */
   errorPolicy: unknown;
 

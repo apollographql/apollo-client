@@ -104,6 +104,7 @@ interface TransformCacheEntry {
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
+import { mask } from "./masking.js";
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -1209,7 +1210,10 @@ export class QueryManager<TStore> {
         }
 
         const aqr: ApolloQueryResult<TData> = {
-          data: result.data,
+          data:
+            this.dataMasking ?
+              mask(result.data, linkDocument, (this.cache as any).policies)
+            : result.data,
           loading: false,
           networkStatus: NetworkStatus.ready,
         };

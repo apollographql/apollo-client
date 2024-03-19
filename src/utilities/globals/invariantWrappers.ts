@@ -111,7 +111,7 @@ const ApolloErrorMessageHandler = Symbol.for(
 declare global {
   interface Window {
     [ApolloErrorMessageHandler]?: {
-      (message: string | number, args: unknown[]): string | undefined;
+      (message: string | number, args: string[]): string | undefined;
     } & ErrorCodes;
   }
 }

@@ -104,6 +104,7 @@ interface TransformCacheEntry {
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
+import { mask } from "./masking.js";
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -114,6 +115,8 @@ export class QueryManager<TStore> {
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
+
+  private readonly dataMasking: boolean;
 
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
@@ -146,6 +149,7 @@ export class QueryManager<TStore> {
     localState,
     assumeImmutableResults = !!cache.assumeImmutableResults,
     defaultContext,
+    dataMasking = false,
   }: {
     cache: ApolloCache<TStore>;
     link: ApolloLink;
@@ -158,6 +162,7 @@ export class QueryManager<TStore> {
     localState?: LocalState<TStore>;
     assumeImmutableResults?: boolean;
     defaultContext?: Partial<DefaultContext>;
+    dataMasking?: boolean;
   }) {
     const defaultDocumentTransform = new DocumentTransform(
       (document) => this.cache.transformDocument(document),
@@ -173,6 +178,7 @@ export class QueryManager<TStore> {
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = assumeImmutableResults;
+    this.dataMasking = dataMasking;
     this.documentTransform =
       documentTransform ?
         defaultDocumentTransform
@@ -1204,7 +1210,10 @@ export class QueryManager<TStore> {
         }
 
         const aqr: ApolloQueryResult<TData> = {
-          data: result.data,
+          data:
+            this.dataMasking ?
+              mask(result.data, linkDocument, (this.cache as any).policies).data
+            : result.data,
           loading: false,
           networkStatus: NetworkStatus.ready,
         };

@@ -14,16 +14,22 @@ export type ErrorMessageHandler = {
    * In some edge cases, this can already be a string, that can be passed through
    * as an error message.
    *
-   * @param args - The placeholders that can be passed into the error message.
+   * @param args - The placeholders that can be passed into the error message (pre-stringified).
    * These relate with the `%s` and `%d` [substitution strings](https://developer.mozilla.org/en-US/docs/Web/API/console#using_string_substitutions)
    * in the error message defined in `@apollo/client/invariantErrorCodes.js`.
+   *
+   * ⚠️ Note that arguments will only be passed in for error messages.
+   * For normal log messages, you will get an empty array here and they will directly
+   * be passed to `console.log` instead, to have the string subsitution done by the
+   * engine, as that allows for nicer (and in the case of a browser, interactive)
+   * output.
    *
    * @returns The error message to be logged or thrown. If it returns `undefined`,
    *          the mechanism will fall back to the default:
    *          A link to https://go.apollo.dev/c/err with Apollo Client version,
    *          the error message number, and the error message arguments encoded into
    *          the URL hash.
-   */ (message: string | number, args: unknown[]): string | undefined;
+   */ (message: string | number, args: string[]): string | undefined;
 };
 
 /**

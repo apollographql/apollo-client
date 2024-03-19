@@ -49,8 +49,8 @@ import { cacheSizes } from '@apollo/client/utilities';
 import { print } from '@apollo/client'
 
 cacheSizes.print = 100;
-// cache sizes changed this way will only take effect for caches 
-// created after the cache size has been changed, so we need to 
+// cache sizes changed this way will only take effect for caches
+// created after the cache size has been changed, so we need to
 // reset the cache for it to be effective
 
 print.reset();
@@ -121,6 +121,7 @@ The cache usage API is only meant for manual measurements. Don't rely on it in p
 ### Cache options
 
 <PropertySignatureTable
+  idPrefix="cachesizes-interface"
   canonicalReference="@apollo/client!CacheSizes:interface"
   properties
 />

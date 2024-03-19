@@ -15,7 +15,6 @@ import {
   createRejectedPromise,
 } from "../../../utilities/index.js";
 import type { QueryKey } from "./types.js";
-import type { useBackgroundQuery, useReadQuery } from "../../hooks/index.js";
 import { wrapPromiseWithState } from "../../../utilities/index.js";
 
 type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
@@ -30,8 +29,8 @@ const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 const PROMISE_SYMBOL: unique symbol = Symbol();
 
 /**
- * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
- * A child component reading the `QueryReference` via {@link useReadQuery} will
+ * A `QueryReference` is an opaque object returned by `useBackgroundQuery`.
+ * A child component reading the `QueryReference` via `useReadQuery` will
  * suspend until the promise resolves.
  */
 export interface QueryReference<TData = unknown, TVariables = unknown> {

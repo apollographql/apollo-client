@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-expose `setErrorMessageHandler`
+Expose `setErrorMessageHandler` from `@apollo/client/dev` entrypoint.

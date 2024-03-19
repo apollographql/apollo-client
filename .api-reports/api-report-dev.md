@@ -16,7 +16,7 @@ interface ErrorCodes {
 
 // @public
 export type ErrorMessageHandler = {
-    (message: string | number, args: unknown[]): string | undefined;
+    (message: string | number, args: string[]): string | undefined;
 };
 
 // @public (undocumented)

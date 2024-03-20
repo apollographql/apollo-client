@@ -10200,9 +10200,9 @@ describe("useSuspenseQuery", () => {
       }),
       defaultOptions: {
         watchQuery: {
-          errorPolicy: 'all'
-        }
-      }
+          errorPolicy: "all",
+        },
+      },
     });
 
     function App() {

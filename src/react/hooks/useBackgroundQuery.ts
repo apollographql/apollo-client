@@ -224,10 +224,8 @@ function _useBackgroundQuery<
     ...([] as any[]).concat(queryKey),
   ];
 
-  const queryRef = suspenseCache.getQueryRef(
-    cacheKey,
-    () => client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>),
-    true
+  const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
+    client.watchQuery(watchQueryOptions as WatchQueryOptions<any, any>)
   );
 
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(
@@ -264,6 +262,7 @@ function _useBackgroundQuery<
   );
 
   React.useEffect(() => {
+    queryRef.newUsage();
     return () => {
       queryRef.disposeOnUnmount();
     };

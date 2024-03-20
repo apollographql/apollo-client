@@ -160,19 +160,17 @@ export class InternalQueryReference<TData = unknown> {
   private reject: ((error: unknown) => void) | undefined;
 
   private references = 0;
-  private nbOfUse = 0;
+  private numberOfUse = 0;
 
   constructor(
     observable: ObservableQuery<TData, any>,
-    options: InternalQueryReferenceOptions,
-    trackUses: boolean = false
+    options: InternalQueryReferenceOptions
   ) {
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
     this.autoDisposeTimeoutMs = options.autoDisposeTimeoutMs ?? 30_000;
-    this.nbOfUse = trackUses ? 1 : 0;
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;
@@ -260,16 +258,21 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   newUsage() {
-    this.nbOfUse++;
-    clearTimeout(this.autoDisposeTimeoutId);
-    this.startDisposeTimer();
+    this.numberOfUse++;
+    if (!this.references) {
+      clearTimeout(this.autoDisposeTimeoutId);
+      this.startDisposeTimer();
+    }
   }
 
   disposeOnUnmount() {
-    this.nbOfUse--;
-    if (!this.nbOfUse && !this.references) {
-      this.dispose();
-    }
+    this.numberOfUse--;
+    // Wait before fully disposing in case the app is running in strict mode.
+    setTimeout(() => {
+      if (!this.numberOfUse && !this.references) {
+        this.dispose();
+      }
+    });
   }
 
   didChangeOptions(watchQueryOptions: ObservedOptions) {

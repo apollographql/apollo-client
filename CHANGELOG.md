@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.10.0-alpha.1
+
+### Patch Changes
+
+- [#11694](https://github.com/apollographql/apollo-client/pull/11694) [`835d5f3`](https://github.com/apollographql/apollo-client/commit/835d5f30c532c432e2434561580e6f1ec44cc908) Thanks [@phryneas](https://github.com/phryneas)! - Expose `setErrorMessageHandler` from `@apollo/client/dev` entrypoint.
+
+- [#11689](https://github.com/apollographql/apollo-client/pull/11689) [`cb8ffe5`](https://github.com/apollographql/apollo-client/commit/cb8ffe50e903397f741b62a44624bfe69b5f7b75) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where passing a new `from` option to `useFragment` would first render with the previous value before rerendering with the correct value.
+
 ## 3.10.0-alpha.0
 
 ### Minor Changes

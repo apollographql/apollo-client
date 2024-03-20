@@ -5,6 +5,8 @@
     "@apollo/client": "3.9.7"
   },
   "changesets": [
+    "eleven-doors-rescue",
+    "flat-singers-kiss",
     "tasty-pillows-ring"
   ]
 }

@@ -5249,6 +5249,210 @@ describe("fetchMore", () => {
 
     await expect(Profiler).not.toRerender();
   });
+
+  // https://github.com/apollographql/apollo-client/issues/11708
+  it("`fetchMore` works with startTransition when setting errorPolicy as default option in ApolloClient constructor", async () => {
+    type Variables = {
+      offset: number;
+    };
+
+    interface Todo {
+      __typename: "Todo";
+      id: string;
+      name: string;
+      completed: boolean;
+    }
+    interface Data {
+      todos: Todo[];
+    }
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query TodosQuery($offset: Int!) {
+        todos(offset: $offset) {
+          id
+          name
+          completed
+        }
+      }
+    `;
+
+    const mocks: MockedResponse<Data, Variables>[] = [
+      {
+        request: { query, variables: { offset: 0 } },
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+        },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { offset: 1 } },
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "2",
+                name: "Take out trash",
+                completed: true,
+              },
+            ],
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        isPending: false,
+        result: null as UseReadQueryResult<Data> | null,
+      },
+    });
+
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              todos: offsetLimitPagination(),
+            },
+          },
+        },
+      }),
+      defaultOptions: {
+        watchQuery: {
+          errorPolicy: "all",
+        },
+      },
+    });
+
+    function App() {
+      useTrackRenders();
+      const [isPending, startTransition] = React.useTransition();
+      const [queryRef, { fetchMore }] = useBackgroundQuery(query, {
+        variables: { offset: 0 },
+      });
+
+      Profiler.mergeSnapshot({ isPending });
+
+      return (
+        <>
+          <button
+            onClick={() => {
+              startTransition(() => {
+                fetchMore({ variables: { offset: 1 } });
+              });
+            }}
+          >
+            Load more
+          </button>
+          <Suspense fallback={<SuspenseFallback />}>
+            <ReadQueryHook queryRef={queryRef} />
+          </Suspense>
+        </>
+      );
+    }
+
+    renderWithClient(<App />, { client, wrapper: Profiler });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot).toEqual({
+        isPending: false,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Load more")));
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+      expect(snapshot).toEqual({
+        isPending: true,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+      expect(snapshot).toEqual({
+        isPending: false,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+              {
+                __typename: "Todo",
+                id: "2",
+                name: "Take out trash",
+                completed: true,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
+  });
 });
 
 describe.skip("type tests", () => {

@@ -253,6 +253,7 @@ export class InternalQueryReference<TData = unknown> {
   didChangeOptions(watchQueryOptions: ObservedOptions) {
     return OBSERVED_CHANGED_OPTIONS.some(
       (option) =>
+        option in watchQueryOptions &&
         !equal(this.watchQueryOptions[option], watchQueryOptions[option])
     );
   }

@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 3.9.8
+
+### Patch Changes
+
+- [#11706](https://github.com/apollographql/apollo-client/pull/11706) [`8619bc7`](https://github.com/apollographql/apollo-client/commit/8619bc7e569c1c732afa6faf605c83a6ce0cdf0c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue in all suspense hooks where returning an empty array after calling `fetchMore` would rerender the component with an empty list.
+
+- [#11694](https://github.com/apollographql/apollo-client/pull/11694) [`835d5f3`](https://github.com/apollographql/apollo-client/commit/835d5f30c532c432e2434561580e6f1ec44cc908) Thanks [@phryneas](https://github.com/phryneas)! - Expose `setErrorMessageHandler` from `@apollo/client/dev` entrypoint.
+
+- [#11689](https://github.com/apollographql/apollo-client/pull/11689) [`cb8ffe5`](https://github.com/apollographql/apollo-client/commit/cb8ffe50e903397f741b62a44624bfe69b5f7b75) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where passing a new `from` option to `useFragment` would first render with the previous value before rerendering with the correct value.
+
+- [#11713](https://github.com/apollographql/apollo-client/pull/11713) [`642092c`](https://github.com/apollographql/apollo-client/commit/642092c713199093aede45f105a1ee3f637614cd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where setting a default `watchQuery` option in the `ApolloClient` constructor could break `startTransition` when used with suspense hooks.
+
 ## 3.9.7
 
 ### Patch Changes

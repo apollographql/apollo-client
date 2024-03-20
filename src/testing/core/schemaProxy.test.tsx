@@ -7,7 +7,7 @@ import {
   useTrackRenders,
 } from "../internal/index.js";
 import { proxiedSchema } from "./schemaProxy.js";
-import { buildSchema, execute } from "graphql";
+import { buildSchema } from "graphql";
 import { useMutation, useSuspenseQuery } from "../../react/index.js";
 import { createMockSchema } from "../graphql-tools/utils.js";
 import userEvent from "@testing-library/user-event";
@@ -370,7 +370,7 @@ describe("schema proxy", () => {
     unmount();
   });
 
-  it.only("should handle mutations", async () => {
+  it("should handle mutations", async () => {
     const query = gql`
       query {
         viewer {
@@ -391,23 +391,19 @@ describe("schema proxy", () => {
     const forkedSchema = schema.forkWithResolvers({
       Query: {
         viewer: () => ({
-          name: () => name,
           book: {
             text: "Hello World",
             title: "The Book",
           },
         }),
       },
+      User: {
+        name: () => name,
+      },
       Mutation: {
         changeViewerName: (_: any, { newName }: { newName: string }) => {
           name = newName;
-          const { data } = execute({
-            schema: forkedSchema,
-            document: query,
-          });
-          data.viewer.name = newName;
-          console.log(JSON.stringify(data.viewer, null, 2));
-          return data.viewer;
+          return {};
         },
       },
     });
@@ -428,6 +424,7 @@ describe("schema proxy", () => {
     const mutation = gql`
       mutation {
         changeViewerName(newName: "Alexandre") {
+          id
           name
         }
       }
@@ -448,10 +445,7 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-      const [changeViewerName, { loading, data }] = useMutation(mutation);
-      console.log(
-        JSON.stringify({ data, loading, result: result.data }, null, 2)
-      );
+      const [changeViewerName] = useMutation(mutation);
 
       useTrackRenders();
 
@@ -512,7 +506,7 @@ describe("schema proxy", () => {
           __typename: "User",
           age: 42,
           id: "1",
-          name: "Jane Doe",
+          name: "Alexandre",
           book: {
             __typename: "TextBook",
             id: "1",
@@ -537,7 +531,7 @@ describe("schema proxy", () => {
           id: "1",
           // In our resolvers defined in this test, we omit name so it uses
           // the scalar default mock
-          name: "String",
+          name: "Alexandre",
           book: {
             // locally overrode the resolver for the book field
             __typename: "TextBook",

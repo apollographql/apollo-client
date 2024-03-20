@@ -2,16 +2,22 @@ import { addResolversToSchema } from "@graphql-tools/schema";
 import type { GraphQLSchema } from "graphql";
 import type { Resolvers } from "../../core/types.js";
 
+interface ProxiedSchemaFns {
+  addResolvers: (newResolvers: Resolvers) => GraphQLSchema;
+  forkWithResolvers: (newResolvers: Resolvers) => GraphQLSchema;
+  reset: () => void;
+}
+
 const proxiedSchema = (
   schemaWithMocks: GraphQLSchema,
   resolvers: Resolvers
-) => {
+): GraphQLSchema & ProxiedSchemaFns => {
   let targetSchema = addResolversToSchema({
     schema: schemaWithMocks,
     resolvers,
   });
 
-  const fns = {
+  const fns: ProxiedSchemaFns = {
     addResolvers: (newResolvers: typeof resolvers) =>
       (targetSchema = addResolversToSchema({
         schema: targetSchema,
@@ -55,9 +61,3 @@ const proxiedSchema = (
 };
 
 export { proxiedSchema };
-
-// const schema = proxiedSchema(schema, { mocks, resolvers });
-
-// export {
-//   schema
-// };

@@ -59,7 +59,9 @@ jobs:
         run: npx changeset pre enter alpha
 
       - name: Create prerelease PR
-        if: steps.check_files.outputs.files_exists == 'true'
+        # If .changeset/pre.json exists and we are not currently cutting a
+        # release after merging a Version Packages PR
+        if: steps.check_files.outputs.files_exists == 'true' && !startsWith(github.event.head_commit.message, 'Version Packages')
         uses: changesets/action@v1
         with:
           version: npm run changeset-version

@@ -4795,6 +4795,15 @@ describe("refetch", () => {
 describe("fetchMore", () => {
   it("re-suspends when calling `fetchMore` with different variables", async () => {
     const { query, link } = setupPaginatedCase();
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    });
     const user = userEvent.setup();
     const Profiler = createDefaultProfiler<PaginatedCaseData>();
     const { SuspenseFallback, ReadQueryHook } =
@@ -4818,7 +4827,7 @@ describe("fetchMore", () => {
       );
     }
 
-    renderWithMocks(<App />, { link, wrapper: Profiler });
+    renderWithMocks(<App />, { cache, link, wrapper: Profiler });
 
     {
       const { renderedComponents } = await Profiler.takeRender();

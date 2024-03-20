@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.10.0-alpha.0
+
+### Minor Changes
+
+- [#11465](https://github.com/apollographql/apollo-client/pull/11465) [`7623da7`](https://github.com/apollographql/apollo-client/commit/7623da7720855b0c19e13ff9124679f426a39725) Thanks [@alessbell](https://github.com/alessbell)! - Add `watchFragment` method to the cache and expose it on ApolloClient, refactor `useFragment` using `watchFragment`.
+
 ## 3.9.7
 
 ### Patch Changes

@@ -1,0 +1,10 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@apollo/client": "3.9.7"
+  },
+  "changesets": [
+    "tasty-pillows-ring"
+  ]
+}

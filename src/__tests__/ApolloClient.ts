@@ -14,7 +14,7 @@ import { ApolloLink } from "../link/core";
 import { HttpLink } from "../link/http";
 import { InMemoryCache } from "../cache";
 import { itAsync } from "../testing";
-import { spyOnConsole } from "../testing/internal";
+import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
 
@@ -2172,6 +2172,263 @@ describe("ApolloClient", () => {
         });
       }
     );
+  });
+
+  describe("watchFragment", () => {
+    it("if all data is available, `complete` is `true`", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5",
+          },
+          complete: true,
+        });
+      }
+    });
+    it("cache writes emit a new value", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5",
+          },
+          complete: true,
+        });
+      }
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5 (edited)",
+        },
+      });
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5 (edited)",
+          },
+          complete: true,
+        });
+      }
+    });
+    it("if only partial data is available, `complete` is `false`", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      {
+        // we expect a "Missing field 'text' while writing result..." error
+        // when writing item to the cache, so we'll silence the console.error
+        using _consoleSpy = spyOnConsole("error");
+        cache.writeFragment({
+          fragment: ItemFragment,
+          data: {
+            __typename: "Item",
+            id: 5,
+          },
+        });
+      }
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+          },
+          complete: false,
+          missing: {
+            text: "Can't find field 'text' on Item:5 object",
+          },
+        });
+      }
+    });
+    it("if no data is written after observable is subscribed to, next is never called", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          complete: false,
+          data: {},
+          missing: "Dangling reference to missing Item:5 object",
+        });
+      }
+
+      await expect(stream.takeNext({ timeout: 1000 })).rejects.toEqual(
+        expect.any(Error)
+      );
+    });
+    // The @nonreactive directive can only be used on fields or fragment
+    // spreads in queries, and currently has no effect here
+    it.failing("does not support the @nonreactive directive", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text @nonreactive
+        }
+      `;
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5",
+          },
+          complete: true,
+        });
+      }
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5 (edited)",
+        },
+      });
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5",
+          },
+          complete: true,
+        });
+      }
+    });
   });
 
   describe("defaultOptions", () => {

@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-useBackgroundQuery, handle ref disposal if unmount before used
+Immediately dispose of the `queryRef` if `useBackgroundQuery` unmounts before the auto dispose timeout kicks in.

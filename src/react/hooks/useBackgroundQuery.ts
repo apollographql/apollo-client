@@ -261,12 +261,7 @@ function _useBackgroundQuery<
     [queryRef]
   );
 
-  React.useEffect(() => {
-    queryRef.newUsage();
-    return () => {
-      queryRef.disposeOnUnmount();
-    };
-  }, [queryRef]);
+  React.useEffect(() => queryRef.softRetain(), [queryRef]);
 
   return [
     didFetchResult.current ? wrappedQueryRef : void 0,

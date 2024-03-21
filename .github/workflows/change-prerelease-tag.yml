@@ -26,10 +26,10 @@ jobs:
       - uses: actions/create-github-app-token@v1
         id: github-actions-bot-app-token
         with:
-          app-id: 47012416
+          app-id: 48725422
           private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
           repositories: ${{ github.repository }}
-          owner: mdg-private
+          owner: ${{ github.repository_owner }}
 
       # Check out the repository, using the Github Actions Bot app's token so
       # that we can push later.

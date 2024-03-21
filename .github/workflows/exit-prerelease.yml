@@ -43,7 +43,7 @@ jobs:
         with:
           node-version: 20.x
 
-      - name: Write previous version to package.json and package-lock.json
+      - name: Write latest version to package.json and package-lock.json
         run: |
           version=$(npm show @apollo/client version)
           npm pkg set version="$version"

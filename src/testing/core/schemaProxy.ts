@@ -50,14 +50,14 @@ const proxiedSchema = (
         return Reflect.get(fns, p);
       }
 
-      if (typeof targetSchema[p] === "function") {
-        return targetSchema[p].bind(targetSchema);
-      }
+      // if (typeof targetSchema[p] === "function") {
+      //   return targetSchema[p].bind(targetSchema);
+      // }
       return Reflect.get(targetSchema, p);
     },
   });
 
-  return schema;
+  return schema as GraphQLSchema & ProxiedSchemaFns;
 };
 
 export { proxiedSchema };

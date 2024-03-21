@@ -13,4 +13,5 @@ export { default as subscribeAndCount } from "./subscribeAndCount.js";
 export { itAsync } from "./itAsync.js";
 export { wait, tick } from "./wait.js";
 export { proxiedSchema } from "./schemaProxy.js";
+export { createMockFetch } from "./mockFetchWithSchema.js";
 export * from "./withConsoleSpy.js";

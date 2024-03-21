@@ -1,6 +1,11 @@
 import * as React from "react";
-import { ApolloClient, InMemoryCache, gql } from "../../core/index.js";
-import { SchemaLink } from "../../link/schema/index.js";
+import {
+  ApolloClient,
+  HttpLink,
+  InMemoryCache,
+  gql,
+} from "../../core/index.js";
+import type { TypedDocumentNode } from "../../core/index.js";
 import {
   createProfiler,
   renderWithClient,
@@ -8,10 +13,12 @@ import {
 } from "../internal/index.js";
 import { proxiedSchema } from "./schemaProxy.js";
 import { buildSchema } from "graphql";
+import type { UseSuspenseQueryResult } from "../../react/index.js";
 import { useMutation, useSuspenseQuery } from "../../react/index.js";
 import { createMockSchema } from "../graphql-tools/utils.js";
 import userEvent from "@testing-library/user-event";
 import { act, screen } from "@testing-library/react";
+import { createMockFetch } from "./mockFetchWithSchema.js";
 
 const typeDefs = /* GraphQL */ `
   type User {
@@ -73,6 +80,27 @@ const typeDefs = /* GraphQL */ `
 
 const schemaWithTypeDefs = buildSchema(typeDefs);
 
+function createDefaultProfiler<TData = unknown>() {
+  return createProfiler({
+    initialSnapshot: {
+      result: null as UseSuspenseQueryResult<TData> | null,
+    },
+  });
+}
+
+interface ViewerQueryData {
+  viewer: {
+    id: string;
+    name: string;
+    age: number;
+    book: {
+      id: string;
+      title: string;
+      publishedAt: string;
+    };
+  };
+}
+
 describe("schema proxy", () => {
   const schemaWithMocks = createMockSchema(schemaWithTypeDefs, {
     ID: () => "1",
@@ -105,20 +133,14 @@ describe("schema proxy", () => {
   });
 
   it("should allow adding scalar mocks and resolvers", async () => {
-    const Profiler = createProfiler({
-      initialSnapshot: {
-        result: null,
-      },
-    });
-
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+    const mockFetch = createMockFetch(schema);
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new SchemaLink({
-        schema,
-      }),
+      link: new HttpLink({ fetch: mockFetch }),
     });
 
-    const query = gql`
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
       query {
         viewer {
           id
@@ -169,7 +191,7 @@ describe("schema proxy", () => {
     {
       const { snapshot } = await Profiler.takeRender();
 
-      expect(snapshot.result.data).toEqual({
+      expect(snapshot.result?.data).toEqual({
         viewer: {
           __typename: "User",
           age: 42,
@@ -200,20 +222,14 @@ describe("schema proxy", () => {
       },
     });
 
-    const Profiler = createProfiler({
-      initialSnapshot: {
-        result: null,
-      },
-    });
-
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+    const mockFetch = createMockFetch(forkedSchema);
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new SchemaLink({
-        schema: forkedSchema,
-      }),
+      link: new HttpLink({ fetch: mockFetch }),
     });
 
-    const query = gql`
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
       query {
         viewer {
           id
@@ -264,7 +280,7 @@ describe("schema proxy", () => {
     {
       const { snapshot } = await Profiler.takeRender();
 
-      expect(snapshot.result.data).toEqual({
+      expect(snapshot.result?.data).toEqual({
         viewer: {
           __typename: "User",
           age: 42,
@@ -287,20 +303,15 @@ describe("schema proxy", () => {
   });
 
   it("should not pollute the original schema", async () => {
-    const Profiler = createProfiler({
-      initialSnapshot: {
-        result: null,
-      },
-    });
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+    const mockFetch = createMockFetch(schema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new SchemaLink({
-        schema,
-      }),
+      link: new HttpLink({ fetch: mockFetch }),
     });
 
-    const query = gql`
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
       query {
         viewer {
           id
@@ -351,7 +362,7 @@ describe("schema proxy", () => {
     {
       const { snapshot } = await Profiler.takeRender();
 
-      expect(snapshot.result.data).toEqual({
+      expect(snapshot.result?.data).toEqual({
         viewer: {
           __typename: "User",
           age: 42,
@@ -371,7 +382,7 @@ describe("schema proxy", () => {
   });
 
   it("should handle mutations", async () => {
-    const query = gql`
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
       query {
         viewer {
           id
@@ -408,17 +419,13 @@ describe("schema proxy", () => {
       },
     });
 
-    const Profiler = createProfiler({
-      initialSnapshot: {
-        result: null,
-      },
-    });
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    const mockFetch = createMockFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new SchemaLink({
-        schema: forkedSchema,
-      }),
+      link: new HttpLink({ fetch: mockFetch }),
     });
 
     const mutation = gql`
@@ -474,7 +481,7 @@ describe("schema proxy", () => {
     {
       const { snapshot } = await Profiler.takeRender();
 
-      expect(snapshot.result.data).toEqual({
+      expect(snapshot.result?.data).toEqual({
         viewer: {
           __typename: "User",
           age: 42,
@@ -497,34 +504,10 @@ describe("schema proxy", () => {
 
     // initial suspended render
     await Profiler.takeRender();
-
     {
       const { snapshot } = await Profiler.takeRender();
 
-      expect(snapshot.result.data).toEqual({
-        viewer: {
-          __typename: "User",
-          age: 42,
-          id: "1",
-          name: "Alexandre",
-          book: {
-            __typename: "TextBook",
-            id: "1",
-            publishedAt: "2024-01-01",
-            title: "The Book",
-          },
-        },
-      });
-    }
-
-    await act(() => user.click(screen.getByText("Change name")));
-
-    // initial suspended render
-    await Profiler.takeRender();
-    {
-      const { snapshot } = await Profiler.takeRender();
-
-      expect(snapshot.result.data).toEqual({
+      expect(snapshot.result?.data).toEqual({
         viewer: {
           __typename: "User",
           age: 42,

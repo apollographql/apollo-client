@@ -22,9 +22,20 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: github-actions-bot-app-token
+        with:
+          app-id: 819772
+          private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
+          repositories: ${{ github.repository }}
+          owner: ${{ github.repository_owner }}
+
+      # Check out the repository, using the Github Actions Bot app's token so
+      # that we can push later.
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
+          token: ${{ steps.github-actions-bot-app-token.outputs.token }}
           # Fetch entire git history so  Changesets can generate changelogs
           # with the correct commits
           fetch-depth: 0
@@ -56,10 +67,12 @@ jobs:
         # If .changeset/pre.json does not exist and we did not recently exit
         # prerelease mode, enter prerelease mode with tag alpha
         if: steps.check_files.outputs.files_exists == 'false' && !contains(github.event.head_commit.message, 'Exit prerelease')
-        run: npx changeset pre enter alpha
+        run: npx changeset pre enter alpha && git add -A && git commit -m 'Enter prerelease mode' && git push
 
       - name: Create prerelease PR
-        if: steps.check_files.outputs.files_exists == 'true'
+        # If .changeset/pre.json exists and we are not currently cutting a
+        # release after merging a Version Packages PR
+        if: steps.check_files.outputs.files_exists == 'true' && !startsWith(github.event.head_commit.message, 'Version Packages')
         uses: changesets/action@v1
         with:
           version: npm run changeset-version

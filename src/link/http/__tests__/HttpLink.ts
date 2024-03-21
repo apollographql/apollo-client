@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 import fetchMock from "fetch-mock";
 import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 import { TextDecoder } from "util";
-import { ReadableStream } from "web-streams-polyfill/ponyfill/es2018";
+import { ReadableStream } from "web-streams-polyfill";
 import { Readable } from "stream";
 
 import {
@@ -1940,6 +1940,10 @@ describe("HttpLink", () => {
         "Content-Type: application/json",
         "",
         '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"blue","roll":2,"sides":5}}}}}',
+        "---",
+        "Content-Type: application/json",
+        "",
+        '{"payload": null}',
         "-----",
       ].join("\r\n");
 

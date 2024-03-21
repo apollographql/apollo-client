@@ -10109,6 +10109,369 @@ describe("useSuspenseQuery", () => {
     await expect(Profiler).not.toRerender();
   });
 
+  // https://github.com/apollographql/apollo-client/issues/11708
+  it("`fetchMore` works with startTransition when setting errorPolicy as default option in ApolloClient constructor", async () => {
+    type Variables = {
+      offset: number;
+    };
+
+    interface Todo {
+      __typename: "Todo";
+      id: string;
+      name: string;
+      completed: boolean;
+    }
+    interface Data {
+      todos: Todo[];
+    }
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query TodosQuery($offset: Int!) {
+        todos(offset: $offset) {
+          id
+          name
+          completed
+        }
+      }
+    `;
+
+    const mocks: MockedResponse<Data, Variables>[] = [
+      {
+        request: { query, variables: { offset: 0 } },
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+        },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { offset: 1 } },
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "2",
+                name: "Take out trash",
+                completed: true,
+              },
+            ],
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        isPending: false,
+        result: null as Pick<
+          UseSuspenseQueryResult<Data>,
+          "data" | "error" | "networkStatus"
+        > | null,
+      },
+    });
+
+    function SuspenseFallback() {
+      useTrackRenders();
+
+      return <div>Loading...</div>;
+    }
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              todos: offsetLimitPagination(),
+            },
+          },
+        },
+      }),
+      defaultOptions: {
+        watchQuery: {
+          errorPolicy: "all",
+        },
+      },
+    });
+
+    function App() {
+      useTrackRenders();
+      const [isPending, startTransition] = React.useTransition();
+      const { data, error, networkStatus, fetchMore } = useSuspenseQuery(
+        query,
+        {
+          variables: { offset: 0 },
+        }
+      );
+
+      Profiler.mergeSnapshot({
+        isPending,
+        result: { data, error, networkStatus },
+      });
+
+      return (
+        <button
+          onClick={() => {
+            startTransition(() => {
+              fetchMore({ variables: { offset: 1 } });
+            });
+          }}
+        >
+          Load more
+        </button>
+      );
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot).toEqual({
+        isPending: false,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Load more")));
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot).toEqual({
+        isPending: true,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot).toEqual({
+        isPending: false,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+              {
+                __typename: "Todo",
+                id: "2",
+                name: "Take out trash",
+                completed: true,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/11642
+  it("returns merged array when `fetchMore` returns empty array of results", async () => {
+    const query: TypedDocumentNode<PaginatedCaseData, PaginatedCaseVariables> =
+      gql`
+        query LettersQuery($limit: Int, $offset: Int) {
+          letters(limit: $limit, offset: $offset) {
+            letter
+            position
+          }
+        }
+      `;
+
+    const data = "ABCD".split("").map((letter, index) => ({
+      __typename: "Letter",
+      letter,
+      position: index + 1,
+    }));
+
+    const link = new MockLink([
+      {
+        request: { query, variables: { offset: 0, limit: 2 } },
+        result: { data: { letters: data.slice(0, 2) } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { offset: 2, limit: 2 } },
+        result: { data: { letters: data.slice(2, 4) } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { offset: 4, limit: 2 } },
+        result: { data: { letters: [] } },
+        delay: 20,
+      },
+    ]);
+
+    const user = userEvent.setup();
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              letters: offsetLimitPagination(),
+            },
+          },
+        },
+      }),
+      link,
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<
+          PaginatedCaseData,
+          PaginatedCaseVariables
+        > | null,
+      },
+    });
+
+    function App() {
+      useTrackRenders();
+      const result = useSuspenseQuery(query, {
+        variables: { offset: 0, limit: 2 },
+      });
+      const { data, fetchMore } = result;
+
+      Profiler.mergeSnapshot({ result });
+
+      return (
+        <button
+          onClick={() =>
+            fetchMore({
+              variables: {
+                offset: data.letters.length,
+                limit: 2,
+              },
+            })
+          }
+        >
+          Fetch next
+        </button>
+      );
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+        ],
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Fetch next")));
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
+        ],
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Fetch next")));
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
+        ],
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
+  });
+
   describe.skip("type tests", () => {
     it("returns unknown when TData cannot be inferred", () => {
       const query = gql`

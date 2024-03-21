@@ -158,6 +158,7 @@ export class InternalQueryReference<TData = unknown> {
   private reject: ((error: unknown) => void) | undefined;
 
   private references = 0;
+  private softReferences = 0;
 
   constructor(
     observable: ObservableQuery<TData, any>,
@@ -244,6 +245,28 @@ export class InternalQueryReference<TData = unknown> {
       // Wait before fully disposing in case the app is running in strict mode.
       setTimeout(() => {
         if (!this.references) {
+          this.dispose();
+        }
+      });
+    };
+  }
+
+  softRetain() {
+    this.softReferences++;
+    let disposed = false;
+
+    return () => {
+      // Tracking if this has already been called helps ensure that
+      // multiple calls to this function won't decrement the reference
+      // counter more than it should. Subsequent calls just result in a noop.
+      if (disposed) {
+        return;
+      }
+
+      disposed = true;
+      this.softReferences--;
+      setTimeout(() => {
+        if (!this.softReferences && !this.references) {
           this.dispose();
         }
       });

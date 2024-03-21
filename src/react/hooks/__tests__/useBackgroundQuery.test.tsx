@@ -111,6 +111,7 @@ function createErrorProfiler<TData = unknown>() {
     },
   });
 }
+
 function createDefaultProfiler<TData = unknown>() {
   return createProfiler({
     initialSnapshot: {
@@ -444,6 +445,169 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
   }
 
   await expect(Profiler).not.toRerender({ timeout: 50 });
+});
+
+it("disposes of the queryRef when unmounting before it is used by useReadQuery", async () => {
+  const { query, mocks } = setupSimpleCase();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+
+  function App() {
+    useTrackRenders();
+    useBackgroundQuery(query);
+
+    return null;
+  }
+
+  const { unmount } = renderWithClient(<App />, { client, wrapper: Profiler });
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+  }
+
+  unmount();
+  await wait(0);
+
+  expect(client.getObservableQueries().size).toBe(0);
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+});
+
+it("disposes of old queryRefs when changing variables before the queryRef is used by useReadQuery", async () => {
+  const { query, mocks } = setupVariablesCase();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+
+  function App({ id }: { id: string }) {
+    useTrackRenders();
+    useBackgroundQuery(query, { variables: { id } });
+
+    return null;
+  }
+
+  const { rerender } = renderWithClient(<App id="1" />, {
+    client,
+    wrapper: Profiler,
+  });
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query, {
+    variables: { id: "1" },
+  });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+  }
+
+  rerender(<App id="2" />);
+
+  await wait(0);
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query, {
+    variables: { id: "2" },
+  });
+  expect(client).not.toHaveSuspenseCacheEntryUsing(query, {
+    variables: { id: "1" },
+  });
+});
+
+it("does not prematurely dispose of the queryRef when using strict mode", async () => {
+  const { query, mocks } = setupSimpleCase();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+
+  function App() {
+    useTrackRenders();
+    useBackgroundQuery(query);
+
+    return null;
+  }
+
+  renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => (
+      <React.StrictMode>
+        <Profiler>{children}</Profiler>
+      </React.StrictMode>
+    ),
+  });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+  }
+
+  await wait(10);
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+});
+
+it("disposes of the queryRef when unmounting before it is used by useReadQuery even if it has been rerendered", async () => {
+  const { query, mocks } = setupSimpleCase();
+  const client = new ApolloClient({
+    link: new MockLink(mocks),
+    cache: new InMemoryCache(),
+  });
+  const user = userEvent.setup();
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+
+  function App() {
+    useTrackRenders();
+    useBackgroundQuery(query);
+
+    const [a, setA] = React.useState(0);
+
+    return (
+      <>
+        <button onClick={() => setA(a + 1)}>Increment</button>
+      </>
+    );
+  }
+
+  const { unmount } = renderWithClient(<App />, {
+    client,
+    wrapper: Profiler,
+  });
+  const button = screen.getByText("Increment");
+
+  await act(() => user.click(button));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+  }
+
+  expect(client.getObservableQueries().size).toBe(1);
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
+
+  await wait(0);
+
+  unmount();
+  await wait(0);
+  expect(client.getObservableQueries().size).toBe(0);
 });
 
 it("allows the client to be overridden", async () => {
@@ -985,6 +1149,7 @@ it("works with startTransition to change variables", async () => {
       completed: boolean;
     };
   }
+
   const user = userEvent.setup();
 
   const query: TypedDocumentNode<Data, Variables> = gql`
@@ -4189,6 +4354,7 @@ describe("refetch", () => {
         completed: boolean;
       };
     }
+
     const user = userEvent.setup();
 
     const query: TypedDocumentNode<Data, Variables> = gql`
@@ -4437,6 +4603,7 @@ describe("refetch", () => {
         completed: boolean;
       };
     }
+
     const user = userEvent.setup();
 
     const query: TypedDocumentNode<Data, Variables> = gql`
@@ -5055,9 +5222,11 @@ describe("fetchMore", () => {
       name: string;
       completed: boolean;
     }
+
     interface Data {
       todos: Todo[];
     }
+
     const user = userEvent.setup();
 
     const query: TypedDocumentNode<Data, Variables> = gql`

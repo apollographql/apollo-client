@@ -15,7 +15,7 @@ import {
 } from "../internal/index.js";
 import type { CacheKey, QueryReference } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
-import { __use, wrapHook } from "./internal/index.js";
+import { wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
@@ -260,6 +260,8 @@ function _useBackgroundQuery<
     },
     [queryRef]
   );
+
+  React.useEffect(() => queryRef.softRetain(), [queryRef]);
 
   return [
     didFetchResult.current ? wrappedQueryRef : void 0,

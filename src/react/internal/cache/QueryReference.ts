@@ -261,7 +261,7 @@ export class InternalQueryReference<TData = unknown> {
       // multiple calls to this function won't decrement the reference
       // counter more than it should. Subsequent calls just result in a noop.
       if (disposed) {
-        return
+        return;
       }
 
       disposed = true;
@@ -271,7 +271,7 @@ export class InternalQueryReference<TData = unknown> {
           this.dispose();
         }
       });
-    }
+    };
   }
 
   didChangeOptions(watchQueryOptions: ObservedOptions) {

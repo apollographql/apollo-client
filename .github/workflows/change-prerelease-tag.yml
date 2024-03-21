@@ -26,7 +26,7 @@ jobs:
       - uses: actions/create-github-app-token@v1
         id: github-actions-bot-app-token
         with:
-          app-id: 48725422
+          app-id: 819772
           private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
           repositories: ${{ github.repository }}
           owner: ${{ github.repository_owner }}

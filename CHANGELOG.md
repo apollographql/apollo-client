@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.9.9
+
+### Patch Changes
+
+- [#11696](https://github.com/apollographql/apollo-client/pull/11696) [`466ef82`](https://github.com/apollographql/apollo-client/commit/466ef82198486fc696da64d17d82b46140760ac4) Thanks [@PiR1](https://github.com/PiR1)! - Immediately dispose of the `queryRef` if `useBackgroundQuery` unmounts before the auto dispose timeout kicks in.
+
 ## 3.9.8
 
 ### Patch Changes

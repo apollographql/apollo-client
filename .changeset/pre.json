@@ -4,5 +4,7 @@
   "initialVersions": {
     "@apollo/client": "3.9.8"
   },
-  "changesets": []
+  "changesets": [
+    "fast-roses-kick"
+  ]
 }

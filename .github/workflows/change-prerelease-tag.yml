@@ -53,7 +53,7 @@ jobs:
           npm i
 
       - name: Update prerelease tag in .changeset/pre.json
-        uses: restackio/update-json-file-action@v2.1
+        uses: restackio/update-json-file-action@2.1
         with:
           file: .changeset/pre.json
           fields: '{"tag": "${{github.event.inputs.tag}}"}'

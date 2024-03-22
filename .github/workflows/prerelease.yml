@@ -65,7 +65,13 @@ jobs:
         # If .changeset/pre.json does not exist and we did not recently exit
         # prerelease mode, enter prerelease mode with tag alpha
         if: steps.check_files.outputs.files_exists == 'false' && !contains(github.event.head_commit.message, 'Exit prerelease')
-        run: npx changeset pre enter alpha && git add -A && git commit -m 'Enter prerelease mode' && git push
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          npx changeset pre enter alpha
+          git add -A
+          git commit -m 'Enter prerelease mode'
+          git push
 
       - name: Create prerelease PR
         # If .changeset/pre.json exists and we are not currently cutting a

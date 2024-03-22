@@ -28,8 +28,6 @@ jobs:
         with:
           app-id: 819772
           private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
-          repositories: ${{ github.repository }}
-          owner: ${{ github.repository_owner }}
 
       # Check out the repository, using the Github Actions Bot app's token so
       # that we can push later.

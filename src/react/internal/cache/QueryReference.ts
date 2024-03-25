@@ -15,7 +15,6 @@ import {
   createRejectedPromise,
 } from "../../../utilities/index.js";
 import type { QueryKey } from "./types.js";
-import type { useBackgroundQuery, useReadQuery } from "../../hooks/index.js";
 import { wrapPromiseWithState } from "../../../utilities/index.js";
 
 type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
@@ -30,8 +29,8 @@ const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 const PROMISE_SYMBOL: unique symbol = Symbol();
 
 /**
- * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
- * A child component reading the `QueryReference` via {@link useReadQuery} will
+ * A `QueryReference` is an opaque object returned by `useBackgroundQuery`.
+ * A child component reading the `QueryReference` via `useReadQuery` will
  * suspend until the promise resolves.
  */
 export interface QueryReference<TData = unknown, TVariables = unknown> {
@@ -159,6 +158,7 @@ export class InternalQueryReference<TData = unknown> {
   private reject: ((error: unknown) => void) | undefined;
 
   private references = 0;
+  private softReferences = 0;
 
   constructor(
     observable: ObservableQuery<TData, any>,
@@ -251,9 +251,32 @@ export class InternalQueryReference<TData = unknown> {
     };
   }
 
+  softRetain() {
+    this.softReferences++;
+    let disposed = false;
+
+    return () => {
+      // Tracking if this has already been called helps ensure that
+      // multiple calls to this function won't decrement the reference
+      // counter more than it should. Subsequent calls just result in a noop.
+      if (disposed) {
+        return;
+      }
+
+      disposed = true;
+      this.softReferences--;
+      setTimeout(() => {
+        if (!this.softReferences && !this.references) {
+          this.dispose();
+        }
+      });
+    };
+  }
+
   didChangeOptions(watchQueryOptions: ObservedOptions) {
     return OBSERVED_CHANGED_OPTIONS.some(
       (option) =>
+        option in watchQueryOptions &&
         !equal(this.watchQueryOptions[option], watchQueryOptions[option])
     );
   }
@@ -378,11 +401,31 @@ export class InternalQueryReference<TData = unknown> {
     // to resolve the promise if `handleNext` hasn't been run to ensure the
     // promise is resolved correctly.
     returnedPromise
-      .then((result) => {
-        if (this.promise.status === "pending") {
-          this.result = result;
-          this.resolve?.(result);
-        }
+      .then(() => {
+        // In the case of `fetchMore`, this promise is resolved before a cache
+        // result is emitted due to the fact that `fetchMore` sets a `no-cache`
+        // fetch policy and runs `cache.batch` in its `.then` handler. Because
+        // the timing is different, we accidentally run this update twice
+        // causing an additional re-render with the `fetchMore` result by
+        // itself. By wrapping in `setTimeout`, this should provide a short
+        // delay to allow the `QueryInfo.notify` handler to run before this
+        // promise is checked.
+        // See https://github.com/apollographql/apollo-client/issues/11315 for
+        // more information
+        setTimeout(() => {
+          if (this.promise.status === "pending") {
+            // Use the current result from the observable instead of the value
+            // resolved from the promise. This avoids issues in some cases where
+            // the raw resolved value should not be the emitted value, such as
+            // when a `fetchMore` call returns an empty array after it has
+            // reached the end of the list.
+            //
+            // See the following for more information:
+            // https://github.com/apollographql/apollo-client/issues/11642
+            this.result = this.observable.getCurrentResult();
+            this.resolve?.(this.result);
+          }
+        });
       })
       .catch(() => {});
 

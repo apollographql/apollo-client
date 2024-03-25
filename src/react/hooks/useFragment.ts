@@ -29,7 +29,7 @@ export interface UseFragmentOptions<TData, TVars>
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
   /**
-   * The instance of {@link ApolloClient} to use to look up the fragment.
+   * The instance of `ApolloClient` to use to look up the fragment.
    *
    * By default, the instance that's passed down via context is used, but you
    * can provide a different instance here.
@@ -87,6 +87,12 @@ function _useFragment<TData = any, TVars = OperationVariables>(
   const resultRef = useLazyRef<UseFragmentResult<TData>>(() =>
     diffToResult(cache.diff<TData>(diffOptions))
   );
+
+  // Since .next is async, we need to make sure that we
+  // get the correct diff on the next render given new diffOptions
+  React.useMemo(() => {
+    resultRef.current = diffToResult(cache.diff<TData>(diffOptions));
+  }, [diffOptions, cache]);
 
   // Used for both getSnapshot and getServerSnapshot
   const getSnapshot = React.useCallback(() => resultRef.current, []);

@@ -4,7 +4,7 @@ import { HttpLink } from "../HttpLink";
 import { itAsync, subscribeAndCount } from "../../../testing";
 import type { Observable } from "zen-observable-ts";
 import { TextEncoder, TextDecoder } from "util";
-import { ReadableStream } from "web-streams-polyfill/ponyfill/es2018";
+import { ReadableStream } from "web-streams-polyfill";
 import { Readable } from "stream";
 
 // As of Jest 26 there is no way to mock/unmock a module that is used indirectly

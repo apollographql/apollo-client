@@ -1100,7 +1100,18 @@ test("resuspends when calling `fetchMore`", async () => {
 
   const user = userEvent.setup();
 
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    }),
+    link,
+  });
   const preloadQuery = createQueryPreloader(client);
 
   const Profiler = createProfiler({
@@ -1397,7 +1408,18 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
   const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    }),
+    link,
+  });
 
   const Profiler = createProfiler({
     initialSnapshot: {
@@ -1489,7 +1511,18 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
   const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    }),
+    link,
+  });
 
   const Profiler = createProfiler({
     initialSnapshot: {
@@ -1589,7 +1622,18 @@ test("`fetchMore` works with startTransition", async () => {
   const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    }),
+    link,
+  });
   const preloadQuery = createQueryPreloader(client);
 
   const Profiler = createProfiler({
@@ -1708,7 +1752,18 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
   const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    }),
+    link,
+  });
 
   const Profiler = createProfiler({
     initialSnapshot: {

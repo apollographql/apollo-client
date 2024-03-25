@@ -560,6 +560,69 @@ describe("reading from the store", () => {
     });
   });
 
+  it("runs a nested query - skips iterating into an empty array", () => {
+    const reader = new StoreReader({
+      cache: new InMemoryCache(),
+    });
+
+    const result = {
+      id: "abcd",
+      stringField: "This is a string!",
+      numberField: 5,
+      nullField: null,
+      nestedArray: [
+        {
+          id: "abcde",
+          stringField: "This is a string also!",
+          numberField: 7,
+          nullField: null,
+        },
+      ],
+      emptyArray: [],
+    } satisfies StoreObject;
+
+    const store = defaultNormalizedCacheFactory({
+      ROOT_QUERY: { ...result, nestedArray: [makeReference("abcde")] },
+      abcde: result.nestedArray[0],
+    });
+
+    expect(reader["executeSubSelectedArray"].size).toBe(0);
+
+    // assumption: cache size does not increase for empty array
+    readQueryFromStore(reader, {
+      store,
+      query: gql`
+        {
+          stringField
+          numberField
+          emptyArray {
+            id
+            stringField
+            numberField
+          }
+        }
+      `,
+    });
+    expect(reader["executeSubSelectedArray"].size).toBe(0);
+
+    // assumption: cache size increases for array with content
+    readQueryFromStore(reader, {
+      store,
+      query: gql`
+        {
+          stringField
+          numberField
+          nestedArray {
+            id
+            stringField
+            numberField
+          }
+        }
+      `,
+    });
+    expect(reader["executeSubSelectedArray"].size).toBe(1);
+  });
+
   it("throws on a missing field", () => {
     const result = {
       id: "abcd",

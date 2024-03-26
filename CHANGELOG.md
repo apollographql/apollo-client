@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.9.10
+
+### Patch Changes
+
+- [#11670](https://github.com/apollographql/apollo-client/pull/11670) [`cc5c03b`](https://github.com/apollographql/apollo-client/commit/cc5c03b2690f452483d83eecb68611a23055d99e) Thanks [@phryneas](https://github.com/phryneas)! - Bail out of `executeSubSelectedArray` calls if the array has 0 elements.
+
 ## 3.9.9
 
 ### Patch Changes

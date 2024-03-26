@@ -7,6 +7,7 @@ interface ProxiedSchemaFns {
   addResolvers: (newResolvers: Resolvers) => GraphQLSchema;
   forkWithResolvers: (newResolvers: Resolvers) => GraphQLSchema;
   reset: () => void;
+  fork: () => GraphQLSchema;
 }
 
 const proxiedSchema = (
@@ -27,13 +28,12 @@ const proxiedSchema = (
           ...newResolvers,
         },
       })),
-    // could also just create a fn that just forks and doesn't take resolvers
     forkWithResolvers: (newResolvers: typeof resolvers) => {
       return proxiedSchema(targetSchema, newResolvers);
     },
-    // fork: () => {
-    //   return proxiedSchema(targetSchema, {});
-    // },
+    fork: () => {
+      return proxiedSchema(targetSchema, {});
+    },
     reset: () => {
       targetSchema = addResolversToSchema({
         schema: schemaWithMocks,
@@ -42,9 +42,6 @@ const proxiedSchema = (
     },
   };
 
-  // Usage notes:
-  // You'd want to fork aka call withResolvers e.g. in a describe block and
-  // call addResolvers after/in a single test file, you shouldn't
   const schema = new Proxy(targetSchema, {
     get(_target, p) {
       if (p in fns) {

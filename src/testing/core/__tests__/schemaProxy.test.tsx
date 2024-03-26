@@ -1,24 +1,31 @@
 import * as React from "react";
 import {
   ApolloClient,
+  ApolloError,
   HttpLink,
   InMemoryCache,
   gql,
 } from "../../../core/index.js";
 import type { TypedDocumentNode } from "../../../core/index.js";
 import {
+  Profiler,
   createProfiler,
   renderWithClient,
+  spyOnConsole,
   useTrackRenders,
 } from "../../internal/index.js";
 import { proxiedSchema } from "../schemaProxy.js";
-import { buildSchema } from "graphql";
+import { GraphQLError, buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
 import { useMutation, useSuspenseQuery } from "../../../react/index.js";
 import { createMockSchema } from "../../graphql-tools/utils.js";
 import userEvent from "@testing-library/user-event";
 import { act, screen } from "@testing-library/react";
 import { createMockFetch } from "../mockFetchWithSchema.js";
+import {
+  FallbackProps,
+  ErrorBoundary as ReactErrorBoundary,
+} from "react-error-boundary";
 
 const typeDefs = /* GraphQL */ `
   type User {
@@ -88,6 +95,36 @@ function createDefaultProfiler<TData = unknown>() {
   });
 }
 
+function createErrorProfiler<TData = unknown>() {
+  return createProfiler({
+    initialSnapshot: {
+      error: null as Error | null,
+      result: null as UseSuspenseQueryResult<TData> | null,
+    },
+  });
+}
+
+function createTrackedErrorComponents<Snapshot extends { error: Error | null }>(
+  Profiler: Profiler<Snapshot>
+) {
+  function ErrorFallback({ error }: FallbackProps) {
+    useTrackRenders({ name: "ErrorFallback" });
+    Profiler.mergeSnapshot({ error } as Partial<Snapshot>);
+
+    return <div>Error</div>;
+  }
+
+  function ErrorBoundary({ children }: { children: React.ReactNode }) {
+    return (
+      <ReactErrorBoundary FallbackComponent={ErrorFallback}>
+        {children}
+      </ReactErrorBoundary>
+    );
+  }
+
+  return { ErrorBoundary };
+}
+
 interface ViewerQueryData {
   viewer: {
     id: string;
@@ -132,7 +169,7 @@ describe("schema proxy", () => {
     },
   });
 
-  it("should allow adding scalar mocks and resolvers", async () => {
+  it("mocks scalars and resolvers", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
     const mockFetch = createMockFetch(schema);
     const client = new ApolloClient({
@@ -210,7 +247,7 @@ describe("schema proxy", () => {
     unmount();
   });
 
-  it("should allow schema forking with .fork", async () => {
+  it("allows schema forking with .fork", async () => {
     const forkedSchema = schema.forkWithResolvers({
       Query: {
         viewer: () => ({
@@ -307,7 +344,7 @@ describe("schema proxy", () => {
     unmount();
   });
 
-  it("should not pollute the original schema", async () => {
+  it("does not pollute the original schema", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
     const mockFetch = createMockFetch(schema);
 
@@ -386,7 +423,7 @@ describe("schema proxy", () => {
     unmount();
   });
 
-  it("should handle mutations", async () => {
+  it("handles mutations", async () => {
     const query: TypedDocumentNode<ViewerQueryData> = gql`
       query {
         viewer {
@@ -529,6 +566,179 @@ describe("schema proxy", () => {
           },
         },
       });
+    }
+
+    unmount();
+  });
+
+  it("returns GraphQL errors", async () => {
+    using _consoleSpy = spyOnConsole("error");
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+          }
+        }
+      }
+    `;
+
+    let name = "Jane Doe";
+
+    const forkedSchema = schema.forkWithResolvers({
+      Query: {
+        viewer: () => ({
+          book: {
+            // text: "Hello World", <- this will cause a validation error
+            title: "The Book",
+          },
+        }),
+      },
+      User: {
+        name: () => name,
+      },
+    });
+
+    const Profiler = createErrorProfiler<ViewerQueryData>();
+
+    const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
+
+    const mockFetch = createMockFetch(forkedSchema);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new HttpLink({ fetch: mockFetch }),
+    });
+
+    const Fallback = () => {
+      useTrackRenders();
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <ErrorBoundary>
+            <Child />
+          </ErrorBoundary>
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+
+      useTrackRenders();
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return <div>Hello</div>;
+    };
+
+    const { unmount } = renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.error).toEqual(
+        new ApolloError({
+          graphQLErrors: [new GraphQLError("Could not resolve type")],
+        })
+      );
+    }
+
+    unmount();
+  });
+
+  it("validates schema by default and returns validation errors", async () => {
+    using _consoleSpy = spyOnConsole("error");
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+          }
+        }
+      }
+    `;
+
+    // invalid schema
+    const forkedSchema = { foo: "bar" };
+
+    const Profiler = createErrorProfiler<ViewerQueryData>();
+
+    const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
+
+    const mockFetch = createMockFetch(forkedSchema);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new HttpLink({ fetch: mockFetch }),
+    });
+
+    const Fallback = () => {
+      useTrackRenders();
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <ErrorBoundary>
+            <Child />
+          </ErrorBoundary>
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+
+      useTrackRenders();
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return <div>Hello</div>;
+    };
+
+    const { unmount } = renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.error).toEqual(
+        new ApolloError({
+          graphQLErrors: [
+            new GraphQLError('Expected { foo: "bar" } to be a GraphQL schema.'),
+          ],
+        })
+      );
     }
 
     unmount();

@@ -1,3 +1,4 @@
+import { gql } from "../../core/index.js";
 import { Response as NodeFetchResponse } from "node-fetch";
 import { execute } from "graphql";
 
@@ -9,12 +10,14 @@ const createMockFetch = (schema: any) => {
     // TODO: validation errors
 
     return new Promise(async (resolve) => {
+      const body = JSON.parse(options.body);
+      const document = gql(body.query);
+
       const result = await execute({
         schema,
-        contextValue: options.context,
-        document: options.operation.query,
-        variableValues: options.operation.variables,
-        operationName: options.operation.operationName,
+        document,
+        variableValues: body.variables,
+        operationName: body.operationName,
       });
 
       const stringifiedResult = JSON.stringify(result);

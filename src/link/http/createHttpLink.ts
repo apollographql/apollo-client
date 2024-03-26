@@ -176,11 +176,6 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       }
     }
 
-    if (__DEV__) {
-      options.context = context;
-      options.operation = operation;
-    }
-
     return new Observable((observer) => {
       // Prefer linkOptions.fetch (preferredFetch) if provided, and otherwise
       // fall back to the *current* global window.fetch function (see issue

@@ -1,8 +1,0 @@
-{
-  "mode": "pre",
-  "tag": "rc",
-  "initialVersions": {
-    "@apollo/client": "3.9.9"
-  },
-  "changesets": []
-}

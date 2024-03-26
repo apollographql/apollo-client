@@ -260,11 +260,7 @@ describe("schema proxy", () => {
     });
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
-    // TODO list:
-    // might need rootValue and context in the future but for now we'll
-    // leave them out of the options accepted by createMockFetch
-    // where might we want to inject context? (e.g. for authentication)
-    // start without (maybe it should be injected via createMockFetch?)
+
     const mockFetch = createMockFetch(forkedSchema);
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -528,8 +524,6 @@ describe("schema proxy", () => {
           __typename: "User",
           age: 42,
           id: "1",
-          // In our resolvers defined in this test, we omit name so it uses
-          // the scalar default mock
           name: "Jane Doe",
           book: {
             // locally overrode the resolver for the book field
@@ -554,8 +548,6 @@ describe("schema proxy", () => {
           __typename: "User",
           age: 42,
           id: "1",
-          // In our resolvers defined in this test, we omit name so it uses
-          // the scalar default mock
           name: "Alexandre",
           book: {
             // locally overrode the resolver for the book field

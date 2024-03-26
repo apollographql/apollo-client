@@ -58,14 +58,10 @@ jobs:
           file: .changeset/pre.json
           fields: '{"tag": "${{github.event.inputs.tag}}"}'
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Prepare for ${{ github.event.inputs.tag }} release
-          # must manually set these values since the defaults come from
-          # the workflow_dispatch event which does not contain the email
-          # for the user dispatching the event which breaks the CLA check
-          commit_user_name: github-actions[bot]
-          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
-          commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          # Commit these changes to the branch workflow is running against
-          branch: ${{ github.event.inputs.branch }}
+      - name: Commit and push changes
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -A
+          git commit -m 'Prepare for ${{ github.event.inputs.tag }} release'
+          git push

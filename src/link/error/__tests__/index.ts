@@ -145,6 +145,40 @@ describe("error handling", () => {
       });
     }
   );
+  itAsync(
+    "sets graphQLErrors to undefined if networkError.result is an empty string",
+    (resolve, reject) => {
+      const query = gql`
+        query Foo {
+          foo {
+            bar
+          }
+        }
+      `;
+
+      let called: boolean;
+      const errorLink = onError(({ graphQLErrors }) => {
+        expect(graphQLErrors).toBeUndefined();
+        called = true;
+      });
+
+      const mockLink = new ApolloLink((operation) => {
+        return new Observable((obs) => {
+          const response = { status: 500, ok: false } as Response;
+          throwServerError(response, "", "app is crashing");
+        });
+      });
+
+      const link = errorLink.concat(mockLink);
+
+      execute(link, { query }).subscribe({
+        error: (e) => {
+          expect(called).toBe(true);
+          resolve();
+        },
+      });
+    }
+  );
   itAsync("completes if no errors", (resolve, reject) => {
     const query = gql`
       {

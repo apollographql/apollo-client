@@ -4,21 +4,21 @@ import {
   HttpLink,
   InMemoryCache,
   gql,
-} from "../../core/index.js";
-import type { TypedDocumentNode } from "../../core/index.js";
+} from "../../../core/index.js";
+import type { TypedDocumentNode } from "../../../core/index.js";
 import {
   createProfiler,
   renderWithClient,
   useTrackRenders,
-} from "../internal/index.js";
-import { proxiedSchema } from "./schemaProxy.js";
+} from "../../internal/index.js";
+import { proxiedSchema } from "../schemaProxy.js";
 import { buildSchema } from "graphql";
-import type { UseSuspenseQueryResult } from "../../react/index.js";
-import { useMutation, useSuspenseQuery } from "../../react/index.js";
-import { createMockSchema } from "../graphql-tools/utils.js";
+import type { UseSuspenseQueryResult } from "../../../react/index.js";
+import { useMutation, useSuspenseQuery } from "../../../react/index.js";
+import { createMockSchema } from "../../graphql-tools/utils.js";
 import userEvent from "@testing-library/user-event";
 import { act, screen } from "@testing-library/react";
-import { createMockFetch } from "./mockFetchWithSchema.js";
+import { createMockFetch } from "../mockFetchWithSchema.js";
 
 const typeDefs = /* GraphQL */ `
   type User {
@@ -223,6 +223,11 @@ describe("schema proxy", () => {
     });
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
+    // TODO list:
+    // might need rootValue and context in the future but for now we'll
+    // leave them out of the options accepted by createMockFetch
+    // where might we want to inject context? (e.g. for authentication)
+    // start without (maybe it should be injected via createMockFetch?)
     const mockFetch = createMockFetch(forkedSchema);
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -230,7 +235,7 @@ describe("schema proxy", () => {
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`
-      query {
+      query ViewerQuery {
         viewer {
           id
           name

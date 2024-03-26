@@ -1,5 +1,6 @@
 import { addResolversToSchema } from "@graphql-tools/schema";
 import type { GraphQLSchema } from "graphql";
+
 import type { Resolvers } from "../../core/types.js";
 
 interface ProxiedSchemaFns {
@@ -50,9 +51,15 @@ const proxiedSchema = (
         return Reflect.get(fns, p);
       }
 
-      // if (typeof targetSchema[p] === "function") {
-      //   return targetSchema[p].bind(targetSchema);
-      // }
+      // this binds `this` to the right schema - without it, the new schema
+      // calls methods but with the wrong `this` context, from the previous
+      // schema
+      // @ts-ignore
+      if (typeof targetSchema[p] === "function") {
+        // @ts-ignore
+        return targetSchema[p].bind(targetSchema);
+      }
+
       return Reflect.get(targetSchema, p);
     },
   });

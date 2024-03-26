@@ -51,11 +51,9 @@ jobs:
         run: npx rimraf .changeset/pre.json
 
       - name: Commit and push changes
-        env:
-          BRANCH: ${{ github.event.inputs.branch }}
         run: |
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add -A
-          git commit -m "Prepare for "$BRANCH" release"
+          git commit -m "Exit prerelease mode"
           git push

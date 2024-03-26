@@ -61,5 +61,11 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Prepare for ${{ github.event.inputs.tag }} release
+          # must manually set these values since the defaults come from
+          # the workflow_dispatch event which does not contain the email
+          # for the user dispatching the event which breaks the CLA check
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           # Commit these changes to the branch workflow is running against
           branch: ${{ github.event.inputs.branch }}

@@ -1212,9 +1212,6 @@ describe("ObservableQuery", () => {
             expect(fqbpCalls.length).toBe(2);
             expect(fqbpCalls[1][1].fetchPolicy).toBe("no-cache");
 
-            // Unlike network-only or cache-and-network, the no-cache
-            // FetchPolicy does not switch to cache-first after the first
-            // network request.
             expect(observable.options.fetchPolicy).toBe("no-cache");
             const fqoCalls = mocks.fetchConcastWithInfo.mock.calls;
             expect(fqoCalls.length).toBe(2);

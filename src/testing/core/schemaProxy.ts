@@ -48,16 +48,34 @@ const proxiedSchema = (
         return Reflect.get(fns, p);
       }
 
-      // this binds `this` to the right schema - without it, the new schema
-      // calls methods but with the wrong `this` context, from the previous
-      // schema
-      // @ts-ignore
-      if (typeof targetSchema[p] === "function") {
-        // @ts-ignore
-        return targetSchema[p].bind(targetSchema);
-      }
+      // An optimization that eliminates round-trips through the proxy
+      // on class methods invoked via `this` on a base class instance wrapped by
+      // the proxy.
+      //
+      // For example, consider the following class:
+      //
+      // class Base {
+      //   foo(){
+      //     this.bar()
+      //   }
+      //   bar(){
+      //     ...
+      //   }
+      // }
+      //
+      // Calling `proxy.foo()` would call `foo` with `this` being the proxy.
+      // This would result in calling `proxy.bar()` which would again invoke
+      // the proxy to resolve `bar` and call that method.
+      //
+      // Instead, calls to `proxy.foo()` should result in a call to
+      // `innerObject.foo()` with a `this` of `innerObject`, and that call
+      // should directly call `innerObject.bar()`.
 
-      return Reflect.get(targetSchema, p);
+      const property = Reflect.get(targetSchema, p);
+      if (typeof property === "function") {
+        return property.bind(targetSchema);
+      }
+      return property;
     },
   });
 

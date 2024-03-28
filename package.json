@@ -112,6 +112,7 @@
     "@changesets/changelog-github": "0.5.0",
     "@changesets/cli": "2.27.1",
     "@graphql-tools/schema": "10.0.3",
+    "@graphql-tools/utils": "10.0.13",
     "@microsoft/api-extractor": "7.42.3",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@size-limit/esbuild-why": "11.1.1",

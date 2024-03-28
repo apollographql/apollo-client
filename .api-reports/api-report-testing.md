@@ -11,6 +11,7 @@ import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
+import type { GraphQLSchema } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 import * as React_2 from 'react';
@@ -445,6 +446,16 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 //
 // @public (undocumented)
 export function createMockClient<TData>(data: TData, query: DocumentNode, variables?: {}): ApolloClient<NormalizedCacheObject>;
+
+// @public (undocumented)
+export const createMockFetch: (schema: any, mockFetchOpts?: {
+    validate: boolean;
+}) => (uri: any, options: any) => Promise<Response>;
+
+// @public (undocumented)
+export const createMockSchema: (staticSchema: GraphQLSchema, mocks: {
+    [key: string]: any;
+}) => GraphQLSchema;
 
 // @public (undocumented)
 namespace DataProxy {
@@ -1264,6 +1275,23 @@ type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
+
+// Warning: (ae-forgotten-export) The symbol "ProxiedSchemaFns" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export const proxiedSchema: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => GraphQLSchema & ProxiedSchemaFns;
+
+// @public (undocumented)
+interface ProxiedSchemaFns {
+    // (undocumented)
+    addResolvers: (newResolvers: Resolvers) => GraphQLSchema;
+    // (undocumented)
+    fork: () => GraphQLSchema;
+    // (undocumented)
+    forkWithResolvers: (newResolvers: Resolvers) => GraphQLSchema;
+    // (undocumented)
+    reset: () => void;
+}
 
 // @public (undocumented)
 class QueryInfo {

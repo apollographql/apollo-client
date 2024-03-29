@@ -1731,6 +1731,8 @@ interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
 class SuspenseCache {
     constructor(options?: SuspenseCacheOptions);
     // (undocumented)
+    add(cacheKey: CacheKey, queryRef: InternalQueryReference<unknown>): void;
+    // (undocumented)
     getQueryRef<TData = any>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData>;
 }
 

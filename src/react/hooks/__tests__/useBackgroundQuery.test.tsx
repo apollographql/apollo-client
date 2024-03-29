@@ -450,6 +450,92 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
   await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
+it("does not recreate queryRef and execute a network request when rerendering useBackgroundQuery after queryRef is disposed", async () => {
+  const { query } = setupSimpleCase();
+  const user = userEvent.setup();
+  let fetchCount = 0;
+  const client = new ApolloClient({
+    link: new ApolloLink(() => {
+      fetchCount++;
+
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { greeting: "Hello" } });
+          observer.complete();
+        }, 20);
+      });
+    }),
+    cache: new InMemoryCache(),
+  });
+
+  const Profiler = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [show, setShow] = React.useState(true);
+    // Use a fetchPolicy of no-cache to ensure we can more easily track if
+    // another network request was made
+    const [queryRef] = useBackgroundQuery(query, { fetchPolicy: "no-cache" });
+
+    return (
+      <>
+        <button onClick={() => setShow((show) => !show)}>Toggle</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {show && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  const { rerender } = renderWithClient(<App />, { client, wrapper: Profiler });
+
+  const toggleButton = screen.getByText("Toggle");
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await act(() => user.click(toggleButton));
+  await Profiler.takeRender();
+  await wait(0);
+
+  rerender(<App />);
+  await Profiler.takeRender();
+
+  expect(fetchCount).toBe(1);
+
+  await act(() => user.click(toggleButton));
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(fetchCount).toBe(1);
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
+});
+
 it("disposes of the queryRef when unmounting before it is used by useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();
   const client = new ApolloClient({

@@ -251,14 +251,16 @@ describe("schema proxy", () => {
   });
 
   it("allows schema forking with .fork", async () => {
-    const forkedSchema = schema.forkWithResolvers({
-      Query: {
-        viewer: () => ({
-          book: {
-            colors: ["red", "blue", "green"],
-            title: "The Book",
-          },
-        }),
+    const forkedSchema = schema.fork({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              colors: ["red", "blue", "green"],
+              title: "The Book",
+            },
+          }),
+        },
       },
     });
 
@@ -424,6 +426,101 @@ describe("schema proxy", () => {
     unmount();
   });
 
+  it("allows you to call .fork without providing resolvers", async () => {
+    const forkedSchema = schema.fork();
+
+    forkedSchema.add({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              colors: ["red", "blue", "green"],
+              title: "The Book",
+            },
+          }),
+        },
+      },
+    });
+
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    using _fetch = createMockFetch(schema);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      uri,
+    });
+
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+          }
+        }
+      }
+    `;
+
+    const Fallback = () => {
+      useTrackRenders();
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child />
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+
+      useTrackRenders();
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return <div>Hello</div>;
+    };
+
+    const { unmount } = renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "Jane Doe",
+          book: {
+            __typename: "TextBook",
+            id: "1",
+            publishedAt: "2024-01-01",
+            title: "The Book",
+          },
+        },
+      });
+    }
+
+    unmount();
+  });
+
   it("handles mutations", async () => {
     const query: TypedDocumentNode<ViewerQueryData> = gql`
       query {
@@ -442,22 +539,24 @@ describe("schema proxy", () => {
 
     let name = "Jane Doe";
 
-    const forkedSchema = schema.forkWithResolvers({
-      Query: {
-        viewer: () => ({
-          book: {
-            text: "Hello World",
-            title: "The Book",
+    const forkedSchema = schema.fork({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              text: "Hello World",
+              title: "The Book",
+            },
+          }),
+        },
+        User: {
+          name: () => name,
+        },
+        Mutation: {
+          changeViewerName: (_: any, { newName }: { newName: string }) => {
+            name = newName;
+            return {};
           },
-        }),
-      },
-      User: {
-        name: () => name,
-      },
-      Mutation: {
-        changeViewerName: (_: any, { newName }: { newName: string }) => {
-          name = newName;
-          return {};
         },
       },
     });
@@ -587,17 +686,19 @@ describe("schema proxy", () => {
 
     let name = "Jane Doe";
 
-    const forkedSchema = schema.forkWithResolvers({
-      Query: {
-        viewer: () => ({
-          book: {
-            // text: "Hello World", <- this will cause a validation error
-            title: "The Book",
-          },
-        }),
-      },
-      User: {
-        name: () => name,
+    const forkedSchema = schema.fork({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              // text: "Hello World", <- this will cause a validation error
+              title: "The Book",
+            },
+          }),
+        },
+        User: {
+          name: () => name,
+        },
       },
     });
 

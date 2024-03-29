@@ -243,11 +243,9 @@ export class InternalQueryReference<TData = unknown> {
       this.references--;
 
       // Wait before fully disposing in case the app is running in strict mode.
-      setTimeout(() => {
-        if (!this.references) {
-          this.dispose();
-        }
-      });
+      if (!this.references) {
+        this.dispose();
+      }
     };
   }
 

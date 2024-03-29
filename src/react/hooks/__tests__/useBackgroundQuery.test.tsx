@@ -410,7 +410,10 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
   await wait(0);
 
   expect(client.getObservableQueries().size).toBe(0);
-  expect(client).not.toHaveSuspenseCacheEntryUsing(query);
+  // We retain the cache entry in useBackgroundQuery to avoid recreating the
+  // queryRef if useBackgroundQuery rerenders before useReadQuery is mounted
+  // again.
+  expect(client).toHaveSuspenseCacheEntryUsing(query);
 
   await act(() => user.click(toggleButton));
 

@@ -3672,6 +3672,79 @@ it('does not suspend deferred queries with partial data in the cache and using a
   await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
+it.each<SuspenseQueryHookFetchPolicy>([
+  "cache-first",
+  "network-only",
+  "cache-and-network",
+])(
+  'responds to cache updates in strict mode while using a "%s" fetch policy',
+  async (fetchPolicy) => {
+    const { query, mocks } = setupSimpleCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const Profiler = createDefaultProfiler<SimpleCaseData>();
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
+
+    function App() {
+      useTrackRenders();
+      const [queryRef] = useBackgroundQuery(query, { fetchPolicy });
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      );
+    }
+
+    renderWithClient(<App />, {
+      client,
+      wrapper: ({ children }) => (
+        <React.StrictMode>
+          <Profiler>{children}</Profiler>
+        </React.StrictMode>
+      ),
+    });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: { greeting: "Hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    client.writeQuery({
+      query,
+      data: { greeting: "Updated hello" },
+    });
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result).toEqual({
+        data: { greeting: "Updated hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await expect(Profiler).not.toRerender({ timeout: 50 });
+  }
+);
+
 describe("refetch", () => {
   it("re-suspends when calling `refetch`", async () => {
     const { query, mocks: defaultMocks } = setupVariablesCase();

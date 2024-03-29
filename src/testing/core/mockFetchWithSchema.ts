@@ -1,14 +1,17 @@
-import { ApolloError, gql } from "../../core/index.js";
 import { Response as NodeFetchResponse } from "node-fetch";
 import { execute, validate } from "graphql";
 import type { GraphQLError } from "graphql";
+import { ApolloError, gql } from "../../core/index.js";
+import { withCleanup } from "../internal/index.js";
 
 const createMockFetch = (
   schema: any,
   mockFetchOpts: { validate: boolean } = { validate: true }
 ) => {
+  const prevFetch = window.fetch;
+
   const mockFetch: (uri: any, options: any) => Promise<Response> = (
-    uri,
+    _uri,
     options
   ) => {
     return new Promise(async (resolve) => {
@@ -47,7 +50,14 @@ const createMockFetch = (
       resolve(new NodeFetchResponse(stringifiedResult) as unknown as Response);
     });
   };
-  return mockFetch;
+
+  window.fetch = mockFetch;
+
+  const restore = () => {
+    window.fetch = prevFetch;
+  };
+
+  return withCleanup({ mock: mockFetch, restore }, restore);
 };
 
 export { createMockFetch };

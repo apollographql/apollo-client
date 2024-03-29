@@ -2,7 +2,6 @@ import * as React from "react";
 import {
   ApolloClient,
   ApolloError,
-  HttpLink,
   InMemoryCache,
   gql,
 } from "../../../core/index.js";
@@ -86,6 +85,8 @@ const typeDefs = /* GraphQL */ `
 `;
 
 const schemaWithTypeDefs = buildSchema(typeDefs);
+
+const uri = "https://localhost:3000/graphql";
 
 function createDefaultProfiler<TData = unknown>() {
   return createProfiler({
@@ -171,10 +172,12 @@ describe("schema proxy", () => {
 
   it("mocks scalars and resolvers", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
-    const mockFetch = createMockFetch(schema);
+
+    using _fetch = createMockFetch(schema);
+
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new HttpLink({ fetch: mockFetch }),
+      uri,
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`
@@ -261,10 +264,11 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    const mockFetch = createMockFetch(forkedSchema);
+    using _fetch = createMockFetch(forkedSchema);
+
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new HttpLink({ fetch: mockFetch }),
+      uri,
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`
@@ -342,11 +346,12 @@ describe("schema proxy", () => {
 
   it("does not pollute the original schema", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
-    const mockFetch = createMockFetch(schema);
+
+    using _fetch = createMockFetch(schema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new HttpLink({ fetch: mockFetch }),
+      uri,
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`
@@ -459,11 +464,11 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    const mockFetch = createMockFetch(forkedSchema);
+    using _fetch = createMockFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new HttpLink({ fetch: mockFetch }),
+      uri,
     });
 
     const mutation = gql`
@@ -600,11 +605,11 @@ describe("schema proxy", () => {
 
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
-    const mockFetch = createMockFetch(forkedSchema);
+    using _fetch = createMockFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new HttpLink({ fetch: mockFetch }),
+      uri,
     });
 
     const Fallback = () => {
@@ -679,11 +684,11 @@ describe("schema proxy", () => {
 
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
-    const mockFetch = createMockFetch(forkedSchema);
+    using _fetch = createMockFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new HttpLink({ fetch: mockFetch }),
+      uri,
     });
 
     const Fallback = () => {

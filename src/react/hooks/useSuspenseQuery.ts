@@ -254,10 +254,10 @@ function _useSuspenseQuery<
   React.useEffect(() => {
     if (queryRef.disposed) {
       // Calling the `dispose` function removes it from the suspense cache, so
-      // when the component goes to rerender, it will instantiate a fresh query
-      // ref. We handle this by adding the queryRef back to the suspense cache
-      // as if it had never been disposed so that the lookup on the next render
-      // works as expected.
+      // when the component rerenders, it instantiates a fresh query ref.
+      // We address this by adding the queryRef back to the suspense cache
+      // so that the lookup on the next render uses the existing queryRef rather
+      // than instantiating a new one.
       suspenseCache.add(cacheKey, queryRef);
       queryRef.reinitialize();
     }

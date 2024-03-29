@@ -241,7 +241,7 @@ function _useBackgroundQuery<
 
   // Handle strict mode where the query ref might be disposed when useEffect
   // runs twice. We add the queryRef back in the suspense cache so that the next
-  // render will reuse this queryRef rather than initlializing a new instance.
+  // render will reuse this queryRef rather than initializing a new instance.
   // This also prevents issues where rerendering useBackgroundQuery after the
   // queryRef has been disposed, either automatically or by unmounting
   // useReadQuery will ensure the same queryRef is maintained.

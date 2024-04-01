@@ -47,4 +47,9 @@ export class SuspenseCache {
 
     return ref.current;
   }
+
+  add(cacheKey: CacheKey, queryRef: InternalQueryReference<unknown>) {
+    const ref = this.queryRefs.lookupArray(cacheKey);
+    ref.current = queryRef;
+  }
 }

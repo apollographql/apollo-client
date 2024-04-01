@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { ExecutionResult } from 'graphql';
@@ -450,7 +452,10 @@ export function createMockClient<TData>(data: TData, query: DocumentNode, variab
 // @public (undocumented)
 export const createMockFetch: (schema: any, mockFetchOpts?: {
     validate: boolean;
-}) => (uri: any, options: any) => Promise<Response>;
+}) => {
+    mock: (uri: any, options: any) => Promise<Response>;
+    restore: () => void;
+} & Disposable;
 
 // @public (undocumented)
 export const createMockSchema: (staticSchema: GraphQLSchema, mocks: {
@@ -1279,16 +1284,23 @@ type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 // Warning: (ae-forgotten-export) The symbol "ProxiedSchemaFns" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export const proxiedSchema: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => GraphQLSchema & ProxiedSchemaFns;
+type ProxiedSchema = GraphQLSchema & ProxiedSchemaFns;
+
+// Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export const proxiedSchema: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => ProxiedSchema;
 
 // @public (undocumented)
 interface ProxiedSchemaFns {
     // (undocumented)
-    addResolvers: (newResolvers: Resolvers) => GraphQLSchema;
+    add: (addOptions: {
+        resolvers: Resolvers;
+    }) => ProxiedSchema;
     // (undocumented)
-    fork: () => GraphQLSchema;
-    // (undocumented)
-    forkWithResolvers: (newResolvers: Resolvers) => GraphQLSchema;
+    fork: (forkOptions?: {
+        resolvers?: Resolvers;
+    }) => ProxiedSchema;
     // (undocumented)
     reset: () => void;
 }

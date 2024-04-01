@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.9.10
+
+### Patch Changes
+
+- [#11738](https://github.com/apollographql/apollo-client/pull/11738) [`b1a5eb8`](https://github.com/apollographql/apollo-client/commit/b1a5eb80cae8bdf2e9d8627f1eab65e088c43438) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where rerendering `useBackgroundQuery` after the `queryRef` had been disposed, either via the auto dispose timeout or by unmounting `useReadQuery`, would cause the `queryRef` to be recreated potentially resulting in another network request.
+
+- [#11738](https://github.com/apollographql/apollo-client/pull/11738) [`b1a5eb8`](https://github.com/apollographql/apollo-client/commit/b1a5eb80cae8bdf2e9d8627f1eab65e088c43438) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow queryRefs to be disposed of synchronously when a suspense hook unmounts. This prevents some situations where using a suspense hook with the same query/variables as the disposed queryRef accidentally used the disposed queryRef rather than creating a new instance.
+
+- [#11670](https://github.com/apollographql/apollo-client/pull/11670) [`cc5c03b`](https://github.com/apollographql/apollo-client/commit/cc5c03b2690f452483d83eecb68611a23055d99e) Thanks [@phryneas](https://github.com/phryneas)! - Bail out of `executeSubSelectedArray` calls if the array has 0 elements.
+
 ## 3.9.9
 
 ### Patch Changes

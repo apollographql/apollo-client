@@ -15,7 +15,7 @@ import {
 } from "../internal/index.js";
 import type { CacheKey, QueryReference } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
-import { __use, wrapHook } from "./internal/index.js";
+import { wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
@@ -239,6 +239,20 @@ function _useBackgroundQuery<
     updateWrappedQueryRef(wrappedQueryRef, promise);
   }
 
+  // Handle strict mode where the query ref might be disposed when useEffect
+  // runs twice. We add the queryRef back in the suspense cache so that the next
+  // render will reuse this queryRef rather than initializing a new instance.
+  // This also prevents issues where rerendering useBackgroundQuery after the
+  // queryRef has been disposed, either automatically or by unmounting
+  // useReadQuery will ensure the same queryRef is maintained.
+  React.useEffect(() => {
+    if (queryRef.disposed) {
+      suspenseCache.add(cacheKey, queryRef);
+    }
+    // Omitting the deps is intentional. This avoids stale closures and the
+    // conditional ensures we aren't running the logic on each render.
+  });
+
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
       const promise = queryRef.fetchMore(options as FetchMoreQueryOptions<any>);
@@ -260,6 +274,8 @@ function _useBackgroundQuery<
     },
     [queryRef]
   );
+
+  React.useEffect(() => queryRef.softRetain(), [queryRef]);
 
   return [
     didFetchResult.current ? wrappedQueryRef : void 0,

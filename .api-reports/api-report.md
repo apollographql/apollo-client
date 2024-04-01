@@ -1332,6 +1332,8 @@ class InternalQueryReference<TData = unknown> {
     // (undocumented)
     retain(): () => void;
     // (undocumented)
+    softRetain(): () => void;
+    // (undocumented)
     get watchQueryOptions(): WatchQueryOptions<OperationVariables, TData>;
 }
 

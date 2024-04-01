@@ -239,6 +239,34 @@ function _useSuspenseQuery<
     };
   }, [queryRef]);
 
+  // This effect handles the case where strict mode causes the queryRef to get
+  // disposed early. Previously this was done by using a `setTimeout` inside the
+  // dispose function, but this could cause some issues in cases where someone
+  // might expect the queryRef to be disposed immediately. For example, when
+  // using the same client instance across multiple tests in a test suite, the
+  // `setTimeout` has the possibility of retaining the suspense cache entry for
+  // too long, which means that two tests might accidentally share the same
+  // `queryRef` instance. By immediately disposing, we can avoid this situation.
+  //
+  // Instead we can leverage the work done to allow the queryRef to "resume"
+  // after it has been disposed without executing an additional network request.
+  // This is done by calling the `initialize` function below.
+  React.useEffect(() => {
+    if (queryRef.disposed) {
+      // Calling the `dispose` function removes it from the suspense cache, so
+      // when the component rerenders, it instantiates a fresh query ref.
+      // We address this by adding the queryRef back to the suspense cache
+      // so that the lookup on the next render uses the existing queryRef rather
+      // than instantiating a new one.
+      suspenseCache.add(cacheKey, queryRef);
+      queryRef.reinitialize();
+    }
+    // We can omit the deps here to get a fresh closure each render since the
+    // conditional will prevent the logic from running in most cases. This
+    // should also be a touch faster since it should be faster to check the `if`
+    // statement than for React to compare deps on this effect.
+  });
+
   const skipResult = React.useMemo(() => {
     const error = toApolloError(queryRef.result);
 

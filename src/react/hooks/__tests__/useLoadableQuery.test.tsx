@@ -49,6 +49,7 @@ import {
   Profiler,
   SimpleCaseData,
   createProfiler,
+  setupPaginatedCase,
   setupSimpleCase,
   spyOnConsole,
   useTrackRenders,
@@ -3205,7 +3206,22 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
 });
 
 it("re-suspends when calling `fetchMore` with different variables", async () => {
-  const { query, client } = usePaginatedQueryCase();
+  const { query, link } = setupPaginatedCase();
+
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: {
+              keyArgs: false,
+            },
+          },
+        },
+      },
+    }),
+  });
 
   const Profiler = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
@@ -3244,8 +3260,8 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
       error: undefined,
@@ -3268,8 +3284,8 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "C", position: 3 },
-          { letter: "D", position: 4 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
       error: undefined,

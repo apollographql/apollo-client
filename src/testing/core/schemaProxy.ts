@@ -7,7 +7,7 @@ type ProxiedSchema = GraphQLSchema & ProxiedSchemaFns;
 
 interface ProxiedSchemaFns {
   add: (addOptions: { resolvers: Resolvers }) => ProxiedSchema;
-  fork: (forkOptions?: { resolvers: Resolvers }) => ProxiedSchema;
+  fork: (forkOptions?: { resolvers?: Resolvers }) => ProxiedSchema;
   reset: () => void;
 }
 
@@ -15,23 +15,25 @@ const proxiedSchema = (
   schemaWithMocks: GraphQLSchema,
   resolvers: Resolvers
 ): ProxiedSchema => {
+  let targetResolvers = { ...resolvers };
   let targetSchema = addResolversToSchema({
     schema: schemaWithMocks,
-    resolvers,
+    resolvers: targetResolvers,
   });
 
   const fns: ProxiedSchemaFns = {
-    add: ({ resolvers: newResolvers }) =>
-      (targetSchema = addResolversToSchema({
+    add: ({ resolvers: newResolvers }) => {
+      targetResolvers = { ...targetResolvers, ...newResolvers };
+      targetSchema = addResolversToSchema({
         schema: targetSchema,
-        resolvers: {
-          ...resolvers,
-          ...newResolvers,
-        },
-      })) as ProxiedSchema,
+        resolvers: targetResolvers,
+      });
 
-    fork: ({ resolvers } = { resolvers: {} }) => {
-      return proxiedSchema(targetSchema, resolvers);
+      return targetSchema as ProxiedSchema;
+    },
+
+    fork: ({ resolvers: newResolvers } = {}) => {
+      return proxiedSchema(targetSchema, newResolvers ?? targetResolvers);
     },
 
     reset: () => {

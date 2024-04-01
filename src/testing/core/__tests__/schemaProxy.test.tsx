@@ -444,7 +444,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createMockFetch(schema);
+    using _fetch = createMockFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -507,9 +507,12 @@ describe("schema proxy", () => {
           __typename: "User",
           age: 42,
           id: "1",
-          name: "Jane Doe",
+          // since we called .add and provided a new `viewer` resolver
+          // _without_ providing the viewer.name field in the response data,
+          // it renders with the default scalar mock for String
+          name: "String",
           book: {
-            __typename: "TextBook",
+            __typename: "ColoringBook",
             id: "1",
             publishedAt: "2024-01-01",
             title: "The Book",
@@ -837,6 +840,189 @@ describe("schema proxy", () => {
           ],
         })
       );
+    }
+
+    unmount();
+  });
+
+  it("preserves resolvers from previous calls to .add on subsequent calls to .fork", async () => {
+    let name = "Virginia";
+
+    const schema = proxiedSchema(schemaWithMocks, {
+      Query: {
+        viewer: () => ({
+          name,
+          book: {
+            text: "Hello World",
+            title: "The Book",
+          },
+        }),
+      },
+      Book: {
+        __resolveType: (obj) => {
+          if ("text" in obj) {
+            return "TextBook";
+          }
+          if ("colors" in obj) {
+            return "ColoringBook";
+          }
+          throw new Error("Could not resolve type");
+        },
+      },
+    });
+
+    schema.add({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            name: "Virginia",
+            book: {
+              colors: ["red", "blue", "green"],
+              title: "The Book",
+            },
+          }),
+        },
+      },
+    });
+
+    schema.add({
+      resolvers: {
+        User: {
+          name: () => name,
+        },
+      },
+    });
+
+    // should preserve resolvers from previous calls to .add
+    const forkedSchema = schema.fork({
+      resolvers: {
+        Mutation: {
+          changeViewerName: (_: any, { newName }: { newName: string }) => {
+            name = newName;
+            return {};
+          },
+        },
+      },
+    });
+
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    using _fetch = createMockFetch(forkedSchema);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      uri,
+    });
+
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+            ... on ColoringBook {
+              colors
+            }
+          }
+        }
+      }
+    `;
+
+    const mutation = gql`
+      mutation {
+        changeViewerName(newName: "Alexandre") {
+          id
+          name
+        }
+      }
+    `;
+
+    const Fallback = () => {
+      useTrackRenders();
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child />
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+      const [changeViewerName] = useMutation(mutation);
+
+      useTrackRenders();
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return (
+        <div>
+          <button onClick={() => changeViewerName()}>Change name</button>
+          Hello
+        </div>
+      );
+    };
+
+    const user = userEvent.setup();
+
+    const { unmount } = renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "Virginia",
+          book: {
+            __typename: "ColoringBook",
+            colors: ["red", "blue", "green"],
+            id: "1",
+            publishedAt: "2024-01-01",
+            title: "The Book",
+          },
+        },
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Change name")));
+
+    await Profiler.takeRender();
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "Alexandre",
+          book: {
+            __typename: "ColoringBook",
+            colors: ["red", "blue", "green"],
+            id: "1",
+            publishedAt: "2024-01-01",
+            title: "The Book",
+          },
+        },
+      });
     }
 
     unmount();

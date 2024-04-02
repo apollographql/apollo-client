@@ -535,12 +535,6 @@ We begin fetching our `GET_DOG_QUERY` by calling the `loadDog` function inside o
 
 </MinVersion>
 
-<ExperimentalFeature>
-
-This feature is in [alpha](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in version `3.9.0` and is subject to change before `3.10.0`. We consider this feature production-ready, but it may change depending on feedback. If you'd like to provide feedback before it is stabilized in `3.10.0`, please comment on [#11519](https://github.com/apollographql/apollo-client/issues/11519).
-
-</ExperimentalFeature>
-
 Starting with Apollo Client `3.9.0`, queries can be initiated outside of React. This allows your app to begin fetching data before React renders your components, and can provide performance benefits.
 
 To preload queries, you first need to create a preload function with `createQueryPreloader`. `createQueryPreloader` takes an `ApolloClient` instance as an argument and returns a function that, when called, initiates a network request.
@@ -676,12 +670,6 @@ export function RouteComponent() {
 ```
 
 This instructs React Router to wait for the query to finish loading before the route transitions. When the route transitions after the promise resolves, the data is rendered immediately without the need to show a loading fallback in the route component.
-
-<ExperimentalFeature>
-
-`queryRef.toPromise` is [experimental](https://www.apollographql.com/docs/resources/product-launch-stages/#experimental-features) in version `3.9.0` and is subject to breaking changes before `3.10.0`. If you'd like to provide feedback for this feature before it is stabilized in `3.10.0`, please comment on [#11519](https://github.com/apollographql/apollo-client/issues/11519).
-
-</ExperimentalFeature>
 
 #### Why prevent access to `data` in `toPromise`?
 

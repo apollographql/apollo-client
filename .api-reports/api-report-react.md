@@ -541,7 +541,7 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 export interface Context extends Record<string, any> {
 }
 
-// @alpha
+// @public
 export function createQueryPreloader(client: ApolloClient<any>): PreloadQueryFunction;
 
 // @public (undocumented)
@@ -1757,7 +1757,6 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
     //
     // @internal (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-    // @alpha
     toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 

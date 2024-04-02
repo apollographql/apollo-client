@@ -5,6 +5,10 @@
     "@apollo/client": "3.9.7"
   },
   "changesets": [
-    "tasty-pillows-ring"
+    "chatty-llamas-switch",
+    "stupid-bears-cheat",
+    "tasty-pillows-ring",
+    "tiny-bugs-tap",
+    "twelve-apples-vanish"
   ]
 }

@@ -164,7 +164,6 @@ export interface PreloadQueryFunction {
  * const preloadQuery = createQueryPreloader(client);
  * ```
  * @since 3.9.0
- * @alpha
  */
 export function createQueryPreloader(
   client: ApolloClient<any>

@@ -545,7 +545,7 @@ export const concat: typeof ApolloLink.concat;
 // @public (undocumented)
 export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
 
-// @alpha
+// @public
 export function createQueryPreloader(client: ApolloClient<any>): PreloadQueryFunction;
 
 // @public @deprecated (undocumented)
@@ -2330,7 +2330,6 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
     //
     // @internal (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-    // @alpha
     toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 

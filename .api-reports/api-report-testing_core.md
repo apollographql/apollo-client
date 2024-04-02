@@ -449,7 +449,7 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 export function createMockClient<TData>(data: TData, query: DocumentNode, variables?: {}): ApolloClient<NormalizedCacheObject>;
 
 // @public (undocumented)
-export const createMockFetch: (schema: any, mockFetchOpts?: {
+export const createMockFetch: (schema: GraphQLSchema, mockFetchOpts?: {
     validate: boolean;
 }) => {
     mock: (uri: any, options: any) => Promise<Response>;

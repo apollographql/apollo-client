@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { ExecutionResult } from 'graphql';
@@ -11,6 +13,7 @@ import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
+import type { GraphQLSchema } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 import * as React_2 from 'react';
@@ -445,6 +448,24 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 //
 // @public (undocumented)
 export function createMockClient<TData>(data: TData, query: DocumentNode, variables?: {}): ApolloClient<NormalizedCacheObject>;
+
+// @alpha
+export const createMockFetch: (schema: GraphQLSchema, mockFetchOpts?: {
+    validate: boolean;
+}) => {
+    mock: (uri: any, options: any) => Promise<Response>;
+    restore: () => void;
+} & Disposable;
+
+// @alpha
+export const createMockSchema: (staticSchema: GraphQLSchema, mocks: {
+    [key: string]: any;
+}) => GraphQLSchema;
+
+// Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts
+//
+// @alpha
+export const createProxiedSchema: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => ProxiedSchema;
 
 // @public (undocumented)
 namespace DataProxy {
@@ -1264,6 +1285,25 @@ type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
+
+// Warning: (ae-forgotten-export) The symbol "ProxiedSchemaFns" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type ProxiedSchema = GraphQLSchema & ProxiedSchemaFns;
+
+// @public (undocumented)
+interface ProxiedSchemaFns {
+    // (undocumented)
+    add: (addOptions: {
+        resolvers: Resolvers;
+    }) => ProxiedSchema;
+    // (undocumented)
+    fork: (forkOptions?: {
+        resolvers?: Resolvers;
+    }) => ProxiedSchema;
+    // (undocumented)
+    reset: () => void;
+}
 
 // @public (undocumented)
 class QueryInfo {

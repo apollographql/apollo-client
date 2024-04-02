@@ -788,6 +788,7 @@ describe("schema proxy", () => {
 
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
+    // @ts-expect-error - we're intentionally passing an invalid schema
     using _fetch = createMockFetch(forkedSchema);
 
     const client = new ApolloClient({

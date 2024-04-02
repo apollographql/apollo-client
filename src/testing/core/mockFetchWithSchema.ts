@@ -1,11 +1,10 @@
-import { Response as NodeFetchResponse } from "node-fetch";
 import { execute, validate } from "graphql";
-import type { GraphQLError } from "graphql";
+import type { GraphQLError, GraphQLSchema } from "graphql";
 import { ApolloError, gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
 
 const createMockFetch = (
-  schema: any,
+  schema: GraphQLSchema,
   mockFetchOpts: { validate: boolean } = { validate: true }
 ) => {
   const prevFetch = window.fetch;
@@ -31,9 +30,7 @@ const createMockFetch = (
 
         if (validationErrors?.length > 0) {
           return resolve(
-            new NodeFetchResponse(
-              JSON.stringify({ errors: validationErrors })
-            ) as unknown as Response
+            new Response(JSON.stringify({ errors: validationErrors }))
           );
         }
       }
@@ -47,7 +44,7 @@ const createMockFetch = (
 
       const stringifiedResult = JSON.stringify(result);
 
-      resolve(new NodeFetchResponse(stringifiedResult) as unknown as Response);
+      resolve(new Response(stringifiedResult));
     });
   };
 

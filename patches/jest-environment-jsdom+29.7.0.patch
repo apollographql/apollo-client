@@ -1,14 +1,13 @@
 diff --git a/node_modules/jest-environment-jsdom/build/index.js b/node_modules/jest-environment-jsdom/build/index.js
-index 2e6c16c..ce5c77d 100644
+index 2e6c16c..5aa9bd5 100644
 --- a/node_modules/jest-environment-jsdom/build/index.js
 +++ b/node_modules/jest-environment-jsdom/build/index.js
-@@ -96,6 +96,14 @@ class JSDOMEnvironment {
+@@ -96,6 +96,13 @@ class JSDOMEnvironment {
      // TODO: remove this ASAP, but it currently causes tests to run really slow
      global.Buffer = Buffer;
  
 +    // Add mocks for schemaProxy tests that rely on `Response` and `fetch`
 +    // being globally available
-+    global.fetch = fetch;
 +    global.Headers = Headers;
 +    global.Request = Request;
 +    global.Response = Response;

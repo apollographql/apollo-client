@@ -13,14 +13,14 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../internal/index.js";
-import { proxiedSchema } from "../schemaProxy.js";
+import { createProxiedSchema } from "../createProxiedSchema.js";
 import { GraphQLError, buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
 import { useMutation, useSuspenseQuery } from "../../../react/index.js";
 import { createMockSchema } from "../../graphql-tools/utils.js";
 import userEvent from "@testing-library/user-event";
 import { act, screen } from "@testing-library/react";
-import { createMockFetch } from "../mockFetchWithSchema.js";
+import { createMockFetch } from "../createMockFetch.js";
 import {
   FallbackProps,
   ErrorBoundary as ReactErrorBoundary,
@@ -147,7 +147,7 @@ describe("schema proxy", () => {
     Date: () => new Date("January 1, 2024 01:00:00").toJSON().split("T")[0],
   });
 
-  const schema = proxiedSchema(schemaWithMocks, {
+  const schema = createProxiedSchema(schemaWithMocks, {
     Query: {
       viewer: () => ({
         name: "Jane Doe",
@@ -849,7 +849,7 @@ describe("schema proxy", () => {
   it("preserves resolvers from previous calls to .add on subsequent calls to .fork", async () => {
     let name = "Virginia";
 
-    const schema = proxiedSchema(schemaWithMocks, {
+    const schema = createProxiedSchema(schemaWithMocks, {
       Query: {
         viewer: () => ({
           name,

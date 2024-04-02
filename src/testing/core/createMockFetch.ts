@@ -3,6 +3,33 @@ import type { GraphQLError, GraphQLSchema } from "graphql";
 import { ApolloError, gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
 
+/**
+ * A function that accepts a static `schema` and a `mockFetchOpts` object and
+ * returns a disposable object with `mock` and `restore` functions.
+ *
+ * The `mock` function is a mock fetch function that is set on the global
+ * `window` object. This function intercepts any fetch requests and
+ * returns a response by executing the operation against the provided schema.
+ *
+ * The `restore` function is a cleanup function that will restore the previous
+ * `fetch`. It is automatically called if the function's return value is
+ * declared with `using`. If your environment does not support the language
+ * feature `using`, you should manually invoke the `restore` function.
+ *
+ * @param schema - A `GraphQLSchema`.
+ * @param mockFetchOpts - Configuration options.
+ * @returns An object with both `mock` and `restore` functions.
+ *
+ * @example
+ * ```js
+ * using _fetch = createMockFetch(schema); // automatically restores fetch after exiting the block
+ *
+ * const { restore } = createMockFetch(schema);
+ * restore(); // manually restore fetch if `using` is not supported
+ * ```
+ * @since 3.10.0
+ * @alpha
+ */
 const createMockFetch = (
   schema: GraphQLSchema,
   mockFetchOpts: { validate: boolean } = { validate: true }

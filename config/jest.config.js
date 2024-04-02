@@ -33,7 +33,7 @@ const react17TestFileIgnoreList = [
   ignoreTSFiles,
   // We only support Suspense with React 18, so don't test suspense hooks with
   // React 17
-  "src/testing/core/__tests__/schemaProxy.test.tsx",
+  "src/testing/core/__tests__/createProxiedSchema.test.tsx",
   "src/react/hooks/__tests__/useSuspenseQuery.test.tsx",
   "src/react/hooks/__tests__/useBackgroundQuery.test.tsx",
   "src/react/hooks/__tests__/useLoadableQuery.test.tsx",

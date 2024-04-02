@@ -11,7 +11,39 @@ interface ProxiedSchemaFns {
   reset: () => void;
 }
 
-const proxiedSchema = (
+/**
+ * A function that creates a [Proxy object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
+ * around a given `schema` with `resolvers`. This proxied schema can be used to
+ * progressively layer resolvers on top of the original schema using the `add`
+ * method. The `fork` method can be used to create a new proxied schema which
+ * can be modified independently of the original schema. `reset` will restore
+ * resolvers to the original proxied schema.
+ *
+ * @param schemaWithMocks - A `GraphQLSchema`.
+ * @param resolvers - `Resolvers` object.
+ * @returns A `ProxiedSchema` with `add`, `fork` and `reset` methods.
+ *
+ * @example
+ * ```js
+ * const schemaWithMocks = createMockSchema(schemaWithTypeDefs, {
+     ID: () => "1",
+     Int: () => 36,
+     String: () => "String",
+     Date: () => new Date("December 10, 1815 01:00:00").toJSON().split("T")[0],
+   });
+ *
+ * const schema = createProxiedSchema(schemaWithMocks, {
+     Query: {
+       writer: () => ({
+         name: "Ada Lovelace",
+       }),
+     }
+   });
+ * ```
+ * @since 3.9.0
+ * @alpha
+ */
+const createProxiedSchema = (
   schemaWithMocks: GraphQLSchema,
   resolvers: Resolvers
 ): ProxiedSchema => {
@@ -33,7 +65,7 @@ const proxiedSchema = (
     },
 
     fork: ({ resolvers: newResolvers } = {}) => {
-      return proxiedSchema(targetSchema, newResolvers ?? targetResolvers);
+      return createProxiedSchema(targetSchema, newResolvers ?? targetResolvers);
     },
 
     reset: () => {
@@ -84,4 +116,4 @@ const proxiedSchema = (
   return schema as ProxiedSchema;
 };
 
-export { proxiedSchema };
+export { createProxiedSchema };

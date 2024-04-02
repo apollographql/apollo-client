@@ -448,13 +448,18 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 // @public (undocumented)
 export function createMockClient<TData>(data: TData, query: DocumentNode, variables?: {}): ApolloClient<NormalizedCacheObject>;
 
-// @public (undocumented)
+// @alpha
 export const createMockFetch: (schema: GraphQLSchema, mockFetchOpts?: {
     validate: boolean;
 }) => {
     mock: (uri: any, options: any) => Promise<Response>;
     restore: () => void;
 } & Disposable;
+
+// Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts
+//
+// @alpha
+export const createProxiedSchema: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => ProxiedSchema;
 
 // @public (undocumented)
 namespace DataProxy {
@@ -1235,11 +1240,6 @@ type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 //
 // @public (undocumented)
 type ProxiedSchema = GraphQLSchema & ProxiedSchemaFns;
-
-// Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const proxiedSchema: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => ProxiedSchema;
 
 // @public (undocumented)
 interface ProxiedSchemaFns {

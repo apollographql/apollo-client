@@ -27,6 +27,26 @@ import { MapperKind, mapSchema, getRootTypeNames } from "@graphql-tools/utils";
 // https://github.com/ardatan/graphql-tools/blob/4b56b04d69b02919f6c5fa4f97d33da63f36e8c8/packages/mock/src/utils.ts#L20
 const takeRandom = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
+/**
+ * A function that accepts a static `schema` and a `mocks` object for specifying
+ * default scalar mocks and returns a `GraphQLSchema`.
+ *
+ * @param staticSchema - A static `GraphQLSchema`.
+ * @param mocks - An object containing scalar mocks.
+ * @returns A `GraphQLSchema` with scalar mocks.
+ *
+ * @example
+ * ```js
+ * const mockedSchema = createMockSchema(schema, {
+     ID: () => "1",
+     Int: () => 42,
+     String: () => "String",
+     Date: () => new Date("January 1, 2024 01:00:00").toJSON().split("T")[0],
+  });
+ * ```
+ * @since 3.10.0
+ * @alpha
+ */
 const createMockSchema = (
   staticSchema: GraphQLSchema,
   mocks: { [key: string]: any }

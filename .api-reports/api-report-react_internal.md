@@ -889,6 +889,8 @@ export class InternalQueryReference<TData = unknown> {
     // (undocumented)
     retain(): () => void;
     // (undocumented)
+    softRetain(): () => void;
+    // (undocumented)
     get watchQueryOptions(): WatchQueryOptions<OperationVariables, TData>;
 }
 
@@ -1732,6 +1734,8 @@ interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
 // @public (undocumented)
 class SuspenseCache {
     constructor(options?: SuspenseCacheOptions);
+    // (undocumented)
+    add(cacheKey: CacheKey, queryRef: InternalQueryReference<unknown>): void;
     // (undocumented)
     getQueryRef<TData = any>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData>;
 }

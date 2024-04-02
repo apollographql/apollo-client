@@ -403,15 +403,17 @@ export class StoreReader {
             });
           }
         } else if (isArray(fieldValue)) {
-          fieldValue = handleMissing(
-            this.executeSubSelectedArray({
-              field: selection,
-              array: fieldValue,
-              enclosingRef,
-              context,
-            }),
-            resultName
-          );
+          if (fieldValue.length > 0) {
+            fieldValue = handleMissing(
+              this.executeSubSelectedArray({
+                field: selection,
+                array: fieldValue,
+                enclosingRef,
+                context,
+              }),
+              resultName
+            );
+          }
         } else if (!selection.selectionSet) {
           // If the field does not have a selection set, then we handle it
           // as a scalar value. To keep this.canon from canonicalizing

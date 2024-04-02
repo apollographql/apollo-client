@@ -22,9 +22,18 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: github-actions-bot-app-token
+        with:
+          app-id: 819772
+          private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
+
+      # Check out the repository, using the Github Actions Bot app's token so
+      # that we can push later.
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
+          token: ${{ steps.github-actions-bot-app-token.outputs.token }}
           # Fetch entire git history so  Changesets can generate changelogs
           # with the correct commits
           fetch-depth: 0
@@ -56,12 +65,33 @@ jobs:
         # If .changeset/pre.json does not exist and we did not recently exit
         # prerelease mode, enter prerelease mode with tag alpha
         if: steps.check_files.outputs.files_exists == 'false' && !contains(github.event.head_commit.message, 'Exit prerelease')
-        run: npx changeset pre enter alpha
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          npx changeset pre enter alpha
+          git add -A
+          git commit -m 'Enter prerelease mode'
+          git push
+
+      - name: Get prerelease changesets
+        id: prerelease-changesets
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: ".changeset/pre.json"
+          prop_path: "changesets"
+
+      - name: Get changesets array length
+        id: number-of-changesets
+        run: |
+          arrayLength=$(echo '${{steps.prerelease-changesets.outputs.prop}}' | jq '. | length')
+          echo "length=$arrayLength" >> "$GITHUB_OUTPUT"
 
       - name: Create prerelease PR
-        # If .changeset/pre.json exists and we are not currently cutting a
-        # release after merging a Version Packages PR
-        if: steps.check_files.outputs.files_exists == 'true' && !startsWith(github.event.head_commit.message, 'Version Packages')
+        # Only attempt to create a PR if:
+        # 1. .changeset/pre.json exists
+        # 2. we are not actively publishing after merging a Version Packages PR
+        # 3. AND we have prerelease changesets to publish (otherwise it errors)
+        if: steps.check_files.outputs.files_exists == 'true' && !startsWith(github.event.head_commit.message, 'Version Packages') && steps.number-of-changesets.outputs.length > 0
         uses: changesets/action@v1
         with:
           version: npm run changeset-version
@@ -70,8 +100,8 @@ jobs:
 
       - name: Publish to npm + GitHub
         id: changesets
-        # Only run publish if we're still in pre mode and the last commit was
-        # via an automatically created Version Packages PR
+        # Only publish if we're still in pre mode and the last commit was
+        # from an automatically created Version Packages PR
         if: steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')
         uses: changesets/action@v1
         with:

@@ -45,7 +45,10 @@ jobs:
       - name: Detect new changesets
         id: added-files
         run: |
-          echo "changesets=$(git diff --name-only --diff-filter=A ${{ steps.comment-branch.outputs.base_sha }} ${{ steps.comment-branch.outputs.head_sha }} .changeset/*.md)" >> "$GITHUB_OUTPUT"
+          delimiter="$(openssl rand -hex 8)"
+          echo "changesets<<${delimiter}" >> "${GITHUB_OUTPUT}"
+          echo "$(git diff --name-only --diff-filter=A ${{ steps.comment-branch.outputs.base_sha }} ${{ steps.comment-branch.outputs.head_sha }} .changeset/*.md)" >> "${GITHUB_OUTPUT}"
+          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
       - name: Append NPM token to .npmrc
         run: |

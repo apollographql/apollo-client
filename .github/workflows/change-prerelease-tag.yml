@@ -1,17 +1,22 @@
-name: Exit Prerelease Mode
+name: Change Prerelease Tag
 
 on:
   workflow_dispatch:
     inputs:
       branch:
-        description: "Exit prerelease mode on release branch"
+        description: "Branch name"
         type: string
         default: "release-"
         required: true
+      tag:
+        description: "New tag name"
+        type: string
+        default: "rc"
+        required: true
 
 jobs:
-  exit_prerelease:
-    name: Changesets Exit Prerelease
+  change_prerelease_tag:
+    name: Changesets Update Prerelease Tag
     runs-on: ubuntu-latest
     # Allow GITHUB_TOKEN to have write permissions
     permissions:
@@ -47,13 +52,18 @@ jobs:
           npm pkg set version="$version"
           npm i
 
-      - name: Remove pre.json
-        run: npx rimraf .changeset/pre.json
+      - name: Update prerelease tag in .changeset/pre.json
+        uses: restackio/update-json-file-action@2.1
+        with:
+          file: .changeset/pre.json
+          fields: '{"tag": "${{github.event.inputs.tag}}"}'
 
       - name: Commit and push changes
+        env:
+          TAG: ${{ github.event.inputs.tag }}
         run: |
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add -A
-          git commit -m "Exit prerelease mode"
+          git commit -m "Prepare for "$TAG" release"
           git push

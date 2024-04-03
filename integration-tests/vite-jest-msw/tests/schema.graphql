@@ -1,0 +1,129 @@
+schema {
+  query: Query
+}
+
+"""
+An user's saved cart session. Only one cart can be active at a time
+"""
+type Cart {
+  """
+  Items saved in the cart session
+  """
+  items: [Product]
+  """
+  The current total of all the items in the cart, before taxes and shipping
+  """
+  subtotal: Float
+}
+
+type Money {
+  amount: Float
+  currency: String
+}
+
+"""
+Returns information about a specific purchase
+"""
+type Order {
+  """
+  Each order has a unique id which is separate from the user or items they bought
+  """
+  id: ID!
+  """
+  The user who made the purchase
+  """
+  buyer: User!
+  """
+  A list of all the items they purchased.
+  """
+  items: [Product!]!
+  total: Money
+  """
+  Calculate the cost to ship all the variants to the users address
+  """
+  shippingCost: Float
+}
+
+"""
+Search filters for when showing an users previous purchases
+"""
+input OrderFilters {
+  orderId: ID!
+  priceHigh: Float
+  priceLow: Float
+  itemsInOrder: Int
+}
+
+"""
+A specific product sold by our store. This contains all the high level details but is not the purchasable item.
+"""
+type Product {
+  id: ID!
+  title: String
+  description: String
+  mediaUrl: String
+  weight: Float
+  price: Money
+  reviews: [Review]
+  averageRating: Float
+}
+
+"""
+Search filters for when returning Products
+"""
+input ProductSearchInput {
+  titleStartsWith: String
+}
+
+type Query {
+  """
+  Get a specific order by id. Meant to be used for a detailed view of an order
+  """
+  order(id: ID!): Order
+  """
+  Get all available products to shop for. Optionally provide some search filters
+  """
+  searchProducts(searchInput: ProductSearchInput! = {}): [Product]
+  """
+  Get a specific product by id. Useful for the product details page or checkout page
+  """
+  product(id: ID!): Product
+  """
+  Top products for home display
+  """
+  products: [Product]
+  """
+  Get the current user from our fake "auth" headers
+  Set the "x-user-id" header to the user id.
+  """
+  viewer: User
+}
+
+type Review {
+  id: ID!
+  rating: Float
+  content: String
+}
+
+"""
+An user account in our system
+"""
+type User {
+  id: ID!
+  """
+  The users current saved shipping address
+  """
+  shippingAddress: String
+  """
+  The users login username
+  """
+  username: String!
+  """
+  The user's active cart session. Once the cart items have been purchases, they transition to an Order
+  """
+  cart: Cart
+  """
+  The users previous purchases
+  """
+  orders(filters: OrderFilters): [Order]
+}

@@ -1,0 +1,78 @@
+import { graphql, HttpResponse } from "msw";
+import { execute, GraphQLSchema } from "graphql";
+import { gql } from "@apollo/client";
+import { createMockSchema, createProxiedSchema } from "@apollo/client/testing";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import Schema from "../schema.graphql";
+
+export const resolvers = {
+  Query: {
+    products: () => {
+      console.log("product resolver");
+      return [
+        {
+          id: "1",
+          title: "product",
+          description: "description",
+          mediaUrl: "http://example.com",
+          weight: 1.0,
+          price: {
+            amount: 1.0,
+            currency: "USD",
+          },
+          reviews: [],
+          averageRating: 5.0,
+        },
+      ];
+    },
+  },
+};
+
+const staticSchema = makeExecutableSchema({ typeDefs: Schema });
+
+const schema = createMockSchema(staticSchema, {
+  Int: () => 6,
+  Float: () => 22.1,
+  String: () => "string",
+});
+
+export let schemaProxy = createProxiedSchema(schema, resolvers);
+
+// export function replaceSchema(newSchema: typeof schemaProxy) {
+//   const oldSchema = schemaProxy;
+//   schemaProxy = newSchema;
+
+//   function restore() {
+//     schemaProxy = oldSchema;
+//   }
+
+//   return Object.assign(restore, {
+//     [Symbol.dispose]() {
+//       restore();
+//     },
+//   });
+//   // return {
+//   //   [Symbol.dispose]: () => {
+//   //     schemaProxy = oldSchema;
+//   //   },
+//   //   restore,
+//   // };
+// }
+
+export const handlers = [
+  graphql.operation(async ({ query, variables, operationName }) => {
+    const document = gql(query);
+    console.log({ execute });
+
+    const result = await execute({
+      document,
+      operationName,
+      schema: schemaProxy,
+      variableValues: variables,
+    });
+
+    console.log({ result });
+    console.log("AFTER");
+    return HttpResponse.json(result);
+  }),
+];

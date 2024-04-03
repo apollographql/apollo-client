@@ -1,5 +1,5 @@
 {
-  "name": "vite",
+  "name": "vite-msw",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,28 +9,45 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --port 3000",
     "serve-app": "npm run preview",
-    "test": "playwright test"
+    "test": "jest"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.16",
+    "@apollo/client": "^3.10.0-rc.0",
     "graphql": "^16.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@jest/globals": "^29.7.0",
+    "@babel/plugin-proposal-explicit-resource-management": "^7.24.1",
+    "@babel/preset-env": "^7.24.4",
+    "@babel/preset-react": "^7.24.1",
+    "@babel/preset-typescript": "^7.24.1",
+    "@graphql-tools/jest-transform": "^2.0.0",
     "@playwright/test": "*",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^14.2.2",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/jest": "^29.5.12",
     "@types/react": "^18.0.37",
     "@types/react-dom": "^18.0.11",
     "@typescript-eslint/eslint-plugin": "^5.59.0",
     "@typescript-eslint/parser": "^5.59.0",
     "@vitejs/plugin-react": "^4.0.0",
+    "babel-jest": "^29.7.0",
+    "babel-plugin-inline-json-import": "^0.3.2",
     "eslint": "^8.38.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.3.4",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^24.0.0",
+    "msw": "^2.2.13",
     "playwright": "*",
+    "playwright-msw": "^3.0.1",
     "shared": "*",
-    "typescript": "^5.0.2",
-    "vite": "^4.3.9"
+    "typescript": "^5.4.3",
+    "undici": "^6.11.1",
+    "vite": "^4.4.4",
+    "vite-plugin-graphql-loader": "^3.0.1"
   }
 }

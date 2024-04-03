@@ -1,7 +1,7 @@
 const defaults = {
   rootDir: "src",
   preset: "ts-jest",
-  testEnvironment: "jsdom",
+  testEnvironment: require.resolve("./FixJSDOMEnvironment.js"),
   setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
   globals: {
     __DEV__: true,

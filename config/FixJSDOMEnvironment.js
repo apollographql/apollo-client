@@ -14,7 +14,7 @@ class FixJSDOMEnvironment extends JSDOMEnvironment {
     // and setting AbortController breaks PersistedQueryLink tests, which may
     // indicate a memory leak
     // this.global.fetch = fetch;
-    // this.global.AbortController = AbortController;
+    this.global.AbortController = AbortController;
   }
 }
 

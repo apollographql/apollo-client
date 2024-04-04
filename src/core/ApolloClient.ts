@@ -239,7 +239,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.watchQuery = this.watchQuery.bind(this);
     this.query = this.query.bind(this);
     this.mutate = this.mutate.bind(this);
-    this.watchQuery = this.watchQuery.bind(this);
+    this.watchFragment = this.watchFragment.bind(this);
     this.resetStore = this.resetStore.bind(this);
     this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 

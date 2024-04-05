@@ -1,5 +1,5 @@
 import { graphql, HttpResponse } from "msw";
-import { execute, GraphQLSchema } from "graphql";
+import { execute } from "graphql";
 import { gql } from "@apollo/client";
 import { createMockSchema, createProxiedSchema } from "@apollo/client/testing";
 import { makeExecutableSchema } from "@graphql-tools/schema";
@@ -7,24 +7,12 @@ import Schema from "../schema.graphql";
 
 export const resolvers = {
   Query: {
-    products: () => {
-      console.log("product resolver");
-      return [
-        {
-          id: "1",
-          title: "product",
-          description: "description",
-          mediaUrl: "http://example.com",
-          weight: 1.0,
-          price: {
-            amount: 1.0,
-            currency: "USD",
-          },
-          reviews: [],
-          averageRating: 5.0,
-        },
-      ];
-    },
+    products: () => [
+      {
+        id: "1",
+        title: "Blue Jays Hat",
+      },
+    ],
   },
 };
 
@@ -62,7 +50,6 @@ export let schemaProxy = createProxiedSchema(schema, resolvers);
 export const handlers = [
   graphql.operation(async ({ query, variables, operationName }) => {
     const document = gql(query);
-    console.log({ execute });
 
     const result = await execute({
       document,
@@ -71,8 +58,6 @@ export const handlers = [
       variableValues: variables,
     });
 
-    console.log({ result });
-    console.log("AFTER");
     return HttpResponse.json(result);
   }),
 ];

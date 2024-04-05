@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom";
-import { beforeAll, afterAll, afterEach, jest } from "@jest/globals";
+
+import { beforeAll, afterAll, afterEach } from "@jest/globals";
 import { server } from "./mocks/server";
 import { gql } from "@apollo/client";
 

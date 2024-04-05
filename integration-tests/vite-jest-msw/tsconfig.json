@@ -23,6 +23,6 @@
     "noFallthroughCasesInSwitch": true
   },
   "files": ["@types/graphql.d.ts"],
-  "include": ["src", "./tests/setupTests.ts"],
+  "include": ["src", "tests", "./tests/setupTests.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

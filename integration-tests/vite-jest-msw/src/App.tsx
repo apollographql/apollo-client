@@ -25,7 +25,7 @@ const httpLink = new HttpLink({
   uri: "https://main--hack-the-e-commerce.apollographos.net/graphql",
 });
 
-const client = new ApolloClient({
+export const client = new ApolloClient({
   cache: new InMemoryCache(),
   link: ApolloLink.from([delayLink, httpLink]),
 });
@@ -54,7 +54,7 @@ export default function App() {
 
 function Main() {
   const { data } = useQuery(QUERY);
-  console.log({ data });
+
   return data ?
       <ul>
         {data?.products.map(({ id, title }) => <li key={id}>{title}</li>)}

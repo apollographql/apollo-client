@@ -8,5 +8,5 @@
     "allowSyntheticDefaultImports": true
   },
   "files": ["@types/graphql.d.ts"],
-  "include": ["vite.config.ts", "./tests/setupTests.ts"]
+  "include": ["vite.config.ts", "tests/setupTests.js"]
 }

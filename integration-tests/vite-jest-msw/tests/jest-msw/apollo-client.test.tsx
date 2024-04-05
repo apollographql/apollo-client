@@ -4,26 +4,20 @@ import { render as rtlRender, screen } from "@testing-library/react";
 import {
   ApolloClient,
   ApolloProvider,
-  InMemoryCache,
   NormalizedCacheObject,
 } from "@apollo/client";
-import App from "../../src/App";
+import App, { client } from "../../src/App";
 import { schemaProxy } from "../mocks/handlers";
 
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  uri: "http://localhost:3000/graphql",
-});
-
-const render = (client: ApolloClient<NormalizedCacheObject>) =>
+const render = (renderedClient: ApolloClient<NormalizedCacheObject>) =>
   rtlRender(
-    <ApolloProvider client={client}>
+    <ApolloProvider client={renderedClient}>
       <App />
     </ApolloProvider>
   );
 
 beforeEach(() => {
-  // since all our tests now use our production Apollo Client instance
+  // since all our tests now use our "real" production Apollo Client instance,
   // we need to reset the client cache before each test
   return client.cache.reset();
 });
@@ -32,36 +26,36 @@ describe("IndexRoute", () => {
   test("renders", async () => {
     render(client);
 
-    screen.debug();
-    expect(await screen.findByText(/product/i)).toBeInTheDocument();
-    // expect(await screen.findByText(/this is my playlist/i)).toBeInTheDocument();
-    // expect(await screen.findByText(/description/i)).toBeInTheDocument();
+    expect(await screen.findByText(/blue jays hat/i)).toBeInTheDocument();
   });
 
-  // test("allows resolvers to be updated via schemaProxy", async () => {
-  //   // using _restore = replaceSchema(
-  //   //   schemaProxy.fork({
-  //   //     resolvers: {
-  //   //       FeaturedPlaylistConnection: {
-  //   //         message: () => "purple seahorse",
-  //   //         edges: () => [{}],
-  //   //       },
-  //   //     },
-  //   //   })
-  //   // );
+  test("allows resolvers to be updated via schemaProxy", async () => {
+    schemaProxy.add({
+      resolvers: {
+        Query: {
+          products: () => {
+            return [
+              {
+                id: "2",
+                title: "Mets Hat",
+              },
+            ];
+          },
+        },
+      },
+    });
 
-  //   render(client);
+    render(client);
 
-  //   // the resolver has been updated
-  //   // expect(await screen.findByText(/afternoon delight/i)).toBeInTheDocument();
-  //   expect(await screen.findByText(/purple seahorse/i)).toBeInTheDocument();
-  // });
+    // the resolver has been updated
+    expect(await screen.findByText(/mets hat/i)).toBeInTheDocument();
+  });
 
-  // test("reset method works", async () => {
-  //   schemaProxy.reset();
+  test("reset method works", async () => {
+    schemaProxy.reset();
 
-  //   render(client);
+    render(client);
 
-  //   expect(await screen.findByText(/afternoon delight/i)).toBeInTheDocument();
-  // });
+    expect(await screen.findByText(/blue jays hat/i)).toBeInTheDocument();
+  });
 });

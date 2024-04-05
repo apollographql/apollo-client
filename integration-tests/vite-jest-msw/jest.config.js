@@ -1,12 +1,10 @@
-import type { Config } from "jest";
-
-const config: Config = {
+const config = {
   globals: {
     "globalThis.__DEV__": JSON.stringify(true),
   },
   testEnvironment: "jsdom",
   setupFiles: ["./tests/jest.polyfills.js"],
-  setupFilesAfterEnv: ["./tests/setupTests.ts"],
+  setupFilesAfterEnv: ["./tests/setupTests.js"],
   transform: {
     "\\.(gql|graphql)$": "@graphql-tools/jest-transform",
     ".*": "babel-jest",

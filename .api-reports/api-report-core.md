@@ -1562,7 +1562,10 @@ export interface Operation {
     // (undocumented)
     query: DocumentNode;
     // (undocumented)
-    setContext: (context: DefaultContext) => DefaultContext;
+    setContext: {
+        (context: DefaultContext): void;
+        (updateContext: (previousContext: DefaultContext) => DefaultContext): void;
+    };
     // (undocumented)
     variables: Record<string, any>;
 }

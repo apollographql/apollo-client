@@ -97,7 +97,7 @@ function getContextFlavor<TContext extends FlavorableWriteContext>(
       (flavored =
         context.clientOnly === clientOnly && context.deferred === deferred ?
           context
-        : {
+          : {
             ...context,
             clientOnly,
             deferred,
@@ -120,7 +120,7 @@ export class StoreWriter {
     public readonly cache: InMemoryCache,
     private reader?: StoreReader,
     private fragments?: InMemoryCacheConfig["fragments"]
-  ) {}
+  ) { }
 
   public writeToStore(
     store: NormalizedCache,
@@ -332,7 +332,7 @@ export class StoreWriter {
           // values before processing nested selection sets.
           field.selectionSet ?
             getContextFlavor(context, false, false)
-          : context,
+            : context,
           childTree
         );
 
@@ -641,7 +641,7 @@ export class StoreWriter {
           (isReference(existing) || storeValueIsStoreObject(existing))
         ) ?
           existing
-        : void 0;
+          : void 0;
 
       // This narrowing is implied by mergeTree.map.size > 0 and
       // !isReference(incoming), though TypeScript understandably cannot
@@ -671,8 +671,8 @@ export class StoreWriter {
           isArray(from) ?
             typeof name === "number" ?
               from[name]
-            : void 0
-          : context.store.getFieldValue(from, String(name))
+              : void 0
+            : context.store.getFieldValue(from, String(name))
         );
       };
 
@@ -748,13 +748,13 @@ function mergeMergeTrees(
         ...left.info,
         ...right.info,
       }
-    : left.info || right.info;
+      : left.info || right.info;
 
   const needToMergeMaps = left.map.size && right.map.size;
   const map =
     needToMergeMaps ? new Map()
-    : left.map.size ? left.map
-    : right.map;
+      : left.map.size ? left.map
+        : right.map;
 
   const merged = { info, map };
 
@@ -857,8 +857,9 @@ This could cause additional (usually avoidable) network requests to fetch data t
 
 To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
 
-  existing: %o
-  incoming: %o
+  existing: %s
+
+  incoming: %s
 
 For more information about these options, please refer to the documentation:
 
@@ -869,11 +870,11 @@ For more information about these options, please refer to the documentation:
     parentType,
     childTypenames.length ?
       "either ensure all objects of type " +
-        childTypenames.join(" and ") +
-        " have an ID or a custom merge function, or "
-    : "",
+      childTypenames.join(" and ") +
+      " have an ID or a custom merge function, or "
+      : "",
     typeDotName,
-    existing,
-    incoming
+    JSON.stringify(existing),
+    JSON.stringify(incoming)
   );
 }

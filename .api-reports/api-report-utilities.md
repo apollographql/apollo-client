@@ -1904,8 +1904,8 @@ interface Operation {
     query: DocumentNode;
     // (undocumented)
     setContext: {
-        (context: DefaultContext): void;
-        (updateContext: (previousContext: DefaultContext) => DefaultContext): void;
+        (context: Partial<DefaultContext>): void;
+        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
     };
     // (undocumented)
     variables: Record<string, any>;

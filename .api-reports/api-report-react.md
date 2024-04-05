@@ -1418,8 +1418,8 @@ interface Operation {
     query: DocumentNode;
     // (undocumented)
     setContext: {
-        (context: Context): void;
-        (updateContext: (previousContext: Context) => Context): void;
+        (context: Partial<Context>): void;
+        (updateContext: (previousContext: Context) => Partial<Context>): void;
     };
     // (undocumented)
     variables: Record<string, any>;

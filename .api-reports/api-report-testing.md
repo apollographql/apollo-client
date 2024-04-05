@@ -465,7 +465,7 @@ export const createMockSchema: (staticSchema: GraphQLSchema, mocks: {
 // Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts
 //
 // @alpha
-export const createProxiedSchema: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => ProxiedSchema;
+export const createSchemaProxy: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => ProxiedSchema;
 
 // @public (undocumented)
 namespace DataProxy {

@@ -13,7 +13,7 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../internal/index.js";
-import { createProxiedSchema } from "../createProxiedSchema.js";
+import { createSchemaProxy } from "../createSchemaProxy.js";
 import { GraphQLError, buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
 import { useMutation, useSuspenseQuery } from "../../../react/index.js";
@@ -147,7 +147,7 @@ describe("schema proxy", () => {
     Date: () => new Date("January 1, 2024 01:00:00").toJSON().split("T")[0],
   });
 
-  const schema = createProxiedSchema(schemaWithMocks, {
+  const schema = createSchemaProxy(schemaWithMocks, {
     Query: {
       viewer: () => ({
         name: "Jane Doe",
@@ -849,7 +849,7 @@ describe("schema proxy", () => {
   it("preserves resolvers from previous calls to .add on subsequent calls to .fork", async () => {
     let name = "Virginia";
 
-    const schema = createProxiedSchema(schemaWithMocks, {
+    const schema = createSchemaProxy(schemaWithMocks, {
       Query: {
         viewer: () => ({
           name,

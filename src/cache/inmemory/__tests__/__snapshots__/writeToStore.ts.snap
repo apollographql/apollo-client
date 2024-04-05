@@ -68,8 +68,9 @@ This could cause additional (usually avoidable) network requests to fetch data t
 
 To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
 
-  existing: %o
-  incoming: %o
+  existing: %s
+
+  incoming: %s
 
 For more information about these options, please refer to the documentation:
 
@@ -80,12 +81,8 @@ For more information about these options, please refer to the documentation:
       "Query",
       "",
       "Query.someJSON",
-      Object {
-        "name": "Tom",
-      },
-      Object {
-        "age": 20,
-      },
+      "{\\"name\\":\\"Tom\\"}",
+      "{\\"age\\":20}",
     ],
   ],
   "results": Array [

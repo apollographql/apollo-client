@@ -346,7 +346,7 @@ describe("schema proxy", () => {
     unmount();
   });
 
-  it("does not pollute the original schema", async () => {
+  it("schema.fork does not pollute the original schema", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createMockFetch(schema);
@@ -861,6 +861,7 @@ describe("schema proxy", () => {
       },
       Book: {
         __resolveType: (obj) => {
+          console.log(obj);
           if ("text" in obj) {
             return "TextBook";
           }
@@ -876,10 +877,9 @@ describe("schema proxy", () => {
       resolvers: {
         Query: {
           viewer: () => ({
-            name: "Virginia",
             book: {
               colors: ["red", "blue", "green"],
-              title: "The Book",
+              title: "A New Book",
             },
           }),
         },
@@ -997,7 +997,7 @@ describe("schema proxy", () => {
             colors: ["red", "blue", "green"],
             id: "1",
             publishedAt: "2024-01-01",
-            title: "The Book",
+            title: "A New Book",
           },
         },
       });
@@ -1020,7 +1020,7 @@ describe("schema proxy", () => {
             colors: ["red", "blue", "green"],
             id: "1",
             publishedAt: "2024-01-01",
-            title: "The Book",
+            title: "A New Book",
           },
         },
       });
@@ -1028,4 +1028,7 @@ describe("schema proxy", () => {
 
     unmount();
   });
+  it.todo("add test for reset");
+  it.todo("add test for mergeResolvers: false");
+  it.todo("add test for mergeResolvers: true");
 });

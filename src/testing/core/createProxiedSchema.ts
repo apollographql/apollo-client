@@ -1,6 +1,6 @@
-import { addResolversToSchema } from "@graphql-tools/schema";
 import type { GraphQLSchema } from "graphql";
-
+import { addResolversToSchema } from "@graphql-tools/schema";
+import { mergeResolvers } from "@graphql-tools/merge";
 import type { Resolvers } from "../../core/types.js";
 
 type ProxiedSchema = GraphQLSchema & ProxiedSchemaFns;
@@ -10,6 +10,10 @@ interface ProxiedSchemaFns {
   fork: (forkOptions?: { resolvers?: Resolvers }) => ProxiedSchema;
   reset: () => void;
 }
+
+type CreateProxiedSchemaOptions = {
+  mergeResolvers: boolean;
+};
 
 /**
  * A function that creates a [Proxy object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
@@ -45,7 +49,10 @@ interface ProxiedSchemaFns {
  */
 const createProxiedSchema = (
   schemaWithMocks: GraphQLSchema,
-  resolvers: Resolvers
+  resolvers: Resolvers,
+  options: CreateProxiedSchemaOptions = {
+    mergeResolvers: true,
+  }
 ): ProxiedSchema => {
   let targetResolvers = { ...resolvers };
   let targetSchema = addResolversToSchema({
@@ -55,7 +62,12 @@ const createProxiedSchema = (
 
   const fns: ProxiedSchemaFns = {
     add: ({ resolvers: newResolvers }) => {
-      targetResolvers = { ...targetResolvers, ...newResolvers };
+      // @ts-ignore TODO: fix this
+      targetResolvers =
+        options.mergeResolvers ?
+          mergeResolvers([targetResolvers, newResolvers])
+        : { ...targetResolvers, ...newResolvers };
+
       targetSchema = addResolversToSchema({
         schema: targetSchema,
         resolvers: targetResolvers,
@@ -65,7 +77,11 @@ const createProxiedSchema = (
     },
 
     fork: ({ resolvers: newResolvers } = {}) => {
-      return createProxiedSchema(targetSchema, newResolvers ?? targetResolvers);
+      return createProxiedSchema(
+        targetSchema,
+        newResolvers ?? targetResolvers,
+        options
+      );
     },
 
     reset: () => {

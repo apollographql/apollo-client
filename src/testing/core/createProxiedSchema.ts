@@ -62,7 +62,7 @@ const createProxiedSchema = (
 
   const fns: ProxiedSchemaFns = {
     add: ({ resolvers: newResolvers }) => {
-      // @ts-ignore TODO: fix this
+      // @ts-ignore TODO(fixme): IResolvers type does not play well with our Resolvers
       targetResolvers =
         options.mergeResolvers ?
           mergeResolvers([targetResolvers, newResolvers])

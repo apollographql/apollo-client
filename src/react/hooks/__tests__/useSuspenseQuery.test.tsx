@@ -5631,8 +5631,7 @@ describe("useSuspenseQuery", () => {
     });
 
     const { result, rerender } = renderSuspenseHook(
-      ({ skip, id }) =>
-        useSuspenseQuery(query, { skip, variables: { id } }),
+      ({ skip, id }) => useSuspenseQuery(query, { skip, variables: { id } }),
       { mocks, link, strictMode: true, initialProps: { skip: true, id: "1" } }
     );
 

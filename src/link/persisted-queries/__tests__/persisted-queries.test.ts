@@ -573,7 +573,11 @@ describe("failure path", () => {
           variables,
         }).subscribe({ complete })
       );
-
+      // fetch-mock holds a history of all options it has been called with
+      // that includes the `signal` option, which (with the native `AbortController`)
+      // has a reference to the `Request` instance, which will somehow reference our
+      // hash object
+      fetchMock.resetHistory();
       await expect(hashRefs[0]).toBeGarbageCollected();
     }
   );

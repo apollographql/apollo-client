@@ -65,8 +65,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     // (undocumented)
     abstract watch<TData = any, TVariables = any>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     // Warning: (ae-forgotten-export) The symbol "OperationVariables" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "WatchFragmentOptions" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "WatchFragmentResult" needs to be exported by the entry point index.d.ts
     watchFragment<TData = any, TVars = OperationVariables>(options: WatchFragmentOptions<TData, TVars>): Observable<WatchFragmentResult<TData>>;
     // (undocumented)
     abstract write<TData = any, TVariables = any>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
@@ -977,7 +975,7 @@ export type TypePolicy = {
 };
 
 // @public
-interface WatchFragmentOptions<TData, TVars> {
+export interface WatchFragmentOptions<TData, TVars> {
     // @deprecated (undocumented)
     canonizeResults?: boolean;
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
@@ -988,7 +986,7 @@ interface WatchFragmentOptions<TData, TVars> {
 }
 
 // @public
-type WatchFragmentResult<TData> = {
+export type WatchFragmentResult<TData> = {
     data: TData;
     complete: true;
     missing?: never;

@@ -176,10 +176,24 @@ const cache = new InMemoryCache({
       keyFields: ["title", "author", ["name"]],
     },
     AllProducts: {
-      // Singleton types that have no identifying field can use an empty
-      // array for their keyFields.
-      keyFields: [],
+      // Singleton types that have no identifying field.
+      keyFields: false,
     },
+    Store: {
+      // If a type requires logic to choose the key fields, we can specify that in a function
+      keyFields: (object, context) => {
+        if (object.location == "United States") {
+          // We can return the array of field specifiers
+          return ["state", "storeNumber"];
+        } else if (object.location) {
+          // Or we can return another function to calculate the cache key as a string
+          return ((obj) => "prefix:" + obj.location + obj.storeNumber);
+        } else {
+          // Or we can indicate that this type is a Singleton
+          return false;
+        }
+      }
+    }
   },
 });
 ```
@@ -194,7 +208,8 @@ This example shows a variety of `typePolicies` with different `keyFields`:
         ```
         Book:{"title":"Fahrenheit 451","author":{"name":"Ray Bradbury"}}
         ```
-* The `AllProducts` type illustrates a special strategy for a **singleton** type. If the cache will only ever contain one `AllProducts` object and that object has _no_ identifying fields, you can provide an empty array for its `keyFields`.
+* The `AllProducts` type illustrates a special strategy for a **singleton** type. If the cache will only ever contain one `AllProducts` object and that object has _no_ identifying fields, you can provide an empty array or `false` for its `keyFields`.
+* The `Store` type provides an example of using custom logic from the given object and runtime context to calculate what fields should be used for the key field selection.
 
 If an object has multiple `keyFields`, the cache ID always lists those fields in the same order to ensure uniqueness.
 

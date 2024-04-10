@@ -20,9 +20,11 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    "types": ["@testing-library/jest-dom"]
   },
   "files": ["@types/graphql.d.ts"],
-  "include": ["src", "tests", "./tests/setupTests.ts"],
+  "include": ["src", "./tests/setupTests.js"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

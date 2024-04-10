@@ -5,8 +5,9 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "types": ["@testing-library/jest-dom"]
   },
   "files": ["@types/graphql.d.ts"],
-  "include": ["vite.config.ts", "tests/setupTests.js"]
+  "include": ["vite.config.ts", "./tests/setupTests.js"]
 }

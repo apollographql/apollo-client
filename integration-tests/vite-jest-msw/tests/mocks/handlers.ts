@@ -26,27 +26,6 @@ const schema = createMockSchema(staticSchema, {
 
 export let schemaProxy = createProxiedSchema(schema, resolvers);
 
-// export function replaceSchema(newSchema: typeof schemaProxy) {
-//   const oldSchema = schemaProxy;
-//   schemaProxy = newSchema;
-
-//   function restore() {
-//     schemaProxy = oldSchema;
-//   }
-
-//   return Object.assign(restore, {
-//     [Symbol.dispose]() {
-//       restore();
-//     },
-//   });
-//   // return {
-//   //   [Symbol.dispose]: () => {
-//   //     schemaProxy = oldSchema;
-//   //   },
-//   //   restore,
-//   // };
-// }
-
 export const handlers = [
   graphql.operation(async ({ query, variables, operationName }) => {
     const document = gql(query);

@@ -3,12 +3,7 @@ import type { GraphQLError, GraphQLSchema } from "graphql";
 import { ApolloError, gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
 import { wait } from "./wait.js";
-
-// const randomDelayWithinThreshold = (min: number, max: number) => {
-//   return new Promise((resolve) => {
-//     setTimeout(resolve, Math.random() * (max - min) + min);
-//   });
-// };
+import { invariant } from "../../utilities/globals/invariantWrappers.js";
 
 /**
  * A function that accepts a static `schema` and a `mockFetchOpts` object and
@@ -51,11 +46,17 @@ const createSchemaFetch = (
     options
   ) => {
     if (mockFetchOpts.delay) {
-      const randomDelay =
-        Math.random() * (mockFetchOpts.delay.max - mockFetchOpts.delay.min) +
-        mockFetchOpts.delay.min;
+      if (mockFetchOpts.delay.min > mockFetchOpts.delay.max) {
+        invariant.error(
+          "Please configure a minimum delay that is less than the maximum delay."
+        );
+      } else {
+        const randomDelay =
+          Math.random() * (mockFetchOpts.delay.max - mockFetchOpts.delay.min) +
+          mockFetchOpts.delay.min;
 
-      await wait(randomDelay);
+        await wait(randomDelay);
+      }
     }
 
     return new Promise(async (resolve) => {

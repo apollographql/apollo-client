@@ -1035,7 +1035,7 @@ describe("schema proxy", () => {
     const maxDelay = 2000;
 
     using _fetch = createSchemaFetch(schema, {
-      delay: { min: 100, max: 2000 },
+      delay: { min: 10, max: maxDelay },
     });
 
     const client = new ApolloClient({
@@ -1112,8 +1112,91 @@ describe("schema proxy", () => {
     {
       // with a timeout > maxDelay, this passes
       const { snapshot } = await Profiler.takeRender({
-        timeout: maxDelay + 10,
+        timeout: maxDelay + 100,
       });
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "Jane Doe",
+          book: {
+            __typename: "TextBook",
+            id: "1",
+            publishedAt: "2024-01-01",
+            title: "The Book",
+          },
+        },
+      });
+    }
+
+    unmount();
+  });
+
+  it("should call invariant.error if min delay is greater than max delay", async () => {
+    using _consoleSpy = spyOnConsole.takeSnapshots("error");
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    using _fetch = createSchemaFetch(schema, {
+      delay: { min: 3000, max: 1000 },
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      uri,
+    });
+
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+          }
+        }
+      }
+    `;
+
+    const Fallback = () => {
+      useTrackRenders();
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child />
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+
+      useTrackRenders();
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return <div>Hello</div>;
+    };
+
+    const { unmount } = renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         viewer: {

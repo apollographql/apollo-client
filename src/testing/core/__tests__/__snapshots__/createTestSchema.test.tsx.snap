@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`schema proxy should call invariant.error if min delay is greater than max delay 1`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "Please configure a minimum delay that is less than the maximum delay.",
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;

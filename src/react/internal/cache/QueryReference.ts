@@ -207,18 +207,20 @@ export class InternalQueryReference<TData = unknown> {
     const { observable } = this;
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
+    const avoidNetworkRequests =
+      originalFetchPolicy === "no-cache" || originalFetchPolicy === "standby";
 
     try {
-      if (originalFetchPolicy !== "no-cache") {
+      if (avoidNetworkRequests) {
+        observable.silentSetOptions({ fetchPolicy: "standby" });
+      } else {
         observable.resetLastResults();
         observable.silentSetOptions({ fetchPolicy: "cache-first" });
-      } else {
-        observable.silentSetOptions({ fetchPolicy: "standby" });
       }
 
       this.subscribeToQuery();
 
-      if (originalFetchPolicy === "no-cache") {
+      if (avoidNetworkRequests) {
         return;
       }
 

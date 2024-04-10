@@ -18,6 +18,12 @@
 
 - [#11465](https://github.com/apollographql/apollo-client/pull/11465) [`7623da7`](https://github.com/apollographql/apollo-client/commit/7623da7720855b0c19e13ff9124679f426a39725) Thanks [@alessbell](https://github.com/alessbell)! - Add `watchFragment` method to the cache and expose it on ApolloClient, refactor `useFragment` using `watchFragment`.
 
+## 3.9.11
+
+### Patch Changes
+
+- [#11769](https://github.com/apollographql/apollo-client/pull/11769) [`04132af`](https://github.com/apollographql/apollo-client/commit/04132af121c9b48d6e03eb733b9b91f825defbac) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where using `skipToken` or the `skip` option with `useSuspenseQuery` in React's strict mode would perform a network request.
+
 ## 3.9.10
 
 ### Patch Changes

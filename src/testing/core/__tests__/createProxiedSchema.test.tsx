@@ -861,7 +861,6 @@ describe("schema proxy", () => {
       },
       Book: {
         __resolveType: (obj) => {
-          console.log(obj);
           if ("text" in obj) {
             return "TextBook";
           }
@@ -1028,7 +1027,209 @@ describe("schema proxy", () => {
 
     unmount();
   });
-  it.todo("add test for reset");
-  it.todo("add test for mergeResolvers: false");
-  it.todo("add test for mergeResolvers: true");
+
+  describe("schema.reset", () => {
+    const resetTestSchema = createProxiedSchema(schemaWithMocks, {
+      Query: {
+        viewer: () => ({
+          book: {
+            text: "Hello World",
+            title: "Orlando: A Biography",
+          },
+        }),
+      },
+      Book: {
+        __resolveType: (obj) => {
+          if ("text" in obj) {
+            return "TextBook";
+          }
+          if ("colors" in obj) {
+            return "ColoringBook";
+          }
+          throw new Error("Could not resolve type");
+        },
+      },
+    });
+    it("setup test where we add resolvers to schema", async () => {
+      const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+      resetTestSchema.add({
+        resolvers: {
+          Query: {
+            viewer: () => ({
+              book: {
+                text: "Hello World",
+                title: "The Waves",
+              },
+            }),
+          },
+        },
+      });
+
+      using _fetch = createMockFetch(resetTestSchema);
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        uri,
+      });
+
+      const query: TypedDocumentNode<ViewerQueryData> = gql`
+        query {
+          viewer {
+            id
+            name
+            age
+            book {
+              id
+              title
+              publishedAt
+              ... on ColoringBook {
+                colors
+              }
+            }
+          }
+        }
+      `;
+
+      const Fallback = () => {
+        useTrackRenders();
+        return <div>Loading...</div>;
+      };
+
+      const App = () => {
+        return (
+          <React.Suspense fallback={<Fallback />}>
+            <Child />
+          </React.Suspense>
+        );
+      };
+
+      const Child = () => {
+        const result = useSuspenseQuery(query);
+
+        useTrackRenders();
+
+        Profiler.mergeSnapshot({
+          result,
+        } as Partial<{}>);
+
+        return <div>Hello</div>;
+      };
+
+      const { unmount } = renderWithClient(<App />, {
+        client,
+        wrapper: Profiler,
+      });
+
+      // initial suspended render
+      await Profiler.takeRender();
+
+      {
+        const { snapshot } = await Profiler.takeRender();
+
+        expect(snapshot.result?.data).toEqual({
+          viewer: {
+            __typename: "User",
+            age: 42,
+            id: "1",
+            name: "String",
+            book: {
+              __typename: "TextBook",
+              id: "1",
+              publishedAt: "2024-01-01",
+              // value set in this test with .add
+              title: "The Waves",
+            },
+          },
+        });
+      }
+
+      unmount();
+    });
+    it("resets the schema to the original", async () => {
+      const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+      resetTestSchema.reset();
+
+      using _fetch = createMockFetch(resetTestSchema);
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        uri,
+      });
+
+      const query: TypedDocumentNode<ViewerQueryData> = gql`
+        query {
+          viewer {
+            id
+            name
+            age
+            book {
+              id
+              title
+              publishedAt
+              ... on ColoringBook {
+                colors
+              }
+            }
+          }
+        }
+      `;
+
+      const Fallback = () => {
+        useTrackRenders();
+        return <div>Loading...</div>;
+      };
+
+      const App = () => {
+        return (
+          <React.Suspense fallback={<Fallback />}>
+            <Child />
+          </React.Suspense>
+        );
+      };
+
+      const Child = () => {
+        const result = useSuspenseQuery(query);
+
+        useTrackRenders();
+
+        Profiler.mergeSnapshot({
+          result,
+        } as Partial<{}>);
+
+        return <div>Hello</div>;
+      };
+
+      const { unmount } = renderWithClient(<App />, {
+        client,
+        wrapper: Profiler,
+      });
+
+      // initial suspended render
+      await Profiler.takeRender();
+
+      {
+        const { snapshot } = await Profiler.takeRender();
+
+        expect(snapshot.result?.data).toEqual({
+          viewer: {
+            __typename: "User",
+            age: 42,
+            id: "1",
+            name: "String",
+            book: {
+              __typename: "TextBook",
+              id: "1",
+              publishedAt: "2024-01-01",
+              // original value
+              title: "Orlando: A Biography",
+            },
+          },
+        });
+      }
+
+      unmount();
+    });
+  });
 });

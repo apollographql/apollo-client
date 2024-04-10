@@ -11,10 +11,6 @@ interface ProxiedSchemaFns {
   reset: () => void;
 }
 
-type CreateProxiedSchemaOptions = {
-  mergeResolvers: boolean;
-};
-
 /**
  * A function that creates a [Proxy object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
  * around a given `schema` with `resolvers`. This proxied schema can be used to
@@ -49,10 +45,7 @@ type CreateProxiedSchemaOptions = {
  */
 const createProxiedSchema = (
   schemaWithMocks: GraphQLSchema,
-  resolvers: Resolvers,
-  options: CreateProxiedSchemaOptions = {
-    mergeResolvers: true,
-  }
+  resolvers: Resolvers
 ): ProxiedSchema => {
   let targetResolvers = { ...resolvers };
   let targetSchema = addResolversToSchema({
@@ -63,10 +56,7 @@ const createProxiedSchema = (
   const fns: ProxiedSchemaFns = {
     add: ({ resolvers: newResolvers }) => {
       // @ts-ignore TODO(fixme): IResolvers type does not play well with our Resolvers
-      targetResolvers =
-        options.mergeResolvers ?
-          mergeResolvers([targetResolvers, newResolvers])
-        : { ...targetResolvers, ...newResolvers };
+      targetResolvers = mergeResolvers([targetResolvers, newResolvers]);
 
       targetSchema = addResolversToSchema({
         schema: targetSchema,
@@ -77,11 +67,7 @@ const createProxiedSchema = (
     },
 
     fork: ({ resolvers: newResolvers } = {}) => {
-      return createProxiedSchema(
-        targetSchema,
-        newResolvers ?? targetResolvers,
-        options
-      );
+      return createProxiedSchema(targetSchema, newResolvers ?? targetResolvers);
     },
 
     reset: () => {

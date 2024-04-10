@@ -32,7 +32,7 @@ interface ProxiedSchemaFns {
      Date: () => new Date("December 10, 1815 01:00:00").toJSON().split("T")[0],
    });
  *
- * const schema = createProxiedSchema(schemaWithMocks, {
+ * const schema = createTestSchema(schemaWithMocks, {
      Query: {
        writer: () => ({
          name: "Ada Lovelace",
@@ -43,7 +43,7 @@ interface ProxiedSchemaFns {
  * @since 3.9.0
  * @alpha
  */
-const createProxiedSchema = (
+const createTestSchema = (
   schemaWithMocks: GraphQLSchema,
   resolvers: Resolvers
 ): ProxiedSchema => {
@@ -67,7 +67,7 @@ const createProxiedSchema = (
     },
 
     fork: ({ resolvers: newResolvers } = {}) => {
-      return createProxiedSchema(targetSchema, newResolvers ?? targetResolvers);
+      return createTestSchema(targetSchema, newResolvers ?? targetResolvers);
     },
 
     reset: () => {
@@ -118,4 +118,4 @@ const createProxiedSchema = (
   return schema as ProxiedSchema;
 };
 
-export { createProxiedSchema };
+export { createTestSchema };

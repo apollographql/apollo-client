@@ -1029,7 +1029,7 @@ describe("schema proxy", () => {
   });
 
   describe("schema.reset", () => {
-    const resetTestSchema = createProxiedSchema(schemaWithMocks, {
+    const resetTestSchema = createTestSchema(schemaWithMocks, {
       Query: {
         viewer: () => ({
           book: {
@@ -1066,7 +1066,7 @@ describe("schema proxy", () => {
         },
       });
 
-      using _fetch = createMockFetch(resetTestSchema);
+      using _fetch = createSchemaFetch(resetTestSchema);
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
@@ -1151,7 +1151,7 @@ describe("schema proxy", () => {
 
       resetTestSchema.reset();
 
-      using _fetch = createMockFetch(resetTestSchema);
+      using _fetch = createSchemaFetch(resetTestSchema);
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),

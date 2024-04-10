@@ -2,6 +2,13 @@ import { execute, validate } from "graphql";
 import type { GraphQLError, GraphQLSchema } from "graphql";
 import { ApolloError, gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
+import { wait } from "./wait.js";
+
+// const randomDelayWithinThreshold = (min: number, max: number) => {
+//   return new Promise((resolve) => {
+//     setTimeout(resolve, Math.random() * (max - min) + min);
+//   });
+// };
 
 /**
  * A function that accepts a static `schema` and a `mockFetchOpts` object and
@@ -32,14 +39,25 @@ import { withCleanup } from "../internal/index.js";
  */
 const createSchemaFetch = (
   schema: GraphQLSchema,
-  mockFetchOpts: { validate: boolean } = { validate: true }
+  mockFetchOpts: {
+    validate?: boolean;
+    delay?: { min: number; max: number };
+  } = { validate: true, delay: { min: 0, max: 0 } }
 ) => {
   const prevFetch = window.fetch;
 
-  const mockFetch: (uri: any, options: any) => Promise<Response> = (
+  const mockFetch: (uri: any, options: any) => Promise<Response> = async (
     _uri,
     options
   ) => {
+    if (mockFetchOpts.delay) {
+      const randomDelay =
+        Math.random() * (mockFetchOpts.delay.max - mockFetchOpts.delay.min) +
+        mockFetchOpts.delay.min;
+
+      await wait(randomDelay);
+    }
+
     return new Promise(async (resolve) => {
       const body = JSON.parse(options.body);
       const document = gql(body.query);

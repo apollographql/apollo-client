@@ -22,15 +22,15 @@ import { withCleanup } from "../internal/index.js";
  *
  * @example
  * ```js
- * using _fetch = createMockFetch(schema); // automatically restores fetch after exiting the block
+ * using _fetch = createSchemaFetch(schema); // automatically restores fetch after exiting the block
  *
- * const { restore } = createMockFetch(schema);
+ * const { restore } = createSchemaFetch(schema);
  * restore(); // manually restore fetch if `using` is not supported
  * ```
  * @since 3.10.0
  * @alpha
  */
-const createMockFetch = (
+const createSchemaFetch = (
   schema: GraphQLSchema,
   mockFetchOpts: { validate: boolean } = { validate: true }
 ) => {
@@ -84,4 +84,4 @@ const createMockFetch = (
   return withCleanup({ mock: mockFetch, restore }, restore);
 };
 
-export { createMockFetch };
+export { createSchemaFetch };

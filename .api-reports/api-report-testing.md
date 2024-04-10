@@ -450,22 +450,22 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 export function createMockClient<TData>(data: TData, query: DocumentNode, variables?: {}): ApolloClient<NormalizedCacheObject>;
 
 // @alpha
-export const createMockFetch: (schema: GraphQLSchema, mockFetchOpts?: {
+export const createMockSchema: (staticSchema: GraphQLSchema, mocks: {
+    [key: string]: any;
+}) => GraphQLSchema;
+
+// @alpha
+export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
     validate: boolean;
 }) => {
     mock: (uri: any, options: any) => Promise<Response>;
     restore: () => void;
 } & Disposable;
 
-// @alpha
-export const createMockSchema: (staticSchema: GraphQLSchema, mocks: {
-    [key: string]: any;
-}) => GraphQLSchema;
-
 // Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts
 //
 // @alpha
-export const createProxiedSchema: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => ProxiedSchema;
+export const createTestSchema: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => ProxiedSchema;
 
 // @public (undocumented)
 namespace DataProxy {

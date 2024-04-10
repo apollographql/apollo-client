@@ -456,7 +456,11 @@ export const createMockSchema: (staticSchema: GraphQLSchema, mocks: {
 
 // @alpha
 export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
-    validate: boolean;
+    validate?: boolean;
+    delay?: {
+        min: number;
+        max: number;
+    };
 }) => {
     mock: (uri: any, options: any) => Promise<Response>;
     restore: () => void;

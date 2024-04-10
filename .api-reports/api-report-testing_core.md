@@ -450,7 +450,11 @@ export function createMockClient<TData>(data: TData, query: DocumentNode, variab
 
 // @alpha
 export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
-    validate: boolean;
+    validate?: boolean;
+    delay?: {
+        min: number;
+        max: number;
+    };
 }) => {
     mock: (uri: any, options: any) => Promise<Response>;
     restore: () => void;

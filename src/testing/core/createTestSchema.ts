@@ -1,14 +1,20 @@
 import { addResolversToSchema } from "@graphql-tools/schema";
 import type { GraphQLSchema } from "graphql";
 
+import { createMockSchema } from "../graphql-tools/utils.js";
 import type { Resolvers } from "../../core/types.js";
 
-type ProxiedSchema = GraphQLSchema & ProxiedSchemaFns;
+type ProxiedSchema = GraphQLSchema & TestSchemaFns;
 
-interface ProxiedSchemaFns {
+interface TestSchemaFns {
   add: (addOptions: { resolvers: Resolvers }) => ProxiedSchema;
   fork: (forkOptions?: { resolvers?: Resolvers }) => ProxiedSchema;
   reset: () => void;
+}
+
+interface TestSchemaOptions {
+  resolvers: Resolvers;
+  mocks?: { [key: string]: any };
 }
 
 /**
@@ -19,24 +25,26 @@ interface ProxiedSchemaFns {
  * can be modified independently of the original schema. `reset` will restore
  * resolvers to the original proxied schema.
  *
- * @param schemaWithMocks - A `GraphQLSchema`.
- * @param resolvers - `Resolvers` object.
+ * @param schema - A `GraphQLSchema`.
+ * @param options - An `options` object that accepts `mocks` and `resolvers` objects.
  * @returns A `ProxiedSchema` with `add`, `fork` and `reset` methods.
  *
  * @example
  * ```js
- * const schemaWithMocks = createMockSchema(schemaWithTypeDefs, {
-     ID: () => "1",
-     Int: () => 36,
-     String: () => "String",
-     Date: () => new Date("December 10, 1815 01:00:00").toJSON().split("T")[0],
-   });
  *
- * const schema = createTestSchema(schemaWithMocks, {
-     Query: {
-       writer: () => ({
-         name: "Ada Lovelace",
-       }),
+ * const schema = createTestSchema(schemaWithTypeDefs, {
+ *   resolvers: {
+       Query: {
+         writer: () => ({
+           name: "Ada Lovelace",
+         }),
+       }
+     },
+     mocks: {
+       ID: () => "1",
+       Int: () => 36,
+       String: () => "String",
+       Date: () => new Date("December 10, 1815 01:00:00").toJSON().split("T")[0],
      }
    });
  * ```
@@ -44,16 +52,16 @@ interface ProxiedSchemaFns {
  * @alpha
  */
 const createTestSchema = (
-  schemaWithMocks: GraphQLSchema,
-  resolvers: Resolvers
+  schemaWithTypeDefs: GraphQLSchema,
+  options: TestSchemaOptions
 ): ProxiedSchema => {
-  let targetResolvers = { ...resolvers };
+  let targetResolvers = { ...options.resolvers };
   let targetSchema = addResolversToSchema({
-    schema: schemaWithMocks,
+    schema: createMockSchema(schemaWithTypeDefs, options.mocks ?? {}),
     resolvers: targetResolvers,
   });
 
-  const fns: ProxiedSchemaFns = {
+  const fns: TestSchemaFns = {
     add: ({ resolvers: newResolvers }) => {
       targetResolvers = { ...targetResolvers, ...newResolvers };
       targetSchema = addResolversToSchema({
@@ -65,13 +73,16 @@ const createTestSchema = (
     },
 
     fork: ({ resolvers: newResolvers } = {}) => {
-      return createTestSchema(targetSchema, newResolvers ?? targetResolvers);
+      return createTestSchema(targetSchema, {
+        resolvers: newResolvers ?? targetResolvers,
+        mocks: options.mocks,
+      });
     },
 
     reset: () => {
       targetSchema = addResolversToSchema({
-        schema: schemaWithMocks,
-        resolvers,
+        schema: schemaWithTypeDefs,
+        resolvers: options.resolvers,
       });
     },
   };

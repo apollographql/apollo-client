@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2024-02-12**
+**Last updated: 2024-04-08**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -13,18 +13,18 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ---
 
-## [3.10.0](https://github.com/apollographql/apollo-client/milestone/33) - April 9th, 2024
+## [3.10.0](https://github.com/apollographql/apollo-client/milestone/33) - April 15th, 2024
 
 - RC target: April 2nd, 2024
 
 ## Upcoming features
 
+- Core `watchFragment` API to provide `useFragment`-like functionality for non-React envs
 - schema-driven testing utilities
-- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
 - Data masking
+- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
 - leaner client (under alternate entry point)
 - Better types for `useQuery`/`useMutation`/`useSubscription`
-- Core `watchFragment` API to provide `useFragment`-like functionality for non-React envs
 
 ## 4.0
 

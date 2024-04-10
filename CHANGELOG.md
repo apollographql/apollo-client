@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.9.11
+
+### Patch Changes
+
+- [#11769](https://github.com/apollographql/apollo-client/pull/11769) [`04132af`](https://github.com/apollographql/apollo-client/commit/04132af121c9b48d6e03eb733b9b91f825defbac) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where using `skipToken` or the `skip` option with `useSuspenseQuery` in React's strict mode would perform a network request.
+
 ## 3.9.10
 
 ### Patch Changes

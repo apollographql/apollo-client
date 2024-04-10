@@ -2,4 +2,4 @@
 "@apollo/client": minor
 ---
 
-`createProxiedSchema` deep merges resolvers by default, can be opted out of with `mergeResolvers: false`
+`createProxiedSchema` now uses graphql-tools `mergeResolvers` to merge resolvers instead of a shallow merge.

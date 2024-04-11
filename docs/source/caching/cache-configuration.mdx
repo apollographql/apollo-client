@@ -181,11 +181,11 @@ const cache = new InMemoryCache({
     },
     Store: {
       // If a type requires logic to choose the key fields, we can specify that in a function
-      keyFields: (object, context) => {
-        if (object.location == "United States") {
+      keyFields: (store, context) => {
+        if (store.location == "United States") {
           // We can return the array of field specifiers
           return ["state", "storeNumber"];
-        } else if (object.location) {
+        } else if (store.location) {
           // Or we can return another function to calculate the cache key as a string
           return ((obj) => "prefix:" + obj.location + obj.storeNumber);
         } else {

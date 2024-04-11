@@ -39,20 +39,19 @@ const createSchemaFetch = (
   } = { validate: true }
 ) => {
   const prevFetch = window.fetch;
+  const delayMin = mockFetchOpts.delay?.min ?? 3;
+  const delayMax = mockFetchOpts.delay?.max ?? delayMin + 2;
+
+  if (delayMin > delayMax) {
+    throw new Error(
+      "Please configure a minimum delay that is less than the maximum delay. The default minimum delay is 3ms."
+    );
+  }
 
   const mockFetch: (uri?: any, options?: any) => Promise<Response> = async (
     _uri,
     options
   ) => {
-    const delayMin = mockFetchOpts.delay?.min ?? 3;
-    const delayMax = mockFetchOpts.delay?.max ?? delayMin + 2;
-
-    if (delayMin > delayMax) {
-      throw new Error(
-        "Please configure a minimum delay that is less than the maximum delay. The default minimum delay is 3ms."
-      );
-    }
-
     if (delayMin > 0) {
       const randomDelay = Math.random() * (delayMax - delayMin) + delayMin;
       await wait(randomDelay);

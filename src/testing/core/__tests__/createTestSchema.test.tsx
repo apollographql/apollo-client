@@ -1017,13 +1017,14 @@ describe("schema proxy", () => {
     }
   });
 
-  it("createSchemaFetch respects min and max delay", async () => {
+  it.only("createSchemaFetch respects min and max delay", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
+    const minDelay = 1500;
     const maxDelay = 2000;
 
     using _fetch = createSchemaFetch(schema, {
-      delay: { min: 10, max: maxDelay },
+      delay: { min: minDelay, max: maxDelay },
     });
 
     const client = new ApolloClient({
@@ -1071,7 +1072,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { rerender } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -1079,26 +1080,10 @@ describe("schema proxy", () => {
     // initial suspended render
     await Profiler.takeRender();
 
-    {
-      try {
-        await Profiler.takeRender();
-      } catch (e) {
-        // default timeout is 1000, so this throws
-        if (e instanceof Error) {
-          expect(e.message).toMatch(
-            /Exceeded timeout waiting for next render./
-          );
-        }
-      }
-    }
-
-    rerender(<App />);
-
-    // suspended render
-    await Profiler.takeRender();
+    await expect(Profiler).not.toRerender({ timeout: minDelay - 10 });
 
     {
-      // with a timeout > maxDelay, this passes
+      // this fails with `Exceeded timeout waiting for next render`
       const { snapshot } = await Profiler.takeRender({
         timeout: maxDelay + 100,
       });

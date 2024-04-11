@@ -59,39 +59,35 @@ const createSchemaFetch = (
       }
     }
 
-    return new Promise(async (resolve) => {
-      const body = JSON.parse(options.body);
-      const document = gql(body.query);
+    const body = JSON.parse(options.body);
+    const document = gql(body.query);
 
-      if (mockFetchOpts.validate) {
-        let validationErrors: readonly Error[] = [];
+    if (mockFetchOpts.validate) {
+      let validationErrors: readonly Error[] = [];
 
-        try {
-          validationErrors = validate(schema, document);
-        } catch (e) {
-          validationErrors = [
-            new ApolloError({ graphQLErrors: [e as GraphQLError] }),
-          ];
-        }
-
-        if (validationErrors?.length > 0) {
-          return resolve(
-            new Response(JSON.stringify({ errors: validationErrors }))
-          );
-        }
+      try {
+        validationErrors = validate(schema, document);
+      } catch (e) {
+        validationErrors = [
+          new ApolloError({ graphQLErrors: [e as GraphQLError] }),
+        ];
       }
 
-      const result = await execute({
-        schema,
-        document,
-        variableValues: body.variables,
-        operationName: body.operationName,
-      });
+      if (validationErrors?.length > 0) {
+        return new Response(JSON.stringify({ errors: validationErrors }));
+      }
+    }
 
-      const stringifiedResult = JSON.stringify(result);
-
-      resolve(new Response(stringifiedResult));
+    const result = await execute({
+      schema,
+      document,
+      variableValues: body.variables,
+      operationName: body.operationName,
     });
+
+    const stringifiedResult = JSON.stringify(result);
+
+    return new Response(stringifiedResult);
   };
 
   window.fetch = mockFetch;

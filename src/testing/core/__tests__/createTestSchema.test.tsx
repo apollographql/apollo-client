@@ -1081,7 +1081,7 @@ describe("schema proxy", () => {
 
     {
       try {
-        const { snapshot: _snapshot } = await Profiler.takeRender();
+        await Profiler.takeRender();
       } catch (e) {
         // default timeout is 1000, so this throws
         if (e instanceof Error) {

@@ -396,7 +396,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -422,8 +422,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("allows you to call .fork without providing resolvers", async () => {
@@ -491,7 +489,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -520,8 +518,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("handles mutations", async () => {
@@ -615,7 +611,7 @@ describe("schema proxy", () => {
 
     const user = userEvent.setup();
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -666,8 +662,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("returns GraphQL errors", async () => {
@@ -743,7 +737,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -760,8 +754,6 @@ describe("schema proxy", () => {
         })
       );
     }
-
-    unmount();
   });
 
   it("validates schema by default and returns validation errors", async () => {
@@ -823,7 +815,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -842,8 +834,6 @@ describe("schema proxy", () => {
         })
       );
     }
-
-    unmount();
   });
 
   it("preserves resolvers from previous calls to .add on subsequent calls to .fork", async () => {
@@ -975,7 +965,7 @@ describe("schema proxy", () => {
 
     const user = userEvent.setup();
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -1025,8 +1015,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("createSchemaFetch respects min and max delay", async () => {
@@ -1083,7 +1071,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount, rerender } = renderWithClient(<App />, {
+    const { rerender } = renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -1130,13 +1118,13 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("should call invariant.error if min delay is greater than max delay", async () => {
-    using _consoleSpy = spyOnConsole.takeSnapshots("error");
-    const Profiler = createDefaultProfiler<ViewerQueryData>();
+    using _consoleSpy = spyOnConsole("error");
+    const Profiler = createErrorProfiler<ViewerQueryData>();
+
+    const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
     using _fetch = createSchemaFetch(schema, {
       delay: { min: 3000, max: 1000 },
@@ -1170,7 +1158,9 @@ describe("schema proxy", () => {
     const App = () => {
       return (
         <React.Suspense fallback={<Fallback />}>
-          <Child />
+          <ErrorBoundary>
+            <Child />
+          </ErrorBoundary>
         </React.Suspense>
       );
     };
@@ -1187,7 +1177,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -1198,22 +1188,15 @@ describe("schema proxy", () => {
     {
       const { snapshot } = await Profiler.takeRender();
 
-      expect(snapshot.result?.data).toEqual({
-        viewer: {
-          __typename: "User",
-          age: 42,
-          id: "1",
-          name: "Jane Doe",
-          book: {
-            __typename: "TextBook",
-            id: "1",
-            publishedAt: "2024-01-01",
-            title: "The Book",
-          },
-        },
-      });
+      expect(snapshot.error).toEqual(
+        new ApolloError({
+          graphQLErrors: [
+            new GraphQLError(
+              "Please configure a minimum delay that is less than the maximum delay. The default minimum delay is 3ms."
+            ),
+          ],
+        })
+      );
     }
-
-    unmount();
   });
 });

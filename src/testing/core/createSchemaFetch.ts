@@ -3,7 +3,6 @@ import type { GraphQLError, GraphQLSchema } from "graphql";
 import { ApolloError, gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
 import { wait } from "./wait.js";
-import { invariant } from "../../utilities/globals/invariantWrappers.js";
 
 /**
  * A function that accepts a static `schema` and a `mockFetchOpts` object and
@@ -37,24 +36,25 @@ const createSchemaFetch = (
   mockFetchOpts: {
     validate?: boolean;
     delay?: { min: number; max: number };
-  } = { validate: true, delay: { min: 0, max: 0 } }
+  } = { validate: true }
 ) => {
   const prevFetch = window.fetch;
 
-  const mockFetch: (uri: any, options: any) => Promise<Response> = async (
+  const mockFetch: (uri?: any, options?: any) => Promise<Response> = async (
     _uri,
     options
   ) => {
-    if (mockFetchOpts.delay) {
-      if (mockFetchOpts.delay.min > mockFetchOpts.delay.max) {
-        invariant.error(
-          "Please configure a minimum delay that is less than the maximum delay."
+    const delayMin = mockFetchOpts.delay?.min ?? 3;
+    const delayMax = mockFetchOpts.delay?.max ?? delayMin + 2;
+
+    if (delayMin > 0) {
+      if (delayMin > delayMax) {
+        console.log("should throw");
+        throw new Error(
+          "Please configure a minimum delay that is less than the maximum delay. The default minimum delay is 3ms."
         );
       } else {
-        const randomDelay =
-          Math.random() * (mockFetchOpts.delay.max - mockFetchOpts.delay.min) +
-          mockFetchOpts.delay.min;
-
+        const randomDelay = Math.random() * (delayMax - delayMin) + delayMin;
         await wait(randomDelay);
       }
     }

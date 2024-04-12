@@ -1018,7 +1018,7 @@ describe("schema proxy", () => {
     }
   });
 
-  it.failing("createSchemaFetch respects min and max delay", async () => {
+  it("createSchemaFetch respects min and max delay", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
     const minDelay = 1500;
@@ -1081,7 +1081,9 @@ describe("schema proxy", () => {
     // initial suspended render
     await Profiler.takeRender();
 
+    console.log("a");
     await expect(Profiler).not.toRerender({ timeout: minDelay - 100 });
+    console.log("b");
 
     {
       // This fails with `Exceeded timeout waiting for next render` -

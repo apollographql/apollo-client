@@ -88,13 +88,23 @@ const createSchemaFetch = (
     return new Response(stringifiedResult);
   };
 
-  window.fetch = mockFetch;
+  function mockGlobal() {
+    window.fetch = mockFetch;
 
-  const restore = () => {
-    window.fetch = prevFetch;
-  };
+    const restore = () => {
+      if (window.fetch === mockFetch) {
+        window.fetch = prevFetch;
+      }
+    };
 
-  return withCleanup({ mock: mockFetch, restore }, restore);
+    return withCleanup({ restore }, restore);
+  }
+
+  return Object.assign(mockFetch, {
+    mockGlobal,
+    // if https://github.com/rbuckton/proposal-using-enforcement lands
+    // [Symbol.enter]: mockGlobal
+  });
 };
 
 export { createSchemaFetch };

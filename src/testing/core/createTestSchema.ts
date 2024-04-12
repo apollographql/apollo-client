@@ -26,7 +26,7 @@ interface TestSchemaOptions {
  * resolvers to the original proxied schema.
  *
  * @param schema - A `GraphQLSchema`.
- * @param options - An `options` object that accepts `mocks` and `resolvers` objects.
+ * @param options - An `options` object that accepts `scalars` and `resolvers` objects.
  * @returns A `ProxiedSchema` with `add`, `fork` and `reset` methods.
  *
  * @example
@@ -40,7 +40,7 @@ interface TestSchemaOptions {
          }),
        }
      },
-     mocks: {
+     scalars: {
        ID: () => "1",
        Int: () => 36,
        String: () => "String",

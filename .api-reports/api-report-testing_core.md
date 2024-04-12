@@ -461,10 +461,11 @@ export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
     } & Disposable;
 };
 
+// Warning: (ae-forgotten-export) The symbol "TestSchemaOptions" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts
 //
 // @alpha
-export const createTestSchema: (schemaWithMocks: GraphQLSchema, resolvers: Resolvers) => ProxiedSchema;
+export const createTestSchema: (schemaWithTypeDefs: GraphQLSchema, options: TestSchemaOptions) => ProxiedSchema;
 
 // @public (undocumented)
 namespace DataProxy {
@@ -1241,24 +1242,10 @@ type Path = ReadonlyArray<string | number>;
 // @public (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
-// Warning: (ae-forgotten-export) The symbol "ProxiedSchemaFns" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "TestSchemaFns" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type ProxiedSchema = GraphQLSchema & ProxiedSchemaFns;
-
-// @public (undocumented)
-interface ProxiedSchemaFns {
-    // (undocumented)
-    add: (addOptions: {
-        resolvers: Resolvers;
-    }) => ProxiedSchema;
-    // (undocumented)
-    fork: (forkOptions?: {
-        resolvers?: Resolvers;
-    }) => ProxiedSchema;
-    // (undocumented)
-    reset: () => void;
-}
+type ProxiedSchema = GraphQLSchema & TestSchemaFns;
 
 // @public (undocumented)
 class QueryInfo {
@@ -1636,6 +1623,30 @@ interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
     fetchPolicy?: FetchPolicy;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     variables?: TVariables;
+}
+
+// @public (undocumented)
+interface TestSchemaFns {
+    // (undocumented)
+    add: (addOptions: {
+        resolvers: Resolvers;
+    }) => ProxiedSchema;
+    // (undocumented)
+    fork: (forkOptions?: {
+        resolvers?: Resolvers;
+    }) => ProxiedSchema;
+    // (undocumented)
+    reset: () => void;
+}
+
+// @public (undocumented)
+interface TestSchemaOptions {
+    // (undocumented)
+    resolvers: Resolvers;
+    // (undocumented)
+    scalars?: {
+        [key: string]: any;
+    };
 }
 
 // @public (undocumented)

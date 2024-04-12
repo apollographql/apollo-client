@@ -215,7 +215,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -241,8 +241,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("allows schema forking with .fork", async () => {
@@ -305,7 +303,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -334,12 +332,23 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("schema.fork does not pollute the original schema", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    schema.fork({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              colors: ["red", "blue", "green"],
+              title: "The Book",
+            },
+          }),
+        },
+      },
+    });
 
     using _fetch = createSchemaFetch(schema).mockGlobal();
 
@@ -385,7 +394,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -411,8 +420,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("allows you to call .fork without providing resolvers", async () => {
@@ -477,7 +484,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -506,8 +513,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("handles mutations", async () => {
@@ -598,7 +603,7 @@ describe("schema proxy", () => {
 
     const user = userEvent.setup();
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -649,8 +654,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("returns GraphQL errors", async () => {
@@ -723,7 +726,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -740,8 +743,6 @@ describe("schema proxy", () => {
         })
       );
     }
-
-    unmount();
   });
 
   it("validates schema by default and returns validation errors", async () => {
@@ -800,7 +801,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -819,8 +820,6 @@ describe("schema proxy", () => {
         })
       );
     }
-
-    unmount();
   });
 
   it("preserves resolvers from previous calls to .add on subsequent calls to .fork", async () => {
@@ -956,7 +955,7 @@ describe("schema proxy", () => {
 
     const user = userEvent.setup();
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -1006,11 +1005,9 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
-  describe("schema.reset", () => {
+  it.only("resets the schema with schema.reset()", async () => {
     const resetTestSchema = createTestSchema(schema, {
       resolvers: {
         Query: {
@@ -1034,180 +1031,127 @@ describe("schema proxy", () => {
         },
       },
     });
-    it("setup test where we add resolvers to schema", async () => {
-      const Profiler = createDefaultProfiler<ViewerQueryData>();
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-      resetTestSchema.add({
-        resolvers: {
-          Query: {
-            viewer: () => ({
-              book: {
-                text: "Hello World",
-                title: "The Waves",
-              },
-            }),
+    resetTestSchema.add({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              text: "Hello World",
+              title: "The Waves",
+            },
+          }),
+        },
+      },
+    });
+
+    using _fetch = createSchemaFetch(resetTestSchema).mockGlobal();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      uri,
+    });
+
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+            ... on ColoringBook {
+              colors
+            }
+          }
+        }
+      }
+    `;
+
+    const Fallback = () => {
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child />
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+      console.log(result.data);
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return (
+        <div>
+          Hello<button onClick={() => result.refetch()}>Refetch</button>
+        </div>
+      );
+    };
+
+    renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "String",
+          book: {
+            __typename: "TextBook",
+            id: "1",
+            publishedAt: "2024-01-01",
+            // value set in this test with .add
+            title: "The Waves",
           },
         },
       });
+    }
 
-      using _fetch = createSchemaFetch(resetTestSchema).mockGlobal();
+    resetTestSchema.reset();
 
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        uri,
-      });
+    const user = userEvent.setup();
 
-      const query: TypedDocumentNode<ViewerQueryData> = gql`
-        query {
-          viewer {
-            id
-            name
-            age
-            book {
-              id
-              title
-              publishedAt
-              ... on ColoringBook {
-                colors
-              }
-            }
-          }
-        }
-      `;
+    await act(() => user.click(screen.getByText("Refetch")));
 
-      const Fallback = () => {
-        return <div>Loading...</div>;
-      };
+    // initial suspended render
+    await Profiler.takeRender();
 
-      const App = () => {
-        return (
-          <React.Suspense fallback={<Fallback />}>
-            <Child />
-          </React.Suspense>
-        );
-      };
+    {
+      const { snapshot } = await Profiler.takeRender();
 
-      const Child = () => {
-        const result = useSuspenseQuery(query);
-
-        Profiler.mergeSnapshot({
-          result,
-        } as Partial<{}>);
-
-        return <div>Hello</div>;
-      };
-
-      const { unmount } = renderWithClient(<App />, {
-        client,
-        wrapper: Profiler,
-      });
-
-      // initial suspended render
-      await Profiler.takeRender();
-
-      {
-        const { snapshot } = await Profiler.takeRender();
-
-        expect(snapshot.result?.data).toEqual({
-          viewer: {
-            __typename: "User",
-            age: 42,
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "String",
+          book: {
+            __typename: "TextBook",
             id: "1",
-            name: "String",
-            book: {
-              __typename: "TextBook",
-              id: "1",
-              publishedAt: "2024-01-01",
-              // value set in this test with .add
-              title: "The Waves",
-            },
+            publishedAt: "2024-01-01",
+            // original value
+            title: "Orlando: A Biography",
           },
-        });
-      }
-
-      unmount();
-    });
-    it("resets the schema to the original", async () => {
-      const Profiler = createDefaultProfiler<ViewerQueryData>();
-
-      resetTestSchema.reset();
-
-      using _fetch = createSchemaFetch(resetTestSchema).mockGlobal();
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        uri,
+        },
       });
-
-      const query: TypedDocumentNode<ViewerQueryData> = gql`
-        query {
-          viewer {
-            id
-            name
-            age
-            book {
-              id
-              title
-              publishedAt
-              ... on ColoringBook {
-                colors
-              }
-            }
-          }
-        }
-      `;
-
-      const Fallback = () => {
-        return <div>Loading...</div>;
-      };
-
-      const App = () => {
-        return (
-          <React.Suspense fallback={<Fallback />}>
-            <Child />
-          </React.Suspense>
-        );
-      };
-
-      const Child = () => {
-        const result = useSuspenseQuery(query);
-
-        Profiler.mergeSnapshot({
-          result,
-        } as Partial<{}>);
-
-        return <div>Hello</div>;
-      };
-
-      const { unmount } = renderWithClient(<App />, {
-        client,
-        wrapper: Profiler,
-      });
-
-      // initial suspended render
-      await Profiler.takeRender();
-
-      {
-        const { snapshot } = await Profiler.takeRender();
-
-        expect(snapshot.result?.data).toEqual({
-          viewer: {
-            __typename: "User",
-            age: 42,
-            id: "1",
-            name: "String",
-            book: {
-              __typename: "TextBook",
-              id: "1",
-              publishedAt: "2024-01-01",
-              // original value
-              title: "Orlando: A Biography",
-            },
-          },
-        });
-      }
-
-      unmount();
-    });
+    }
   });
 });

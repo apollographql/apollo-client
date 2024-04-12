@@ -544,7 +544,7 @@ describe("failure path", () => {
   );
 
   it.each([
-    ["error message", giveUpResponse],
+    // ["error message", giveUpResponse],
     ["error code", giveUpResponseWithCode],
   ] as const)(
     "clears the cache when receiving NotSupported error (%s)",

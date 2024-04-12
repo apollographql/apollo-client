@@ -5,7 +5,6 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "noEmit": true,
     "allowSyntheticDefaultImports": true
   },
   "files": ["@types/graphql.d.ts"],

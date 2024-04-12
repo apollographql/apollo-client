@@ -451,11 +451,16 @@ export function createMockClient<TData>(data: TData, query: DocumentNode, variab
 
 // @alpha
 export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
-    validate: boolean;
-}) => {
-    mock: (uri: any, options: any) => Promise<Response>;
-    restore: () => void;
-} & Disposable;
+    validate?: boolean;
+    delay?: {
+        min: number;
+        max: number;
+    };
+}) => ((uri: any, options: any) => Promise<Response>) & {
+    mockGlobal: () => {
+        restore: () => void;
+    } & Disposable;
+};
 
 // Warning: (ae-forgotten-export) The symbol "TestSchemaOptions" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts

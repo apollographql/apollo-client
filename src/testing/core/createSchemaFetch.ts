@@ -2,6 +2,8 @@ import { execute, validate } from "graphql";
 import type { GraphQLError, GraphQLSchema } from "graphql";
 import { ApolloError, gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
+import { wait } from "./wait.js";
+import { invariant } from "../../utilities/globals/invariantWrappers.js";
 
 /**
  * A function that accepts a static `schema` and a `mockFetchOpts` object and
@@ -32,14 +34,31 @@ import { withCleanup } from "../internal/index.js";
  */
 const createSchemaFetch = (
   schema: GraphQLSchema,
-  mockFetchOpts: { validate: boolean } = { validate: true }
+  mockFetchOpts: {
+    validate?: boolean;
+    delay?: { min: number; max: number };
+  } = { validate: true, delay: { min: 0, max: 0 } }
 ) => {
   const prevFetch = window.fetch;
 
-  const mockFetch: (uri: any, options: any) => Promise<Response> = (
+  const mockFetch: (uri: any, options: any) => Promise<Response> = async (
     _uri,
     options
   ) => {
+    if (mockFetchOpts.delay) {
+      if (mockFetchOpts.delay.min > mockFetchOpts.delay.max) {
+        invariant.error(
+          "Please configure a minimum delay that is less than the maximum delay."
+        );
+      } else {
+        const randomDelay =
+          Math.random() * (mockFetchOpts.delay.max - mockFetchOpts.delay.min) +
+          mockFetchOpts.delay.min;
+
+        await wait(randomDelay);
+      }
+    }
+
     return new Promise(async (resolve) => {
       const body = JSON.parse(options.body);
       const document = gql(body.query);
@@ -75,13 +94,23 @@ const createSchemaFetch = (
     });
   };
 
-  window.fetch = mockFetch;
+  function mockGlobal() {
+    window.fetch = mockFetch;
 
-  const restore = () => {
-    window.fetch = prevFetch;
-  };
+    const restore = () => {
+      if (window.fetch === mockFetch) {
+        window.fetch = prevFetch;
+      }
+    };
 
-  return withCleanup({ mock: mockFetch, restore }, restore);
+    return withCleanup({ restore }, restore);
+  }
+
+  return Object.assign(mockFetch, {
+    mockGlobal,
+    // if https://github.com/rbuckton/proposal-using-enforcement lands
+    // [Symbol.enter]: mockGlobal
+  });
 };
 
 export { createSchemaFetch };

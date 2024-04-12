@@ -173,7 +173,7 @@ describe("schema proxy", () => {
   it("mocks scalars and resolvers", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(schema);
+    using _fetch = createSchemaFetch(schema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -266,7 +266,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -349,7 +349,7 @@ describe("schema proxy", () => {
   it("does not pollute the original schema", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(schema);
+    using _fetch = createSchemaFetch(schema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -444,7 +444,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -566,7 +566,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -709,7 +709,7 @@ describe("schema proxy", () => {
 
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -789,7 +789,7 @@ describe("schema proxy", () => {
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
     // @ts-expect-error - we're intentionally passing an invalid schema
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -916,7 +916,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -1026,6 +1026,194 @@ describe("schema proxy", () => {
           book: {
             __typename: "ColoringBook",
             colors: ["red", "blue", "green"],
+            id: "1",
+            publishedAt: "2024-01-01",
+            title: "The Book",
+          },
+        },
+      });
+    }
+
+    unmount();
+  });
+
+  it("createSchemaFetch respects min and max delay", async () => {
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    const maxDelay = 2000;
+
+    using _fetch = createSchemaFetch(schema, {
+      delay: { min: 10, max: maxDelay },
+    }).mockGlobal();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      uri,
+    });
+
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+          }
+        }
+      }
+    `;
+
+    const Fallback = () => {
+      useTrackRenders();
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child />
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+
+      useTrackRenders();
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return <div>Hello</div>;
+    };
+
+    const { unmount, rerender } = renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      try {
+        const { snapshot: _snapshot } = await Profiler.takeRender();
+      } catch (e) {
+        // default timeout is 1000, so this throws
+        if (e instanceof Error) {
+          expect(e.message).toMatch(
+            /Exceeded timeout waiting for next render./
+          );
+        }
+      }
+    }
+
+    rerender(<App />);
+
+    // suspended render
+    await Profiler.takeRender();
+
+    {
+      // with a timeout > maxDelay, this passes
+      const { snapshot } = await Profiler.takeRender({
+        timeout: maxDelay + 100,
+      });
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "Jane Doe",
+          book: {
+            __typename: "TextBook",
+            id: "1",
+            publishedAt: "2024-01-01",
+            title: "The Book",
+          },
+        },
+      });
+    }
+
+    unmount();
+  });
+
+  it("should call invariant.error if min delay is greater than max delay", async () => {
+    using _consoleSpy = spyOnConsole.takeSnapshots("error");
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    using _fetch = createSchemaFetch(schema, {
+      delay: { min: 3000, max: 1000 },
+    }).mockGlobal();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      uri,
+    });
+
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+          }
+        }
+      }
+    `;
+
+    const Fallback = () => {
+      useTrackRenders();
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child />
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+
+      useTrackRenders();
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return <div>Hello</div>;
+    };
+
+    const { unmount } = renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "Jane Doe",
+          book: {
+            __typename: "TextBook",
             id: "1",
             publishedAt: "2024-01-01",
             title: "The Book",

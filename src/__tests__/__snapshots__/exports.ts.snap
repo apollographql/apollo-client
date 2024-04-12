@@ -369,7 +369,6 @@ Array [
   "MockSubscriptionLink",
   "MockedProvider",
   "createMockClient",
-  "createMockSchema",
   "createSchemaFetch",
   "createTestSchema",
   "itAsync",

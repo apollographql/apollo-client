@@ -1936,6 +1936,17 @@ type UseFragmentResult<TData> = {
 // @public
 function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>): QueryResult<TData, TVariables>;
 
+// Warning: (ae-forgotten-export) The symbol "UseQueryRefHandlersResult" needs to be exported by the entry point index.d.ts
+//
+// @public
+function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryReference<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;
+
+// @public (undocumented)
+interface UseQueryRefHandlersResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    refetch: RefetchFunction<TData, TVariables>;
+}
+
 // Warning: (ae-forgotten-export) The symbol "UseReadQueryResult" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -2056,6 +2067,10 @@ interface WrappableHooks {
     //
     // (undocumented)
     useQuery: typeof useQuery;
+    // Warning: (ae-forgotten-export) The symbol "useQueryRefHandlers" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    useQueryRefHandlers: typeof useQueryRefHandlers;
     // Warning: (ae-forgotten-export) The symbol "useReadQuery" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

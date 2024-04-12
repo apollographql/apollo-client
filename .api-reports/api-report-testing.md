@@ -461,10 +461,11 @@ export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
         min: number;
         max: number;
     };
-}) => {
-    mock: (uri: any, options: any) => Promise<Response>;
-    restore: () => void;
-} & Disposable;
+}) => ((uri: any, options: any) => Promise<Response>) & {
+    mockGlobal: () => {
+        restore: () => void;
+    } & Disposable;
+};
 
 // Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts
 //

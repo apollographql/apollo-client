@@ -1034,7 +1034,7 @@ describe("schema proxy", () => {
 
     using _fetch = createSchemaFetch(schema, {
       delay: { min: minDelay, max: maxDelay },
-    });
+    }).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),

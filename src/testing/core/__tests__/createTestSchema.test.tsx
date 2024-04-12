@@ -11,7 +11,6 @@ import {
   createProfiler,
   renderWithClient,
   spyOnConsole,
-  useTrackRenders,
 } from "../../internal/index.js";
 import { createTestSchema } from "../createTestSchema.js";
 import { GraphQLError, buildSchema } from "graphql";
@@ -109,7 +108,6 @@ function createTrackedErrorComponents<Snapshot extends { error: Error | null }>(
   Profiler: Profiler<Snapshot>
 ) {
   function ErrorFallback({ error }: FallbackProps) {
-    useTrackRenders({ name: "ErrorFallback" });
     Profiler.mergeSnapshot({ error } as Partial<Snapshot>);
 
     return <div>Error</div>;
@@ -196,7 +194,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -211,11 +208,9 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
-      } as Partial<{}>);
+      });
 
       return <div>Hello</div>;
     };
@@ -289,7 +284,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -303,8 +297,6 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -372,7 +364,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -386,8 +377,6 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -467,7 +456,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -481,8 +469,6 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -583,7 +569,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -598,8 +583,6 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
       const [changeViewerName] = useMutation(mutation);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -717,7 +700,6 @@ describe("schema proxy", () => {
     });
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -733,8 +715,6 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -797,7 +777,6 @@ describe("schema proxy", () => {
     });
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -813,8 +792,6 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -942,7 +919,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -957,8 +933,6 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
       const [changeViewerName] = useMutation(mutation);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -1092,7 +1066,6 @@ describe("schema proxy", () => {
       `;
 
       const Fallback = () => {
-        useTrackRenders();
         return <div>Loading...</div>;
       };
 
@@ -1106,8 +1079,6 @@ describe("schema proxy", () => {
 
       const Child = () => {
         const result = useSuspenseQuery(query);
-
-        useTrackRenders();
 
         Profiler.mergeSnapshot({
           result,
@@ -1177,7 +1148,6 @@ describe("schema proxy", () => {
       `;
 
       const Fallback = () => {
-        useTrackRenders();
         return <div>Loading...</div>;
       };
 
@@ -1191,8 +1161,6 @@ describe("schema proxy", () => {
 
       const Child = () => {
         const result = useSuspenseQuery(query);
-
-        useTrackRenders();
 
         Profiler.mergeSnapshot({
           result,

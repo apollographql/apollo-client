@@ -76,7 +76,9 @@ const createTestSchema = (
 
     fork: ({ resolvers: newResolvers } = {}) => {
       return createTestSchema(targetSchema, {
-        resolvers: newResolvers ?? targetResolvers,
+        // @ts-ignore TODO(fixme): IResolvers type does not play well with our Resolvers
+        resolvers:
+          mergeResolvers([targetResolvers, newResolvers]) ?? targetResolvers,
         scalars: options.scalars,
       });
     },

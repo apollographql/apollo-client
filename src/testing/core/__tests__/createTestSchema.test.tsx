@@ -1011,24 +1011,26 @@ describe("schema proxy", () => {
   });
 
   describe("schema.reset", () => {
-    const resetTestSchema = createTestSchema(schemaWithMocks, {
-      Query: {
-        viewer: () => ({
-          book: {
-            text: "Hello World",
-            title: "Orlando: A Biography",
+    const resetTestSchema = createTestSchema(schema, {
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              text: "Hello World",
+              title: "Orlando: A Biography",
+            },
+          }),
+        },
+        Book: {
+          __resolveType: (obj) => {
+            if ("text" in obj) {
+              return "TextBook";
+            }
+            if ("colors" in obj) {
+              return "ColoringBook";
+            }
+            throw new Error("Could not resolve type");
           },
-        }),
-      },
-      Book: {
-        __resolveType: (obj) => {
-          if ("text" in obj) {
-            return "TextBook";
-          }
-          if ("colors" in obj) {
-            return "ColoringBook";
-          }
-          throw new Error("Could not resolve type");
         },
       },
     });
@@ -1048,7 +1050,7 @@ describe("schema proxy", () => {
         },
       });
 
-      using _fetch = createSchemaFetch(resetTestSchema);
+      using _fetch = createSchemaFetch(resetTestSchema).mockGlobal();
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
@@ -1130,7 +1132,7 @@ describe("schema proxy", () => {
 
       resetTestSchema.reset();
 
-      using _fetch = createSchemaFetch(resetTestSchema);
+      using _fetch = createSchemaFetch(resetTestSchema).mockGlobal();
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),

@@ -173,7 +173,7 @@ describe("schema proxy", () => {
   it("mocks scalars and resolvers", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(schema);
+    using _fetch = createSchemaFetch(schema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -266,7 +266,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -349,7 +349,7 @@ describe("schema proxy", () => {
   it("does not pollute the original schema", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(schema);
+    using _fetch = createSchemaFetch(schema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -444,7 +444,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -566,7 +566,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -709,7 +709,7 @@ describe("schema proxy", () => {
 
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -789,7 +789,7 @@ describe("schema proxy", () => {
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
     // @ts-expect-error - we're intentionally passing an invalid schema
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -916,7 +916,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),

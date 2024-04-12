@@ -1680,11 +1680,11 @@ interface TestSchemaFns {
 // @public (undocumented)
 interface TestSchemaOptions {
     // (undocumented)
-    mocks?: {
+    resolvers: Resolvers;
+    // (undocumented)
+    scalars?: {
         [key: string]: any;
     };
-    // (undocumented)
-    resolvers: Resolvers;
 }
 
 // @public (undocumented)

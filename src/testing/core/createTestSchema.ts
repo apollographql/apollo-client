@@ -14,7 +14,7 @@ interface TestSchemaFns {
 
 interface TestSchemaOptions {
   resolvers: Resolvers;
-  mocks?: { [key: string]: any };
+  scalars?: { [key: string]: any };
 }
 
 /**
@@ -57,7 +57,7 @@ const createTestSchema = (
 ): ProxiedSchema => {
   let targetResolvers = { ...options.resolvers };
   let targetSchema = addResolversToSchema({
-    schema: createMockSchema(schemaWithTypeDefs, options.mocks ?? {}),
+    schema: createMockSchema(schemaWithTypeDefs, options.scalars ?? {}),
     resolvers: targetResolvers,
   });
 
@@ -75,7 +75,7 @@ const createTestSchema = (
     fork: ({ resolvers: newResolvers } = {}) => {
       return createTestSchema(targetSchema, {
         resolvers: newResolvers ?? targetResolvers,
-        mocks: options.mocks,
+        scalars: options.scalars,
       });
     },
 

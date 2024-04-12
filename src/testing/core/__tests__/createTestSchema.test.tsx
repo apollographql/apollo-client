@@ -162,7 +162,7 @@ describe("schema proxy", () => {
         },
       },
     },
-    mocks: {
+    scalars: {
       ID: () => "1",
       Int: () => 42,
       String: () => "String",
@@ -872,7 +872,7 @@ describe("schema proxy", () => {
           },
         },
       },
-      mocks: {
+      scalars: {
         ID: () => "1",
         Int: () => 42,
         String: () => "String",

@@ -1081,9 +1081,7 @@ describe("schema proxy", () => {
     // initial suspended render
     await Profiler.takeRender();
 
-    console.log("a");
     await expect(Profiler).not.toRerender({ timeout: minDelay - 100 });
-    console.log("b");
 
     {
       // This fails with `Exceeded timeout waiting for next render` -

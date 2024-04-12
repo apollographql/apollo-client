@@ -5560,6 +5560,100 @@ describe("useSuspenseQuery", () => {
     expect(fetchCount).toBe(1);
   });
 
+  // https://github.com/apollographql/apollo-client/issues/11768
+  it("does not make network requests when using `skipToken` with strict mode", async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.variables, operation.variables)
+        );
+
+        if (!mock) {
+          throw new Error("Could not find mock for operation");
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ skip, id }) =>
+        useSuspenseQuery(query, skip ? skipToken : { variables: { id } }),
+      { mocks, link, strictMode: true, initialProps: { skip: true, id: "1" } }
+    );
+
+    expect(fetchCount).toBe(0);
+
+    rerender({ skip: false, id: "1" });
+
+    expect(fetchCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ skip: true, id: "2" });
+
+    expect(fetchCount).toBe(1);
+  });
+
+  it("does not make network requests when using `skip` with strict mode", async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.variables, operation.variables)
+        );
+
+        if (!mock) {
+          throw new Error("Could not find mock for operation");
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ skip, id }) => useSuspenseQuery(query, { skip, variables: { id } }),
+      { mocks, link, strictMode: true, initialProps: { skip: true, id: "1" } }
+    );
+
+    expect(fetchCount).toBe(0);
+
+    rerender({ skip: false, id: "1" });
+
+    expect(fetchCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ skip: true, id: "2" });
+
+    expect(fetchCount).toBe(1);
+  });
+
   it("`skip` result is referentially stable", async () => {
     const { query, mocks } = useSimpleQueryCase();
 

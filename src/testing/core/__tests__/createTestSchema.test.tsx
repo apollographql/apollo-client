@@ -13,14 +13,13 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../internal/index.js";
-import { createProxiedSchema } from "../createProxiedSchema.js";
+import { createTestSchema } from "../createTestSchema.js";
 import { GraphQLError, buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
 import { useMutation, useSuspenseQuery } from "../../../react/index.js";
-import { createMockSchema } from "../../graphql-tools/utils.js";
 import userEvent from "@testing-library/user-event";
 import { act, screen } from "@testing-library/react";
-import { createMockFetch } from "../createMockFetch.js";
+import { createSchemaFetch } from "../createSchemaFetch.js";
 import {
   FallbackProps,
   ErrorBoundary as ReactErrorBoundary,
@@ -140,40 +139,41 @@ interface ViewerQueryData {
 }
 
 describe("schema proxy", () => {
-  const schemaWithMocks = createMockSchema(schemaWithTypeDefs, {
-    ID: () => "1",
-    Int: () => 42,
-    String: () => "String",
-    Date: () => new Date("January 1, 2024 01:00:00").toJSON().split("T")[0],
-  });
-
-  const schema = createProxiedSchema(schemaWithMocks, {
-    Query: {
-      viewer: () => ({
-        name: "Jane Doe",
-        book: {
-          text: "Hello World",
-          title: "The Book",
-        },
-      }),
-    },
-    Book: {
-      __resolveType: (obj) => {
-        if ("text" in obj) {
-          return "TextBook";
-        }
-        if ("colors" in obj) {
-          return "ColoringBook";
-        }
-        throw new Error("Could not resolve type");
+  const schema = createTestSchema(schemaWithTypeDefs, {
+    resolvers: {
+      Query: {
+        viewer: () => ({
+          name: "Jane Doe",
+          book: {
+            text: "Hello World",
+            title: "The Book",
+          },
+        }),
       },
+      Book: {
+        __resolveType: (obj) => {
+          if ("text" in obj) {
+            return "TextBook";
+          }
+          if ("colors" in obj) {
+            return "ColoringBook";
+          }
+          throw new Error("Could not resolve type");
+        },
+      },
+    },
+    scalars: {
+      ID: () => "1",
+      Int: () => 42,
+      String: () => "String",
+      Date: () => new Date("January 1, 2024 01:00:00").toJSON().split("T")[0],
     },
   });
 
   it("mocks scalars and resolvers", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createMockFetch(schema);
+    using _fetch = createSchemaFetch(schema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -266,7 +266,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createMockFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -349,7 +349,7 @@ describe("schema proxy", () => {
   it("does not pollute the original schema", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createMockFetch(schema);
+    using _fetch = createSchemaFetch(schema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -444,7 +444,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createMockFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -566,7 +566,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createMockFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -709,7 +709,7 @@ describe("schema proxy", () => {
 
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
-    using _fetch = createMockFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -789,7 +789,7 @@ describe("schema proxy", () => {
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
     // @ts-expect-error - we're intentionally passing an invalid schema
-    using _fetch = createMockFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -849,26 +849,34 @@ describe("schema proxy", () => {
   it("preserves resolvers from previous calls to .add on subsequent calls to .fork", async () => {
     let name = "Virginia";
 
-    const schema = createProxiedSchema(schemaWithMocks, {
-      Query: {
-        viewer: () => ({
-          name,
-          book: {
-            text: "Hello World",
-            title: "The Book",
-          },
-        }),
-      },
-      Book: {
-        __resolveType: (obj) => {
-          if ("text" in obj) {
-            return "TextBook";
-          }
-          if ("colors" in obj) {
-            return "ColoringBook";
-          }
-          throw new Error("Could not resolve type");
+    const schema = createTestSchema(schemaWithTypeDefs, {
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            name,
+            book: {
+              text: "Hello World",
+              title: "The Book",
+            },
+          }),
         },
+        Book: {
+          __resolveType: (obj) => {
+            if ("text" in obj) {
+              return "TextBook";
+            }
+            if ("colors" in obj) {
+              return "ColoringBook";
+            }
+            throw new Error("Could not resolve type");
+          },
+        },
+      },
+      scalars: {
+        ID: () => "1",
+        Int: () => 42,
+        String: () => "String",
+        Date: () => new Date("January 1, 2024 01:00:00").toJSON().split("T")[0],
       },
     });
 
@@ -908,7 +916,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createMockFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),

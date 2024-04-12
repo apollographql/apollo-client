@@ -544,6 +544,7 @@ describe("failure path", () => {
   );
 
   it.each([
+    // TODO(fixme): test flake on CI https://github.com/apollographql/apollo-client/issues/11782
     // ["error message", giveUpResponse],
     ["error code", giveUpResponseWithCode],
   ] as const)(

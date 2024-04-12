@@ -1092,9 +1092,6 @@ describe("schema proxy", () => {
     await expect(Profiler).not.toRerender({ timeout: minDelay - 100 });
 
     {
-      // This fails with `Exceeded timeout waiting for next render` -
-      // when we call .toRerender above, we'd expect it to not increment
-      // the render iterator position, but it seems to...
       const { snapshot } = await Profiler.takeRender({
         timeout: maxDelay + 100,
       });

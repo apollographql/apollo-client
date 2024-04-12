@@ -456,7 +456,7 @@ export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
         max: number;
     };
 }) => {
-    mock: (uri: any, options: any) => Promise<Response>;
+    mock: (uri?: any, options?: any) => Promise<Response>;
     restore: () => void;
 } & Disposable;
 

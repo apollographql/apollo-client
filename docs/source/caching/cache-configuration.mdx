@@ -176,23 +176,15 @@ const cache = new InMemoryCache({
       keyFields: ["title", "author", ["name"]],
     },
     AllProducts: {
-      // Singleton types that have no identifying field.
-      keyFields: false,
+      // Singleton types that have no identifying field can use an empty
+      // array for their keyFields.
+      keyFields: [],
     },
     Store: {
-      // If a type requires logic to choose the key fields, we can specify that in a function
-      keyFields: (store, context) => {
-        if (store.location == "United States") {
-          // We can return the array of field specifiers
-          return ["state", "storeNumber"];
-        } else if (store.location) {
-          // Or we can return another function to calculate the cache key as a string
-          return ((obj) => "prefix:" + obj.location + obj.storeNumber);
-        } else {
-          // Or we can indicate that this type is a Singleton
-          return false;
-        }
-      }
+      // If you need to disable normalization, set the keyFields to false
+      // and the object will be embedded in the parent
+      // See: https://www.apollographql.com/docs/react/caching/cache-configuration/#disabling-normalization
+      keyFields: false
     }
   },
 });

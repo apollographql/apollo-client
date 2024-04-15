@@ -23,6 +23,7 @@ import {
   FallbackProps,
   ErrorBoundary as ReactErrorBoundary,
 } from "react-error-boundary";
+import { InvariantError } from "ts-invariant";
 
 const typeDefs = /* GraphQL */ `
   type User {
@@ -1007,7 +1008,7 @@ describe("schema proxy", () => {
     }
   });
 
-  it.only("resets the schema with schema.reset()", async () => {
+  it("resets the schema with schema.reset()", async () => {
     const resetTestSchema = createTestSchema(schema, {
       resolvers: {
         Query: {
@@ -1085,7 +1086,7 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-      console.log(result.data);
+
       Profiler.mergeSnapshot({
         result,
       } as Partial<{}>);
@@ -1134,6 +1135,7 @@ describe("schema proxy", () => {
     // initial suspended render
     await Profiler.takeRender();
 
+    // no initial suspended render
     {
       const { snapshot } = await Profiler.takeRender();
 
@@ -1153,5 +1155,106 @@ describe("schema proxy", () => {
         },
       });
     }
+  });
+
+  it("createSchemaFetch respects min and max delay", async () => {
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    const minDelay = 1500;
+    const maxDelay = 2000;
+
+    using _fetch = createSchemaFetch(schema, {
+      delay: { min: minDelay, max: maxDelay },
+    }).mockGlobal();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      uri,
+    });
+
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+          }
+        }
+      }
+    `;
+
+    const Fallback = () => {
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child />
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return <div>Hello</div>;
+    };
+
+    renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    await expect(Profiler).not.toRerender({ timeout: minDelay - 100 });
+
+    {
+      const { snapshot } = await Profiler.takeRender({
+        // This timeout doesn't start until after our `minDelay - 100`
+        // timeout above, so we don't have to wait the full `maxDelay`
+        // here.
+        // Instead we can just wait for the difference between `maxDelay`
+        // and `minDelay`, plus a bit to prevent flakiness.
+        timeout: maxDelay - minDelay + 110,
+      });
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "Jane Doe",
+          book: {
+            __typename: "TextBook",
+            id: "1",
+            publishedAt: "2024-01-01",
+            title: "The Book",
+          },
+        },
+      });
+    }
+  });
+
+  it("should call invariant.error if min delay is greater than max delay", async () => {
+    await expect(async () => {
+      createSchemaFetch(schema, {
+        delay: { min: 3000, max: 1000 },
+      });
+    }).rejects.toThrow(
+      new InvariantError(
+        "Please configure a minimum delay that is less than the maximum delay. The default minimum delay is 3ms."
+      )
+    );
   });
 });

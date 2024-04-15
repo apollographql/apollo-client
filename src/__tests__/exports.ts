@@ -31,7 +31,7 @@ import * as reactParser from "../react/parser";
 import * as reactSSR from "../react/ssr";
 import * as testing from "../testing";
 import * as testingCore from "../testing/core";
-import * as testingAlpha from "../testing/alpha";
+import * as testingExperimental from "../testing/experimental";
 import * as utilities from "../utilities";
 import * as utilitiesGlobals from "../utilities/globals";
 import * as urqlUtilities from "../utilities/subscriptions/urql";
@@ -78,7 +78,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/react/ssr", reactSSR);
   check("@apollo/client/testing", testing);
   check("@apollo/client/testing/core", testingCore);
-  check("@apollo/client/testing/alpha", testingAlpha);
+  check("@apollo/client/testing/experimental", testingExperimental);
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
   check("@apollo/client/utilities/subscriptions/urql", urqlUtilities);

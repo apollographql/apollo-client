@@ -381,13 +381,6 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/testing/alpha 1`] = `
-Array [
-  "createSchemaFetch",
-  "createTestSchema",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/testing/core 1`] = `
 Array [
   "MockLink",
@@ -402,6 +395,13 @@ Array [
   "withErrorSpy",
   "withLogSpy",
   "withWarningSpy",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/experimental 1`] = `
+Array [
+  "createSchemaFetch",
+  "createTestSchema",
 ]
 `;
 

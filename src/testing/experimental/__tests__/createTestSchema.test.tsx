@@ -11,7 +11,6 @@ import {
   createProfiler,
   renderWithClient,
   spyOnConsole,
-  useTrackRenders,
 } from "../../internal/index.js";
 import { createTestSchema } from "../createTestSchema.js";
 import { GraphQLError, buildSchema } from "graphql";
@@ -109,7 +108,6 @@ function createTrackedErrorComponents<Snapshot extends { error: Error | null }>(
   Profiler: Profiler<Snapshot>
 ) {
   function ErrorFallback({ error }: FallbackProps) {
-    useTrackRenders({ name: "ErrorFallback" });
     Profiler.mergeSnapshot({ error } as Partial<Snapshot>);
 
     return <div>Error</div>;
@@ -197,7 +195,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -212,16 +209,14 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
-      } as Partial<{}>);
+      });
 
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -247,8 +242,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("allows schema forking with .fork", async () => {
@@ -290,7 +283,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -305,8 +297,6 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
       } as Partial<{}>);
@@ -314,7 +304,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -343,12 +333,23 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
-  it("does not pollute the original schema", async () => {
+  it("schema.fork does not pollute the original schema", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    schema.fork({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              colors: ["red", "blue", "green"],
+              title: "The Book",
+            },
+          }),
+        },
+      },
+    });
 
     using _fetch = createSchemaFetch(schema).mockGlobal();
 
@@ -373,7 +374,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -387,8 +387,6 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -466,7 +464,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -480,8 +477,6 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -580,7 +575,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -595,8 +589,6 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
       const [changeViewerName] = useMutation(mutation);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -712,7 +704,6 @@ describe("schema proxy", () => {
     });
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -728,8 +719,6 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -790,7 +779,6 @@ describe("schema proxy", () => {
     });
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -806,8 +794,6 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -875,10 +861,9 @@ describe("schema proxy", () => {
       resolvers: {
         Query: {
           viewer: () => ({
-            name: "Virginia",
             book: {
               colors: ["red", "blue", "green"],
-              title: "The Book",
+              title: "A New Book",
             },
           }),
         },
@@ -942,7 +927,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -957,8 +941,6 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
       const [changeViewerName] = useMutation(mutation);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,
@@ -996,7 +978,7 @@ describe("schema proxy", () => {
             colors: ["red", "blue", "green"],
             id: "1",
             publishedAt: "2024-01-01",
-            title: "The Book",
+            title: "A New Book",
           },
         },
       });
@@ -1019,7 +1001,155 @@ describe("schema proxy", () => {
             colors: ["red", "blue", "green"],
             id: "1",
             publishedAt: "2024-01-01",
-            title: "The Book",
+            title: "A New Book",
+          },
+        },
+      });
+    }
+  });
+
+  it("resets the schema with schema.reset()", async () => {
+    const resetTestSchema = createTestSchema(schema, {
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              text: "Hello World",
+              title: "Orlando: A Biography",
+            },
+          }),
+        },
+        Book: {
+          __resolveType: (obj) => {
+            if ("text" in obj) {
+              return "TextBook";
+            }
+            if ("colors" in obj) {
+              return "ColoringBook";
+            }
+            throw new Error("Could not resolve type");
+          },
+        },
+      },
+    });
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    resetTestSchema.add({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              text: "Hello World",
+              title: "The Waves",
+            },
+          }),
+        },
+      },
+    });
+
+    using _fetch = createSchemaFetch(resetTestSchema).mockGlobal();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      uri,
+    });
+
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+            ... on ColoringBook {
+              colors
+            }
+          }
+        }
+      }
+    `;
+
+    const Fallback = () => {
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child />
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return (
+        <div>
+          Hello<button onClick={() => result.refetch()}>Refetch</button>
+        </div>
+      );
+    };
+
+    renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "String",
+          book: {
+            __typename: "TextBook",
+            id: "1",
+            publishedAt: "2024-01-01",
+            // value set in this test with .add
+            title: "The Waves",
+          },
+        },
+      });
+    }
+
+    resetTestSchema.reset();
+
+    const user = userEvent.setup();
+
+    await act(() => user.click(screen.getByText("Refetch")));
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "String",
+          book: {
+            __typename: "TextBook",
+            id: "1",
+            publishedAt: "2024-01-01",
+            // original value
+            title: "Orlando: A Biography",
           },
         },
       });
@@ -1057,7 +1187,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -1071,8 +1200,6 @@ describe("schema proxy", () => {
 
     const Child = () => {
       const result = useSuspenseQuery(query);
-
-      useTrackRenders();
 
       Profiler.mergeSnapshot({
         result,

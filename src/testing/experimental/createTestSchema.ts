@@ -1,6 +1,6 @@
-import { addResolversToSchema } from "@graphql-tools/schema";
 import type { GraphQLSchema } from "graphql";
-
+import { addResolversToSchema } from "@graphql-tools/schema";
+import { mergeResolvers } from "@graphql-tools/merge";
 import { createMockSchema } from "./graphql-tools/utils.js";
 import type { Resolvers } from "../../core/types.js";
 
@@ -63,7 +63,9 @@ const createTestSchema = (
 
   const fns: TestSchemaFns = {
     add: ({ resolvers: newResolvers }) => {
-      targetResolvers = { ...targetResolvers, ...newResolvers };
+      // @ts-ignore TODO(fixme): IResolvers type does not play well with our Resolvers
+      targetResolvers = mergeResolvers([targetResolvers, newResolvers]);
+
       targetSchema = addResolversToSchema({
         schema: targetSchema,
         resolvers: targetResolvers,
@@ -74,7 +76,9 @@ const createTestSchema = (
 
     fork: ({ resolvers: newResolvers } = {}) => {
       return createTestSchema(targetSchema, {
-        resolvers: newResolvers ?? targetResolvers,
+        // @ts-ignore TODO(fixme): IResolvers type does not play well with our Resolvers
+        resolvers:
+          mergeResolvers([targetResolvers, newResolvers]) ?? targetResolvers,
         scalars: options.scalars,
       });
     },

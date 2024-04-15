@@ -2,4 +2,4 @@
 "@apollo/client": minor
 ---
 
-Moves new testing utilities to their own entrypoint, `testing/alpha`
+Moves new testing utilities to their own entrypoint, `testing/experimental`

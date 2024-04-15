@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="node" />
-
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { ExecutionResult } from 'graphql';
@@ -13,7 +11,6 @@ import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
-import type { GraphQLSchema } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 import * as React_2 from 'react';
@@ -448,25 +445,6 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 //
 // @public (undocumented)
 export function createMockClient<TData>(data: TData, query: DocumentNode, variables?: {}): ApolloClient<NormalizedCacheObject>;
-
-// @alpha
-export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
-    validate?: boolean;
-    delay?: {
-        min: number;
-        max: number;
-    };
-}) => ((uri?: any, options?: any) => Promise<Response>) & {
-    mockGlobal: () => {
-        restore: () => void;
-    } & Disposable;
-};
-
-// Warning: (ae-forgotten-export) The symbol "TestSchemaOptions" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts
-//
-// @alpha
-export const createTestSchema: (schemaWithTypeDefs: GraphQLSchema, options: TestSchemaOptions) => ProxiedSchema;
 
 // @public (undocumented)
 namespace DataProxy {
@@ -1287,11 +1265,6 @@ type Path = ReadonlyArray<string | number>;
 // @public (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
-// Warning: (ae-forgotten-export) The symbol "TestSchemaFns" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type ProxiedSchema = GraphQLSchema & TestSchemaFns;
-
 // @public (undocumented)
 class QueryInfo {
     constructor(queryManager: QueryManager<any>, queryId?: string);
@@ -1666,30 +1639,6 @@ interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
     fetchPolicy?: FetchPolicy;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     variables?: TVariables;
-}
-
-// @public (undocumented)
-interface TestSchemaFns {
-    // (undocumented)
-    add: (addOptions: {
-        resolvers: Resolvers;
-    }) => ProxiedSchema;
-    // (undocumented)
-    fork: (forkOptions?: {
-        resolvers?: Resolvers;
-    }) => ProxiedSchema;
-    // (undocumented)
-    reset: () => void;
-}
-
-// @public (undocumented)
-interface TestSchemaOptions {
-    // (undocumented)
-    resolvers: Resolvers;
-    // (undocumented)
-    scalars?: {
-        [key: string]: any;
-    };
 }
 
 // @public (undocumented)

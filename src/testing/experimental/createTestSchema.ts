@@ -1,7 +1,7 @@
 import { addResolversToSchema } from "@graphql-tools/schema";
 import type { GraphQLSchema } from "graphql";
 
-import { createMockSchema } from "../graphql-tools/utils.js";
+import { createMockSchema } from "./graphql-tools/utils.js";
 import type { Resolvers } from "../../core/types.js";
 
 type ProxiedSchema = GraphQLSchema & TestSchemaFns;

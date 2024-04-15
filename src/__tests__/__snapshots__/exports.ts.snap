@@ -369,8 +369,6 @@ Array [
   "MockSubscriptionLink",
   "MockedProvider",
   "createMockClient",
-  "createSchemaFetch",
-  "createTestSchema",
   "itAsync",
   "mockObservableLink",
   "mockSingleLink",
@@ -388,8 +386,6 @@ Array [
   "MockLink",
   "MockSubscriptionLink",
   "createMockClient",
-  "createSchemaFetch",
-  "createTestSchema",
   "itAsync",
   "mockObservableLink",
   "mockSingleLink",
@@ -399,6 +395,13 @@ Array [
   "withErrorSpy",
   "withLogSpy",
   "withWarningSpy",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/experimental 1`] = `
+Array [
+  "createSchemaFetch",
+  "createTestSchema",
 ]
 `;
 

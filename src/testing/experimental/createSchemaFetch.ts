@@ -2,7 +2,7 @@ import { execute, validate } from "graphql";
 import type { GraphQLError, GraphQLSchema } from "graphql";
 import { ApolloError, gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
-import { wait } from "./wait.js";
+import { wait } from "../core/wait.js";
 
 /**
  * A function that accepts a static `schema` and a `mockFetchOpts` object and

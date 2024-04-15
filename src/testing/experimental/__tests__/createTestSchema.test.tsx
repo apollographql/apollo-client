@@ -1093,7 +1093,12 @@ describe("schema proxy", () => {
 
     {
       const { snapshot } = await Profiler.takeRender({
-        timeout: maxDelay + 100,
+        // This timeout doesn't start until after our `minDelay - 100`
+        // timeout above, so we don't have to wait the full `maxDelay`
+        // here.
+        // Instead we can just wait for the difference between `maxDelay`
+        // and `minDelay`, plus a bit to prevent flakiness.
+        timeout: maxDelay - minDelay + 110,
       });
 
       expect(snapshot.result?.data).toEqual({

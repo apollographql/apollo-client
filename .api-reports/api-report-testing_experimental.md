@@ -12,8 +12,12 @@ import type { GraphQLSchema } from 'graphql';
 
 // @alpha
 export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
-    validate: boolean;
-}) => ((uri: any, options: any) => Promise<Response>) & {
+    validate?: boolean;
+    delay?: {
+        min: number;
+        max: number;
+    };
+}) => ((uri?: any, options?: any) => Promise<Response>) & {
     mockGlobal: () => {
         restore: () => void;
     } & Disposable;

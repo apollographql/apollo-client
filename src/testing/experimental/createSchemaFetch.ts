@@ -2,6 +2,7 @@ import { execute, validate } from "graphql";
 import type { GraphQLError, GraphQLSchema } from "graphql";
 import { ApolloError, gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
+import { wait } from "../core/wait.js";
 
 /**
  * A function that accepts a static `schema` and a `mockFetchOpts` object and
@@ -32,47 +33,59 @@ import { withCleanup } from "../internal/index.js";
  */
 const createSchemaFetch = (
   schema: GraphQLSchema,
-  mockFetchOpts: { validate: boolean } = { validate: true }
+  mockFetchOpts: {
+    validate?: boolean;
+    delay?: { min: number; max: number };
+  } = { validate: true }
 ) => {
   const prevFetch = window.fetch;
+  const delayMin = mockFetchOpts.delay?.min ?? 3;
+  const delayMax = mockFetchOpts.delay?.max ?? delayMin + 2;
 
-  const mockFetch: (uri: any, options: any) => Promise<Response> = (
+  if (delayMin > delayMax) {
+    throw new Error(
+      "Please configure a minimum delay that is less than the maximum delay. The default minimum delay is 3ms."
+    );
+  }
+
+  const mockFetch: (uri?: any, options?: any) => Promise<Response> = async (
     _uri,
     options
   ) => {
-    return new Promise(async (resolve) => {
-      const body = JSON.parse(options.body);
-      const document = gql(body.query);
+    if (delayMin > 0) {
+      const randomDelay = Math.random() * (delayMax - delayMin) + delayMin;
+      await wait(randomDelay);
+    }
 
-      if (mockFetchOpts.validate) {
-        let validationErrors: readonly Error[] = [];
+    const body = JSON.parse(options.body);
+    const document = gql(body.query);
 
-        try {
-          validationErrors = validate(schema, document);
-        } catch (e) {
-          validationErrors = [
-            new ApolloError({ graphQLErrors: [e as GraphQLError] }),
-          ];
-        }
+    if (mockFetchOpts.validate) {
+      let validationErrors: readonly Error[] = [];
 
-        if (validationErrors?.length > 0) {
-          return resolve(
-            new Response(JSON.stringify({ errors: validationErrors }))
-          );
-        }
+      try {
+        validationErrors = validate(schema, document);
+      } catch (e) {
+        validationErrors = [
+          new ApolloError({ graphQLErrors: [e as GraphQLError] }),
+        ];
       }
 
-      const result = await execute({
-        schema,
-        document,
-        variableValues: body.variables,
-        operationName: body.operationName,
-      });
+      if (validationErrors?.length > 0) {
+        return new Response(JSON.stringify({ errors: validationErrors }));
+      }
+    }
 
-      const stringifiedResult = JSON.stringify(result);
-
-      resolve(new Response(stringifiedResult));
+    const result = await execute({
+      schema,
+      document,
+      variableValues: body.variables,
+      operationName: body.operationName,
     });
+
+    const stringifiedResult = JSON.stringify(result);
+
+    return new Response(stringifiedResult);
   };
 
   function mockGlobal() {

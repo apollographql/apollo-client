@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2024-04-08**
+**Last updated: 2024-04-15**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -13,7 +13,7 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ---
 
-## [3.10.0](https://github.com/apollographql/apollo-client/milestone/33) - April 15th, 2024
+## [3.10.0](https://github.com/apollographql/apollo-client/milestone/33) - April 18th, 2024
 
 - RC target: April 2nd, 2024
 

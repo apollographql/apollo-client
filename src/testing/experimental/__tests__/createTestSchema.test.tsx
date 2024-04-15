@@ -1135,7 +1135,6 @@ describe("schema proxy", () => {
     // initial suspended render
     await Profiler.takeRender();
 
-    // no initial suspended render
     {
       const { snapshot } = await Profiler.takeRender();
 

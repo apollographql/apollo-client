@@ -1,7 +1,7 @@
 import { graphql, HttpResponse } from "msw";
 import { execute } from "graphql";
 import { gql } from "@apollo/client";
-import { createMockSchema, createProxiedSchema } from "@apollo/client/testing";
+import { createTestSchema } from "@apollo/client/testing/experimental";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import Schema from "../schema.graphql";
 
@@ -18,13 +18,14 @@ export const resolvers = {
 
 const staticSchema = makeExecutableSchema({ typeDefs: Schema });
 
-const schema = createMockSchema(staticSchema, {
-  Int: () => 6,
-  Float: () => 22.1,
-  String: () => "string",
+export let schemaProxy = createTestSchema(staticSchema, {
+  resolvers,
+  scalars: {
+    Int: () => 6,
+    Float: () => 22.1,
+    String: () => "string",
+  },
 });
-
-export let schemaProxy = createProxiedSchema(schema, resolvers);
 
 export const handlers = [
   graphql.operation(async ({ query, variables, operationName }) => {

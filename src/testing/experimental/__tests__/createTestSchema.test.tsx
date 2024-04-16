@@ -11,7 +11,6 @@ import {
   createProfiler,
   renderWithClient,
   spyOnConsole,
-  useTrackRenders,
 } from "../../internal/index.js";
 import { createTestSchema } from "../createTestSchema.js";
 import { GraphQLError, buildSchema } from "graphql";
@@ -24,6 +23,7 @@ import {
   FallbackProps,
   ErrorBoundary as ReactErrorBoundary,
 } from "react-error-boundary";
+import { InvariantError } from "ts-invariant";
 
 const typeDefs = /* GraphQL */ `
   type User {
@@ -108,7 +108,6 @@ function createTrackedErrorComponents<Snapshot extends { error: Error | null }>(
   Profiler: Profiler<Snapshot>
 ) {
   function ErrorFallback({ error }: FallbackProps) {
-    useTrackRenders({ name: "ErrorFallback" });
     Profiler.mergeSnapshot({ error } as Partial<Snapshot>);
 
     return <div>Error</div>;
@@ -173,7 +172,7 @@ describe("schema proxy", () => {
   it("mocks scalars and resolvers", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(schema);
+    using _fetch = createSchemaFetch(schema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -196,7 +195,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -211,16 +209,14 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
-      } as Partial<{}>);
+      });
 
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -246,8 +242,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("allows schema forking with .fork", async () => {
@@ -266,7 +260,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -289,7 +283,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -304,8 +297,6 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
       } as Partial<{}>);
@@ -313,7 +304,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -342,14 +333,25 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
-  it("does not pollute the original schema", async () => {
+  it("schema.fork does not pollute the original schema", async () => {
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(schema);
+    schema.fork({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              colors: ["red", "blue", "green"],
+              title: "The Book",
+            },
+          }),
+        },
+      },
+    });
+
+    using _fetch = createSchemaFetch(schema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -372,7 +374,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -387,8 +388,6 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
       } as Partial<{}>);
@@ -396,7 +395,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -422,8 +421,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("allows you to call .fork without providing resolvers", async () => {
@@ -444,7 +441,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -467,7 +464,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -482,8 +478,6 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
       } as Partial<{}>);
@@ -491,7 +485,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -520,8 +514,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("handles mutations", async () => {
@@ -566,7 +558,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -583,7 +575,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -599,8 +590,6 @@ describe("schema proxy", () => {
       const result = useSuspenseQuery(query);
       const [changeViewerName] = useMutation(mutation);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
       } as Partial<{}>);
@@ -615,7 +604,7 @@ describe("schema proxy", () => {
 
     const user = userEvent.setup();
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -666,8 +655,6 @@ describe("schema proxy", () => {
         },
       });
     }
-
-    unmount();
   });
 
   it("returns GraphQL errors", async () => {
@@ -709,7 +696,7 @@ describe("schema proxy", () => {
 
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -717,7 +704,6 @@ describe("schema proxy", () => {
     });
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -734,8 +720,6 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
       } as Partial<{}>);
@@ -743,7 +727,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -760,8 +744,6 @@ describe("schema proxy", () => {
         })
       );
     }
-
-    unmount();
   });
 
   it("validates schema by default and returns validation errors", async () => {
@@ -789,7 +771,7 @@ describe("schema proxy", () => {
     const { ErrorBoundary } = createTrackedErrorComponents(Profiler);
 
     // @ts-expect-error - we're intentionally passing an invalid schema
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -797,7 +779,6 @@ describe("schema proxy", () => {
     });
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -814,8 +795,6 @@ describe("schema proxy", () => {
     const Child = () => {
       const result = useSuspenseQuery(query);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
       } as Partial<{}>);
@@ -823,7 +802,7 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -842,8 +821,6 @@ describe("schema proxy", () => {
         })
       );
     }
-
-    unmount();
   });
 
   it("preserves resolvers from previous calls to .add on subsequent calls to .fork", async () => {
@@ -884,10 +861,9 @@ describe("schema proxy", () => {
       resolvers: {
         Query: {
           viewer: () => ({
-            name: "Virginia",
             book: {
               colors: ["red", "blue", "green"],
-              title: "The Book",
+              title: "A New Book",
             },
           }),
         },
@@ -916,7 +892,7 @@ describe("schema proxy", () => {
 
     const Profiler = createDefaultProfiler<ViewerQueryData>();
 
-    using _fetch = createSchemaFetch(forkedSchema);
+    using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -951,7 +927,6 @@ describe("schema proxy", () => {
     `;
 
     const Fallback = () => {
-      useTrackRenders();
       return <div>Loading...</div>;
     };
 
@@ -967,8 +942,6 @@ describe("schema proxy", () => {
       const result = useSuspenseQuery(query);
       const [changeViewerName] = useMutation(mutation);
 
-      useTrackRenders();
-
       Profiler.mergeSnapshot({
         result,
       } as Partial<{}>);
@@ -983,7 +956,7 @@ describe("schema proxy", () => {
 
     const user = userEvent.setup();
 
-    const { unmount } = renderWithClient(<App />, {
+    renderWithClient(<App />, {
       client,
       wrapper: Profiler,
     });
@@ -1005,7 +978,7 @@ describe("schema proxy", () => {
             colors: ["red", "blue", "green"],
             id: "1",
             publishedAt: "2024-01-01",
-            title: "The Book",
+            title: "A New Book",
           },
         },
       });
@@ -1028,12 +1001,259 @@ describe("schema proxy", () => {
             colors: ["red", "blue", "green"],
             id: "1",
             publishedAt: "2024-01-01",
-            title: "The Book",
+            title: "A New Book",
+          },
+        },
+      });
+    }
+  });
+
+  it("resets the schema with schema.reset()", async () => {
+    const resetTestSchema = createTestSchema(schema, {
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              text: "Hello World",
+              title: "Orlando: A Biography",
+            },
+          }),
+        },
+        Book: {
+          __resolveType: (obj) => {
+            if ("text" in obj) {
+              return "TextBook";
+            }
+            if ("colors" in obj) {
+              return "ColoringBook";
+            }
+            throw new Error("Could not resolve type");
+          },
+        },
+      },
+    });
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    resetTestSchema.add({
+      resolvers: {
+        Query: {
+          viewer: () => ({
+            book: {
+              text: "Hello World",
+              title: "The Waves",
+            },
+          }),
+        },
+      },
+    });
+
+    using _fetch = createSchemaFetch(resetTestSchema).mockGlobal();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      uri,
+    });
+
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+            ... on ColoringBook {
+              colors
+            }
+          }
+        }
+      }
+    `;
+
+    const Fallback = () => {
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child />
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return (
+        <div>
+          Hello<button onClick={() => result.refetch()}>Refetch</button>
+        </div>
+      );
+    };
+
+    renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "String",
+          book: {
+            __typename: "TextBook",
+            id: "1",
+            publishedAt: "2024-01-01",
+            // value set in this test with .add
+            title: "The Waves",
           },
         },
       });
     }
 
-    unmount();
+    resetTestSchema.reset();
+
+    const user = userEvent.setup();
+
+    await act(() => user.click(screen.getByText("Refetch")));
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "String",
+          book: {
+            __typename: "TextBook",
+            id: "1",
+            publishedAt: "2024-01-01",
+            // original value
+            title: "Orlando: A Biography",
+          },
+        },
+      });
+    }
+  });
+
+  it("createSchemaFetch respects min and max delay", async () => {
+    const Profiler = createDefaultProfiler<ViewerQueryData>();
+
+    const minDelay = 1500;
+    const maxDelay = 2000;
+
+    using _fetch = createSchemaFetch(schema, {
+      delay: { min: minDelay, max: maxDelay },
+    }).mockGlobal();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      uri,
+    });
+
+    const query: TypedDocumentNode<ViewerQueryData> = gql`
+      query {
+        viewer {
+          id
+          name
+          age
+          book {
+            id
+            title
+            publishedAt
+          }
+        }
+      }
+    `;
+
+    const Fallback = () => {
+      return <div>Loading...</div>;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child />
+        </React.Suspense>
+      );
+    };
+
+    const Child = () => {
+      const result = useSuspenseQuery(query);
+
+      Profiler.mergeSnapshot({
+        result,
+      } as Partial<{}>);
+
+      return <div>Hello</div>;
+    };
+
+    renderWithClient(<App />, {
+      client,
+      wrapper: Profiler,
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    await expect(Profiler).not.toRerender({ timeout: minDelay - 100 });
+
+    {
+      const { snapshot } = await Profiler.takeRender({
+        // This timeout doesn't start until after our `minDelay - 100`
+        // timeout above, so we don't have to wait the full `maxDelay`
+        // here.
+        // Instead we can just wait for the difference between `maxDelay`
+        // and `minDelay`, plus a bit to prevent flakiness.
+        timeout: maxDelay - minDelay + 110,
+      });
+
+      expect(snapshot.result?.data).toEqual({
+        viewer: {
+          __typename: "User",
+          age: 42,
+          id: "1",
+          name: "Jane Doe",
+          book: {
+            __typename: "TextBook",
+            id: "1",
+            publishedAt: "2024-01-01",
+            title: "The Book",
+          },
+        },
+      });
+    }
+  });
+
+  it("should call invariant.error if min delay is greater than max delay", async () => {
+    await expect(async () => {
+      createSchemaFetch(schema, {
+        delay: { min: 3000, max: 1000 },
+      });
+    }).rejects.toThrow(
+      new InvariantError(
+        "Please configure a minimum delay that is less than the maximum delay. The default minimum delay is 3ms."
+      )
+    );
   });
 });

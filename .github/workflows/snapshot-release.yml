@@ -30,7 +30,7 @@ jobs:
       startsWith(github.event.comment.body, '/release:pr')
 
     steps:
-      - uses: alessbell/pull-request-comment-branch@v1.1
+      - uses: alessbell/pull-request-comment-branch@v2.1.0
         id: comment-branch
 
       - name: Checkout head ref

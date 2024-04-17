@@ -1,9 +1,10 @@
-import type { ExecutionResult, GraphQLError } from "graphql";
+import type { GraphQLError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { DefaultContext } from "../../core/index.js";
 export type { DocumentNode };
 
 import type { Observable } from "../../utilities/index.js";
+import type { GraphQLErrorsFromResponse } from "../../errors/index.js";
 
 export type Path = ReadonlyArray<string | number>;
 
@@ -84,10 +85,12 @@ export interface SingleExecutionResult<
   TData = Record<string, any>,
   TContext = DefaultContext,
   TExtensions = Record<string, any>,
-> extends ExecutionResult<TData, TExtensions> {
+> {
   // data might be undefined if errorPolicy was set to 'ignore'
   data?: TData | null;
   context?: TContext;
+  errors?: GraphQLErrorsFromResponse;
+  extensions?: TExtensions;
 }
 
 export type FetchResult<

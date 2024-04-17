@@ -10,7 +10,11 @@ import type {
   ObservableSubscription,
 } from "../../utilities/index.js";
 import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
-import type { NetworkError } from "../../errors/index.js";
+import type {
+  GraphQLErrorFromResponse,
+  GraphQLErrorsFromResponse,
+  NetworkError,
+} from "../../errors/index.js";
 import type { ServerError } from "../utils/index.js";
 import {
   cacheSizes,
@@ -21,7 +25,7 @@ import {
 export const VERSION = 1;
 
 export interface ErrorResponse {
-  graphQLErrors?: readonly GraphQLError[];
+  graphQLErrors?: GraphQLErrorsFromResponse;
   networkError?: NetworkError;
   response?: ExecutionResult;
   operation: Operation;
@@ -59,7 +63,10 @@ export namespace PersistedQueryLink {
 }
 
 function processErrors(
-  graphQLErrors: GraphQLError[] | readonly GraphQLError[] | undefined
+  graphQLErrors:
+    | GraphQLErrorFromResponse[]
+    | readonly GraphQLErrorFromResponse[]
+    | undefined
 ): ErrorMeta {
   const byMessage = Object.create(null),
     byCode = Object.create(null);
@@ -180,7 +187,7 @@ export const createPersistedQueryLink = (
           if (!retried && ((response && response.errors) || networkError)) {
             retried = true;
 
-            const graphQLErrors: GraphQLError[] = [];
+            const graphQLErrors: GraphQLErrorFromResponse[] = [];
 
             const responseErrors = response && response.errors;
             if (isNonEmptyArray(responseErrors)) {

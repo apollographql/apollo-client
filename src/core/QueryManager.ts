@@ -42,6 +42,7 @@ import {
   ApolloError,
   isApolloError,
   graphQLResultHasProtocolErrors,
+  reviveGraphQLError,
 } from "../errors/index.js";
 import type {
   QueryOptions,
@@ -1210,7 +1211,7 @@ export class QueryManager<TStore> {
         };
 
         if (hasErrors && options.errorPolicy !== "ignore") {
-          aqr.errors = graphQLErrors;
+          aqr.errors = graphQLErrors.map(reviveGraphQLError);
           aqr.networkStatus = NetworkStatus.error;
         }
 

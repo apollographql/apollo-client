@@ -1,0 +1,38 @@
+---
+title: Testing React components
+description: Using createTestSchema and associated APIs
+---
+
+This article describes best practices for writing integration tests using the testing utility `createdTestSchema`. It allows developers to execute queries against a mock schema with default scalar values in order to test an Apollo Client application end-to-end, including the [link chain](react/api/link/introduction).
+
+<MinVersion version="3.10">
+
+## `createTestSchema`
+
+</MinVersion>
+
+### Installation
+
+First, ensure you are running Apollo Client v3.10 or greater. Then, install the following peer dependencies:
+
+```bash
+npm i @graphql-tools/merge @graphql-tools/schema @graphql-tools/utils --save-dev
+```
+
+
+Usage with Jest + createFetchMock
+
+- FixJSDOMEnvironment
+- mocking Symbol.dispose
+
+
+Testing set-up with MSW
+- separate env mocks, see MSW docs
+
+
+FAQ
+
+- Don't use a single client even if it's your production client
+
+- Know limitation with Vite and dual package hazard
+

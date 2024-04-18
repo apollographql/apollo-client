@@ -185,10 +185,10 @@ Every bundling setup is different and we cannot guarantee which style results in
 
 **Note:** some entry points are not part of the "main" entrypoint `'@apollo/client'` and can only be imported directly (e.g. from `'@apollo/client/link/batch'`). It's perfectly fine to use these, even when using the "main" entrypoint.
 
-## Why havev a larger library in the first place?
+## Why have a larger library in the first place?
 
 ### What you get
 Apollo Client is more than just a simple data fetcher: it is a request/response cache, state manager, and React component integration. Attempting to build a comparable experience to Apollo Client with other libraries would require you to write custom logic, libraries, and components wrappers. Scaling that out to all the components in your application would easily lead to a larger bundle and doing so with a custom and difficult to understand implementation that needs to be maintain by your team. By choosing Apollo Client, you hand off that ownership to a trusted team building Open Source Software since 2016.
 
 ### Next major version
-Apollo Client v3 supports a large range of browser compatiblity, back to IE11. In our next major version we plan to raise those targets which will allow us to remove included polyfills and as well as clean up deprecrated features.
+Apollo Client v3 supports a large range of browser compatibility, back to IE11. In our next major version we plan to raise those targets which will allow us to remove included polyfills and as well as clean up deprecated features.

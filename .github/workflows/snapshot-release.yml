@@ -50,7 +50,6 @@ jobs:
         env:
           COMMENT_BODY: ${{ github.event.comment.body }}
 
-
       - name: Comment sha reminder
         if: steps.parse-sha.outcome == 'failure'
         uses: peter-evans/create-or-update-comment@v2.1.0

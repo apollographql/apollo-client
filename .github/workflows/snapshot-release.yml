@@ -39,7 +39,7 @@ jobs:
           if [ "${{ steps.comment-branch.outputs.head_owner }}" == "apollographql" ]; then
             echo "sha=${{ steps.comment-branch.outputs.head_sha }}" >> "${GITHUB_OUTPUT}"
           else
-            sha_from_comment="$(echo '${{ github.event.comment.body }}' | tr -s ' ' | cut -d ' ' -f2)"
+            sha_from_comment="$(echo $COMMENT_BODY | tr -s ' ' | cut -d ' ' -f2)"
 
             if [ $sha_from_comment == "/release:pr" ]; then
               exit 1
@@ -47,6 +47,8 @@ jobs:
               echo "sha=$sha_from_comment" >> "${GITHUB_OUTPUT}"
             fi
           fi
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
 
 
       - name: Comment sha reminder

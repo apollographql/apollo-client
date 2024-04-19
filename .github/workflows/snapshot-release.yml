@@ -36,18 +36,31 @@ jobs:
       - name: Get sha
         id: parse-sha
         run: |
-          if (
-            ${{ github.event.sender.login }} == 'benjamn' ||
-            ${{ github.event.sender.login }} == 'alessbell' ||
-            ${{ github.event.sender.login }} == 'bignimbus' ||
-            ${{ github.event.sender.login }} == 'hwillson' ||
-            ${{ github.event.sender.login }} == 'jerelmiller' ||
-            ${{ github.event.sender.login }} == 'phryneas'
-          ); then
-            echo "sha<<${{ steps.comment-brand.outputs.head_sha }}" >> "${GITHUB_OUTPUT}"
+          if [ "${{ steps.comment-branch.outputs.head_owner }}" == "apollographql" ]; then
+            echo "sha=${{ steps.comment-branch.outputs.head_sha }}" >> "${GITHUB_OUTPUT}"
           else
-            echo "sha<<"${${{ github.event.comment.body }} | tr -s ' ' | cut -d ' ' -f2}" >> "${GITHUB_OUTPUT}"
+            sha_from_comment="$(echo '${{ github.event.comment.body }}' | tr -s ' ' | cut -d ' ' -f2)"
+
+            if [ $sha_from_comment == "/release:pr" ]; then
+              exit 1
+            else
+              echo "sha=$sha_from_comment" >> "${GITHUB_OUTPUT}"
+            fi
           fi
+
+
+      - name: Comment sha reminder
+        if: steps.parse-sha.outcome == 'failure'
+        uses: peter-evans/create-or-update-comment@v2.1.0
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Did you forget to add the sha? Please use `/release:pr <sha>`
+
+      - name: Fail job
+        if: steps.parse-sha.outcome == 'failure'
+        run: |
+          exit 1
 
       - name: Checkout head ref
         uses: actions/checkout@v4

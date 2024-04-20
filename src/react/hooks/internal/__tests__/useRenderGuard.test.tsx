@@ -45,18 +45,6 @@ function breakReactInternalsTemporarily() {
   });
 }
 
-function breakReact19InternalsTemporarily() {
-  const R = React as unknown as {
-    __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE: any;
-  };
-  const orig = R.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-
-  R.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = {};
-  return withCleanup({}, () => {
-    R.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = orig;
-  });
-}
-
 it("results in false negatives if React internals change", () => {
   let result: boolean | typeof UNDEF = UNDEF;
   function TestComponent() {

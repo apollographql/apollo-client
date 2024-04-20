@@ -1,8 +1,11 @@
 import * as React from "rehackt";
 
 function getRenderDispatcher() {
-  return (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-    ?.ReactCurrentDispatcher?.current;
+  const reactInternals =
+    (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED ||
+    (React as any)
+      .__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  return reactInternals?.ReactCurrentDispatcher?.current;
 }
 
 let RenderDispatcher: unknown = null;

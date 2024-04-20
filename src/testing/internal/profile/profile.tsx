@@ -433,8 +433,11 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
 }
 
 function resolveHookOwner(): React.ComponentType | undefined {
-  return (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-    ?.ReactCurrentOwner?.current?.elementType;
+  const reactInternals =
+    (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED ||
+    (React as any)
+      .__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  return reactInternals?.ReactCurrentOwner?.current?.elementType;
 }
 
 export function useTrackRenders({ name }: { name?: string } = {}) {

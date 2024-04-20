@@ -67,6 +67,23 @@ const standardReact17Config = {
   },
 };
 
+const standardReact19Config = {
+  ...defaults,
+  displayName: "ReactDOM 19",
+  testRegex: "src/react/.+/__tests__/.*\\.test-react19\\.tsx$",
+  moduleNameMapper: {
+    "^react$": "react-19",
+    "^react-dom$": "react-dom-19",
+    "^react-dom/server$": "react-dom-19/server",
+    "^react-dom/test-utils$": "react-dom-19/test-utils",
+  },
+};
+
 module.exports = {
-  projects: [tsStandardConfig, standardReact17Config, standardReact18Config],
+  projects: [
+    tsStandardConfig,
+    standardReact17Config,
+    standardReact18Config,
+    standardReact19Config,
+  ],
 };

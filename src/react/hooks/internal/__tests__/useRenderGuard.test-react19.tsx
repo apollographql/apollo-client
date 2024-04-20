@@ -33,22 +33,11 @@ it("returns a function that returns `false` if called after render", async () =>
   expect(result).toBe(false);
 });
 
-function breakReactInternalsTemporarily() {
-  const R = React as unknown as {
-    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: any;
-  };
-  const orig = R.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
-  R.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {};
-  return withCleanup({}, () => {
-    R.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = orig;
-  });
-}
-
 function breakReact19InternalsTemporarily() {
   const R = React as unknown as {
     __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE: any;
   };
+  console.log('R', R)
   const orig = R.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
   R.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = {};
@@ -60,7 +49,7 @@ function breakReact19InternalsTemporarily() {
 it("results in false negatives if React internals change", () => {
   let result: boolean | typeof UNDEF = UNDEF;
   function TestComponent() {
-    using _ = breakReactInternalsTemporarily();
+    using _ = breakReact19InternalsTemporarily();
     const calledDuringRender = useRenderGuard();
     result = calledDuringRender();
     return <>Test</>;
@@ -72,10 +61,10 @@ it("results in false negatives if React internals change", () => {
 it("does not result in false positives if React internals change", async () => {
   let result: boolean | typeof UNDEF = UNDEF;
   function TestComponent() {
-    using _ = breakReactInternalsTemporarily();
+    using _ = breakReact19InternalsTemporarily();
     const calledDuringRender = useRenderGuard();
     useEffect(() => {
-      using _ = breakReactInternalsTemporarily();
+      using _ = breakReact19InternalsTemporarily();
       result = calledDuringRender();
     });
     return <>Test</>;

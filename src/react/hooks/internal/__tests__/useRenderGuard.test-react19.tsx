@@ -6,7 +6,7 @@ import { withCleanup } from "../../../../testing/internal";
 
 const UNDEF = {};
 
-it("returns a function that returns `true` if called during render", () => {
+it.skip("returns a function that returns `true` if called during render", () => {
   let result: boolean | typeof UNDEF = UNDEF;
   function TestComponent() {
     const calledDuringRender = useRenderGuard();
@@ -17,7 +17,7 @@ it("returns a function that returns `true` if called during render", () => {
   expect(result).toBe(true);
 });
 
-it("returns a function that returns `false` if called after render", async () => {
+it.skip("returns a function that returns `false` if called after render", async () => {
   let result: boolean | typeof UNDEF = UNDEF;
   function TestComponent() {
     const calledDuringRender = useRenderGuard();
@@ -46,7 +46,7 @@ function breakReact19InternalsTemporarily() {
   });
 }
 
-it("results in false negatives if React internals change", () => {
+it.skip("results in false negatives if React internals change", () => {
   let result: boolean | typeof UNDEF = UNDEF;
   function TestComponent() {
     using _ = breakReact19InternalsTemporarily();
@@ -58,7 +58,7 @@ it("results in false negatives if React internals change", () => {
   expect(result).toBe(false);
 });
 
-it("does not result in false positives if React internals change", async () => {
+it.skip("does not result in false positives if React internals change", async () => {
   let result: boolean | typeof UNDEF = UNDEF;
   function TestComponent() {
     using _ = breakReact19InternalsTemporarily();

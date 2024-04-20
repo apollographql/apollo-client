@@ -1,4 +1,4 @@
-import * as React from "rehackt";
+import React from "rehackt";
 
 function getRenderDispatcher() {
   const reactInternals =

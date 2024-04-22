@@ -370,17 +370,17 @@ new ApolloClient({
           options,
           // The original value of options.fetchPolicy, before nextFetchPolicy was
           // applied for the first time.
-          initialPolicy,
+          initialFetchPolicy,
           // The ObservableQuery associated with this client.watchQuery call.
           observable,
         }
       ) {
         // When variables change, the default behavior is to reset
-        // options.fetchPolicy to context.initialPolicy. If you omit this logic,
+        // options.fetchPolicy to context.initialFetchPolicy. If you omit this logic,
         // your nextFetchPolicy function can override this default behavior to
         // prevent options.fetchPolicy from changing in this case.
         if (reason === 'variables-changed') {
-          return initialPolicy;
+          return initialFetchPolicy;
         }
 
         if (

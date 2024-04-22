@@ -35,6 +35,7 @@ jobs:
 
       - name: Get sha
         id: parse-sha
+        continue-on-error: true
         run: |
           if [ "${{ steps.comment-branch.outputs.head_owner }}" == "apollographql" ]; then
             echo "sha=${{ steps.comment-branch.outputs.head_sha }}" >> "${GITHUB_OUTPUT}"

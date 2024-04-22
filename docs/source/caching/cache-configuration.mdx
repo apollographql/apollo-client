@@ -189,7 +189,7 @@ const cache = new InMemoryCache({
       // You can also use a function to determine any of the values above.
       // The first argument is the reference to the record to be written, and the second is the runtime context
       keyFields: (location, context) => {
-        if (context.storeObject.location.state) {
+        if (context.readField("location", context.readField("state"))) {
           return ["city, "state", "country"];
         } else {
           return ["city, "country"];

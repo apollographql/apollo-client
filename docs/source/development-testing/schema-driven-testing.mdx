@@ -59,7 +59,6 @@ export function Products() {
 
   return (
     <div>
-      {error ? <p>Error :(</p> : ""}
       {data.products.map((product) => (
         <p key={product.id}>
           <a href={product.mediaUrl}>
@@ -263,7 +262,7 @@ You may have noticed a new keyword in the first line of the test above: `using`.
 
 `using` is part of a [proposed new language feature](https://github.com/tc39/proposal-explicit-resource-management) which is currently at Stage 3 of the TC39 proposal process.
 
-If you are using TypeScript 5.2 or greater, or using Babel's `@babel/plugin-proposal-explicit-resource-management` plugin, you can use the `using` keyword to automatically perform some cleanup when `_fetch` goes out of scope. In our case, this is when the test is complete; this means restoring the global fetch function to its original state automatically after each test.
+If you are using TypeScript 5.2 or greater, or using Babel's [`@babel/plugin-proposal-explicit-resource-management` plugin](https://babeljs.io/docs/babel-plugin-proposal-explicit-resource-management), you can use the `using` keyword to automatically perform some cleanup when `_fetch` goes out of scope. In our case, this is when the test is complete; this means restoring the global fetch function to its original state automatically after each test.
 
 If your environment does not support explicit resource management, you'll find that calling `mockGlobal()` returns a restore function that you can manually call at the end of each test:
 
@@ -289,9 +288,9 @@ describe("Products", () => {
 
 #### Should I share a single `ApolloClient` instance between tests?
 
-No; we recommend creating a new instance of `ApolloClient` for each test. Even if you reset the cache in between tests, the `QueryManager` used by the client is not reset. This means your `ApolloClient` instance could have pending queries that could cause the following test's queries to be deduplicated by default.
+No; we recommend creating a new instance of `ApolloClient` for each test. Even if you reset the cache in between tests, the client maintains some internal state that is not reset. This could have some unintended consequences. For example, the `ApolloClient` instance could have pending queries that could cause the following test's queries to be deduplicated by default.
 
-We _do_ recommend establishing a pattern of a `makeClient` function so that every test can use a "real" production client, but no two tests should share the same client instance. Here's an example:
+We _do_ recommend creating a `makeClient` function or equivalent so that every test uses the same client configuration as your production client, but no two tests should share the same client instance. Here's an example:
 
 <ExpansionPanel title="Click to expand">
 

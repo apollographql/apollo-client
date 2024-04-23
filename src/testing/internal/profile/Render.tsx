@@ -124,7 +124,7 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
     return (this._domSnapshot = body);
   }
 
-  get withinDOM() {
+  get withinDOM(): () => SyncScreen {
     const snapScreen = Object.assign(within(this.domSnapshot), {
       debug: (
         ...[dom = this.domSnapshot, ...rest]: Parameters<typeof screen.debug>

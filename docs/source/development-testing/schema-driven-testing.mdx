@@ -4,7 +4,7 @@ description: Using createTestSchema and associated APIs
 minVersion: 3.10.0
 ---
 
-This article describes best practices for writing integration tests using testing utilities released in v3.10. It allows developers to execute queries against a schema configured with mock resolvers and default scalar values in order to test an entire Apollo Client application, including the [link chain](/react/api/link/introduction).
+This article describes best practices for writing integration tests using testing utilities released as experimental in v3.10. It allows developers to execute queries against a schema configured with mock resolvers and default scalar values in order to test an entire Apollo Client application, including the [link chain](/react/api/link/introduction).
 
 ## Guiding principles
 
@@ -55,7 +55,7 @@ const PRODUCTS_QUERY: TypedDocumentNode<ProductsQuery> = gql`
 `;
 
 export function Products() {
-  const { data, error } = useSuspenseQuery(PRODUCTS_QUERY);
+  const { data } = useSuspenseQuery(PRODUCTS_QUERY);
 
   return (
     <div>
@@ -144,15 +144,14 @@ const config: Config = {
   setupFiles: ["./jest.polyfills.js"],
   // You may also have an e.g. setupTests.ts file here
   setupFilesAfterEnv: ["<rootDir>/setupTests.ts"],
-  // Opt out of the browser export condition for MSW tests
-  // for more information, see: https://github.com/mswjs/msw/issues/1786#issuecomment-1782559851
+  // If you're using MSW, opt out of the browser export condition for MSW tests
+  // For more information, see: https://github.com/mswjs/msw/issues/1786#issuecomment-1782559851
   testEnvironmentOptions: {
     customExportConditions: [""],
   },
-  // If we plan on importing .gql/.graphql files in our tests, we need to transform them
+  // If you plan on importing .gql/.graphql files in your tests, transform them with @graphql-tools/jest-transform
   transform: {
     "\\.(gql|graphql)$": "@graphql-tools/jest-transform",
-    "^.+\\.tsx?$": "ts-jest",
   },
 };
 
@@ -160,7 +159,7 @@ export default config;
 
 ```
 
-Node that if you're using MSW, you will need to opt out of the browser export condition using `testEnvironmentOptions`.
+Note that if you're using MSW, you will need to opt out of the browser export condition using `testEnvironmentOptions`.
 
 In our `setupTests.ts` file, we'll import `"@testing-library/jest-dom"` as well as disable fragment warnings which can pollute our test output:
 
@@ -268,7 +267,7 @@ If you are using TypeScript 5.2 or greater, or using Babel's `@babel/plugin-prop
 
 If your environment does not support explicit resource management, you'll find that calling `mockGlobal()` returns a restore function that you can manually call at the end of each test:
 
-```jsx title="products.test.jsx"
+```tsx title="products.test.tsx"
 describe("Products", () => {
   it("renders", async () => {
     const { restore } = createSchemaFetch(schema).mockGlobal();
@@ -296,7 +295,7 @@ We _do_ recommend establishing a pattern of a `makeClient` function so that ever
 
 <ExpansionPanel title="Click to expand">
 
-```jsx title="src/client.ts"
+```ts title="src/client.ts"
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 
 const httpLink = new HttpLink({

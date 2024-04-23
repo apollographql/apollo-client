@@ -1,23 +1,24 @@
 ---
 title: Schema-driven testing
 description: Using createTestSchema and associated APIs
+minVersion: 3.10.0
 ---
 
-This article describes best practices for writing integration tests using testing utilities released in v3.10. It allows developers to execute queries against a schema configured with mock resolvers and default scalar values in order to test an entire Apollo Client application, including the [link chain](react/api/link/introduction).
+This article describes best practices for writing integration tests using testing utilities released in v3.10. It allows developers to execute queries against a schema configured with mock resolvers and default scalar values in order to test an entire Apollo Client application, including the [link chain](/react/api/link/introduction).
 
 ## Guiding principles
 
-Kent C. Dodds [said it best](https://twitter.com/kentcdodds/status/977018512689455106): "The more your tests resemble the way your software is used, the more confidence they can give you." This means validating the behavior of the code path your users' requests will travel, from the UI to the network layer and back.
+Kent C. Dodds [said it best](https://twitter.com/kentcdodds/status/977018512689455106):
 
-Unit-style testing with `MockedProvider` can be useful for testing individual components—or even entire pages or React subtrees—in isolation by mocking the expected response data for individual operations. However, it's important to also test the integration of your components with the network layer. That's where schema-driven testing comes in.
+> The more your tests resemble the way your software is used, the more confidence they can give you.
+
+When it comes to testing applications built with Apollo Client, this means validating the behavior of the code path your users' requests will travel from the UI to the network layer and back.
+
+Unit-style testing with [`MockedProvider`](/react/development-testing/testing) can be useful for testing individual components—or even entire pages or React subtrees—in isolation by mocking the expected response data for individual operations. However, it's important to also test the integration of your components with the network layer. That's where schema-driven testing comes in.
 
 > This page is heavily inspired by the excellent [Redux documentation](https://redux.js.org/usage/writing-tests#guiding-principles). We believe the same principles apply to Apollo Client :)
 
-<MinVersion version="3.10">
-
-## `createTestSchema`
-
-</MinVersion>
+## `createTestSchema` and `createSchemaFetch`
 
 ### Installation
 
@@ -31,7 +32,7 @@ Consider a React application that fetches a list of products from a GraphQL serv
 
 <ExpansionPanel title="Click to expand">
 
-```jsx title="products.tsx"
+```tsx title="products.tsx"
 import { gql, TypedDocumentNode, useSuspenseQuery } from "@apollo/client";
 
 type ProductsQuery = {
@@ -72,7 +73,7 @@ export function Products() {
 ```
 </ExpansionPanel>
 
-Instead of using `MockedProvider` to statically mock the response data for a single operation, `ProductsQuery`, let's use `createTestSchema` to create a schema with mock resolvers and default scalar values.
+Now that we have our `Products` component, let's write some tests using a mock schema created with the `createTestSchema` utility that we can then pass to our mock fetch implementation using `createSchemaFetch`.
 
 ### Configuring your test environment
 
@@ -82,11 +83,8 @@ These schema-driven testing tools can be used with Jest, Testing Library, and Mo
 /**
  * @note The block below contains polyfills for Node.js globals
  * required for Jest to function when running JSDOM tests.
- * These HAVE to be require's and HAVE to be in this exact
+ * These have to be require's and have to be in this exact
  * order, since "undici" depends on the "TextEncoder" global API.
- *
- * Consider migrating to a more modern test runner if
- * you don't want to deal with this.
  */
 
 const { TextDecoder, TextEncoder } = require("node:util");
@@ -115,9 +113,12 @@ Object.defineProperties(globalThis, {
   Request: { value: Request },
 });
 
-// Symbol.dispose is not defined
-// jest bug: https://github.com/jestjs/jest/issues/14874
-// fix is available in https://github.com/jestjs/jest/releases/tag/v30.0.0-alpha.3
+// Note: if your environment supports it, you can use the `using` keyword
+// but must polyfill Symbol.dispose here with Jest versions <= 29
+// where Symbol.dispose is not defined
+//
+// Jest bug: https://github.com/jestjs/jest/issues/14874
+// Fix is available in https://github.com/jestjs/jest/releases/tag/v30.0.0-alpha.3
 if (!Symbol.dispose) {
   Object.defineProperty(Symbol, "dispose", {
     value: Symbol("dispose"),
@@ -151,14 +152,7 @@ const config: Config = {
   // If we plan on importing .gql/.graphql files in our tests, we need to transform them
   transform: {
     "\\.(gql|graphql)$": "@graphql-tools/jest-transform",
-    "^.+\\.tsx?$": [
-      "ts-jest",
-      {
-        diagnostics: {
-          warnOnly: process.env.TEST_ENV !== "ci",
-        },
-      },
-    ],
+    "^.+\\.tsx?$": "ts-jest",
   },
 };
 

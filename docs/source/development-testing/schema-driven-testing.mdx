@@ -4,7 +4,7 @@ description: Using createTestSchema and associated APIs
 minVersion: 3.10.0
 ---
 
-This article describes best practices for writing integration tests using testing utilities released as experimental in v3.10. It allows developers to execute queries against a schema configured with mock resolvers and default scalar values in order to test an entire Apollo Client application, including the [link chain](/react/api/link/introduction).
+This article describes best practices for writing integration tests using testing utilities released as experimental in v3.10. These testing tools allow developers to execute queries against a schema configured with mock resolvers and default scalar values in order to test an entire Apollo Client application, including the [link chain](/react/api/link/introduction).
 
 ## Guiding principles
 
@@ -12,11 +12,11 @@ Kent C. Dodds [said it best](https://twitter.com/kentcdodds/status/9770185126894
 
 > The more your tests resemble the way your software is used, the more confidence they can give you.
 
-When it comes to testing applications built with Apollo Client, this means validating the behavior of the code path your users' requests will travel from the UI to the network layer and back.
+When it comes to testing applications built with Apollo Client, this means validating the code path your users' requests will travel from the UI to the network layer and back.
 
 Unit-style testing with [`MockedProvider`](/react/development-testing/testing) can be useful for testing individual components—or even entire pages or React subtrees—in isolation by mocking the expected response data for individual operations. However, it's important to also test the integration of your components with the network layer. That's where schema-driven testing comes in.
 
-> This page is heavily inspired by the excellent [Redux documentation](https://redux.js.org/usage/writing-tests#guiding-principles). We believe the same principles apply to Apollo Client :)
+> This page is heavily inspired by the excellent [Redux documentation](https://redux.js.org/usage/writing-tests#guiding-principles). We believe the same principles apply to Apollo Client.
 
 ## `createTestSchema` and `createSchemaFetch`
 
@@ -76,7 +76,7 @@ Now that we have our `Products` component, let's write some tests using a mock s
 
 ### Configuring your test environment
 
-These schema-driven testing tools can be used with Jest, Testing Library, and Mock Service Worker (MSW). First, we'll need to polyfill some Node.js globals in order for our JSDOM tests to run correctly. Here's how to set up your test environment:
+First, we'll need to polyfill some Node.js globals in order for our JSDOM tests to run correctly. Here's how to set up your test environment:
 
 ```js title="jest.polyfills.js"
 /**
@@ -130,7 +130,7 @@ if (!Symbol.asyncDispose) {
 }
 ```
 
-Now, in your `jest.config.ts` or `test.config.js` file, add the following configuration:
+Now, in your `jest.config.ts` or `jest.config.js` file, add the following configuration:
 
 ```ts title="jest.config.ts"
 import type { Config } from "jest";
@@ -158,9 +158,7 @@ export default config;
 
 ```
 
-Note that if you're using MSW, you will need to opt out of the browser export condition using `testEnvironmentOptions`.
-
-In our `setupTests.ts` file, we'll import `"@testing-library/jest-dom"` as well as disable fragment warnings which can pollute our test output:
+In our `setupTests.ts` file, we'll import `@testing-library/jest-dom` (see the [`@testing-library/jest-dom` documentation](https://github.com/testing-library/jest-dom?tab=readme-ov-file#usage) for more information) as well as disable fragment warnings which can pollute our test output:
 
 ```ts title="setupTests.ts"
 import "@testing-library/jest-dom";
@@ -173,7 +171,7 @@ gql.disableFragmentWarnings();
 
 Now, let's write a test for the `Products` component using `createTestSchema`.
 
-We'll import `createSchemaFetch` and `createTestSchema` from the new `@apollo/client/testing` entrypoint. We'll also need a local copy of our graph's schema, and for jest to be configured to transform `.gql` or `.graphql` files using `@graphql-tools/jest-transform` (see `jest.config.ts` example above.)
+We'll import `createSchemaFetch` and `createTestSchema` from the new `@apollo/client/testing` entrypoint. We'll also need a local copy of our graph's schema, and for jest to be configured to transform `.gql` or `.graphql` files using `@graphql-tools/jest-transform` (see the `jest.config.ts` example configuration above.)
 
 Here's how we might set up our test file:
 
@@ -229,9 +227,9 @@ const render = (renderedClient: ApolloClient<NormalizedCacheObject>) =>
   );
 ```
 
-Now let's write some tests!
+Now we're ready to write some tests 🎉
 
-The first thing we'll do is mock the global fetch function using the `createSchemaFetch` utility. This will allow us to intercept and respond to network requests made by our Apollo Client instance using responses generated against our test schema 🎉
+The first thing we'll do is mock the global fetch function using the `createSchemaFetch` utility. This will allow us to intercept and respond to network requests made by our Apollo Client instance using responses generated against our test schema.
 
 ```tsx title="products.test.tsx"
 describe("Products", () => {

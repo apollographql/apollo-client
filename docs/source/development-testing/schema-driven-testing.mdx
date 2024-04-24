@@ -70,6 +70,7 @@ export function Products() {
   );
 }
 ```
+
 </ExpansionPanel>
 
 Now let's write some tests using a test schema created with the `createTestSchema` utility that can then be used to create a mock fetch implementation with `createSchemaFetch`.
@@ -155,7 +156,6 @@ const config: Config = {
 };
 
 export default config;
-
 ```
 
 In the example `setupTests.ts` file below, `@testing-library/jest-dom` is imported to allow the use of custom `jest-dom` matchers (see the [`@testing-library/jest-dom` documentation](https://github.com/testing-library/jest-dom?tab=readme-ov-file#usage) for more information) and fragment warnings are disabled which can pollute the test output:
@@ -344,10 +344,7 @@ import graphqlSchema from "../../../schema.graphql";
 // This should be a function that returns a new ApolloClient instance
 // configured just like your production Apollo Client instance - see the FAQ.
 import { makeClient } from "../../client";
-import {
-  ApolloProvider,
-  NormalizedCacheObject,
-} from "@apollo/client";
+import { ApolloProvider, NormalizedCacheObject } from "@apollo/client";
 import { Products } from "../../products";
 import { Suspense } from "react";
 
@@ -437,6 +434,82 @@ describe("Products", () => {
 });
 ```
 
+## Modifying a test schema using `testSchema.add` and `testSchema.fork`
+
+If you need to make changes to the behavior of a schema after it has been created, you can use the `testSchema.add` method to add new resolvers to the schema or overwrite existing ones.
+This can be useful for testing scenarios where the behavior of the schema needs to change inside a test.
+
+````tsx title="products.test.tsx"
+describe("Products", () => {
+  it("renders", async () => {
+    const { restore } = createSchemaFetch(schema).mockGlobal();
+
+    render(makeClient());
+
+    // make assertions against the rendered DOM output
+
+    // Here we want to change the return value of the `products` resolver
+    // for the next outgoing query.
+    testSchema.add({
+      resolvers: {
+        Query: {
+          products: () =>
+            Array.from({ length: 5 }, (_element, id) => ({
+              // we want to return ids starting from 5 for the second request
+              id: id + 5,
+              mediaUrl: `https://example.com/image${id + 5}.jpg`,
+            })),
+        },
+      },
+    });
+
+    // trigger a new query with a user interaction
+    userEvent.click(screen.getByText("Fetch more"));
+
+    // make assertions against the rendered DOM output
+
+    restore();
+    testSchema.reset();
+  });
+});
+```
+
+Alternatively, you can use `testSchema.fork` to create a new schema with the same configuration as the original schema,
+but with the ability to make changes to the new isolated schema without affecting the original schema.
+This can be useful if you just want to mock the global fetch function with a different schema for each test without
+having to care about resetting your original testSchema.
+You could also write incremental tests where each test builds on the previous one.
+
+If you use MSW, you will probably end up using `testSchema.add`, as MSW needs to be set up with a single schema for all tests.
+If you are going the `createSchemaFetch` route, you can use `testSchema.fork` to create a new schema for each test,
+and then use `forkedSchema.add` to make changes to the schema for that test.
+
+```tsx
+const baseSchema = createTestSchema(staticSchema, {
+  resolvers: {
+    // ...
+  },
+  scalars: {
+    // ...
+  },
+});
+
+test("a test", () => {
+  const forkedSchema = baseSchema.fork();
+
+  const { restore } = createSchemaFetch(forkedSchema).mockGlobal();
+
+  // make assertions against the rendered DOM output
+
+  forkedSchema.add({
+    // ...
+  });
+
+  restore();
+  // forkedSchema will just be discarded, and there is no need to reset it
+});
+````
+
 ### FAQ
 
 #### When should I use `createSchemaFetch` vs [MSW](https://mswjs.io/)?
@@ -468,8 +541,8 @@ export const makeClient = () => {
 };
 
 export const client = makeClient();
-
 ```
+
 </ExpansionPanel>
 
 This way, every test can use `makeClient` to create a new client instance, and you can still use `client` in your production code.

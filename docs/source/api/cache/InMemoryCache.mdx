@@ -2,7 +2,11 @@
 title: class InMemoryCache
 description: API reference
 api_reference: true
+api_doc:
+  - "@apollo/client!ApolloClient#watchFragment:member(1)"
 ---
+
+import { FunctionDetails, DocBlock, Example } from '../../../shared/ApiDoc';
 
 Methods of the `InMemoryCache` class (the cache used by almost every instance of [`ApolloClient`](../core/ApolloClient/)) are documented here.
 
@@ -768,6 +772,9 @@ writeFragment<TData = any, TVariables = any>(
   options: Cache.WriteFragmentOptions<TData, TVariables>,
 ): Reference | undefined
 ```
+
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#watchFragment:member(1)" headingLevel={2} />
+
 <MinVersion version="3.5">
 
 ## `updateFragment`

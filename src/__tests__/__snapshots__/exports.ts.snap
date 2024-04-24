@@ -398,6 +398,13 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/testing/experimental 1`] = `
+Array [
+  "createSchemaFetch",
+  "createTestSchema",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/utilities 1`] = `
 Array [
   "AutoCleanedStrongCache",

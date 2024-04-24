@@ -1,7 +1,7 @@
 const defaults = {
   rootDir: "src",
   preset: "ts-jest",
-  testEnvironment: "jsdom",
+  testEnvironment: require.resolve("./FixJSDOMEnvironment.js"),
   setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
   globals: {
     __DEV__: true,
@@ -33,6 +33,7 @@ const react17TestFileIgnoreList = [
   ignoreTSFiles,
   // We only support Suspense with React 18, so don't test suspense hooks with
   // React 17
+  "src/testing/experimental/__tests__/createTestSchema.test.tsx",
   "src/react/hooks/__tests__/useSuspenseQuery.test.tsx",
   "src/react/hooks/__tests__/useBackgroundQuery.test.tsx",
   "src/react/hooks/__tests__/useLoadableQuery.test.tsx",

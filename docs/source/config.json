@@ -49,6 +49,7 @@
       "Developer tools": "/development-testing/developer-tooling",
       "Using TypeScript": "/development-testing/static-typing",
       "Testing React components": "/development-testing/testing",
+      "Schema-driven testing": "/development-testing/schema-driven-testing",
       "Mocking schema capabilities": "/development-testing/client-schema-mocking",
       "Reducing bundle size": "/development-testing/reducing-bundle-size"
     },

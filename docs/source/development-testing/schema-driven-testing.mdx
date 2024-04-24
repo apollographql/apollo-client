@@ -185,7 +185,8 @@ import { render as rtlRender, screen } from "@testing-library/react";
 import graphqlSchema from "../../../schema.graphql";
 import { makeClient } from "../../client";
 import {
-  ApolloClient,
+// this should be a function that returns a new ApolloClient instance configured just like your production Apollo Client instance - see the FAQ.
+import { makeClient } from "../../client";
   ApolloProvider,
   NormalizedCacheObject,
 } from "@apollo/client";

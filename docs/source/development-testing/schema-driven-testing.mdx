@@ -284,6 +284,12 @@ describe("Products", () => {
 
 ### FAQ
 
+#### When should I use `createSchemaFetch` vs [MSW](https://mswjs.io/)?
+
+There are many benefits to using [MSW](https://mswjs.io/): it's a powerful tool with a great set of APIs. Read more about its philosophy and benefits [here](https://mswjs.io/blog/why-mock-service-worker/).
+
+Wherever possible, use MSW: it enables more realistic tests that can catch more bugs by intercepting requests _after_ they've been dispatched by an application. MSW also supports both REST and GraphQL handlers, so if your application uses a combination (e.g. to fetch data from a third party endpoint), MSW will provide more flexibility than `createSchemaFetch`, which is a more lightweight solution.
+
 #### Should I share a single `ApolloClient` instance between tests?
 
 No; please create a new instance of `ApolloClient` for each test. Even if the cache is reset in between tests, the client maintains some internal state that is not reset. This could have some unintended consequences. For example, the `ApolloClient` instance could have pending queries that could cause the following test's queries to be deduplicated by default.

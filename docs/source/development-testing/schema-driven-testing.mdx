@@ -16,7 +16,7 @@ When it comes to testing applications built with Apollo Client, this means valid
 
 Unit-style testing with [`MockedProvider`](/react/development-testing/testing) can be useful for testing individual components—or even entire pages or React subtrees—in isolation by mocking the expected response data for individual operations. However, it's important to also test the integration of your components with the network layer. That's where schema-driven testing comes in.
 
-> This page is heavily inspired by the excellent [Redux documentation](https://redux.js.org/usage/writing-tests#guiding-principles). We believe the same principles apply to Apollo Client.
+> This page is heavily inspired by the excellent [Redux documentation](https://redux.js.org/usage/writing-tests#guiding-principles); the same principles apply to Apollo Client.
 
 ## `createTestSchema` and `createSchemaFetch`
 
@@ -72,11 +72,11 @@ export function Products() {
 ```
 </ExpansionPanel>
 
-Now that we have our `Products` component, let's write some tests using a mock schema created with the `createTestSchema` utility that we can then pass to our mock fetch implementation using `createSchemaFetch`.
+Now let's write some tests using a test schema created with the `createTestSchema` utility that can then be used to create a mock fetch implementation with `createSchemaFetch`.
 
 ### Configuring your test environment
 
-First, we'll need to polyfill some Node.js globals in order for our JSDOM tests to run correctly. Here's how to set up your test environment:
+First, some Node.js globals will need to be polyfilled in order for JSDOM tests to run correctly. Create a file called e.g. `jest.polyfills.js`:
 
 ```js title="jest.polyfills.js"
 /**
@@ -130,7 +130,7 @@ if (!Symbol.asyncDispose) {
 }
 ```
 
-Now, in your `jest.config.ts` or `jest.config.js` file, add the following configuration:
+Now, in a `jest.config.ts` or `jest.config.js` file, add the following configuration:
 
 ```ts title="jest.config.ts"
 import type { Config } from "jest";
@@ -158,7 +158,7 @@ export default config;
 
 ```
 
-In our `setupTests.ts` file, we'll import `@testing-library/jest-dom` (see the [`@testing-library/jest-dom` documentation](https://github.com/testing-library/jest-dom?tab=readme-ov-file#usage) for more information) as well as disable fragment warnings which can pollute our test output:
+In the example `setupTests.ts` file below, `@testing-library/jest-dom` is imported to allow the use of custom `jest-dom` matchers (see the [`@testing-library/jest-dom` documentation](https://github.com/testing-library/jest-dom?tab=readme-ov-file#usage) for more information) and fragment warnings are disabled which can pollute the test output:
 
 ```ts title="setupTests.ts"
 import "@testing-library/jest-dom";
@@ -171,9 +171,9 @@ gql.disableFragmentWarnings();
 
 Now, let's write a test for the `Products` component using `createTestSchema`.
 
-We'll import `createSchemaFetch` and `createTestSchema` from the new `@apollo/client/testing` entrypoint. We'll also need a local copy of our graph's schema, and for jest to be configured to transform `.gql` or `.graphql` files using `@graphql-tools/jest-transform` (see the `jest.config.ts` example configuration above.)
+First, import `createSchemaFetch` and `createTestSchema` from the new `@apollo/client/testing` entrypoint. Next, import a local copy of your graph's schema: jest should be configured to transform `.gql` or `.graphql` files using `@graphql-tools/jest-transform` (see the `jest.config.ts` example configuration above.)
 
-Here's how we might set up our test file:
+Here's how an initial set up of the test file might look:
 
 ```tsx title="products.test.tsx"
 import {
@@ -192,12 +192,12 @@ import {
 import { Products } from "../../products";
 import { Suspense } from "react";
 
-// First, we create an executable schema...
+// First, let's create an executable schema...
 const staticSchema = makeExecutableSchema({ typeDefs: graphqlSchema });
 
-// which we then pass as the first argument to `createTestSchema`.
+// which is then passed as the first argument to `createTestSchema`.
 const schema = createTestSchema(staticSchema, {
-  // Next, we define our mock resolvers
+  // Next, let's define mock resolvers
   resolvers: {
     Query: {
       products: () =>
@@ -227,9 +227,9 @@ const render = (renderedClient: ApolloClient<NormalizedCacheObject>) =>
   );
 ```
 
-Now we're ready to write some tests 🎉
+Now let's write some tests 🎉
 
-The first thing we'll do is mock the global fetch function using the `createSchemaFetch` utility. This will allow us to intercept and respond to network requests made by our Apollo Client instance using responses generated against our test schema.
+First, `createSchemaFetch` can be used to mock the global `fetch` implementation with one that resolves network requests with payloads generated from the test schema.
 
 ```tsx title="products.test.tsx"
 describe("Products", () => {
@@ -286,9 +286,9 @@ describe("Products", () => {
 
 #### Should I share a single `ApolloClient` instance between tests?
 
-No; we recommend creating a new instance of `ApolloClient` for each test. Even if you reset the cache in between tests, the client maintains some internal state that is not reset. This could have some unintended consequences. For example, the `ApolloClient` instance could have pending queries that could cause the following test's queries to be deduplicated by default.
+No; please create a new instance of `ApolloClient` for each test. Even if the cache is reset in between tests, the client maintains some internal state that is not reset. This could have some unintended consequences. For example, the `ApolloClient` instance could have pending queries that could cause the following test's queries to be deduplicated by default.
 
-We _do_ recommend creating a `makeClient` function or equivalent so that every test uses the same client configuration as your production client, but no two tests should share the same client instance. Here's an example:
+Instead, create a `makeClient` function or equivalent so that every test uses the same client configuration as your production client, but no two tests share the same client instance. Here's an example:
 
 <ExpansionPanel title="Click to expand">
 

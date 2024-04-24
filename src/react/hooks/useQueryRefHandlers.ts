@@ -5,10 +5,15 @@ import {
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "../internal/index.js";
-import type { QueryReference } from "../internal/index.js";
+import type {
+  InternalQueryReference,
+  QueryReference,
+} from "../internal/index.js";
 import type { OperationVariables } from "../../core/types.js";
 import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";
 import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { wrapHook } from "./internal/index.js";
 
 export interface UseQueryRefHandlersResult<
   TData = unknown,
@@ -40,6 +45,34 @@ export interface UseQueryRefHandlersResult<
  * @param queryRef - A `QueryReference` returned from `useBackgroundQuery`, `useLoadableQuery`, or `createQueryPreloader`.
  */
 export function useQueryRefHandlers<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  queryRef: QueryReference<TData, TVariables>
+): UseQueryRefHandlersResult<TData, TVariables> {
+  const unwrapped = unwrapQueryRef(
+    queryRef
+  ) satisfies InternalQueryReference<TData> as /*
+    by all rules of this codebase, this should never be undefined
+    but if `queryRef` is a transported object, it cannot have a
+    `QUERY_REFERENCE_SYMBOL` symbol property, so the call above
+    will return `undefined` and we want that represented in the type
+    */ InternalQueryReference<TData> | undefined;
+
+  return wrapHook(
+    "useQueryRefHandlers",
+    _useQueryRefHandlers,
+    unwrapped ?
+      unwrapped["observable"]
+      // in the case of a "transported" queryRef object, we need to use the
+      // client that's available to us at the current position in the React tree
+      // that ApolloClient will then have the job to recreate a real queryRef from
+      // the transported object
+    : useApolloClient()
+  )(queryRef);
+}
+
+function _useQueryRefHandlers<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(

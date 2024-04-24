@@ -151,6 +151,9 @@ export function createProfiler<Snapshot extends ValidSnapshot = void>({
   let nextRender: Promise<Render<Snapshot>> | undefined;
   let resolveNextRender: ((render: Render<Snapshot>) => void) | undefined;
   let rejectNextRender: ((error: unknown) => void) | undefined;
+  function resetNextRender() {
+    nextRender = resolveNextRender = rejectNextRender = undefined;
+  }
   const snapshotRef = { current: initialSnapshot };
   const replaceSnapshot: ReplaceSnapshot<Snapshot> = (snap) => {
     if (typeof snap === "function") {
@@ -241,7 +244,7 @@ export function createProfiler<Snapshot extends ValidSnapshot = void>({
       });
       rejectNextRender?.(error);
     } finally {
-      nextRender = resolveNextRender = rejectNextRender = undefined;
+      resetNextRender();
     }
   };
 
@@ -340,13 +343,12 @@ export function createProfiler<Snapshot extends ValidSnapshot = void>({
               rejectNextRender = reject;
             }),
             new Promise<Render<Snapshot>>((_, reject) =>
-              setTimeout(
-                () =>
-                  reject(
-                    applyStackTrace(new WaitForRenderTimeoutError(), stackTrace)
-                  ),
-                timeout
-              )
+              setTimeout(() => {
+                reject(
+                  applyStackTrace(new WaitForRenderTimeoutError(), stackTrace)
+                );
+                resetNextRender();
+              }, timeout)
             ),
           ]);
         }

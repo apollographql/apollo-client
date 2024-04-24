@@ -17,6 +17,8 @@ import {
   cloneDeep,
   stringifyForDisplay,
   print,
+  getOperationDefinition,
+  getDefaultValues,
 } from "../../../utilities/index.js";
 
 export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
@@ -211,6 +213,13 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
     if (query) {
       newMockedResponse.request.query = query;
     }
+
+    newMockedResponse.request.variables = {
+      ...getDefaultValues(
+        getOperationDefinition(newMockedResponse.request.query)
+      ),
+      ...newMockedResponse.request.variables,
+    };
 
     mockedResponse.maxUsageCount = mockedResponse.maxUsageCount ?? 1;
     invariant(

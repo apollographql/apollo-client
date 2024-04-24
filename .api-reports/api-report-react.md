@@ -1421,7 +1421,10 @@ interface Operation {
     // (undocumented)
     query: DocumentNode;
     // (undocumented)
-    setContext: (context: Context) => Context;
+    setContext: {
+        (context: Partial<Context>): void;
+        (updateContext: (previousContext: Context) => Partial<Context>): void;
+    };
     // (undocumented)
     variables: Record<string, any>;
 }

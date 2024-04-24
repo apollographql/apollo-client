@@ -1274,7 +1274,7 @@ describe("nextFetchPolicy", () => {
 
       // The nextFetchPolicy function we provided always returnes cache-first,
       // even when context.reason is variables-changed (which by default
-      // resets the fetchPolicy to context.initialPolicy), so cache-first is
+      // resets the fetchPolicy to context.initialFetchPolicy), so cache-first is
       // still what we see here.
       expect(observable.options.fetchPolicy).toBe("cache-first");
     } else if (count === 3) {

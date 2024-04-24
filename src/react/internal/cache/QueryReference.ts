@@ -73,7 +73,7 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
    * }
    * ```
    *
-   * @alpha
+   * @since 3.9.0
    */
   toPromise(): Promise<QueryReference<TData, TVariables>>;
 }

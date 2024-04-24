@@ -1,0 +1,21 @@
+---
+title: Server-Side Rendering and React Server Components - Introduction
+---
+
+# Disambiguation of essential terms
+
+Talking about Server-Side Rendering (SSR) and React Server Components (RSC), it's important to understand the distinction between classic SSR and the modern approaches used in frameworks like Next.js.
+
+* **Classic SSR**, typically executed using React's `renderToString`, involves rendering the entire React component tree on the server into a static HTML string, which is then sent to the browser.
+This HTML will be generated in one final pass after all data dependencies have been resolved, which can take a significant amount of time.
+Only after that can that HTML be transported to the Browser, where a hydration pass has to happen before the page becomes interactive, often leading to a delay before interactive elements become functional.
+This approach is explained in the "Classic Server-side rendering with `renderToString`" section.
+
+* Modern **streaming SSR** utilizes React Suspense with the `renderToReadableStream` and `renderToPipeableStream` APIs, which support streaming HTML to the browser as soon as suspendse boundaries are ready.
+This approach is more efficient, improving Time to Interactive (TTI) by allowing users to see and interact with content as it streams in rather than waiting for the entire bundle.
+When the term **SSR** is used outside the "Classic SSR" section, it refers to streaming SSR of React "Client Components".
+
+* React Server Components (**RSC**) describe an - also streamed - render pass that happens before SSR, and only creates static JSX, which will be rendered into static HTML and is not rehydrated with interactive Components in the browser.
+A router can replace the RSC contents of a page by re-initializing an RSC render on the RSC server, and replace the static HTML of the page with the new RSC contents, while leaving interactive React Client Components intact.
+
+* React **Client Components** are the interactive components that React has been known for the longest time of its existence, rendered either in SSR or after hydration directly in the browser.

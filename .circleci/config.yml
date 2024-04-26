@@ -80,6 +80,9 @@ jobs:
           command: npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.framework >>
           working_directory: integration-tests
       - run:
+          command: npm install react@<< parameters.react >> react-dom@<< parameters.react >> --workspace=<< parameters.framework >>
+          working_directory: integration-tests
+      - run:
           command: npx playwright install-deps
           working_directory: integration-tests
       - run:
@@ -130,6 +133,9 @@ workflows:
                 - vite
                 - vite-swc
                 # -browser-esm would need a package publish to npm/CDNs
+              react:
+                - ^18.3.0
+                - ^19.0.0-beta
       - TestPeerDepTypes:
           name: Test external types for << matrix.externalPackage >>
           requires:
@@ -143,6 +149,7 @@ workflows:
                 - "@types/react@16.8 @types/react-dom@16.8"
                 - "@types/react@17 @types/react-dom@17"
                 - "@types/react@18 @types/react-dom@18"
+                - "@types/react@npm:types-react@19.0.0-alpha.3 @types/react-dom@npm:types-react-dom@19.0.0-alpha.3"
                 - "typescript@next"
   security-scans:
     jobs:

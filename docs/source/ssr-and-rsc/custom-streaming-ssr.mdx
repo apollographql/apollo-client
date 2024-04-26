@@ -19,7 +19,7 @@ In a setup with streaming SSR, your server will send the HTML response in chunks
 That means your browser might already be hydrating components - including your `ApolloClient` and `InMemoryCache` instances, while the server is still making GraphQL requests and rendering contents.
 Apollo Client needs to be set up with a specific transport mechanism that fulfills the following requirements:
 
-- When a query is executed on the SSR server, the same query should be simulated as "in flight" in the Browser so that components rendering in the Browser will not trigger the same query argsToArgsConfig.
+- When a query is executed on the SSR server, the same query should be simulated as "in flight" in the Browser so that components rendering in the Browser will not trigger a network request for the same query and variables.
 - When a query receives data on the SSR server, that data should be sent to the browser to hydrate the cache and resolve that simulated "in flight" query.
 - When a query receives an error on the SSR server, that error should be signaled to the browser as soon as possible so the browser can retry the query before the component renders. (Error details should not be transported from SSR to the Browser to prevent any potential "server-only" secrets from leaking to the Browser.)
 - When a hook is rendered on the server, it has to be ensured that the hydration render in the Browser sees the exact same data the server saw to prevent a hydration mismatch.

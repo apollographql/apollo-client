@@ -55,10 +55,10 @@
     },
     "Server-Side Rendering and React Server Components": {
       "Introduction": "/ssr-and-rsc/introduction",
-      "Usage in React Server Components": "/ssr-and-rsc/usage-in-rsc.mdx",
-      "Usage in React Client Components with streaming SSR": "/ssr-and-rsc/usage-in-client-components.mdx",
-      "Setting up with Next.js": "/ssr-and-rsc/nextjs.mdx",
-      "Setting up a custom \"streaming SSR\" server": "/ssr-and-rsc/custom-streaming-ssr.mdx",
+      "Usage in React Server Components": "/ssr-and-rsc/usage-in-rsc",
+      "Usage in React Client Components with streaming SSR": "/ssr-and-rsc/usage-in-client-components",
+      "Setting up with Next.js": "/ssr-and-rsc/nextjs",
+      "Setting up a custom \"streaming SSR\" server": "/ssr-and-rsc/custom-streaming-ssr",
       "Classic Server-side rendering with `renderToString`": "/ssr-and-rsc/server-side-rendering-string"
     },
     "Performance": {

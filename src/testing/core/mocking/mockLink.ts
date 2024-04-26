@@ -19,10 +19,12 @@ import {
   print,
 } from "../../../utilities/index.js";
 
-export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
+export type ResultFunction<T, V = Record<string, any>> = <_V extends V = V>(
+  variables: _V
+) => T;
 
-export type VariableMatcher<V = Record<string, any>> = (
-  variables: V
+export type VariableMatcher<V = Record<string, any>> = <_V extends V = V>(
+  variables: _V
 ) => boolean;
 
 export interface MockedResponse<

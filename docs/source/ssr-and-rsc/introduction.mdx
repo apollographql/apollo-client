@@ -6,20 +6,20 @@ title: Server-Side Rendering and React Server Components - Introduction
 
 When discussing Server-Side Rendering (SSR) and React Server Components (RSC), it's necessary to understand the distinction between classic SSR and the modern approaches used in frameworks like Next.js.
 
-* **Classic SSR**, typically executed using React's `renderToString`, involves rendering the entire React component tree on the server into a static HTML string, which is then sent to the browser.
-First, your React tree will render one or multiple times to start all network requests your page needs to render successfully.
-Once all these network requests have finished, one final render pass will generate the HTML sent to the browser.
-Only after that can that HTML be transported to the Browser, where a hydration pass has to happen before the page becomes interactive, often leading to a delay before interactive elements become functional.
-This approach is explained in the "Classic Server-side rendering with `renderToString`" section.
+- **Classic SSR**, typically executed using React's `renderToString`, involves rendering the entire React component tree on the server into a static HTML string, which is then sent to the browser.
+  First, your React tree will render one or multiple times to start all network requests your page needs to render successfully.
+  Once all these network requests have finished, one final render pass will generate the HTML sent to the browser.
+  Only after that can that HTML be transported to the Browser, where a hydration pass has to happen before the page becomes interactive, often leading to a delay before interactive elements become functional.
+  This approach is explained in the "Classic Server-side rendering with `renderToString`" section.
 
-* Modern **streaming SSR** utilizes React Suspense with the `renderToReadableStream` and `renderToPipeableStream` APIs, which support streaming HTML to the browser as soon as suspendse boundaries are ready.
-This approach is more efficient, improving Time to Interactive (TTI) by allowing users to see and interact with content as it streams in rather than waiting for the entire bundle.
-When the term **SSR** is used outside the "Classic SSR" section, it refers to streaming SSR of React "Client Components".
+- Modern **streaming SSR** utilizes React Suspense with the `renderToReadableStream` and `renderToPipeableStream` APIs, which support streaming HTML to the browser as soon as suspendse boundaries are ready.
+  This approach is more efficient, improving Time to Interactive (TTI) by allowing users to see and interact with content as it streams in rather than waiting for the entire bundle.
+  When the term **SSR** is used outside the "Classic SSR" section, it refers to streaming SSR of React "Client Components".
 
-* React Server Components (**RSC**) describe an - also streamed - render pass that happens before SSR, and only creates static JSX, which will be rendered into static HTML and is not rehydrated with interactive Components in the browser.
-A router can replace the RSC contents of a page by re-initializing an RSC render on the RSC server, and replace the static HTML of the page with the new RSC contents, while leaving interactive React Client Components intact.
+- React Server Components (**RSC**) describe an - also streamed - render pass that happens before SSR, and only creates static JSX, which will be rendered into static HTML and is not rehydrated with interactive Components in the browser.
+  A router can replace the RSC contents of a page by re-initializing an RSC render on the RSC server, and replace the static HTML of the page with the new RSC contents, while leaving interactive React Client Components intact.
 
-* React **Client Components** are the interactive components that React has been known for the longest time of its existence, rendered either in SSR or after hydration directly in the browser.
-You can read more on how React "draws the line" between Client and Server Components in the [React documentation](https://react.dev/reference/react/use-client)
+- React **Client Components** are the interactive components that React has been known for the longest time of its existence, rendered either in SSR or after hydration directly in the browser.
+  You can read more on how React "draws the line" between Client and Server Components in the [React documentation](https://react.dev/reference/react/use-client)
 
 Generally, most custom implementations will use classic SSR, while frameworks like Next.js and Remix might use streaming SSR and RSC. It is possible to use streaming SSR in a manual setup, but at this point, it still requires a lot of setup. Using RSC without a framework is generally not recommended.

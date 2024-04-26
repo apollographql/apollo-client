@@ -2,10 +2,16 @@
 title: Setting up Apollo Client with a custom "streaming SSR" server
 ---
 
-> This page covers setting up Apollo Client for usage with `renderToPipeableStream` or `renderToReadableStream` in a custom "streaming SSR" server.
-> If you use a framework like Next.js or Redwood.js, these instructions will not apply to your situation.
-> If you are using Next.js, you can follow the [Next.js guide](/docs/nextjs) instead.
-> Redwood is preconfigured to support Apollo Client in their latest experimental releases with RSC support.
+<Note>
+
+This page covers setting up Apollo Client for usage with `renderToPipeableStream` or `renderToReadableStream` in a custom "streaming SSR" server.
+
+If you use a framework like Next.js or Redwood.js, these instructions will not apply to your situation:
+
+- If you are using Next.js, please follow the [Next.js guide](/docs/nextjs) instead.
+- Redwood is preconfigured to support Apollo Client in their latest experimental releases with RSC support, so no additional setup is required.
+
+</Note>
 
 ## Why you need a specific setup for Apollo Client with streaming SSR.
 

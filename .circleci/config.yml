@@ -138,6 +138,12 @@ workflows:
               react:
                 - ^18.3.0
                 - ^19.0.0-beta
+            exclude:
+              - framework: cra4
+                react: ^19.0.0-beta
+              # next ships it's own React version anyways, no need to run this test twice
+              - framework: next
+                react: ^19.0.0-beta
       - TestPeerDepTypes:
           name: Test external types for << matrix.externalPackage >>
           requires:

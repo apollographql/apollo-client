@@ -30,5 +30,14 @@
     "shared": "*",
     "typescript": "^5.0.2",
     "vite": "^4.3.9"
+  },
+  "overrides": {
+    "next": {
+      "@playwright/test": "$@playwright/test"
+    },
+    "@apollo/client": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
   }
 }

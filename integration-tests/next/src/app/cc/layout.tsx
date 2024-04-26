@@ -1,4 +1,4 @@
-import { ApolloWrapper } from "./ApolloWrapper";
+import { ApolloWrapper } from "./ApolloWrapper.tsx";
 
 export default async function Layout({
   children,

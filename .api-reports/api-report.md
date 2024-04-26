@@ -81,6 +81,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     updateQuery<TData = any, TVariables = any>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: TData | null) => TData | null | void): TData | null;
     // (undocumented)
     abstract watch<TData = any, TVariables = any>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
+    watchFragment<TData = any, TVars = OperationVariables>(options: WatchFragmentOptions<TData, TVars>): Observable<WatchFragmentResult<TData>>;
     // (undocumented)
     abstract write<TData = any, TVariables = any>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
     // (undocumented)
@@ -135,6 +136,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     readonly typeDefs: ApolloClientOptions<TCacheShape>["typeDefs"];
     // (undocumented)
     version: string;
+    watchFragment<TFragmentData = unknown, TVariables = OperationVariables>(options: WatchFragmentOptions<TFragmentData, TVariables>): Observable<WatchFragmentResult<TFragmentData>>;
     watchQuery<T = any, TVariables extends OperationVariables = OperationVariables>(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables>;
     writeFragment<TData = any, TVariables = OperationVariables>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
     writeQuery<TData = any, TVariables = OperationVariables>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
@@ -541,7 +543,7 @@ export const concat: typeof ApolloLink.concat;
 // @public (undocumented)
 export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
 
-// @alpha
+// @public
 export function createQueryPreloader(client: ApolloClient<any>): PreloadQueryFunction;
 
 // @public @deprecated (undocumented)
@@ -1922,7 +1924,10 @@ export interface Operation {
     // (undocumented)
     query: DocumentNode;
     // (undocumented)
-    setContext: (context: DefaultContext) => DefaultContext;
+    setContext: {
+        (context: Partial<DefaultContext>): void;
+        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
+    };
     // (undocumented)
     variables: Record<string, any>;
 }
@@ -2326,7 +2331,6 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
     //
     // @internal (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-    // @alpha
     toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 
@@ -3017,6 +3021,28 @@ TVariables
     variables?: TVariables;
 } : {
     variables: TVariables;
+};
+
+// @public
+export interface WatchFragmentOptions<TData, TVars> {
+    // @deprecated (undocumented)
+    canonizeResults?: boolean;
+    fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+    fragmentName?: string;
+    from: StoreObject | Reference | string;
+    optimistic?: boolean;
+    variables?: TVars;
+}
+
+// @public
+export type WatchFragmentResult<TData> = {
+    data: TData;
+    complete: true;
+    missing?: never;
+} | {
+    data: DeepPartial<TData>;
+    complete: false;
+    missing: MissingTree;
 };
 
 // @public (undocumented)

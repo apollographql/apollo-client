@@ -1,5 +1,89 @@
 # @apollo/client
 
+## 3.10.1
+
+### Patch Changes
+
+- [#11792](https://github.com/apollographql/apollo-client/pull/11792) [`5876c35`](https://github.com/apollographql/apollo-client/commit/5876c35530a21473207954d1f0c2b7dd00c0b9ea) Thanks [@phryneas](https://github.com/phryneas)! - AutoCleanedCache: only schedule batched cache cleanup if the cache is full (fixes #11790)
+
+- [#11799](https://github.com/apollographql/apollo-client/pull/11799) [`1aca7ed`](https://github.com/apollographql/apollo-client/commit/1aca7ed5a3accf2303ccdf9b3dece7278f03ad62) Thanks [@phryneas](https://github.com/phryneas)! - `RenderPromises`: use `canonicalStringify` to serialize `variables` to ensure query deduplication is properly applied even when `variables` are specified in a different order.
+
+- [#11803](https://github.com/apollographql/apollo-client/pull/11803) [`bf9dd17`](https://github.com/apollographql/apollo-client/commit/bf9dd17b288f33901e9421bcc0eacb3894c087af) Thanks [@phryneas](https://github.com/phryneas)! - Update the `rehackt` dependency to `^0.1.0`
+
+- [#11756](https://github.com/apollographql/apollo-client/pull/11756) [`60592e9`](https://github.com/apollographql/apollo-client/commit/60592e95399c3695d1d49a4c39ad29f00d4059fd) Thanks [@henryqdineen](https://github.com/henryqdineen)! - Fix operation.setContext() type
+
+## 3.10.0
+
+### Minor Changes
+
+- [#11605](https://github.com/apollographql/apollo-client/pull/11605) [`e2dd4c9`](https://github.com/apollographql/apollo-client/commit/e2dd4c95290cea604b548cc446826d89aafe8e11) Thanks [@alessbell](https://github.com/alessbell)! - Adds `createMockFetch` utility for integration testing that includes the link chain
+
+- [#11760](https://github.com/apollographql/apollo-client/pull/11760) [`acd1982`](https://github.com/apollographql/apollo-client/commit/acd1982a59ed66fc44fa9e70b08a31c69dac35a6) Thanks [@alessbell](https://github.com/alessbell)! - `createTestSchema` now uses graphql-tools `mergeResolvers` to merge resolvers instead of a shallow merge.
+
+- [#11764](https://github.com/apollographql/apollo-client/pull/11764) [`f046aa9`](https://github.com/apollographql/apollo-client/commit/f046aa9fc24ac197a797045d280811a3bbe05806) Thanks [@alessbell](https://github.com/alessbell)! - Rename `createProxiedSchema` to `createTestSchema` and `createMockFetch` to `createSchemaFetch`.
+
+- [#11777](https://github.com/apollographql/apollo-client/pull/11777) [`5dfc79f`](https://github.com/apollographql/apollo-client/commit/5dfc79fa6d974362f38361f7dffbe984a9546377) Thanks [@alessbell](https://github.com/alessbell)! - Call `createMockSchema` inside `createTestSchema`.
+
+- [#11774](https://github.com/apollographql/apollo-client/pull/11774) [`2583488`](https://github.com/apollographql/apollo-client/commit/2583488677912cb4500e5fb9e3f91b5c113c4cdb) Thanks [@alessbell](https://github.com/alessbell)! - Add ability to set min and max delay in `createSchemaFetch`
+
+- [#11605](https://github.com/apollographql/apollo-client/pull/11605) [`e2dd4c9`](https://github.com/apollographql/apollo-client/commit/e2dd4c95290cea604b548cc446826d89aafe8e11) Thanks [@alessbell](https://github.com/alessbell)! - Adds proxiedSchema and createMockSchema testing utilities
+
+- [#11465](https://github.com/apollographql/apollo-client/pull/11465) [`7623da7`](https://github.com/apollographql/apollo-client/commit/7623da7720855b0c19e13ff9124679f426a39725) Thanks [@alessbell](https://github.com/alessbell)! - Add `watchFragment` method to the cache and expose it on ApolloClient, refactor `useFragment` using `watchFragment`.
+
+- [#11743](https://github.com/apollographql/apollo-client/pull/11743) [`78891f9`](https://github.com/apollographql/apollo-client/commit/78891f9ec81c0b7a7e010f5550a91965fa33a958) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove alpha designation for `queryRef.toPromise()` to stabilize the API.
+
+- [#11743](https://github.com/apollographql/apollo-client/pull/11743) [`78891f9`](https://github.com/apollographql/apollo-client/commit/78891f9ec81c0b7a7e010f5550a91965fa33a958) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove alpha designation for `createQueryPreloader` to stabilize the API.
+
+- [#11783](https://github.com/apollographql/apollo-client/pull/11783) [`440563a`](https://github.com/apollographql/apollo-client/commit/440563ab2c47efcb9c7d08f52531ade33d753037) Thanks [@alessbell](https://github.com/alessbell)! - Moves new testing utilities to their own entrypoint, `testing/experimental`
+
+### Patch Changes
+
+- [#11757](https://github.com/apollographql/apollo-client/pull/11757) [`9825295`](https://github.com/apollographql/apollo-client/commit/982529530893f66a1d236f0fff53862e513fc9a8) Thanks [@phryneas](https://github.com/phryneas)! - Adjust `useReadQuery` wrapper logic to work with transported objects.
+
+- [#11771](https://github.com/apollographql/apollo-client/pull/11771) [`e72cbba`](https://github.com/apollographql/apollo-client/commit/e72cbba07e5caa6d75b44ca8c766846e855a6c93) Thanks [@phryneas](https://github.com/phryneas)! - Wrap `useQueryRefHandlers` in `wrapHook`.
+
+- [#11754](https://github.com/apollographql/apollo-client/pull/11754) [`80d2ba5`](https://github.com/apollographql/apollo-client/commit/80d2ba579fe6d2a2d102d1fe79d7d503f31cd931) Thanks [@alessbell](https://github.com/alessbell)! - Export `WatchFragmentOptions` and `WatchFragmentResult` from main entrypoint and fix bug where `this` wasn't bound to the `watchFragment` method on `ApolloClient`.
+
+## 3.10.0-rc.1
+
+### Minor Changes
+
+- [#11760](https://github.com/apollographql/apollo-client/pull/11760) [`acd1982`](https://github.com/apollographql/apollo-client/commit/acd1982a59ed66fc44fa9e70b08a31c69dac35a6) Thanks [@alessbell](https://github.com/alessbell)! - `createTestSchema` now uses graphql-tools `mergeResolvers` to merge resolvers instead of a shallow merge.
+
+- [#11764](https://github.com/apollographql/apollo-client/pull/11764) [`f046aa9`](https://github.com/apollographql/apollo-client/commit/f046aa9fc24ac197a797045d280811a3bbe05806) Thanks [@alessbell](https://github.com/alessbell)! - Rename `createProxiedSchema` to `createTestSchema` and `createMockFetch` to `createSchemaFetch`.
+
+- [#11777](https://github.com/apollographql/apollo-client/pull/11777) [`5dfc79f`](https://github.com/apollographql/apollo-client/commit/5dfc79fa6d974362f38361f7dffbe984a9546377) Thanks [@alessbell](https://github.com/alessbell)! - Call `createMockSchema` inside `createTestSchema`.
+
+- [#11774](https://github.com/apollographql/apollo-client/pull/11774) [`2583488`](https://github.com/apollographql/apollo-client/commit/2583488677912cb4500e5fb9e3f91b5c113c4cdb) Thanks [@alessbell](https://github.com/alessbell)! - Add ability to set min and max delay in `createSchemaFetch`
+
+- [#11783](https://github.com/apollographql/apollo-client/pull/11783) [`440563a`](https://github.com/apollographql/apollo-client/commit/440563ab2c47efcb9c7d08f52531ade33d753037) Thanks [@alessbell](https://github.com/alessbell)! - Moves new testing utilities to their own entrypoint, `testing/experimental`
+
+### Patch Changes
+
+- [#11757](https://github.com/apollographql/apollo-client/pull/11757) [`9825295`](https://github.com/apollographql/apollo-client/commit/982529530893f66a1d236f0fff53862e513fc9a8) Thanks [@phryneas](https://github.com/phryneas)! - Adjust `useReadQuery` wrapper logic to work with transported objects.
+
+- [#11771](https://github.com/apollographql/apollo-client/pull/11771) [`e72cbba`](https://github.com/apollographql/apollo-client/commit/e72cbba07e5caa6d75b44ca8c766846e855a6c93) Thanks [@phryneas](https://github.com/phryneas)! - Wrap `useQueryRefHandlers` in `wrapHook`.
+
+- [#11754](https://github.com/apollographql/apollo-client/pull/11754) [`80d2ba5`](https://github.com/apollographql/apollo-client/commit/80d2ba579fe6d2a2d102d1fe79d7d503f31cd931) Thanks [@alessbell](https://github.com/alessbell)! - Export `WatchFragmentOptions` and `WatchFragmentResult` from main entrypoint and fix bug where `this` wasn't bound to the `watchFragment` method on `ApolloClient`.
+
+## 3.10.0-rc.0
+
+### Minor Changes
+
+- [#11605](https://github.com/apollographql/apollo-client/pull/11605) [`e2dd4c9`](https://github.com/apollographql/apollo-client/commit/e2dd4c95290cea604b548cc446826d89aafe8e11) Thanks [@alessbell](https://github.com/alessbell)! - Adds `createMockFetch` utility for integration testing that includes the link chain
+
+- [#11605](https://github.com/apollographql/apollo-client/pull/11605) [`e2dd4c9`](https://github.com/apollographql/apollo-client/commit/e2dd4c95290cea604b548cc446826d89aafe8e11) Thanks [@alessbell](https://github.com/alessbell)! - Adds proxiedSchema and createMockSchema testing utilities
+
+- [#11743](https://github.com/apollographql/apollo-client/pull/11743) [`78891f9`](https://github.com/apollographql/apollo-client/commit/78891f9ec81c0b7a7e010f5550a91965fa33a958) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove alpha designation for `queryRef.toPromise()` to stabilize the API.
+
+- [#11743](https://github.com/apollographql/apollo-client/pull/11743) [`78891f9`](https://github.com/apollographql/apollo-client/commit/78891f9ec81c0b7a7e010f5550a91965fa33a958) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove alpha designation for `createQueryPreloader` to stabilize the API.
+
+## 3.10.0-alpha.0
+
+### Minor Changes
+
+- [#11465](https://github.com/apollographql/apollo-client/pull/11465) [`7623da7`](https://github.com/apollographql/apollo-client/commit/7623da7720855b0c19e13ff9124679f426a39725) Thanks [@alessbell](https://github.com/alessbell)! - Add `watchFragment` method to the cache and expose it on ApolloClient, refactor `useFragment` using `watchFragment`.
+
 ## 3.9.11
 
 ### Patch Changes

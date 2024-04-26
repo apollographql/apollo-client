@@ -76,7 +76,14 @@ export interface Operation {
   variables: Record<string, any>;
   operationName: string;
   extensions: Record<string, any>;
-  setContext: (context: DefaultContext) => DefaultContext;
+  setContext: {
+    (context: Partial<DefaultContext>): void;
+    (
+      updateContext: (
+        previousContext: DefaultContext
+      ) => Partial<DefaultContext>
+    ): void;
+  };
   getContext: () => DefaultContext;
 }
 

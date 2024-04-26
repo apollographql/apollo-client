@@ -24,6 +24,7 @@
 !/docs/source/development-testing
 /docs/source/development-testing/**
 !/docs/source/development-testing/reducing-bundle-size.mdx
+!/docs/source/development-testing/schema-driven-testing.mdx
 
 !docs/shared
 /docs/shared/**

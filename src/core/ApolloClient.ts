@@ -128,6 +128,10 @@ export interface ApolloClientOptions<TCacheShape> {
 // solution is to reexport mergeOptions where it was previously declared (here).
 import { mergeOptions } from "../utilities/index.js";
 import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
+import type {
+  WatchFragmentOptions,
+  WatchFragmentResult,
+} from "../cache/core/cache.js";
 export { mergeOptions };
 
 /**
@@ -235,6 +239,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.watchQuery = this.watchQuery.bind(this);
     this.query = this.query.bind(this);
     this.mutate = this.mutate.bind(this);
+    this.watchFragment = this.watchFragment.bind(this);
     this.resetStore = this.resetStore.bind(this);
     this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
@@ -355,7 +360,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * This watches the cache store of the query according to the options specified and
    * returns an `ObservableQuery`. We can subscribe to this `ObservableQuery` and
-   * receive updated results through a GraphQL observer when the cache store changes.
+   * receive updated results through an observer when the cache store changes.
    *
    * Note that this method is not an implementation of GraphQL subscriptions. Rather,
    * it uses Apollo's store in order to reactively deliver updates to your query results.
@@ -472,6 +477,32 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     optimistic: boolean = false
   ): T | null {
     return this.cache.readQuery<T, TVariables>(options, optimistic);
+  }
+
+  /**
+   * Watches the cache store of the fragment according to the options specified
+   * and returns an `Observable`. We can subscribe to this
+   * `Observable` and receive updated results through an
+   * observer when the cache store changes.
+   *
+   * You must pass in a GraphQL document with a single fragment or a document
+   * with multiple fragments that represent what you are reading. If you pass
+   * in a document with multiple fragments then you must also specify a
+   * `fragmentName`.
+   *
+   * @since 3.10.0
+   * @param options - An object of type `WatchFragmentOptions` that allows
+   * the cache to identify the fragment and optionally specify whether to react
+   * to optimistic updates.
+   */
+
+  public watchFragment<
+    TFragmentData = unknown,
+    TVariables = OperationVariables,
+  >(
+    options: WatchFragmentOptions<TFragmentData, TVariables>
+  ): Observable<WatchFragmentResult<TFragmentData>> {
+    return this.cache.watchFragment<TFragmentData, TVariables>(options);
   }
 
   /**

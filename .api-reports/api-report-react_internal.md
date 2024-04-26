@@ -78,6 +78,10 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     updateQuery<TData = any, TVariables = any>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: TData | null) => TData | null | void): TData | null;
     // (undocumented)
     abstract watch<TData = any, TVariables = any>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
+    // Warning: (ae-forgotten-export) The symbol "OperationVariables" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "WatchFragmentOptions" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "WatchFragmentResult" needs to be exported by the entry point index.d.ts
+    watchFragment<TData = any, TVars = OperationVariables>(options: WatchFragmentOptions<TData, TVars>): Observable<WatchFragmentResult<TData>>;
     // Warning: (ae-forgotten-export) The symbol "Reference" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -154,7 +158,7 @@ class ApolloClient<TCacheShape> implements DataProxy {
     readonly typeDefs: ApolloClientOptions<TCacheShape>["typeDefs"];
     // (undocumented)
     version: string;
-    // Warning: (ae-forgotten-export) The symbol "OperationVariables" needs to be exported by the entry point index.d.ts
+    watchFragment<TFragmentData = unknown, TVariables = OperationVariables>(options: WatchFragmentOptions<TFragmentData, TVariables>): Observable<WatchFragmentResult<TFragmentData>>;
     // Warning: (ae-forgotten-export) The symbol "WatchQueryOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "ObservableQuery" needs to be exported by the entry point index.d.ts
     watchQuery<T = any, TVariables extends OperationVariables = OperationVariables>(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables>;
@@ -1250,7 +1254,10 @@ interface Operation {
     // (undocumented)
     query: DocumentNode;
     // (undocumented)
-    setContext: (context: DefaultContext) => DefaultContext;
+    setContext: {
+        (context: Partial<DefaultContext>): void;
+        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
+    };
     // (undocumented)
     variables: Record<string, any>;
 }
@@ -1514,7 +1521,6 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
     [PROMISE_SYMBOL]: QueryRefPromise<TData>;
     // @internal (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-    // @alpha
     toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
 
@@ -1933,6 +1939,17 @@ type UseFragmentResult<TData> = {
 // @public
 function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>): QueryResult<TData, TVariables>;
 
+// Warning: (ae-forgotten-export) The symbol "UseQueryRefHandlersResult" needs to be exported by the entry point index.d.ts
+//
+// @public
+function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryReference<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;
+
+// @public (undocumented)
+interface UseQueryRefHandlersResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    refetch: RefetchFunction<TData, TVariables>;
+}
+
 // Warning: (ae-forgotten-export) The symbol "UseReadQueryResult" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -2009,6 +2026,28 @@ interface UseSuspenseQueryResult<TData = unknown, TVariables extends OperationVa
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
+// @public
+interface WatchFragmentOptions<TData, TVars> {
+    // @deprecated (undocumented)
+    canonizeResults?: boolean;
+    fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+    fragmentName?: string;
+    from: StoreObject | Reference | string;
+    optimistic?: boolean;
+    variables?: TVars;
+}
+
+// @public
+type WatchFragmentResult<TData> = {
+    data: TData;
+    complete: true;
+    missing?: never;
+} | {
+    data: DeepPartial<TData>;
+    complete: false;
+    missing: MissingTree;
+};
+
 // @public (undocumented)
 type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
@@ -2031,6 +2070,10 @@ interface WrappableHooks {
     //
     // (undocumented)
     useQuery: typeof useQuery;
+    // Warning: (ae-forgotten-export) The symbol "useQueryRefHandlers" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    useQueryRefHandlers: typeof useQueryRefHandlers;
     // Warning: (ae-forgotten-export) The symbol "useReadQuery" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

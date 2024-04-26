@@ -1,3 +1,259 @@
 ---
 title: Setting up Apollo Client with a custom "streaming SSR" server
 ---
+
+> This page covers setting up Apollo Client for usage with `renderToPipeableStream` or `renderToReadableStream` in a custom "streaming SSR" server.
+> If you use a framework like Next.js or Redwood.js, these instructions will not apply to your situation.
+> If you are using Next.js, you can follow the [Next.js guide](/docs/nextjs) instead.
+> Redwood is preconfigured to support Apollo Client in their latest experimental releases with RSC support.
+
+## Why you need a specific setup for Apollo Client with streaming SSR.
+
+In a setup with streaming SSR, your server will send the HTML response in chunks as it is being generated.
+That means your browser might already be hydrating components - including your `ApolloClient` and `InMemoryCache` instances, while the server is still making GraphQL requests and rendering contents.
+Apollo Client needs to be set up with a specific transport mechanism that fulfills the following requirements:
+
+- When a query is executed on the SSR server, the same query should be simulated as "in flight" in the Browser so that components rendering in the Browser will not trigger the same query argsToArgsConfig.
+- When a query receives data on the SSR server, that data should be sent to the browser to hydrate the cache and resolve that simulated "in flight" query.
+- When a query receives an error on the SSR server, that error should be signaled to the browser as soon as possible so the browser can retry the query before the component renders. (Error details should not be transported from SSR to the Browser to prevent any potential "server-only" secrets from leaking to the Browser.)
+- When a hook is rendered on the server, it has to be ensured that the hydration render in the Browser sees the exact same data the server saw to prevent a hydration mismatch.
+
+As this is a complex setup, Apollo Client provides the `@apollo/client-react-streaming` package to help you set up Apollo Client in a streaming SSR environment. This functionality is not included in the main `@apollo/client` yet - we are still waiting for React to add some APIs that will make a part of this package obsolete and setup a lot simpler.
+
+## Setting up Apollo Client with a custom "streaming SSR" server - with the example of a Vite.js server
+
+This guide assumes you already have a working Vite setup with `renderToReadableStream` or `renderToPipeableStream` in place.
+Unfortunately, at the time of writing, there is no official template for Vite with streaming SSR available, so the following section is based off of [letientai299/vite-react-ssr-typescript](https://github.com/letientai299/vite-react-ssr-typescript/tree/6b0b98a2947e1b2d8bbfb610da1e53e474395fe2), which is a variation of the [official Vite React SSR template](https://github.com/bluwy/create-vite-extra/tree/master/template-ssr-react) with streaming SSR support.
+You can also find a slightly different variant with a full setup in [the Apollo Client integration tests](https://github.com/apollographql/apollo-client-nextjs/tree/main/integration-test/vite-streaming).
+
+### 1. Install the necessary package
+
+As explained above, you will need the `@apollo/client-react-streaming` package, so run the following command to install it:
+
+```bash
+npm install @apollo/client-react-streaming @apollo/client
+```
+
+### 2. Create a `WrappedApolloProvider`
+
+Create a file called `Transport.tsx` in your `src` folder with the following content:
+
+```tsx title="src/Transport.tsx"
+import { WrapApolloProvider } from "@apollo/client-react-streaming";
+import { buildManualDataTransport } from "@apollo/client-react-streaming/manual-transport";
+import * as React from "react";
+
+const InjectionContext = React.createContext<
+  (callback: () => React.ReactNode) => void
+>(() => {});
+
+export const InjectionContextProvider = InjectionContext.Provider;
+
+export const WrappedApolloProvider = WrapApolloProvider(
+  buildManualDataTransport({
+    useInsertHtml() {
+      return React.useContext(InjectionContext);
+    },
+  })
+);
+```
+
+Here, you combined a few building blocks:
+
+- `buildManualDataTransport` this creates a "manual data transport". In the future, there might be other kinds of data transport depending on your setup and React version.
+- `WrapApolloProvider` creates a version of an `ApolloProvider` component that is optimized for streaming SSR for a data transport of your choice. It has a different signature in that it doesn't accept `client` prop, but a `makeClient` prop.
+- `InjectionContext` is created so you can pass in a custom `injectIntoStream` method when rendering your app on the server.
+
+### 3. Update your `Html.tsx` file to use `InjectionContextProvider`
+
+```diff title="src/Html.tsx"
++import { InjectionContextProvider } from "./Transport";
+
+ interface HtmlProps {
+   children: ReactNode;
++  injectIntoStream: (callback: () => React.ReactNode) => void;
+ }
+
+-function Html({ children }: HtmlProps) {
++function Html({ children, injectIntoStream }: HtmlProps) {
+
+// ...
+
+       <body>
++        <InjectionContextProvider value={injectIntoStream}>
+           <div id="root">{children}</div>
++        </InjectionContextProvider>
+       </body>
+     </html>
+   );
+```
+
+### 4. Update your `entry-server.tsx` to enable injecting data into the React Stream
+
+```diff
+ import type { Request, Response } from "express";
+ import App from "./src/App";
+ import Html from "./src/Html";
++import { Writable } from "node:stream";
++import {
++  createInjectionTransformStream,
++  pipeReaderToResponse,
++} from "@apollo/client-react-streaming/stream-utils";
+
+ export function render(req: Request, res: Response, bootstrap: string) {
++  const { transformStream, injectIntoStream } =
++    createInjectionTransformStream();
+   const { pipe } = ReactDOMServer.renderToPipeableStream(
+-    <Html>
++    <Html injectIntoStream={injectIntoStream}>
+       <App />
+     </Html>,
+     {
+       onShellReady() {
+         res.statusCode = 200;
+         res.setHeader("content-type", "text/html");
+-        pipe(res);
++        pipeReaderToResponse(transformStream.readable.getReader(), res);
++        pipe(Writable.fromWeb(transformStream.writable));
+       },
+       bootstrapModules: [bootstrap],
+     }
+```
+
+Alternatively, if you are using `renderToReadableStream`, your new setup might look like this:
+
+```js
+const reactStream = await renderToReadableStream(
+  <Html injectIntoStream={injectIntoStream}>
+    <App />
+  </Html>,
+  {
+    /* ...options... */
+  }
+);
+
+await pipeReaderToResponse(
+  reactStream.pipeThrough(transformStream).getReader(),
+  res
+);
+```
+
+The important parts here are:
+
+- `createInjectionTransformStream` creates a `transformStream` and a `injectIntoStream` function.
+- You forward the `injectIntoStream` function into your `Html` component so that you can use it to inject data into the stream.
+- Instead of piping the React stream directly into the Response, you pipe it into the `transformStream` and then pipe the transformed stream into the Response - this varies depending on the streaming API you are using.
+
+### 5. Create a `makeClient` function
+
+This is very similar to a typical Apollo Client setup, with the exception of being wrapped in a method. This "wrapping" is necessary so during SSR every client instance is unique and doesn't share any state between requests.
+
+Create a file called `client.ts` in your `src` folder with the following content:
+
+```ts title="src/client.ts"
+import { ApolloClient, InMemoryCache } from "@apollo/client-react-streaming";
+import { HttpLink } from "@apollo/client";
+
+export const makeClient = () => {
+  const link = new HttpLink({
+    uri: "https://flyby-router-demo.herokuapp.com/'",
+  });
+  return new ApolloClient({
+    link,
+    cache: new InMemoryCache(),
+  });
+};
+```
+
+Important bits here :
+
+- `ApolloClient` and `InMemoryCache` are imported from `@apollo/client-react-streaming` instead of `@apollo/client`.
+- instead of exporting a `client` variable, you export a `makeClient` function that creates a new client instance every time it is called.
+
+### 6. Update your `App.tsx` to use `WrappedApolloProvider` and `makeClient`
+
+```diff
+ import "./App.css";
++import { WrappedApolloProvider } from "./Transport";
++import { makeClient } from "./client";
+
+ function App() {
+   return (
++    <WrappedApolloProvider makeClient={makeClient}>
+       <div className="App">
+       // ...
+       </div>
++    </WrappedApolloProvider>
+   );
+ }
+```
+
+### 7. Start using suspense-enabled hooks in your application
+
+At this point, you're all set.
+
+You can now use the suspense-enabled hooks `useSuspenseQuery` and `useBackgroundQuery`/`useReadQuery` in your application, and their data will be streamed from the server to the browser as it comes in.
+
+Give it a try - create a component that uses `useSuspenseQuery`:
+
+```ts title="src/DisplayLocations.js"
+import { gql, useSuspenseQuery } from "@apollo/client";
+import type { TypedDocumentNode } from "@apollo/client";
+
+const GET_LOCATIONS: TypedDocumentNode<{
+  locations: Array<{
+    id: string;
+    name: string;
+    description: string;
+    photo: string;
+  }>;
+}> = gql`
+  query GetLocations {
+    locations {
+      id
+      name
+      description
+      photo
+    }
+  }
+`;
+
+export function DisplayLocations() {
+  const { data } = useSuspenseQuery(GET_LOCATIONS);
+  console.log(data);
+  return data.locations.map(({ id, name, description, photo }) => (
+    <div key={id}>
+      <h3>{name}</h3>
+      <img width="400" height="250" alt="location-reference" src={`${photo}`} />
+      <br />
+      <b>About this location:</b>
+      <p>{description}</p>
+      <br />
+    </div>
+  ));
+}
+```
+
+and hook it up:
+
+```diff title="src/App.tsx"
+-import { useState } from "react";
++import { Suspense, useState } from "react";
++import { DisplayLocations } from "./DisplayLocations";
+
+// ...
+
+         <h1>Vite + React + TS + SSR</h1>
+         <Counter />
++        <Suspense fallback="loading">
++          <DisplayLocations />
++        </Suspense>
+         <p className="read-the-docs">
+```
+
+If you open this page in your browser, you should see a "loading" message, which will be replaced by the actual data as soon as it arrives from the server.
+
+Take a look at your Devtools' Network tab: you will notice that there is no GraphQL request happening in the browser.
+The request was made during SSR, and the result has been streamed over.
+
+After hydration, your page is fully working "in the browser", so any future requests after the initial render will be made from the Browser.

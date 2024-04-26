@@ -2,66 +2,95 @@ import gql from "graphql-tag";
 import { MockLink, MockedResponse } from "../mockLink";
 import { execute } from "../../../../link/core/execute";
 
-describe("MockedResponse.newData", () => {
-  const setup = () => {
-    const weaklyTypedMockResponse: MockedResponse = {
-      request: {
-        query: gql`
-          query A {
-            a
-          }
-        `,
-      },
-    };
+describe("MockedResponse", () => {
+  test("infers variable types correctly", () => {
+    function setup<M extends MockedResponse[]>(props: { mocks: M }) {
+      const { mocks } = props;
 
-    const stronglyTypedMockResponse: MockedResponse<
-      { a: string },
-      { input: string }
-    > = {
-      request: {
-        query: gql`
-          query A {
-            a
-          }
-        `,
-      },
-    };
+      return {
+        mocks,
+      };
+    }
 
-    return {
-      weaklyTypedMockResponse,
-      stronglyTypedMockResponse,
-    };
-  };
-
-  test("returned 'data' can be any object with untyped response", () => {
-    const { weaklyTypedMockResponse } = setup();
-
-    weaklyTypedMockResponse.newData = ({ fake: { faker } }) => ({
-      data: {
-        pretend: faker,
-      },
+    setup<[MockedResponse<{ a: string }, { a: string }>]>({
+      mocks: [
+        {
+          request: {
+            query: gql`
+              query A {
+                a
+              }
+            `,
+            variables: {
+              a: "a",
+            },
+          },
+        },
+      ],
     });
   });
 
-  test("can't return output that doesn't match TData", () => {
-    const { stronglyTypedMockResponse } = setup();
+  describe("newData", () => {
+    const setup = () => {
+      const weaklyTypedMockResponse: MockedResponse = {
+        request: {
+          query: gql`
+            query A {
+              a
+            }
+          `,
+        },
+      };
 
-    // @ts-expect-error return type does not match `TData`
-    stronglyTypedMockResponse.newData = () => ({
-      data: {
-        a: 123,
-      },
+      const stronglyTypedMockResponse: MockedResponse<
+        { a: string },
+        { input: string }
+      > = {
+        request: {
+          query: gql`
+            query A {
+              a
+            }
+          `,
+        },
+      };
+
+      return {
+        weaklyTypedMockResponse,
+        stronglyTypedMockResponse,
+      };
+    };
+
+    test("returned 'data' can be any object with untyped response", () => {
+      const { weaklyTypedMockResponse } = setup();
+
+      weaklyTypedMockResponse.newData = ({ fake: { faker } }) => ({
+        data: {
+          pretend: faker,
+        },
+      });
     });
-  });
 
-  test("can't use input variables that don't exist in TVariables", () => {
-    const { stronglyTypedMockResponse } = setup();
+    test("can't return output that doesn't match TData", () => {
+      const { stronglyTypedMockResponse } = setup();
 
-    // @ts-expect-error unknown variables
-    stronglyTypedMockResponse.newData = ({ fake: { faker } }) => ({
-      data: {
-        a: faker,
-      },
+      // @ts-expect-error return type does not match `TData`
+      stronglyTypedMockResponse.newData = () => ({
+        data: {
+          a: 123,
+        },
+      });
+    });
+
+    test("can't use input variables that don't exist in TVariables", () => {
+      const { stronglyTypedMockResponse } = setup();
+
+      // @ts-expect-error unknown variables
+      stronglyTypedMockResponse.newData = ({ fake: { faker } }) => ({
+        data: {
+          a: faker,
+        },
+      });
     });
   });
 });

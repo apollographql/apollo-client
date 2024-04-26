@@ -121,7 +121,7 @@ workflows:
       - Lint
       - BuildTarball
       - IntegrationTests:
-          name: Integration Test << matrix.framework >>
+          name: Integration Test << matrix.framework >> with React << matrix.react >>
           requires:
             - BuildTarball
           matrix:

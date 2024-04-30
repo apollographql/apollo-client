@@ -959,11 +959,17 @@ class InternalQueryReference<TData = unknown> {
     // (undocumented)
     softRetain(): () => void;
     // (undocumented)
+    strictModeFixAddToSuspenseCache(): void;
+    // (undocumented)
     get watchQueryOptions(): WatchQueryOptions<OperationVariables, TData>;
 }
 
 // @public (undocumented)
 interface InternalQueryReferenceOptions {
+    // Warning: (ae-forgotten-export) The symbol "InternalQueryReference" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    addToSuspenseCache?: (queryRef: InternalQueryReference<any>) => void;
     // (undocumented)
     autoDisposeTimeoutMs?: number;
     // (undocumented)
@@ -1756,8 +1762,6 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
 export interface QueryReference<TData = unknown, TVariables = unknown> {
     // @internal (undocumented)
     [PROMISE_SYMBOL]: QueryRefPromise<TData>;
-    // Warning: (ae-forgotten-export) The symbol "InternalQueryReference" needs to be exported by the entry point index.d.ts
-    //
     // @internal (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
     toPromise(): Promise<QueryReference<TData, TVariables>>;

@@ -89,6 +89,7 @@ function _useReadQuery<TData>(
     // handle strict mode where this useEffect will be run twice resulting in a
     // disposed queryRef before the next render.
     if (internalQueryRef.disposed) {
+      internalQueryRef.strictModeFixAddToSuspenseCache();
       internalQueryRef.reinitialize();
     }
 

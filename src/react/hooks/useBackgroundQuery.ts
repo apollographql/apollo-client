@@ -247,7 +247,7 @@ function _useBackgroundQuery<
   // useReadQuery will ensure the same queryRef is maintained.
   React.useEffect(() => {
     if (queryRef.disposed) {
-      suspenseCache.add(cacheKey, queryRef);
+      queryRef.strictModeFixAddToSuspenseCache();
     }
     // Omitting the deps is intentional. This avoids stale closures and the
     // conditional ensures we aren't running the logic on each render.

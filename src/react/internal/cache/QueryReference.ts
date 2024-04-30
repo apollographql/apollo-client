@@ -80,6 +80,7 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
 
 interface InternalQueryReferenceOptions {
   onDispose?: () => void;
+  addToSuspenseCache?: (queryRef: InternalQueryReference<any>) => void;
   autoDisposeTimeoutMs?: number;
 }
 
@@ -147,6 +148,9 @@ export class InternalQueryReference<TData = unknown> {
   public result!: ApolloQueryResult<TData>;
   public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
+  private readonly addToSuspenseCache?: (
+    queryRef: InternalQueryReference<TData>
+  ) => void;
 
   public promise!: QueryRefPromise<TData>;
 
@@ -168,6 +172,7 @@ export class InternalQueryReference<TData = unknown> {
     this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
+    this.addToSuspenseCache = options.addToSuspenseCache;
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;
@@ -201,6 +206,10 @@ export class InternalQueryReference<TData = unknown> {
 
   get watchQueryOptions() {
     return this.observable.options;
+  }
+
+  strictModeFixAddToSuspenseCache() {
+    this.addToSuspenseCache?.(this);
   }
 
   reinitialize() {

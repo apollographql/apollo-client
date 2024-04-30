@@ -39,6 +39,10 @@ export class SuspenseCache {
     if (!ref.current) {
       ref.current = new InternalQueryReference(createObservable(), {
         autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
+        addToSuspenseCache: (queryRef) => {
+          const ref = this.queryRefs.lookupArray(cacheKey);
+          ref.current = queryRef;
+        },
         onDispose: () => {
           delete ref.current;
         },
@@ -46,10 +50,5 @@ export class SuspenseCache {
     }
 
     return ref.current;
-  }
-
-  add(cacheKey: CacheKey, queryRef: InternalQueryReference<unknown>) {
-    const ref = this.queryRefs.lookupArray(cacheKey);
-    ref.current = queryRef;
   }
 }

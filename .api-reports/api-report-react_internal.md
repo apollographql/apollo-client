@@ -323,10 +323,10 @@ interface BackgroundQueryHookOptions<TData = unknown, TVariables extends Operati
 }
 
 // Warning: (ae-forgotten-export) The symbol "BackgroundQueryHookOptions" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "NoInfer" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "LegacyNoInfer" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type BackgroundQueryHookOptionsNoInfer<TData, TVariables extends OperationVariables> = BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+type BackgroundQueryHookOptionsNoInfer<TData, TVariables extends OperationVariables> = BackgroundQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>>;
 
 // Warning: (ae-forgotten-export) The symbol "SharedWatchQueryOptions" needs to be exported by the entry point index.d.ts
 //
@@ -949,6 +949,9 @@ function isReference(obj: any): obj is Reference;
 // @public (undocumented)
 type IsStrictlyAny<T> = UnionToIntersection<UnionForAny<T>> extends never ? true : false;
 
+// @public @deprecated
+type LegacyNoInfer<T> = [T][T extends any ? 0 : never];
+
 // @public (undocumented)
 type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
@@ -1147,9 +1150,6 @@ type NextLink = (operation: Operation) => Observable<FetchResult>;
 
 // @public (undocumented)
 type NextResultListener = (method: "next" | "error" | "complete", arg?: any) => any;
-
-// @public
-type NoInfer<T> = [T][T extends any ? 0 : never];
 
 // @public (undocumented)
 class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> extends Observable<ApolloQueryResult<TData>> {
@@ -1915,7 +1915,7 @@ type UseBackgroundQueryResult<TData = unknown, TVariables extends OperationVaria
 function useFragment<TData = any, TVars = OperationVariables>(options: UseFragmentOptions<TData, TVars>): UseFragmentResult<TData>;
 
 // @public (undocumented)
-interface UseFragmentOptions<TData, TVars> extends Omit<Cache_2.DiffOptions<NoInfer<TData>, NoInfer<TVars>>, "id" | "query" | "optimistic" | "previousResult" | "returnPartialData">, Omit<Cache_2.ReadFragmentOptions<TData, TVars>, "id" | "variables" | "returnPartialData"> {
+interface UseFragmentOptions<TData, TVars> extends Omit<Cache_2.DiffOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVars>>, "id" | "query" | "optimistic" | "previousResult" | "returnPartialData">, Omit<Cache_2.ReadFragmentOptions<TData, TVars>, "id" | "variables" | "returnPartialData"> {
     client?: ApolloClient<any>;
     // (undocumented)
     from: StoreObject | Reference | string;
@@ -1937,7 +1937,7 @@ type UseFragmentResult<TData> = {
 // Warning: (ae-forgotten-export) The symbol "QueryResult" needs to be exported by the entry point index.d.ts
 //
 // @public
-function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>): QueryResult<TData, TVariables>;
+function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>>): QueryResult<TData, TVariables>;
 
 // Warning: (ae-forgotten-export) The symbol "UseQueryRefHandlersResult" needs to be exported by the entry point index.d.ts
 //
@@ -1966,45 +1966,45 @@ interface UseReadQueryResult<TData = unknown> {
 // Warning: (ae-forgotten-export) The symbol "UseSuspenseQueryResult" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-function useSuspenseQuery<TData, TVariables extends OperationVariables, TOptions extends Omit<SuspenseQueryHookOptions<TData>, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & TOptions): UseSuspenseQueryResult<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? TOptions["skip"] extends boolean ? DeepPartial<TData> | undefined : DeepPartial<TData> : TOptions["skip"] extends boolean ? TData | undefined : TData, TVariables>;
+function useSuspenseQuery<TData, TVariables extends OperationVariables, TOptions extends Omit<SuspenseQueryHookOptions<TData>, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SuspenseQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>> & TOptions): UseSuspenseQueryResult<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? TOptions["skip"] extends boolean ? DeepPartial<TData> | undefined : DeepPartial<TData> : TOptions["skip"] extends boolean ? TData | undefined : TData, TVariables>;
 
 // @public (undocumented)
-function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>> & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
 }): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
 // @public (undocumented)
-function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>> & {
     errorPolicy: "ignore" | "all";
 }): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
 // @public (undocumented)
-function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>> & {
     skip: boolean;
     returnPartialData: true;
 }): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
 // @public (undocumented)
-function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>> & {
     returnPartialData: true;
 }): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
 
 // @public (undocumented)
-function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>> & {
     skip: boolean;
 }): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
 // @public (undocumented)
-function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>): UseSuspenseQueryResult<TData, TVariables>;
+function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SuspenseQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>>): UseSuspenseQueryResult<TData, TVariables>;
 
 // @public (undocumented)
-function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken | (SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken | (SuspenseQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>> & {
     returnPartialData: true;
 })): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
 // @public (undocumented)
-function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SkipToken | SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>): UseSuspenseQueryResult<TData | undefined, TVariables>;
+function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SkipToken | SuspenseQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>>): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
 // @public (undocumented)
 interface UseSuspenseQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
@@ -2105,8 +2105,8 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(inter
 // src/core/types.ts:203:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:29:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:32:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:33:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

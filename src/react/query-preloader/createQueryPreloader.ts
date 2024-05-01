@@ -15,7 +15,7 @@ import type {
 } from "../../utilities/index.js";
 import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
 import type { QueryReference } from "../internal/index.js";
-import type { NoInfer } from "../index.js";
+import type { LegacyNoInfer } from "../index.js";
 
 type VariablesOption<TVariables extends OperationVariables> =
   [TVariables] extends [never] ?
@@ -62,11 +62,11 @@ type PreloadQueryOptionsArg<
   [options?: PreloadQueryOptions<never> & TOptions]
 : {} extends OnlyRequiredProperties<TVariables> ?
   [
-    options?: PreloadQueryOptions<NoInfer<TVariables>> &
+    options?: PreloadQueryOptions<LegacyNoInfer<TVariables>> &
       Omit<TOptions, "variables">,
   ]
 : [
-    options: PreloadQueryOptions<NoInfer<TVariables>> &
+    options: PreloadQueryOptions<LegacyNoInfer<TVariables>> &
       Omit<TOptions, "variables">,
   ];
 
@@ -104,7 +104,7 @@ export interface PreloadQueryFunction {
     TOptions extends Omit<PreloadQueryOptions, "variables">,
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>, TOptions>
+    ...[options]: PreloadQueryOptionsArg<LegacyNoInfer<TVariables>, TOptions>
   ): QueryReference<
     TOptions["errorPolicy"] extends "ignore" | "all" ?
       TOptions["returnPartialData"] extends true ?
@@ -118,7 +118,7 @@ export interface PreloadQueryFunction {
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions<NoInfer<TVariables>> & {
+    options: PreloadQueryOptions<LegacyNoInfer<TVariables>> & {
       returnPartialData: true;
       errorPolicy: "ignore" | "all";
     }
@@ -127,7 +127,7 @@ export interface PreloadQueryFunction {
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions<NoInfer<TVariables>> & {
+    options: PreloadQueryOptions<LegacyNoInfer<TVariables>> & {
       errorPolicy: "ignore" | "all";
     }
   ): QueryReference<TData | undefined, TVariables>;
@@ -135,7 +135,7 @@ export interface PreloadQueryFunction {
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions<NoInfer<TVariables>> & {
+    options: PreloadQueryOptions<LegacyNoInfer<TVariables>> & {
       returnPartialData: true;
     }
   ): QueryReference<DeepPartial<TData>, TVariables>;
@@ -143,7 +143,7 @@ export interface PreloadQueryFunction {
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>
+    ...[options]: PreloadQueryOptionsArg<LegacyNoInfer<TVariables>>
   ): QueryReference<TData, TVariables>;
 }
 
@@ -173,7 +173,7 @@ export function createQueryPreloader(
     TVariables extends OperationVariables = OperationVariables,
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions<NoInfer<TVariables>> &
+    options: PreloadQueryOptions<LegacyNoInfer<TVariables>> &
       VariablesOption<TVariables> = Object.create(null)
   ): QueryReference<TData, TVariables> {
     const queryRef = new InternalQueryReference(

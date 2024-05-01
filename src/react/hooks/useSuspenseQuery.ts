@@ -18,7 +18,7 @@ import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import type {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
-  NoInfer,
+  LegacyNoInfer,
 } from "../types/types.js";
 import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
 import { getSuspenseCache } from "../internal/index.js";
@@ -68,7 +68,10 @@ export function useSuspenseQuery<
   TOptions extends Omit<SuspenseQueryHookOptions<TData>, "variables">,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
+  options?: SuspenseQueryHookOptions<
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>
+  > &
     TOptions
 ): UseSuspenseQueryResult<
   TOptions["errorPolicy"] extends "ignore" | "all" ?
@@ -89,7 +92,10 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: SuspenseQueryHookOptions<
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>
+  > & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
   }
@@ -100,7 +106,10 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: SuspenseQueryHookOptions<
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>
+  > & {
     errorPolicy: "ignore" | "all";
   }
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
@@ -110,7 +119,10 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: SuspenseQueryHookOptions<
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>
+  > & {
     skip: boolean;
     returnPartialData: true;
   }
@@ -121,7 +133,10 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: SuspenseQueryHookOptions<
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>
+  > & {
     returnPartialData: true;
   }
 ): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
@@ -131,7 +146,10 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: SuspenseQueryHookOptions<
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>
+  > & {
     skip: boolean;
   }
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
@@ -141,7 +159,10 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  options?: SuspenseQueryHookOptions<
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>
+  >
 ): UseSuspenseQueryResult<TData, TVariables>;
 
 export function useSuspenseQuery<
@@ -151,7 +172,10 @@ export function useSuspenseQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
-    | (SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+    | (SuspenseQueryHookOptions<
+        LegacyNoInfer<TData>,
+        LegacyNoInfer<TVariables>
+      > & {
         returnPartialData: true;
       })
 ): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
@@ -163,7 +187,7 @@ export function useSuspenseQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?:
     | SkipToken
-    | SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+    | SuspenseQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>>
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<

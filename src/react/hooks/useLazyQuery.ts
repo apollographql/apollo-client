@@ -8,7 +8,7 @@ import type {
   LazyQueryHookExecOptions,
   LazyQueryHookOptions,
   LazyQueryResultTuple,
-  NoInfer,
+  LegacyNoInfer,
   QueryResult,
 } from "../types/types.js";
 import { useInternalState } from "./useQuery.js";
@@ -65,7 +65,10 @@ export function useLazyQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  options?: LazyQueryHookOptions<
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>
+  >
 ): LazyQueryResultTuple<TData, TVariables> {
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>();

@@ -25,7 +25,7 @@ import type {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
-  NoInfer,
+  LegacyNoInfer,
 } from "../types/types.js";
 
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
@@ -82,8 +82,8 @@ export function useQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>
   > = Object.create(null)
 ): QueryResult<TData, TVariables> {
   return wrapHook(
@@ -98,7 +98,7 @@ function _useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  options: QueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>>
 ) {
   return useInternalState(useApolloClient(options.client), query).useQuery(
     options

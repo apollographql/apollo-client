@@ -6,7 +6,7 @@ import type {
   MutationHookOptions,
   MutationResult,
   MutationTuple,
-  NoInfer,
+  LegacyNoInfer,
 } from "../types/types.js";
 
 import type {
@@ -76,8 +76,8 @@ export function useMutation<
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: MutationHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>,
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>,
     TContext,
     TCache
   >

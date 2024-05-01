@@ -6,7 +6,7 @@ import { equal } from "@wry/equality";
 
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import type {
-  NoInfer,
+  LegacyNoInfer,
   SubscriptionHookOptions,
   SubscriptionResult,
 } from "../types/types.js";
@@ -102,7 +102,10 @@ export function useSubscription<
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  options?: SubscriptionHookOptions<
+    LegacyNoInfer<TData>,
+    LegacyNoInfer<TVariables>
+  >
 ) {
   const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options?.client);

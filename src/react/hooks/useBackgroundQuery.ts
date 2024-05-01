@@ -14,7 +14,10 @@ import {
   wrapQueryRef,
 } from "../internal/index.js";
 import type { CacheKey, QueryReference } from "../internal/index.js";
-import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
+import type {
+  BackgroundQueryHookOptions,
+  LegacyNoInfer,
+} from "../types/types.js";
 import { wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
@@ -33,7 +36,7 @@ export type UseBackgroundQueryResult<
 type BackgroundQueryHookOptionsNoInfer<
   TData,
   TVariables extends OperationVariables,
-> = BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+> = BackgroundQueryHookOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVariables>>;
 
 export function useBackgroundQuery<
   TData,

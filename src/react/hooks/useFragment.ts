@@ -11,13 +11,13 @@ import type {
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
-import type { NoInfer } from "../types/types.js";
+import type { LegacyNoInfer } from "../types/types.js";
 import { useDeepMemo, useLazyRef, wrapHook } from "./internal/index.js";
 import equal from "@wry/equality";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
-      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
+      Cache.DiffOptions<LegacyNoInfer<TData>, LegacyNoInfer<TVars>>,
       "id" | "query" | "optimistic" | "previousResult" | "returnPartialData"
     >,
     Omit<

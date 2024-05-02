@@ -2084,6 +2084,9 @@ const PROMISE_SYMBOL: unique symbol;
 type PromiseWithState<TValue> = PendingPromise<TValue> | FulfilledPromise<TValue> | RejectedPromise<TValue>;
 
 // @public (undocumented)
+const QUERY_REF_BRAND: unique symbol;
+
+// @public (undocumented)
 const QUERY_REFERENCE_SYMBOL: unique symbol;
 
 // @public (undocumented)
@@ -2323,8 +2326,10 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
 export { QueryOptions as PureQueryOptions }
 export { QueryOptions }
 
+// Warning: (ae-forgotten-export) The symbol "QueryReferenceBase" needs to be exported by the entry point index.d.ts
+//
 // @public
-export interface QueryReference<TData = unknown, TVariables = unknown> {
+export interface QueryReference<TData = unknown, TVariables = unknown> extends QueryReferenceBase<TData, TVariables> {
     // @internal (undocumented)
     [PROMISE_SYMBOL]: QueryRefPromise<TData>;
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReference" needs to be exported by the entry point index.d.ts
@@ -2332,6 +2337,12 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
     // @internal (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
     toPromise(): Promise<QueryReference<TData, TVariables>>;
+}
+
+// @public
+interface QueryReferenceBase<TData = unknown, TVariables = unknown> {
+    // @internal (undocumented)
+    [QUERY_REF_BRAND]?(variables: TVariables): TData;
 }
 
 // Warning: (ae-forgotten-export) The symbol "PromiseWithState" needs to be exported by the entry point index.d.ts
@@ -2927,7 +2938,7 @@ export function useMutation<TData = any, TVariables = OperationVariables, TConte
 export function useQuery<TData = any, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>): QueryResult<TData, TVariables>;
 
 // @public
-export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryReference<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;
+export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryReferenceBase<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;
 
 // @public (undocumented)
 export interface UseQueryRefHandlersResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
@@ -2939,7 +2950,7 @@ export interface UseQueryRefHandlersResult<TData = unknown, TVariables extends O
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T;
 
 // @public (undocumented)
-export function useReadQuery<TData>(queryRef: QueryReference<TData>): UseReadQueryResult<TData>;
+export function useReadQuery<TData>(queryRef: QueryReferenceBase<TData>): UseReadQueryResult<TData>;
 
 // @public (undocumented)
 export interface UseReadQueryResult<TData = unknown> {

@@ -4,10 +4,7 @@ import {
   unwrapQueryRef,
   updateWrappedQueryRef,
 } from "../internal/index.js";
-import type {
-  InternalQueryReference,
-  QueryReference,
-} from "../internal/index.js";
+import type { QueryReference, QueryReferenceBase } from "../internal/index.js";
 import { __use, wrapHook } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
@@ -41,16 +38,9 @@ export interface UseReadQueryResult<TData = unknown> {
 }
 
 export function useReadQuery<TData>(
-  queryRef: QueryReference<TData>
+  queryRef: QueryReferenceBase<TData>
 ): UseReadQueryResult<TData> {
-  const unwrapped = unwrapQueryRef(
-    queryRef
-  ) satisfies InternalQueryReference<TData> as /*
-    by all rules of this codebase, this should never be undefined
-    but if `queryRef` is a transported object, it cannot have a
-    `QUERY_REFERENCE_SYMBOL` symbol property, so the call above
-    will return `undefined` and we want that represented in the type
-    */ InternalQueryReference<TData> | undefined;
+  const unwrapped = unwrapQueryRef(queryRef);
 
   return wrapHook(
     "useReadQuery",
@@ -62,7 +52,11 @@ export function useReadQuery<TData>(
       // that ApolloClient will then have the job to recreate a real queryRef from
       // the transported object
     : useApolloClient()
-  )(queryRef);
+  )(
+    // at this point, we're not sure if this isn't a "transported" queryRef object
+    // yet, but the wrapper should turn it into a real queryRef object
+    queryRef as any
+  );
 }
 
 function _useReadQuery<TData>(

@@ -27,13 +27,24 @@ type FetchMoreOptions<TData> = Parameters<
 
 const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 const PROMISE_SYMBOL: unique symbol = Symbol();
+declare const QUERY_REF_BRAND: unique symbol;
+/**
+ * A `QueryReference` is an opaque object returned by `useBackgroundQuery`.
+ * A child component reading the `QueryReference` via `useReadQuery` will
+ * suspend until the promise resolves.
+ */
+export interface QueryReferenceBase<TData = unknown, TVariables = unknown> {
+  /** @internal */
+  [QUERY_REF_BRAND]?(variables: TVariables): TData;
+}
 
 /**
  * A `QueryReference` is an opaque object returned by `useBackgroundQuery`.
  * A child component reading the `QueryReference` via `useReadQuery` will
  * suspend until the promise resolves.
  */
-export interface QueryReference<TData = unknown, TVariables = unknown> {
+export interface QueryReference<TData = unknown, TVariables = unknown>
+  extends QueryReferenceBase<TData, TVariables> {
   /** @internal */
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   /** @internal */
@@ -118,7 +129,13 @@ export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
 
 export function unwrapQueryRef<TData>(
   queryRef: QueryReference<TData>
-): InternalQueryReference<TData> {
+): InternalQueryReference<TData>;
+export function unwrapQueryRef<TData>(
+  queryRef: Partial<QueryReference<TData>>
+): undefined | InternalQueryReference<TData>;
+export function unwrapQueryRef<TData>(
+  queryRef: Partial<QueryReference<TData>>
+) {
   return queryRef[QUERY_REFERENCE_SYMBOL];
 }
 

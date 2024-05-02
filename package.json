@@ -181,7 +181,7 @@
     "ts-morph": "22.0.0",
     "ts-node": "10.9.2",
     "typedoc": "0.25.0",
-    "typescript": "5.4.3",
+    "typescript": "5.4.5",
     "wait-for-observables": "1.0.3",
     "web-streams-polyfill": "4.0.0",
     "whatwg-fetch": "3.6.20"

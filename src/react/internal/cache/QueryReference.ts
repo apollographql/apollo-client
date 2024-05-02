@@ -147,9 +147,6 @@ export class InternalQueryReference<TData = unknown> {
   public result!: ApolloQueryResult<TData>;
   public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
-  private readonly addToSuspenseCache?: (
-    queryRef: InternalQueryReference<TData>
-  ) => void;
 
   public promise!: QueryRefPromise<TData>;
 

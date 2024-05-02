@@ -891,15 +891,11 @@ export class InternalQueryReference<TData = unknown> {
     // (undocumented)
     softRetain(): () => void;
     // (undocumented)
-    strictModeFixAddToSuspenseCache(): void;
-    // (undocumented)
     get watchQueryOptions(): WatchQueryOptions<OperationVariables, TData>;
 }
 
 // @public (undocumented)
 interface InternalQueryReferenceOptions {
-    // (undocumented)
-    addToSuspenseCache?: (queryRef: InternalQueryReference<any>) => void;
     // (undocumented)
     autoDisposeTimeoutMs?: number;
     // (undocumented)
@@ -1740,6 +1736,8 @@ interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
 // @public (undocumented)
 class SuspenseCache {
     constructor(options?: SuspenseCacheOptions);
+    // (undocumented)
+    add(cacheKey: CacheKey, queryRef: InternalQueryReference<unknown>): void;
     // (undocumented)
     getQueryRef<TData = any>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData>;
 }

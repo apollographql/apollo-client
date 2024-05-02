@@ -133,7 +133,6 @@ describe("mockLink", () => {
       query GetTodo($done: Boolean = true, $user: String!) {
         todo(user: $user, done: $done) {
           id
-          title
         }
       }
     `;

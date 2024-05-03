@@ -76,15 +76,13 @@ jobs:
           at: /tmp/workspace
       - run: npm version
       - run:
+          command: npm pkg set "overrides[react]=<< parameters.react >>" "overrides[react-dom]=<< parameters.react >>"
+          working_directory: integration-tests
+      - run:
           command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
           command: npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.framework >>
-          working_directory: integration-tests
-      - run:
-          command: |
-            npm pkg set "overrides[react]=<< parameters.react >>" "overrides[react-dom]=<< parameters.react >>"
-            npm install react@<< parameters.react >> react-dom@<< parameters.react >> --workspace=<< parameters.framework >>
           working_directory: integration-tests
       - run:
           command: npx playwright install-deps

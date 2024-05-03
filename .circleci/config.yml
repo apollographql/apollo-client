@@ -82,7 +82,9 @@ jobs:
           command: npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.framework >>
           working_directory: integration-tests
       - run:
-          command: npm install react@<< parameters.react >> react-dom@<< parameters.react >> --workspace=<< parameters.framework >>
+          command: |
+            npm pkg set "overrides[react]=<< parameters.react >>" "overrides[react-dom]=<< parameters.react >>"
+            npm install react@<< parameters.react >> react-dom@<< parameters.react >> --workspace=<< parameters.framework >>
           working_directory: integration-tests
       - run:
           command: npx playwright install-deps

@@ -83,17 +83,7 @@ function _useReadQuery<TData>(
     updateWrappedQueryRef(queryRef, internalQueryRef.promise);
   }
 
-  React.useEffect(() => {
-    // It may seem odd that we are trying to reinitialize the queryRef even
-    // though we reinitialize in render above, but this is necessary to
-    // handle strict mode where this useEffect will be run twice resulting in a
-    // disposed queryRef before the next render.
-    if (internalQueryRef.disposed) {
-      internalQueryRef.reinitialize();
-    }
-
-    return internalQueryRef.retain();
-  }, [internalQueryRef]);
+  React.useEffect(() => internalQueryRef.retain(), [internalQueryRef]);
 
   const promise = useSyncExternalStore(
     React.useCallback(

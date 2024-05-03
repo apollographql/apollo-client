@@ -2036,6 +2036,83 @@ describe("useQuery Hook", () => {
       requestSpy.mockRestore();
     });
 
+    // https://github.com/apollographql/apollo-client/issues/9431
+    it("should stop polling when component unmounts in strict mode with cache-and-network fetch policy", async () => {
+      const query: TypedDocumentNode<{ hello: string }> = gql`
+        query {
+          hello
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world 1" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "world 2" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "world 3" } },
+        },
+      ];
+
+      const cache = new InMemoryCache();
+
+      const link = new MockLink(mocks);
+      const requestSpy = jest.spyOn(link, "request");
+      const onErrorFn = jest.fn();
+      link.setOnError(onErrorFn);
+
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { pollInterval: 10, fetchPolicy: "cache-and-network" })
+      );
+
+      const { unmount } = render(<ProfiledHook />, {
+        wrapper: ({ children }: any) => (
+          <React.StrictMode>
+            <MockedProvider link={link} cache={cache}>
+              {children}
+            </MockedProvider>
+          </React.StrictMode>
+        ),
+      });
+
+      {
+        const snapshot = await ProfiledHook.takeSnapshot();
+
+        expect(snapshot.loading).toBe(true);
+        expect(snapshot.data).toBeUndefined();
+      }
+
+      {
+        const snapshot = await ProfiledHook.takeSnapshot();
+
+        expect(snapshot.loading).toBe(false);
+        expect(snapshot.data).toEqual({ hello: "world 1" });
+        expect(requestSpy).toHaveBeenCalledTimes(1);
+      }
+
+      await wait(10);
+
+      {
+        const snapshot = await ProfiledHook.takeSnapshot();
+
+        expect(snapshot.loading).toBe(false);
+        expect(snapshot.data).toEqual({ hello: "world 2" });
+        expect(requestSpy).toHaveBeenCalledTimes(2);
+      }
+
+      unmount();
+
+      await expect(ProfiledHook).not.toRerender({ timeout: 50 });
+
+      expect(requestSpy).toHaveBeenCalledTimes(2);
+      expect(onErrorFn).toHaveBeenCalledTimes(0);
+    });
+
     it("should start and stop polling in Strict Mode", async () => {
       const query = gql`
         {

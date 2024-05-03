@@ -2271,7 +2271,9 @@ describe.skip("type tests", () => {
 
     const queryRef = preloadQuery(query);
 
-    expectTypeOf(queryRef).toEqualTypeOf<QueryReference<unknown, unknown>>();
+    expectTypeOf(queryRef).toEqualTypeOf<
+      QueryReference<unknown, OperationVariables>
+    >();
   });
 
   test("returns QueryReference<TData> in default case", () => {
@@ -2387,7 +2389,9 @@ describe.skip("type tests", () => {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { returnPartialData: false });
 
-      expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryReference<SimpleCaseData, OperationVariables>
+      >();
     }
 
     {
@@ -2396,7 +2400,9 @@ describe.skip("type tests", () => {
         returnPartialData: false,
       });
 
-      expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryReference<SimpleCaseData, OperationVariables>
+      >();
     }
   });
 

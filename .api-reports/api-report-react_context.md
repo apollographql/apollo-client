@@ -204,7 +204,7 @@ export interface ApolloConsumerProps {
     // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    children: (client: ApolloClient<object>) => ReactTypes.ReactChild | null;
+    children: (client: ApolloClient<object>) => ReactTypes.ReactNode;
 }
 
 // @public (undocumented)

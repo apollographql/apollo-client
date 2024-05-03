@@ -90,6 +90,9 @@ jobs:
           command: npx playwright install-deps
           working_directory: integration-tests
       - run:
+          command: npx playwright install
+          working_directory: integration-tests
+      - run:
           command: npm run build --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:

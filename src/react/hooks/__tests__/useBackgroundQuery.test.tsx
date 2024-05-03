@@ -536,6 +536,88 @@ it("does not recreate queryRef and execute a network request when rerendering us
   await expect(Profiler).not.toRerender({ timeout: 50 });
 });
 
+// https://github.com/apollographql/apollo-client/issues/11815
+it("does not recreate queryRef or execute a network request when rerendering useBackgroundQuery in strict mode", async () => {
+  const { query } = setupSimpleCase();
+  const user = userEvent.setup();
+  let fetchCount = 0;
+  const client = new ApolloClient({
+    link: new ApolloLink(() => {
+      fetchCount++;
+
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { greeting: "Hello" } });
+          observer.complete();
+        }, 20);
+      });
+    }),
+    cache: new InMemoryCache(),
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      queryRef: null as QueryReference<SimpleCaseData> | null,
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [, setCount] = React.useState(0);
+    // Use a fetchPolicy of no-cache to ensure we can more easily track if
+    // another network request was made
+    const [queryRef] = useBackgroundQuery(query, { fetchPolicy: "no-cache" });
+
+    Profiler.mergeSnapshot({ queryRef });
+
+    return (
+      <>
+        <button onClick={() => setCount((count) => count + 1)}>
+          Increment
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      </>
+    );
+  }
+
+  renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => (
+      <Profiler>
+        <React.StrictMode>{children}</React.StrictMode>
+      </Profiler>
+    ),
+  });
+
+  const incrementButton = screen.getByText("Increment");
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  // eslint-disable-next-line testing-library/render-result-naming-convention
+  const firstRender = await Profiler.takeRender();
+  const initialQueryRef = firstRender.snapshot.queryRef;
+
+  await act(() => user.click(incrementButton));
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.queryRef).toBe(initialQueryRef);
+    expect(fetchCount).toBe(1);
+  }
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
+});
+
 it("disposes of the queryRef when unmounting before it is used by useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();
   const client = new ApolloClient({

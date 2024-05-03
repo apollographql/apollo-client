@@ -244,9 +244,11 @@ export class InternalQueryReference<TData = unknown> {
       disposed = true;
       this.references--;
 
-      if (!this.references) {
-        this.dispose();
-      }
+      setTimeout(() => {
+        if (!this.references) {
+          this.dispose();
+        }
+      });
     };
   }
 

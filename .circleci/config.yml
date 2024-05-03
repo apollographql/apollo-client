@@ -76,7 +76,9 @@ jobs:
           at: /tmp/workspace
       - run: npm version
       - run:
-          command: VERSION=$(npm show react --json | jq '."dist-tags"."<< parameters.react >>"' -r) npm pkg set "overrides[react]=${VERSION}" "overrides[react-dom]=${VERSION}"
+          command: |
+            export VERSION=$(npm show react --json | jq '."dist-tags"."<< parameters.react >>"' -r)
+            npm pkg set "overrides[react]=${VERSION}" "overrides[react-dom]=${VERSION}"
           working_directory: integration-tests
       - run:
           command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present

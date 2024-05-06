@@ -873,7 +873,7 @@ For more information about these options, please refer to the documentation:
         " have an ID or a custom merge function, or "
     : "",
     typeDotName,
-    existing,
-    incoming
+    { ...existing },
+    { ...incoming }
   );
 }

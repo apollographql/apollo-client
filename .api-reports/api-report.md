@@ -178,7 +178,7 @@ export const ApolloConsumer: ReactTypes.FC<ApolloConsumerProps>;
 // @public (undocumented)
 interface ApolloConsumerProps {
     // (undocumented)
-    children: (client: ApolloClient<object>) => ReactTypes.ReactChild | null;
+    children: (client: ApolloClient<object>) => ReactTypes.ReactNode;
 }
 
 // @public (undocumented)
@@ -2653,7 +2653,7 @@ export interface SubscriptionCurrentObservable {
 // @public (undocumented)
 export interface SubscriptionDataOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseSubscriptionOptions<TData, TVariables> {
     // (undocumented)
-    children?: null | ((result: SubscriptionResult<TData>) => JSX.Element | null);
+    children?: null | ((result: SubscriptionResult<TData>) => ReactTypes.ReactNode);
     // (undocumented)
     subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }

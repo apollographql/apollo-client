@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import * as React from "react";
 import { HttpLink } from "@apollo/client";
 import {
   ApolloNextAppProvider,
@@ -9,7 +9,7 @@ import {
 
 import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
 import { setVerbosity } from "ts-invariant";
-import { schemaLink } from "@/libs/schemaLink";
+import { schemaLink } from "@/libs/schemaLink.ts";
 
 //if (process.env.NODE_ENV === 'development') {
 setVerbosity("debug");

@@ -865,7 +865,7 @@ For more information, see the [`useSuspenseQuery`](../api/react/hooks/#usesuspen
 While `useSuspenseQuery` and `useBackgroundQuery` both have a `skip` option, that option is only present to ease migration from `useQuery` with as few code changes as possible.
 It should not be used in the long term.
 
-Instead, you should use [`skipToken`](/react/api/react/hooks#skiptoken`):
+Instead, you should use [`skipToken`](/react/api/react/hooks#skiptoken):
 
 ```js title="Recommended usage of skipToken with useSuspenseQuery"
 import { skipToken, useSuspenseQuery } from '@apollo/client';

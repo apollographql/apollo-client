@@ -10,7 +10,7 @@ import { Observable } from 'zen-observable-ts';
 //
 // @public (undocumented)
 export function createFetchMultipartSubscription(uri: string, { fetch: preferredFetch, headers }?: CreateMultipartSubscriptionOptions): ({ query, variables, }: {
-    query?: string | undefined;
+    query?: string;
     variables: undefined | Record<string, any>;
 }) => Observable<unknown>;
 

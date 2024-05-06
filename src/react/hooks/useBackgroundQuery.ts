@@ -239,16 +239,21 @@ function _useBackgroundQuery<
     updateWrappedQueryRef(wrappedQueryRef, promise);
   }
 
-  // Handle strict mode where the query ref might be disposed when useEffect
-  // runs twice. We add the queryRef back in the suspense cache so that the next
-  // render will reuse this queryRef rather than initializing a new instance.
-  // This also prevents issues where rerendering useBackgroundQuery after the
-  // queryRef has been disposed, either automatically or by unmounting
-  // useReadQuery will ensure the same queryRef is maintained.
+  // This prevents issues where rerendering useBackgroundQuery after the
+  // queryRef has been disposed would cause the hook to return a new queryRef
+  // instance since disposal also removes it from the suspense cache. We add
+  // the queryRef back in the suspense cache so that the next render will reuse
+  // this queryRef rather than initializing a new instance.
   React.useEffect(() => {
-    if (queryRef.disposed) {
-      suspenseCache.add(cacheKey, queryRef);
-    }
+    // Since the queryRef is disposed async via `setTimeout`, we have to wait a
+    // tick before checking it and adding back to the suspense cache.
+    const id = setTimeout(() => {
+      if (queryRef.disposed) {
+        suspenseCache.add(cacheKey, queryRef);
+      }
+    });
+
+    return () => clearTimeout(id);
     // Omitting the deps is intentional. This avoids stale closures and the
     // conditional ensures we aren't running the logic on each render.
   });

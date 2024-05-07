@@ -2,4 +2,7 @@
 "@apollo/client": patch
 ---
 
-Accept branded QueryReferenceBase type in useReadQuery/useQueryRefHandlers
+Create branded `QueryRef` type without exposed properties.
+
+This change deprecates `QueryReference` in favor of a `QueryRef` type that doesn't expose any properties.
+Also adds a `PreloadedQueryRef` type for `preloadQuery` that still exposes `toPromise`.

@@ -1,10 +1,11 @@
 import * as React from "rehackt";
 import {
+  assertWrappedQueryRef,
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
 } from "../internal/index.js";
-import type { QueryReference, QueryReferenceBase } from "../internal/index.js";
+import type { QueryRef } from "../internal/index.js";
 import { __use, wrapHook } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
@@ -38,7 +39,7 @@ export interface UseReadQueryResult<TData = unknown> {
 }
 
 export function useReadQuery<TData>(
-  queryRef: QueryReferenceBase<TData>
+  queryRef: QueryRef<TData>
 ): UseReadQueryResult<TData> {
   const unwrapped = unwrapQueryRef(queryRef);
 
@@ -52,16 +53,13 @@ export function useReadQuery<TData>(
       // that ApolloClient will then have the job to recreate a real queryRef from
       // the transported object
     : useApolloClient()
-  )(
-    // at this point, we're not sure if this isn't a "transported" queryRef object
-    // yet, but the wrapper should turn it into a real queryRef object
-    queryRef as any
-  );
+  )(queryRef);
 }
 
 function _useReadQuery<TData>(
-  queryRef: QueryReference<TData>
+  queryRef: QueryRef<TData>
 ): UseReadQueryResult<TData> {
+  assertWrappedQueryRef(queryRef);
   const internalQueryRef = React.useMemo(
     () => unwrapQueryRef(queryRef),
     [queryRef]

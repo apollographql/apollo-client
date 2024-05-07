@@ -14,7 +14,7 @@ import type {
   OnlyRequiredProperties,
 } from "../../utilities/index.js";
 import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
-import type { QueryReference } from "../internal/index.js";
+import type { PreloadedQueryRef } from "../internal/index.js";
 import type { NoInfer } from "../index.js";
 
 type VariablesOption<TVariables extends OperationVariables> =
@@ -105,7 +105,7 @@ export interface PreloadQueryFunction {
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>, TOptions>
-  ): QueryReference<
+  ): PreloadedQueryRef<
     TOptions["errorPolicy"] extends "ignore" | "all" ?
       TOptions["returnPartialData"] extends true ?
         DeepPartial<TData> | undefined
@@ -122,7 +122,7 @@ export interface PreloadQueryFunction {
       returnPartialData: true;
       errorPolicy: "ignore" | "all";
     }
-  ): QueryReference<DeepPartial<TData> | undefined, TVariables>;
+  ): PreloadedQueryRef<DeepPartial<TData> | undefined, TVariables>;
 
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
@@ -130,7 +130,7 @@ export interface PreloadQueryFunction {
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
       errorPolicy: "ignore" | "all";
     }
-  ): QueryReference<TData | undefined, TVariables>;
+  ): PreloadedQueryRef<TData | undefined, TVariables>;
 
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
@@ -138,13 +138,13 @@ export interface PreloadQueryFunction {
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
       returnPartialData: true;
     }
-  ): QueryReference<DeepPartial<TData>, TVariables>;
+  ): PreloadedQueryRef<DeepPartial<TData>, TVariables>;
 
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>
-  ): QueryReference<TData, TVariables>;
+  ): PreloadedQueryRef<TData, TVariables>;
 }
 
 /**
@@ -175,7 +175,7 @@ export function createQueryPreloader(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> &
       VariablesOption<TVariables> = Object.create(null)
-  ): QueryReference<TData, TVariables> {
+  ): PreloadedQueryRef<TData, TVariables> {
     const queryRef = new InternalQueryReference(
       client.watchQuery({
         ...options,
@@ -187,6 +187,6 @@ export function createQueryPreloader(
       }
     );
 
-    return wrapQueryRef(queryRef);
+    return wrapQueryRef(queryRef) as PreloadedQueryRef<TData, TVariables>;
   };
 }

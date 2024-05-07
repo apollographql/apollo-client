@@ -3,7 +3,7 @@ import type {
   DocumentNode,
   OperationVariables,
 } from "../../core/index.js";
-import type { QueryReference } from "../../react/index.js";
+import type { QueryRef } from "../../react/index.js";
 import {
   NextRenderOptions,
   Profiler,
@@ -15,7 +15,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   /**
    * Used to determine if a queryRef has been disposed.
    */
-  toBeDisposed: T extends QueryReference<any, any> ? () => R
+  toBeDisposed: T extends QueryRef<any, any> ? () => R
   : { error: "matcher needs to be called on a QueryReference" };
   /**
    * Used to determine if two GraphQL query documents are equal to each other by

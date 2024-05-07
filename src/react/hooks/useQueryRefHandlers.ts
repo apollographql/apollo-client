@@ -1,11 +1,12 @@
 import * as React from "rehackt";
 import {
+  assertWrappedQueryRef,
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "../internal/index.js";
-import type { QueryReference, QueryReferenceBase } from "../internal/index.js";
+import type { QueryRef } from "../internal/index.js";
 import type { OperationVariables } from "../../core/types.js";
 import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";
 import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";
@@ -45,7 +46,7 @@ export function useQueryRefHandlers<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  queryRef: QueryReferenceBase<TData, TVariables>
+  queryRef: QueryRef<TData, TVariables>
 ): UseQueryRefHandlersResult<TData, TVariables> {
   const unwrapped = unwrapQueryRef(queryRef);
 
@@ -59,19 +60,16 @@ export function useQueryRefHandlers<
       // that ApolloClient will then have the job to recreate a real queryRef from
       // the transported object
     : useApolloClient()
-  )(
-    // at this point, we're not sure if this isn't a "transported" queryRef object
-    // yet, but the wrapper should turn it into a real queryRef object
-    queryRef as any
-  );
+  )(queryRef);
 }
 
 function _useQueryRefHandlers<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  queryRef: QueryReference<TData, TVariables>
+  queryRef: QueryRef<TData, TVariables>
 ): UseQueryRefHandlersResult<TData, TVariables> {
+  assertWrappedQueryRef(queryRef);
   const [previousQueryRef, setPreviousQueryRef] = React.useState(queryRef);
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(queryRef);
   const internalQueryRef = unwrapQueryRef(queryRef);

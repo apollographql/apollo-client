@@ -1376,7 +1376,7 @@ type Path = ReadonlyArray<string | number>;
 
 // @public
 export interface PreloadedQueryRef<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
-    toPromise(): Promise<QueryRef<TData, TVariables>>;
+    toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
 }
 
 // @public (undocumented)

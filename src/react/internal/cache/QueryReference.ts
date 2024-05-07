@@ -110,7 +110,7 @@ export interface PreloadedQueryRef<TData = unknown, TVariables = unknown>
    *
    * @since 3.9.0
    */
-  toPromise(): Promise<QueryRef<TData, TVariables>>;
+  toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
 }
 
 interface InternalQueryReferenceOptions {

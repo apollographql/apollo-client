@@ -16,7 +16,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
    * Used to determine if a queryRef has been disposed.
    */
   toBeDisposed: T extends QueryRef<any, any> ? () => R
-  : { error: "matcher needs to be called on a QueryReference" };
+  : { error: "matcher needs to be called on a QueryRef" };
   /**
    * Used to determine if two GraphQL query documents are equal to each other by
    * comparing their printed values. The document must be parsed by `gql`.

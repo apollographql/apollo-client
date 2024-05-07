@@ -437,7 +437,7 @@ function Dog({ id, queryRef }: DogProps) {
 }
 
 interface BreedsProps {
-  queryRef: QueryReference<BreedData>;
+  queryRef: QueryRef<BreedData>;
 }
 
 function Breeds({ queryRef }: BreedsProps) {
@@ -691,7 +691,7 @@ import {
   useReadQuery,
   gql,
   TypedDocumentNode,
-  QueryReference,
+  QueryRef,
 } from "@apollo/client";
 
 function App() {

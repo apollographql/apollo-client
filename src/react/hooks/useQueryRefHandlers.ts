@@ -40,7 +40,7 @@ export interface UseQueryRefHandlersResult<
  * }
  * ```
  * @since 3.9.0
- * @param queryRef - A `QueryReference` returned from `useBackgroundQuery`, `useLoadableQuery`, or `createQueryPreloader`.
+ * @param queryRef - A `QueryRef` returned from `useBackgroundQuery`, `useLoadableQuery`, or `createQueryPreloader`.
  */
 export function useQueryRefHandlers<
   TData = unknown,

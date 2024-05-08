@@ -8,7 +8,6 @@ Every byte counts in optimizing your app's performance. This page covers some co
 - Turn off Apollo Client's development mode
 - Pick a consistent style for your imports
 
-
 ## Turning off development mode
 
 By default, Apollo Client is in "development mode". That means Apollo Client performs additional checks and the browser console displays warnings.
@@ -194,10 +193,9 @@ Some entry points are not part of the "main" entry point `'@apollo/client'` and 
 
 ## Why have a larger library in the first place?
 
+Apollo Client is more than a data fetcher. It's a normalized request and response cache, state manager, and React component integration, including React testing utilities.
 
-Apollo Client is more than a data fetcher.  It's a normalized request and response cache, state manager, and React component integration, including React testing utilities.
-
-To build a similar experience with other libraries, you need to write custom logic, libraries, and component wrappers.  Scaling this custom code to all your app components often creates a bundle larger than Apollo Client's.
+To build a similar experience with other libraries, you need to write custom logic, libraries, and component wrappers. Scaling this custom code to all your app components often creates a bundle larger than Apollo Client's.
 
 A custom implementation also means extra maintenance work for your team. By using Apollo Client, you hand off that ownership to a team specializing in GraphQL clients.
 

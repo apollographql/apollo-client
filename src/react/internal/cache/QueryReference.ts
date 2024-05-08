@@ -73,7 +73,7 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
    * }
    * ```
    *
-   * @alpha
+   * @since 3.9.0
    */
   toPromise(): Promise<QueryReference<TData, TVariables>>;
 }
@@ -244,9 +244,11 @@ export class InternalQueryReference<TData = unknown> {
       disposed = true;
       this.references--;
 
-      if (!this.references) {
-        this.dispose();
-      }
+      setTimeout(() => {
+        if (!this.references) {
+          this.dispose();
+        }
+      });
     };
   }
 

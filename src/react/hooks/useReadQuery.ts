@@ -4,12 +4,16 @@ import {
   unwrapQueryRef,
   updateWrappedQueryRef,
 } from "../internal/index.js";
-import type { QueryReference } from "../internal/index.js";
+import type {
+  InternalQueryReference,
+  QueryReference,
+} from "../internal/index.js";
 import { __use, wrapHook } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
 import type { NetworkStatus } from "../../core/index.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**
@@ -39,10 +43,25 @@ export interface UseReadQueryResult<TData = unknown> {
 export function useReadQuery<TData>(
   queryRef: QueryReference<TData>
 ): UseReadQueryResult<TData> {
+  const unwrapped = unwrapQueryRef(
+    queryRef
+  ) satisfies InternalQueryReference<TData> as /*
+    by all rules of this codebase, this should never be undefined
+    but if `queryRef` is a transported object, it cannot have a
+    `QUERY_REFERENCE_SYMBOL` symbol property, so the call above
+    will return `undefined` and we want that represented in the type
+    */ InternalQueryReference<TData> | undefined;
+
   return wrapHook(
     "useReadQuery",
     _useReadQuery,
-    unwrapQueryRef(queryRef)["observable"]
+    unwrapped ?
+      unwrapped["observable"]
+      // in the case of a "transported" queryRef object, we need to use the
+      // client that's available to us at the current position in the React tree
+      // that ApolloClient will then have the job to recreate a real queryRef from
+      // the transported object
+    : useApolloClient()
   )(queryRef);
 }
 
@@ -64,17 +83,7 @@ function _useReadQuery<TData>(
     updateWrappedQueryRef(queryRef, internalQueryRef.promise);
   }
 
-  React.useEffect(() => {
-    // It may seem odd that we are trying to reinitialize the queryRef even
-    // though we reinitialize in render above, but this is necessary to
-    // handle strict mode where this useEffect will be run twice resulting in a
-    // disposed queryRef before the next render.
-    if (internalQueryRef.disposed) {
-      internalQueryRef.reinitialize();
-    }
-
-    return internalQueryRef.retain();
-  }, [internalQueryRef]);
+  React.useEffect(() => internalQueryRef.retain(), [internalQueryRef]);
 
   const promise = useSyncExternalStore(
     React.useCallback(

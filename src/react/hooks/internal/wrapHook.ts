@@ -4,6 +4,7 @@ import type {
   useBackgroundQuery,
   useReadQuery,
   useFragment,
+  useQueryRefHandlers,
 } from "../index.js";
 import type { QueryManager } from "../../../core/QueryManager.js";
 import type { ApolloClient } from "../../../core/ApolloClient.js";
@@ -17,6 +18,7 @@ interface WrappableHooks {
   useBackgroundQuery: typeof useBackgroundQuery;
   useReadQuery: typeof useReadQuery;
   useFragment: typeof useFragment;
+  useQueryRefHandlers: typeof useQueryRefHandlers;
 }
 
 /**

@@ -1889,6 +1889,7 @@ describe("useQuery Hook", () => {
     });
 
     // https://github.com/apollographql/apollo-client/issues/9431
+    // https://github.com/apollographql/apollo-client/issues/11750
     it("stops polling when component unmounts with cache-and-network fetch policy", async () => {
       const query: TypedDocumentNode<{ hello: string }> = gql`
         query {
@@ -2041,6 +2042,7 @@ describe("useQuery Hook", () => {
     });
 
     // https://github.com/apollographql/apollo-client/issues/9431
+    // https://github.com/apollographql/apollo-client/issues/11750
     it("stops polling when component unmounts in strict mode with cache-and-network fetch policy", async () => {
       const query: TypedDocumentNode<{ hello: string }> = gql`
         query {

@@ -1922,11 +1922,15 @@ describe("useQuery Hook", () => {
         useQuery(query, { pollInterval: 10, fetchPolicy: "cache-and-network" })
       );
 
+      const client = new ApolloClient({
+        queryDeduplication: false,
+        link,
+        cache,
+      });
+
       const { unmount } = render(<ProfiledHook />, {
         wrapper: ({ children }: any) => (
-          <MockedProvider link={link} cache={cache}>
-            {children}
-          </MockedProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       });
 

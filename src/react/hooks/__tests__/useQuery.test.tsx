@@ -1889,7 +1889,7 @@ describe("useQuery Hook", () => {
     });
 
     // https://github.com/apollographql/apollo-client/issues/9431
-    it("should stop polling when component unmounts with cache-and-network fetch policy", async () => {
+    it("stops polling when component unmounts with cache-and-network fetch policy", async () => {
       const query: TypedDocumentNode<{ hello: string }> = gql`
         query {
           hello

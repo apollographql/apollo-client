@@ -2041,7 +2041,7 @@ describe("useQuery Hook", () => {
     });
 
     // https://github.com/apollographql/apollo-client/issues/9431
-    it("should stop polling when component unmounts in strict mode with cache-and-network fetch policy", async () => {
+    it("stops polling when component unmounts in strict mode with cache-and-network fetch policy", async () => {
       const query: TypedDocumentNode<{ hello: string }> = gql`
         query {
           hello
@@ -2074,12 +2074,12 @@ describe("useQuery Hook", () => {
         useQuery(query, { pollInterval: 10, fetchPolicy: "cache-and-network" })
       );
 
+      const client = new ApolloClient({ link, cache });
+
       const { unmount } = render(<ProfiledHook />, {
         wrapper: ({ children }: any) => (
           <React.StrictMode>
-            <MockedProvider link={link} cache={cache}>
-              {children}
-            </MockedProvider>
+            <ApolloProvider client={client}>{children}</ApolloProvider>
           </React.StrictMode>
         ),
       });

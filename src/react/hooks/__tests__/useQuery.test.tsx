@@ -4505,7 +4505,7 @@ describe("useQuery Hook", () => {
     await expect(Profiler).not.toRerender();
   });
 
-  it.only("triggers a refetch when writing partial result on a query", async () => {
+  it("triggers a network request and rerenders with the new result when a mutation causes a partial cache update due to an incomplete merge function result", async () => {
     const query = gql`
       query {
         author {
@@ -4514,7 +4514,6 @@ describe("useQuery Hook", () => {
           post {
             id
             title
-            contents
           }
         }
       }
@@ -4528,7 +4527,6 @@ describe("useQuery Hook", () => {
             post {
               id
               title
-              contents
             }
           }
         }
@@ -4557,7 +4555,6 @@ describe("useQuery Hook", () => {
                   __typename: "Post",
                   id: 1,
                   title: "Title",
-                  contents: "lorem ipsum",
                 },
               },
             },
@@ -4576,7 +4573,6 @@ describe("useQuery Hook", () => {
                   __typename: "Post",
                   id: 1,
                   title: "Title",
-                  contents: "lorem ipsum",
                 },
               },
             },
@@ -4596,7 +4592,6 @@ describe("useQuery Hook", () => {
                     __typename: "Post",
                     id: 1,
                     title: "Title",
-                    contents: "lorem ipsum",
                   },
                 },
               },
@@ -4611,7 +4606,9 @@ describe("useQuery Hook", () => {
             fields: {
               post: {
                 // this is necessary to reproduce the issue
-                merge: () => ({}),
+                merge: () => {
+                  return {};
+                },
               },
             },
           },
@@ -4658,7 +4655,6 @@ describe("useQuery Hook", () => {
             post: {
               __typename: "Post",
               title: "Title",
-              contents: "lorem ipsum",
             },
           },
         },
@@ -4667,7 +4663,6 @@ describe("useQuery Hook", () => {
       });
     }
 
-    console.log("mutation");
     await act(() => user.click(screen.getByText("Run mutation")));
     await Profiler.takeRender();
 
@@ -4683,7 +4678,6 @@ describe("useQuery Hook", () => {
             post: {
               __typename: "Post",
               title: "Title",
-              contents: "lorem ipsum",
             },
           },
         },
@@ -4708,7 +4702,6 @@ describe("useQuery Hook", () => {
             post: {
               __typename: "Post",
               title: "Title",
-              contents: "lorem ipsum",
             },
           },
         },

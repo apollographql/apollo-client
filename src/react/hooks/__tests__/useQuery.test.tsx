@@ -4505,6 +4505,218 @@ describe("useQuery Hook", () => {
     await expect(Profiler).not.toRerender();
   });
 
+  it.only("triggers a refetch when writing partial result on a query", async () => {
+    const query = gql`
+      query {
+        author {
+          id
+          name
+          post {
+            id
+            title
+            contents
+          }
+        }
+      }
+    `;
+    const mutation = gql`
+      mutation {
+        updateAuthor {
+          author {
+            id
+            name
+            post {
+              id
+              title
+              contents
+            }
+          }
+        }
+      }
+    `;
+
+    const user = userEvent.setup();
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        useQueryResult: null as QueryResult | null,
+      },
+    });
+
+    const client = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query },
+          result: {
+            data: {
+              author: {
+                __typename: "Author",
+                id: 1,
+                name: "Author Lee",
+                post: {
+                  __typename: "Post",
+                  id: 1,
+                  title: "Title",
+                  contents: "lorem ipsum",
+                },
+              },
+            },
+          },
+          delay: 20,
+        },
+        {
+          request: { query },
+          result: {
+            data: {
+              author: {
+                __typename: "Author",
+                id: 1,
+                name: "Author Lee (refetch)",
+                post: {
+                  __typename: "Post",
+                  id: 1,
+                  title: "Title",
+                  contents: "lorem ipsum",
+                },
+              },
+            },
+          },
+          delay: 20,
+        },
+        {
+          request: { query: mutation },
+          result: {
+            data: {
+              updateAuthor: {
+                author: {
+                  __typename: "Author",
+                  id: 1,
+                  name: "Author Lee (mutation)",
+                  post: {
+                    __typename: "Post",
+                    id: 1,
+                    title: "Title",
+                    contents: "lorem ipsum",
+                  },
+                },
+              },
+            },
+          },
+          delay: 20,
+        },
+      ]),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Author: {
+            fields: {
+              post: {
+                // this is necessary to reproduce the issue
+                merge: () => ({}),
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    function App() {
+      const useQueryResult = useQuery(query);
+      const [mutate] = useMutation(mutation);
+
+      Profiler.replaceSnapshot({ useQueryResult });
+
+      return <button onClick={() => mutate()}>Run mutation</button>;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: {
+          author: {
+            __typename: "Author",
+            id: 1,
+            name: "Author Lee",
+            post: {
+              __typename: "Post",
+              title: "Title",
+              contents: "lorem ipsum",
+            },
+          },
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    console.log("mutation");
+    await act(() => user.click(screen.getByText("Run mutation")));
+    await Profiler.takeRender();
+
+    // mutation finished
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: {
+          author: {
+            __typename: "Author",
+            id: 1,
+            name: "Author Lee",
+            post: {
+              __typename: "Post",
+              title: "Title",
+              contents: "lorem ipsum",
+            },
+          },
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: {
+          author: {
+            __typename: "Author",
+            id: 1,
+            name: "Author Lee (refetch)",
+            post: {
+              __typename: "Post",
+              title: "Title",
+              contents: "lorem ipsum",
+            },
+          },
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
+  });
+
   describe("Refetching", () => {
     it("refetching with different variables", async () => {
       const query = gql`

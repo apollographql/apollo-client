@@ -4671,7 +4671,6 @@ describe("useQuery Hook", () => {
     await act(() => user.click(screen.getByText("Run mutation")));
     await Profiler.takeRender();
 
-    // mutation finished
     {
       const { snapshot } = await Profiler.takeRender();
 
@@ -4701,6 +4700,10 @@ describe("useQuery Hook", () => {
           author: {
             __typename: "Author",
             id: 1,
+            // Because of the merge function returning an incomplete result, we
+            // don't expect to see the value returned from the mutation. The
+            // partial result from the mutation causes a network fetch which
+            // renders the refetched result.
             name: "Author Lee (refetch)",
             post: {
               __typename: "Post",

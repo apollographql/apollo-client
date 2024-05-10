@@ -4281,6 +4281,230 @@ describe("useQuery Hook", () => {
     await expect(Profiler).not.toRerender();
   });
 
+  it("rerenders errored query for full cache write", async () => {
+    interface Query1 {
+      person: {
+        __typename: "Person";
+        id: number;
+        firstName: string;
+      } | null;
+    }
+
+    interface Query2 {
+      person: {
+        __typename: "Person";
+        id: number;
+        firstName: string;
+        lastName: string;
+      } | null;
+    }
+
+    interface Variables {
+      id: number;
+    }
+
+    const user = userEvent.setup();
+
+    const query1: TypedDocumentNode<Query1, Variables> = gql`
+      query PersonQuery1($id: ID!) {
+        person(id: $id) {
+          id
+          firstName
+        }
+      }
+    `;
+
+    const query2: TypedDocumentNode<Query2, Variables> = gql`
+      query PersonQuery2($id: ID!) {
+        person(id: $id) {
+          id
+          firstName
+          lastName
+        }
+      }
+    `;
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        useQueryResult: null as QueryResult<Query1, Variables> | null,
+        useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
+      },
+    });
+
+    const client = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query: query1, variables: { id: 1 } },
+          result: {
+            data: { person: null },
+            errors: [new GraphQLError("Intentional error")],
+          },
+          delay: 20,
+        },
+        {
+          request: { query: query2, variables: { id: 1 } },
+          result: {
+            data: {
+              person: {
+                __typename: "Person",
+                id: 1,
+                firstName: "John",
+                lastName: "Doe",
+              },
+            },
+          },
+          delay: 20,
+        },
+      ]),
+      cache: new InMemoryCache(),
+    });
+
+    function App() {
+      const useQueryResult = useQuery(query1, {
+        variables: { id: 1 },
+        // This is necessary to reproduce the behavior
+        notifyOnNetworkStatusChange: true,
+      });
+
+      const [execute, useLazyQueryResult] = useLazyQuery(query2, {
+        variables: { id: 1 },
+      });
+
+      Profiler.replaceSnapshot({ useQueryResult, useLazyQueryResult });
+
+      return <button onClick={() => execute()}>Run 2nd query</button>;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: false,
+        data: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: false,
+        data: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Run 2nd query")));
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: true,
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      // We don't see the update from the cache for one more render cycle, hence
+      // why this is still showing the error result even though the result from
+      // the other query has finished and re-rendered.
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        error: new ApolloError({
+          graphQLErrors: [new GraphQLError("Intentional error")],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: true,
+        data: {
+          person: {
+            __typename: "Person",
+            id: 1,
+            firstName: "John",
+            lastName: "Doe",
+          },
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: {
+          person: {
+            __typename: "Person",
+            id: 1,
+            firstName: "John",
+          },
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      expect(snapshot.useLazyQueryResult).toMatchObject({
+        called: true,
+        data: {
+          person: {
+            __typename: "Person",
+            id: 1,
+            firstName: "John",
+            lastName: "Doe",
+          },
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
+  });
+
   describe("Refetching", () => {
     it("refetching with different variables", async () => {
       const query = gql`

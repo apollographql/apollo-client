@@ -4505,6 +4505,111 @@ describe("useQuery Hook", () => {
     await expect(Profiler).not.toRerender();
   });
 
+  it("delivers the full network response when a merge function returns an incomplete result", async () => {
+    const query = gql`
+      query {
+        author {
+          id
+          name
+          post {
+            id
+            title
+          }
+        }
+      }
+    `;
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        useQueryResult: null as QueryResult | null,
+      },
+    });
+
+    const client = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query },
+          result: {
+            data: {
+              author: {
+                __typename: "Author",
+                id: 1,
+                name: "Author Lee",
+                post: {
+                  __typename: "Post",
+                  id: 1,
+                  title: "Title",
+                },
+              },
+            },
+          },
+          delay: 20,
+        },
+      ]),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Author: {
+            fields: {
+              post: {
+                merge: () => {
+                  return {};
+                },
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    function App() {
+      const useQueryResult = useQuery(query);
+
+      Profiler.replaceSnapshot({ useQueryResult });
+
+      return null;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.useQueryResult).toMatchObject({
+        data: {
+          author: {
+            __typename: "Author",
+            id: 1,
+            name: "Author Lee",
+            post: {
+              __typename: "Post",
+              title: "Title",
+            },
+          },
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
+  });
+
   it("triggers a network request and rerenders with the new result when a mutation causes a partial cache update due to an incomplete merge function result", async () => {
     const query = gql`
       query {

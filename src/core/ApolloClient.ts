@@ -313,7 +313,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           typeof window !== "undefined" &&
           window.document &&
           window.top === window.self &&
-          !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__
+          !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ &&
+          /^(https?|file):$/.test(window.location.protocol)
         ) {
           const nav = window.navigator;
           const ua = nav && nav.userAgent;

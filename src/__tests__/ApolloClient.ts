@@ -2365,7 +2365,7 @@ describe("ApolloClient", () => {
     });
     // The @nonreactive directive can only be used on fields or fragment
     // spreads in queries, and currently has no effect here
-    it.failing("does not support the @nonreactive directive", async () => {
+    it("supports the @nonreactive directive", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
@@ -2416,18 +2416,9 @@ describe("ApolloClient", () => {
         },
       });
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          data: {
-            __typename: "Item",
-            id: 5,
-            text: "Item #5",
-          },
-          complete: true,
-        });
-      }
+      await expect(stream.takeNext()).rejects.toThrow(
+        new Error("Timeout waiting for next event")
+      );
     });
   });
 

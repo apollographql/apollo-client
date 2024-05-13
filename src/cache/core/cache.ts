@@ -250,8 +250,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
             latestDiff &&
             equalByQuery(
               query,
-              { data: diff.result },
-              { data: latestDiff?.result }
+              { data: latestDiff?.result },
+              { data: diff.result }
             )
           ) {
             return;

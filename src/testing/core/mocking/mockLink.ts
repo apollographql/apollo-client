@@ -81,7 +81,6 @@ function requestToKey(
     serverQuery &&
     print(addTypename ? addTypenameToDocument(serverQuery) : serverQuery);
   const requestKey = { query: queryString };
-  console.log(requestKey);
   return JSON.stringify(requestKey);
 }
 

@@ -8,12 +8,13 @@ import type {
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import {
+  assertWrappedQueryRef,
   getSuspenseCache,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "../internal/index.js";
-import type { CacheKey, QueryReference } from "../internal/index.js";
+import type { CacheKey, QueryRef } from "../internal/index.js";
 import type { LoadableQueryHookOptions } from "../types/types.js";
 import { __use, useRenderGuard } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
@@ -42,7 +43,7 @@ export type UseLoadableQueryResult<
   TVariables extends OperationVariables = OperationVariables,
 > = [
   loadQuery: LoadQueryFunction<TVariables>,
-  queryRef: QueryReference<TData, TVariables> | null,
+  queryRef: QueryRef<TData, TVariables> | null,
   {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: FetchMoreFunction<TData, TVariables>;
@@ -168,10 +169,12 @@ export function useLoadableQuery<
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { queryKey = [] } = options;
 
-  const [queryRef, setQueryRef] = React.useState<QueryReference<
+  const [queryRef, setQueryRef] = React.useState<QueryRef<
     TData,
     TVariables
   > | null>(null);
+
+  assertWrappedQueryRef(queryRef);
 
   const internalQueryRef = queryRef && unwrapQueryRef(queryRef);
 

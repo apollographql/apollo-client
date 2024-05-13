@@ -144,7 +144,8 @@ function processComments() {
         Node.isPropertySignature(node) ||
         Node.isMethodSignature(node) ||
         Node.isMethodDeclaration(node) ||
-        Node.isCallSignatureDeclaration(node)
+        Node.isCallSignatureDeclaration(node) ||
+        Node.isInterfaceDeclaration(node)
       ) {
         const docsNode = node.getJsDocs()[0];
         if (!docsNode) return;

@@ -1,13 +1,11 @@
 import * as React from "rehackt";
 import {
+  assertWrappedQueryRef,
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
 } from "../internal/index.js";
-import type {
-  InternalQueryReference,
-  QueryReference,
-} from "../internal/index.js";
+import type { QueryRef } from "../internal/index.js";
 import { __use, wrapHook } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
@@ -41,16 +39,9 @@ export interface UseReadQueryResult<TData = unknown> {
 }
 
 export function useReadQuery<TData>(
-  queryRef: QueryReference<TData>
+  queryRef: QueryRef<TData>
 ): UseReadQueryResult<TData> {
-  const unwrapped = unwrapQueryRef(
-    queryRef
-  ) satisfies InternalQueryReference<TData> as /*
-    by all rules of this codebase, this should never be undefined
-    but if `queryRef` is a transported object, it cannot have a
-    `QUERY_REFERENCE_SYMBOL` symbol property, so the call above
-    will return `undefined` and we want that represented in the type
-    */ InternalQueryReference<TData> | undefined;
+  const unwrapped = unwrapQueryRef(queryRef);
 
   return wrapHook(
     "useReadQuery",
@@ -66,8 +57,9 @@ export function useReadQuery<TData>(
 }
 
 function _useReadQuery<TData>(
-  queryRef: QueryReference<TData>
+  queryRef: QueryRef<TData>
 ): UseReadQueryResult<TData> {
+  assertWrappedQueryRef(queryRef);
   const internalQueryRef = React.useMemo(
     () => unwrapQueryRef(queryRef),
     [queryRef]

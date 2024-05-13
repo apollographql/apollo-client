@@ -296,6 +296,14 @@ interface ApolloQueryResult<T> {
     partial?: boolean;
 }
 
+// Warning: (ae-forgotten-export) The symbol "WrappedQueryRef" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function assertWrappedQueryRef<TData, TVariables>(queryRef: QueryRef<TData, TVariables>): asserts queryRef is WrappedQueryRef<TData, TVariables>;
+
+// @public (undocumented)
+export function assertWrappedQueryRef<TData, TVariables>(queryRef: QueryRef<TData, TVariables> | undefined | null): asserts queryRef is WrappedQueryRef<TData, TVariables> | undefined | null;
+
 // @public
 type AsStoreObject<T extends {
     __typename?: string;
@@ -803,7 +811,7 @@ export function getSuspenseCache(client: ApolloClient<object> & {
 // Warning: (ae-forgotten-export) The symbol "QueryRefPromise" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>): QueryRefPromise<TData>;
+export function getWrappedPromise<TData>(queryRef: WrappedQueryRef<TData, any>): QueryRefPromise<TData>;
 
 // @public (undocumented)
 type GraphQLErrors = ReadonlyArray<GraphQLError>;
@@ -1274,6 +1282,11 @@ interface PendingPromise<TValue> extends Promise<TValue> {
     status: "pending";
 }
 
+// @public
+export interface PreloadedQueryRef<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
+    toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
+}
+
 // @public (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
@@ -1286,6 +1299,9 @@ const PROMISE_SYMBOL: unique symbol;
 //
 // @public (undocumented)
 type PromiseWithState<TValue> = PendingPromise<TValue> | FulfilledPromise<TValue> | RejectedPromise<TValue>;
+
+// @public (undocumented)
+const QUERY_REF_BRAND: unique symbol;
 
 // @public (undocumented)
 const QUERY_REFERENCE_SYMBOL: unique symbol;
@@ -1516,12 +1532,15 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
 }
 
 // @public
-export interface QueryReference<TData = unknown, TVariables = unknown> {
+export interface QueryRef<TData = unknown, TVariables = unknown> {
     // @internal (undocumented)
-    [PROMISE_SYMBOL]: QueryRefPromise<TData>;
-    // @internal (undocumented)
-    readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-    toPromise(): Promise<QueryReference<TData, TVariables>>;
+    [QUERY_REF_BRAND]?(variables: TVariables): TData;
+}
+
+// @public @deprecated (undocumented)
+export interface QueryReference<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
+    // @deprecated (undocumented)
+    toPromise?: unknown;
 }
 
 // Warning: (ae-forgotten-export) The symbol "PromiseWithState" needs to be exported by the entry point index.d.ts
@@ -1804,7 +1823,10 @@ type UnionForAny<T> = T extends never ? "a" : 1;
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
 // @public (undocumented)
-export function unwrapQueryRef<TData>(queryRef: QueryReference<TData>): InternalQueryReference<TData>;
+export function unwrapQueryRef<TData>(queryRef: WrappedQueryRef<TData>): InternalQueryReference<TData>;
+
+// @public (undocumented)
+export function unwrapQueryRef<TData>(queryRef: Partial<WrappedQueryRef<TData>>): undefined | InternalQueryReference<TData>;
 
 // @public (undocumented)
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
@@ -1818,7 +1840,7 @@ type UpdateQueryFn<TData = any, TSubscriptionVariables = OperationVariables, TSu
 }) => TData;
 
 // @public (undocumented)
-export function updateWrappedQueryRef<TData>(queryRef: QueryReference<TData>, promise: QueryRefPromise<TData>): void;
+export function updateWrappedQueryRef<TData>(queryRef: WrappedQueryRef<TData>, promise: QueryRefPromise<TData>): void;
 
 // @public (undocumented)
 interface UriFunction {
@@ -1831,7 +1853,7 @@ interface UriFunction {
 //
 // @public (undocumented)
 function useBackgroundQuery<TData, TVariables extends OperationVariables, TOptions extends Omit<BackgroundQueryHookOptions<TData>, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions): [
-(QueryReference<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData, TVariables> | (TOptions["skip"] extends boolean ? undefined : never)),
+(QueryRef<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData, TVariables> | (TOptions["skip"] extends boolean ? undefined : never)),
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -1840,7 +1862,7 @@ function useBackgroundQuery<TData = unknown, TVariables extends OperationVariabl
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
 }): [
-QueryReference<DeepPartial<TData> | undefined, TVariables>,
+QueryRef<DeepPartial<TData> | undefined, TVariables>,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -1848,7 +1870,7 @@ UseBackgroundQueryResult<TData, TVariables>
 function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     errorPolicy: "ignore" | "all";
 }): [
-QueryReference<TData | undefined, TVariables>,
+QueryRef<TData | undefined, TVariables>,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -1857,7 +1879,7 @@ function useBackgroundQuery<TData = unknown, TVariables extends OperationVariabl
     skip: boolean;
     returnPartialData: true;
 }): [
-QueryReference<DeepPartial<TData>, TVariables> | undefined,
+QueryRef<DeepPartial<TData>, TVariables> | undefined,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -1865,7 +1887,7 @@ UseBackgroundQueryResult<TData, TVariables>
 function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
 }): [
-QueryReference<DeepPartial<TData>, TVariables>,
+QueryRef<DeepPartial<TData>, TVariables>,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -1873,15 +1895,12 @@ UseBackgroundQueryResult<TData, TVariables>
 function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     skip: boolean;
 }): [
-QueryReference<TData, TVariables> | undefined,
+QueryRef<TData, TVariables> | undefined,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
 // @public (undocumented)
-function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>): [
-QueryReference<TData, TVariables>,
-UseBackgroundQueryResult<TData, TVariables>
-];
+function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>): [QueryRef<TData, TVariables>, UseBackgroundQueryResult<TData, TVariables>];
 
 // Warning: (ae-forgotten-export) The symbol "SkipToken" needs to be exported by the entry point index.d.ts
 //
@@ -1892,13 +1911,13 @@ function useBackgroundQuery<TData = unknown, TVariables extends OperationVariabl
 function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken | (BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
     returnPartialData: true;
 })): [
-QueryReference<DeepPartial<TData>, TVariables> | undefined,
+QueryRef<DeepPartial<TData>, TVariables> | undefined,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
 // @public (undocumented)
 function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SkipToken | BackgroundQueryHookOptionsNoInfer<TData, TVariables>): [
-QueryReference<TData, TVariables> | undefined,
+QueryRef<TData, TVariables> | undefined,
 UseBackgroundQueryResult<TData, TVariables>
 ];
 
@@ -1942,7 +1961,7 @@ function useQuery<TData = any, TVariables extends OperationVariables = Operation
 // Warning: (ae-forgotten-export) The symbol "UseQueryRefHandlersResult" needs to be exported by the entry point index.d.ts
 //
 // @public
-function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryReference<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;
+function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;
 
 // @public (undocumented)
 interface UseQueryRefHandlersResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
@@ -1953,7 +1972,7 @@ interface UseQueryRefHandlersResult<TData = unknown, TVariables extends Operatio
 // Warning: (ae-forgotten-export) The symbol "UseReadQueryResult" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-function useReadQuery<TData>(queryRef: QueryReference<TData>): UseReadQueryResult<TData>;
+function useReadQuery<TData>(queryRef: QueryRef<TData>): UseReadQueryResult<TData>;
 
 // @public (undocumented)
 interface UseReadQueryResult<TData = unknown> {
@@ -2084,8 +2103,18 @@ interface WrappableHooks {
     useSuspenseQuery: typeof useSuspenseQuery;
 }
 
+// @internal
+interface WrappedQueryRef<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
+    // (undocumented)
+    [PROMISE_SYMBOL]: QueryRefPromise<TData>;
+    // (undocumented)
+    readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+    // (undocumented)
+    toPromise?(): Promise<unknown>;
+}
+
 // @public (undocumented)
-export function wrapQueryRef<TData, TVariables extends OperationVariables>(internalQueryRef: InternalQueryReference<TData>): QueryReference<TData, TVariables>;
+export function wrapQueryRef<TData, TVariables extends OperationVariables>(internalQueryRef: InternalQueryReference<TData>): WrappedQueryRef<TData, TVariables>;
 
 // Warnings were encountered during analysis:
 //

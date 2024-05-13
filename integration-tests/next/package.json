@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "serve-app": "npm run start",
-    "ci-preparations": "npm install @apollo/experimental-nextjs-app-support",
+    "ci-preparations": "npm install --legacy-peer-deps @apollo/experimental-nextjs-app-support",
     "test": "playwright test"
   },
   "dependencies": {

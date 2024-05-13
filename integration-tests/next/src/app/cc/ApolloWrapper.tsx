@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { HttpLink } from "@apollo/client";
+import { ApolloLink, HttpLink } from "@apollo/client";
 import {
   ApolloNextAppProvider,
   NextSSRInMemoryCache,
@@ -31,7 +31,10 @@ export function ApolloWrapper({ children }: React.PropsWithChildren<{}>) {
 
     return new NextSSRApolloClient({
       cache: new NextSSRInMemoryCache(),
-      link: typeof window === "undefined" ? schemaLink : httpLink,
+      link:
+        typeof window === "undefined" ?
+          (schemaLink as ApolloLink)
+        : (httpLink as ApolloLink),
     });
   }
 }

@@ -4624,7 +4624,7 @@ describe("useQuery Hook", () => {
               primes: [13, 17, 19, 23, 29],
             },
           },
-          delay: 10,
+          delay: 25,
         },
       ];
 

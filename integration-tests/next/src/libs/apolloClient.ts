@@ -48,7 +48,9 @@ function createApolloClient() {
     link: from([
       errorLink,
       delayLink,
-      typeof window === "undefined" ? schemaLink : httpLink,
+      typeof window === "undefined" ?
+        (schemaLink as ApolloLink)
+      : (httpLink as ApolloLink),
     ]),
     cache: new InMemoryCache(),
   });

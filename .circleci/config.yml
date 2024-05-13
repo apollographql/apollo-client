@@ -76,6 +76,9 @@ jobs:
           at: /tmp/workspace
       - run: npm version
       - run:
+          command: npm pkg set "overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
+          working_directory: integration-tests
+      - run:
           command: |
             export VERSION=$(npm show react --json | jq '."dist-tags"."<< parameters.react >>"' -r)
             npm pkg set "overrides[react]=${VERSION}" "overrides[react-dom]=${VERSION}"
@@ -84,7 +87,7 @@ jobs:
           command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
-          command: npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.framework >>
+          command: npm install
           working_directory: integration-tests
       - run:
           command: npx playwright install-deps

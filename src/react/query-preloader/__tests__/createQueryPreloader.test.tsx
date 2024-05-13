@@ -17,7 +17,7 @@ import {
   wait,
 } from "../../../testing";
 import { expectTypeOf } from "expect-type";
-import { QueryReference, unwrapQueryRef } from "../../internal";
+import { PreloadedQueryRef, QueryRef, unwrapQueryRef } from "../../internal";
 import { DeepPartial, Observable } from "../../../utilities";
 import {
   SimpleCaseData,
@@ -48,7 +48,7 @@ function renderDefaultTestApp<TData>({
   queryRef,
 }: {
   client: ApolloClient<any>;
-  queryRef: QueryReference<TData>;
+  queryRef: QueryRef<TData>;
 }) {
   const Profiler = createProfiler({
     initialSnapshot: {
@@ -2271,7 +2271,9 @@ describe.skip("type tests", () => {
 
     const queryRef = preloadQuery(query);
 
-    expectTypeOf(queryRef).toEqualTypeOf<QueryReference<unknown, unknown>>();
+    expectTypeOf(queryRef).toEqualTypeOf<
+      PreloadedQueryRef<unknown, OperationVariables>
+    >();
   });
 
   test("returns QueryReference<TData> in default case", () => {
@@ -2280,7 +2282,7 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery(query);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<SimpleCaseData, { [key: string]: any }>
+        PreloadedQueryRef<SimpleCaseData, { [key: string]: any }>
       >();
     }
 
@@ -2289,7 +2291,7 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<SimpleCaseData, OperationVariables>
       >();
     }
   });
@@ -2300,7 +2302,7 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery(query, { errorPolicy: "ignore" });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<SimpleCaseData | undefined, { [key: string]: any }>
+        PreloadedQueryRef<SimpleCaseData | undefined, { [key: string]: any }>
       >();
     }
 
@@ -2311,7 +2313,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<SimpleCaseData | undefined, OperationVariables>
+        PreloadedQueryRef<SimpleCaseData | undefined, OperationVariables>
       >();
     }
   });
@@ -2322,7 +2324,7 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery(query, { errorPolicy: "all" });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<SimpleCaseData | undefined, { [key: string]: any }>
+        PreloadedQueryRef<SimpleCaseData | undefined, { [key: string]: any }>
       >();
     }
 
@@ -2333,7 +2335,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<SimpleCaseData | undefined, OperationVariables>
+        PreloadedQueryRef<SimpleCaseData | undefined, OperationVariables>
       >();
     }
   });
@@ -2344,7 +2346,7 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery(query, { errorPolicy: "none" });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<SimpleCaseData, { [key: string]: any }>
+        PreloadedQueryRef<SimpleCaseData, { [key: string]: any }>
       >();
     }
 
@@ -2355,7 +2357,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<SimpleCaseData, OperationVariables>
       >();
     }
   });
@@ -2366,7 +2368,7 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery(query, { returnPartialData: true });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<DeepPartial<SimpleCaseData>, { [key: string]: any }>
+        PreloadedQueryRef<DeepPartial<SimpleCaseData>, { [key: string]: any }>
       >();
     }
 
@@ -2377,7 +2379,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<DeepPartial<SimpleCaseData>, OperationVariables>
+        PreloadedQueryRef<DeepPartial<SimpleCaseData>, OperationVariables>
       >();
     }
   });
@@ -2387,7 +2389,9 @@ describe.skip("type tests", () => {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { returnPartialData: false });
 
-      expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+      >();
     }
 
     {
@@ -2396,7 +2400,9 @@ describe.skip("type tests", () => {
         returnPartialData: false,
       });
 
-      expectTypeOf(queryRef).toEqualTypeOf<QueryReference<SimpleCaseData>>();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+      >();
     }
   });
 
@@ -2406,7 +2412,7 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery(query, { canonizeResults: true });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<SimpleCaseData, { [key: string]: any }>
+        PreloadedQueryRef<SimpleCaseData, { [key: string]: any }>
       >();
     }
 
@@ -2417,7 +2423,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<SimpleCaseData, OperationVariables>
       >();
     }
   });
@@ -2431,7 +2437,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<
+        PreloadedQueryRef<
           DeepPartial<SimpleCaseData> | undefined,
           { [key: string]: any }
         >
@@ -2446,7 +2452,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<
+        PreloadedQueryRef<
           DeepPartial<SimpleCaseData> | undefined,
           OperationVariables
         >
@@ -2461,7 +2467,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<DeepPartial<SimpleCaseData>, { [key: string]: any }>
+        PreloadedQueryRef<DeepPartial<SimpleCaseData>, { [key: string]: any }>
       >();
     }
 
@@ -2473,7 +2479,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<DeepPartial<SimpleCaseData>, OperationVariables>
+        PreloadedQueryRef<DeepPartial<SimpleCaseData>, OperationVariables>
       >();
     }
   });
@@ -2488,7 +2494,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<DeepPartial<SimpleCaseData>, { [key: string]: any }>
+        PreloadedQueryRef<DeepPartial<SimpleCaseData>, { [key: string]: any }>
       >();
     }
 
@@ -2501,7 +2507,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        QueryReference<DeepPartial<SimpleCaseData>, OperationVariables>
+        PreloadedQueryRef<DeepPartial<SimpleCaseData>, OperationVariables>
       >();
     }
   });

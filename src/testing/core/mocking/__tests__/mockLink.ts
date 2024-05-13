@@ -1,6 +1,7 @@
 import gql from "graphql-tag";
 import { MockLink, MockedResponse } from "../mockLink";
 import { execute } from "../../../../link/core/execute";
+import { ObservableStream, spyOnConsole } from "../../../internal";
 
 describe("MockedResponse.newData", () => {
   const setup = () => {
@@ -125,4 +126,163 @@ describe("mockLink", () => {
 
     jest.advanceTimersByTime(MAXIMUM_DELAY);
   });
+});
+
+test("removes @nonreactive directives from fields", async () => {
+  const query = gql`
+    query A {
+      a
+      b
+      c @nonreactive
+    }
+  `;
+
+  const link = new MockLink([
+    { request: { query }, result: { data: { a: 1, b: 2, c: 3 } } },
+  ]);
+
+  {
+    const stream = new ObservableStream(
+      execute(link, {
+        query: gql`
+          query A {
+            a
+            b
+            c
+          }
+        `,
+      })
+    );
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 1, b: 2, c: 3 },
+    });
+  }
+
+  {
+    using spy = spyOnConsole("warn");
+    const stream = new ObservableStream(
+      execute(link, {
+        query: gql`
+          query A {
+            a
+            b
+            c @nonreactive
+          }
+        `,
+      })
+    );
+
+    expect(spy.warn).toHaveBeenCalledTimes(1);
+    expect(spy.warn).toHaveBeenCalledWith(
+      expect.stringMatching(/^No more mocked responses for the query/)
+    );
+
+    await expect(stream.takeError()).resolves.toEqual(expect.any(Error));
+  }
+});
+
+test("removes @connection directives", async () => {
+  const query = gql`
+    query A {
+      a
+      b
+      c @connection(key: "test")
+    }
+  `;
+
+  const link = new MockLink([
+    { request: { query }, result: { data: { a: 1, b: 2, c: 3 } } },
+  ]);
+
+  {
+    const stream = new ObservableStream(
+      execute(link, {
+        query: gql`
+          query A {
+            a
+            b
+            c
+          }
+        `,
+      })
+    );
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 1, b: 2, c: 3 },
+    });
+  }
+
+  {
+    using spy = spyOnConsole("warn");
+    const stream = new ObservableStream(
+      execute(link, {
+        query: gql`
+          query A {
+            a
+            b
+            c @connection(key: "test")
+          }
+        `,
+      })
+    );
+
+    expect(spy.warn).toHaveBeenCalledTimes(1);
+    expect(spy.warn).toHaveBeenCalledWith(
+      expect.stringMatching(/^No more mocked responses for the query/)
+    );
+
+    await expect(stream.takeError()).resolves.toEqual(expect.any(Error));
+  }
+});
+
+test("removes fields with @client directives", async () => {
+  const query = gql`
+    query A {
+      a
+      b
+      c @client
+    }
+  `;
+
+  const link = new MockLink([
+    { request: { query }, result: { data: { a: 1, b: 2 } } },
+  ]);
+
+  {
+    const stream = new ObservableStream(
+      execute(link, {
+        query: gql`
+          query A {
+            a
+            b
+          }
+        `,
+      })
+    );
+
+    await expect(stream.takeNext()).resolves.toEqual({ data: { a: 1, b: 2 } });
+  }
+
+  {
+    using spy = spyOnConsole("warn");
+    const stream = new ObservableStream(
+      execute(link, {
+        query: gql`
+          query A {
+            a
+            b
+            c @client
+          }
+        `,
+      })
+    );
+
+    expect(spy.warn).toHaveBeenCalledTimes(1);
+    expect(spy.warn).toHaveBeenCalledWith(
+      expect.stringMatching(/^No more mocked responses for the query/)
+    );
+
+    await expect(stream.takeError()).resolves.toEqual(expect.any(Error));
+  }
 });

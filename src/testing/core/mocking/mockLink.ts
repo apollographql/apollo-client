@@ -6,6 +6,7 @@ import type {
   Operation,
   GraphQLRequest,
   FetchResult,
+  DocumentNode,
 } from "../../../link/core/index.js";
 import { ApolloLink } from "../../../link/core/index.js";
 
@@ -17,6 +18,7 @@ import {
   cloneDeep,
   stringifyForDisplay,
   print,
+  removeDirectivesFromDocument,
 } from "../../../utilities/index.js";
 
 export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
@@ -42,10 +44,22 @@ export interface MockLinkOptions {
   showWarnings?: boolean;
 }
 
+function getServerQuery(document: DocumentNode) {
+  return removeDirectivesFromDocument(
+    [
+      { name: "client", remove: true },
+      { name: "connection" },
+      { name: "nonreactive" },
+    ],
+    document
+  );
+}
+
 function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
+  const serverQuery = request.query ? getServerQuery(request.query) : null;
   const queryString =
-    request.query &&
-    print(addTypename ? addTypenameToDocument(request.query) : request.query);
+    serverQuery &&
+    print(addTypename ? addTypenameToDocument(serverQuery) : serverQuery);
   const requestKey = { query: queryString };
   return JSON.stringify(requestKey);
 }

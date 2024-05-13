@@ -41,44 +41,12 @@ export interface MockedResponse<
 
 export interface MockLinkOptions {
   showWarnings?: boolean;
-
-  /**
-   * Determines whether to remove client-only directives from the query such as
-   * `@client`, `@nonreactive`, and `@connection`. This matches the behavior in
-   * the core client and ensures `MockLink` behaves more similarly to a
-   * GraphQL server which would not receive these directives in the request.
-   *
-   * @default true
-   * @since 3.10.4
-   */
-  removeClientOnlyDirectives?: boolean;
 }
 
-function getServerQuery(document: DocumentNode) {
-  return removeDirectivesFromDocument(
-    [
-      { name: "client", remove: true },
-      { name: "connection" },
-      { name: "nonreactive" },
-    ],
-    document
-  );
-}
-
-function requestToKey(
-  request: GraphQLRequest,
-  addTypename: boolean,
-  removeClientOnlyDirectives?: boolean
-): string {
-  let serverQuery: DocumentNode | null = request.query;
-
-  if (request.query && removeClientOnlyDirectives) {
-    serverQuery = getServerQuery(request.query);
-  }
-
+function requestToKey(request: GraphQLRequest, addTypename: boolean): string {
   const queryString =
-    serverQuery &&
-    print(addTypename ? addTypenameToDocument(serverQuery) : serverQuery);
+    request.query &&
+    print(addTypename ? addTypenameToDocument(request.query) : request.query);
   const requestKey = { query: queryString };
   return JSON.stringify(requestKey);
 }
@@ -87,7 +55,6 @@ export class MockLink extends ApolloLink {
   public operation!: Operation;
   public addTypename: boolean = true;
   public showWarnings: boolean = true;
-  public removeClientOnlyDirectives: boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
@@ -98,8 +65,6 @@ export class MockLink extends ApolloLink {
     super();
     this.addTypename = addTypename;
     this.showWarnings = options.showWarnings ?? true;
-    this.removeClientOnlyDirectives =
-      options.removeClientOnlyDirectives ?? true;
 
     if (mockedResponses) {
       mockedResponses.forEach((mockedResponse) => {
@@ -113,8 +78,7 @@ export class MockLink extends ApolloLink {
       this.normalizeMockedResponse(mockedResponse);
     const key = requestToKey(
       normalizedMockedResponse.request,
-      this.addTypename,
-      this.removeClientOnlyDirectives
+      this.addTypename
     );
     let mockedResponses = this.mockedResponsesByKey[key];
     if (!mockedResponses) {
@@ -126,11 +90,7 @@ export class MockLink extends ApolloLink {
 
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
-    const key = requestToKey(
-      operation,
-      this.addTypename,
-      this.removeClientOnlyDirectives
-    );
+    const key = requestToKey(operation, this.addTypename);
     const unmatchedVars: Array<Record<string, any>> = [];
     const requestVariables = operation.variables || {};
     const mockedResponses = this.mockedResponsesByKey[key];

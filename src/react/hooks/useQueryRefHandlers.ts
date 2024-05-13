@@ -1,14 +1,12 @@
 import * as React from "rehackt";
 import {
+  assertWrappedQueryRef,
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "../internal/index.js";
-import type {
-  InternalQueryReference,
-  QueryReference,
-} from "../internal/index.js";
+import type { QueryRef } from "../internal/index.js";
 import type { OperationVariables } from "../../core/types.js";
 import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";
 import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";
@@ -42,22 +40,15 @@ export interface UseQueryRefHandlersResult<
  * }
  * ```
  * @since 3.9.0
- * @param queryRef - A `QueryReference` returned from `useBackgroundQuery`, `useLoadableQuery`, or `createQueryPreloader`.
+ * @param queryRef - A `QueryRef` returned from `useBackgroundQuery`, `useLoadableQuery`, or `createQueryPreloader`.
  */
 export function useQueryRefHandlers<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  queryRef: QueryReference<TData, TVariables>
+  queryRef: QueryRef<TData, TVariables>
 ): UseQueryRefHandlersResult<TData, TVariables> {
-  const unwrapped = unwrapQueryRef(
-    queryRef
-  ) satisfies InternalQueryReference<TData> as /*
-    by all rules of this codebase, this should never be undefined
-    but if `queryRef` is a transported object, it cannot have a
-    `QUERY_REFERENCE_SYMBOL` symbol property, so the call above
-    will return `undefined` and we want that represented in the type
-    */ InternalQueryReference<TData> | undefined;
+  const unwrapped = unwrapQueryRef(queryRef);
 
   return wrapHook(
     "useQueryRefHandlers",
@@ -76,8 +67,9 @@ function _useQueryRefHandlers<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  queryRef: QueryReference<TData, TVariables>
+  queryRef: QueryRef<TData, TVariables>
 ): UseQueryRefHandlersResult<TData, TVariables> {
+  assertWrappedQueryRef(queryRef);
   const [previousQueryRef, setPreviousQueryRef] = React.useState(queryRef);
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(queryRef);
   const internalQueryRef = unwrapQueryRef(queryRef);

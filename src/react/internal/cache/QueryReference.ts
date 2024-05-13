@@ -16,6 +16,7 @@ import {
 } from "../../../utilities/index.js";
 import type { QueryKey } from "./types.js";
 import { wrapPromiseWithState } from "../../../utilities/index.js";
+import { invariant } from "../../../utilities/globals/invariantWrappers.js";
 
 type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
 
@@ -27,17 +28,51 @@ type FetchMoreOptions<TData> = Parameters<
 
 const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 const PROMISE_SYMBOL: unique symbol = Symbol();
-
+declare const QUERY_REF_BRAND: unique symbol;
 /**
  * A `QueryReference` is an opaque object returned by `useBackgroundQuery`.
  * A child component reading the `QueryReference` via `useReadQuery` will
  * suspend until the promise resolves.
  */
-export interface QueryReference<TData = unknown, TVariables = unknown> {
+export interface QueryRef<TData = unknown, TVariables = unknown> {
+  /** @internal */
+  [QUERY_REF_BRAND]?(variables: TVariables): TData;
+}
+
+/**
+ * @internal
+ * For usage in internal helpers only.
+ */
+interface WrappedQueryRef<TData = unknown, TVariables = unknown>
+  extends QueryRef<TData, TVariables> {
   /** @internal */
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   /** @internal */
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
+  /** @internal */
+  toPromise?(): Promise<unknown>;
+}
+
+/**
+ * @deprecated Please use the `QueryRef` interface instead of `QueryReference`.
+ *
+ * {@inheritDoc @apollo/client!QueryRef:interface}
+ */
+export interface QueryReference<TData = unknown, TVariables = unknown>
+  extends QueryRef<TData, TVariables> {
+  /**
+   * @deprecated Please use the `QueryRef` interface instead of `QueryReference`.
+   *
+   * {@inheritDoc @apollo/client!PreloadedQueryRef#toPromise:member(1)}
+   */
+  toPromise?: unknown;
+}
+
+/**
+ * {@inheritDoc @apollo/client!QueryRef:interface}
+ */
+export interface PreloadedQueryRef<TData = unknown, TVariables = unknown>
+  extends QueryRef<TData, TVariables> {
   /**
    * A function that returns a promise that resolves when the query has finished
    * loading. The promise resolves with the `QueryReference` itself.
@@ -75,7 +110,7 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
    *
    * @since 3.9.0
    */
-  toPromise(): Promise<QueryReference<TData, TVariables>>;
+  toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -86,7 +121,7 @@ interface InternalQueryReferenceOptions {
 export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   internalQueryRef: InternalQueryReference<TData>
 ) {
-  const ref: QueryReference<TData, TVariables> = {
+  const ref: WrappedQueryRef<TData, TVariables> = {
     toPromise() {
       // We avoid resolving this promise with the query data because we want to
       // discourage using the server data directly from the queryRef. Instead,
@@ -108,7 +143,24 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   return ref;
 }
 
-export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
+export function assertWrappedQueryRef<TData, TVariables>(
+  queryRef: QueryRef<TData, TVariables>
+): asserts queryRef is WrappedQueryRef<TData, TVariables>;
+export function assertWrappedQueryRef<TData, TVariables>(
+  queryRef: QueryRef<TData, TVariables> | undefined | null
+): asserts queryRef is WrappedQueryRef<TData, TVariables> | undefined | null;
+export function assertWrappedQueryRef<TData, TVariables>(
+  queryRef: QueryRef<TData, TVariables> | undefined | null
+) {
+  invariant(
+    !queryRef || QUERY_REFERENCE_SYMBOL in queryRef,
+    "Expected a QueryRef object, but got something else instead."
+  );
+}
+
+export function getWrappedPromise<TData>(
+  queryRef: WrappedQueryRef<TData, any>
+) {
   const internalQueryRef = unwrapQueryRef(queryRef);
 
   return internalQueryRef.promise.status === "fulfilled" ?
@@ -117,13 +169,19 @@ export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
 }
 
 export function unwrapQueryRef<TData>(
-  queryRef: QueryReference<TData>
-): InternalQueryReference<TData> {
+  queryRef: WrappedQueryRef<TData>
+): InternalQueryReference<TData>;
+export function unwrapQueryRef<TData>(
+  queryRef: Partial<WrappedQueryRef<TData>>
+): undefined | InternalQueryReference<TData>;
+export function unwrapQueryRef<TData>(
+  queryRef: Partial<WrappedQueryRef<TData>>
+) {
   return queryRef[QUERY_REFERENCE_SYMBOL];
 }
 
 export function updateWrappedQueryRef<TData>(
-  queryRef: QueryReference<TData>,
+  queryRef: WrappedQueryRef<TData>,
   promise: QueryRefPromise<TData>
 ) {
   queryRef[PROMISE_SYMBOL] = promise;

@@ -33,7 +33,7 @@ import {
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
-import { QueryReference } from "../../internal";
+import { QueryRef, QueryReference } from "../../internal";
 import { InMemoryCache } from "../../../cache";
 import { SuspenseQueryHookFetchPolicy } from "../../types/types";
 import equal from "@wry/equality";
@@ -70,7 +70,7 @@ function createDefaultTrackedComponents<
     return <div>Loading</div>;
   }
 
-  function ReadQueryHook({ queryRef }: { queryRef: QueryReference<TData> }) {
+  function ReadQueryHook({ queryRef }: { queryRef: QueryRef<TData> }) {
     useTrackRenders();
     Profiler.mergeSnapshot({
       result: useReadQuery(queryRef),
@@ -557,7 +557,7 @@ it("does not recreate queryRef or execute a network request when rerendering use
 
   const Profiler = createProfiler({
     initialSnapshot: {
-      queryRef: null as QueryReference<SimpleCaseData> | null,
+      queryRef: null as QueryRef<SimpleCaseData> | null,
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
   });
@@ -4843,7 +4843,7 @@ describe("refetch", () => {
       );
     }
 
-    function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
+    function Todo({ queryRef }: { queryRef: QueryRef<Data> }) {
       useTrackRenders();
       Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
@@ -4973,7 +4973,7 @@ describe("refetch", () => {
       );
     }
 
-    function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
+    function Todo({ queryRef }: { queryRef: QueryRef<Data> }) {
       useTrackRenders();
       Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
@@ -6337,7 +6337,7 @@ describe.skip("type tests", () => {
     expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
   });
 
-  it("returns QueryReference<TData> | undefined when `skip` is present", () => {
+  it("returns QueryRef<TData> | undefined when `skip` is present", () => {
     const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, {
@@ -6345,10 +6345,13 @@ describe.skip("type tests", () => {
     });
 
     expectTypeOf(inferredQueryRef).toEqualTypeOf<
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+    >();
+    expectTypeOf(inferredQueryRef).toMatchTypeOf<
       QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
     expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData>
+      QueryRef<VariablesCaseData>
     >();
 
     const [explicitQueryRef] = useBackgroundQuery<
@@ -6357,10 +6360,13 @@ describe.skip("type tests", () => {
     >(query, { skip: true });
 
     expectTypeOf(explicitQueryRef).toEqualTypeOf<
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+    >();
+    expectTypeOf(explicitQueryRef).toMatchTypeOf<
       QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
     expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
 
     // TypeScript is too smart and using a `const` or `let` boolean variable
@@ -6375,10 +6381,13 @@ describe.skip("type tests", () => {
     });
 
     expectTypeOf(dynamicQueryRef).toEqualTypeOf<
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+    >();
+    expectTypeOf(dynamicQueryRef).toMatchTypeOf<
       QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
     expectTypeOf(dynamicQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
   });
 
@@ -6389,7 +6398,7 @@ describe.skip("type tests", () => {
 
     expectTypeOf(inferredQueryRef).toEqualTypeOf<undefined>();
     expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
 
     const [explicitQueryRef] = useBackgroundQuery<
@@ -6399,11 +6408,11 @@ describe.skip("type tests", () => {
 
     expectTypeOf(explicitQueryRef).toEqualTypeOf<undefined>();
     expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
   });
 
-  it("returns QueryReference<TData> | undefined when using conditional `skipToken`", () => {
+  it("returns QueryRef<TData> | undefined when using conditional `skipToken`", () => {
     const { query } = setupVariablesCase();
     const options = {
       skip: true,
@@ -6415,10 +6424,13 @@ describe.skip("type tests", () => {
     );
 
     expectTypeOf(inferredQueryRef).toEqualTypeOf<
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+    >();
+    expectTypeOf(inferredQueryRef).toMatchTypeOf<
       QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
     expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
 
     const [explicitQueryRef] = useBackgroundQuery<
@@ -6427,14 +6439,17 @@ describe.skip("type tests", () => {
     >(query, options.skip ? skipToken : undefined);
 
     expectTypeOf(explicitQueryRef).toEqualTypeOf<
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+    >();
+    expectTypeOf(explicitQueryRef).toMatchTypeOf<
       QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
     expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
   });
 
-  it("returns QueryReference<DeepPartial<TData>> | undefined when using `skipToken` with `returnPartialData`", () => {
+  it("returns QueryRef<DeepPartial<TData>> | undefined when using `skipToken` with `returnPartialData`", () => {
     const { query } = setupVariablesCase();
     const options = {
       skip: true,
@@ -6446,11 +6461,15 @@ describe.skip("type tests", () => {
     );
 
     expectTypeOf(inferredQueryRef).toEqualTypeOf<
+      | QueryRef<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
+      | undefined
+    >();
+    expectTypeOf(inferredQueryRef).toMatchTypeOf<
       | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
       | undefined
     >();
     expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
 
     const [explicitQueryRef] = useBackgroundQuery<
@@ -6459,11 +6478,15 @@ describe.skip("type tests", () => {
     >(query, options.skip ? skipToken : { returnPartialData: true });
 
     expectTypeOf(explicitQueryRef).toEqualTypeOf<
+      | QueryRef<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
+      | undefined
+    >();
+    expectTypeOf(explicitQueryRef).toMatchTypeOf<
       | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
       | undefined
     >();
     expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
   });
 });

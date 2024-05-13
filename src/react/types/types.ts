@@ -32,7 +32,11 @@ import type {
 
 /* QueryReference type */
 
-export type { QueryReference } from "../internal/index.js";
+export type {
+  QueryReference,
+  QueryRef,
+  PreloadedQueryRef,
+} from "../internal/index.js";
 
 /* Common types */
 

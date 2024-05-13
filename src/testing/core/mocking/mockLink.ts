@@ -68,10 +68,8 @@ function getServerQuery(document: DocumentNode) {
 
 function requestToKey(
   request: GraphQLRequest,
-  {
-    addTypename,
-    removeClientOnlyDirectives,
-  }: { addTypename: boolean; removeClientOnlyDirectives: boolean }
+  addTypename: boolean,
+  removeClientOnlyDirectives?: boolean
 ): string {
   let serverQuery: DocumentNode | null = request.query;
 
@@ -115,7 +113,11 @@ export class MockLink extends ApolloLink {
   public addMockedResponse(mockedResponse: MockedResponse) {
     const normalizedMockedResponse =
       this.normalizeMockedResponse(mockedResponse);
-    const key = requestToKey(normalizedMockedResponse.request, this);
+    const key = requestToKey(
+      normalizedMockedResponse.request,
+      this.addTypename,
+      this.removeClientOnlyDirectives
+    );
     let mockedResponses = this.mockedResponsesByKey[key];
     if (!mockedResponses) {
       mockedResponses = [];
@@ -126,7 +128,11 @@ export class MockLink extends ApolloLink {
 
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
-    const key = requestToKey(operation, this);
+    const key = requestToKey(
+      operation,
+      this.addTypename,
+      this.removeClientOnlyDirectives
+    );
     const unmatchedVars: Array<Record<string, any>> = [];
     const requestVariables = operation.variables || {};
     const mockedResponses = this.mockedResponsesByKey[key];

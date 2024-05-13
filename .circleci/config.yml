@@ -84,7 +84,7 @@ jobs:
           command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
-          command: npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.framework >>
+          command: npm install --legacy-peer-deps @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.framework >>
           working_directory: integration-tests
       - run:
           command: npx playwright install-deps

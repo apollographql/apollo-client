@@ -161,17 +161,7 @@ test("removes @nonreactive directives from fields", async () => {
 
   {
     using spy = spyOnConsole("warn");
-    const stream = new ObservableStream(
-      execute(link, {
-        query: gql`
-          query A {
-            a
-            b
-            c @nonreactive
-          }
-        `,
-      })
-    );
+    const stream = new ObservableStream(execute(link, { query }));
 
     expect(spy.warn).toHaveBeenCalledTimes(1);
     expect(spy.warn).toHaveBeenCalledWith(
@@ -215,17 +205,7 @@ test("removes @connection directives", async () => {
 
   {
     using spy = spyOnConsole("warn");
-    const stream = new ObservableStream(
-      execute(link, {
-        query: gql`
-          query A {
-            a
-            b
-            c @connection(key: "test")
-          }
-        `,
-      })
-    );
+    const stream = new ObservableStream(execute(link, { query }));
 
     expect(spy.warn).toHaveBeenCalledTimes(1);
     expect(spy.warn).toHaveBeenCalledWith(

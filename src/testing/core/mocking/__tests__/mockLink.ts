@@ -286,3 +286,56 @@ test("removes fields with @client directives", async () => {
     await expect(stream.takeError()).resolves.toEqual(expect.any(Error));
   }
 });
+
+test("leaves query as-is when removeClientOnlyDirectives is false", async () => {
+  const query = gql`
+    query A {
+      a
+      b @client
+      c @nonreactive
+      d @connection(key: "test")
+    }
+  `;
+
+  const link = new MockLink(
+    [{ request: { query }, result: { data: { a: 1, c: 3, d: 4 } } }],
+    true,
+    { removeClientOnlyDirectives: false }
+  );
+
+  {
+    using spy = spyOnConsole("warn");
+    const stream = new ObservableStream(
+      execute(link, {
+        query: gql`
+          query A {
+            a
+            c
+            d
+          }
+        `,
+      })
+    );
+
+    expect(spy.warn).toHaveBeenCalledTimes(1);
+    expect(spy.warn).toHaveBeenCalledWith(
+      expect.stringMatching(/^No more mocked responses for the query/)
+    );
+
+    await expect(stream.takeError()).resolves.toEqual(expect.any(Error));
+  }
+
+  {
+    const link = new MockLink(
+      [{ request: { query }, result: { data: { a: 1, b: 2, c: 3, d: 4 } } }],
+      true,
+      { removeClientOnlyDirectives: false }
+    );
+
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 1, b: 2, c: 3, d: 4 },
+    });
+  }
+});

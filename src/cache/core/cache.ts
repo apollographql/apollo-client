@@ -21,8 +21,8 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from "../../core/types.js";
-import { equal } from "@wry/equality";
 import type { MissingTree } from "./types/common.js";
+import { equalByQuery } from "../../core/equalByQuery.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -240,12 +240,20 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     let latestDiff: DataProxy.DiffResult<TData> | undefined;
 
     return new Observable((observer) => {
+      const query = this.getFragmentDoc(fragment, fragmentName);
+
       return this.watch<TData, TVars>({
         ...diffOptions,
         immediate: true,
-        query: this.getFragmentDoc(fragment, fragmentName),
+        query,
         callback(diff) {
-          if (equal(diff, latestDiff)) {
+          if (
+            equalByQuery(
+              query,
+              { data: diff.result },
+              { data: latestDiff?.result }
+            )
+          ) {
             return;
           }
 

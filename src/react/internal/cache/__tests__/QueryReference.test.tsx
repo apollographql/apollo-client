@@ -45,7 +45,7 @@ test.skip("type tests", () => {
     function ComponentWithQueryRefProp<
       TData = unknown,
       TVariables = unknown,
-    >({}: { queryRef: QueryRef<TData> }) {
+    >({}: { queryRef: QueryRef<TData, TVariables> }) {
       return null;
     }
     function ComponentWithQueryReferenceProp<
@@ -57,7 +57,7 @@ test.skip("type tests", () => {
     function ComponentWithPreloadedQueryRefProp<
       TData = unknown,
       TVariables = unknown,
-    >({}: { queryRef: PreloadedQueryRef<TData> }) {
+    >({}: { queryRef: PreloadedQueryRef<TData, TVariables> }) {
       return null;
     }
 

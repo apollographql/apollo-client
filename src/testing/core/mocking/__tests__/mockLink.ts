@@ -138,7 +138,11 @@ test("removes @nonreactive directives from fields", async () => {
   `;
 
   const link = new MockLink([
-    { request: { query }, result: { data: { a: 1, b: 2, c: 3 } } },
+    {
+      request: { query },
+      result: { data: { a: 1, b: 2, c: 3 } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    },
   ]);
 
   {
@@ -182,7 +186,11 @@ test("removes @connection directives", async () => {
   `;
 
   const link = new MockLink([
-    { request: { query }, result: { data: { a: 1, b: 2, c: 3 } } },
+    {
+      request: { query },
+      result: { data: { a: 1, b: 2, c: 3 } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    },
   ]);
 
   {
@@ -226,7 +234,11 @@ test("removes fields with @client directives", async () => {
   `;
 
   const link = new MockLink([
-    { request: { query }, result: { data: { a: 1, b: 2 } } },
+    {
+      request: { query },
+      result: { data: { a: 1, b: 2 } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    },
   ]);
 
   {
@@ -278,7 +290,13 @@ test("leaves query as-is when removeClientOnlyDirectives is false", async () => 
   `;
 
   const link = new MockLink(
-    [{ request: { query }, result: { data: { a: 1, c: 3, d: 4 } } }],
+    [
+      {
+        request: { query },
+        result: { data: { a: 1, c: 3, d: 4 } },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ],
     true,
     { removeClientOnlyDirectives: false }
   );
@@ -306,12 +324,6 @@ test("leaves query as-is when removeClientOnlyDirectives is false", async () => 
   }
 
   {
-    const link = new MockLink(
-      [{ request: { query }, result: { data: { a: 1, b: 2, c: 3, d: 4 } } }],
-      true,
-      { removeClientOnlyDirectives: false }
-    );
-
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream.takeNext()).resolves.toEqual({

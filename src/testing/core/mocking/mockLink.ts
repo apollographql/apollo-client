@@ -43,7 +43,7 @@ export interface MockLinkOptions {
   showWarnings?: boolean;
 }
 
-function requestToKey(request: GraphQLRequest, addTypename: boolean): string {
+function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
   const queryString =
     request.query &&
     print(addTypename ? addTypenameToDocument(request.query) : request.query);
@@ -53,13 +53,13 @@ function requestToKey(request: GraphQLRequest, addTypename: boolean): string {
 
 export class MockLink extends ApolloLink {
   public operation!: Operation;
-  public addTypename: boolean = true;
+  public addTypename: Boolean = true;
   public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse<any, any>>,
-    addTypename: boolean = true,
+    addTypename: Boolean = true,
     options: MockLinkOptions = Object.create(null)
   ) {
     super();

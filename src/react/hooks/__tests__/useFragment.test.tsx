@@ -1414,6 +1414,150 @@ describe("useFragment", () => {
     await expect(ProfiledHook).not.toRerender();
   });
 
+  it("does not rerender when fields with @nonreactive change", async () => {
+    type Post = {
+      __typename: "User";
+      id: number;
+      title: string;
+      updatedAt: string;
+    };
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+    });
+
+    const fragment: TypedDocumentNode<Post> = gql`
+      fragment PostFragment on Post {
+        id
+        title
+        updatedAt @nonreactive
+      }
+    `;
+
+    client.writeFragment({
+      fragment,
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        updatedAt: "2024-01-01",
+      },
+    });
+
+    const ProfiledHook = profileHook(() =>
+      useFragment({ fragment, from: { __typename: "Post", id: 1 } })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+
+      expect(snapshot).toEqual({
+        complete: true,
+        data: {
+          __typename: "Post",
+          id: 1,
+          title: "Blog post",
+          updatedAt: "2024-01-01",
+        },
+      });
+    }
+
+    client.writeFragment({
+      fragment,
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        updatedAt: "2024-02-01",
+      },
+    });
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
+  it("does not rerender when fields with @nonreactive on nested fragment change", async () => {
+    type Post = {
+      __typename: "User";
+      id: number;
+      title: string;
+      updatedAt: string;
+    };
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+    });
+
+    const fragment: TypedDocumentNode<Post> = gql`
+      fragment PostFragment on Post {
+        id
+        title
+        ...PostFields @nonreactive
+      }
+
+      fragment PostFields on Post {
+        updatedAt
+      }
+    `;
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "PostFragment",
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        updatedAt: "2024-01-01",
+      },
+    });
+
+    const ProfiledHook = profileHook(() =>
+      useFragment({
+        fragment,
+        fragmentName: "PostFragment",
+        from: { __typename: "Post", id: 1 },
+      })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+
+      expect(snapshot).toEqual({
+        complete: true,
+        data: {
+          __typename: "Post",
+          id: 1,
+          title: "Blog post",
+          updatedAt: "2024-01-01",
+        },
+      });
+    }
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "PostFragment",
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        updatedAt: "2024-02-01",
+      },
+    });
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
   describe("tests with incomplete data", () => {
     let cache: InMemoryCache, wrapper: React.FunctionComponent;
     const ItemFragment = gql`

@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 import { MockLink, MockedResponse } from "../mockLink";
 import { execute } from "../../../../link/core/execute";
-import { ObservableStream, spyOnConsole } from "../../../internal";
+import { ObservableStream } from "../../../internal";
 
 describe("MockedResponse.newData", () => {
   const setup = () => {
@@ -129,25 +129,29 @@ describe("mockLink", () => {
 });
 
 test("removes @nonreactive directives from fields", async () => {
-  const query = gql`
+  const serverQuery = gql`
     query A {
       a
       b
-      c @nonreactive
+      c
     }
   `;
 
   const link = new MockLink([
     {
-      request: { query },
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c @nonreactive
+          }
+        `,
+      },
       result: { data: { a: 1, b: 2, c: 3 } },
-      maxUsageCount: Number.POSITIVE_INFINITY,
     },
-  ]);
-
-  {
-    const stream = new ObservableStream(
-      execute(link, {
+    {
+      request: {
         query: gql`
           query A {
             a
@@ -155,8 +159,13 @@ test("removes @nonreactive directives from fields", async () => {
             c
           }
         `,
-      })
-    );
+      },
+      result: { data: { a: 4, b: 5, c: 6 } },
+    },
+  ]);
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
     await expect(stream.takeNext()).resolves.toEqual({
       data: { a: 1, b: 2, c: 3 },
@@ -164,38 +173,38 @@ test("removes @nonreactive directives from fields", async () => {
   }
 
   {
-    using spy = spyOnConsole("warn");
-    const stream = new ObservableStream(execute(link, { query }));
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
-    expect(spy.warn).toHaveBeenCalledTimes(1);
-    expect(spy.warn).toHaveBeenCalledWith(
-      expect.stringMatching(/^No more mocked responses for the query/)
-    );
-
-    await expect(stream.takeError()).resolves.toEqual(expect.any(Error));
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 4, b: 5, c: 6 },
+    });
   }
 });
 
 test("removes @connection directives", async () => {
-  const query = gql`
+  const serverQuery = gql`
     query A {
       a
       b
-      c @connection(key: "test")
+      c
     }
   `;
 
   const link = new MockLink([
     {
-      request: { query },
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c @connection(key: "test")
+          }
+        `,
+      },
       result: { data: { a: 1, b: 2, c: 3 } },
-      maxUsageCount: Number.POSITIVE_INFINITY,
     },
-  ]);
-
-  {
-    const stream = new ObservableStream(
-      execute(link, {
+    {
+      request: {
         query: gql`
           query A {
             a
@@ -203,8 +212,13 @@ test("removes @connection directives", async () => {
             c
           }
         `,
-      })
-    );
+      },
+      result: { data: { a: 4, b: 5, c: 6 } },
+    },
+  ]);
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
     await expect(stream.takeNext()).resolves.toEqual({
       data: { a: 1, b: 2, c: 3 },
@@ -212,54 +226,25 @@ test("removes @connection directives", async () => {
   }
 
   {
-    using spy = spyOnConsole("warn");
-    const stream = new ObservableStream(execute(link, { query }));
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
-    expect(spy.warn).toHaveBeenCalledTimes(1);
-    expect(spy.warn).toHaveBeenCalledWith(
-      expect.stringMatching(/^No more mocked responses for the query/)
-    );
-
-    await expect(stream.takeError()).resolves.toEqual(expect.any(Error));
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 4, b: 5, c: 6 },
+    });
   }
 });
 
 test("removes fields with @client directives", async () => {
-  const query = gql`
+  const serverQuery = gql`
     query A {
       a
       b
-      c @client
     }
   `;
 
   const link = new MockLink([
     {
-      request: { query },
-      result: { data: { a: 1, b: 2 } },
-      maxUsageCount: Number.POSITIVE_INFINITY,
-    },
-  ]);
-
-  {
-    const stream = new ObservableStream(
-      execute(link, {
-        query: gql`
-          query A {
-            a
-            b
-          }
-        `,
-      })
-    );
-
-    await expect(stream.takeNext()).resolves.toEqual({ data: { a: 1, b: 2 } });
-  }
-
-  {
-    using spy = spyOnConsole("warn");
-    const stream = new ObservableStream(
-      execute(link, {
+      request: {
         query: gql`
           query A {
             a
@@ -267,14 +252,31 @@ test("removes fields with @client directives", async () => {
             c @client
           }
         `,
-      })
-    );
+      },
+      result: { data: { a: 1, b: 2 } },
+    },
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+          }
+        `,
+      },
+      result: { data: { a: 3, b: 4 } },
+    },
+  ]);
 
-    expect(spy.warn).toHaveBeenCalledTimes(1);
-    expect(spy.warn).toHaveBeenCalledWith(
-      expect.stringMatching(/^No more mocked responses for the query/)
-    );
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
-    await expect(stream.takeError()).resolves.toEqual(expect.any(Error));
+    await expect(stream.takeNext()).resolves.toEqual({ data: { a: 1, b: 2 } });
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({ data: { a: 3, b: 4 } });
   }
 });

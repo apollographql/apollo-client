@@ -327,6 +327,44 @@ test("strips named fragments inside inline fragments", () => {
   });
 });
 
+test("handles objects with no matching inline fragment condition", () => {
+  const cache = new InMemoryCache({
+    possibleTypes: {
+      Drink: ["HotChocolate", "Juice"],
+    },
+  });
+
+  const query = gql`
+    query {
+      drinks {
+        __typename
+        id
+        ... on Juice {
+          fruitBase
+        }
+      }
+    }
+  `;
+
+  const data = mask(
+    {
+      drinks: [
+        { __typename: "HotChocolate", id: 1 },
+        { __typename: "Juice", id: 2, fruitBase: "Strawberry" },
+      ],
+    },
+    query,
+    createFragmentMatcher(cache)
+  );
+
+  expect(data).toEqual({
+    drinks: [
+      { __typename: "HotChocolate", id: 1 },
+      { __typename: "Juice", id: 2, fruitBase: "Strawberry" },
+    ],
+  });
+});
+
 test("handles overlapping fields inside multiple inline fragments", () => {
   const cache = new InMemoryCache({
     possibleTypes: {

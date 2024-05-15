@@ -498,7 +498,7 @@ test("does nothing if there are no fragments to mask", () => {
   });
 });
 
-test.skip("maintains referential equality on subtrees that did not change", () => {
+test("maintains referential equality on subtrees that did not change", () => {
   const query = gql`
     query {
       user {
@@ -534,6 +534,15 @@ test.skip("maintains referential equality on subtrees that did not change", () =
           ...TradeIndustryFields
         }
       }
+      drink {
+        __typename
+        ... on SportsDrink {
+          saltContent
+        }
+        ... on Espresso {
+          __typename
+        }
+      }
     }
 
     fragment UserFields on User {
@@ -566,7 +575,8 @@ test.skip("maintains referential equality on subtrees that did not change", () =
       languageRequirements: ["English", "German"],
     },
   ];
-  const originalData = { user, post, authors, industries };
+  const drink = { __typename: "Espresso" };
+  const originalData = { user, post, authors, industries, drink };
 
   const { data } = mask(originalData, query, new InMemoryCache().policies);
 
@@ -586,6 +596,7 @@ test.skip("maintains referential equality on subtrees that did not change", () =
       { __typename: "FinanceIndustry" },
       { __typename: "TradeIndustry", id: 10, yearsInBusiness: 15 },
     ],
+    drink: { __typename: "Espresso" },
   });
 
   expect(data).not.toBe(originalData);
@@ -597,9 +608,10 @@ test.skip("maintains referential equality on subtrees that did not change", () =
   expect(data.industries[0]).toBe(industries[0]);
   expect(data.industries[1]).not.toBe(industries[1]);
   expect(data.industries[2]).not.toBe(industries[2]);
+  expect(data.drink).toBe(drink);
 });
 
-test.skip("maintains referential equality the entire result if there are no fragments", () => {
+test("maintains referential equality the entire result if there are no fragments", () => {
   const query = gql`
     query {
       user {

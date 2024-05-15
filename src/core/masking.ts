@@ -6,6 +6,7 @@ import {
 } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
 import type { Policies } from "../cache/index.js";
+import equal from "@wry/equality";
 
 export function mask(
   data: Record<string, unknown>,
@@ -15,7 +16,7 @@ export function mask(
   const definition = getMainDefinition(document);
   const masked = maskSelectionSet(data, definition.selectionSet, policies);
 
-  return { data: masked };
+  return equal(data, masked) ? { data } : { data: masked };
 }
 
 function maskSelectionSet(
@@ -25,7 +26,9 @@ function maskSelectionSet(
 ): any {
   if (Array.isArray(data)) {
     return data.map((item) => {
-      return maskSelectionSet(item, selectionSet, policies);
+      const masked = maskSelectionSet(item, selectionSet, policies);
+
+      return equal(item, masked) ? item : masked;
     });
   }
 
@@ -36,10 +39,19 @@ function maskSelectionSet(
           const keyName = resultKeyNameFromField(selection);
           const childSelectionSet = selection.selectionSet;
 
-          memo[keyName] =
-            childSelectionSet ?
-              maskSelectionSet(data[keyName], childSelectionSet, policies)
-            : data[keyName];
+          memo[keyName] = data[keyName];
+
+          if (childSelectionSet) {
+            const masked = maskSelectionSet(
+              data[keyName],
+              childSelectionSet,
+              policies
+            );
+
+            if (!equal(memo[keyName], masked)) {
+              memo[keyName] = masked;
+            }
+          }
 
           return memo;
         }

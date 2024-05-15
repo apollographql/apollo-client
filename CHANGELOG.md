@@ -1,5 +1,39 @@
 # @apollo/client
 
+## 3.10.4
+
+### Patch Changes
+
+- [#11838](https://github.com/apollographql/apollo-client/pull/11838) [`8475346`](https://github.com/apollographql/apollo-client/commit/84753462af50d89c8693713990cccf432ff8267d) Thanks [@alex-kinokon](https://github.com/alex-kinokon)! - Don’t prompt for DevTools installation for browser extension page
+
+- [#11839](https://github.com/apollographql/apollo-client/pull/11839) [`6481fe1`](https://github.com/apollographql/apollo-client/commit/6481fe1196cedee987781dcb45ebdc0cafb3998c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix a regression in [3.9.5](https://github.com/apollographql/apollo-client/releases/tag/v3.9.5) where a merge function that returned an incomplete result would not allow the client to refetch in order to fulfill the query.
+
+- [#11844](https://github.com/apollographql/apollo-client/pull/11844) [`86984f2`](https://github.com/apollographql/apollo-client/commit/86984f24bd9076a6034acd59bbcb28a2ea1add93) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Honor the `@nonreactive` directive when using `cache.watchFragment` or the `useFragment` hook to avoid rerendering when using these directives.
+
+- [#11824](https://github.com/apollographql/apollo-client/pull/11824) [`47ad806`](https://github.com/apollographql/apollo-client/commit/47ad806c7b0c55f1e05dbf276ca87a354ac389e5) Thanks [@phryneas](https://github.com/phryneas)! - Create branded `QueryRef` type without exposed properties.
+
+  This change deprecates `QueryReference` in favor of a `QueryRef` type that doesn't expose any properties.
+  This change also updates `preloadQuery` to return a new `PreloadedQueryRef` type, which exposes the `toPromise` function as it does today. This means that query refs produced by `useBackgroundQuery` and `useLoadableQuery` now return `QueryRef` types that do not have access to a `toPromise` function, which was never meant to be used in combination with these hooks.
+
+  While we tend to avoid any types of breaking changes in patch releases as this, this change was necessary to support an upcoming version of the React Server Component integration, which needed to omit the `toPromise` function that would otherwise have broken at runtime.
+  Note that this is a TypeScript-only change. At runtime, `toPromise` is still present on all queryRefs currently created by this package - but we strongly want to discourage you from accessing it in all cases except for the `PreloadedQueryRef` use case.
+
+  Migration is as simple as replacing all references to `QueryReference` with `QueryRef`, so it should be possible to do this with a search & replace in most code bases:
+
+  ```diff
+  -import { QueryReference } from '@apollo/client'
+  +import { QueryRef } from '@apollo/client'
+
+  - function Component({ queryRef }: { queryRef: QueryReference<TData> }) {
+  + function Component({ queryRef }: { queryRef: QueryRef<TData> }) {
+    // ...
+  }
+  ```
+
+- [#11845](https://github.com/apollographql/apollo-client/pull/11845) [`4c5c820`](https://github.com/apollographql/apollo-client/commit/4c5c820b6172f6a2455bcdd974109513e0e2a39e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `@nonreactive` directives from queries passed to `MockLink` to ensure they are properly matched.
+
+- [#11837](https://github.com/apollographql/apollo-client/pull/11837) [`dff15b1`](https://github.com/apollographql/apollo-client/commit/dff15b1b03ebac9cae508c69bf607a29d0f6eccb) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a polled query created in React strict mode may not stop polling after the component unmounts while using the `cache-and-network` fetch policy.
+
 ## 3.10.3
 
 ### Patch Changes

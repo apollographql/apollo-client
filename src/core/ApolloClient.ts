@@ -120,13 +120,6 @@ export interface ApolloClientOptions<TCacheShape> {
    */
   version?: string;
   documentTransform?: DocumentTransform;
-  /**
-   * Determines whether to enable data masking for queries made through the
-   * client.
-   *
-   * Defaults to `false`
-   */
-  dataMasking?: boolean;
 }
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
@@ -216,7 +209,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
-      dataMasking,
     } = options;
 
     let { link } = options;
@@ -269,7 +261,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       },
       localState: this.localState,
       assumeImmutableResults,
-      dataMasking,
       onBroadcast:
         connectToDevTools ?
           () => {

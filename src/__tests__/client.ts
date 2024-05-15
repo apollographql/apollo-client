@@ -43,7 +43,7 @@ import {
   MockLink,
   wait,
 } from "../testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
+import { spyOnConsole } from "../testing/internal";
 import { waitFor } from "@testing-library/react";
 
 describe("client", () => {
@@ -6404,62 +6404,6 @@ describe("custom document transforms", () => {
         b
       }
     `);
-  });
-});
-
-describe("data masking", () => {
-  it("masks data returned from queries", async () => {
-    const fragment = gql`
-      fragment FlavorFields on Flavor {
-        name
-        description
-      }
-    `;
-    const query = gql`
-      query {
-        favoriteFlavor {
-          id
-          ...FlavorFields
-        }
-      }
-
-      ${fragment}
-    `;
-
-    const link = new MockLink([
-      {
-        request: { query },
-        result: {
-          data: {
-            favoriteFlavor: {
-              __typename: "Flavor",
-              id: 1,
-              name: "Strawberry",
-              description: "Hint of strawberry",
-            },
-          },
-        },
-        delay: 20,
-      },
-    ]);
-
-    const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
-      link,
-    });
-
-    const stream = new ObservableStream(client.watchQuery({ query }));
-
-    {
-      const snapshot = await stream.takeNext();
-
-      expect(snapshot).toEqual({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        data: { favoriteFlavor: { __typename: "Flavor", id: 1 } },
-      });
-    }
   });
 });
 

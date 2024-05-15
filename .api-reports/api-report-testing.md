@@ -1553,7 +1553,7 @@ interface Resolvers {
 }
 
 // @public (undocumented)
-export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
+export type ResultFunction<T, V = Record<string, any>> = <_V extends V = V>(variables: _V) => T;
 
 // @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
@@ -1698,7 +1698,7 @@ interface UriFunction {
 }
 
 // @public (undocumented)
-type VariableMatcher<V = Record<string, any>> = (variables: V) => boolean;
+type VariableMatcher<V = Record<string, any>> = <_V extends V = V>(variables: _V) => boolean;
 
 // @public (undocumented)
 export function wait(ms: number): Promise<void>;

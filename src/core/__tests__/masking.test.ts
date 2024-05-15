@@ -332,12 +332,12 @@ test("handles overlapping fields inside multiple inline fragments", () => {
       Drink: [
         "Espresso",
         "Latte",
-        "Cappucinno",
+        "Cappuccino",
         "Cortado",
         "Juice",
         "HotChocolate",
       ],
-      Espresso: ["Latte", "Cappucinno", "Cortado"],
+      Espresso: ["Latte", "Cappuccino", "Cortado"],
     },
   });
   const query = gql`
@@ -357,7 +357,7 @@ test("handles overlapping fields inside multiple inline fragments", () => {
               ...FlavorFields
             }
           }
-          ... on Cappucinno {
+          ... on Cappuccino {
             roast
           }
           ... on Cortado {
@@ -412,7 +412,7 @@ test("handles overlapping fields inside multiple inline fragments", () => {
           },
         },
         {
-          __typename: "Cappucinno",
+          __typename: "Cappuccino",
           id: 2,
           amount: 12,
           milkType: "Cow",
@@ -453,7 +453,7 @@ test("handles overlapping fields inside multiple inline fragments", () => {
         },
       },
       {
-        __typename: "Cappucinno",
+        __typename: "Cappuccino",
         id: 2,
         amount: 12,
         milkType: "Cow",

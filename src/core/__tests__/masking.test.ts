@@ -14,7 +14,7 @@ test("strips top-level fragment data from query", () => {
     }
   `;
 
-  const { data } = mask(
+  const data = mask(
     { foo: true, bar: true },
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -38,7 +38,7 @@ test("strips fragment data from nested object", () => {
     }
   `;
 
-  const { data } = mask(
+  const data = mask(
     { user: { __typename: "User", id: 1, name: "Test User" } },
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -62,7 +62,7 @@ test("strips fragment data from arrays", () => {
     }
   `;
 
-  const { data } = mask(
+  const data = mask(
     {
       users: [
         { __typename: "User", id: 1, name: "Test User 1" },
@@ -101,7 +101,7 @@ test("strips multiple fragments in the same selection set", () => {
     }
   `;
 
-  const { data } = mask(
+  const data = mask(
     {
       user: {
         __typename: "User",
@@ -143,7 +143,7 @@ test("strips multiple fragments across different selection sets", () => {
     }
   `;
 
-  const { data } = mask(
+  const data = mask(
     {
       user: {
         __typename: "User",
@@ -183,7 +183,7 @@ test("leaves overlapping fields in query", () => {
     }
   `;
 
-  const { data } = mask(
+  const data = mask(
     {
       user: {
         __typename: "User",
@@ -224,7 +224,7 @@ test("does not strip inline fragments", () => {
     }
   `;
 
-  const { data } = mask(
+  const data = mask(
     {
       user: {
         __typename: "User",
@@ -295,7 +295,7 @@ test("strips named fragments inside inline fragments", () => {
     }
   `;
 
-  const { data } = mask(
+  const data = mask(
     {
       user: {
         __typename: "User",
@@ -397,7 +397,7 @@ test("handles overlapping fields inside multiple inline fragments", () => {
     }
   `;
 
-  const { data } = mask(
+  const data = mask(
     {
       drinks: [
         {
@@ -488,7 +488,7 @@ test("does nothing if there are no fragments to mask", () => {
     }
   `;
 
-  const { data } = mask(
+  const data = mask(
     { user: { __typename: "User", id: 1, name: "Test User" } },
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -579,7 +579,7 @@ test("maintains referential equality on subtrees that did not change", () => {
   const drink = { __typename: "Espresso" };
   const originalData = { user, post, authors, industries, drink };
 
-  const { data } = mask(
+  const data = mask(
     originalData,
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -635,7 +635,7 @@ test("maintains referential equality the entire result if there are no fragments
     },
   };
 
-  const { data } = mask(
+  const data = mask(
     originalData,
     query,
     createFragmentMatcher(new InMemoryCache())

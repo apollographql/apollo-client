@@ -23,7 +23,7 @@ export function mask(
     matchesFragment
   );
 
-  return { data: changed ? masked : data };
+  return changed ? masked : data;
 }
 
 function maskSelectionSet(

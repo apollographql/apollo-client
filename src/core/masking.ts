@@ -1,22 +1,26 @@
 import { Kind } from "graphql";
-import type { SelectionSetNode } from "graphql";
+import type { InlineFragmentNode, SelectionSetNode } from "graphql";
 import {
   getMainDefinition,
   resultKeyNameFromField,
 } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
-import type { Policies } from "../cache/index.js";
+
+type MatchesFragmentFn = (
+  fragmentNode: InlineFragmentNode,
+  typename: string
+) => boolean;
 
 export function mask(
   data: Record<string, unknown>,
   document: TypedDocumentNode<any> | DocumentNode,
-  policies: Policies
+  matchesFragment: MatchesFragmentFn
 ) {
   const definition = getMainDefinition(document);
   const [masked, changed] = maskSelectionSet(
     data,
     definition.selectionSet,
-    policies
+    matchesFragment
   );
 
   return { data: changed ? masked : data };
@@ -25,7 +29,7 @@ export function mask(
 function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
-  policies: Policies
+  matchesFragment: MatchesFragmentFn
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
@@ -34,7 +38,7 @@ function maskSelectionSet(
       const [masked, itemChanged] = maskSelectionSet(
         item,
         selectionSet,
-        policies
+        matchesFragment
       );
       changed ||= itemChanged;
 
@@ -57,7 +61,7 @@ function maskSelectionSet(
             const [masked, changed] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
-              policies
+              matchesFragment
             );
 
             if (changed) {
@@ -69,14 +73,14 @@ function maskSelectionSet(
           return [memo, changed];
         }
         case Kind.INLINE_FRAGMENT: {
-          if (!policies.fragmentMatches(selection, data.__typename, data)) {
+          if (!matchesFragment(selection, data.__typename)) {
             return [memo, changed];
           }
 
           const [fragmentData, childChanged] = maskSelectionSet(
             data,
             selection.selectionSet,
-            policies
+            matchesFragment
           );
 
           return [

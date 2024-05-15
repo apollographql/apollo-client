@@ -1,5 +1,6 @@
 import { mask } from "../masking.js";
 import { InMemoryCache, gql } from "../index.js";
+import { InlineFragmentNode } from "graphql";
 
 test("strips top-level fragment data from query", () => {
   const query = gql`
@@ -16,7 +17,7 @@ test("strips top-level fragment data from query", () => {
   const { data } = mask(
     { foo: true, bar: true },
     query,
-    new InMemoryCache().policies
+    createFragmentMatcher(new InMemoryCache())
   );
 
   expect(data).toEqual({ foo: true });
@@ -40,7 +41,7 @@ test("strips fragment data from nested object", () => {
   const { data } = mask(
     { user: { __typename: "User", id: 1, name: "Test User" } },
     query,
-    new InMemoryCache().policies
+    createFragmentMatcher(new InMemoryCache())
   );
 
   expect(data).toEqual({ user: { __typename: "User", id: 1 } });
@@ -69,7 +70,7 @@ test("strips fragment data from arrays", () => {
       ],
     },
     query,
-    new InMemoryCache().policies
+    createFragmentMatcher(new InMemoryCache())
   );
 
   expect(data).toEqual({
@@ -110,7 +111,7 @@ test("strips multiple fragments in the same selection set", () => {
       },
     },
     query,
-    new InMemoryCache().policies
+    createFragmentMatcher(new InMemoryCache())
   );
 
   expect(data).toEqual({
@@ -156,7 +157,7 @@ test("strips multiple fragments across different selection sets", () => {
       },
     },
     query,
-    new InMemoryCache().policies
+    createFragmentMatcher(new InMemoryCache())
   );
 
   expect(data).toEqual({
@@ -192,7 +193,7 @@ test("leaves overlapping fields in query", () => {
       },
     },
     query,
-    new InMemoryCache().policies
+    createFragmentMatcher(new InMemoryCache())
   );
 
   expect(data).toEqual({
@@ -236,7 +237,7 @@ test("does not strip inline fragments", () => {
       },
     },
     query,
-    cache.policies
+    createFragmentMatcher(cache)
   );
 
   expect(data).toEqual({
@@ -309,7 +310,7 @@ test("strips named fragments inside inline fragments", () => {
       },
     },
     query,
-    cache.policies
+    createFragmentMatcher(cache)
   );
 
   expect(data).toEqual({
@@ -436,7 +437,7 @@ test("handles overlapping fields inside multiple inline fragments", () => {
       ],
     },
     query,
-    cache.policies
+    createFragmentMatcher(cache)
   );
 
   expect(data).toEqual({
@@ -490,7 +491,7 @@ test("does nothing if there are no fragments to mask", () => {
   const { data } = mask(
     { user: { __typename: "User", id: 1, name: "Test User" } },
     query,
-    new InMemoryCache().policies
+    createFragmentMatcher(new InMemoryCache())
   );
 
   expect(data).toEqual({
@@ -578,7 +579,11 @@ test("maintains referential equality on subtrees that did not change", () => {
   const drink = { __typename: "Espresso" };
   const originalData = { user, post, authors, industries, drink };
 
-  const { data } = mask(originalData, query, new InMemoryCache().policies);
+  const { data } = mask(
+    originalData,
+    query,
+    createFragmentMatcher(new InMemoryCache())
+  );
 
   expect(data).toEqual({
     user: {
@@ -630,7 +635,16 @@ test("maintains referential equality the entire result if there are no fragments
     },
   };
 
-  const { data } = mask(originalData, query, new InMemoryCache().policies);
+  const { data } = mask(
+    originalData,
+    query,
+    createFragmentMatcher(new InMemoryCache())
+  );
 
   expect(data).toBe(originalData);
 });
+
+function createFragmentMatcher(cache: InMemoryCache) {
+  return (node: InlineFragmentNode, typename: string) =>
+    cache.policies.fragmentMatches(node, typename, { __typename: typename });
+}

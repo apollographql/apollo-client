@@ -6,7 +6,6 @@ import {
 } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
 import type { Policies } from "../cache/index.js";
-import equal from "@wry/equality";
 
 export function mask(
   data: Record<string, unknown>,
@@ -14,26 +13,39 @@ export function mask(
   policies: Policies
 ) {
   const definition = getMainDefinition(document);
-  const masked = maskSelectionSet(data, definition.selectionSet, policies);
+  const [masked, changed] = maskSelectionSet(
+    data,
+    definition.selectionSet,
+    policies
+  );
 
-  return equal(data, masked) ? { data } : { data: masked };
+  return { data: changed ? masked : data };
 }
 
 function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
   policies: Policies
-): any {
+): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
-    return data.map((item) => {
-      const masked = maskSelectionSet(item, selectionSet, policies);
+    let changed = false;
 
-      return equal(item, masked) ? item : masked;
+    const masked = data.map((item) => {
+      const [masked, itemChanged] = maskSelectionSet(
+        item,
+        selectionSet,
+        policies
+      );
+      changed ||= itemChanged;
+
+      return itemChanged ? masked : item;
     });
+
+    return [changed ? masked : data, changed];
   }
 
-  return selectionSet.selections.reduce(
-    (memo, selection) => {
+  return selectionSet.selections.reduce<[any, boolean]>(
+    ([memo, changed], selection) => {
       switch (selection.kind) {
         case Kind.FIELD: {
           const keyName = resultKeyNameFromField(selection);
@@ -42,33 +54,43 @@ function maskSelectionSet(
           memo[keyName] = data[keyName];
 
           if (childSelectionSet) {
-            const masked = maskSelectionSet(
+            const [masked, changed] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
               policies
             );
 
-            if (!equal(memo[keyName], masked)) {
+            if (changed) {
               memo[keyName] = masked;
+              return [memo, true];
             }
           }
 
-          return memo;
+          return [memo, changed];
         }
         case Kind.INLINE_FRAGMENT: {
           if (!policies.fragmentMatches(selection, data.__typename, data)) {
-            return memo;
+            return [memo, changed];
           }
 
-          return {
-            ...memo,
-            ...maskSelectionSet(data, selection.selectionSet, policies),
-          };
+          const [fragmentData, childChanged] = maskSelectionSet(
+            data,
+            selection.selectionSet,
+            policies
+          );
+
+          return [
+            {
+              ...memo,
+              ...fragmentData,
+            },
+            changed || childChanged,
+          ];
         }
         default:
-          return memo;
+          return [memo, true];
       }
     },
-    Object.create(Object.getPrototypeOf(data))
+    [Object.create(Object.getPrototypeOf(data)), false]
   );
 }

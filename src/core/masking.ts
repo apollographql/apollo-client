@@ -98,6 +98,6 @@ function maskSelectionSet(
           return [memo, true];
       }
     },
-    [Object.create(Object.getPrototypeOf(data)), false]
+    [Object.create(null), false]
   );
 }

@@ -109,23 +109,27 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>
 ): InternalState<TData, TVariables> {
-  const stateRef = React.useRef<InternalState<TData, TVariables>>();
-  if (
-    !stateRef.current ||
-    client !== stateRef.current.client ||
-    query !== stateRef.current.query
-  ) {
-    stateRef.current = new InternalState(client, query, stateRef.current);
-  }
-  const state = stateRef.current;
-
   // By default, InternalState.prototype.forceUpdate is an empty function, but
   // we replace it here (before anyone has had a chance to see this state yet)
   // with a function that unconditionally forces an update, using the latest
   // setTick function. Updating this state by calling state.forceUpdate is the
   // only way we trigger React component updates (no other useState calls within
   // the InternalState class).
-  state.forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
+  const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
+
+  const stateRef = React.useRef<InternalState<TData, TVariables> | undefined>(
+    undefined
+  );
+  const state = React.useMemo(
+    () =>
+      Object.assign(new InternalState(client, query, stateRef.current), {
+        forceUpdateState,
+      }),
+    [client, forceUpdateState, query]
+  );
+  React.useLayoutEffect(() => {
+    stateRef.current = state;
+  });
 
   return state;
 }

@@ -20,6 +20,7 @@ import {
   checkDocument,
 } from "../../../utilities/index.js";
 
+/** @internal */
 type CovariantUnaryFunction<out Arg, out Ret> = { fn(arg: Arg): Ret }["fn"];
 
 export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<

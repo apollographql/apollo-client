@@ -61,15 +61,15 @@ function maskSelectionSet(
           memo[keyName] = data[keyName];
 
           if (childSelectionSet) {
-            const [masked, changed] = maskSelectionSet(
+            const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
               matchesFragment
             );
 
-            if (changed) {
+            if (childChanged) {
               memo[keyName] = masked;
-              return [memo, true];
+              changed = true;
             }
           }
 

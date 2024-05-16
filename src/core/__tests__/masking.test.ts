@@ -365,6 +365,28 @@ test("handles objects with no matching inline fragment condition", () => {
   });
 });
 
+test("handles field aliases", () => {
+  const query = gql`
+    query {
+      user {
+        __typename
+        id
+        fullName: name
+      }
+    }
+  `;
+
+  const data = mask(
+    { user: { __typename: "User", id: 1, fullName: "Test User" } },
+    query,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  expect(data).toEqual({
+    user: { __typename: "User", id: 1, fullName: "Test User" },
+  });
+});
+
 test("handles overlapping fields inside multiple inline fragments", () => {
   const cache = new InMemoryCache({
     possibleTypes: {

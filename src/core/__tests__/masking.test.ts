@@ -1,6 +1,7 @@
 import { mask } from "../masking.js";
 import { InMemoryCache, gql } from "../index.js";
 import { InlineFragmentNode } from "graphql";
+import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 
 test("strips top-level fragment data from query", () => {
   const query = gql`
@@ -637,7 +638,7 @@ test("maintains referential equality on subtrees that did not change", () => {
     },
   ];
   const drink = { __typename: "Espresso" };
-  const originalData = { user, post, authors, industries, drink };
+  const originalData = deepFreeze({ user, post, authors, industries, drink });
 
   const data = mask(
     originalData,
@@ -687,13 +688,13 @@ test("maintains referential equality the entire result if there are no fragments
     }
   `;
 
-  const originalData = {
+  const originalData = deepFreeze({
     user: {
       __typename: "User",
       id: 1,
       name: "Test User",
     },
-  };
+  });
 
   const data = mask(
     originalData,

@@ -373,18 +373,33 @@ test("handles field aliases", () => {
         __typename
         id
         fullName: name
+        ... @defer {
+          userAddress: address
+        }
       }
     }
   `;
 
   const data = mask(
-    { user: { __typename: "User", id: 1, fullName: "Test User" } },
+    {
+      user: {
+        __typename: "User",
+        id: 1,
+        fullName: "Test User",
+        userAddress: "1234 Main St",
+      },
+    },
     query,
     createFragmentMatcher(new InMemoryCache())
   );
 
   expect(data).toEqual({
-    user: { __typename: "User", id: 1, fullName: "Test User" },
+    user: {
+      __typename: "User",
+      id: 1,
+      fullName: "Test User",
+      userAddress: "1234 Main St",
+    },
   });
 });
 

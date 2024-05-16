@@ -4,28 +4,45 @@ title: Introduction to Apollo Client
 
 import { Link } from 'gatsby';
 
-**Apollo Client** is a comprehensive state management library for JavaScript that enables you to manage both local and remote data with GraphQL. Use it to fetch, cache, and modify application data, all while automatically updating your UI.
+**Apollo Client** is a comprehensive state management library for JavaScript. It enables you to manage both local and remote data with GraphQL. Use it to fetch, cache, and modify application data, all while automatically updating your UI.
 
 Apollo Client helps you structure code in an economical, predictable, and declarative way that's consistent with modern development practices. The core `@apollo/client` library provides built-in integration with React, and the larger Apollo community maintains [integrations for other popular view layers](#community-integrations).
 
 <p>
   <ButtonLink
     size="lg"
-    colorScheme="indigo"
     href="./get-started/"
+    colorScheme="navy"
   >
     Get started!
   </ButtonLink>
 </p>
 
-## Features
+## Core features
+
+Some of Apollo Client's core capabilities include:
 
 - **Declarative data fetching:** Write a query and receive data without manually tracking loading states.
+- **Normalized request and response caching:** Boost performance by responding almost immediately to queries with cached data.
 - **Excellent developer experience:** Enjoy helpful tooling for TypeScript, Chrome / Firefox devtools, and VS Code.
-- **Designed for modern React:** Take advantage of the latest React features, such as hooks.
-- **Incrementally adoptable:** Drop Apollo into any JavaScript app and incorporate it feature by feature.
+- **Designed for modern React:** Take advantage of the latest React features, such as hooks and Suspense.
+- **Incrementally adoptable:** Drop Apollo Client into any JavaScript app and incorporate it feature by feature.
 - **Universally compatible:** Use any build setup and any GraphQL API.
 - **Community driven:** Share knowledge with thousands of developers in the GraphQL community.
+
+## GraphOS supported features
+
+Apollo Client works seamlessly with these GraphOS router supported features:
+
+- Receiving data for specific fields incrementally with the [`@defer` directive](/graphos/operations/defer)
+- Real-time updates via [GraphQL subscriptions](/graphos/operations/subscriptions)
+- Safelisting with [persisted queries](/graphos/operations/persisted-queries)
+
+<Note>
+
+Apollo Client also supports `@defer` and GraphQL subscription implementations outside of GraphOS.
+
+</Note>
 
 ## Recommended docs
 

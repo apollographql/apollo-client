@@ -42,13 +42,14 @@ import { useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
 import { InMemoryCache } from "../../../cache";
 import { LoadableQueryHookFetchPolicy } from "../../types/types";
-import { QueryReference } from "../../../react";
+import { QueryRef } from "../../../react";
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
   Profiler,
   SimpleCaseData,
   createProfiler,
+  setupPaginatedCase,
   setupSimpleCase,
   spyOnConsole,
   useTrackRenders,
@@ -182,7 +183,7 @@ function createDefaultProfiledComponents<
     return <p>Loading</p>;
   }
 
-  function ReadQueryHook({ queryRef }: { queryRef: QueryReference<TData> }) {
+  function ReadQueryHook({ queryRef }: { queryRef: QueryRef<TData> }) {
     useTrackRenders();
     profiler.mergeSnapshot({
       result: useReadQuery(queryRef),
@@ -1506,7 +1507,7 @@ it("works with startTransition to change variables", async () => {
     queryRef,
     onChange,
   }: {
-    queryRef: QueryReference<Data>;
+    queryRef: QueryRef<Data>;
     onChange: (id: string) => void;
   }) {
     const { data } = useReadQuery(queryRef);
@@ -3142,7 +3143,7 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     refetch,
   }: {
     refetch: RefetchFunction<Data, OperationVariables>;
-    queryRef: QueryReference<Data>;
+    queryRef: QueryRef<Data>;
     onChange: (id: string) => void;
   }) {
     const { data } = useReadQuery(queryRef);
@@ -3205,7 +3206,22 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
 });
 
 it("re-suspends when calling `fetchMore` with different variables", async () => {
-  const { query, client } = usePaginatedQueryCase();
+  const { query, link } = setupPaginatedCase();
+
+  const client = new ApolloClient({
+    link,
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: {
+              keyArgs: false,
+            },
+          },
+        },
+      },
+    }),
+  });
 
   const Profiler = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
@@ -3244,8 +3260,8 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "A", position: 1 },
-          { letter: "B", position: 2 },
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
       error: undefined,
@@ -3268,8 +3284,8 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     expect(snapshot.result).toEqual({
       data: {
         letters: [
-          { letter: "C", position: 3 },
-          { letter: "D", position: 4 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
       error: undefined,
@@ -3543,7 +3559,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
     fetchMore,
   }: {
     fetchMore: FetchMoreFunction<Data, OperationVariables>;
-    queryRef: QueryReference<Data>;
+    queryRef: QueryRef<Data>;
   }) {
     const { data } = useReadQuery(queryRef);
     const [isPending, startTransition] = React.useTransition();

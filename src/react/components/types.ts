@@ -45,6 +45,7 @@ export interface SubscriptionComponentOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#query:member} */
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
   children?:
     | null

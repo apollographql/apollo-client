@@ -145,6 +145,7 @@ Array [
   "loadDevMessages",
   "loadErrorMessageHandler",
   "loadErrorMessages",
+  "setErrorMessageHandler",
 ]
 `;
 
@@ -336,6 +337,7 @@ Array [
 exports[`exports of public entry points @apollo/client/react/internal 1`] = `
 Array [
   "InternalQueryReference",
+  "assertWrappedQueryRef",
   "getSuspenseCache",
   "getWrappedPromise",
   "unwrapQueryRef",
@@ -394,6 +396,13 @@ Array [
   "withErrorSpy",
   "withLogSpy",
   "withWarningSpy",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/experimental 1`] = `
+Array [
+  "createSchemaFetch",
+  "createTestSchema",
 ]
 `;
 

@@ -13,10 +13,11 @@ import {
   Observable,
   addTypenameToDocument,
   removeClientSetsFromDocument,
-  removeConnectionDirectiveFromDocument,
   cloneDeep,
   stringifyForDisplay,
   print,
+  removeDirectivesFromDocument,
+  checkDocument,
 } from "../../../utilities/index.js";
 
 export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
@@ -35,7 +36,7 @@ export interface MockedResponse<
   error?: Error;
   delay?: number;
   variableMatcher?: VariableMatcher<TVariables>;
-  newData?: ResultFunction<FetchResult>;
+  newData?: ResultFunction<FetchResult<TData>, TVariables>;
 }
 
 export interface MockLinkOptions {
@@ -154,9 +155,9 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
         mockedResponses.push(response);
       }
 
-      if (!response.result && !response.error) {
+      if (!response.result && !response.error && response.delay !== Infinity) {
         configError = new Error(
-          `Mocked response should contain either result or error: ${key}`
+          `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: ${key}`
         );
       }
     }
@@ -202,11 +203,12 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
     mockedResponse: MockedResponse
   ): MockedResponse {
     const newMockedResponse = cloneDeep(mockedResponse);
-    const queryWithoutConnection = removeConnectionDirectiveFromDocument(
-      newMockedResponse.request.query
+    const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
+      [{ name: "connection" }, { name: "nonreactive" }],
+      checkDocument(newMockedResponse.request.query)
     );
-    invariant(queryWithoutConnection, "query is required");
-    newMockedResponse.request.query = queryWithoutConnection!;
+    invariant(queryWithoutClientOnlyDirectives, "query is required");
+    newMockedResponse.request.query = queryWithoutClientOnlyDirectives!;
     const query = removeClientSetsFromDocument(newMockedResponse.request.query);
     if (query) {
       newMockedResponse.request.query = query;

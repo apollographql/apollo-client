@@ -196,9 +196,10 @@ function transform(code: string, relativeFilePath: string) {
   });
 
   if (
-    !["utilities/globals/index.js", "config/jest/setup.js"].includes(
-      relativeFilePath
-    )
+    ![
+      osPathJoin("utilities", "globals", "index.js"),
+      osPathJoin("config", "jest", "setup.js"),
+    ].includes(relativeFilePath)
   )
     recast.visit(ast, {
       visitIdentifier(path) {

@@ -2,56 +2,65 @@ import { useMDXComponents } from "@mdx-js/react";
 
 import PropTypes from "prop-types";
 import React, { useMemo } from "react";
-import { DocBlock, FunctionSignature, useApiDocContext } from ".";
-import { GridItem, Text, chakra } from "@chakra-ui/react";
+import {
+  DocBlock,
+  FunctionSignature,
+  useApiDocContext,
+  ApiDocHeading,
+} from ".";
+import { GridItem, Text } from "@chakra-ui/react";
 import { ResponsiveGrid } from "./ResponsiveGrid";
+import { groupItems } from "./sortWithCustomOrder";
 
 export function PropertySignatureTable({
   canonicalReference,
   prefix = "",
-  showHeaders = true,
+  showHeaders = false,
   display = "parent",
   customOrder = [],
+  idPrefix = "",
+  genericNames,
 }) {
   const MDX = useMDXComponents();
   const getItem = useApiDocContext();
   const item = getItem(canonicalReference);
-  const Wrapper = display === "parent" ? ResponsiveGrid : React.Fragment;
 
-  const sortedProperties = useMemo(
-    () =>
-      item.properties.map(getItem).sort((a, b) => {
-        const aIndex = customOrder.indexOf(a.displayName);
-        const bIndex = customOrder.indexOf(b.displayName);
-        if (aIndex >= 0 && bIndex >= 0) {
-          return aIndex - bIndex;
-        } else if (aIndex >= 0) {
-          return -1;
-        } else if (bIndex >= 0) {
-          return 1;
-        } else {
-          return a.displayName.localeCompare(b.displayName);
-        }
-      }),
+  const Wrapper = display === "parent" ? ResponsiveGrid : React.Fragment;
+  const groupedProperties = useMemo(
+    () => groupItems(item.properties.map(getItem), customOrder),
     [item.properties, getItem, customOrder]
   );
+  if (item.childrenIncomplete) {
+    console.warn(
+      "Warning: some properties might be missing from the table due to complex inheritance!",
+      item.childrenIncompleteDetails
+    );
+  }
+
+  const replaceGenericNames = React.useMemo(() => {
+    if (!genericNames) return (str) => str;
+
+    const replacements = {};
+    item.typeParameters.forEach((p, i) => {
+      if (genericNames[i] === p.name) return;
+      replacements[p.name] = genericNames[i];
+    });
+    if (!Object.values(replacements).length) return (str) => str;
+
+    const genericReplacementRegex = new RegExp(
+      `\\b(${Object.keys(replacements).join("|")})\\b`,
+      "g"
+    );
+    function replace(match) {
+      return replacements[match] || match;
+    }
+    return function replaceGenericNames(str) {
+      return str.replace(genericReplacementRegex, replace);
+    };
+  });
 
   return (
     <>
-      {showHeaders ?
-        <GridItem className="row">
-          <chakra.h6
-            className="fullWidth"
-            mb="4"
-            fontWeight="bold"
-            textTransform="uppercase"
-            fontSize="sm"
-            letterSpacing="wider"
-          >
-            Properties
-          </chakra.h6>
-        </GridItem>
-      : null}
       {item.childrenIncomplete ?
         <GridItem className="row">
           <br />
@@ -67,46 +76,64 @@ export function PropertySignatureTable({
             <GridItem className="cell heading">Description</GridItem>
           </>
         : null}
-
-        {sortedProperties.map((property) => (
-          <React.Fragment key={property.id}>
-            <GridItem
-              className="first cell"
-              fontSize="md"
-              sx={{ code: { bg: "none", p: 0 } }}
-            >
-              <chakra.h6 fontSize="lg" mb="1" mr="1">
-                <MDX.inlineCode>
-                  <Text color="gray.400" as="span">
-                    {prefix}
-                  </Text>
-                  {property.displayName}
-                </MDX.inlineCode>
-                {property.optional ?
-                  <em> (optional)</em>
-                : null}
-              </chakra.h6>
-              <MDX.inlineCode color="tertiary">
-                {property.kind === "MethodSignature" ?
-                  <FunctionSignature
-                    canonicalReference={property.canonicalReference}
-                    name={false}
-                    parameterTypes
-                    arrow
-                  />
-                : property.type}
-              </MDX.inlineCode>
-            </GridItem>
-            <GridItem className="cell" fontSize="md" lineHeight="base">
-              <DocBlock
-                canonicalReference={property.canonicalReference}
-                summary
-                remarks
-                remarkCollapsible
-              />
-            </GridItem>
-          </React.Fragment>
-        ))}
+        {Object.entries(groupedProperties).map(
+          ([groupName, sortedProperties]) => (
+            <React.Fragment key={groupName}>
+              {groupName ?
+                <GridItem className="row heading">{groupName}</GridItem>
+              : null}
+              {sortedProperties.map((property) => (
+                <React.Fragment key={property.id}>
+                  <GridItem
+                    className="first cell"
+                    fontSize="md"
+                    sx={{ code: { bg: "none", p: 0 } }}
+                  >
+                    <ApiDocHeading
+                      canonicalReference={property.canonicalReference}
+                      fontSize="lg"
+                      as={Text}
+                      since
+                      prefix={
+                        prefix ?
+                          <MDX.inlineCode color="gray.400">
+                            {prefix}
+                          </MDX.inlineCode>
+                        : null
+                      }
+                      suffix={property.optional ? <em> (optional)</em> : null}
+                      id={
+                        idPrefix ?
+                          `${idPrefix}-${property.displayName.toLowerCase()}`
+                        : undefined
+                      }
+                    />
+                    <MDX.inlineCode color="tertiary">
+                      {property.kind === "MethodSignature" ?
+                        <FunctionSignature
+                          canonicalReference={property.canonicalReference}
+                          name={false}
+                          parameterTypes
+                          arrow
+                        />
+                      : replaceGenericNames(property.type)}
+                    </MDX.inlineCode>
+                  </GridItem>
+                  <GridItem className="cell" fontSize="md" lineHeight="base">
+                    <DocBlock
+                      canonicalReference={property.canonicalReference}
+                      deprecated
+                      summary
+                      remarks
+                      remarkCollapsible
+                      releaseTag
+                    />
+                  </GridItem>
+                </React.Fragment>
+              ))}
+            </React.Fragment>
+          )
+        )}
       </Wrapper>
     </>
   );
@@ -114,8 +141,10 @@ export function PropertySignatureTable({
 
 PropertySignatureTable.propTypes = {
   canonicalReference: PropTypes.string.isRequired,
+  idPrefix: PropTypes.string.isRequired,
   prefix: PropTypes.string,
   showHeaders: PropTypes.bool,
   display: PropTypes.oneOf(["parent", "child"]),
   customOrder: PropTypes.arrayOf(PropTypes.string),
+  genericNames: PropTypes.arrayOf(PropTypes.string),
 };

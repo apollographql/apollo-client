@@ -29,7 +29,7 @@ import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
-import { profile, spyOnConsole } from "../../../testing/internal";
+import { profile, profileHook, spyOnConsole } from "../../../testing/internal";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -331,6 +331,55 @@ describe("useFragment", () => {
 
     // would throw if not present synchronously
     screen.getByText(/Item #1/);
+  });
+
+  it("allows the client to be overriden", () => {
+    const ItemFragment: TypedDocumentNode<Item> = gql`
+      fragment ItemFragment on Item {
+        id
+        text
+      }
+    `;
+    const cache = new InMemoryCache();
+    const item = { __typename: "Item", id: 1, text: "Item #1" };
+    cache.writeFragment({
+      fragment: ItemFragment,
+      data: item,
+    });
+    const client = new ApolloClient({
+      cache,
+    });
+    function Component() {
+      const { data } = useFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 1 },
+        client,
+      });
+      return <>{data.text}</>;
+    }
+
+    // Without a MockedProvider supplying the client via context,
+    // the client must be passed directly to the hook or an error is thrown
+    expect(() => render(<Component />)).not.toThrow(/pass an ApolloClient/);
+
+    // Item #1 is rendered
+    screen.getByText(/Item #1/);
+  });
+
+  it("throws if no client is provided", () => {
+    function Component() {
+      const { data } = useFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 1 },
+      });
+      return <>{data.text}</>;
+    }
+
+    // silence the console error
+    {
+      using _spy = spyOnConsole("error");
+      expect(() => render(<Component />)).toThrow(/pass an ApolloClient/);
+    }
   });
 
   it.each<TypedDocumentNode<{ list: Item[] }>>([
@@ -1310,6 +1359,205 @@ describe("useFragment", () => {
     });
   });
 
+  it("returns correct data when options change", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+    });
+    type User = { __typename: "User"; id: number; name: string };
+    const fragment: TypedDocumentNode<User> = gql`
+      fragment UserFragment on User {
+        id
+        name
+      }
+    `;
+
+    client.writeFragment({
+      fragment,
+      data: { __typename: "User", id: 1, name: "Alice" },
+    });
+
+    client.writeFragment({
+      fragment,
+      data: { __typename: "User", id: 2, name: "Charlie" },
+    });
+
+    const ProfiledHook = profileHook(({ id }: { id: number }) =>
+      useFragment({ fragment, from: { __typename: "User", id } })
+    );
+
+    const { rerender } = render(<ProfiledHook id={1} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+
+      expect(snapshot).toEqual({
+        complete: true,
+        data: { __typename: "User", id: 1, name: "Alice" },
+      });
+    }
+
+    rerender(<ProfiledHook id={2} />);
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+
+      expect(snapshot).toEqual({
+        complete: true,
+        data: { __typename: "User", id: 2, name: "Charlie" },
+      });
+    }
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
+  it("does not rerender when fields with @nonreactive change", async () => {
+    type Post = {
+      __typename: "User";
+      id: number;
+      title: string;
+      updatedAt: string;
+    };
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+    });
+
+    const fragment: TypedDocumentNode<Post> = gql`
+      fragment PostFragment on Post {
+        id
+        title
+        updatedAt @nonreactive
+      }
+    `;
+
+    client.writeFragment({
+      fragment,
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        updatedAt: "2024-01-01",
+      },
+    });
+
+    const ProfiledHook = profileHook(() =>
+      useFragment({ fragment, from: { __typename: "Post", id: 1 } })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+
+      expect(snapshot).toEqual({
+        complete: true,
+        data: {
+          __typename: "Post",
+          id: 1,
+          title: "Blog post",
+          updatedAt: "2024-01-01",
+        },
+      });
+    }
+
+    client.writeFragment({
+      fragment,
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        updatedAt: "2024-02-01",
+      },
+    });
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
+  it("does not rerender when fields with @nonreactive on nested fragment change", async () => {
+    type Post = {
+      __typename: "User";
+      id: number;
+      title: string;
+      updatedAt: string;
+    };
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+    });
+
+    const fragment: TypedDocumentNode<Post> = gql`
+      fragment PostFragment on Post {
+        id
+        title
+        ...PostFields @nonreactive
+      }
+
+      fragment PostFields on Post {
+        updatedAt
+      }
+    `;
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "PostFragment",
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        updatedAt: "2024-01-01",
+      },
+    });
+
+    const ProfiledHook = profileHook(() =>
+      useFragment({
+        fragment,
+        fragmentName: "PostFragment",
+        from: { __typename: "Post", id: 1 },
+      })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+
+      expect(snapshot).toEqual({
+        complete: true,
+        data: {
+          __typename: "Post",
+          id: 1,
+          title: "Blog post",
+          updatedAt: "2024-01-01",
+        },
+      });
+    }
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "PostFragment",
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        updatedAt: "2024-02-01",
+      },
+    });
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
   describe("tests with incomplete data", () => {
     let cache: InMemoryCache, wrapper: React.FunctionComponent;
     const ItemFragment = gql`
@@ -1721,6 +1969,7 @@ describe.skip("Type Tests", () => {
       optimistic?: boolean;
       variables?: TVars;
       canonizeResults?: boolean;
+      client?: ApolloClient<any>;
     }>();
   });
 });

@@ -5,6 +5,7 @@ import { act, render, renderHook, waitFor } from "@testing-library/react";
 
 import {
   ApolloClient,
+  ApolloError,
   ApolloLink,
   ErrorPolicy,
   InMemoryCache,
@@ -19,6 +20,7 @@ import {
   wait,
   tick,
   MockSubscriptionLink,
+  MockLink,
 } from "../../../testing";
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
@@ -1481,6 +1483,274 @@ describe("useLazyQuery Hook", () => {
     await wait(10);
 
     expect(fetchCount).toBe(1);
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/9448
+  it.each(["network-only", "no-cache", "cache-and-network"] as const)(
+    "does not issue multiple network calls when calling execute again without variables with a %s fetch policy",
+    async (fetchPolicy) => {
+      interface Data {
+        user: { id: string; name: string };
+      }
+
+      interface Variables {
+        id?: string;
+      }
+
+      const query: TypedDocumentNode<Data, Variables> = gql`
+        query UserQuery($id: ID) {
+          user(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+
+      let fetchCount = 0;
+
+      const link = new ApolloLink((operation) => {
+        fetchCount++;
+        return new Observable((observer) => {
+          const { id } = operation.variables;
+
+          setTimeout(() => {
+            observer.next({
+              data: {
+                user:
+                  id ?
+                    { id, name: "John Doe" }
+                  : { id: null, name: "John Default" },
+              },
+            });
+            observer.complete();
+          }, 20);
+        });
+      });
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const { result } = renderHook(
+        () => useLazyQuery(query, { fetchPolicy }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      await act(() => result.current[0]({ variables: { id: "2" } }));
+
+      expect(fetchCount).toBe(1);
+
+      await waitFor(() => {
+        expect(result.current[1].data).toEqual({
+          user: { id: "2", name: "John Doe" },
+        });
+      });
+
+      expect(fetchCount).toBe(1);
+
+      await act(() => result.current[0]());
+
+      await waitFor(() => {
+        expect(result.current[1].data).toEqual({
+          user: { id: null, name: "John Default" },
+        });
+      });
+
+      expect(fetchCount).toBe(2);
+    }
+  );
+
+  it("maintains stable execute function when passing in dynamic function options", async () => {
+    interface Data {
+      user: { id: string; name: string };
+    }
+
+    interface Variables {
+      id: string;
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const link = new MockLink([
+      {
+        request: { query, variables: { id: "1" } },
+        result: { data: { user: { id: "1", name: "John Doe" } } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { id: "2" } },
+        result: { errors: [new GraphQLError("Oops")] },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { id: "3" } },
+        result: { data: { user: { id: "3", name: "Johnny Three" } } },
+        delay: 20,
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+    let countRef = { current: 0 };
+
+    const trackClosureValue = jest.fn();
+
+    const { result, rerender } = renderHook(
+      () => {
+        let count = countRef.current;
+
+        return useLazyQuery(query, {
+          fetchPolicy: "cache-first",
+          variables: { id: "1" },
+          onCompleted: () => {
+            trackClosureValue("onCompleted", count);
+          },
+          onError: () => {
+            trackClosureValue("onError", count);
+          },
+          skipPollAttempt: () => {
+            trackClosureValue("skipPollAttempt", count);
+            return false;
+          },
+          nextFetchPolicy: (currentFetchPolicy) => {
+            trackClosureValue("nextFetchPolicy", count);
+            return currentFetchPolicy;
+          },
+        });
+      },
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const [originalExecute] = result.current;
+
+    countRef.current++;
+    rerender();
+
+    expect(result.current[0]).toBe(originalExecute);
+
+    // Check for stale closures with onCompleted
+    await act(() => result.current[0]());
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual({
+        user: { id: "1", name: "John Doe" },
+      });
+    });
+
+    // after fetch
+    expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 1);
+    expect(trackClosureValue).toHaveBeenNthCalledWith(2, "onCompleted", 1);
+    trackClosureValue.mockClear();
+
+    countRef.current++;
+    rerender();
+
+    expect(result.current[0]).toBe(originalExecute);
+
+    // Check for stale closures with onError
+    await act(() => result.current[0]({ variables: { id: "2" } }));
+    await waitFor(() => {
+      expect(result.current[1].error).toEqual(
+        new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] })
+      );
+    });
+
+    // variables changed
+    expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 2);
+    // after fetch
+    expect(trackClosureValue).toHaveBeenNthCalledWith(2, "nextFetchPolicy", 2);
+    expect(trackClosureValue).toHaveBeenNthCalledWith(3, "onError", 2);
+    trackClosureValue.mockClear();
+
+    countRef.current++;
+    rerender();
+
+    expect(result.current[0]).toBe(originalExecute);
+
+    await act(() => result.current[0]({ variables: { id: "3" } }));
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual({
+        user: { id: "3", name: "Johnny Three" },
+      });
+    });
+
+    // variables changed
+    expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 3);
+    // after fetch
+    expect(trackClosureValue).toHaveBeenNthCalledWith(2, "nextFetchPolicy", 3);
+    expect(trackClosureValue).toHaveBeenNthCalledWith(3, "onCompleted", 3);
+    trackClosureValue.mockClear();
+
+    // Test for stale closures for skipPollAttempt
+    result.current[1].startPolling(20);
+    await wait(50);
+    result.current[1].stopPolling();
+
+    expect(trackClosureValue).toHaveBeenCalledWith("skipPollAttempt", 3);
+  });
+
+  it("maintains stable execute function identity when changing non-callback options", async () => {
+    interface Data {
+      user: { id: string; name: string };
+    }
+
+    interface Variables {
+      id: string;
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({
+            data: { user: { id: operation.variables.id, name: "John Doe" } },
+          });
+          observer.complete();
+        }, 20);
+      });
+    });
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+    const { result, rerender } = renderHook(
+      ({ id }) => useLazyQuery(query, { variables: { id } }),
+      {
+        initialProps: { id: "1" },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const [execute] = result.current;
+
+    rerender({ id: "2" });
+
+    expect(result.current[0]).toBe(execute);
   });
 
   describe("network errors", () => {

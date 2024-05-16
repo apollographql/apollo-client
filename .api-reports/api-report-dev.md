@@ -14,16 +14,24 @@ interface ErrorCodes {
     };
 }
 
+// @public
+export type ErrorMessageHandler = {
+    (message: string | number, args: string[]): string | undefined;
+};
+
 // @public (undocumented)
 export function loadDevMessages(): void;
 
 // Warning: (ae-forgotten-export) The symbol "ErrorCodes" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
-export function loadErrorMessageHandler(...errorCodes: ErrorCodes[]): ((message: string | number, args: unknown[]) => string | undefined) & ErrorCodes;
+// @public
+export function loadErrorMessageHandler(...errorCodes: ErrorCodes[]): ErrorMessageHandler & ErrorCodes;
 
 // @public (undocumented)
 export function loadErrorMessages(): void;
+
+// @public
+export function setErrorMessageHandler(handler: ErrorMessageHandler): void;
 
 // (No @packageDocumentation comment for this package)
 

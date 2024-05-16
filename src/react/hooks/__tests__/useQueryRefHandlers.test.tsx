@@ -22,7 +22,7 @@ import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
 import { Suspense } from "react";
 import { createQueryPreloader } from "../../query-preloader/createQueryPreloader";
 import userEvent from "@testing-library/user-event";
-import { QueryReference } from "../../internal";
+import { QueryRef } from "../../internal";
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { useLoadableQuery } from "../useLoadableQuery";
 import { concatPagination } from "../../../utilities";
@@ -770,11 +770,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     return <p>Loading</p>;
   }
 
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleCaseData>;
-  }) {
+  function ReadQueryHook({ queryRef }: { queryRef: QueryRef<SimpleCaseData> }) {
     useTrackRenders();
     const [isPending, startTransition] = React.useTransition();
     const { refetch } = useQueryRefHandlers(queryRef);
@@ -937,11 +933,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
     return <p>Loading</p>;
   }
 
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleCaseData>;
-  }) {
+  function ReadQueryHook({ queryRef }: { queryRef: QueryRef<SimpleCaseData> }) {
     const { refetch } = useQueryRefHandlers(queryRef);
     Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
@@ -1028,11 +1020,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
     return <p>Loading</p>;
   }
 
-  function ReadQueryHook({
-    queryRef,
-  }: {
-    queryRef: QueryReference<SimpleCaseData>;
-  }) {
+  function ReadQueryHook({ queryRef }: { queryRef: QueryRef<SimpleCaseData> }) {
     const { refetch } = useQueryRefHandlers(queryRef);
     Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
@@ -1100,7 +1088,18 @@ test("resuspends when calling `fetchMore`", async () => {
 
   const user = userEvent.setup();
 
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    }),
+    link,
+  });
   const preloadQuery = createQueryPreloader(client);
 
   const Profiler = createProfiler({
@@ -1397,7 +1396,18 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
   const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    }),
+    link,
+  });
 
   const Profiler = createProfiler({
     initialSnapshot: {
@@ -1413,7 +1423,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
   function ReadQueryHook({
     queryRef,
   }: {
-    queryRef: QueryReference<PaginatedCaseData>;
+    queryRef: QueryRef<PaginatedCaseData>;
   }) {
     useTrackRenders();
     const { fetchMore } = useQueryRefHandlers(queryRef);
@@ -1489,7 +1499,18 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
   const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    }),
+    link,
+  });
 
   const Profiler = createProfiler({
     initialSnapshot: {
@@ -1505,7 +1526,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
   function ReadQueryHook({
     queryRef,
   }: {
-    queryRef: QueryReference<PaginatedCaseData>;
+    queryRef: QueryRef<PaginatedCaseData>;
   }) {
     useTrackRenders();
     const { fetchMore } = useQueryRefHandlers(queryRef);
@@ -1589,7 +1610,18 @@ test("`fetchMore` works with startTransition", async () => {
   const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    }),
+    link,
+  });
   const preloadQuery = createQueryPreloader(client);
 
   const Profiler = createProfiler({
@@ -1708,7 +1740,18 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
   const { query, link } = setupPaginatedCase();
 
   const user = userEvent.setup();
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            letters: { keyArgs: false },
+          },
+        },
+      },
+    }),
+    link,
+  });
 
   const Profiler = createProfiler({
     initialSnapshot: {
@@ -1726,7 +1769,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
   function ReadQueryHook({
     queryRef,
   }: {
-    queryRef: QueryReference<PaginatedCaseData>;
+    queryRef: QueryRef<PaginatedCaseData>;
   }) {
     useTrackRenders();
     const [isPending, startTransition] = React.useTransition();

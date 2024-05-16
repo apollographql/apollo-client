@@ -8,12 +8,13 @@ import type {
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import {
+  assertWrappedQueryRef,
   getSuspenseCache,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "../internal/index.js";
-import type { CacheKey, QueryReference } from "../internal/index.js";
+import type { CacheKey, QueryRef } from "../internal/index.js";
 import type { LoadableQueryHookOptions } from "../types/types.js";
 import { __use, useRenderGuard } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
@@ -41,11 +42,16 @@ export type UseLoadableQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = [
-  LoadQueryFunction<TVariables>,
-  QueryReference<TData, TVariables> | null,
+  loadQuery: LoadQueryFunction<TVariables>,
+  queryRef: QueryRef<TData, TVariables> | null,
   {
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: FetchMoreFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
     refetch: RefetchFunction<TData, TVariables>;
+    /**
+     * A function that resets the `queryRef` back to `null`.
+     */
     reset: ResetFunction;
   },
 ];
@@ -98,6 +104,51 @@ export function useLoadableQuery<
   }
 ): UseLoadableQueryResult<DeepPartial<TData>, TVariables>;
 
+/**
+ * A hook for imperatively loading a query, such as responding to a user
+ * interaction.
+ *
+ * > Refer to the [Suspense - Fetching in response to user interaction](https://www.apollographql.com/docs/react/data/suspense#fetching-in-response-to-user-interaction) section for a more in-depth overview of `useLoadableQuery`.
+ *
+ * @example
+ * ```jsx
+ * import { gql, useLoadableQuery } from "@apollo/client";
+ *
+ * const GET_GREETING = gql`
+ *   query GetGreeting($language: String!) {
+ *     greeting(language: $language) {
+ *       message
+ *     }
+ *   }
+ * `;
+ *
+ * function App() {
+ *   const [loadGreeting, queryRef] = useLoadableQuery(GET_GREETING);
+ *
+ *   return (
+ *     <>
+ *       <button onClick={() => loadGreeting({ language: "english" })}>
+ *         Load greeting
+ *       </button>
+ *       <Suspense fallback={<div>Loading...</div>}>
+ *         {queryRef && <Hello queryRef={queryRef} />}
+ *       </Suspense>
+ *     </>
+ *   );
+ * }
+ *
+ * function Hello({ queryRef }) {
+ *   const { data } = useReadQuery(queryRef);
+ *
+ *   return <div>{data.greeting.message}</div>;
+ * }
+ * ```
+ *
+ * @since 3.9.0
+ * @param query - A GraphQL query document parsed into an AST by `gql`.
+ * @param options - Options to control how the query is executed.
+ * @returns A tuple in the form of `[loadQuery, queryRef, handlers]`
+ */
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -118,10 +169,12 @@ export function useLoadableQuery<
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { queryKey = [] } = options;
 
-  const [queryRef, setQueryRef] = React.useState<QueryReference<
+  const [queryRef, setQueryRef] = React.useState<QueryRef<
     TData,
     TVariables
   > | null>(null);
+
+  assertWrappedQueryRef(queryRef);
 
   const internalQueryRef = queryRef && unwrapQueryRef(queryRef);
 

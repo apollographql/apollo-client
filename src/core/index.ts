@@ -40,6 +40,8 @@ export type {
   FieldMergeFunction,
   FieldFunctionOptions,
   PossibleTypesMap,
+  WatchFragmentOptions,
+  WatchFragmentResult,
 } from "../cache/index.js";
 export {
   Cache,

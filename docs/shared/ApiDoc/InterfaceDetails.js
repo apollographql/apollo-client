@@ -1,12 +1,21 @@
 import PropTypes from "prop-types";
 import React from "react";
-import { ApiDocHeading, DocBlock, PropertySignatureTable } from ".";
+import { GridItem } from "@chakra-ui/react";
+import {
+  ApiDocHeading,
+  DocBlock,
+  PropertySignatureTable,
+  useApiDocContext,
+  SectionHeading,
+} from ".";
 export function InterfaceDetails({
   canonicalReference,
   headingLevel,
   link,
   customPropertyOrder,
 }) {
+  const getItem = useApiDocContext();
+  const item = getItem(canonicalReference);
   return (
     <>
       <ApiDocHeading
@@ -14,16 +23,15 @@ export function InterfaceDetails({
         headingLevel={headingLevel}
         link={link}
       />
-      <DocBlock
-        canonicalReference={canonicalReference}
-        heading
-        headingLevel={3}
-      />
+      <DocBlock canonicalReference={canonicalReference} />
+      <GridItem className="row">
+        <SectionHeading>Properties</SectionHeading>
+      </GridItem>
       <PropertySignatureTable
+        showHeaders
         canonicalReference={canonicalReference}
-        methods
-        properties
         customOrder={customPropertyOrder}
+        idPrefix={item.displayName.toLowerCase()}
       />
     </>
   );

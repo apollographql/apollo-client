@@ -20,7 +20,7 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from "../types/types.js";
-import { __use, useDeepMemo } from "./internal/index.js";
+import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
 import { getSuspenseCache } from "../internal/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
@@ -174,6 +174,22 @@ export function useSuspenseQuery<
   options:
     | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
     | SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
+): UseSuspenseQueryResult<TData | undefined, TVariables> {
+  return wrapHook(
+    "useSuspenseQuery",
+    _useSuspenseQuery,
+    useApolloClient(typeof options === "object" ? options.client : undefined)
+  )(query, options);
+}
+
+function _useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
+    | SuspenseQueryHookOptions<TData, TVariables>
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);

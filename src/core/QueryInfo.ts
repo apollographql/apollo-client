@@ -210,7 +210,22 @@ export class QueryInfo {
 
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.lastDiff && this.lastDiff.diff;
+
+    // If we are trying to deliver an incomplete cache result, we avoid
+    // reporting it if the query has errored, otherwise we let the broadcast try
+    // and repair the partial result by refetching the query. This check avoids
+    // a situation where a query that errors and another succeeds with
+    // overlapping data does not report the partial data result to the errored
+    // query.
+    //
+    // See https://github.com/apollographql/apollo-client/issues/11400 for more
+    // information on this issue.
+    if (diff && !diff.complete && this.observableQuery?.getLastError()) {
+      return;
+    }
+
     this.updateLastDiff(diff);
+
     if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
       this.dirty = true;
       if (!this.notifyTimeout) {
@@ -364,8 +379,7 @@ export class QueryInfo {
       "variables" | "fetchPolicy" | "errorPolicy"
     >,
     cacheWriteBehavior: CacheWriteBehavior
-  ): typeof result {
-    result = { ...result };
+  ) {
     const merger = new DeepMerger();
     const graphQLErrors =
       isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
@@ -411,10 +425,7 @@ export class QueryInfo {
             });
 
             this.lastWrite = {
-              // Make a shallow defensive copy of the result object, in case we
-              // later later modify result.data in place, since we don't want
-              // that mutation affecting the saved lastWrite.result.data.
-              result: { ...result },
+              result,
               variables: options.variables,
               dmCount: destructiveMethodCounts.get(this.cache),
             };
@@ -476,19 +487,20 @@ export class QueryInfo {
             this.updateWatch(options.variables);
           }
 
-          // If we're allowed to write to the cache, update result.data to be
-          // the result as re-read from the cache, rather than the raw network
-          // result. Set without setDiff to avoid triggering a notify call,
-          // since we have other ways of notifying for this result.
+          // If we're allowed to write to the cache, and we can read a
+          // complete result from the cache, update result.data to be the
+          // result from the cache, rather than the raw network result.
+          // Set without setDiff to avoid triggering a notify call, since
+          // we have other ways of notifying for this result.
           this.updateLastDiff(diff, diffOptions);
-          result.data = diff.result;
+          if (diff.complete) {
+            result.data = diff.result;
+          }
         });
       } else {
         this.lastWrite = void 0;
       }
     }
-
-    return result;
   }
 
   public markReady() {

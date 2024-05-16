@@ -1,6 +1,6 @@
 import { isNonNullObject } from "./objects.js";
 
-function deepFreeze(value: any) {
+export function deepFreeze(value: any) {
   const workSet = new Set([value]);
   workSet.forEach((obj) => {
     if (isNonNullObject(obj) && shallowFreeze(obj) === obj) {

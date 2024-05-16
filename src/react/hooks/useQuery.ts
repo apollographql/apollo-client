@@ -522,7 +522,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
   private onError(error: ApolloError) {}
 
   private observable!: ObservableQuery<TData, TVariables>;
-  private obsQueryFields!: Omit<
+  public obsQueryFields!: Omit<
     ObservableQueryFields<TData, TVariables>,
     "variables"
   >;

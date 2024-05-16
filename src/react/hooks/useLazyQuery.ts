@@ -94,18 +94,17 @@ export function useLazyQuery<
     useQueryResult.observable.options.initialFetchPolicy ||
     internalState.getDefaultFetchPolicy();
 
-  useQueryResult.called = !!execOptionsRef.current;
-
+  const { forceUpdateState, obsQueryFields } = internalState;
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
-      const method = useQueryResult[key];
+      const method = obsQueryFields[key];
       eagerMethods[key] = function () {
         if (!execOptionsRef.current) {
           execOptionsRef.current = Object.create(null);
           // Only the first time populating execOptionsRef.current matters here.
-          internalState.forceUpdateState();
+          forceUpdateState();
         }
         // @ts-expect-error this is just too generic to type
         return method.apply(this, arguments);
@@ -113,12 +112,17 @@ export function useLazyQuery<
     }
 
     return eagerMethods;
-    // React Hook React.useMemo has missing dependencies: 'internalState' and 'useQueryResult'.
-    // Both `internalState` as well as all of the handlers are stable references.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [forceUpdateState, obsQueryFields]);
 
-  Object.assign(useQueryResult, eagerMethods);
+  const called = !!execOptionsRef.current;
+  const result = React.useMemo(
+    () => ({
+      ...useQueryResult,
+      ...eagerMethods,
+      called,
+    }),
+    [useQueryResult, eagerMethods, called]
+  );
 
   const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
     (executeOptions) => {
@@ -150,5 +154,5 @@ export function useLazyQuery<
     [eagerMethods, initialFetchPolicy, internalState]
   );
 
-  return [execute, useQueryResult];
+  return [execute, result];
 }

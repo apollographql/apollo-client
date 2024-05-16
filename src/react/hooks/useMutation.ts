@@ -90,7 +90,7 @@ export function useMutation<
     client,
   });
 
-  const { current } = React.useRef({
+  const ref = React.useRef({
     result,
     mutationId: 0,
     isMounted: true,
@@ -99,11 +99,9 @@ export function useMutation<
     options,
   });
 
-  // TODO: Trying to assign these in a useEffect or useLayoutEffect breaks
-  // higher-order components.
-  {
-    Object.assign(current, { client, options, mutation });
-  }
+  React.useLayoutEffect(() => {
+    Object.assign(ref.current, { client, options, mutation });
+  });
 
   const execute = React.useCallback(
     (
@@ -114,17 +112,17 @@ export function useMutation<
         TCache
       > = {}
     ) => {
-      const { options, mutation } = current;
+      const { options, mutation } = ref.current;
       const baseOptions = { ...options, mutation };
-      const client = executeOptions.client || current.client;
+      const client = executeOptions.client || ref.current.client;
 
       if (
-        !current.result.loading &&
+        !ref.current.result.loading &&
         !baseOptions.ignoreResults &&
-        current.isMounted
+        ref.current.isMounted
       ) {
         setResult(
-          (current.result = {
+          (ref.current.result = {
             loading: true,
             error: void 0,
             data: void 0,
@@ -134,7 +132,7 @@ export function useMutation<
         );
       }
 
-      const mutationId = ++current.mutationId;
+      const mutationId = ++ref.current.mutationId;
       const clientOptions = mergeOptions(baseOptions, executeOptions);
 
       return client
@@ -146,7 +144,8 @@ export function useMutation<
               new ApolloError({ graphQLErrors: errors })
             : void 0;
 
-          const onError = executeOptions.onError || current.options?.onError;
+          const onError =
+            executeOptions.onError || ref.current.options?.onError;
 
           if (error && onError) {
             onError(
@@ -156,7 +155,7 @@ export function useMutation<
           }
 
           if (
-            mutationId === current.mutationId &&
+            mutationId === ref.current.mutationId &&
             !clientOptions.ignoreResults
           ) {
             const result = {
@@ -167,13 +166,13 @@ export function useMutation<
               client,
             };
 
-            if (current.isMounted && !equal(current.result, result)) {
-              setResult((current.result = result));
+            if (ref.current.isMounted && !equal(ref.current.result, result)) {
+              setResult((ref.current.result = result));
             }
           }
 
           const onCompleted =
-            executeOptions.onCompleted || current.options?.onCompleted;
+            executeOptions.onCompleted || ref.current.options?.onCompleted;
 
           if (!error) {
             onCompleted?.(
@@ -185,7 +184,7 @@ export function useMutation<
           return response;
         })
         .catch((error) => {
-          if (mutationId === current.mutationId && current.isMounted) {
+          if (mutationId === ref.current.mutationId && ref.current.isMounted) {
             const result = {
               loading: false,
               error,
@@ -194,12 +193,13 @@ export function useMutation<
               client,
             };
 
-            if (!equal(current.result, result)) {
-              setResult((current.result = result));
+            if (!equal(ref.current.result, result)) {
+              setResult((ref.current.result = result));
             }
           }
 
-          const onError = executeOptions.onError || current.options?.onError;
+          const onError =
+            executeOptions.onError || ref.current.options?.onError;
 
           if (onError) {
             onError(
@@ -214,24 +214,29 @@ export function useMutation<
           throw error;
         });
     },
-    [current]
+    []
   );
 
   const reset = React.useCallback(() => {
-    if (current.isMounted) {
-      const result = { called: false, loading: false, client };
-      Object.assign(current, { mutationId: 0, result });
+    if (ref.current.isMounted) {
+      const result = {
+        called: false,
+        loading: false,
+        client: ref.current.client,
+      };
+      Object.assign(ref.current, { mutationId: 0, result });
       setResult(result);
     }
-  }, [client, current]);
+  }, []);
 
   React.useEffect(() => {
+    const current = ref.current;
     current.isMounted = true;
 
     return () => {
       current.isMounted = false;
     };
-  }, [current]);
+  }, []);
 
   return [execute, { reset, ...result }];
 }

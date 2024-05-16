@@ -684,5 +684,5 @@ test("maintains referential equality the entire result if there are no fragments
 
 function createFragmentMatcher(cache: InMemoryCache) {
   return (node: InlineFragmentNode, typename: string) =>
-    cache.policies.fragmentMatches(node, typename, { __typename: typename });
+    cache.policies.fragmentMatches(node, typename);
 }

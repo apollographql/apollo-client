@@ -215,104 +215,129 @@ class InternalState<TData, TVariables extends OperationVariables> {
   // Methods beginning with use- should be called according to the standard
   // rules of React hooks: only at the top level of the calling function, and
   // without any dynamic conditional logic.
-  useQuery(options: QueryHookOptions<TData, TVariables>) {
-    // The renderPromises field gets initialized here in the useQuery method, at
-    // the beginning of everything (for a given component rendering, at least),
-    // so we can safely use this.renderPromises in other/later InternalState
-    // methods without worrying it might be uninitialized. Even after
-    // initialization, this.renderPromises is usually undefined (unless SSR is
-    // happening), but that's fine as long as it has been initialized that way,
-    // rather than left uninitialized.
-    this.renderPromises = React.useContext(getApolloContext()).renderPromises;
+  useQuery(
+    options: QueryHookOptions<TData, TVariables>
+  ): QueryResult<TData, TVariables> {
+    // Let's treat `this` as a static external variable here so the lint rule has something to go on.
+    const internalState = this;
 
-    this.useOptions(options);
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useQueryImpl(options);
 
-    const obsQuery = this.useObservableQuery();
+    // the eslint plugin cannot detect that this is a hook if it's a class property
+    // (honestly, for good reason!)
+    // this gets around that.
+    function useQueryImpl(options: QueryHookOptions<TData, TVariables>) {
+      // The renderPromises field gets initialized here in the useQuery method, at
+      // the beginning of everything (for a given component rendering, at least),
+      // so we can safely use this.renderPromises in other/later InternalState
+      // methods without worrying it might be uninitialized. Even after
+      // initialization, this.renderPromises is usually undefined (unless SSR is
+      // happening), but that's fine as long as it has been initialized that way,
+      // rather than left uninitialized.
 
-    const result = useSyncExternalStore(
-      React.useCallback(
-        (handleStoreChange) => {
-          if (this.renderPromises) {
-            return () => {};
-          }
+      internalState.renderPromises =
+        React.useContext(getApolloContext()).renderPromises;
 
-          this.forceUpdate = handleStoreChange;
+      internalState.useOptions(options);
 
-          const onNext = () => {
-            const previousResult = this.result;
-            // We use `getCurrentResult()` instead of the onNext argument because
-            // the values differ slightly. Specifically, loading results will have
-            // an empty object for data instead of `undefined` for some reason.
-            const result = obsQuery.getCurrentResult();
-            // Make sure we're not attempting to re-render similar results
-            if (
-              previousResult &&
-              previousResult.loading === result.loading &&
-              previousResult.networkStatus === result.networkStatus &&
-              equal(previousResult.data, result.data)
-            ) {
-              return;
+      const obsQuery = internalState.useObservableQuery();
+
+      const disableNetworkFetches = internalState.client.disableNetworkFetches;
+
+      const result = useSyncExternalStore(
+        React.useCallback(
+          (handleStoreChange) => {
+            // there is nothing to really do here with `disableNetworkFetches`,
+            // we need to reference it here to ensure the effect depends on it
+            // and resubscribes when it changes and the component is re-rendered by chance
+            disableNetworkFetches;
+
+            // Technically, `renderPromises` should probably be a dependency of
+            // this effect, but we know that it never changes between renders, so
+            // we can safely omit it.
+            if (internalState.renderPromises) {
+              return () => {};
             }
 
-            this.setResult(result);
-          };
+            internalState.forceUpdate = handleStoreChange;
 
-          const onError = (error: Error) => {
-            subscription.unsubscribe();
-            subscription = obsQuery.resubscribeAfterError(onNext, onError);
+            const onNext = () => {
+              const previousResult = internalState.result;
+              // We use `getCurrentResult()` instead of the onNext argument because
+              // the values differ slightly. Specifically, loading results will have
+              // an empty object for data instead of `undefined` for some reason.
+              const result = obsQuery.getCurrentResult();
+              // Make sure we're not attempting to re-render similar results
+              if (
+                previousResult &&
+                previousResult.loading === result.loading &&
+                previousResult.networkStatus === result.networkStatus &&
+                equal(previousResult.data, result.data)
+              ) {
+                return;
+              }
 
-            if (!hasOwnProperty.call(error, "graphQLErrors")) {
-              // The error is not a GraphQL error
-              throw error;
-            }
+              internalState.setResult(result);
+            };
 
-            const previousResult = this.result;
-            if (
-              !previousResult ||
-              (previousResult && previousResult.loading) ||
-              !equal(error, previousResult.error)
-            ) {
-              this.setResult({
-                data: (previousResult && previousResult.data) as TData,
-                error: error as ApolloError,
-                loading: false,
-                networkStatus: NetworkStatus.error,
-              });
-            }
-          };
+            const onError = (error: Error) => {
+              subscription.unsubscribe();
+              subscription = obsQuery.resubscribeAfterError(onNext, onError);
 
-          let subscription = obsQuery.subscribe(onNext, onError);
+              if (!hasOwnProperty.call(error, "graphQLErrors")) {
+                // The error is not a GraphQL error
+                throw error;
+              }
 
-          // Do the "unsubscribe" with a short delay.
-          // This way, an existing subscription can be reused without an additional
-          // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
-          // happen in very fast succession.
-          return () => {
-            setTimeout(() => subscription.unsubscribe());
-            this.forceUpdate = () => this.forceUpdateState();
-          };
-        },
-        [
-          // We memoize the subscribe function using useCallback and the following
-          // dependency keys, because the subscribe function reference is all that
-          // useSyncExternalStore uses internally as a dependency key for the
-          // useEffect ultimately responsible for the subscription, so we are
-          // effectively passing this dependency array to that useEffect buried
-          // inside useSyncExternalStore, as desired.
-          obsQuery,
-          this.renderPromises,
-          this.client.disableNetworkFetches,
-        ]
-      ),
+              const previousResult = internalState.result;
+              if (
+                !previousResult ||
+                (previousResult && previousResult.loading) ||
+                !equal(error, previousResult.error)
+              ) {
+                internalState.setResult({
+                  data: (previousResult && previousResult.data) as TData,
+                  error: error as ApolloError,
+                  loading: false,
+                  networkStatus: NetworkStatus.error,
+                });
+              }
+            };
 
-      () => this.getCurrentResult(),
-      () => this.getCurrentResult()
-    );
+            let subscription = obsQuery.subscribe(onNext, onError);
 
-    // TODO Remove this method when we remove support for options.partialRefetch.
-    this.unsafeHandlePartialRefetch(result);
+            // Do the "unsubscribe" with a short delay.
+            // This way, an existing subscription can be reused without an additional
+            // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
+            // happen in very fast succession.
+            return () => {
+              setTimeout(() => subscription.unsubscribe());
+              internalState.forceUpdate = () =>
+                internalState.forceUpdateState();
+            };
+          },
+          [
+            // We memoize the subscribe function using useCallback and the following
+            // dependency keys, because the subscribe function reference is all that
+            // useSyncExternalStore uses internally as a dependency key for the
+            // useEffect ultimately responsible for the subscription, so we are
+            // effectively passing this dependency array to that useEffect buried
+            // inside useSyncExternalStore, as desired.
+            obsQuery,
+            disableNetworkFetches,
+          ]
+        ),
 
-    return this.toQueryResult(result);
+        () => internalState.getCurrentResult(),
+        () => internalState.getCurrentResult()
+      );
+
+      // TODO Remove this method when we remove support for options.partialRefetch.
+      internalState.unsafeHandlePartialRefetch(result);
+
+      return internalState.toQueryResult(result);
+    }
   }
 
   // These members (except for renderPromises) are all populated by the
@@ -526,6 +551,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
       this.observable || // Reuse this.observable if possible (and not SSR)
       this.client.watchQuery(this.getObsQueryOptions()));
 
+    // React Hook "React.useMemo" cannot be called in a class component.
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     this.obsQueryFields = React.useMemo(
       () => ({
         refetch: obsQuery.refetch.bind(obsQuery),

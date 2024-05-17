@@ -1348,7 +1348,7 @@ describe("General Mutation testing", () => {
                 if (count === 0) {
                   expect(result.called).toEqual(false);
                   expect(result.loading).toEqual(false);
-                  createTodo();
+                  setTimeout(createTodo, 10);
                 } else if (count === 2 && result) {
                   expect(result.data).toEqual(data);
                   setTimeout(() => {
@@ -1358,7 +1358,7 @@ describe("General Mutation testing", () => {
                   });
                 } else if (count === 3) {
                   expect(result.loading).toEqual(false);
-                  createTodo();
+                  setTimeout(createTodo, 10);
                 } else if (count === 5) {
                   expect(result.data).toEqual(data3);
                 }

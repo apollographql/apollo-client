@@ -149,13 +149,6 @@ export function useSubscription<
     });
   });
 
-  const canResetObservableRef = React.useRef(false);
-  React.useEffect(() => {
-    return () => {
-      canResetObservableRef.current = true;
-    };
-  }, []);
-
   const ref = React.useRef({ client, subscription, options });
   React.useEffect(() => {
     let shouldResubscribe = options?.shouldResubscribe;
@@ -164,10 +157,7 @@ export function useSubscription<
     }
 
     if (options?.skip) {
-      if (
-        !options?.skip !== !ref.current.options?.skip ||
-        canResetObservableRef.current
-      ) {
+      if (!options?.skip !== !ref.current.options?.skip) {
         setResult({
           loading: false,
           data: void 0,
@@ -175,16 +165,14 @@ export function useSubscription<
           variables: options?.variables,
         });
         setObservable(null);
-        canResetObservableRef.current = false;
       }
     } else if (
-      (shouldResubscribe !== false &&
-        (client !== ref.current.client ||
-          subscription !== ref.current.subscription ||
-          options?.fetchPolicy !== ref.current.options?.fetchPolicy ||
-          !options?.skip !== !ref.current.options?.skip ||
-          !equal(options?.variables, ref.current.options?.variables))) ||
-      canResetObservableRef.current
+      shouldResubscribe !== false &&
+      (client !== ref.current.client ||
+        subscription !== ref.current.subscription ||
+        options?.fetchPolicy !== ref.current.options?.fetchPolicy ||
+        !options?.skip !== !ref.current.options?.skip ||
+        !equal(options?.variables, ref.current.options?.variables))
     ) {
       setResult({
         loading: true,
@@ -200,11 +188,10 @@ export function useSubscription<
           context: options?.context,
         })
       );
-      canResetObservableRef.current = false;
     }
 
     Object.assign(ref.current, { client, subscription, options });
-  }, [client, subscription, options, canResetObservableRef.current]);
+  }, [client, subscription, options]);
 
   React.useEffect(() => {
     if (!observable) {

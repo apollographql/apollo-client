@@ -92,9 +92,7 @@ describe("graphql(mutation) lifecycle", () => {
       class Container extends React.Component<ChildProps<Props>> {
         render() {
           if (this.props.listId !== 2) return null;
-          setTimeout(() => {
-            this.props.mutate!().then(() => resolve());
-          });
+          this.props.mutate!().then(() => resolve());
           return null;
         }
       }

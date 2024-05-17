@@ -99,9 +99,11 @@ export function useMutation<
     options,
   });
 
-  React.useLayoutEffect(() => {
+  // TODO: Trying to assign these in a useEffect or useLayoutEffect breaks
+  // higher-order components.
+  {
     Object.assign(ref.current, { client, options, mutation });
-  });
+  }
 
   const execute = React.useCallback(
     (
@@ -219,22 +221,17 @@ export function useMutation<
 
   const reset = React.useCallback(() => {
     if (ref.current.isMounted) {
-      const result = {
-        called: false,
-        loading: false,
-        client: ref.current.client,
-      };
+      const result = { called: false, loading: false, client };
       Object.assign(ref.current, { mutationId: 0, result });
       setResult(result);
     }
   }, []);
 
   React.useEffect(() => {
-    const current = ref.current;
-    current.isMounted = true;
+    ref.current.isMounted = true;
 
     return () => {
-      current.isMounted = false;
+      ref.current.isMounted = false;
     };
   }, []);
 

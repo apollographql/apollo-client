@@ -52,6 +52,8 @@ export function useReadQuery<TData>(
       // client that's available to us at the current position in the React tree
       // that ApolloClient will then have the job to recreate a real queryRef from
       // the transported object
+      // This is just a context read - it's fine to do this conditionally
+      // eslint-disable-next-line react-hooks/rules-of-hooks
     : useApolloClient()
   )(queryRef);
 }

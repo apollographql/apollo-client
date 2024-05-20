@@ -377,6 +377,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
           "This cache does not support data masking which effectively disables the data masking feature. Please use a cache that supports data masking or disable data masking to silence this warning."
         );
       }
+
       return data;
     }
 

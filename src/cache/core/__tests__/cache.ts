@@ -3,6 +3,7 @@ import { ApolloCache } from "../cache";
 import { Cache, DataProxy } from "../..";
 import { Reference } from "../../../utilities/graphql/storeUtils";
 import { expectTypeOf } from "expect-type";
+import { spyOnConsole } from "../../../testing/internal";
 class TestCache extends ApolloCache<unknown> {
   constructor() {
     super();
@@ -158,6 +159,27 @@ describe("abstract cache", () => {
 
       test.writeFragment(fragment);
       expect(test.write).toBeCalled();
+    });
+  });
+
+  describe("maskDocument", () => {
+    it("warns on caches that don't implement the required interface and returns original data", () => {
+      using consoleSpy = spyOnConsole("warn");
+      const query = gql`
+        query {
+          greeting
+        }
+      `;
+      const data = { greeting: "Hello" };
+      const cache = new TestCache();
+
+      const result = cache.maskDocument(query, data);
+
+      expect(result).toBe(data);
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.warn).toHaveBeenCalledWith(
+        expect.stringContaining("does not support data masking")
+      );
     });
   });
 

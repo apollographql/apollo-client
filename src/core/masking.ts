@@ -11,14 +11,11 @@ type MatchesFragmentFn = (
   typename: string
 ) => boolean;
 
-export function mask<
-  TData extends Record<string, unknown>,
-  TMaskedData extends Record<string, unknown> = TData,
->(
+export function mask<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
   matchesFragment: MatchesFragmentFn
-): TMaskedData {
+): TData {
   const definition = getMainDefinition(document);
   const [masked, changed] = maskSelectionSet(
     data,

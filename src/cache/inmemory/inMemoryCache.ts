@@ -528,7 +528,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return this.addTypenameToDocument(this.addFragmentsToDocument(document));
   }
 
-  public fragmentMatches(
+  protected fragmentMatches(
     fragment: InlineFragmentNode,
     typename: string
   ): boolean {

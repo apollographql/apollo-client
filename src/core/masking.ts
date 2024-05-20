@@ -73,7 +73,10 @@ function maskSelectionSet(
           return [memo, changed];
         }
         case Kind.INLINE_FRAGMENT: {
-          if (!matchesFragment(selection, data.__typename)) {
+          if (
+            selection.typeCondition &&
+            !matchesFragment(selection, data.__typename)
+          ) {
             return [memo, changed];
           }
 

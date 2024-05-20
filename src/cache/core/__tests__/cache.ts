@@ -169,10 +169,20 @@ describe("abstract cache", () => {
       using consoleSpy = spyOnConsole("warn");
       const query = gql`
         query {
-          greeting
+          user {
+            __typename
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          name
         }
       `;
-      const data = { greeting: "Hello" };
+      const data = {
+        user: { __typename: "User", id: 1, name: "Mister Masked" },
+      };
       const cache = new TestCache();
 
       const result = cache.maskDocument(query, data);

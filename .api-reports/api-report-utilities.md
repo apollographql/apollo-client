@@ -56,6 +56,8 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     abstract evict(options: Cache_2.EvictOptions): boolean;
     abstract extract(optimistic?: boolean): TSerialized;
     // (undocumented)
+    protected fragmentMatches?(fragment: InlineFragmentNode, typename: string): boolean;
+    // (undocumented)
     gc(): string[];
     // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
     //
@@ -63,6 +65,8 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
+    // (undocumented)
+    maskDocument<TData = unknown>(document: DocumentNode, data: TData): TData;
     // (undocumented)
     modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache_2.ModifyOptions<Entity>): boolean;
     // Warning: (ae-forgotten-export) The symbol "Transaction" needs to be exported by the entry point index.d.ts
@@ -1303,6 +1307,8 @@ class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     evict(options: Cache_2.EvictOptions): boolean;
     // (undocumented)
     extract(optimistic?: boolean): NormalizedCacheObject;
+    // (undocumented)
+    protected fragmentMatches(fragment: InlineFragmentNode, typename: string): boolean;
     // (undocumented)
     gc(options?: {
         resetResultCache?: boolean;

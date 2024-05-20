@@ -4,6 +4,7 @@ import { Cache, DataProxy } from "../..";
 import { Reference } from "../../../utilities/graphql/storeUtils";
 import { expectTypeOf } from "expect-type";
 import { spyOnConsole } from "../../../testing/internal";
+import type { InlineFragmentNode } from "graphql";
 class TestCache extends ApolloCache<unknown> {
   constructor() {
     super();
@@ -180,6 +181,42 @@ describe("abstract cache", () => {
       expect(consoleSpy.warn).toHaveBeenCalledWith(
         expect.stringContaining("does not support data masking")
       );
+    });
+
+    it("returns masked query for caches that implement required interface", () => {
+      class MaskingCache extends TestCache {
+        protected fragmentMatches(
+          _fragment: InlineFragmentNode,
+          _typename: string
+        ): boolean {
+          return true;
+        }
+      }
+
+      const cache = new MaskingCache();
+
+      const query = gql`
+        query {
+          user {
+            __typename
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          name
+        }
+      `;
+      const data = {
+        user: { __typename: "User", id: 1, name: "Mister Masked" },
+      };
+
+      const result = cache.maskDocument(query, data);
+
+      expect(result).toEqual({
+        user: { __typename: "User", id: 1 },
+      });
     });
   });
 

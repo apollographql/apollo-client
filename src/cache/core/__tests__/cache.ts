@@ -5,6 +5,7 @@ import { Reference } from "../../../utilities/graphql/storeUtils";
 import { expectTypeOf } from "expect-type";
 import { spyOnConsole } from "../../../testing/internal";
 import type { InlineFragmentNode } from "graphql";
+
 class TestCache extends ApolloCache<unknown> {
   constructor() {
     super();

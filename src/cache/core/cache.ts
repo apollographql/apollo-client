@@ -374,7 +374,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     if (!this.fragmentMatches) {
       if (__DEV__) {
         invariant.warn(
-          "This cache does not support data masking which effectively disables the data masking feature. Please use a cache that supports data masking or disable data masking to silence this warning."
+          "This cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
         );
       }
 

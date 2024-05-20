@@ -1,4 +1,4 @@
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, InlineFragmentNode } from "graphql";
 import { wrap } from "optimism";
 
 import type {
@@ -144,6 +144,19 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // Optimistic API
 
   public abstract removeOptimistic(id: string): void;
+
+  // Data masking API
+
+  // Used by data masking to determine if an inline fragment with a type
+  // condition matches a given typename.
+  //
+  // If not implemented by a cache subclass, data masking will effectively be
+  // disabled since we will not be able to accurately determine if a given type
+  // condition for a union or interface matches a particular type.
+  protected fragmentMatches?(
+    fragment: InlineFragmentNode,
+    typename: string
+  ): boolean;
 
   // Transactional API
 

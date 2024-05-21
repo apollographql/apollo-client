@@ -240,7 +240,7 @@ export function useSubscription<
               error: void 0,
               variables,
             };
-            observable.__.result = result;
+            observable.__.setResult(result);
             update();
 
             if (optionsRef.current.onData) {
@@ -257,12 +257,12 @@ export function useSubscription<
           },
           error(error) {
             if (!subscriptionStopped) {
-              observable.__.result = {
+              observable.__.setResult({
                 loading: false,
                 data: void 0,
                 error,
                 variables,
-              };
+              });
               update();
               optionsRef.current.onError?.(error);
             }
@@ -290,10 +290,7 @@ export function useSubscription<
       },
       [observable]
     ),
-    React.useCallback(
-      () => (observable && !skip ? observable.__.result : fallbackResult),
-      [observable, fallbackResult, skip]
-    )
+    () => (observable && !skip ? observable.__.result : fallbackResult)
   );
 }
 
@@ -307,6 +304,21 @@ function createSubscription<
   fetchPolicy?: FetchPolicy,
   context?: DefaultContext
 ) {
+  const __ = {
+    variables,
+    client,
+    query,
+    fetchPolicy,
+    result: {
+      loading: true,
+      data: void 0,
+      error: void 0,
+      variables,
+    } as SubscriptionResult<TData, TVariables>,
+    setResult(result: SubscriptionResult<TData, TVariables>) {
+      __.result = result;
+    },
+  };
   return Object.assign(
     client.subscribe({
       query,
@@ -315,18 +327,10 @@ function createSubscription<
       context,
     }),
     {
-      __: {
-        variables,
-        client,
-        query,
-        fetchPolicy,
-        result: {
-          loading: true,
-          data: void 0,
-          error: void 0,
-          variables,
-        } as SubscriptionResult<TData, TVariables>,
-      },
+      /**
+       * A tracking object to store details about the observable and the latest result of the subscription.
+       */
+      __,
     }
   );
 }

@@ -280,3 +280,35 @@ test("removes fields with @client directives", async () => {
     await expect(stream.takeNext()).resolves.toEqual({ data: { a: 3, b: 4 } });
   }
 });
+
+describe.skip("type tests", () => {
+  const ANY = {} as any;
+  test("covariant behaviour: `MockedResponses<X,Y>` should be assignable to `MockedResponse`", () => {
+    let unspecificArray: MockedResponse[] = [];
+    let specificArray: MockedResponse<{ foo: string }, { foo: string }>[] = [];
+    let unspecificResponse: MockedResponse = ANY;
+    let specificResponse: MockedResponse<{ foo: string }, { foo: string }> =
+      ANY;
+
+    unspecificArray.push(specificResponse);
+    unspecificArray.push(unspecificResponse);
+
+    specificArray.push(specificResponse);
+    // @ts-expect-error
+    specificArray.push(unspecificResponse);
+
+    unspecificArray = [specificResponse];
+    unspecificArray = [unspecificResponse];
+    unspecificArray = [specificResponse, unspecificResponse];
+
+    specificArray = [specificResponse];
+    // @ts-expect-error
+    specificArray = [unspecificResponse];
+    // @ts-expect-error
+    specificArray = [specificResponse, unspecificResponse];
+
+    unspecificResponse = specificResponse;
+    // @ts-expect-error
+    specificResponse = unspecificResponse;
+  });
+});

@@ -9,7 +9,6 @@ import type {
   LazyQueryHookOptions,
   LazyQueryResultTuple,
   NoInfer,
-  QueryResult,
 } from "../types/types.js";
 import { useInternalState } from "./useQuery.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -95,20 +94,17 @@ export function useLazyQuery<
     useQueryResult.observable.options.initialFetchPolicy ||
     internalState.getDefaultFetchPolicy();
 
-  const result: QueryResult<TData, TVariables> = Object.assign(useQueryResult, {
-    called: !!execOptionsRef.current,
-  });
-
+  const { forceUpdateState, obsQueryFields } = internalState;
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
-      const method = result[key];
+      const method = obsQueryFields[key];
       eagerMethods[key] = function () {
         if (!execOptionsRef.current) {
           execOptionsRef.current = Object.create(null);
           // Only the first time populating execOptionsRef.current matters here.
-          internalState.forceUpdateState();
+          forceUpdateState();
         }
         // @ts-expect-error this is just too generic to type
         return method.apply(this, arguments);
@@ -116,9 +112,17 @@ export function useLazyQuery<
     }
 
     return eagerMethods;
-  }, []);
+  }, [forceUpdateState, obsQueryFields]);
 
-  Object.assign(result, eagerMethods);
+  const called = !!execOptionsRef.current;
+  const result = React.useMemo(
+    () => ({
+      ...useQueryResult,
+      ...eagerMethods,
+      called,
+    }),
+    [useQueryResult, eagerMethods, called]
+  );
 
   const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
     (executeOptions) => {
@@ -147,7 +151,7 @@ export function useLazyQuery<
 
       return promise;
     },
-    []
+    [eagerMethods, initialFetchPolicy, internalState]
   );
 
   return [execute, result];

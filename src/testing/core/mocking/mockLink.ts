@@ -20,15 +20,22 @@ import {
   checkDocument,
 } from "../../../utilities/index.js";
 
-export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
+/** @internal */
+type CovariantUnaryFunction<out Arg, out Ret> = { fn(arg: Arg): Ret }["fn"];
 
-export type VariableMatcher<V = Record<string, any>> = (
-  variables: V
-) => boolean;
+export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<
+  V,
+  T
+>;
+
+export type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
+  V,
+  boolean
+>;
 
 export interface MockedResponse<
-  TData = Record<string, any>,
-  TVariables = Record<string, any>,
+  out TData = Record<string, any>,
+  out TVariables = Record<string, any>,
 > {
   request: GraphQLRequest<TVariables>;
   maxUsageCount?: number;

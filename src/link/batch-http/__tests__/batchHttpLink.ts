@@ -6,6 +6,7 @@ import { ApolloLink } from "../../core/ApolloLink";
 import { execute } from "../../core/execute";
 import {
   Observable,
+  ObservableSubscription,
   Observer,
 } from "../../../utilities/observables/Observable";
 import { BatchHttpLink } from "../batchHttpLink";
@@ -271,6 +272,8 @@ const createHttpLink = (httpArgs?: any) => {
   return new BatchHttpLink(args);
 };
 
+const subscriptions = new Set<ObservableSubscription>();
+
 describe("SharedHttpTest", () => {
   const data = { data: { hello: "world" } };
   const data2 = { data: { hello: "everyone" } };
@@ -300,10 +303,16 @@ describe("SharedHttpTest", () => {
       error,
       complete,
     };
+    subscriptions.clear();
   });
 
   afterEach(() => {
     fetchMock.restore();
+    if (subscriptions.size) {
+      // Tests within this describe block can add subscriptions to this Set
+      // that they want to be canceled/unsubscribed after the test finishes.
+      subscriptions.forEach((sub) => sub.unsubscribe());
+    }
   });
 
   it("raises warning if called with concat", () => {
@@ -620,6 +629,61 @@ describe("SharedHttpTest", () => {
         expect(headers.authorization).toBe("1234");
         expect(headers["content-type"]).toBe("application/json");
         expect(headers.accept).toBe("*/*");
+      })
+    );
+  });
+
+  it("uses the latest window.fetch function if options.fetch not configured", (done) => {
+    const httpLink = createHttpLink({ uri: "data" });
+
+    const fetch = window.fetch;
+    expect(typeof fetch).toBe("function");
+
+    const fetchSpy = jest.spyOn(window, "fetch");
+    fetchSpy.mockImplementation(() =>
+      Promise.resolve<Response>({
+        text() {
+          return Promise.resolve(
+            JSON.stringify({
+              data: { hello: "from spy" },
+            })
+          );
+        },
+      } as Response)
+    );
+
+    const spyFn = window.fetch;
+    expect(spyFn).not.toBe(fetch);
+
+    subscriptions.add(
+      execute(httpLink, {
+        query: sampleQuery,
+      }).subscribe({
+        error: done.fail,
+
+        next(result) {
+          expect(fetchSpy).toHaveBeenCalledTimes(1);
+          expect(result).toEqual({
+            data: { hello: "from spy" },
+          });
+
+          fetchSpy.mockRestore();
+          expect(window.fetch).toBe(fetch);
+
+          subscriptions.add(
+            execute(httpLink, {
+              query: sampleQuery,
+            }).subscribe({
+              error: done.fail,
+              next(result) {
+                expect(result).toEqual({
+                  data: { hello: "world" },
+                });
+                done();
+              },
+            })
+          );
+        },
       })
     );
   });

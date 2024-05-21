@@ -109,23 +109,30 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>
 ): InternalState<TData, TVariables> {
-  const stateRef = React.useRef<InternalState<TData, TVariables>>();
-  if (
-    !stateRef.current ||
-    client !== stateRef.current.client ||
-    query !== stateRef.current.query
-  ) {
-    stateRef.current = new InternalState(client, query, stateRef.current);
-  }
-  const state = stateRef.current;
-
   // By default, InternalState.prototype.forceUpdate is an empty function, but
   // we replace it here (before anyone has had a chance to see this state yet)
   // with a function that unconditionally forces an update, using the latest
-  // setTick function. Updating this state by calling state.forceUpdate is the
-  // only way we trigger React component updates (no other useState calls within
-  // the InternalState class).
-  state.forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
+  // setTick function. Updating this state by calling state.forceUpdate or the
+  // uSES notification callback are the only way we trigger React component updates.
+  const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
+
+  function createInternalState(previous?: InternalState<TData, TVariables>) {
+    return Object.assign(new InternalState(client, query, previous), {
+      forceUpdateState,
+    });
+  }
+
+  let [state, updateState] = React.useState(createInternalState);
+
+  if (client !== state.client || query !== state.query) {
+    // If the client or query have changed, we need to create a new InternalState.
+    // This will trigger a re-render with the new state, but it will also continue
+    // to run the current render function to completion.
+    // Since we sometimes trigger some side-effects in the render function, we
+    // re-assign `state` to the new state to ensure that those side-effects are
+    // triggered with the new state.
+    updateState((state = createInternalState(state)));
+  }
 
   return state;
 }
@@ -511,7 +518,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
   private onError(error: ApolloError) {}
 
   private observable!: ObservableQuery<TData, TVariables>;
-  private obsQueryFields!: Omit<
+  public obsQueryFields!: Omit<
     ObservableQueryFields<TData, TVariables>,
     "variables"
   >;

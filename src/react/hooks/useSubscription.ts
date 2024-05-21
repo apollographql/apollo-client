@@ -22,8 +22,6 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
-const emptyObject = Object.freeze({});
-
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
  *
@@ -114,10 +112,7 @@ export function useSubscription<
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SubscriptionHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = emptyObject
+  options: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>> = {}
 ) {
   const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options.client);
@@ -145,9 +140,6 @@ export function useSubscription<
 
   let { skip, fetchPolicy, variables, shouldResubscribe, context } = options;
   variables = useDeepMemo(() => variables, [variables]);
-  if (typeof shouldResubscribe === "function") {
-    shouldResubscribe = !!shouldResubscribe(options!);
-  }
 
   let [observable, setObservable] = React.useState(() =>
     options.skip ? null : (
@@ -161,11 +153,13 @@ export function useSubscription<
     }
   } else if (
     !observable ||
-    (shouldResubscribe !== false &&
-      (client !== observable.__.client ||
-        subscription !== observable.__.query ||
-        !equal(variables, observable.__.variables) ||
-        fetchPolicy !== observable.__.fetchPolicy))
+    ((client !== observable.__.client ||
+      subscription !== observable.__.query ||
+      fetchPolicy !== observable.__.fetchPolicy ||
+      !equal(variables, observable.__.variables)) &&
+      (typeof shouldResubscribe === "function" ?
+        !!shouldResubscribe(options!)
+      : shouldResubscribe) !== false)
   ) {
     setObservable(
       (observable = createSubscription(

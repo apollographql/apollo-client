@@ -14,8 +14,10 @@ import type {
   ApolloClient,
   DefaultContext,
   FetchPolicy,
+  FetchResult,
   OperationVariables,
 } from "../../core/index.js";
+import { Observable } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
@@ -147,59 +149,34 @@ export function useSubscription<
     shouldResubscribe = !!shouldResubscribe(options!);
   }
 
-  const contextRef = React.useRef(context);
-  React.useEffect(() => {
-    contextRef.current = context;
-  }, [context]);
-
-  const [observable, setObservable] = React.useState(() =>
+  let [observable, setObservable] = React.useState(() =>
     options.skip ? null : (
-      createSubscription(
+      createSubscription(client, subscription, variables, fetchPolicy, context)
+    )
+  );
+
+  if (skip) {
+    if (observable) {
+      setObservable((observable = null));
+    }
+  } else if (
+    !observable ||
+    (shouldResubscribe !== false &&
+      (client !== observable.__.client ||
+        subscription !== observable.__.query ||
+        !equal(variables, observable.__.variables) ||
+        fetchPolicy !== observable.__.fetchPolicy))
+  ) {
+    setObservable(
+      (observable = createSubscription(
         client,
         subscription,
         variables,
         fetchPolicy,
-        contextRef.current
-      )
-    )
-  );
-
-  React.useEffect(() => {
-    function resubscriptionEffect() {
-      if (skip) {
-        if (observable) {
-          setObservable(null);
-        }
-      } else if (
-        !observable ||
-        (shouldResubscribe !== false &&
-          (client !== observable.__.client ||
-            subscription !== observable.__.query ||
-            !equal(variables, observable.__.variables) ||
-            fetchPolicy !== observable.__.fetchPolicy))
-      ) {
-        setObservable(
-          createSubscription(
-            client,
-            subscription,
-            variables,
-            fetchPolicy,
-            contextRef.current
-          )
-        );
-      }
-    }
-    const id = setTimeout(resubscriptionEffect);
-    return () => clearTimeout(id);
-  }, [
-    client,
-    fetchPolicy,
-    observable,
-    shouldResubscribe,
-    skip,
-    subscription,
-    variables,
-  ]);
+        context
+      ))
+    );
+  }
 
   const optionsRef = React.useRef(options);
   React.useEffect(() => {
@@ -319,12 +296,20 @@ function createSubscription<
       __.result = result;
     },
   };
+
+  let observable: Observable<FetchResult<TData>> | null = null;
   return Object.assign(
-    client.subscribe({
-      query,
-      variables,
-      fetchPolicy,
-      context,
+    new Observable<FetchResult<TData>>((observer) => {
+      // lazily start the subscription when the first observer subscribes
+      // to get around strict mode
+      observable ||= client.subscribe({
+        query,
+        variables,
+        fetchPolicy,
+        context,
+      });
+      const sub = observable.subscribe(observer);
+      return () => sub.unsubscribe();
     }),
     {
       /**

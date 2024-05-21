@@ -470,14 +470,6 @@ describe("should update", () => {
 
     {
       const {
-        snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
-      expect(loading).toBeFalsy();
-      expect(data).toEqual(results[0].result.data);
-    }
-
-    {
-      const {
         snapshot,
         snapshot: { loading, data },
       } = await ProfiledContainer.takeRender();
@@ -578,14 +570,6 @@ describe("should update", () => {
       const {
         snapshot: { loading, data },
       } = await ProfiledContainer.takeRender();
-      expect(loading).toBeFalsy();
-      expect(data).toEqual(results[0].result.data);
-    }
-
-    {
-      const {
-        snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -680,13 +664,6 @@ describe("should update", () => {
     await expect(ProfiledContainer).not.toRerender({ timeout: 50 });
 
     rerender(<ProfiledContainer variables={variablesHan} />);
-    {
-      const {
-        snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
-      expect(loading).toBeFalsy();
-      expect(data).toEqual(dataLuke);
-    }
 
     {
       const {

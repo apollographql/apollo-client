@@ -68,3 +68,8 @@ junit.xml
 
 # Ignore generated test report output
 reports
+
+esbuild-why-*.html
+
+.yalc
+yalc.lock

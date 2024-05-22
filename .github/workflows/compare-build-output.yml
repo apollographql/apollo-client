@@ -1,0 +1,31 @@
+name: Compare Build Output
+on:
+  pull_request:
+    branches:
+      - main
+      - release-*
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  comparebuildoutput:
+    name: Compare Build Output
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          # Fetch entire git history so we have the parent commit to compare against
+          fetch-depth: 0
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install dependencies (with cache)
+        uses: bahmutov/npm-install@v1
+
+      - name: Run comparison script
+        id: attw
+        run: ./config/compare-build-output-to.sh $(git merge-base HEAD origin/${{ github.base_ref }}) > $GITHUB_STEP_SUMMARY
+        env:
+          RUNNER_TEMP: ${{ runner.temp }}

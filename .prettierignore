@@ -1,6 +1,39 @@
+##### DISCLAIMER ######
+# We have disabled the use of prettier in this project for a variety of reasons.
+# Because much of this project has not been formatted, we don't want to want to
+# apply formatting to everything and skew `git blame` stats. Instead, we should
+# only format newly created files that we can guarantee have no existing git
+# history. For this reason, we have disabled prettier project-wide except for
+# a handful of files.
+#
+# ONLY ADD NEWLY CREATED FILES/PATHS TO THE LIST BELOW. DO NOT ADD EXISTING
+# PROJECT FILES.
+
 # ignores all files in /docs directory
+!/docs
 /docs/**
 
 # Ignore all mdx & md files:
 *.mdx
 *.md
+*.har
+*.snap
+
+!/docs/source
+/docs/source/**
+!/docs/source/development-testing
+/docs/source/development-testing/**
+!/docs/source/development-testing/reducing-bundle-size.mdx
+!/docs/source/development-testing/schema-driven-testing.mdx
+
+!docs/shared
+/docs/shared/**
+!/docs/shared/ApiDoc
+!/docs/shared/ApiDoc/**
+!/docs/shared/Overrides
+!/docs/shared/Overrides/**
+
+node_modules/
+.yalc/
+.next/
+.changeset/

@@ -18,42 +18,42 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - uses: actions/create-github-app-token@v1
+        id: github-actions-bot-app-token
         with:
+          app-id: 819772
+          private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
+
+      # Check out the repository, using the Github Actions Bot app's token so
+      # that we can push later.
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.github-actions-bot-app-token.outputs.token }}
           # Checkout release branch entered when workflow was kicked off
           ref: ${{ github.event.inputs.branch }}
           # Fetch entire git history so  Changesets can generate changelogs
           # with the correct commits
           fetch-depth: 0
 
-      - name: Setup Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 20.x
 
-      - name: Get latest tagged version
-        id: previoustag
-        uses: WyriHaximus/github-action-get-previous-tag@v1
-
-      - name: Remove 'v' prefix from version number (e.g. v1.0.0)
-        uses: mad9000/actions-find-and-replace-string@4
-        id: formatversion
-        with:
-          source: ${{ steps.previoustag.outputs.tag }}
-          find: "v"
-          replace: ""
-
-      - name: Write previous version to package.json
-        uses: jaywcjlove/github-action-package@v1.3.1
-        with:
-          version: ${{ steps.formatversion.outputs.value }}
+      - name: Write latest version to package.json and package-lock.json
+        run: |
+          version=$(npm show @apollo/client version)
+          npm pkg set version="$version"
+          npm i
 
       - name: Remove pre.json
         run: npx rimraf .changeset/pre.json
 
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: Exit prerelease mode
-          # Commit these changes to the branch workflow is running against
-          branch: ${{ github.event.inputs.branch }}
+      - name: Commit and push changes
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -A
+          git commit -m "Exit prerelease mode"
+          git push

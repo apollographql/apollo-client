@@ -1,0 +1,60 @@
+name: Clean up Prettier, Size-limit, and Api-Extractor
+
+on:
+  pull_request:
+  pull_request_review:
+    types: [submitted, edited]
+
+jobs:
+  add_cleanup_label:
+    # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-a-workflow-when-a-pull-request-is-approved
+    if: |
+      github.repository == 'apollographql/apollo-client' &&
+      github.event.review.state == 'APPROVED' &&
+      contains(github.event.pull_request.labels.*.name, 'auto-cleanup') == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: add label
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: auto-cleanup
+
+  cleanup:
+    if: |
+      github.repository == 'apollographql/apollo-client' &&
+      contains(github.event.pull_request.labels.*.name, 'auto-cleanup')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install dependencies (with cache)
+        uses: bahmutov/npm-install@v1
+
+      - name: Run build
+        run: npm run build
+
+      - name: Run Api-Extractor
+        run: npm run extract-api
+        env:
+          CI: "false"
+
+      - name: Run prettier
+        run: npm run format
+
+      - name: Update size-limit
+        run: npm run update-size-limits
+
+      - name: Commit changes back
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Clean up Prettier, Size-limit, and Api-Extractor"
+          push_options: ""
+          skip_dirty_check: false

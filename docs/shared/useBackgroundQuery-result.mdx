@@ -1,0 +1,79 @@
+<table class="field-table api-ref">
+
+<thead>
+  <tr>
+    <td>Name /<br/>Type</td>
+    <td>Description</td>
+  </tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td colspan="2">
+
+**Query reference**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `queryRef`
+
+`QueryRef<TData>`
+</td>
+<td>
+
+In order to link a query initiated by a specific `useBackgroundQuery` call to the place its data is consumed—which can be uniquely identified not only by the query and variables passed, but also the optional `queryKey` supplied by the user—the hook returns a `queryRef` that can later be read by `useReadQuery`.
+
+</td>
+</tr>
+
+<tr>
+<td colspan="2">
+
+**Helper functions**
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `refetch`
+
+`(variables?: Partial<TVariables>) => Promise<ApolloQueryResult>`
+</td>
+
+<td>
+
+A function that enables you to re-execute the query, optionally passing in new `variables`.
+
+To guarantee that the refetch performs a network request, its `fetchPolicy` is set to `network-only` (unless the original query's `fetchPolicy` is `no-cache` or `cache-and-network`, which also guarantee a network request).
+
+Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `fetchMore`
+
+`({ query?: DocumentNode, variables?: TVariables, updateQuery: Function}) => Promise<ApolloQueryResult>`
+</td>
+
+<td>
+
+A function that helps you fetch the next set of results for a [paginated list field](/react/pagination/core-api/).
+
+Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
+
+</td>
+</tr>
+
+</tbody>
+</table>

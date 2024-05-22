@@ -1,0 +1,926 @@
+---
+title: Suspense
+description: Use React 18 Suspense features with Apollo Client
+minVersion: 3.8.0
+---
+
+"Suspense" is generally used to refer to a new way of building React apps using the [**concurrent rendering engine**](https://react.dev/blog/2022/03/29/react-v18#what-is-concurrent-react) introduced in React 18. It's also a specific React API, [`<Suspense />`](https://react.dev/reference/react/Suspense), a component that lets you display a fallback until its children have finished loading.
+
+This guide explores Apollo Client's data fetching hooks introduced in 3.8, which leverage React's powerful Suspense features.
+
+> To follow along with the examples below, open up our [Suspense demo](https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-client/v3/suspense-hooks?file=/src/App.tsx) on CodeSandbox.
+
+## Fetching with Suspense
+
+The `useSuspenseQuery` hook initiates a network request and causes the component calling it to suspend while the request is made. You can think of it as a Suspense-ready replacement for `useQuery` that lets you take advantage of React's Suspense features while fetching during render.
+
+Let's take a look at an example:
+
+```tsx {5,38,40,45-47}
+import { Suspense } from 'react';
+import {
+  gql,
+  TypedDocumentNode,
+  useSuspenseQuery
+} from '@apollo/client';
+
+interface Data {
+  dog: {
+    id: string;
+    name: string;
+  };
+}
+
+interface Variables {
+  id: string;
+}
+
+interface DogProps {
+  id: string
+}
+
+const GET_DOG_QUERY: TypedDocumentNode<Data, Variables> = gql`
+  query GetDog($id: String) {
+    dog(id: $id) {
+      # By default, an object's cache key is a combination of
+      # its __typename and id fields, so we should always make
+      # sure the id is in the response so our data can be
+      # properly cached.
+      id
+      name
+      breed
+    }
+  }
+`;
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dog id="3" />
+    </Suspense>
+  );
+}
+
+function Dog({ id }: DogProps) {
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { id },
+  });
+
+  return <>Name: {data.dog.name}</>;
+}
+```
+
+<Note>
+
+This example manually defines TypeScript interfaces for `Data` and `Variables` as well as the type for `GET_DOG_QUERY` using `TypedDocumentNode`. [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) is a popular tool that creates these type definitions automatically for you. See the reference on [Using TypeScript](../development-testing/static-typing) for more information on integrating GraphQL Code Generator with Apollo Client.
+
+</Note>
+
+In this example, our `App` component renders a `Dog` component which fetches the record for a single dog via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache is unable to fulfill the request for the `GetDog` query, so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest `Suspense` boundary _above_ the suspended component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for Mozzarella the Corgi.
+
+You may have noticed that `useSuspenseQuery` does not return a `loading` boolean. That's because the component calling `useSuspenseQuery` always suspends when fetching data. A corollary is that when it _does_ render, `data` is always defined! In the Suspense paradigm, fallbacks that exist **outside of suspended components** replace the loading states components were previously responsible for rendering themselves.
+
+<Note>
+
+**For TypeScript users**: Since `GET_DOG_QUERY` is a `TypedDocumentNode` in which we have specified the result type via `Data` generic type argument, the TypeScript type for `data` returned by `useSuspenseQuery` reflects that! This means that `data` is guaranteed to be defined when `Dog` renders, and that `data.dog` has the shape `{ id: string; name: string; breed: string; }`.
+
+</Note>
+
+### Changing variables
+
+In the previous example, we fetched the record for a single dog by passing a hard-coded `id` variable to `useSuspenseQuery`. Now, let's say we want to fetch the record for a different dog using a dynamic value. We'll fetch the `name` and `id` for our list of dogs, and once the user selects an individual dog, we fetch more details, including their `breed`.
+
+Let's update our example:
+
+```tsx {28-30,35,42,49-51}
+export const GET_DOG_QUERY: TypedDocumentNode<
+  DogData,
+  Variables
+> = gql`
+  query GetDog($id: String) {
+    dog(id: $id) {
+      id
+      name
+      breed
+    }
+  }
+`;
+
+export const GET_DOGS_QUERY: TypedDocumentNode<
+  DogsData,
+  Variables
+> = gql`
+  query GetDogs {
+    dogs {
+      id
+      name
+    }
+  }
+`;
+
+function App() {
+  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
+  const [selectedDog, setSelectedDog] = useState(
+    data.dogs[0].id
+  );
+
+  return (
+    <>
+      <select
+        onChange={(e) => setSelectedDog(e.target.value)}
+      >
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>{name}</option>
+        ))}
+      </select>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Dog id={selectedDog} />
+      </Suspense>
+    </>
+  );
+}
+
+function Dog({ id }: DogProps) {
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { id },
+  });
+
+  return (
+    <>
+      <div>Name: {data.dog.name}</div>
+      <div>Breed: {data.dog.breed}</div>
+    </>
+  );
+}
+```
+
+Changing the dog via the `select` causes the component to suspend each time we select a dog whose record **does not yet exist in the cache**. Once we've loaded a given dog's record in the cache, selecting that dog again from our dropdown does not cause the component to re-suspend, since under our default `cache-first` fetch policy Apollo Client does not make a network request after a cache hit.
+
+### Updating state without suspending
+
+Sometimes we may want to avoid showing a loading UI in response to a pending network request and instead prefer to continue displaying the previous render. To do this, we can use a [_transition_](https://react.dev/blog/2022/03/29/react-v18#new-feature-transitions) to mark our update as non-urgent. This tells React to keep the existing UI in place until the new data has finished loading.
+
+To mark a state update as a transition, we use the [`startTransition`](https://react.dev/reference/react/startTransition) function from React.
+
+Let's modify our example so that the previously displayed dog remains on the screen while the next one is fetched in a transition:
+
+```tsx {1,13-15}
+import { useState, Suspense, startTransition } from "react";
+
+function App() {
+  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
+  const [selectedDog, setSelectedDog] = useState(
+    data.dogs[0].id
+  );
+
+  return (
+    <>
+      <select
+        onChange={(e) => {
+          startTransition(() => {
+            setSelectedDog(e.target.value);
+          });
+        }}
+      >
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>{name}</option>
+        ))}
+      </select>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Dog id={selectedDog} />
+      </Suspense>
+    </>
+  );
+}
+```
+
+By wrapping our `setSelectedDog` state update in React's `startTransition` function, we no longer see the Suspense fallback when selecting a new dog! Instead, the previous dog remains on the screen until the next dog's record has finished loading.
+
+### Showing pending UI during a transition
+
+In the previous example, there is no visual indication that a fetch is happening when a new dog is selected. To provide nice visual feedback, let's update our example to use React's [`useTransition`](https://react.dev/reference/react/useTransition) hook which gives you an `isPending` boolean value to determine when a transition is happening.
+
+Let's dim the select dropdown while the transition is happening:
+
+```tsx {1,4,13}
+import { useState, Suspense, useTransition } from "react";
+
+function App() {
+  const [isPending, startTransition] = useTransition();
+  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
+  const [selectedDog, setSelectedDog] = useState(
+    data.dogs[0].id
+  );
+
+  return (
+    <>
+      <select
+        style={{ opacity: isPending ? 0.5 : 1 }}
+        onChange={(e) => {
+          startTransition(() => {
+            setSelectedDog(e.target.value);
+          });
+        }}
+      >
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>{name}</option>
+        ))}
+      </select>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Dog id={selectedDog} />
+      </Suspense>
+    </>
+  );
+}
+```
+
+### Rendering partial data
+
+When the cache contains partial data, you may prefer to render that data immediately without suspending. To do this, use the `returnPartialData` option.
+
+<Note>
+
+This option only works when combined with either the `cache-first` (default) or `cache-and-network` fetch policy. `cache-only` isn't currently supported by `useSuspenseQuery`. For details on these fetch policies, see [Setting a fetch policy](/react/data/queries/#setting-a-fetch-policy).
+
+</Note>
+
+Let's update our example to use the partial cache data and render immediately:
+
+```tsx {41}
+interface PartialData {
+  dog: {
+    id: string;
+    name: string;
+  };
+}
+
+const PARTIAL_GET_DOG_QUERY: TypedDocumentNode<
+  PartialData,
+  Variables
+> = gql`
+  query GetDog($id: String) {
+    dog(id: $id) {
+      id
+      name
+    }
+  }
+`;
+
+// Write partial data for Buck to the cache
+// so it is available when Dog renders
+client.writeQuery({
+  query: PARTIAL_GET_DOG_QUERY,
+  variables: { id: "1" },
+  data: { dog: { id: "1", name: "Buck" } },
+});
+
+function App() {
+  const client = useApolloClient();
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dog id="1" />
+    </Suspense>
+  );
+}
+
+function Dog({ id }: DogProps) {
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { id },
+    returnPartialData: true,
+  });
+
+  return (
+    <>
+      <div>Name: {data?.dog?.name}</div>
+      <div>Breed: {data?.dog?.breed}</div>
+    </>
+  );
+}
+```
+
+In this example, we write partial data to the cache for Buck in order to show the behavior when a query cannot be entirely fulfilled from the cache. We tell `useSuspenseQuery` that we are ok rendering partial data by setting the `returnPartialData` option to `true`. When `Dog` renders for the first time, it does not suspend and uses the partial data immediately. Apollo Client then fetches the missing query data from the network in the background.
+
+On first render, Buck's name is displayed after the `Name` label, followed by the `Breed` label with no value. Once the missing fields have loaded, `useSuspenseQuery` triggers a re-render and Buck's breed is displayed.
+
+<Note>
+
+**For TypeScript users**: With `returnPartialData` set to `true`, the returned type for the `data` property marks all fields in the query type as [optional](https://www.typescriptlang.org/docs/handbook/2/objects.html#optional-properties). Apollo Client cannot accurately determine which fields are present in the cache at any given time when returning partial data.
+
+</Note>
+
+### Error handling
+
+By default, both network errors and GraphQL errors are thrown by `useSuspenseQuery`. These errors are caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror).
+
+<Note>
+
+An error boundary is a **class component** that implements `static getDerivedStateFromError`. For more information, see the React docs for [catching rendering errors with an error boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+</Note>
+
+Let's create a basic error boundary that renders an error UI when errors are thrown by our query:
+
+```tsx
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+<Note>
+
+In a real application, your error boundary might need a more robust implementation. Consider using a library like [`react-error-boundary`](https://github.com/bvaughn/react-error-boundary) when you need a high degree of flexibility and reusability.
+
+</Note>
+
+When the `GET_DOG_QUERY` inside of the `Dog` component returns a GraphQL error or a network error, `useSuspenseQuery` throws the error and the nearest error boundary renders its fallback component.
+
+Our example doesn't have an error boundary yet—let's add one!
+
+```tsx {18-20,24}
+function App() {
+  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
+  const [selectedDog, setSelectedDog] = useState(
+    data.dogs[0].id
+  );
+
+  return (
+    <>
+      <select
+        onChange={(e) => setSelectedDog(e.target.value)}
+      >
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>
+            {name}
+          </option>
+        ))}
+      </select>
+      <ErrorBoundary
+        fallback={<div>Something went wrong</div>}
+      >
+        <Suspense fallback={<div>Loading...</div>}>
+          <Dog id={selectedDog} />
+        </Suspense>
+      </ErrorBoundary>
+    </>
+  );
+}
+```
+
+Here, we're using our `ErrorBoundary` component and placing it **outside** of our `Dog` component. Now, when the `useSuspenseQuery` hook inside the `Dog` component throws an error, the `ErrorBoundary` catches it and displays the `fallback` element we've provided.
+
+<Note>
+
+When working with many React frameworks, you may see an error dialog overlay in development mode when errors are thrown, even _with_ an error boundary. This is done to avoid the error being missed by developers.
+
+</Note>
+
+#### Rendering partial data alongside errors
+
+In some cases, you may want to render partial data alongside an error. To do this, set the `errorPolicy` option to `all`. By setting this option, `useSuspenseQuery` avoids throwing the error and instead sets an `error` property returned by the hook. To ignore errors altogether, set the `errorPolicy` to `ignore`. See the [`errorPolicy` documentation](/react/data/error-handling#graphql-error-policies) for more information.
+
+### Avoiding request waterfalls
+
+Since `useSuspenseQuery` suspends while data is being fetched, a tree of components that all use `useSuspenseQuery` can cause a "waterfall", where each call to `useSuspenseQuery` depends on the previous to complete before it can start fetching. This can be avoided by fetching with `useBackgroundQuery` and reading the data with `useReadQuery`.
+
+`useBackgroundQuery` initiates a request for data in a parent component and returns a `queryRef` which is passed to `useReadQuery` to read the data in a child component. When the child component renders before the data has finished loading, the child component suspends.
+
+Let's update our example to utilize `useBackgroundQuery`:
+
+```tsx {2-3,10,35,39}
+import {
+  useBackgroundQuery,
+  useReadQuery,
+  useSuspenseQuery,
+} from '@apollo/client';
+
+function App() {
+  // We can start the request here, even though `Dog`
+  // suspends and the data is read by a grandchild component.
+  const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dog id="3" queryRef={queryRef} />
+    </Suspense>
+  );
+}
+
+function Dog({ id, queryRef }: DogProps) {
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { id },
+  });
+
+  return (
+    <>
+      Name: {data.dog.name}
+      <Suspense fallback={<div>Loading breeds...</div>}>
+        <Breeds queryRef={queryRef} />
+      </Suspense>
+    </>
+  );
+}
+
+interface BreedsProps {
+  queryRef: QueryRef<BreedData>;
+}
+
+function Breeds({ queryRef }: BreedsProps) {
+  const { data } = useReadQuery(queryRef);
+
+  return data.breeds.map(({ characteristics }) =>
+    characteristics.map((characteristic) => (
+      <div key={characteristic}>{characteristic}</div>
+    ))
+  );
+}
+```
+
+We begin fetching our `GET_BREEDS_QUERY` when the `App` component renders. The network request is made in the background while React renders the rest of our component tree. When the `Dog` component renders, it fetches our `GET_DOG_QUERY` and suspends.
+
+When the network request for `GET_DOG_QUERY` completes, the `Dog` component unsuspends and continues rendering, reaching the `Breeds` component. Since our `GET_BREEDS_QUERY` request was initiated higher up in our component tree using `useBackgroundQuery`, the network request for `GET_BREEDS_QUERY` **has already completed**! When the `Breeds` component reads the data from the `queryRef` provided by `useBackgroundQuery`, it avoids suspending and renders immediately with the fetched data.
+
+<Note>
+
+When the `GET_BREEDS_QUERY` takes _longer_ to fetch than our `GET_DOG_QUERY`, `useReadQuery` suspends and the Suspense fallback inside of the `Dog` component is rendered instead.
+
+</Note>
+
+#### A note about performance
+
+The `useBackgroundQuery` hook used in a parent component is responsible for kicking off fetches, but doesn't deal with reading or rendering data. This is delegated to the `useReadQuery` hook used in a child component. This separation of concerns provides a nice performance benefit because cache updates are observed by `useReadQuery` and re-render only the child component. You may find this as a useful tool to optimize your component structure to avoid unnecessarily re-rendering parent components when cache data changes.
+
+<MinVersion version="3.9.0">
+
+### Fetching in response to user interaction
+
+</MinVersion>
+
+The `useSuspenseQuery` and `useBackgroundQuery` hooks let us load data as soon as the component calling the hook mounts. But what about loading a query in response to user interaction? For example, we may want to start loading some data when a user hovers on a link.
+
+Available as of Apollo Client `3.9.0`, the `useLoadableQuery` hook initiates a network request in response to user interaction.
+
+`useLoadableQuery` returns both an execution function and a `queryRef`. The execution function initiates a network request when called with the provided variables. Like `useBackgroundQuery`, passing the `queryRef` to `useReadQuery` in a child component suspends the child component until the query finishes loading.
+
+<Note>
+
+The `queryRef` is `null` until the execution function is called for the first time. For this reason, any child components attempting to read data using the `queryRef` should be conditionally rendered.
+
+</Note>
+
+Let's update our example to start loading the dog's details as a result of selecting from a dropdown.
+
+```tsx {3,8,13,22,29}
+import {
+  // ...
+  useLoadableQuery
+} from '@apollo/client';
+
+function App() {
+  const { data } = useSuspenseQuery(GET_DOGS_QUERY);
+  const [loadDog, queryRef] = useLoadableQuery(GET_DOG_QUERY);
+
+  return (
+    <>
+      <select
+        onChange={(e) => loadDog({ id: e.target.value })}
+      >
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>
+            {name}
+          </option>
+        ))}
+      </select>
+      <Suspense fallback={<div>Loading...</div>}>
+        {queryRef && <Dog queryRef={queryRef} />}
+      </Suspense>
+    </>
+  );
+}
+
+function Dog({ queryRef }: DogProps) {
+  const { data } = useReadQuery(queryRef)
+
+  return (
+    <>
+      <div>Name: {data.dog.name}</div>
+      <div>Breed: {data.dog.breed}</div>
+    </>
+  );
+}
+```
+
+We begin fetching our `GET_DOG_QUERY` by calling the `loadDog` function inside of the `onChange` handler function when a dog is selected. Once the network request is initiated, the `queryRef` is no longer `null`, rendering the `Dog` component.
+
+`useReadQuery` suspends the `Dog` component while the network request finishes, then returns `data` to the component. As a result of this change, we've also eliminated the need to track the selected dog `id` in component state.
+
+<MinVersion version="3.9.0">
+
+### Initiating queries outside React
+
+</MinVersion>
+
+Starting with Apollo Client `3.9.0`, queries can be initiated outside of React. This allows your app to begin fetching data before React renders your components, and can provide performance benefits.
+
+To preload queries, you first need to create a preload function with `createQueryPreloader`. `createQueryPreloader` takes an `ApolloClient` instance as an argument and returns a function that, when called, initiates a network request.
+
+<Tip>
+
+Consider exporting your preload function along with your `ApolloClient` instance. This allows you to import that function directly without having to pass around your `ApolloClient` instance each time you preload a query.
+
+</Tip>
+
+The preload function returns a `queryRef` that is passed to `useReadQuery` to read the query data and suspend the component while loading. `useReadQuery` ensures that your component is kept up-to-date with cache updates for the preloaded query.
+
+
+Let's update our example to start loading the `GET_DOGS_QUERY` before our app is rendered.
+
+```tsx {3,9-10,13,36,38}
+import {
+  // ...
+  createQueryPreloader
+} from '@apollo/client';
+
+// This `preloadQuery` function does not have to be created each time you
+// need to preload a new query. You may prefer to export this function
+// alongside your client instead.
+const preloadQuery = createQueryPreloader(client);
+const preloadedQueryRef = preloadQuery(GET_DOGS_QUERY);
+
+function App() {
+  const { data } = useReadQuery(preloadedQueryRef);
+  const [queryRef, loadDog] = useLoadableQuery(GET_DOG_QUERY)
+
+  return (
+    <>
+      <select
+        onChange={(e) => loadDog({ id: e.target.value })}
+      >
+        {data.dogs.map(({ id, name }) => (
+          <option key={id} value={id}>{name}</option>
+        ))}
+      </select>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Dog queryRef={queryRef} />
+      </Suspense>
+    </>
+  );
+}
+
+const root = createRoot(document.getElementById('app'));
+
+root.render(
+  <ApolloProvider client={client}>
+    <Suspense fallback={<div>Loading...</div>}>
+      <App />
+    </Suspense>
+  </ApolloProvider>
+);
+```
+
+We begin loading data as soon as our `preloadQuery` function is called rather than waiting for React to render our `<App />` component. Because the `preloadedQueryRef` is passed to `useReadQuery` in our `App` component, we still get the benefit of suspense and cache updates.
+
+<Note>
+
+Unmounting components that contain preloaded queries is safe and disposes of the `queryRef`. When the component re-mounts, `useReadQuery` automatically resubscribes to the `queryRef` and any cache updates that occurred in the interim are read immediately as if the preloaded query had never been unmounted.
+
+</Note>
+
+#### Usage with data loading routers
+
+Popular routers such as [React Router](https://reactrouter.com/en/main) and [TanStack Router](https://tanstack.com/router) provide APIs to load data before route components are rendered. One example is the [`loader` function](https://reactrouter.com/en/main/route/route#loader) from React Router.
+
+Loading data before rendering route components is especially useful for nested routes where data loading is parallelized. It prevents situations where parent route components might otherwise suspend and create request waterfalls for child route components.
+
+`preloadQuery` pairs nicely with these router APIs as it lets you take advantage of those optimizations without sacrificing the ability to rerender cache updates in your route components.
+
+Let's update our example using React Router's `loader` function to begin loading data when we transition to our route.
+
+```ts {4,8-9}
+import { useLoaderData } from 'react-router-dom';
+
+export function loader() {
+  return preloadQuery(GET_DOGS_QUERY);
+}
+
+export function RouteComponent() {
+  const queryRef = useLoaderData();
+  const { data } = useReadQuery(queryRef);
+
+  return (
+    // ...
+  );
+}
+```
+
+> The `loader` function is available in React Router versions 6.4 and above.
+
+React Router calls the `loader` function which we use to begin loading the `GET_DOG_QUERY` query by calling the `preloadQuery` function. The `queryRef` created by `preloadQuery` is returned from the `loader` function making it accessible in the route component.
+
+When the route component renders, we access the `queryRef` from the `useLoaderData` hook, which is then passed to `useReadQuery`. We get the benefit of loading our data early in the routing lifecycle, and the route component maintains the ability to rerender with cache updates.
+
+<Note>
+
+The `preloadQuery` function only works with client-side routing. The `queryRef` returned from `preloadQuery` isn't serializable across the wire and as such, won't work with routers that fetch on the server such as [Remix](https://remix.run/).
+
+</Note>
+
+#### Preventing route transitions until the query is loaded
+
+By default, `preloadQuery` works similarly to a [deferred loader](https://reactrouter.com/en/main/guides/deferred): the route transitions immediately and the incoming page that's attempting to read the data via `useReadQuery` suspends until the network request finishes.
+
+But what if we want to prevent the route from transitioning until the data is fully loaded? `queryRef`'s `toPromise` method provides access to a promise that resolves when the network request has completed. This promise resolves with the `queryRef` itself, making it easy to use with hooks such as `useLoaderData`.
+
+Here's an example:
+
+```ts
+export async function loader() {
+  const queryRef = await preloadQuery(GET_DOGS_QUERY).toPromise();
+
+  return queryRef;
+}
+
+// You may also return the promise directly from loader.
+// This is equivalent to the above.
+export async function loader() {
+  return preloadQuery(GET_DOGS_QUERY).toPromise();
+}
+
+export function RouteComponent() {
+  const queryRef = useLoaderData();
+  const { data } = useReadQuery(queryRef);
+
+  // ...
+}
+```
+
+This instructs React Router to wait for the query to finish loading before the route transitions. When the route transitions after the promise resolves, the data is rendered immediately without the need to show a loading fallback in the route component.
+
+#### Why prevent access to `data` in `toPromise`?
+
+You may be wondering why we resolve `toPromise` with the `queryRef` itself, rather than the data loaded from the query. We want to encourage you to leverage `useReadQuery` to avoid missing out on cache updates for your query. If `data` were available, it would be tempting to consume it in your `loader` functions and expose it to your route components. Doing so means missing out on cache updates.
+
+If you need access to raw query data in your `loader` functions, use [`client.query()`](../api/core/ApolloClient#query) directly.
+
+### Refetching and pagination
+
+Apollo's Suspense data fetching hooks return functions for refetching query data via the `refetch` function, and fetching additional pages of data via the `fetchMore` function.
+
+Let's update our example by adding the ability to refetch breeds. We destructure the `refetch` function from the second item in the tuple returned from `useBackgroundQuery`. We'll be sure to show a pending state to let the user know that data is being refetched by utilizing React's `useTransition` hook:
+
+```tsx {1,12-15,18-20,49,57,62}
+import { Suspense, useTransition } from "react";
+import {
+  useSuspenseQuery,
+  useBackgroundQuery,
+  useReadQuery,
+  gql,
+  TypedDocumentNode,
+  QueryRef,
+} from "@apollo/client";
+
+function App() {
+  const [isPending, startTransition] = useTransition();
+  const [queryRef, { refetch }] = useBackgroundQuery(
+    GET_BREEDS_QUERY
+  );
+
+  function handleRefetch() {
+    startTransition(() => {
+      refetch();
+    });
+  };
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dog
+        id="3"
+        queryRef={queryRef}
+        isPending={isPending}
+        onRefetch={handleRefetch}
+      />
+    </Suspense>
+  );
+}
+
+function Dog({
+  id,
+  queryRef,
+  isPending,
+  onRefetch,
+}: DogProps) {
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { id },
+  });
+
+  return (
+    <>
+      Name: {data.dog.name}
+      <Suspense fallback={<div>Loading breeds...</div>}>
+        <Breeds isPending={isPending} queryRef={queryRef} />
+      </Suspense>
+      <button onClick={onRefetch}>Refetch!</button>
+    </>
+  );
+}
+
+function Breeds({ queryRef, isPending }: BreedsProps) {
+  const { data } = useReadQuery(queryRef);
+
+  return data.breeds.map(({ characteristics }) =>
+    characteristics.map((characteristic) => (
+      <div
+        style={{ opacity: isPending ? 0.5 : 1 }}
+        key={characteristic}
+      >
+        {characteristic}
+      </div>
+    ))
+  );
+}
+```
+
+In this example, our `App` component renders a `Dog` component that fetches a single dog's record via `useSuspenseQuery`. When React attempts to render `Dog` for the first time, the cache can't fulfill the request for the `GetDog` query, so `useSuspenseQuery` initiates a network request. `Dog` suspends while the network request is pending, triggering the nearest `Suspense` boundary _above_ the suspended component in `App` which renders our "Loading..." fallback. Once the network request is complete, `Dog` renders with the newly cached `name` for the dog whose `id="3"`: Mozzarella the Corgi.
+
+#### Usage with query preloading
+
+When loading queries [outside React](#initiating-queries-outside-react), the `preloadQuery` function returns a `queryRef` with no access to `refetch` or `fetchMore` functions. This presents a challenge when you need to refetch or paginate the preloaded query.
+
+You can gain access to `refetch` and `fetchMore` functions by using the `useQueryRefHandlers` hook. This hook integrates with React transitions, giving you the ability to refetch or paginate without showing the loading fallback.
+
+Let's update our example to preload our `GET_BREEDS_QUERY` outside React and use the `useQueryRefHandlers` hook to refetch our query.
+
+```tsx {4,7,11}
+// ...
+import {
+  // ...
+  useQueryRefHandlers,
+} from "@apollo/client";
+
+const queryRef = preloadQuery(GET_BREEDS_QUERY);
+
+function App() {
+  const [isPending, startTransition] = useTransition();
+  const { refetch } = useQueryRefHandlers(queryRef);
+
+  function handleRefetch() {
+    startTransition(() => {
+      refetch();
+    });
+  };
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dog
+        id="3"
+        isPending={isPending}
+        onRefetch={handleRefetch}
+      />
+    </Suspense>
+  );
+}
+
+// ...
+```
+
+We begin loading our `GET_BREEDS_QUERY` outside of React with the `preloadQuery` function. We pass the `queryRef` returned from `preloadQuery` to the `useQueryRefHandlers` hook which provides us with a `refetch` function we can use to refetch the query when the button is clicked.
+
+#### Using `useQueryRefHandlers` with query refs produced from other Suspense hooks
+
+`useQueryRefHandlers` can also be used in combination with any hook that returns a `queryRef`, such as `useBackgroundQuery` or `useLoadableQuery`. This is useful when you need access to the `refetch` and `fetchMore` functions in components where the `queryRef` is passed through deeply.
+
+Let's update our example to use `useBackgroundQuery` again and see how we can access a `refetch` function in our `Dog` component using `useQueryRefHandlers`:
+
+```tsx {15,16,18-22,30}
+function App() {
+  const [queryRef] = useBackgroundQuery(GET_BREEDS_QUERY);
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dog id="3" queryRef={queryRef} />
+    </Suspense>
+  );
+}
+
+function Dog({ id, queryRef }: DogProps) {
+  const { data } = useSuspenseQuery(GET_DOG_QUERY, {
+    variables: { id },
+  });
+  const [isPending, startTransition] = useTransition();
+  const { refetch } = useQueryRefHandlers(queryRef);
+
+  function handleRefetch() {
+    startTransition(() => {
+      refetch();
+    });
+  };
+
+  return (
+    <>
+      Name: {data.dog.name}
+      <Suspense fallback={<div>Loading breeds...</div>}>
+        <Breeds queryRef={queryRef} isPending={isPending} />
+      </Suspense>
+      <button onClick={handleRefetch}>Refetch!</button>
+    </>
+  );
+}
+
+// ...
+```
+
+<Note>
+
+Using the handlers returned from `useQueryRefHandlers` does not prevent you from using the handlers produced by query ref hooks. You can use the handlers in both locations, with or without React transitions to produce the desired result.
+
+</Note>
+
+## Distinguishing between queries with `queryKey`
+
+Apollo Client uses the combination of `query` and `variables` to uniquely identify each query when using Apollo's Suspense data fetching hooks.
+
+If your application renders multiple components that use the same `query` and `variables`, this may present a problem: the queries made by multiple hooks share the same identity causing them to **suspend at the same time**, regardless of which component initiates or re-initiates a network request.
+
+You can prevent this with `queryKey` option to ensure each hook has a unique identity. When `queryKey` is provided, Apollo Client uses it as part of the hook's identity in addition to its `query` and `variables`.
+
+For more information, see the [`useSuspenseQuery`](../api/react/hooks/#usesuspensequery) or [`useBackgroundQuery`](../api/react/hooks/#usebackgroundquery) API docs.
+
+## Skipping suspense hooks
+
+While `useSuspenseQuery` and `useBackgroundQuery` both have a `skip` option, that option is only present to ease migration from `useQuery` with as few code changes as possible.
+It should not be used in the long term.
+
+Instead, you should use [`skipToken`](/react/api/react/hooks#skiptoken):
+
+```js title="Recommended usage of skipToken with useSuspenseQuery"
+import { skipToken, useSuspenseQuery } from '@apollo/client';
+const { data } = useSuspenseQuery(
+  query,
+  id ? { variables: { id } } : skipToken
+);
+```
+
+```js title="Recommended usage of skipToken with useBackgroundQuery"
+import { skipToken, useBackgroundQuery } from '@apollo/client';
+const [queryRef] = useBackgroundQuery(
+  query,
+  id ? { variables: { id } } : skipToken
+);
+```
+
+## React Server Components (RSC)
+
+### Usage with Next.js 13 App Router
+
+In Next.js v13, Next.js's new [App Router](https://nextjs.org/docs/app) brought the React community the first framework with full support for [React Server Components (RSC)](https://react.dev/blog/2023/03/22/react-labs-what-we-have-been-working-on-march-2023#react-server-components) and Streaming SSR, integrating Suspense as a first-class concept from your application's routing layer all the way down.
+
+In order to integrate with these features, our Apollo Client team released an experimental package, [`@apollo/experimental-nextjs-app-support`](https://github.com/apollographql/apollo-client-nextjs), which allows for seamless use of Apollo Client with both RSC and Streaming SSR, one of the first of its kind for data fetching libraries. See its [README](https://github.com/apollographql/apollo-client-nextjs#readme) and our [introductory blog post](https://www.apollographql.com/blog/apollo-client/next-js/how-to-use-apollo-client-with-next-js-13/) for more details.
+
+#### Streaming while fetching with `useBackgroundQuery` during streaming SSR
+
+In a client-rendered application, `useBackgroundQuery` can be used to avoid request waterfalls, but its impact can be even more noticeable in an application using streaming SSR as the App Router does. This is because the server can begin streaming content to the client, bringing even greater performance benefits.
+
+### Error handling
+
+In a purely client-rendered app, errors thrown in components are always caught and displayed by the closest [error boundary](https://react.dev/reference/react/Component#static-getderivedstatefromerror).
+
+Errors thrown on the server when using one of the [streaming server rendering APIs](https://react.dev/reference/react-dom/server) are treated differently. See the [React documentation](https://react.dev/reference/react/Suspense#providing-a-fallback-for-server-errors-and-client-only-content) for more information.
+
+## Further reading
+
+To view a larger codebase that makes use of Apollo Client's Suspense hooks (and many other new features introduced in Apollo Client 3.8), check out Apollo's [Spotify Showcase](https://github.com/apollographql/spotify-showcase) on GitHub. It's a full-stack web application that pays homage to Spotify's iconic UI by building a clone using Apollo Client, Apollo Server and GraphOS.
+
+## useSuspenseQuery API
+
+More details on `useSuspenseQuery`'s API can be found in [its API docs](../api/react/hooks/#usesuspensequery).
+
+## useBackgroundQuery API
+
+More details on `useBackgroundQuery`'s API can be found in [its API docs](../api/react/hooks/#usebackgroundquery).
+
+## useLoadableQuery API
+
+More details on `useLoadableQuery`'s API can be found in [its API docs](../api/react/hooks/#useloadablequery).
+
+## useQueryRefHandlers API
+
+More details on `useQueryRefHandlers`'s API can be found in [its API docs](../api/react/hooks/#usequeryrefhandlers).
+
+## useReadQuery API
+
+More details on `useReadQuery`'s API can be found in [its API docs](../api/react/hooks/#usereadquery).

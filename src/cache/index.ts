@@ -1,40 +1,41 @@
-import '../utilities/globals';
+import "../utilities/globals/index.js";
 
-export { Transaction, ApolloCache } from './core/cache';
-export { Cache } from './core/types/Cache';
-export { DataProxy } from './core/types/DataProxy';
-export {
+export type {
+  Transaction,
+  WatchFragmentOptions,
+  WatchFragmentResult,
+} from "./core/cache.js";
+export { ApolloCache } from "./core/cache.js";
+export { Cache } from "./core/types/Cache.js";
+export type { DataProxy } from "./core/types/DataProxy.js";
+export type {
   MissingTree,
   Modifier,
   Modifiers,
   ModifierDetails,
-  MissingFieldError,
-  ReadFieldOptions
-} from './core/types/common';
+  ReadFieldOptions,
+} from "./core/types/common.js";
+export { MissingFieldError } from "./core/types/common.js";
 
+export type { Reference } from "../utilities/index.js";
 export {
-  Reference,
   isReference,
   makeReference,
-} from '../utilities';
+  canonicalStringify,
+} from "../utilities/index.js";
 
-export { EntityStore } from './inmemory/entityStore';
+export { EntityStore } from "./inmemory/entityStore.js";
 export {
   fieldNameFromStoreName,
   defaultDataIdFromObject,
-} from './inmemory/helpers'
+} from "./inmemory/helpers.js";
 
-export {
-  InMemoryCache,
-} from './inmemory/inMemoryCache';
+export { InMemoryCache } from "./inmemory/inMemoryCache.js";
 
-export {
-  ReactiveVar,
-  makeVar,
-  cacheSlot,
-} from './inmemory/reactiveVars';
+export type { ReactiveVar } from "./inmemory/reactiveVars.js";
+export { makeVar, cacheSlot } from "./inmemory/reactiveVars.js";
 
-export {
+export type {
   TypePolicies,
   TypePolicy,
   FieldPolicy,
@@ -42,16 +43,10 @@ export {
   FieldMergeFunction,
   FieldFunctionOptions,
   PossibleTypesMap,
-  Policies,
-} from './inmemory/policies';
+} from "./inmemory/policies.js";
+export { Policies } from "./inmemory/policies.js";
 
-export {
-  canonicalStringify,
-} from './inmemory/object-canon';
+export type { FragmentRegistryAPI } from "./inmemory/fragmentRegistry.js";
+export { createFragmentRegistry } from "./inmemory/fragmentRegistry.js";
 
-export {
-  FragmentRegistryAPI,
-  createFragmentRegistry,
-} from './inmemory/fragmentRegistry';
-
-export * from './inmemory/types';
+export * from "./inmemory/types.js";

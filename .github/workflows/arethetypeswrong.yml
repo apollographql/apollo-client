@@ -1,0 +1,28 @@
+name: AreTheTypesWrong
+on:
+  pull_request:
+    branches:
+      - main
+      - release-*
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  arethetypeswrong:
+    name: Are the types wrong
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install dependencies (with cache)
+        uses: bahmutov/npm-install@v1
+
+      - name: Run build
+        run: npm run build
+      - name: Run AreTheTypesWrong
+        id: attw
+        run: ./node_modules/.bin/attw --format ascii --pack dist > $GITHUB_STEP_SUMMARY

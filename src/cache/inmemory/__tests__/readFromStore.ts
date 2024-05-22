@@ -1,71 +1,58 @@
-import { assign, omit } from 'lodash';
-import gql from 'graphql-tag';
+import { assign, omit } from "lodash";
+import gql from "graphql-tag";
 
-import { InMemoryCache } from '../inMemoryCache';
-import { StoreObject } from '../types';
-import { StoreReader } from '../readFromStore';
-import { Cache } from '../../core/types/Cache';
-import { MissingFieldError } from '../../core/types/common';
+import { InMemoryCache } from "../inMemoryCache";
+import { StoreObject } from "../types";
+import { StoreReader } from "../readFromStore";
+import { Cache } from "../../core/types/Cache";
+import { MissingFieldError } from "../../core/types/common";
 import {
   defaultNormalizedCacheFactory,
   readQueryFromStore,
   withError,
-} from './helpers';
+} from "./helpers";
 import {
   makeReference,
   Reference,
   isReference,
   TypedDocumentNode,
-} from '../../../core';
+} from "../../../core";
+import { defaultCacheSizes } from "../../../utilities";
 
-jest.mock('optimism');
-import { wrap } from 'optimism';
-
-describe('resultCacheMaxSize', () => {
+describe("resultCacheMaxSize", () => {
   const cache = new InMemoryCache();
-  let wrapSpy: jest.Mock = wrap as jest.Mock;
-  beforeEach(() => {
-    wrapSpy.mockClear();
-  });
 
-  it("does not set max size on caches if resultCacheMaxSize is not configured", () => {
-    new StoreReader({ cache });
-    expect(wrapSpy).toHaveBeenCalled();
-
-    wrapSpy.mock.calls.forEach(([, { max }]) => {
-      expect(max).toBeUndefined();
-    })
+  it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
+    const reader = new StoreReader({ cache });
+    expect(reader["executeSelectionSet"].options.max).toBe(
+      defaultCacheSizes["inMemoryCache.executeSelectionSet"]
+    );
   });
 
   it("configures max size on caches when resultCacheMaxSize is set", () => {
     const resultCacheMaxSize = 12345;
-    new StoreReader({ cache, resultCacheMaxSize });
-    expect(wrapSpy).toHaveBeenCalled();
-
-    wrapSpy.mock.calls.forEach(([, { max }]) => {
-      expect(max).toBe(resultCacheMaxSize);
-    })
+    const reader = new StoreReader({ cache, resultCacheMaxSize });
+    expect(reader["executeSelectionSet"].options.max).toBe(resultCacheMaxSize);
   });
 });
 
-
-describe('reading from the store', () => {
+describe("reading from the store", () => {
   const reader = new StoreReader({
     cache: new InMemoryCache(),
   });
 
-  it('runs a nested query with proper fragment fields in arrays', () => {
+  it("runs a nested query with proper fragment fields in arrays", () => {
     withError(() => {
       const store = defaultNormalizedCacheFactory({
         ROOT_QUERY: {
-          __typename: 'Query',
-          nestedObj: makeReference('abcde'),
+          __typename: "Query",
+          nestedObj: makeReference("abcde"),
         } as StoreObject,
         abcde: {
-          id: 'abcde',
+          id: "abcde",
           innerArray: [
             {
-              id: 'abcdef',
+              id: "abcdef",
               someField: 3,
             },
           ],
@@ -106,13 +93,13 @@ describe('reading from the store', () => {
 
       expect(queryResult).toEqual({
         nestedObj: {
-          innerArray: [{ id: 'abcdef', someField: 3 }],
+          innerArray: [{ id: "abcdef", someField: 3 }],
         },
       });
     });
   });
 
-  it('rejects malformed queries', () => {
+  it("rejects malformed queries", () => {
     expect(() => {
       readQueryFromStore(reader, {
         store: defaultNormalizedCacheFactory(),
@@ -140,10 +127,10 @@ describe('reading from the store', () => {
     }).toThrowError(/contain a query/);
   });
 
-  it('runs a basic query', () => {
+  it("runs a basic query", () => {
     const result = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
     } as StoreObject;
@@ -164,12 +151,12 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(queryResult).toEqual({
-      stringField: result['stringField'],
-      numberField: result['numberField'],
+      stringField: result["stringField"],
+      numberField: result["numberField"],
     });
   });
 
-  it('runs a basic query with arguments', () => {
+  it("runs a basic query with arguments", () => {
     const query = gql`
       query {
         id
@@ -182,15 +169,15 @@ describe('reading from the store', () => {
     const variables = {
       intArg: 5,
       floatArg: 3.14,
-      stringArg: 'This is a string!',
+      stringArg: "This is a string!",
     };
 
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
-        id: 'abcd',
+        id: "abcd",
         nullField: null,
         'numberField({"floatArg":3.14,"intArg":5})': 5,
-        'stringField({"arg":"This is a string!"})': 'Heyo',
+        'stringField({"arg":"This is a string!"})': "Heyo",
       },
     });
 
@@ -201,14 +188,14 @@ describe('reading from the store', () => {
     });
 
     expect(result).toEqual({
-      id: 'abcd',
+      id: "abcd",
       nullField: null,
       numberField: 5,
-      stringField: 'Heyo',
+      stringField: "Heyo",
     });
   });
 
-  it('runs a basic query with custom directives', () => {
+  it("runs a basic query with custom directives", () => {
     const query = gql`
       query {
         id
@@ -220,10 +207,10 @@ describe('reading from the store', () => {
 
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
-        id: 'abcd',
-        firstName: 'James',
-        'lastName@upperCase': 'BOND',
-        'birthDate@dateFormat({"format":"DD-MM-YYYY"})': '20-05-1940',
+        id: "abcd",
+        firstName: "James",
+        "lastName@upperCase": "BOND",
+        'birthDate@dateFormat({"format":"DD-MM-YYYY"})': "20-05-1940",
       },
     });
 
@@ -233,14 +220,14 @@ describe('reading from the store', () => {
     });
 
     expect(result).toEqual({
-      id: 'abcd',
-      firstName: 'James',
-      lastName: 'BOND',
-      birthDate: '20-05-1940',
+      id: "abcd",
+      firstName: "James",
+      lastName: "BOND",
+      birthDate: "20-05-1940",
     });
   });
 
-  it('runs a basic query with default values for arguments', () => {
+  it("runs a basic query with default values for arguments", () => {
     const query = gql`
       query someBigQuery(
         $stringArg: String = "This is a default string!"
@@ -260,10 +247,10 @@ describe('reading from the store', () => {
 
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
-        id: 'abcd',
+        id: "abcd",
         nullField: null,
         'numberField({"floatArg":3.14,"intArg":0})': 5,
-        'stringField({"arg":"This is a default string!"})': 'Heyo',
+        'stringField({"arg":"This is a default string!"})': "Heyo",
       },
     });
 
@@ -274,30 +261,30 @@ describe('reading from the store', () => {
     });
 
     expect(result).toEqual({
-      id: 'abcd',
+      id: "abcd",
       nullField: null,
       numberField: 5,
-      stringField: 'Heyo',
+      stringField: "Heyo",
     });
   });
 
-  it('runs a nested query', () => {
+  it("runs a nested query", () => {
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedObj: {
-        id: 'abcde',
-        stringField: 'This is a string too!',
+        id: "abcde",
+        stringField: "This is a string too!",
         numberField: 6,
         nullField: null,
       } as StoreObject,
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
-        nestedObj: makeReference('abcde'),
+      ROOT_QUERY: assign({}, assign({}, omit(result, "nestedObj")), {
+        nestedObj: makeReference("abcde"),
       } as StoreObject),
       abcde: result.nestedObj,
     });
@@ -318,47 +305,47 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(queryResult).toEqual({
-      stringField: 'This is a string!',
+      stringField: "This is a string!",
       numberField: 5,
       nestedObj: {
-        stringField: 'This is a string too!',
+        stringField: "This is a string too!",
         numberField: 6,
       },
     });
   });
 
-  it('runs a nested query with multiple fragments', () => {
+  it("runs a nested query with multiple fragments", () => {
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedObj: {
-        id: 'abcde',
-        stringField: 'This is a string too!',
+        id: "abcde",
+        stringField: "This is a string too!",
         numberField: 6,
         nullField: null,
       } as StoreObject,
       deepNestedObj: {
-        stringField: 'This is a deep string',
+        stringField: "This is a deep string",
         numberField: 7,
         nullField: null,
       } as StoreObject,
       nullObject: null,
-      __typename: 'Item',
+      __typename: "Item",
     };
 
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign(
         {},
-        assign({}, omit(result, 'nestedObj', 'deepNestedObj')),
+        assign({}, omit(result, "nestedObj", "deepNestedObj")),
         {
-          __typename: 'Query',
-          nestedObj: makeReference('abcde'),
-        } as StoreObject,
+          __typename: "Query",
+          nestedObj: makeReference("abcde"),
+        } as StoreObject
       ),
       abcde: assign({}, result.nestedObj, {
-        deepNestedObj: makeReference('abcdef'),
+        deepNestedObj: makeReference("abcdef"),
       }) as StoreObject,
       abcdef: result.deepNestedObj as StoreObject,
     });
@@ -399,15 +386,15 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(queryResult).toEqual({
-      stringField: 'This is a string!',
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedObj: {
-        stringField: 'This is a string too!',
+        stringField: "This is a string too!",
         numberField: 6,
         nullField: null,
         deepNestedObj: {
-          stringField: 'This is a deep string',
+          stringField: "This is a deep string",
           numberField: 7,
           nullField: null,
         },
@@ -416,20 +403,20 @@ describe('reading from the store', () => {
     });
   });
 
-  it('runs a nested query with an array without IDs', () => {
+  it("runs a nested query with an array without IDs", () => {
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedArray: [
         {
-          stringField: 'This is a string too!',
+          stringField: "This is a string too!",
           numberField: 6,
           nullField: null,
         },
         {
-          stringField: 'This is a string also!',
+          stringField: "This is a string also!",
           numberField: 7,
           nullField: null,
         },
@@ -456,31 +443,31 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(queryResult).toEqual({
-      stringField: 'This is a string!',
+      stringField: "This is a string!",
       numberField: 5,
       nestedArray: [
         {
-          stringField: 'This is a string too!',
+          stringField: "This is a string too!",
           numberField: 6,
         },
         {
-          stringField: 'This is a string also!',
+          stringField: "This is a string also!",
           numberField: 7,
         },
       ],
     });
   });
 
-  it('runs a nested query with an array without IDs and a null', () => {
+  it("runs a nested query with an array without IDs and a null", () => {
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedArray: [
         null,
         {
-          stringField: 'This is a string also!',
+          stringField: "This is a string also!",
           numberField: 7,
           nullField: null,
         },
@@ -507,29 +494,29 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(queryResult).toEqual({
-      stringField: 'This is a string!',
+      stringField: "This is a string!",
       numberField: 5,
       nestedArray: [
         null,
         {
-          stringField: 'This is a string also!',
+          stringField: "This is a string also!",
           numberField: 7,
         },
       ],
     });
   });
 
-  it('runs a nested query with an array with IDs and a null', () => {
+  it("runs a nested query with an array with IDs and a null", () => {
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedArray: [
         null,
         {
-          id: 'abcde',
-          stringField: 'This is a string also!',
+          id: "abcde",
+          stringField: "This is a string also!",
           numberField: 7,
           nullField: null,
         },
@@ -537,8 +524,8 @@ describe('reading from the store', () => {
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedArray')), {
-        nestedArray: [null, makeReference('abcde')],
+      ROOT_QUERY: assign({}, assign({}, omit(result, "nestedArray")), {
+        nestedArray: [null, makeReference("abcde")],
       }) as StoreObject,
       abcde: result.nestedArray[1],
     });
@@ -560,23 +547,86 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(queryResult).toEqual({
-      stringField: 'This is a string!',
+      stringField: "This is a string!",
       numberField: 5,
       nestedArray: [
         null,
         {
-          id: 'abcde',
-          stringField: 'This is a string also!',
+          id: "abcde",
+          stringField: "This is a string also!",
           numberField: 7,
         },
       ],
     });
   });
 
-  it('throws on a missing field', () => {
+  it("runs a nested query - skips iterating into an empty array", () => {
+    const reader = new StoreReader({
+      cache: new InMemoryCache(),
+    });
+
     const result = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
+      numberField: 5,
+      nullField: null,
+      nestedArray: [
+        {
+          id: "abcde",
+          stringField: "This is a string also!",
+          numberField: 7,
+          nullField: null,
+        },
+      ],
+      emptyArray: [],
+    } satisfies StoreObject;
+
+    const store = defaultNormalizedCacheFactory({
+      ROOT_QUERY: { ...result, nestedArray: [makeReference("abcde")] },
+      abcde: result.nestedArray[0],
+    });
+
+    expect(reader["executeSubSelectedArray"].size).toBe(0);
+
+    // assumption: cache size does not increase for empty array
+    readQueryFromStore(reader, {
+      store,
+      query: gql`
+        {
+          stringField
+          numberField
+          emptyArray {
+            id
+            stringField
+            numberField
+          }
+        }
+      `,
+    });
+    expect(reader["executeSubSelectedArray"].size).toBe(0);
+
+    // assumption: cache size increases for array with content
+    readQueryFromStore(reader, {
+      store,
+      query: gql`
+        {
+          stringField
+          numberField
+          nestedArray {
+            id
+            stringField
+            numberField
+          }
+        }
+      `,
+    });
+    expect(reader["executeSubSelectedArray"].size).toBe(1);
+  });
+
+  it("throws on a missing field", () => {
+    const result = {
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
     } as StoreObject;
@@ -596,11 +646,24 @@ describe('reading from the store', () => {
     }).toThrowError(/Can't find field 'missingField' on ROOT_QUERY object/);
   });
 
-  it('readQuery supports returnPartialData', () => {
-    const cache = new InMemoryCache;
-    const aQuery = gql`query { a }`;
-    const bQuery = gql`query { b }`;
-    const abQuery = gql`query { a b }`;
+  it("readQuery supports returnPartialData", () => {
+    const cache = new InMemoryCache();
+    const aQuery = gql`
+      query {
+        a
+      }
+    `;
+    const bQuery = gql`
+      query {
+        b
+      }
+    `;
+    const abQuery = gql`
+      query {
+        a
+        b
+      }
+    `;
 
     cache.writeQuery({
       query: aQuery,
@@ -610,27 +673,44 @@ describe('reading from the store', () => {
     expect(cache.readQuery({ query: bQuery })).toBe(null);
     expect(cache.readQuery({ query: abQuery })).toBe(null);
 
-    expect(cache.readQuery({
-      query: bQuery,
-      returnPartialData: true,
-    })).toEqual({});
+    expect(
+      cache.readQuery({
+        query: bQuery,
+        returnPartialData: true,
+      })
+    ).toEqual({});
 
-    expect(cache.readQuery({
-      query: abQuery,
-      returnPartialData: true,
-    })).toEqual({ a: 123 });
+    expect(
+      cache.readQuery({
+        query: abQuery,
+        returnPartialData: true,
+      })
+    ).toEqual({ a: 123 });
   });
 
-  it('readFragment supports returnPartialData', () => {
-    const cache = new InMemoryCache;
+  it("readFragment supports returnPartialData", () => {
+    const cache = new InMemoryCache();
     const id = cache.identify({
       __typename: "ABObject",
       id: 321,
     });
 
-    const aFragment = gql`fragment AFragment on ABObject { a }`;
-    const bFragment = gql`fragment BFragment on ABObject { b }`;
-    const abFragment = gql`fragment ABFragment on ABObject { a b }`;
+    const aFragment = gql`
+      fragment AFragment on ABObject {
+        a
+      }
+    `;
+    const bFragment = gql`
+      fragment BFragment on ABObject {
+        b
+      }
+    `;
+    const abFragment = gql`
+      fragment ABFragment on ABObject {
+        a
+        b
+      }
+    `;
 
     expect(cache.readFragment({ id, fragment: aFragment })).toBe(null);
     expect(cache.readFragment({ id, fragment: bFragment })).toBe(null);
@@ -647,35 +727,43 @@ describe('reading from the store', () => {
     expect(isReference(ref)).toBe(true);
     expect(ref!.__ref).toBe(id);
 
-    expect(cache.readFragment({
-      id,
-      fragment: bFragment,
-    })).toBe(null);
+    expect(
+      cache.readFragment({
+        id,
+        fragment: bFragment,
+      })
+    ).toBe(null);
 
-    expect(cache.readFragment({
-      id,
-      fragment: abFragment,
-    })).toBe(null);
+    expect(
+      cache.readFragment({
+        id,
+        fragment: abFragment,
+      })
+    ).toBe(null);
 
-    expect(cache.readFragment({
-      id,
-      fragment: bFragment,
-      returnPartialData: true,
-    })).toEqual({
+    expect(
+      cache.readFragment({
+        id,
+        fragment: bFragment,
+        returnPartialData: true,
+      })
+    ).toEqual({
       __typename: "ABObject",
     });
 
-    expect(cache.readFragment({
-      id,
-      fragment: abFragment,
-      returnPartialData: true,
-    })).toEqual({
+    expect(
+      cache.readFragment({
+        id,
+        fragment: abFragment,
+        returnPartialData: true,
+      })
+    ).toEqual({
       __typename: "ABObject",
       a: 123,
     });
   });
 
-  it('distinguishes between missing @client and non-@client fields', () => {
+  it("distinguishes between missing @client and non-@client fields", () => {
     const query = gql`
       query {
         normal {
@@ -723,38 +811,46 @@ describe('reading from the store', () => {
 
     expect(missing).toEqual([
       new MissingFieldError(
-        `Can't find field 'missing' on object ${JSON.stringify({
-          present: "here",
-        }, null, 2)}`,
+        `Can't find field 'missing' on object ${JSON.stringify(
+          {
+            present: "here",
+          },
+          null,
+          2
+        )}`,
         {
           normal: {
-            missing: `Can't find field 'missing' on object ${
-              JSON.stringify({ present: "here" }, null, 2)
-            }`,
+            missing: `Can't find field 'missing' on object ${JSON.stringify(
+              { present: "here" },
+              null,
+              2
+            )}`,
           },
           clientOnly: {
-            missing: `Can't find field 'missing' on object ${
-              JSON.stringify({ present: "also here" }, null, 2)
-            }`,
+            missing: `Can't find field 'missing' on object ${JSON.stringify(
+              { present: "also here" },
+              null,
+              2
+            )}`,
           },
         },
         query,
-        {}, // variables
+        {} // variables
       ),
     ]);
   });
 
-  it('runs a nested query where the reference is null', () => {
+  it("runs a nested query where the reference is null", () => {
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedObj: null,
     };
 
     const store = defaultNormalizedCacheFactory({
-      ROOT_QUERY: assign({}, assign({}, omit(result, 'nestedObj')), {
+      ROOT_QUERY: assign({}, assign({}, omit(result, "nestedObj")), {
         nestedObj: null,
       }) as StoreObject,
     });
@@ -775,19 +871,19 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(queryResult).toEqual({
-      stringField: 'This is a string!',
+      stringField: "This is a string!",
       numberField: 5,
       nestedObj: null,
     });
   });
 
-  it('runs an array of non-objects', () => {
+  it("runs an array of non-objects", () => {
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
-      simpleArray: ['one', 'two', 'three'],
+      simpleArray: ["one", "two", "three"],
     };
 
     const store = defaultNormalizedCacheFactory({
@@ -807,19 +903,19 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(queryResult).toEqual({
-      stringField: 'This is a string!',
+      stringField: "This is a string!",
       numberField: 5,
-      simpleArray: ['one', 'two', 'three'],
+      simpleArray: ["one", "two", "three"],
     });
   });
 
-  it('runs an array of non-objects with null', () => {
+  it("runs an array of non-objects with null", () => {
     const result: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
-      simpleArray: [null, 'two', 'three'],
+      simpleArray: [null, "two", "three"],
     };
 
     const store = defaultNormalizedCacheFactory({
@@ -839,51 +935,51 @@ describe('reading from the store', () => {
 
     // The result of the query shouldn't contain __data_id fields
     expect(queryResult).toEqual({
-      stringField: 'This is a string!',
+      stringField: "This is a string!",
       numberField: 5,
-      simpleArray: [null, 'two', 'three'],
+      simpleArray: [null, "two", "three"],
     });
   });
 
-  it('will read from an arbitrary root id', () => {
+  it("will read from an arbitrary root id", () => {
     const data: any = {
-      id: 'abcd',
-      stringField: 'This is a string!',
+      id: "abcd",
+      stringField: "This is a string!",
       numberField: 5,
       nullField: null,
       nestedObj: {
-        id: 'abcde',
-        stringField: 'This is a string too!',
+        id: "abcde",
+        stringField: "This is a string too!",
         numberField: 6,
         nullField: null,
       } as StoreObject,
       deepNestedObj: {
-        stringField: 'This is a deep string',
+        stringField: "This is a deep string",
         numberField: 7,
         nullField: null,
       } as StoreObject,
       nullObject: null,
-      __typename: 'Item',
+      __typename: "Item",
     };
 
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: assign(
         {},
-        assign({}, omit(data, 'nestedObj', 'deepNestedObj')),
+        assign({}, omit(data, "nestedObj", "deepNestedObj")),
         {
-          __typename: 'Query',
-          nestedObj: makeReference('abcde'),
-        },
+          __typename: "Query",
+          nestedObj: makeReference("abcde"),
+        }
       ) as StoreObject,
       abcde: assign({}, data.nestedObj, {
-        deepNestedObj: makeReference('abcdef'),
+        deepNestedObj: makeReference("abcdef"),
       }) as StoreObject,
       abcdef: data.deepNestedObj as StoreObject,
     });
 
     const queryResult1 = readQueryFromStore(reader, {
       store,
-      rootId: 'abcde',
+      rootId: "abcde",
       query: gql`
         {
           stringField
@@ -899,11 +995,11 @@ describe('reading from the store', () => {
     });
 
     expect(queryResult1).toEqual({
-      stringField: 'This is a string too!',
+      stringField: "This is a string too!",
       numberField: 6,
       nullField: null,
       deepNestedObj: {
-        stringField: 'This is a deep string',
+        stringField: "This is a deep string",
         numberField: 7,
         nullField: null,
       },
@@ -911,7 +1007,7 @@ describe('reading from the store', () => {
 
     const queryResult2 = readQueryFromStore(reader, {
       store,
-      rootId: 'abcdef',
+      rootId: "abcdef",
       query: gql`
         {
           stringField
@@ -922,18 +1018,18 @@ describe('reading from the store', () => {
     });
 
     expect(queryResult2).toEqual({
-      stringField: 'This is a deep string',
+      stringField: "This is a deep string",
       numberField: 7,
       nullField: null,
     });
   });
 
-  it('properly handles the @connection directive', () => {
+  it("properly handles the @connection directive", () => {
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
-        'books:abc': [
+        "books:abc": [
           {
-            name: 'efgh',
+            name: "efgh",
           },
         ],
       },
@@ -953,13 +1049,13 @@ describe('reading from the store', () => {
     expect(queryResult).toEqual({
       books: [
         {
-          name: 'efgh',
+          name: "efgh",
         },
       ],
     });
   });
 
-  it('can use keyArgs function instead of @connection directive', () => {
+  it("can use keyArgs function instead of @connection directive", () => {
     const reader = new StoreReader({
       cache: new InMemoryCache({
         typePolicies: {
@@ -981,7 +1077,7 @@ describe('reading from the store', () => {
       ROOT_QUERY: {
         "books:abc": [
           {
-            name: 'efgh',
+            name: "efgh",
           },
         ],
       },
@@ -1001,43 +1097,43 @@ describe('reading from the store', () => {
     expect(queryResult).toEqual({
       books: [
         {
-          name: 'efgh',
+          name: "efgh",
         },
       ],
     });
   });
 
-  it('refuses to return raw Reference objects', () => {
+  it("refuses to return raw Reference objects", () => {
     const store = defaultNormalizedCacheFactory({
       ROOT_QUERY: {
         author: {
-          __typename: 'Author',
-          name: 'Toni Morrison',
+          __typename: "Author",
+          name: "Toni Morrison",
           books: [
             {
-              title: 'The Bluest Eye',
-              publisher: makeReference('Publisher1'),
+              title: "The Bluest Eye",
+              publisher: makeReference("Publisher1"),
             },
             {
-              title: 'Song of Solomon',
-              publisher: makeReference('Publisher2'),
+              title: "Song of Solomon",
+              publisher: makeReference("Publisher2"),
             },
             {
-              title: 'Beloved',
-              publisher: makeReference('Publisher2'),
+              title: "Beloved",
+              publisher: makeReference("Publisher2"),
             },
           ],
         },
       },
       Publisher1: {
-        __typename: 'Publisher',
+        __typename: "Publisher",
         id: 1,
-        name: 'Holt, Rinehart and Winston',
+        name: "Holt, Rinehart and Winston",
       },
       Publisher2: {
-        __typename: 'Publisher',
+        __typename: "Publisher",
         id: 2,
-        name: 'Alfred A. Knopf, Inc.',
+        name: "Alfred A. Knopf, Inc.",
       },
     });
 
@@ -1054,7 +1150,7 @@ describe('reading from the store', () => {
         `,
       });
     }).toThrow(
-      /Missing selection set for object of type Publisher returned for query field books/,
+      /Missing selection set for object of type Publisher returned for query field books/
     );
 
     expect(
@@ -1073,31 +1169,31 @@ describe('reading from the store', () => {
             }
           }
         `,
-      }),
+      })
     ).toEqual({
       author: {
-        __typename: 'Author',
-        name: 'Toni Morrison',
+        __typename: "Author",
+        name: "Toni Morrison",
         books: [
           {
-            title: 'The Bluest Eye',
+            title: "The Bluest Eye",
             publisher: {
-              __typename: 'Publisher',
-              name: 'Holt, Rinehart and Winston',
+              __typename: "Publisher",
+              name: "Holt, Rinehart and Winston",
             },
           },
           {
-            title: 'Song of Solomon',
+            title: "Song of Solomon",
             publisher: {
-              __typename: 'Publisher',
-              name: 'Alfred A. Knopf, Inc.',
+              __typename: "Publisher",
+              name: "Alfred A. Knopf, Inc.",
             },
           },
           {
-            title: 'Beloved',
+            title: "Beloved",
             publisher: {
-              __typename: 'Publisher',
-              name: 'Alfred A. Knopf, Inc.',
+              __typename: "Publisher",
+              name: "Alfred A. Knopf, Inc.",
             },
           },
         ],
@@ -1116,43 +1212,54 @@ describe('reading from the store', () => {
             null() {
               return null;
             },
-          }
+          },
         },
       },
     });
 
-    expect(cache.readQuery({
-      query: gql`query { uuid null }`,
-    })).toEqual({
+    expect(
+      cache.readQuery({
+        query: gql`
+          query {
+            uuid
+            null
+          }
+        `,
+      })
+    ).toEqual({
       uuid: "8d573b9c-cfcf-4e3e-98dd-14d255af577e",
       null: null,
     });
 
     expect(cache.extract()).toEqual({});
 
-    expect(cache.readFragment({
-      id: "ROOT_QUERY",
-      fragment: gql`
-        fragment UUIDFragment on Query {
-          null
-          uuid
-        }
-      `,
-    })).toEqual({
+    expect(
+      cache.readFragment({
+        id: "ROOT_QUERY",
+        fragment: gql`
+          fragment UUIDFragment on Query {
+            null
+            uuid
+          }
+        `,
+      })
+    ).toEqual({
       uuid: "8d573b9c-cfcf-4e3e-98dd-14d255af577e",
       null: null,
     });
 
     expect(cache.extract()).toEqual({});
 
-    expect(cache.readFragment({
-      id: "does not exist",
-      fragment: gql`
-        fragment F on Never {
-          whatever
-        }
-      `,
-    })).toBe(null);
+    expect(
+      cache.readFragment({
+        id: "does not exist",
+        fragment: gql`
+          fragment F on Never {
+            whatever
+          }
+        `,
+      })
+    ).toBe(null);
 
     expect(cache.extract()).toEqual({});
   });
@@ -1163,10 +1270,12 @@ describe('reading from the store', () => {
         Query: {
           fields: {
             ducks(existing: Reference[] = [], { canRead }) {
-              return existing.map(duck => canRead(duck) ? duck : null);
+              return existing.map((duck) => (canRead(duck) ? duck : null));
             },
             chickens(existing: Reference[] = [], { canRead }) {
-              return existing.map(chicken => canRead(chicken) ? chicken : {});
+              return existing.map((chicken) =>
+                canRead(chicken) ? chicken : {}
+              );
             },
             oxen(existing: Reference[] = [], { canRead }) {
               return existing.filter(canRead);
@@ -1179,9 +1288,16 @@ describe('reading from the store', () => {
     cache.writeQuery({
       query: gql`
         query {
-          ducks { quacking }
-          chickens { inCoop }
-          oxen { gee haw }
+          ducks {
+            quacking
+          }
+          chickens {
+            inCoop
+          }
+          oxen {
+            gee
+            haw
+          }
         }
       `,
       data: {
@@ -1252,21 +1368,21 @@ describe('reading from the store', () => {
           { __ref: "Chicken:2" },
           { __ref: "Chicken:3" },
         ],
-        ducks: [
-          { __ref: "Duck:1" },
-          { __ref: "Duck:2" },
-          { __ref: "Duck:3" },
-        ],
-        oxen: [
-          { __ref: "Ox:1" },
-          { __ref: "Ox:2" },
-        ],
+        ducks: [{ __ref: "Duck:1" }, { __ref: "Duck:2" }, { __ref: "Duck:3" }],
+        oxen: [{ __ref: "Ox:1" }, { __ref: "Ox:2" }],
       },
     });
 
     function diffChickens() {
       return cache.diff({
-        query: gql`query { chickens { id inCoop }}`,
+        query: gql`
+          query {
+            chickens {
+              id
+              inCoop
+            }
+          }
+        `,
         optimistic: true,
       });
     }
@@ -1279,15 +1395,17 @@ describe('reading from the store', () => {
           { __typename: "Chicken", id: 2, inCoop: true },
           { __typename: "Chicken", id: 3, inCoop: false },
         ],
-      }
+      },
     });
 
-    expect(cache.evict({
-      id: cache.identify({
-        __typename: "Chicken",
-        id: 2,
-      }),
-    })).toBe(true);
+    expect(
+      cache.evict({
+        id: cache.identify({
+          __typename: "Chicken",
+          id: 2,
+        }),
+      })
+    ).toBe(true);
 
     expect(diffChickens()).toEqual({
       complete: false,
@@ -1303,7 +1421,7 @@ describe('reading from the store', () => {
             },
           },
           expect.anything(), // query
-          expect.anything(), // variables
+          expect.anything() // variables
         ),
       ],
       result: {
@@ -1317,7 +1435,14 @@ describe('reading from the store', () => {
 
     function diffDucks() {
       return cache.diff({
-        query: gql`query { ducks { id quacking }}`,
+        query: gql`
+          query {
+            ducks {
+              id
+              quacking
+            }
+          }
+        `,
         optimistic: true,
       });
     }
@@ -1333,12 +1458,14 @@ describe('reading from the store', () => {
       },
     });
 
-    expect(cache.evict({
-      id: cache.identify({
-        __typename: "Duck",
-        id: 3,
-      }),
-    })).toBe(true);
+    expect(
+      cache.evict({
+        id: cache.identify({
+          __typename: "Duck",
+          id: 3,
+        }),
+      })
+    ).toBe(true);
 
     // Returning null as a placeholder in a list is a way to indicate that
     // a list element has been removed, without causing an incomplete
@@ -1356,7 +1483,15 @@ describe('reading from the store', () => {
 
     function diffOxen() {
       return cache.diff({
-        query: gql`query { oxen { id gee haw }}`,
+        query: gql`
+          query {
+            oxen {
+              id
+              gee
+              haw
+            }
+          }
+        `,
         optimistic: true,
       });
     }
@@ -1371,19 +1506,19 @@ describe('reading from the store', () => {
       },
     });
 
-    expect(cache.evict({
-      id: cache.identify({
-        __typename: "Ox",
-        id: 1,
-      }),
-    })).toBe(true);
+    expect(
+      cache.evict({
+        id: cache.identify({
+          __typename: "Ox",
+          id: 1,
+        }),
+      })
+    ).toBe(true);
 
     expect(diffOxen()).toEqual({
       complete: true,
       result: {
-        oxen: [
-          { __typename: "Ox", id: 2, gee: false, haw: true },
-        ],
+        oxen: [{ __typename: "Ox", id: 2, gee: false, haw: true }],
       },
     });
   });
@@ -1407,10 +1542,12 @@ describe('reading from the store', () => {
           fields: {
             ruler(ruler, { canRead, toReference }) {
               // If the throne is empty, promote Apollo!
-              return canRead(ruler) ? ruler : toReference({
-                __typename: "Deity",
-                name: "Apollo",
-              });
+              return canRead(ruler) ? ruler : (
+                  toReference({
+                    __typename: "Deity",
+                    name: "Apollo",
+                  })
+                );
             },
           },
         },
@@ -1443,7 +1580,7 @@ describe('reading from the store', () => {
       "Hades",
       "Poseidon",
       "Hestia",
-    ].map(name => ({
+    ].map((name) => ({
       __typename: "Deity",
       name,
       children: [],
@@ -1493,14 +1630,13 @@ describe('reading from the store', () => {
     };
 
     // We already have one diff because of the immediate:true above.
-    expect(diffs).toEqual([
-      initialDiff,
-    ]);
+    expect(diffs).toEqual([initialDiff]);
 
     expect(devour("Son #1")).toBe(true);
 
-    const childrenWithoutSon1 =
-      children.filter(child => child.name !== "Son #1");
+    const childrenWithoutSon1 = children.filter(
+      (child) => child.name !== "Son #1"
+    );
 
     expect(childrenWithoutSon1.length).toBe(children.length - 1);
 
@@ -1515,17 +1651,11 @@ describe('reading from the store', () => {
       complete: true,
     };
 
-    expect(diffs).toEqual([
-      initialDiff,
-      diffWithoutSon1,
-    ]);
+    expect(diffs).toEqual([initialDiff, diffWithoutSon1]);
 
     expect(devour("Son #1")).toBe(false);
 
-    expect(diffs).toEqual([
-      initialDiff,
-      diffWithoutSon1,
-    ]);
+    expect(diffs).toEqual([initialDiff, diffWithoutSon1]);
 
     expect(devour("Son #2")).toBe(true);
 
@@ -1534,7 +1664,7 @@ describe('reading from the store', () => {
         ruler: {
           name: "Cronus",
           __typename: "Deity",
-          children: childrenWithoutSon1.filter(child => {
+          children: childrenWithoutSon1.filter((child) => {
             return child.name !== "Son #2";
           }),
         },
@@ -1555,7 +1685,7 @@ describe('reading from the store', () => {
       // is the same in both traditions.
       "Apollo",
       "Athena",
-    ].map(name => ({
+    ].map((name) => ({
       __typename: "Deity",
       name,
       children: [],
@@ -1566,11 +1696,13 @@ describe('reading from the store', () => {
         __typename: "Deity",
         name: "Zeus",
       }),
-      fragment: gql`fragment Offspring on Deity {
-        children {
-          name
+      fragment: gql`
+        fragment Offspring on Deity {
+          children {
+            name
+          }
         }
-      }`,
+      `,
       data: {
         children: childrenOfZeus,
       },
@@ -1585,14 +1717,18 @@ describe('reading from the store', () => {
         ...diffWithoutDevouredSons.result,
         ruler: {
           ...diffWithoutDevouredSons.result.ruler,
-          children: diffWithoutDevouredSons.result.ruler.children.map(child => {
-            return child.name === "Zeus" ? {
-              ...child,
-              children: childrenOfZeus
-                // Remove empty child.children arrays.
-                .map(({ children, ...child }) => child),
-            } : child;
-          }),
+          children: diffWithoutDevouredSons.result.ruler.children.map(
+            (child) => {
+              return child.name === "Zeus" ?
+                  {
+                    ...child,
+                    children: childrenOfZeus
+                      // Remove empty child.children arrays.
+                      .map(({ children, ...child }) => child),
+                  }
+                : child;
+            }
+          ),
         },
       },
     };
@@ -1677,9 +1813,7 @@ describe('reading from the store', () => {
     };
 
     const zeusMeta = {
-      extraRootIds: [
-        'Deity:{"name":"Zeus"}',
-      ],
+      extraRootIds: ['Deity:{"name":"Zeus"}'],
     };
 
     expect(cache.extract()).toEqual({
@@ -1700,16 +1834,20 @@ describe('reading from the store', () => {
 
     const lastDiff = diffs[diffs.length - 1];
 
-    expect(cache.readQuery({
-      query: rulerQuery,
-    })).toBe(lastDiff.result);
+    expect(
+      cache.readQuery({
+        query: rulerQuery,
+      })
+    ).toBe(lastDiff.result);
 
-    expect(cache.evict({
-      id: cache.identify({
-        __typename: "Deity",
-        name: "Ares",
-      }),
-    })).toBe(true);
+    expect(
+      cache.evict({
+        id: cache.identify({
+          __typename: "Deity",
+          name: "Ares",
+        }),
+      })
+    ).toBe(true);
 
     // No new diff generated since we called cancel() above.
     expect(diffs).toEqual([
@@ -1724,15 +1862,14 @@ describe('reading from the store', () => {
       ...snapshotAfterGC,
       __META: zeusMeta,
     };
-    delete (snapshotWithoutAres as any)["Deity:{\"name\":\"Ares\"}"];
+    delete (snapshotWithoutAres as any)['Deity:{"name":"Ares"}'];
     expect(cache.extract()).toEqual(snapshotWithoutAres);
     // Ares already removed, so no new garbage to collect.
     expect(cache.gc()).toEqual([]);
 
-    const childrenOfZeusWithoutAres =
-      childrenOfZeus.filter(child => {
-        return child.name !== "Ares";
-      });
+    const childrenOfZeusWithoutAres = childrenOfZeus.filter((child) => {
+      return child.name !== "Ares";
+    });
 
     expect(childrenOfZeusWithoutAres).toEqual([
       { __typename: "Deity", name: "Artemis", children: [] },
@@ -1740,9 +1877,11 @@ describe('reading from the store', () => {
       { __typename: "Deity", name: "Athena", children: [] },
     ]);
 
-    expect(cache.readQuery({
-      query: rulerQuery,
-    })).toEqual({
+    expect(
+      cache.readQuery({
+        query: rulerQuery,
+      })
+    ).toEqual({
       ruler: {
         __typename: "Deity",
         name: "Zeus",
@@ -1750,19 +1889,23 @@ describe('reading from the store', () => {
       },
     });
 
-    expect(cache.evict({
-      id: cache.identify({
-        __typename: "Deity",
-        name: "Zeus",
-      }),
-    })).toBe(true);
+    expect(
+      cache.evict({
+        id: cache.identify({
+          __typename: "Deity",
+          name: "Zeus",
+        }),
+      })
+    ).toBe(true);
 
     // You didn't think we were going to let Apollo be garbage-collected,
     // did you?
-    cache.retain(cache.identify({
-      __typename: "Deity",
-      name: "Apollo",
-    })!);
+    cache.retain(
+      cache.identify({
+        __typename: "Deity",
+        name: "Apollo",
+      })!
+    );
 
     expect(cache.gc().sort()).toEqual([
       'Deity:{"name":"Artemis"}',
@@ -1771,10 +1914,7 @@ describe('reading from the store', () => {
 
     expect(cache.extract()).toEqual({
       __META: {
-        extraRootIds: [
-          'Deity:{"name":"Apollo"}',
-          'Deity:{"name":"Zeus"}',
-        ],
+        extraRootIds: ['Deity:{"name":"Apollo"}', 'Deity:{"name":"Zeus"}'],
       },
       ROOT_QUERY: {
         __typename: "Query",
@@ -1825,10 +1965,11 @@ describe('reading from the store', () => {
         ruler(value, { toReference }) {
           expect(isReference(value)).toBe(true);
           expect(value.__ref).toBe(
-            cache.identify(diffWithZeusAsRuler.result.ruler));
+            cache.identify(diffWithZeusAsRuler.result.ruler)
+          );
           expect(value.__ref).toBe('Deity:{"name":"Zeus"}');
           // Interim ruler Apollo takes over for real.
-          return toReference(apolloRulerResult.ruler);
+          return toReference(apolloRulerResult.ruler)!;
         },
       },
     });
@@ -1854,10 +1995,12 @@ describe('reading from the store', () => {
 
     expect(
       // Undo the cache.retain call above.
-      cache.release(cache.identify({
-        __typename: "Deity",
-        name: "Apollo",
-      })!)
+      cache.release(
+        cache.identify({
+          __typename: "Deity",
+          name: "Apollo",
+        })!
+      )
     ).toBe(0);
 
     // Since ROOT_QUERY.ruler points to Apollo, nothing needs to be
@@ -1886,7 +2029,11 @@ describe('reading from the store', () => {
 
     const aQuery: TypedDocumentNode<{
       a: string[];
-    }> = gql`query { a }`;
+    }> = gql`
+      query {
+        a
+      }
+    `;
 
     const abQuery: TypedDocumentNode<{
       a: string[];
@@ -1894,14 +2041,29 @@ describe('reading from the store', () => {
         c: string;
         d: string;
       };
-    }> = gql`query { a b { c d } }`;
+    }> = gql`
+      query {
+        a
+        b {
+          c
+          d
+        }
+      }
+    `;
 
     const bQuery: TypedDocumentNode<{
       b: {
         c: string;
         d: string;
       };
-    }> = gql`query { b { d c } }`;
+    }> = gql`
+      query {
+        b {
+          d
+          c
+        }
+      }
+    `;
 
     const abData1 = {
       a: ["a", "y"],
@@ -1978,7 +2140,7 @@ describe('reading from the store', () => {
   });
 
   it("does not canonicalize custom scalar objects", function () {
-    const now = new Date;
+    const now = new Date();
     const abc = { a: 1, b: 2, c: 3 };
 
     const cache = new InMemoryCache({
@@ -2000,7 +2162,12 @@ describe('reading from the store', () => {
     const query: TypedDocumentNode<{
       now: typeof now;
       abc: typeof abc;
-    }> = gql`query { now abc }`;
+    }> = gql`
+      query {
+        now
+        abc
+      }
+    `;
 
     const result1 = cache.readQuery({ query })!;
     const result2 = cache.readQuery({ query })!;

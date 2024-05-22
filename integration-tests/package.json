@@ -1,0 +1,23 @@
+{
+  "name": "integration-tests",
+  "license": "UNLICENSED",
+  "overrides": {
+    "@playwright/test": "1.43.1",
+    "playwright": "1.43.1",
+    "serve": "^14.2.0"
+  },
+  "workspaces": [
+    "browser-esm",
+    "cra4",
+    "cra5",
+    "next",
+    "vite",
+    "vite-swc",
+    "node-standard",
+    "node-esm",
+    "shared"
+  ],
+  "devDependencies": {
+    "@types/lodash": "^4.14.195"
+  }
+}

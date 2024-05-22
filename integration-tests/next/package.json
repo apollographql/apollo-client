@@ -1,0 +1,34 @@
+{
+  "name": "next",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "serve-app": "npm run start",
+    "ci-preparations": "npm install --legacy-peer-deps @apollo/experimental-nextjs-app-support",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.10.1",
+    "@apollo/experimental-nextjs-app-support": "^0.10.0",
+    "@graphql-tools/schema": "^10.0.0",
+    "@types/node": "20.3.1",
+    "@types/react": "18.2.14",
+    "@types/react-dom": "18.2.6",
+    "deepmerge": "^4.3.1",
+    "graphql": "^16.8.1",
+    "lodash": "^4.17.21",
+    "next": "^14.2.3",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "typescript": "5.1.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "*",
+    "@types/lodash": "^4.14.195",
+    "playwright": "*",
+    "shared": "*"
+  }
+}

@@ -1,7 +1,9 @@
-import { DocumentNode } from 'graphql';
+import type * as ReactTypes from "react";
 
-import { ObservableQuery, OperationVariables } from '../../core';
-import { QueryDataOptions } from '../types/types';
+import type { ObservableQuery, OperationVariables } from "../../core/index.js";
+import type { QueryDataOptions } from "../types/types.js";
+import { Trie } from "@wry/trie";
+import { canonicalStringify } from "../../cache/index.js";
 
 // TODO: A vestigial interface from when hooks were implemented with utility
 // classes, which should be deleted in the future.
@@ -15,11 +17,13 @@ type QueryInfo = {
   observable: ObservableQuery<any, any> | null;
 };
 
-function makeDefaultQueryInfo(): QueryInfo {
-  return {
+function makeQueryInfoTrie() {
+  // these Tries are very short-lived, so we don't need to worry about making it
+  // "weak" - it's easier to test and debug as a strong Trie.
+  return new Trie<QueryInfo>(false, () => ({
     seen: false,
-    observable: null
-  };
+    observable: null,
+  }));
 }
 
 export class RenderPromises {
@@ -30,20 +34,20 @@ export class RenderPromises {
   // objects. These QueryInfo objects are intended to survive through the whole
   // getMarkupFromTree process, whereas specific Query instances do not survive
   // beyond a single call to renderToStaticMarkup.
-  private queryInfoTrie = new Map<DocumentNode, Map<string, QueryInfo>>();
+  private queryInfoTrie = makeQueryInfoTrie();
 
   private stopped = false;
   public stop() {
     if (!this.stopped) {
       this.queryPromises.clear();
-      this.queryInfoTrie.clear();
+      this.queryInfoTrie = makeQueryInfoTrie();
       this.stopped = true;
     }
   }
 
   // Registers the server side rendered observable.
   public registerSSRObservable<TData, TVariables extends OperationVariables>(
-    observable: ObservableQuery<any, TVariables>,
+    observable: ObservableQuery<any, TVariables>
   ) {
     if (this.stopped) return;
     this.lookupQueryInfo(observable.options).observable = observable;
@@ -58,14 +62,14 @@ export class RenderPromises {
 
   public addQueryPromise(
     queryInstance: QueryData,
-    finish?: () => React.ReactNode,
-  ): React.ReactNode {
+    finish?: () => ReactTypes.ReactNode
+  ): ReactTypes.ReactNode {
     if (!this.stopped) {
       const info = this.lookupQueryInfo(queryInstance.getOptions());
       if (!info.seen) {
         this.queryPromises.set(
           queryInstance.getOptions(),
-          new Promise(resolve => {
+          new Promise((resolve) => {
             resolve(queryInstance.fetchData());
           })
         );
@@ -77,30 +81,32 @@ export class RenderPromises {
     return finish ? finish() : null;
   }
 
-  public addObservableQueryPromise<TData, TVariables extends OperationVariables>(
-    obsQuery: ObservableQuery<TData, TVariables>,
-  ) {
+  public addObservableQueryPromise<
+    TData,
+    TVariables extends OperationVariables,
+  >(obsQuery: ObservableQuery<TData, TVariables>) {
     return this.addQueryPromise({
       // The only options which seem to actually be used by the
       // RenderPromises class are query and variables.
       getOptions: () => obsQuery.options,
-      fetchData: () => new Promise<void>((resolve) => {
-        const sub = obsQuery.subscribe({
-          next(result) {
-            if (!result.loading) {
-              resolve()
+      fetchData: () =>
+        new Promise<void>((resolve) => {
+          const sub = obsQuery.subscribe({
+            next(result) {
+              if (!result.loading) {
+                resolve();
+                sub.unsubscribe();
+              }
+            },
+            error() {
+              resolve();
               sub.unsubscribe();
-            }
-          },
-          error() {
-            resolve();
-            sub.unsubscribe();
-          },
-          complete() {
-            resolve();
-          },
-        });
-      }),
+            },
+            complete() {
+              resolve();
+            },
+          });
+        }),
     });
   }
 
@@ -130,13 +136,9 @@ export class RenderPromises {
   private lookupQueryInfo<TData, TVariables extends OperationVariables>(
     props: QueryDataOptions<TData, TVariables>
   ): QueryInfo {
-    const { queryInfoTrie } = this;
-    const { query, variables } = props;
-    const varMap = queryInfoTrie.get(query) || new Map<string, QueryInfo>();
-    if (!queryInfoTrie.has(query)) queryInfoTrie.set(query, varMap);
-    const variablesString = JSON.stringify(variables);
-    const info = varMap.get(variablesString) || makeDefaultQueryInfo();
-    if (!varMap.has(variablesString)) varMap.set(variablesString, info);
-    return info;
+    return this.queryInfoTrie.lookup(
+      props.query,
+      canonicalStringify(props.variables)
+    );
   }
 }

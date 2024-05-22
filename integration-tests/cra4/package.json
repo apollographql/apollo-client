@@ -1,0 +1,45 @@
+{
+  "name": "cra4",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@apollo/client": "^3.10.1",
+    "graphql": "^16.8.1",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-scripts": "^4"
+  },
+  "scripts": {
+    "start": "PORT=3000 react-scripts start",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
+    "serve-app": "yarn serve -s build",
+    "test": "playwright test"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@playwright/test": "*",
+    "@types/react": "^18.0.26",
+    "@types/react-dom": "^18.0.10",
+    "playwright": "*",
+    "serve": "*",
+    "shared": "*",
+    "typescript": "^4.9.4"
+  }
+}

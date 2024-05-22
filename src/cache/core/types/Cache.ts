@@ -1,11 +1,11 @@
-import { DataProxy } from './DataProxy';
-import { Modifier, Modifiers } from './common';
-import { ApolloCache } from '../cache';
+import { DataProxy } from "./DataProxy.js";
+import type { AllFieldsModifier, Modifiers } from "./common.js";
+import type { ApolloCache } from "../cache.js";
 
 export namespace Cache {
   export type WatchCallback<TData = any> = (
     diff: Cache.DiffResult<TData>,
-    lastDiff?: Cache.DiffResult<TData>,
+    lastDiff?: Cache.DiffResult<TData>
   ) => void;
 
   export interface ReadOptions<TVariables = any, TData = any>
@@ -14,30 +14,32 @@ export namespace Cache {
     previousResult?: any;
     optimistic: boolean;
     returnPartialData?: boolean;
+    /**
+     * @deprecated
+     * Using `canonizeResults` can result in memory leaks so we generally do not
+     * recommend using this option anymore.
+     * A future version of Apollo Client will contain a similar feature without
+     * the risk of memory leaks.
+     */
     canonizeResults?: boolean;
   }
 
   export interface WriteOptions<TResult = any, TVariables = any>
     extends Omit<DataProxy.Query<TVariables, TResult>, "id">,
-            Omit<DataProxy.WriteOptions<TResult>, "data">
-  {
+      Omit<DataProxy.WriteOptions<TResult>, "data"> {
     dataId?: string;
     result: TResult;
   }
 
-  export interface DiffOptions<
-    TData = any,
-    TVariables = any,
-  > extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
+  export interface DiffOptions<TData = any, TVariables = any>
+    extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
     // The DiffOptions interface is currently just an alias for
     // ReadOptions, though DiffOptions used to be responsible for
     // declaring the returnPartialData option.
   }
 
-  export interface WatchOptions<
-    TData = any,
-    TVariables = any,
-  > extends DiffOptions<TData, TVariables> {
+  export interface WatchOptions<TData = any, TVariables = any>
+    extends DiffOptions<TData, TVariables> {
     watcher?: object;
     immediate?: boolean;
     callback: WatchCallback<TData>;
@@ -57,9 +59,11 @@ export namespace Cache {
     discardWatches?: boolean;
   }
 
-  export interface ModifyOptions {
+  export interface ModifyOptions<
+    Entity extends Record<string, any> = Record<string, any>,
+  > {
     id?: string;
-    fields: Modifiers | Modifier<any>;
+    fields: Modifiers<Entity> | AllFieldsModifier<Entity>;
     optimistic?: boolean;
     broadcast?: boolean;
   }
@@ -96,7 +100,7 @@ export namespace Cache {
       this: TCache,
       watch: Cache.WatchOptions,
       diff: Cache.DiffResult<any>,
-      lastDiff: Cache.DiffResult<any> | undefined,
+      lastDiff?: Cache.DiffResult<any> | undefined
     ) => any;
   }
 

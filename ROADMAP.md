@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2023-04-04**
+**Last updated: 2024-04-29**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -13,26 +13,15 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ---
 
-## [3.8.0](https://github.com/apollographql/apollo-client/milestone/30)
+## [3.11.0](https://github.com/apollographql/apollo-client/milestone/40) - July 9th, 2024
+_Release candidate - July 2nd, 2024_
 
-_Approximate Date: 2023-04-21 (Beta), GA TBD after user feedback_
+## Upcoming features
 
-Currently in active development and being shipped in a series alpha releases.  React 18 users will get a lot out of this release since it introduces support for Suspense and (for you server-side rendering enthusiasts) `renderToPipeableStream`.  There are also new features added to the core as well.  Here's a brief overview:
-
-- Add a new hook `useSuspenseQuery` which will provide the core functionality for React 18 `Suspense` capabilities
-- Ability to use `Suspense` with `@defer`
-- Introduce another new hook `useBackgroundQuery` with `Suspense` support
-- Ability to use `Suspense` with  `useFragment`
-- Server-side rendering (SSR) upgrade: support `renderToPipeableStream` for streaming renders
-- Support custom GraphQL document transforms
-
-As we release each new feature we'll be looking for feedback from the community on performance, usage and developer experience of adopting and implementing these new concepts in your applications.  Try it today: `npm i @apollo/client@alpha` and let us know what you think!  Once new feature development is complete we'll move this to beta and then GA once stable.
-
-## Future 3.x releases
-
-_Approximate Date: TBD_
-
-The 3.8 release is a major milestone for the project's React support.  Feedback from the community will have a big impact on where we go next, particularly as use cases for React Server Components and other React 18 features emerge.  In addition to new functionality, there is a significant backlog of questions and fixes that we want to categorize and thoughtfully address in upcoming releases.
+- Data masking
+- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
+- leaner client (under alternate entry point)
+- Better types for `useQuery`/`useMutation`/`useSubscription`
 
 ## 4.0
 

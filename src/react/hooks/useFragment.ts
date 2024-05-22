@@ -1,119 +1,141 @@
-import { useRef } from "react";
-import { equal } from "@wry/equality";
-
-import { mergeDeepArray } from "../../utilities";
-import {
+import * as React from "rehackt";
+import type { DeepPartial } from "../../utilities/index.js";
+import { mergeDeepArray } from "../../utilities/index.js";
+import type {
   Cache,
   Reference,
   StoreObject,
   MissingTree,
-} from "../../cache";
+} from "../../cache/index.js";
 
-import { useApolloClient } from "./useApolloClient";
-import { useSyncExternalStore } from "./useSyncExternalStore";
-import { OperationVariables } from "../../core";
+import { useApolloClient } from "./useApolloClient.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
+import type { ApolloClient, OperationVariables } from "../../core/index.js";
+import type { NoInfer } from "../types/types.js";
+import { useDeepMemo, useLazyRef, wrapHook } from "./internal/index.js";
+import equal from "@wry/equality";
 
 export interface UseFragmentOptions<TData, TVars>
-extends Omit<
-  Cache.DiffOptions<TData, TVars>,
-  | "id"
-  | "query"
-  | "optimistic"
-  | "previousResult"
->, Omit<
-  Cache.ReadFragmentOptions<TData, TVars>,
-  | "id"
-> {
+  extends Omit<
+      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
+      "id" | "query" | "optimistic" | "previousResult" | "returnPartialData"
+    >,
+    Omit<
+      Cache.ReadFragmentOptions<TData, TVars>,
+      "id" | "variables" | "returnPartialData"
+    > {
   from: StoreObject | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
+  /**
+   * The instance of `ApolloClient` to use to look up the fragment.
+   *
+   * By default, the instance that's passed down via context is used, but you
+   * can provide a different instance here.
+   *
+   * @docGroup 1. Operation options
+   */
+  client?: ApolloClient<any>;
 }
 
-// Since the above definition of UseFragmentOptions can be hard to parse without
-// help from TypeScript/VSCode, here are the intended fields and their types.
-// Uncomment this code to check that it's consistent with the definition above.
-//
-// export interface UseFragmentOptions<TData, TVars> {
-//   from: string | StoreObject | Reference;
-//   fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
-//   fragmentName?: string;
-//   optimistic?: boolean;
-//   variables?: TVars;
-//   returnPartialData?: boolean;
-//   canonizeResults?: boolean;
-// }
+export type UseFragmentResult<TData> =
+  | {
+      data: TData;
+      complete: true;
+      missing?: never;
+    }
+  | {
+      data: DeepPartial<TData>;
+      complete: false;
+      missing?: MissingTree;
+    };
 
-export interface UseFragmentResult<TData> {
-  data: TData | undefined;
-  complete: boolean;
-  missing?: MissingTree;
-}
-
-export function useFragment_experimental<
-  TData = any,
-  TVars = OperationVariables
->(
-  options: UseFragmentOptions<TData, TVars>,
+export function useFragment<TData = any, TVars = OperationVariables>(
+  options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
-  const { cache } = useApolloClient();
+  return wrapHook(
+    "useFragment",
+    _useFragment,
+    useApolloClient(options.client)
+  )(options);
+}
 
-  const {
-    fragment,
-    fragmentName,
-    from,
-    optimistic = true,
-    ...rest
-  } = options;
+function _useFragment<TData = any, TVars = OperationVariables>(
+  options: UseFragmentOptions<TData, TVars>
+): UseFragmentResult<TData> {
+  const { cache } = useApolloClient(options.client);
 
-  const diffOptions: Cache.DiffOptions<TData, TVars> = {
-    ...rest,
-    id: typeof from === "string" ? from : cache.identify(from),
-    query: cache["getFragmentDoc"](fragment, fragmentName),
-    optimistic,
-  };
+  const diffOptions = useDeepMemo<Cache.DiffOptions<TData, TVars>>(() => {
+    const {
+      fragment,
+      fragmentName,
+      from,
+      optimistic = true,
+      ...rest
+    } = options;
 
-  const resultRef = useRef<UseFragmentResult<TData>>();
-  let latestDiff = cache.diff<TData>(diffOptions);
+    return {
+      ...rest,
+      returnPartialData: true,
+      id: typeof from === "string" ? from : cache.identify(from),
+      query: cache["getFragmentDoc"](fragment, fragmentName),
+      optimistic,
+    };
+  }, [options]);
+
+  const resultRef = useLazyRef<UseFragmentResult<TData>>(() =>
+    diffToResult(cache.diff<TData>(diffOptions))
+  );
+
+  const stableOptions = useDeepMemo(() => options, [options]);
+
+  // Since .next is async, we need to make sure that we
+  // get the correct diff on the next render given new diffOptions
+  React.useMemo(() => {
+    resultRef.current = diffToResult(cache.diff<TData>(diffOptions));
+  }, [diffOptions, cache]);
 
   // Used for both getSnapshot and getServerSnapshot
-  const getSnapshot = () => {
-    const latestDiffToResult = diffToResult(latestDiff);
-    return resultRef.current &&
-      equal(resultRef.current.data, latestDiffToResult.data)
-      ? resultRef.current
-      : (resultRef.current = latestDiffToResult);
-  };
+  const getSnapshot = React.useCallback(() => resultRef.current, []);
 
   return useSyncExternalStore(
-    (forceUpdate) => {
-      return cache.watch({
-        ...diffOptions,
-        immediate: true,
-        callback(diff) {
-          if (!equal(diff, latestDiff)) {
-            resultRef.current = diffToResult((latestDiff = diff));
-            forceUpdate();
-          }
-        },
-      });
-    },
+    React.useCallback(
+      (forceUpdate) => {
+        let lastTimeout = 0;
+        const subscription = cache.watchFragment(stableOptions).subscribe({
+          next: (result) => {
+            if (equal(result, resultRef.current)) return;
+            resultRef.current = result;
+            // If we get another update before we've re-rendered, bail out of
+            // the update and try again. This ensures that the relative timing
+            // between useQuery and useFragment stays roughly the same as
+            // fixed in https://github.com/apollographql/apollo-client/pull/11083
+            clearTimeout(lastTimeout);
+            lastTimeout = setTimeout(forceUpdate) as any;
+          },
+        });
+        return () => {
+          subscription.unsubscribe();
+          clearTimeout(lastTimeout);
+        };
+      },
+      [cache, stableOptions]
+    ),
     getSnapshot,
     getSnapshot
   );
 }
 
 function diffToResult<TData>(
-  diff: Cache.DiffResult<TData>,
+  diff: Cache.DiffResult<TData>
 ): UseFragmentResult<TData> {
-  const result: UseFragmentResult<TData> = {
-    data: diff.result,
+  const result = {
+    data: diff.result!,
     complete: !!diff.complete,
-  };
+  } as UseFragmentResult<TData>;
 
   if (diff.missing) {
-    result.missing = mergeDeepArray(
-      diff.missing.map(error => error.missing),
-    );
+    result.missing = mergeDeepArray(diff.missing.map((error) => error.missing));
   }
 
   return result;

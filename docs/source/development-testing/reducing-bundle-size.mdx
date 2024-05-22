@@ -1,0 +1,206 @@
+---
+title: Reducing bundle size
+description: Squeeze those last few bytes out of your production build
+---
+
+Every byte counts in optimizing your app's performance. This page covers some configuration changes that can help reduce Apollo Client's bundle size:
+
+- Turn off Apollo Client's development mode
+- Pick a consistent style for your imports
+
+## Turning off development mode
+
+By default, Apollo Client is in "development mode". That means Apollo Client performs additional checks and the browser console displays warnings.
+You can disable development mode by setting `globalThis.__DEV__` to `false`.
+Doing so turns off those checks, but they will still end up in your production bundle—you have to tell your bundler to eliminate those checks at build time!
+
+You can expect eliminating checks to result in a reduction of 1-3 KB in your production bundle.
+
+### Bundler-specific configuration
+
+Here are some bundler-specific suggestions for configuring your bundler to remove `globalThis.__DEV__` on build time.
+
+#### Vite
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js title="vite.config.js"
+export default defineConfig({
+  // ...
+  define: {
+    "globalThis.__DEV__": JSON.stringify(false),
+  },
+});
+```
+
+</ExpansionPanel>
+
+#### Next.js
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js title="next.config.js"
+// ...
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  webpack(config, { webpack }) {
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        "globalThis.__DEV__": false,
+      })
+    );
+    return config;
+  },
+};
+
+module.exports = nextConfig;
+```
+
+</ExpansionPanel>
+
+#### create-react-app
+
+With `create-react-app`, you need to use a third-party package like [`craco`](https://craco.js.org/) to modify the bundler configuration.
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js title="craco.config.js"
+const webpack = require("webpack");
+module.exports = {
+  webpack: {
+    plugins: [
+      new webpack.DefinePlugin({
+        "globalThis.__DEV__": false,
+      }),
+    ],
+  },
+};
+```
+
+</ExpansionPanel>
+
+#### esbuild
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```json
+{
+  "define": {
+    "globalThis.__DEV__": "false"
+  }
+}
+```
+
+</ExpansionPanel>
+
+#### Webpack
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js
+config.plugins.push(
+  new webpack.DefinePlugin({
+    "globalThis.__DEV__": false,
+  })
+);
+```
+
+</ExpansionPanel>
+
+#### Rollup
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```js
+export default [
+  {
+    // ... input, output, etc.
+    plugins: [
+      minify({
+        mangle: {
+          toplevel: true,
+        },
+        compress: {
+          toplevel: true,
+          global_defs: {
+            "@globalThis.__DEV__": "false",
+          },
+        },
+      }),
+    ],
+  },
+];
+```
+
+</ExpansionPanel>
+
+#### SWC
+
+<ExpansionPanel title="Click to expand suggested configuration">
+
+```json title=".swcrc"
+{
+  "jsc": {
+    "transform": {
+      "optimizer": {
+        "globals": {
+          "vars": {
+            "globalThis.__DEV__": "false"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+</ExpansionPanel>
+
+### Why use `globalThis.__DEV__` instead of `process.env.NODE_ENV`?
+
+Apollo Client uses the `__DEV__` variable instead of `process.env.NODE_ENV` because the latter is not available in non-Node.js environments. Apollo Client can be used from a CDN with an ESM import. Usage of the `process` variable within the library in this scenario would cause a crash in your application.
+
+It's impossible for Apollo Client to use a guard statement like `typeof process !== "undefined" && process.env.NODE_ENV !== 'production'` because some bundlers, such as `esbuild`, cannot replace a statement like `typeof process` at build time. The development-only code would remain after the build, resulting in no bundle size reduction.
+
+In contrast, checking for `globalThis.__DEV__` does not crash the browser and can be eliminated by every bundler.
+
+## Importing Apollo Client
+
+Depending on your bundler's capabilities and settings, you can use multiple styles of importing from Apollo Client.
+
+### Picking an import style
+
+Apollo Client offers these two styles of imports:
+
+```js
+// "main entrypoint import" style
+import { ApolloClient, InMemoryCache, useQuery } from "@apollo/client";
+
+// "deep entrypoint import" style
+import { ApolloClient, InMemoryCache } from "@apollo/client/core";
+import { useQuery } from "@apollo/client/react/hooks";
+```
+
+With many modern bundlers, it should not matter which of these styles you choose.<br />
+It is important to keep in mind though that bundlers are complex and it might make a difference - especially when your bundler picks up the CommonJS artifacts instead of the ESM artifacts.<br />
+Every bundling setup is different and we cannot guarantee which style results in the smallest bundle size. We recommend trying out these styles in a small setup to determine which results in the best outcome in your environment.
+
+<Note>
+
+Some entry points are not part of the "main" entry point `'@apollo/client'` and can only be imported directly, for example, from `'@apollo/client/link/batch'`. It's fine to use these, even when using the "main" entry point.
+
+</Note>
+
+## Why have a larger library in the first place?
+
+Apollo Client is more than a data fetcher. It's a normalized request and response cache, state manager, and React component integration, including React testing utilities.
+
+To build a similar experience with other libraries, you need to write custom logic, libraries, and component wrappers. Scaling this custom code to all your app components often creates a bundle larger than Apollo Client's.
+
+A custom implementation also means extra maintenance work for your team. By using Apollo Client, you hand off that ownership to a team specializing in GraphQL clients.
+
+### Legacy support
+
+Apollo Client v3 supports legacy JavaScript syntax. It also includes support for some now deprecated features. Similarly, v3 offers broad browser compatibility, extending back to IE11.
+
+The next major version will prioritize contemporary browser support. This transition will streamline the client by removing unnecessary polyfills and phasing out support for legacy syntax and features. Ultimately, these changes reduce bundle size but require a major version release.

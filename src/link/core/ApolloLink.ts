@@ -1,37 +1,30 @@
-import { InvariantError, invariant } from '../../utilities/globals';
+import { newInvariantError, invariant } from "../../utilities/globals/index.js";
 
-import { Observable, Observer } from '../../utilities';
-import {
+import type { Observer } from "../../utilities/index.js";
+import { Observable } from "../../utilities/index.js";
+import type {
   NextLink,
   Operation,
   RequestHandler,
   FetchResult,
-  GraphQLRequest
-} from './types';
+  GraphQLRequest,
+} from "./types.js";
 import {
   validateOperation,
   createOperation,
   transformOperation,
-} from '../utils';
+} from "../utils/index.js";
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;
 }
 
 function toLink(handler: RequestHandler | ApolloLink) {
-  return typeof handler === 'function' ? new ApolloLink(handler) : handler;
+  return typeof handler === "function" ? new ApolloLink(handler) : handler;
 }
 
 function isTerminating(link: ApolloLink): boolean {
   return link.request.length <= 1;
-}
-
-class LinkError extends Error {
-  public link?: ApolloLink;
-  constructor(message?: string, link?: ApolloLink) {
-    super(message);
-    this.link = link;
-  }
 }
 
 export class ApolloLink {
@@ -47,73 +40,75 @@ export class ApolloLink {
   public static split(
     test: (op: Operation) => boolean,
     left: ApolloLink | RequestHandler,
-    right?: ApolloLink | RequestHandler,
+    right?: ApolloLink | RequestHandler
   ): ApolloLink {
     const leftLink = toLink(left);
     const rightLink = toLink(right || new ApolloLink(passthrough));
 
+    let ret: ApolloLink;
     if (isTerminating(leftLink) && isTerminating(rightLink)) {
-      return new ApolloLink(operation => {
-        return test(operation)
-          ? leftLink.request(operation) || Observable.of()
+      ret = new ApolloLink((operation) => {
+        return test(operation) ?
+            leftLink.request(operation) || Observable.of()
           : rightLink.request(operation) || Observable.of();
       });
     } else {
-      return new ApolloLink((operation, forward) => {
-        return test(operation)
-          ? leftLink.request(operation, forward) || Observable.of()
+      ret = new ApolloLink((operation, forward) => {
+        return test(operation) ?
+            leftLink.request(operation, forward) || Observable.of()
           : rightLink.request(operation, forward) || Observable.of();
       });
     }
+    return Object.assign(ret, { left: leftLink, right: rightLink });
   }
 
   public static execute(
     link: ApolloLink,
-    operation: GraphQLRequest,
+    operation: GraphQLRequest
   ): Observable<FetchResult> {
     return (
       link.request(
         createOperation(
           operation.context,
-          transformOperation(validateOperation(operation)),
-        ),
+          transformOperation(validateOperation(operation))
+        )
       ) || Observable.of()
     );
   }
 
   public static concat(
     first: ApolloLink | RequestHandler,
-    second: ApolloLink | RequestHandler,
+    second: ApolloLink | RequestHandler
   ) {
     const firstLink = toLink(first);
     if (isTerminating(firstLink)) {
       invariant.warn(
-        new LinkError(
-          `You are calling concat on a terminating link, which will have no effect`,
-          firstLink,
-        ),
+        `You are calling concat on a terminating link, which will have no effect %o`,
+        firstLink
       );
       return firstLink;
     }
     const nextLink = toLink(second);
 
+    let ret: ApolloLink;
     if (isTerminating(nextLink)) {
-      return new ApolloLink(
-        operation =>
+      ret = new ApolloLink(
+        (operation) =>
           firstLink.request(
             operation,
-            op => nextLink.request(op) || Observable.of(),
-          ) || Observable.of(),
+            (op) => nextLink.request(op) || Observable.of()
+          ) || Observable.of()
       );
     } else {
-      return new ApolloLink((operation, forward) => {
+      ret = new ApolloLink((operation, forward) => {
         return (
-          firstLink.request(operation, op => {
+          firstLink.request(operation, (op) => {
             return nextLink.request(op, forward) || Observable.of();
           }) || Observable.of()
         );
       });
     }
+    return Object.assign(ret, { left: firstLink, right: nextLink });
   }
 
   constructor(request?: RequestHandler) {
@@ -123,7 +118,7 @@ export class ApolloLink {
   public split(
     test: (op: Operation) => boolean,
     left: ApolloLink | RequestHandler,
-    right?: ApolloLink | RequestHandler,
+    right?: ApolloLink | RequestHandler
   ): ApolloLink {
     return this.concat(
       ApolloLink.split(test, left, right || new ApolloLink(passthrough))
@@ -136,14 +131,14 @@ export class ApolloLink {
 
   public request(
     operation: Operation,
-    forward?: NextLink,
+    forward?: NextLink
   ): Observable<FetchResult> | null {
-    throw new InvariantError('request is not implemented');
+    throw newInvariantError("request is not implemented");
   }
 
   protected onError(
     error: any,
-    observer?: Observer<FetchResult>,
+    observer?: Observer<FetchResult>
   ): false | void {
     if (observer && observer.error) {
       observer.error(error);
@@ -163,4 +158,21 @@ export class ApolloLink {
     this.onError = fn;
     return this;
   }
+
+  /**
+   * @internal
+   * Used to iterate through all links that are concatenations or `split` links.
+   */
+  readonly left?: ApolloLink;
+  /**
+   * @internal
+   * Used to iterate through all links that are concatenations or `split` links.
+   */
+  readonly right?: ApolloLink;
+
+  /**
+   * @internal
+   * Can be provided by a link that has an internal cache to report it's memory details.
+   */
+  getMemoryInternals?: () => unknown;
 }

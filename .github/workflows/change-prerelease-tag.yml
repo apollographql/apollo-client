@@ -1,0 +1,69 @@
+name: Change Prerelease Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch name"
+        type: string
+        default: "release-"
+        required: true
+      tag:
+        description: "New tag name"
+        type: string
+        default: "rc"
+        required: true
+
+jobs:
+  change_prerelease_tag:
+    name: Changesets Update Prerelease Tag
+    runs-on: ubuntu-latest
+    # Allow GITHUB_TOKEN to have write permissions
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: github-actions-bot-app-token
+        with:
+          app-id: 819772
+          private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
+
+      # Check out the repository, using the Github Actions Bot app's token so
+      # that we can push later.
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.github-actions-bot-app-token.outputs.token }}
+          # Checkout release branch entered when workflow was kicked off
+          ref: ${{ github.event.inputs.branch }}
+          # Fetch entire git history so  Changesets can generate changelogs
+          # with the correct commits
+          fetch-depth: 0
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Write latest version to package.json and package-lock.json
+        run: |
+          version=$(npm show @apollo/client version)
+          npm pkg set version="$version"
+          npm i
+
+      - name: Update prerelease tag in .changeset/pre.json
+        uses: restackio/update-json-file-action@2.1
+        with:
+          file: .changeset/pre.json
+          fields: '{"tag": "${{github.event.inputs.tag}}"}'
+
+      - name: Commit and push changes
+        env:
+          TAG: ${{ github.event.inputs.tag }}
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -A
+          git commit -m "Prepare for "$TAG" release"
+          git push

@@ -2,7 +2,11 @@
 title: class InMemoryCache
 description: API reference
 api_reference: true
+api_doc:
+  - "@apollo/client!ApolloClient#watchFragment:member(1)"
 ---
+
+import { FunctionDetails, DocBlock, Example } from '../../../shared/ApiDoc';
 
 Methods of the `InMemoryCache` class (the cache used by almost every instance of [`ApolloClient`](../core/ApolloClient/)) are documented here.
 
@@ -139,6 +143,10 @@ By specifying the ID of another cached object, you can query arbitrary cached da
 `Boolean`
 </td>
 <td>
+
+> **⚠️ Deprecated**:
+> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
+> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
 
 If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
 
@@ -304,9 +312,11 @@ writeQuery<TData = any, TVariables = any>(
 ): Reference | undefined
 ```
 
+<MinVersion version="3.5">
+
 ## `updateQuery`
 
-> This method is available in Apollo Client 3.5 and later.
+</MinVersion>
 
 Fetches data from the cache in the shape of a provided GraphQL query, then _updates_ that cached data according to a provided update function.
 
@@ -589,6 +599,10 @@ A map of any GraphQL variable names and values required by `fragment`.
 </td>
 <td>
 
+> **⚠️ Deprecated**:
+> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
+> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
+
 If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
 
 The default value is `false`.
@@ -759,9 +773,13 @@ writeFragment<TData = any, TVariables = any>(
 ): Reference | undefined
 ```
 
+<FunctionDetails canonicalReference="@apollo/client!ApolloClient#watchFragment:member(1)" headingLevel={2} />
+
+<MinVersion version="3.5">
+
 ## `updateFragment`
 
-> This method is available in Apollo Client 3.5 and later.
+</MinVersion>
 
 Fetches data from the cache in the shape of a provided GraphQL fragment, then _updates_ that cached data according to a provided update function.
 
@@ -1089,7 +1107,7 @@ The full key for the field used internally, including serialized key arguments.
 </td>
 <td>
 
-A helper function for reading other fields within the current object.
+A helper function for reading other fields on the object passed to the modifier function as the first parameter.
 </td>
 </tr>
 

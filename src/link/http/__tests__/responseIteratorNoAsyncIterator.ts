@@ -4,7 +4,7 @@ import { HttpLink } from "../HttpLink";
 import { itAsync, subscribeAndCount } from "../../../testing";
 import type { Observable } from "zen-observable-ts";
 import { TextEncoder, TextDecoder } from "util";
-import { ReadableStream } from "web-streams-polyfill/ponyfill/es2018";
+import { ReadableStream } from "web-streams-polyfill";
 import { Readable } from "stream";
 
 // As of Jest 26 there is no way to mock/unmock a module that is used indirectly
@@ -15,10 +15,10 @@ import { Readable } from "stream";
 // which do not execute when isAsyncIterableIterator is true
 // See: https://github.com/facebook/jest/issues/2582#issuecomment-655110424
 
-jest.mock("../../../utilities/common/responseIterator", () => ({
+jest.mock("../../../utilities/index.js", () => ({
   __esModule: true,
-  ...jest.requireActual("../../../utilities/common/responseIterator"),
-  isAsyncIterableIterator: jest.fn(() => false),
+  ...jest.requireActual("../../../utilities/index.js"),
+  canUseAsyncIteratorSymbol: false,
 }));
 
 const sampleDeferredQuery = gql`
@@ -43,21 +43,17 @@ function matchesResults<T>(
   // TODO: adding a second observer to the observable will consume the
   // observable. I want to test completion, but the subscribeAndCount API
   // doesn’t have anything like that.
-  subscribeAndCount(
-    reject,
-    observable,
-    (count, result) => {
-      // subscribeAndCount is 1-indexed for some terrible reason.
-      if (0 >= count || count > results.length) {
-        reject(new Error("Unexpected result"));
-      }
-
-      expect(result).toEqual(results[count - 1]);
-      if (count === results.length) {
-        resolve();
-      }
+  subscribeAndCount(reject, observable, (count, result) => {
+    // subscribeAndCount is 1-indexed for some terrible reason.
+    if (0 >= count || count > results.length) {
+      reject(new Error("Unexpected result"));
     }
-  );
+
+    expect(result).toEqual(results[count - 1]);
+    if (count === results.length) {
+      resolve();
+    }
+  });
 }
 
 describe("multipart responses", () => {

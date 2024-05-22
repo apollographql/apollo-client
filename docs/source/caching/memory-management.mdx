@@ -1,0 +1,127 @@
+---
+title: Memory management
+api_doc:
+  - "@apollo/client!CacheSizes:interface"
+  - "@apollo/client!ApolloClient:class"
+subtitle: Learn how to choose and set custom cache sizes
+description: Learn how to choose and set custom cache sizes with Apollo Client.
+minVersion: 3.9.0
+---
+
+import { Remarks, PropertySignatureTable, Example } from '../../shared/ApiDoc';
+
+## Cache Sizes
+
+For better performance, Apollo Client caches (or, in other words, memoizes) many
+internally calculated values.
+In most cases, these values are cached in [weak caches](https://en.wikipedia.org/wiki/Weak_reference), which means that if the
+source object is garbage-collected, the cached value will be garbage-collected,
+too.
+
+These caches are also Least Recently Used (LRU) caches, meaning that if the cache is full,
+the least recently used value will be garbage-collected.
+
+Depending on your application, you might want to tweak the cache size to fit your
+needs.
+
+You can set your cache size [before (recommended)](#setting-cache-sizes-before-loading-the-apollo-client-library) or [after](#adjusting-cache-sizes-after-loading-the-apollo-client-library) loading the Apollo Client library.
+
+### Setting cache sizes before loading the Apollo Client library
+
+Setting cache sizes before loading the Apollo Client library is recommended because some caches are already initialized when the library is loaded. Changed cache sizes only
+affect caches created after the fact, so you'd have to write additional runtime code to recreate these caches after changing their size.
+
+ ```ts
+import type { CacheSizes } from '@apollo/client/utilities';
+
+ globalThis[Symbol.for("apollo.cacheSize")] = {
+  parser: 100,
+  "fragmentRegistry.lookup": 500
+ } satisfies Partial<CacheSizes>
+ ```
+
+### Adjusting cache sizes after loading the Apollo Client library
+
+You can also adjust cache sizes after loading the library.
+
+```js
+import { cacheSizes } from '@apollo/client/utilities';
+import { print } from '@apollo/client'
+
+cacheSizes.print = 100;
+// cache sizes changed this way will only take effect for caches
+// created after the cache size has been changed, so we need to
+// reset the cache for it to be effective
+
+print.reset();
+```
+
+### Choosing appropriate cache sizes
+
+<Remarks
+  canonicalReference="@apollo/client!CacheSizes:interface"
+/>
+
+To choose good sizes for our memoization caches, you need to know what they
+use as source values, and have a general understanding of the data flow inside of
+Apollo Client.
+
+For most memoized values, the source value is a parsed GraphQL document&mdash;
+a `DocumentNode`. There are two types:
+
+* **User-supplied `DocumentNode`s** are created
+  by the user, for example by using the `gql` template literal tag.
+  This is the `QUERY`, `MUTATION`, or `SUBSCRIPTION` argument passed
+  into a [`useQuery` hook](../data/queries/#usequery-api) or as the `query` option to `client.query`.
+* **Transformed `DocumentNode`s** are derived from
+  user-supplied `DocumentNode`s, for example, by applying [`DocumentTransform`s](../data/document-transforms/) to them.
+
+As a rule of thumb, you should set the cache sizes for caches using a transformed
+`DocumentNode` at least to the same size as for caches using a user-supplied
+`DocumentNode`. If your application uses a custom `DocumentTransform` that does
+not always transform the same input to the same output, you should set the cache
+size for caches using a Transformed `DocumentNode` to a higher value than for
+caches using a user-supplied `DocumentNode`.
+
+By default, Apollo Client uses a base value of 1000 cached objects for caches using
+user-supplied `DocumentNode` instances, and scales other cache sizes relative
+to that. For example, the default base value of 1000 for user-provided `DocumentNode`s would scale to 2000, 4000, etc. for transformed `DocumentNode`s, depending on the transformation performed.
+
+This base value should be plenty for most applications, but you can tweak them if you have different requirements.
+
+#### Measuring cache usage
+
+Since estimating appropriate cache sizes for your application can be hard, Apollo Client
+exposes an API for cache usage measurement.<br />
+This way, you can click around in your application and then take a look at the
+actual usage of the memoizing caches.
+
+Keep in mind that this API is primarily meant for usage with the Apollo DevTools
+(an integration is coming soon), and the API may change at any
+point in time.<br />
+It is also only included in development builds, not in production builds.
+
+<Note>
+
+The cache usage API is only meant for manual measurements. Don't rely on it in production code or tests.
+
+</Note>
+
+<Example
+  canonicalReference="@apollo/client!ApolloClient#getMemoryInternals:member"
+  index={0}
+/>
+
+<Example
+  collapsible
+  canonicalReference="@apollo/client!ApolloClient#getMemoryInternals:member"
+  index={1}
+/>
+
+### Cache options
+
+<PropertySignatureTable
+  idPrefix="cachesizes-interface"
+  canonicalReference="@apollo/client!CacheSizes:interface"
+  properties
+/>

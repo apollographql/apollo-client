@@ -1,0 +1,17 @@
+{
+  "name": "dual-module-test-standard",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "echo Done",
+    "test": "node test-cjs.js && node test-esm.mjs"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.10.1",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "resolve-esm": "^1.4.0"
+  }
+}

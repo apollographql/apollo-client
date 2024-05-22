@@ -1,7 +1,7 @@
-import { Observable, Subscriber } from '../Observable';
+import { Observable, Subscriber } from "../Observable";
 
-describe('Observable', () => {
-  describe('subclassing by non-class constructor functions', () => {
+describe("Observable", () => {
+  describe("subclassing by non-class constructor functions", () => {
     function check(constructor: new <T>(sub: Subscriber<T>) => Observable<T>) {
       constructor.prototype = Object.create(Observable.prototype, {
         constructor: {
@@ -9,7 +9,7 @@ describe('Observable', () => {
         },
       });
 
-      const subscriber: Subscriber<number> = observer => {
+      const subscriber: Subscriber<number> = (observer) => {
         observer.next(123);
         observer.complete();
       };
@@ -28,19 +28,24 @@ describe('Observable', () => {
           next: resolve,
           error: reject,
         });
-      }).then(value => {
+      }).then((value) => {
         expect(value).toBe(123);
       });
     }
 
     function newify(
-      constructor: <T>(sub: Subscriber<T>) => void,
+      constructor: <T>(sub: Subscriber<T>) => void
     ): new <T>(sub: Subscriber<T>) => Observable<T> {
       return constructor as any;
     }
 
-    it('simulating super(sub) with Observable.call(this, sub)', () => {
-      function SubclassWithSuperCall<T>(sub: Subscriber<T>) {
+    type ObservableWithSub<T> = Observable<T> & { sub?: Subscriber<T> };
+
+    it("simulating super(sub) with Observable.call(this, sub)", () => {
+      function SubclassWithSuperCall<T>(
+        this: ObservableWithSub<T>,
+        sub: Subscriber<T>
+      ) {
         const self = Observable.call(this, sub) || this;
         self.sub = sub;
         return self;
@@ -48,8 +53,11 @@ describe('Observable', () => {
       return check(newify(SubclassWithSuperCall));
     });
 
-    it('simulating super(sub) with Observable.apply(this, arguments)', () => {
-      function SubclassWithSuperApplyArgs<T>(_sub: Subscriber<T>) {
+    it("simulating super(sub) with Observable.apply(this, arguments)", () => {
+      function SubclassWithSuperApplyArgs<T>(
+        this: ObservableWithSub<T>,
+        _sub: Subscriber<T>
+      ) {
         const self = Observable.apply(this, arguments) || this;
         self.sub = _sub;
         return self;
@@ -57,8 +65,11 @@ describe('Observable', () => {
       return check(newify(SubclassWithSuperApplyArgs));
     });
 
-    it('simulating super(sub) with Observable.apply(this, [sub])', () => {
-      function SubclassWithSuperApplyArray<T>(...args: [Subscriber<T>]) {
+    it("simulating super(sub) with Observable.apply(this, [sub])", () => {
+      function SubclassWithSuperApplyArray<T>(
+        this: ObservableWithSub<T>,
+        ...args: [Subscriber<T>]
+      ) {
         const self = Observable.apply(this, args) || this;
         self.sub = args[0];
         return self;

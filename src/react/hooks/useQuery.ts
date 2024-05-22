@@ -223,13 +223,16 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // initialization, this.renderPromises is usually undefined (unless SSR is
     // happening), but that's fine as long as it has been initialized that way,
     // rather than left uninitialized.
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     this.renderPromises = React.useContext(getApolloContext()).renderPromises;
 
     this.useOptions(options);
 
     const obsQuery = this.useObservableQuery();
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const result = useSyncExternalStore(
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       React.useCallback(
         (handleStoreChange) => {
           if (this.renderPromises) {
@@ -300,7 +303,9 @@ class InternalState<TData, TVariables extends OperationVariables> {
           // effectively passing this dependency array to that useEffect buried
           // inside useSyncExternalStore, as desired.
           obsQuery,
+          // eslint-disable-next-line react-hooks/exhaustive-deps
           this.renderPromises,
+          // eslint-disable-next-line react-hooks/exhaustive-deps
           this.client.disableNetworkFetches,
         ]
       ),
@@ -526,6 +531,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
       this.observable || // Reuse this.observable if possible (and not SSR)
       this.client.watchQuery(this.getObsQueryOptions()));
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     this.obsQueryFields = React.useMemo(
       () => ({
         refetch: obsQuery.refetch.bind(obsQuery),

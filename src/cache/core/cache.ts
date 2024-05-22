@@ -1,4 +1,4 @@
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, InlineFragmentNode } from "graphql";
 import { wrap } from "optimism";
 
 import type {
@@ -23,6 +23,8 @@ import type {
 } from "../../core/types.js";
 import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
+import { mask } from "../../core/masking.js";
+import { invariant } from "../../utilities/globals/index.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -133,6 +135,19 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // Optimistic API
 
   public abstract removeOptimistic(id: string): void;
+
+  // Data masking API
+
+  // Used by data masking to determine if an inline fragment with a type
+  // condition matches a given typename.
+  //
+  // If not implemented by a cache subclass, data masking will effectively be
+  // disabled since we will not be able to accurately determine if a given type
+  // condition for a union or interface matches a particular type.
+  protected fragmentMatches?(
+    fragment: InlineFragmentNode,
+    typename: string
+  ): boolean;
 
   // Transactional API
 
@@ -349,6 +364,20 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         return data;
       },
     });
+  }
+
+  public maskDocument<TData = unknown>(document: DocumentNode, data: TData) {
+    if (!this.fragmentMatches) {
+      if (__DEV__) {
+        invariant.warn(
+          "This cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
+        );
+      }
+
+      return data;
+    }
+
+    return mask(data, document, this.fragmentMatches.bind(this));
   }
 
   /**

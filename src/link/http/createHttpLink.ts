@@ -146,7 +146,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       options.method = "GET";
     }
 
-    if (hasDefer || isSubscription) {
+    if (hasDefer || hasStream || isSubscription) {
       options.headers = options.headers || {};
       let acceptHeader = "multipart/mixed;";
       // Omit defer-specific headers if the user attempts to defer a selection

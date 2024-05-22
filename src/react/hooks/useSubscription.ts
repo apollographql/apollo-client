@@ -45,11 +45,10 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
  * }
  * ```
  * @remarks
- * #### Subscriptions and React 18 Automatic Batching
+ * #### Consider using `onData` instead of `useEffect`
  *
- * With React 18's [automatic batching](https://react.dev/blog/2022/03/29/react-v18#new-feature-automatic-batching), multiple state updates may be grouped into a single re-render for better performance.
- *
- * If your subscription API sends multiple messages at the same time or in very fast succession (within fractions of a millisecond), it is likely that only the last message received in that narrow time frame will result in a re-render.
+ * If you want to react to incoming data, please use the `onData` option instead of `useEffect`. State updates you make inside a `useEffect` hook might cause additional rerenders, and `useEffect` is mostly meant for side effects of rendering, not as an event handler.
+ * That's why we provide you with `onData` as an option to `useSubscription`.
  *
  * Consider the following component:
  *
@@ -70,10 +69,6 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
  *   );
  * }
  * ```
- *
- * If your subscription back-end emits two messages with the same timestamp, only the last message received by Apollo Client will be rendered. This is because React 18 will batch these two state updates into a single re-render.
- *
- * Since the component above is using `useEffect` to push `data` into a piece of local state on each `Subscriptions` re-render, the first message will never be added to the `accumulatedData` array since its render was skipped.
  *
  * Instead of using `useEffect` here, we can re-write this component to use the `onData` callback function accepted in `useSubscription`'s `options` object:
  *

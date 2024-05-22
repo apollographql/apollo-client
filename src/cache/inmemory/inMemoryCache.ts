@@ -3,7 +3,7 @@ import { invariant } from "../../utilities/globals/index.js";
 // Make builtins like Map and Set safe to use with non-extensible objects.
 import "./fixPolyfills.js";
 
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, InlineFragmentNode } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 import { equal } from "@wry/equality";
@@ -526,6 +526,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public transformDocument(document: DocumentNode): DocumentNode {
     return this.addTypenameToDocument(this.addFragmentsToDocument(document));
+  }
+
+  protected fragmentMatches(
+    fragment: InlineFragmentNode,
+    typename: string
+  ): boolean {
+    return this.policies.fragmentMatches(fragment, typename);
   }
 
   protected broadcastWatches(options?: BroadcastOptions) {

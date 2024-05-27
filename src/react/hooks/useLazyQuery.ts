@@ -2,15 +2,25 @@ import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import * as React from "rehackt";
 
-import type { OperationVariables } from "../../core/index.js";
+import type {
+  ApolloQueryResult,
+  OperationVariables,
+} from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
 import type {
   LazyQueryHookExecOptions,
   LazyQueryHookOptions,
   LazyQueryResultTuple,
   NoInfer,
+  QueryHookOptions,
+  QueryResult,
 } from "../types/types.js";
-import { useInternalState, useQueryWithInternalState } from "./useQuery.js";
+import type { InternalState } from "./useQuery.js";
+import {
+  createWatchQueryOptions,
+  useInternalState,
+  useQueryWithInternalState,
+} from "./useQuery.js";
 import { useApolloClient } from "./useApolloClient.js";
 
 // The following methods, when called will execute the query, regardless of
@@ -94,7 +104,8 @@ export function useLazyQuery<
     useQueryResult.observable.options.initialFetchPolicy ||
     internalState.getDefaultFetchPolicy();
 
-  const { forceUpdateState, obsQueryFields } = internalState;
+  const { obsQueryFields } = internalState;
+  const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
@@ -141,9 +152,12 @@ export function useLazyQuery<
         ...execOptionsRef.current,
       });
 
-      const promise = internalState
-        .executeQuery({ ...options, skip: false }, false)
-        .then((queryResult) => Object.assign(queryResult, eagerMethods));
+      const promise = executeQuery(
+        { ...options, skip: false },
+        false,
+        internalState,
+        forceUpdateState
+      ).then((queryResult) => Object.assign(queryResult, eagerMethods));
 
       // Because the return value of `useLazyQuery` is usually floated, we need
       // to catch the promise to prevent unhandled rejections.
@@ -151,8 +165,63 @@ export function useLazyQuery<
 
       return promise;
     },
-    [eagerMethods, initialFetchPolicy, internalState]
+    [eagerMethods, forceUpdateState, initialFetchPolicy, internalState]
   );
 
   return [execute, result];
+}
+
+function executeQuery<TData, TVariables extends OperationVariables>(
+  options: QueryHookOptions<TData, TVariables> & {
+    query?: DocumentNode;
+  },
+  hasRenderPromises: boolean,
+  internalState: InternalState<TData, TVariables>,
+  forceUpdate: () => void
+) {
+  if (options.query) {
+    internalState.query = options.query;
+  }
+
+  internalState.watchQueryOptions = createWatchQueryOptions(
+    (internalState.queryHookOptions = options),
+    internalState,
+    hasRenderPromises
+  );
+
+  const concast = internalState.observable.reobserveAsConcast(
+    internalState.getObsQueryOptions()
+  );
+
+  // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
+  // but save the current data as this.previousData, just like setResult
+  // usually does.
+  internalState.previousData =
+    internalState.result?.data || internalState.previousData;
+  internalState.result = void 0;
+  forceUpdate();
+
+  return new Promise<QueryResult<TData, TVariables>>((resolve) => {
+    let result: ApolloQueryResult<TData>;
+
+    // Subscribe to the concast independently of the ObservableQuery in case
+    // the component gets unmounted before the promise resolves. This prevents
+    // the concast from terminating early and resolving with `undefined` when
+    // there are no more subscribers for the concast.
+    concast.subscribe({
+      next: (value) => {
+        result = value;
+      },
+      error: () => {
+        resolve(
+          internalState.toQueryResult(
+            internalState.observable.getCurrentResult()
+          )
+        );
+      },
+      complete: () => {
+        resolve(internalState.toQueryResult(result));
+      },
+    });
+  });
 }

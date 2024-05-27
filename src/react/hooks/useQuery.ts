@@ -238,8 +238,6 @@ export function useQueryWithInternalState<
           return () => {};
         }
 
-        internalState.forceUpdate = handleStoreChange;
-
         const onNext = () => {
           const previousResult = internalState.result;
           // We use `getCurrentResult()` instead of the onNext argument because
@@ -256,7 +254,7 @@ export function useQueryWithInternalState<
             return;
           }
 
-          internalState.setResult(result);
+          internalState.setResult(result, handleStoreChange);
         };
 
         const onError = (error: Error) => {
@@ -274,12 +272,15 @@ export function useQueryWithInternalState<
             (previousResult && previousResult.loading) ||
             !equal(error, previousResult.error)
           ) {
-            internalState.setResult({
-              data: (previousResult && previousResult.data) as TData,
-              error: error as ApolloError,
-              loading: false,
-              networkStatus: NetworkStatus.error,
-            });
+            internalState.setResult(
+              {
+                data: (previousResult && previousResult.data) as TData,
+                error: error as ApolloError,
+                loading: false,
+                networkStatus: NetworkStatus.error,
+              },
+              handleStoreChange
+            );
           }
         };
 
@@ -291,7 +292,6 @@ export function useQueryWithInternalState<
         // happen in very fast succession.
         return () => {
           setTimeout(() => subscription.unsubscribe());
-          internalState.forceUpdate = () => internalState.forceUpdateState();
         };
       },
       // eslint-disable-next-line react-compiler/react-compiler
@@ -323,17 +323,8 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>
 ): InternalState<TData, TVariables> {
-  // By default, InternalState.prototype.forceUpdate is an empty function, but
-  // we replace it here (before anyone has had a chance to see this state yet)
-  // with a function that unconditionally forces an update, using the latest
-  // setTick function. Updating this state by calling state.forceUpdate or the
-  // uSES notification callback are the only way we trigger React component updates.
-  const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
-
   function createInternalState(previous?: InternalState<TData, TVariables>) {
-    return Object.assign(new InternalState(client, query, previous), {
-      forceUpdateState,
-    });
+    return new InternalState(client, query, previous);
   }
 
   let [state, updateState] = React.useState(createInternalState);
@@ -351,7 +342,7 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   return state;
 }
 // A function to massage options before passing them to ObservableQuery.
-function createWatchQueryOptions<
+export function createWatchQueryOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -412,10 +403,11 @@ function createWatchQueryOptions<
   return watchQueryOptions;
 }
 
+export { type InternalState };
 class InternalState<TData, TVariables extends OperationVariables> {
   constructor(
     public readonly client: ReturnType<typeof useApolloClient>,
-    public readonly query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+    public query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     previous?: InternalState<TData, TVariables>
   ) {
     verifyDocumentType(query, DocumentType.Query);
@@ -427,74 +419,6 @@ class InternalState<TData, TVariables extends OperationVariables> {
     if (previousData) {
       this.previousData = previousData;
     }
-  }
-
-  /**
-   * Forces an update using local component state.
-   * As this is not batched with `useSyncExternalStore` updates,
-   * this is only used as a fallback if the `useSyncExternalStore` "force update"
-   * method is not registered at the moment.
-   * See https://github.com/facebook/react/issues/25191
-   *  */
-  forceUpdateState() {
-    // Replaced (in useInternalState) with a method that triggers an update.
-    invariant.warn(
-      "Calling default no-op implementation of InternalState#forceUpdate"
-    );
-  }
-
-  /**
-   * Will be overwritten by the `useSyncExternalStore` "force update" method
-   * whenever it is available and reset to `forceUpdateState` when it isn't.
-   */
-  forceUpdate = () => this.forceUpdateState();
-
-  executeQuery(
-    options: QueryHookOptions<TData, TVariables> & {
-      query?: DocumentNode;
-    },
-    hasRenderPromises: boolean
-  ) {
-    if (options.query) {
-      Object.assign(this, { query: options.query });
-    }
-
-    this.watchQueryOptions = createWatchQueryOptions(
-      (this.queryHookOptions = options),
-      this,
-      hasRenderPromises
-    );
-
-    const concast = this.observable.reobserveAsConcast(
-      this.getObsQueryOptions()
-    );
-
-    // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
-    // but save the current data as this.previousData, just like setResult
-    // usually does.
-    this.previousData = this.result?.data || this.previousData;
-    this.result = void 0;
-    this.forceUpdate();
-
-    return new Promise<QueryResult<TData, TVariables>>((resolve) => {
-      let result: ApolloQueryResult<TData>;
-
-      // Subscribe to the concast independently of the ObservableQuery in case
-      // the component gets unmounted before the promise resolves. This prevents
-      // the concast from terminating early and resolving with `undefined` when
-      // there are no more subscribers for the concast.
-      concast.subscribe({
-        next: (value) => {
-          result = value;
-        },
-        error: () => {
-          resolve(this.toQueryResult(this.observable.getCurrentResult()));
-        },
-        complete: () => {
-          resolve(this.toQueryResult(result));
-        },
-      });
-    });
   }
 
   public queryHookOptions!: QueryHookOptions<TData, TVariables>;
@@ -569,7 +493,10 @@ class InternalState<TData, TVariables extends OperationVariables> {
   public result: undefined | ApolloQueryResult<TData>;
   public previousData: undefined | TData;
 
-  public setResult(nextResult: ApolloQueryResult<TData>) {
+  public setResult(
+    nextResult: ApolloQueryResult<TData>,
+    forceUpdate: () => void
+  ) {
     const previousResult = this.result;
     if (previousResult && previousResult.data) {
       this.previousData = previousResult.data;
@@ -577,7 +504,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     this.result = nextResult;
     // Calling state.setResult always triggers an update, though some call sites
     // perform additional equality checks before committing to an update.
-    this.forceUpdate();
+    forceUpdate();
     this.handleErrorOrCompleted(nextResult, previousResult);
   }
 

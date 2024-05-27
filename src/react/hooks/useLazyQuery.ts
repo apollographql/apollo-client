@@ -142,7 +142,7 @@ export function useLazyQuery<
       });
 
       const promise = internalState
-        .executeQuery({ ...options, skip: false })
+        .executeQuery({ ...options, skip: false }, false)
         .then((queryResult) => Object.assign(queryResult, eagerMethods));
 
       // Because the return value of `useLazyQuery` is usually floated, we need

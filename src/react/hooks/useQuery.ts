@@ -9,7 +9,6 @@ import type {
   WatchQueryFetchPolicy,
 } from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
-import type { ApolloContextValue } from "../context/index.js";
 import { getApolloContext } from "../context/index.js";
 import { ApolloError } from "../../errors/index.js";
 import type {
@@ -120,17 +119,122 @@ export function useQueryWithInternalState<
   // initialization, this.renderPromises is usually undefined (unless SSR is
   // happening), but that's fine as long as it has been initialized that way,
   // rather than left uninitialized.
-  internalState.renderPromises =
-    React.useContext(getApolloContext()).renderPromises;
+  const renderPromises = React.useContext(getApolloContext()).renderPromises;
 
-  useOptions(internalState, options);
+  const watchQueryOptions = createWatchQueryOptions(
+    (internalState.queryHookOptions = options),
+    internalState,
+    !!renderPromises
+  );
 
-  const obsQuery = useObservableQuery(internalState);
+  // Update this.watchQueryOptions, but only when they have changed, which
+  // allows us to depend on the referential stability of
+  // this.watchQueryOptions elsewhere.
+  const currentWatchQueryOptions = internalState.watchQueryOptions;
+
+  if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
+    internalState.watchQueryOptions = watchQueryOptions;
+
+    if (currentWatchQueryOptions && internalState.observable) {
+      // Though it might be tempting to postpone this reobserve call to the
+      // useEffect block, we need getCurrentResult to return an appropriate
+      // loading:true result synchronously (later within the same call to
+      // useQuery). Since we already have this.observable here (not true for
+      // the very first call to useQuery), we are not initiating any new
+      // subscriptions, though it does feel less than ideal that reobserve
+      // (potentially) kicks off a network request (for example, when the
+      // variables have changed), which is technically a side-effect.
+      internalState.observable.reobserve(internalState.getObsQueryOptions());
+
+      // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
+      // but save the current data as this.previousData, just like setResult
+      // usually does.
+      internalState.previousData =
+        internalState.result?.data || internalState.previousData;
+      internalState.result = void 0;
+    }
+  }
+
+  // Make sure state.onCompleted and state.onError always reflect the latest
+  // options.onCompleted and options.onError callbacks provided to useQuery,
+  // since those functions are often recreated every time useQuery is called.
+  // Like the forceUpdate method, the versions of these methods inherited from
+  // InternalState.prototype are empty no-ops, but we can override them on the
+  // base state object (without modifying the prototype).
+  internalState.onCompleted =
+    options.onCompleted || InternalState.prototype.onCompleted;
+  internalState.onError = options.onError || InternalState.prototype.onError;
+
+  if (
+    (renderPromises || internalState.client.disableNetworkFetches) &&
+    internalState.queryHookOptions.ssr === false &&
+    !internalState.queryHookOptions.skip
+  ) {
+    // If SSR has been explicitly disabled, and this function has been called
+    // on the server side, return the default loading state.
+    internalState.result = internalState.ssrDisabledResult;
+  } else if (
+    internalState.queryHookOptions.skip ||
+    internalState.watchQueryOptions.fetchPolicy === "standby"
+  ) {
+    // When skipping a query (ie. we're not querying for data but still want to
+    // render children), make sure the `data` is cleared out and `loading` is
+    // set to `false` (since we aren't loading anything).
+    //
+    // NOTE: We no longer think this is the correct behavior. Skipping should
+    // not automatically set `data` to `undefined`, but instead leave the
+    // previous data in place. In other words, skipping should not mandate that
+    // previously received data is all of a sudden removed. Unfortunately,
+    // changing this is breaking, so we'll have to wait until Apollo Client 4.0
+    // to address this.
+    internalState.result = internalState.skipStandbyResult;
+  } else if (
+    internalState.result === internalState.ssrDisabledResult ||
+    internalState.result === internalState.skipStandbyResult
+  ) {
+    internalState.result = void 0;
+  }
+
+  // See if there is an existing observable that was used to fetch the same
+  // data and if so, use it instead since it will contain the proper queryId
+  // to fetch the result set. This is used during SSR.
+  const obsQuery = (internalState.observable =
+    (renderPromises &&
+      renderPromises.getSSRObservable(internalState.watchQueryOptions)) ||
+    internalState.observable || // Reuse this.observable if possible (and not SSR)
+    internalState.client.watchQuery(internalState.getObsQueryOptions()));
+
+  internalState.obsQueryFields = React.useMemo(
+    () => ({
+      refetch: obsQuery.refetch.bind(obsQuery),
+      reobserve: obsQuery.reobserve.bind(obsQuery),
+      fetchMore: obsQuery.fetchMore.bind(obsQuery),
+      updateQuery: obsQuery.updateQuery.bind(obsQuery),
+      startPolling: obsQuery.startPolling.bind(obsQuery),
+      stopPolling: obsQuery.stopPolling.bind(obsQuery),
+      subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
+    }),
+    [obsQuery]
+  );
+
+  const ssrAllowed = !(
+    internalState.queryHookOptions.ssr === false ||
+    internalState.queryHookOptions.skip
+  );
+
+  if (renderPromises && ssrAllowed) {
+    renderPromises.registerSSRObservable(obsQuery);
+
+    if (obsQuery.getCurrentResult().loading) {
+      // TODO: This is a legacy API which could probably be cleaned up
+      renderPromises.addObservableQueryPromise(obsQuery);
+    }
+  }
 
   const result = useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
-        if (internalState.renderPromises) {
+        if (renderPromises) {
           return () => {};
         }
 
@@ -200,7 +304,7 @@ export function useQueryWithInternalState<
         // effectively passing this dependency array to that useEffect buried
         // inside useSyncExternalStore, as desired.
         obsQuery,
-        internalState.renderPromises,
+        renderPromises,
         internalState.client.disableNetworkFetches,
       ]
     ),
@@ -246,127 +350,66 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
 
   return state;
 }
-
-function useOptions<TData, TVariables extends OperationVariables>(
+// A function to massage options before passing them to ObservableQuery.
+function createWatchQueryOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  {
+    skip,
+    ssr,
+    onCompleted,
+    onError,
+    defaultOptions,
+    // The above options are useQuery-specific, so this ...otherOptions spread
+    // makes otherOptions almost a WatchQueryOptions object, except for the
+    // query property that we add below.
+    ...otherOptions
+  }: QueryHookOptions<TData, TVariables> = {},
   internalState: InternalState<TData, TVariables>,
-  options: QueryHookOptions<TData, TVariables>
-) {
-  const watchQueryOptions = internalState.createWatchQueryOptions(
-    (internalState.queryHookOptions = options)
+  hasRenderPromises: boolean
+): WatchQueryOptions<TVariables, TData> {
+  // This Object.assign is safe because otherOptions is a fresh ...rest object
+  // that did not exist until just now, so modifications are still allowed.
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = Object.assign(
+    otherOptions,
+    { query: internalState.query }
   );
-
-  // Update this.watchQueryOptions, but only when they have changed, which
-  // allows us to depend on the referential stability of
-  // this.watchQueryOptions elsewhere.
-  const currentWatchQueryOptions = internalState.watchQueryOptions;
-
-  if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
-    internalState.watchQueryOptions = watchQueryOptions;
-
-    if (currentWatchQueryOptions && internalState.observable) {
-      // Though it might be tempting to postpone this reobserve call to the
-      // useEffect block, we need getCurrentResult to return an appropriate
-      // loading:true result synchronously (later within the same call to
-      // useQuery). Since we already have this.observable here (not true for
-      // the very first call to useQuery), we are not initiating any new
-      // subscriptions, though it does feel less than ideal that reobserve
-      // (potentially) kicks off a network request (for example, when the
-      // variables have changed), which is technically a side-effect.
-      internalState.observable.reobserve(internalState.getObsQueryOptions());
-
-      // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
-      // but save the current data as this.previousData, just like setResult
-      // usually does.
-      internalState.previousData =
-        internalState.result?.data || internalState.previousData;
-      internalState.result = void 0;
-    }
-  }
-
-  // Make sure state.onCompleted and state.onError always reflect the latest
-  // options.onCompleted and options.onError callbacks provided to useQuery,
-  // since those functions are often recreated every time useQuery is called.
-  // Like the forceUpdate method, the versions of these methods inherited from
-  // InternalState.prototype are empty no-ops, but we can override them on the
-  // base state object (without modifying the prototype).
-  internalState.onCompleted =
-    options.onCompleted || InternalState.prototype.onCompleted;
-  internalState.onError = options.onError || InternalState.prototype.onError;
 
   if (
-    (internalState.renderPromises ||
-      internalState.client.disableNetworkFetches) &&
-    internalState.queryHookOptions.ssr === false &&
-    !internalState.queryHookOptions.skip
+    hasRenderPromises &&
+    (watchQueryOptions.fetchPolicy === "network-only" ||
+      watchQueryOptions.fetchPolicy === "cache-and-network")
   ) {
-    // If SSR has been explicitly disabled, and this function has been called
-    // on the server side, return the default loading state.
-    internalState.result = internalState.ssrDisabledResult;
-  } else if (
-    internalState.queryHookOptions.skip ||
-    internalState.watchQueryOptions.fetchPolicy === "standby"
-  ) {
-    // When skipping a query (ie. we're not querying for data but still want to
-    // render children), make sure the `data` is cleared out and `loading` is
-    // set to `false` (since we aren't loading anything).
-    //
-    // NOTE: We no longer think this is the correct behavior. Skipping should
-    // not automatically set `data` to `undefined`, but instead leave the
-    // previous data in place. In other words, skipping should not mandate that
-    // previously received data is all of a sudden removed. Unfortunately,
-    // changing this is breaking, so we'll have to wait until Apollo Client 4.0
-    // to address this.
-    internalState.result = internalState.skipStandbyResult;
-  } else if (
-    internalState.result === internalState.ssrDisabledResult ||
-    internalState.result === internalState.skipStandbyResult
-  ) {
-    internalState.result = void 0;
-  }
-}
-
-function useObservableQuery<TData, TVariables extends OperationVariables>(
-  internalState: InternalState<TData, TVariables>
-) {
-  // See if there is an existing observable that was used to fetch the same
-  // data and if so, use it instead since it will contain the proper queryId
-  // to fetch the result set. This is used during SSR.
-  const obsQuery = (internalState.observable =
-    (internalState.renderPromises &&
-      internalState.renderPromises.getSSRObservable(
-        internalState.watchQueryOptions
-      )) ||
-    internalState.observable || // Reuse this.observable if possible (and not SSR)
-    internalState.client.watchQuery(internalState.getObsQueryOptions()));
-
-  internalState.obsQueryFields = React.useMemo(
-    () => ({
-      refetch: obsQuery.refetch.bind(obsQuery),
-      reobserve: obsQuery.reobserve.bind(obsQuery),
-      fetchMore: obsQuery.fetchMore.bind(obsQuery),
-      updateQuery: obsQuery.updateQuery.bind(obsQuery),
-      startPolling: obsQuery.startPolling.bind(obsQuery),
-      stopPolling: obsQuery.stopPolling.bind(obsQuery),
-      subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
-    }),
-    [obsQuery]
-  );
-
-  const ssrAllowed = !(
-    internalState.queryHookOptions.ssr === false ||
-    internalState.queryHookOptions.skip
-  );
-
-  if (internalState.renderPromises && ssrAllowed) {
-    internalState.renderPromises.registerSSRObservable(obsQuery);
-
-    if (obsQuery.getCurrentResult().loading) {
-      // TODO: This is a legacy API which could probably be cleaned up
-      internalState.renderPromises.addObservableQueryPromise(obsQuery);
-    }
+    // this behavior was added to react-apollo without explanation in this PR
+    // https://github.com/apollographql/react-apollo/pull/1579
+    watchQueryOptions.fetchPolicy = "cache-first";
   }
 
-  return obsQuery;
+  if (!watchQueryOptions.variables) {
+    watchQueryOptions.variables = {} as TVariables;
+  }
+
+  if (skip) {
+    const {
+      fetchPolicy = internalState.getDefaultFetchPolicy(),
+      initialFetchPolicy = fetchPolicy,
+    } = watchQueryOptions;
+
+    // When skipping, we set watchQueryOptions.fetchPolicy initially to
+    // "standby", but we also need/want to preserve the initial non-standby
+    // fetchPolicy that would have been used if not skipping.
+    Object.assign(watchQueryOptions, {
+      initialFetchPolicy,
+      fetchPolicy: "standby",
+    });
+  } else if (!watchQueryOptions.fetchPolicy) {
+    watchQueryOptions.fetchPolicy =
+      internalState.observable?.options.initialFetchPolicy ||
+      internalState.getDefaultFetchPolicy();
+  }
+
+  return watchQueryOptions;
 }
 
 class InternalState<TData, TVariables extends OperationVariables> {
@@ -409,14 +452,17 @@ class InternalState<TData, TVariables extends OperationVariables> {
   executeQuery(
     options: QueryHookOptions<TData, TVariables> & {
       query?: DocumentNode;
-    }
+    },
+    hasRenderPromises: boolean
   ) {
     if (options.query) {
       Object.assign(this, { query: options.query });
     }
 
-    this.watchQueryOptions = this.createWatchQueryOptions(
-      (this.queryHookOptions = options)
+    this.watchQueryOptions = createWatchQueryOptions(
+      (this.queryHookOptions = options),
+      this,
+      hasRenderPromises
     );
 
     const concast = this.observable.reobserveAsConcast(
@@ -451,11 +497,6 @@ class InternalState<TData, TVariables extends OperationVariables> {
     });
   }
 
-  // These members (except for renderPromises) are all populated by the
-  // useOptions method, which is called unconditionally at the beginning of the
-  // useQuery method, so we can safely use these members in other/later methods
-  // without worrying they might be uninitialized.
-  public renderPromises: ApolloContextValue["renderPromises"];
   public queryHookOptions!: QueryHookOptions<TData, TVariables>;
   public watchQueryOptions!: WatchQueryOptions<TVariables, TData>;
 
@@ -502,62 +543,6 @@ class InternalState<TData, TVariables extends OperationVariables> {
     error: void 0,
     networkStatus: NetworkStatus.ready,
   });
-
-  // A function to massage options before passing them to ObservableQuery.
-  public createWatchQueryOptions({
-    skip,
-    ssr,
-    onCompleted,
-    onError,
-    defaultOptions,
-    // The above options are useQuery-specific, so this ...otherOptions spread
-    // makes otherOptions almost a WatchQueryOptions object, except for the
-    // query property that we add below.
-    ...otherOptions
-  }: QueryHookOptions<TData, TVariables> = {}): WatchQueryOptions<
-    TVariables,
-    TData
-  > {
-    // This Object.assign is safe because otherOptions is a fresh ...rest object
-    // that did not exist until just now, so modifications are still allowed.
-    const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-      Object.assign(otherOptions, { query: this.query });
-
-    if (
-      this.renderPromises &&
-      (watchQueryOptions.fetchPolicy === "network-only" ||
-        watchQueryOptions.fetchPolicy === "cache-and-network")
-    ) {
-      // this behavior was added to react-apollo without explanation in this PR
-      // https://github.com/apollographql/react-apollo/pull/1579
-      watchQueryOptions.fetchPolicy = "cache-first";
-    }
-
-    if (!watchQueryOptions.variables) {
-      watchQueryOptions.variables = {} as TVariables;
-    }
-
-    if (skip) {
-      const {
-        fetchPolicy = this.getDefaultFetchPolicy(),
-        initialFetchPolicy = fetchPolicy,
-      } = watchQueryOptions;
-
-      // When skipping, we set watchQueryOptions.fetchPolicy initially to
-      // "standby", but we also need/want to preserve the initial non-standby
-      // fetchPolicy that would have been used if not skipping.
-      Object.assign(watchQueryOptions, {
-        initialFetchPolicy,
-        fetchPolicy: "standby",
-      });
-    } else if (!watchQueryOptions.fetchPolicy) {
-      watchQueryOptions.fetchPolicy =
-        this.observable?.options.initialFetchPolicy ||
-        this.getDefaultFetchPolicy();
-    }
-
-    return watchQueryOptions;
-  }
 
   getDefaultFetchPolicy(): WatchQueryFetchPolicy {
     return (

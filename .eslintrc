@@ -27,7 +27,9 @@
       "parserOptions": {
         "project": "./tsconfig.json"
       },
+      "plugins": ["eslint-plugin-react-compiler"],
       "rules": {
+        "react-compiler/react-compiler": "error",
         "@typescript-eslint/consistent-type-imports": [
           "error",
           {

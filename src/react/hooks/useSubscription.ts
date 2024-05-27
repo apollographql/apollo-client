@@ -204,6 +204,7 @@ export function useSubscription<
     }
 
     Object.assign(ref.current, { client, subscription, options });
+    // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, subscription, options, canResetObservableRef.current]);
 
@@ -272,6 +273,7 @@ export function useSubscription<
         subscription.unsubscribe();
       });
     };
+    // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [observable]);
 

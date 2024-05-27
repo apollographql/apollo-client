@@ -439,6 +439,11 @@ class Concast<T> extends Observable<T> {
 // @public (undocumented)
 type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 
+// @internal (undocumented)
+type CovariantUnaryFunction<out Arg, out Ret> = {
+    fn(arg: Arg): Ret;
+}["fn"];
+
 // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "NormalizedCacheObject" needs to be exported by the entry point index.d.ts
 //
@@ -909,7 +914,7 @@ interface MockApolloLink extends ApolloLink {
 }
 
 // @public (undocumented)
-export interface MockedResponse<TData = Record<string, any>, TVariables = Record<string, any>> {
+export interface MockedResponse<out TData = Record<string, any>, out TVariables = Record<string, any>> {
     // (undocumented)
     delay?: number;
     // (undocumented)
@@ -1509,8 +1514,10 @@ interface Resolvers {
     };
 }
 
+// Warning: (ae-forgotten-export) The symbol "CovariantUnaryFunction" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
+export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<V, T>;
 
 // @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
@@ -1655,7 +1662,7 @@ interface UriFunction {
 }
 
 // @public (undocumented)
-type VariableMatcher<V = Record<string, any>> = (variables: V) => boolean;
+type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<V, boolean>;
 
 // @public (undocumented)
 export function wait(ms: number): Promise<void>;

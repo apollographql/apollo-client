@@ -10,7 +10,7 @@ import type {
   LazyQueryResultTuple,
   NoInfer,
 } from "../types/types.js";
-import { useInternalState } from "./useQuery.js";
+import { useInternalState, useQueryWithInternalState } from "./useQuery.js";
 import { useApolloClient } from "./useApolloClient.js";
 
 // The following methods, when called will execute the query, regardless of
@@ -85,7 +85,7 @@ export function useLazyQuery<
     document
   );
 
-  const useQueryResult = internalState.useQuery({
+  const useQueryResult = useQueryWithInternalState(internalState, {
     ...merged,
     skip: !execOptionsRef.current,
   });

@@ -18,6 +18,7 @@ import type {
 import type { InternalState } from "./useQuery.js";
 import {
   createWatchQueryOptions,
+  toQueryResult,
   useInternalState,
   useQueryWithInternalState,
 } from "./useQuery.js";
@@ -214,13 +215,14 @@ function executeQuery<TData, TVariables extends OperationVariables>(
       },
       error: () => {
         resolve(
-          internalState.toQueryResult(
-            internalState.observable.getCurrentResult()
+          toQueryResult(
+            internalState.observable.getCurrentResult(),
+            internalState
           )
         );
       },
       complete: () => {
-        resolve(internalState.toQueryResult(result));
+        resolve(toQueryResult(result, internalState));
       },
     });
   });

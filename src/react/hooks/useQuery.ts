@@ -172,7 +172,7 @@ export function useQueryWithInternalState<
   ) {
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
-    internalState.result = internalState.ssrDisabledResult;
+    internalState.result = ssrDisabledResult;
   } else if (
     internalState.queryHookOptions.skip ||
     internalState.watchQueryOptions.fetchPolicy === "standby"
@@ -187,10 +187,10 @@ export function useQueryWithInternalState<
     // previously received data is all of a sudden removed. Unfortunately,
     // changing this is breaking, so we'll have to wait until Apollo Client 4.0
     // to address this.
-    internalState.result = internalState.skipStandbyResult;
+    internalState.result = skipStandbyResult;
   } else if (
-    internalState.result === internalState.ssrDisabledResult ||
-    internalState.result === internalState.skipStandbyResult
+    internalState.result === ssrDisabledResult ||
+    internalState.result === skipStandbyResult
   ) {
     internalState.result = void 0;
   }
@@ -314,9 +314,9 @@ export function useQueryWithInternalState<
   );
 
   // TODO Remove this method when we remove support for options.partialRefetch.
-  internalState.unsafeHandlePartialRefetch(result);
+  unsafeHandlePartialRefetch(result, internalState);
 
-  return internalState.toQueryResult(result);
+  return toQueryResult(result, internalState);
 }
 
 export function useInternalState<TData, TVariables extends OperationVariables>(
@@ -454,20 +454,6 @@ class InternalState<TData, TVariables extends OperationVariables> {
     return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
   }
 
-  public ssrDisabledResult = maybeDeepFreeze({
-    loading: true,
-    data: void 0 as unknown as TData,
-    error: void 0,
-    networkStatus: NetworkStatus.loading,
-  });
-
-  public skipStandbyResult = maybeDeepFreeze({
-    loading: false,
-    data: void 0 as unknown as TData,
-    error: void 0,
-    networkStatus: NetworkStatus.ready,
-  });
-
   getDefaultFetchPolicy(): WatchQueryFetchPolicy {
     return (
       this.queryHookOptions.defaultOptions?.fetchPolicy ||
@@ -513,7 +499,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     previousResult?: ApolloQueryResult<TData>
   ) {
     if (!result.loading) {
-      const error = this.toApolloError(result);
+      const error = toApolloError(result);
 
       // wait a tick in case we are in the middle of rendering a component
       Promise.resolve()
@@ -532,14 +518,6 @@ class InternalState<TData, TVariables extends OperationVariables> {
           invariant.warn(error);
         });
     }
-  }
-
-  public toApolloError(
-    result: ApolloQueryResult<TData>
-  ): ApolloError | undefined {
-    return isNonEmptyArray(result.errors) ?
-        new ApolloError({ graphQLErrors: result.errors })
-      : result.error;
   }
 
   public getCurrentResult(): ApolloQueryResult<TData> {
@@ -561,57 +539,85 @@ class InternalState<TData, TVariables extends OperationVariables> {
     ApolloQueryResult<TData>,
     QueryResult<TData, TVariables>
   >();
+}
 
-  toQueryResult(
-    result: ApolloQueryResult<TData>
-  ): QueryResult<TData, TVariables> {
-    let queryResult = this.toQueryResultCache.get(result);
-    if (queryResult) return queryResult;
+function toApolloError<TData>(
+  result: ApolloQueryResult<TData>
+): ApolloError | undefined {
+  return isNonEmptyArray(result.errors) ?
+      new ApolloError({ graphQLErrors: result.errors })
+    : result.error;
+}
 
-    const { data, partial, ...resultWithoutPartial } = result;
-    this.toQueryResultCache.set(
-      result,
-      (queryResult = {
-        data, // Ensure always defined, even if result.data is missing.
-        ...resultWithoutPartial,
-        ...this.obsQueryFields,
-        client: this.client,
-        observable: this.observable,
-        variables: this.observable.variables,
-        called: !this.queryHookOptions.skip,
-        previousData: this.previousData,
-      })
-    );
+export function toQueryResult<TData, TVariables extends OperationVariables>(
+  result: ApolloQueryResult<TData>,
+  internalState: InternalState<TData, TVariables>
+): QueryResult<TData, TVariables> {
+  let queryResult = internalState.toQueryResultCache.get(result);
+  if (queryResult) return queryResult;
 
-    if (!queryResult.error && isNonEmptyArray(result.errors)) {
-      // Until a set naming convention for networkError and graphQLErrors is
-      // decided upon, we map errors (graphQLErrors) to the error options.
-      // TODO: Is it possible for both result.error and result.errors to be
-      // defined here?
-      queryResult.error = new ApolloError({ graphQLErrors: result.errors });
-    }
+  const { data, partial, ...resultWithoutPartial } = result;
+  internalState.toQueryResultCache.set(
+    result,
+    (queryResult = {
+      data, // Ensure always defined, even if result.data is missing.
+      ...resultWithoutPartial,
+      ...internalState.obsQueryFields,
+      client: internalState.client,
+      observable: internalState.observable,
+      variables: internalState.observable.variables,
+      called: !internalState.queryHookOptions.skip,
+      previousData: internalState.previousData,
+    })
+  );
 
-    return queryResult;
+  if (!queryResult.error && isNonEmptyArray(result.errors)) {
+    // Until a set naming convention for networkError and graphQLErrors is
+    // decided upon, we map errors (graphQLErrors) to the error options.
+    // TODO: Is it possible for both result.error and result.errors to be
+    // defined here?
+    queryResult.error = new ApolloError({ graphQLErrors: result.errors });
   }
 
-  public unsafeHandlePartialRefetch(result: ApolloQueryResult<TData>) {
-    // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
-    //
-    // TODO: This code should be removed when the partialRefetch option is
-    // removed. I was unable to get this hook to behave reasonably in certain
-    // edge cases when this block was put in an effect.
-    if (
-      result.partial &&
-      this.queryHookOptions.partialRefetch &&
-      !result.loading &&
-      (!result.data || Object.keys(result.data).length === 0) &&
-      this.observable.options.fetchPolicy !== "cache-only"
-    ) {
-      Object.assign(result, {
-        loading: true,
-        networkStatus: NetworkStatus.refetch,
-      });
-      this.observable.refetch();
-    }
+  return queryResult;
+}
+function unsafeHandlePartialRefetch<
+  TData,
+  TVariables extends OperationVariables,
+>(
+  result: ApolloQueryResult<TData>,
+  internalState: InternalState<TData, TVariables>
+) {
+  // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
+  //
+  // TODO: This code should be removed when the partialRefetch option is
+  // removed. I was unable to get this hook to behave reasonably in certain
+  // edge cases when this block was put in an effect.
+  if (
+    result.partial &&
+    internalState.queryHookOptions.partialRefetch &&
+    !result.loading &&
+    (!result.data || Object.keys(result.data).length === 0) &&
+    internalState.observable.options.fetchPolicy !== "cache-only"
+  ) {
+    Object.assign(result, {
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+    });
+    internalState.observable.refetch();
   }
 }
+
+const ssrDisabledResult = maybeDeepFreeze({
+  loading: true,
+  data: void 0 as any,
+  error: void 0,
+  networkStatus: NetworkStatus.loading,
+});
+
+const skipStandbyResult = maybeDeepFreeze({
+  loading: false,
+  data: void 0 as any,
+  error: void 0,
+  networkStatus: NetworkStatus.ready,
+});

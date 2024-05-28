@@ -313,9 +313,6 @@ export function useQueryWithInternalState<
     () => internalState.getCurrentResult()
   );
 
-  // TODO Remove this method when we remove support for options.partialRefetch.
-  unsafeHandlePartialRefetch(result, internalState);
-
   return toQueryResult(result, internalState);
 }
 
@@ -487,7 +484,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     if (previousResult && previousResult.data) {
       this.previousData = previousResult.data;
     }
-    this.result = nextResult;
+    this.result = unsafeHandlePartialRefetch(nextResult, this);
     // Calling state.setResult always triggers an update, though some call sites
     // perform additional equality checks before committing to an update.
     forceUpdate();
@@ -525,11 +522,11 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // the same (===) result object, unless state.setResult has been called, or
     // we're doing server rendering and therefore override the result below.
     if (!this.result) {
-      this.handleErrorOrCompleted(
-        (this.result = this.observable.getCurrentResult())
-      );
+      // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
+      // this could call unsafeHandlePartialRefetch
+      this.setResult(this.observable.getCurrentResult(), () => {});
     }
-    return this.result;
+    return this.result!;
   }
 
   // This cache allows the referential stability of this.result (as returned by
@@ -581,15 +578,14 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
 
   return queryResult;
 }
+
 function unsafeHandlePartialRefetch<
   TData,
   TVariables extends OperationVariables,
 >(
   result: ApolloQueryResult<TData>,
   internalState: InternalState<TData, TVariables>
-) {
-  // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
-  //
+): ApolloQueryResult<TData> {
   // TODO: This code should be removed when the partialRefetch option is
   // removed. I was unable to get this hook to behave reasonably in certain
   // edge cases when this block was put in an effect.
@@ -600,12 +596,14 @@ function unsafeHandlePartialRefetch<
     (!result.data || Object.keys(result.data).length === 0) &&
     internalState.observable.options.fetchPolicy !== "cache-only"
   ) {
-    Object.assign(result, {
+    internalState.observable.refetch();
+    return {
+      ...result,
       loading: true,
       networkStatus: NetworkStatus.refetch,
-    });
-    internalState.observable.refetch();
+    };
   }
+  return result;
 }
 
 const ssrDisabledResult = maybeDeepFreeze({

@@ -150,7 +150,7 @@ export function useQueryWithInternalState<
       // subscriptions, though it does feel less than ideal that reobserve
       // (potentially) kicks off a network request (for example, when the
       // variables have changed), which is technically a side-effect.
-      internalState.observable.reobserve(internalState.getObsQueryOptions());
+      internalState.observable.reobserve(getObsQueryOptions(internalState));
 
       // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
       // but save the current data as this.previousData, just like setResult
@@ -178,7 +178,7 @@ export function useQueryWithInternalState<
     (renderPromises &&
       renderPromises.getSSRObservable(internalState.watchQueryOptions)) ||
     internalState.observable || // Reuse this.observable if possible (and not SSR)
-    internalState.client.watchQuery(internalState.getObsQueryOptions()));
+    internalState.client.watchQuery(getObsQueryOptions(internalState)));
 
   internalState.obsQueryFields = React.useMemo(
     () => ({
@@ -260,7 +260,7 @@ export function useQueryWithInternalState<
             return;
           }
 
-          internalState.setResult(result, handleStoreChange);
+          setResult(result, handleStoreChange, internalState);
         };
 
         const onError = (error: Error) => {
@@ -278,14 +278,15 @@ export function useQueryWithInternalState<
             (previousResult && previousResult.loading) ||
             !equal(error, previousResult.error)
           ) {
-            internalState.setResult(
+            setResult(
               {
                 data: (previousResult && previousResult.data) as TData,
                 error: error as ApolloError,
                 loading: false,
                 networkStatus: NetworkStatus.error,
               },
-              handleStoreChange
+              handleStoreChange,
+              internalState
             );
           }
         };
@@ -433,36 +434,6 @@ class InternalState<TData, TVariables extends OperationVariables> {
   public queryHookOptions!: QueryHookOptions<TData, TVariables>;
   public watchQueryOptions!: WatchQueryOptions<TVariables, TData>;
 
-  public getObsQueryOptions(): WatchQueryOptions<TVariables, TData> {
-    const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
-
-    const globalDefaults = this.client.defaultOptions.watchQuery;
-    if (globalDefaults) toMerge.push(globalDefaults);
-
-    if (this.queryHookOptions.defaultOptions) {
-      toMerge.push(this.queryHookOptions.defaultOptions);
-    }
-
-    // We use compact rather than mergeOptions for this part of the merge,
-    // because we want watchQueryOptions.variables (if defined) to replace
-    // this.observable.options.variables whole. This replacement allows
-    // removing variables by removing them from the variables input to
-    // useQuery. If the variables were always merged together (rather than
-    // replaced), there would be no way to remove existing variables.
-    // However, the variables from options.defaultOptions and globalDefaults
-    // (if provided) should be merged, to ensure individual defaulted
-    // variables always have values, if not otherwise defined in
-    // observable.options or watchQueryOptions.
-    toMerge.push(
-      compact(
-        this.observable && this.observable.options,
-        this.watchQueryOptions
-      )
-    );
-
-    return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
-  }
-
   // Defining these methods as no-ops on the prototype allows us to call
   // state.onCompleted and/or state.onError without worrying about whether a
   // callback was provided.
@@ -479,24 +450,64 @@ class InternalState<TData, TVariables extends OperationVariables> {
   // okay/normal for them to be initially undefined.
   public result: undefined | InternalQueryResult<TData, TVariables>;
   public previousData: undefined | TData;
+}
 
-  public setResult(
-    nextResult: ApolloQueryResult<TData>,
-    forceUpdate: () => void
-  ) {
-    const previousResult = this.result;
-    if (previousResult && previousResult.data) {
-      this.previousData = previousResult.data;
-    }
-    this.result = toQueryResult(
-      unsafeHandlePartialRefetch(nextResult, this),
-      this
-    );
-    // Calling state.setResult always triggers an update, though some call sites
-    // perform additional equality checks before committing to an update.
-    forceUpdate();
-    handleErrorOrCompleted(nextResult, previousResult?.[originalResult], this);
+export function getObsQueryOptions<
+  TData,
+  TVariables extends OperationVariables,
+>(
+  internalState: InternalState<TData, TVariables>
+): WatchQueryOptions<TVariables, TData> {
+  const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
+
+  const globalDefaults = internalState.client.defaultOptions.watchQuery;
+  if (globalDefaults) toMerge.push(globalDefaults);
+
+  if (internalState.queryHookOptions.defaultOptions) {
+    toMerge.push(internalState.queryHookOptions.defaultOptions);
   }
+
+  // We use compact rather than mergeOptions for this part of the merge,
+  // because we want watchQueryOptions.variables (if defined) to replace
+  // this.observable.options.variables whole. This replacement allows
+  // removing variables by removing them from the variables input to
+  // useQuery. If the variables were always merged together (rather than
+  // replaced), there would be no way to remove existing variables.
+  // However, the variables from options.defaultOptions and globalDefaults
+  // (if provided) should be merged, to ensure individual defaulted
+  // variables always have values, if not otherwise defined in
+  // observable.options or watchQueryOptions.
+  toMerge.push(
+    compact(
+      internalState.observable && internalState.observable.options,
+      internalState.watchQueryOptions
+    )
+  );
+
+  return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
+}
+
+function setResult<TData, TVariables extends OperationVariables>(
+  nextResult: ApolloQueryResult<TData>,
+  forceUpdate: () => void,
+  internalState: InternalState<TData, TVariables>
+) {
+  const previousResult = internalState.result;
+  if (previousResult && previousResult.data) {
+    internalState.previousData = previousResult.data;
+  }
+  internalState.result = toQueryResult(
+    unsafeHandlePartialRefetch(nextResult, internalState),
+    internalState
+  );
+  // Calling state.setResult always triggers an update, though some call sites
+  // perform additional equality checks before committing to an update.
+  forceUpdate();
+  handleErrorOrCompleted(
+    nextResult,
+    previousResult?.[originalResult],
+    internalState
+  );
 }
 
 function handleErrorOrCompleted<TData, TVariables extends OperationVariables>(
@@ -535,9 +546,10 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
   if (!internalState.result) {
     // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
     // this could call unsafeHandlePartialRefetch
-    internalState.setResult(
+    setResult(
       internalState.observable.getCurrentResult(),
-      () => {}
+      () => {},
+      internalState
     );
   }
   return internalState.result!;

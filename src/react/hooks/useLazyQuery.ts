@@ -19,6 +19,7 @@ import type { InternalState } from "./useQuery.js";
 import {
   createWatchQueryOptions,
   getDefaultFetchPolicy,
+  getObsQueryOptions,
   toQueryResult,
   useInternalState,
   useQueryWithInternalState,
@@ -195,7 +196,7 @@ function executeQuery<TData, TVariables extends OperationVariables>(
   );
 
   const concast = internalState.observable.reobserveAsConcast(
-    internalState.getObsQueryOptions()
+    getObsQueryOptions(internalState)
   );
 
   // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,

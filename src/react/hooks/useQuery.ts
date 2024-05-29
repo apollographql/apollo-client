@@ -315,8 +315,8 @@ export function useQueryWithInternalState<
       ]
     ),
 
-    () => internalState.getCurrentResult(),
-    () => internalState.getCurrentResult()
+    () => getCurrentResult(internalState),
+    () => getCurrentResult(internalState)
   );
 
   return result;
@@ -495,46 +495,52 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // Calling state.setResult always triggers an update, though some call sites
     // perform additional equality checks before committing to an update.
     forceUpdate();
-    this.handleErrorOrCompleted(nextResult, previousResult?.[originalResult]);
+    handleErrorOrCompleted(nextResult, previousResult?.[originalResult], this);
   }
+}
 
-  public handleErrorOrCompleted(
-    result: ApolloQueryResult<TData>,
-    previousResult?: ApolloQueryResult<TData>
-  ) {
-    if (!result.loading) {
-      const error = toApolloError(result);
+function handleErrorOrCompleted<TData, TVariables extends OperationVariables>(
+  result: ApolloQueryResult<TData>,
+  previousResult: ApolloQueryResult<TData> | undefined,
+  internalState: InternalState<TData, TVariables>
+) {
+  if (!result.loading) {
+    const error = toApolloError(result);
 
-      // wait a tick in case we are in the middle of rendering a component
-      Promise.resolve()
-        .then(() => {
-          if (error) {
-            this.onError(error);
-          } else if (
-            result.data &&
-            previousResult?.networkStatus !== result.networkStatus &&
-            result.networkStatus === NetworkStatus.ready
-          ) {
-            this.onCompleted(result.data);
-          }
-        })
-        .catch((error) => {
-          invariant.warn(error);
-        });
-    }
+    // wait a tick in case we are in the middle of rendering a component
+    Promise.resolve()
+      .then(() => {
+        if (error) {
+          internalState.onError(error);
+        } else if (
+          result.data &&
+          previousResult?.networkStatus !== result.networkStatus &&
+          result.networkStatus === NetworkStatus.ready
+        ) {
+          internalState.onCompleted(result.data);
+        }
+      })
+      .catch((error) => {
+        invariant.warn(error);
+      });
   }
+}
 
-  public getCurrentResult(): QueryResult<TData, TVariables> {
-    // Using this.result as a cache ensures getCurrentResult continues returning
-    // the same (===) result object, unless state.setResult has been called, or
-    // we're doing server rendering and therefore override the result below.
-    if (!this.result) {
-      // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
-      // this could call unsafeHandlePartialRefetch
-      this.setResult(this.observable.getCurrentResult(), () => {});
-    }
-    return this.result!;
+function getCurrentResult<TData, TVariables extends OperationVariables>(
+  internalState: InternalState<TData, TVariables>
+): QueryResult<TData, TVariables> {
+  // Using this.result as a cache ensures getCurrentResult continues returning
+  // the same (===) result object, unless state.setResult has been called, or
+  // we're doing server rendering and therefore override the result below.
+  if (!internalState.result) {
+    // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
+    // this could call unsafeHandlePartialRefetch
+    internalState.setResult(
+      internalState.observable.getCurrentResult(),
+      () => {}
+    );
   }
+  return internalState.result!;
 }
 
 export function getDefaultFetchPolicy<

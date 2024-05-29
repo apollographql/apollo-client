@@ -552,7 +552,6 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
 ): InternalQueryResult<TData, TVariables> {
   const { data, partial, ...resultWithoutPartial } = result;
   const queryResult: InternalQueryResult<TData, TVariables> = {
-    [originalResult]: result,
     data, // Ensure always defined, even if result.data is missing.
     ...resultWithoutPartial,
     ...internalState.obsQueryFields,
@@ -561,7 +560,12 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
     variables: internalState.observable.variables,
     called: !internalState.queryHookOptions.skip,
     previousData: internalState.previousData,
-  };
+  } satisfies QueryResult<TData, TVariables> as InternalQueryResult<
+    TData,
+    TVariables
+  >;
+  // non-enumerable property to hold the original result, for referential equality checks
+  Object.defineProperty(queryResult, originalResult, { value: result });
 
   if (!queryResult.error && isNonEmptyArray(result.errors)) {
     // Until a set naming convention for networkError and graphQLErrors is

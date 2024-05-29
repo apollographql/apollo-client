@@ -56,18 +56,20 @@ export interface InternalState<TData, TVariables extends OperationVariables> {
   queryHookOptions: QueryHookOptions<TData, TVariables>;
   watchQueryOptions: WatchQueryOptions<TVariables, TData>;
 
-  // Defining these methods as no-ops on the prototype allows us to call
-  // state.onCompleted and/or state.onError without worrying about whether a
-  // callback was provided.
-  onCompleted(data: TData): void;
-  onError(error: ApolloError): void;
-
   observable: ObservableQuery<TData, TVariables>;
   obsQueryFields: Omit<ObservableQueryFields<TData, TVariables>, "variables">;
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
   result: undefined | InternalQueryResult<TData, TVariables>;
   previousData: undefined | TData;
+}
+
+interface Callbacks<TData> {
+  // Defining these methods as no-ops on the prototype allows us to call
+  // state.onCompleted and/or state.onError without worrying about whether a
+  // callback was provided.
+  onCompleted(data: TData): void;
+  onError(error: ApolloError): void;
 }
 
 /**
@@ -184,14 +186,20 @@ export function useQueryWithInternalState<
     }
   }
 
-  // Make sure state.onCompleted and state.onError always reflect the latest
-  // options.onCompleted and options.onError callbacks provided to useQuery,
-  // since those functions are often recreated every time useQuery is called.
-  // Like the forceUpdate method, the versions of these methods inherited from
-  // InternalState.prototype are empty no-ops, but we can override them on the
-  // base state object (without modifying the prototype).
-  internalState.onCompleted = options.onCompleted || noop;
-  internalState.onError = options.onError || noop;
+  const _callbacks = {
+    onCompleted: options.onCompleted || noop,
+    onError: options.onError || noop,
+  };
+  const callbackRef = React.useRef<Callbacks<TData>>(_callbacks);
+  React.useEffect(() => {
+    // Make sure state.onCompleted and state.onError always reflect the latest
+    // options.onCompleted and options.onError callbacks provided to useQuery,
+    // since those functions are often recreated every time useQuery is called.
+    // Like the forceUpdate method, the versions of these methods inherited from
+    // InternalState.prototype are empty no-ops, but we can override them on the
+    // base state object (without modifying the prototype).
+    callbackRef.current = _callbacks;
+  });
 
   // See if there is an existing observable that was used to fetch the same
   // data and if so, use it instead since it will contain the proper queryId
@@ -282,7 +290,12 @@ export function useQueryWithInternalState<
             return;
           }
 
-          setResult(result, handleStoreChange, internalState);
+          setResult(
+            result,
+            handleStoreChange,
+            internalState,
+            callbackRef.current
+          );
         };
 
         const onError = (error: Error) => {
@@ -308,7 +321,8 @@ export function useQueryWithInternalState<
                 networkStatus: NetworkStatus.error,
               },
               handleStoreChange,
-              internalState
+              internalState,
+              callbackRef.current
             );
           }
         };
@@ -338,8 +352,8 @@ export function useQueryWithInternalState<
       ]
     ),
 
-    () => getCurrentResult(internalState),
-    () => getCurrentResult(internalState)
+    () => getCurrentResult(internalState, callbackRef.current),
+    () => getCurrentResult(internalState, callbackRef.current)
   );
 
   return result;
@@ -359,8 +373,6 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
     const internalState: Partial<InternalState<TData, TVariables>> = {
       client,
       query,
-      onCompleted: noop,
-      onError: noop,
     };
     if (previousData) {
       internalState.previousData = previousData;
@@ -383,6 +395,7 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
 
   return state;
 }
+
 // A function to massage options before passing them to ObservableQuery.
 export function createWatchQueryOptions<
   TData = any,
@@ -489,7 +502,8 @@ export function getObsQueryOptions<
 function setResult<TData, TVariables extends OperationVariables>(
   nextResult: ApolloQueryResult<TData>,
   forceUpdate: () => void,
-  internalState: InternalState<TData, TVariables>
+  internalState: InternalState<TData, TVariables>,
+  callbacks: Callbacks<TData>
 ) {
   const previousResult = internalState.result;
   if (previousResult && previousResult.data) {
@@ -505,14 +519,14 @@ function setResult<TData, TVariables extends OperationVariables>(
   handleErrorOrCompleted(
     nextResult,
     previousResult?.[originalResult],
-    internalState
+    callbacks
   );
 }
 
 function handleErrorOrCompleted<TData, TVariables extends OperationVariables>(
   result: ApolloQueryResult<TData>,
   previousResult: ApolloQueryResult<TData> | undefined,
-  internalState: InternalState<TData, TVariables>
+  callbacks: Callbacks<TData>
 ) {
   if (!result.loading) {
     const error = toApolloError(result);
@@ -521,13 +535,13 @@ function handleErrorOrCompleted<TData, TVariables extends OperationVariables>(
     Promise.resolve()
       .then(() => {
         if (error) {
-          internalState.onError(error);
+          callbacks.onError(error);
         } else if (
           result.data &&
           previousResult?.networkStatus !== result.networkStatus &&
           result.networkStatus === NetworkStatus.ready
         ) {
-          internalState.onCompleted(result.data);
+          callbacks.onCompleted(result.data);
         }
       })
       .catch((error) => {
@@ -537,7 +551,8 @@ function handleErrorOrCompleted<TData, TVariables extends OperationVariables>(
 }
 
 function getCurrentResult<TData, TVariables extends OperationVariables>(
-  internalState: InternalState<TData, TVariables>
+  internalState: InternalState<TData, TVariables>,
+  callbacks: Callbacks<TData>
 ): QueryResult<TData, TVariables> {
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or
@@ -548,7 +563,8 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
     setResult(
       internalState.observable.getCurrentResult(),
       () => {},
-      internalState
+      internalState,
+      callbacks
     );
   }
   return internalState.result!;

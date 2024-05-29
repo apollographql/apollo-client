@@ -30,7 +30,6 @@ import type {
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import {
-  canUseWeakMap,
   compact,
   isNonEmptyArray,
   maybeDeepFreeze,
@@ -40,6 +39,12 @@ import { wrapHook } from "./internal/index.js";
 const {
   prototype: { hasOwnProperty },
 } = Object;
+
+const originalResult = Symbol();
+interface InternalQueryResult<TData, TVariables extends OperationVariables>
+  extends QueryResult<TData, TVariables> {
+  [originalResult]: ApolloQueryResult<TData>;
+}
 
 /**
  * A hook for executing queries in an Apollo application.
@@ -165,36 +170,6 @@ export function useQueryWithInternalState<
     options.onCompleted || InternalState.prototype.onCompleted;
   internalState.onError = options.onError || InternalState.prototype.onError;
 
-  if (
-    (renderPromises || internalState.client.disableNetworkFetches) &&
-    internalState.queryHookOptions.ssr === false &&
-    !internalState.queryHookOptions.skip
-  ) {
-    // If SSR has been explicitly disabled, and this function has been called
-    // on the server side, return the default loading state.
-    internalState.result = ssrDisabledResult;
-  } else if (
-    internalState.queryHookOptions.skip ||
-    internalState.watchQueryOptions.fetchPolicy === "standby"
-  ) {
-    // When skipping a query (ie. we're not querying for data but still want to
-    // render children), make sure the `data` is cleared out and `loading` is
-    // set to `false` (since we aren't loading anything).
-    //
-    // NOTE: We no longer think this is the correct behavior. Skipping should
-    // not automatically set `data` to `undefined`, but instead leave the
-    // previous data in place. In other words, skipping should not mandate that
-    // previously received data is all of a sudden removed. Unfortunately,
-    // changing this is breaking, so we'll have to wait until Apollo Client 4.0
-    // to address this.
-    internalState.result = skipStandbyResult;
-  } else if (
-    internalState.result === ssrDisabledResult ||
-    internalState.result === skipStandbyResult
-  ) {
-    internalState.result = void 0;
-  }
-
   // See if there is an existing observable that was used to fetch the same
   // data and if so, use it instead since it will contain the proper queryId
   // to fetch the result set. This is used during SSR.
@@ -216,6 +191,36 @@ export function useQueryWithInternalState<
     }),
     [obsQuery]
   );
+
+  if (
+    (renderPromises || internalState.client.disableNetworkFetches) &&
+    internalState.queryHookOptions.ssr === false &&
+    !internalState.queryHookOptions.skip
+  ) {
+    // If SSR has been explicitly disabled, and this function has been called
+    // on the server side, return the default loading state.
+    internalState.result = toQueryResult(ssrDisabledResult, internalState);
+  } else if (
+    internalState.queryHookOptions.skip ||
+    internalState.watchQueryOptions.fetchPolicy === "standby"
+  ) {
+    // When skipping a query (ie. we're not querying for data but still want to
+    // render children), make sure the `data` is cleared out and `loading` is
+    // set to `false` (since we aren't loading anything).
+    //
+    // NOTE: We no longer think this is the correct behavior. Skipping should
+    // not automatically set `data` to `undefined`, but instead leave the
+    // previous data in place. In other words, skipping should not mandate that
+    // previously received data is all of a sudden removed. Unfortunately,
+    // changing this is breaking, so we'll have to wait until Apollo Client 4.0
+    // to address this.
+    internalState.result = toQueryResult(skipStandbyResult, internalState);
+  } else if (
+    internalState.result?.[originalResult] === ssrDisabledResult ||
+    internalState.result?.[originalResult] === skipStandbyResult
+  ) {
+    internalState.result = void 0;
+  }
 
   const ssrAllowed = !(
     internalState.queryHookOptions.ssr === false ||
@@ -313,7 +318,7 @@ export function useQueryWithInternalState<
     () => internalState.getCurrentResult()
   );
 
-  return toQueryResult(result, internalState);
+  return result;
 }
 
 export function useInternalState<TData, TVariables extends OperationVariables>(
@@ -473,7 +478,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
 
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
-  public result: undefined | ApolloQueryResult<TData>;
+  public result: undefined | InternalQueryResult<TData, TVariables>;
   public previousData: undefined | TData;
 
   public setResult(
@@ -484,11 +489,14 @@ class InternalState<TData, TVariables extends OperationVariables> {
     if (previousResult && previousResult.data) {
       this.previousData = previousResult.data;
     }
-    this.result = unsafeHandlePartialRefetch(nextResult, this);
+    this.result = toQueryResult(
+      unsafeHandlePartialRefetch(nextResult, this),
+      this
+    );
     // Calling state.setResult always triggers an update, though some call sites
     // perform additional equality checks before committing to an update.
     forceUpdate();
-    this.handleErrorOrCompleted(nextResult, previousResult);
+    this.handleErrorOrCompleted(nextResult, previousResult?.[originalResult]);
   }
 
   public handleErrorOrCompleted(
@@ -517,7 +525,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
     }
   }
 
-  public getCurrentResult(): ApolloQueryResult<TData> {
+  public getCurrentResult(): QueryResult<TData, TVariables> {
     // Using this.result as a cache ensures getCurrentResult continues returning
     // the same (===) result object, unless state.setResult has been called, or
     // we're doing server rendering and therefore override the result below.
@@ -528,14 +536,6 @@ class InternalState<TData, TVariables extends OperationVariables> {
     }
     return this.result!;
   }
-
-  // This cache allows the referential stability of this.result (as returned by
-  // getCurrentResult) to translate into referential stability of the resulting
-  // QueryResult object returned by toQueryResult.
-  public toQueryResultCache = new (canUseWeakMap ? WeakMap : Map)<
-    ApolloQueryResult<TData>,
-    QueryResult<TData, TVariables>
-  >();
 }
 
 function toApolloError<TData>(
@@ -549,24 +549,19 @@ function toApolloError<TData>(
 export function toQueryResult<TData, TVariables extends OperationVariables>(
   result: ApolloQueryResult<TData>,
   internalState: InternalState<TData, TVariables>
-): QueryResult<TData, TVariables> {
-  let queryResult = internalState.toQueryResultCache.get(result);
-  if (queryResult) return queryResult;
-
+): InternalQueryResult<TData, TVariables> {
   const { data, partial, ...resultWithoutPartial } = result;
-  internalState.toQueryResultCache.set(
-    result,
-    (queryResult = {
-      data, // Ensure always defined, even if result.data is missing.
-      ...resultWithoutPartial,
-      ...internalState.obsQueryFields,
-      client: internalState.client,
-      observable: internalState.observable,
-      variables: internalState.observable.variables,
-      called: !internalState.queryHookOptions.skip,
-      previousData: internalState.previousData,
-    })
-  );
+  const queryResult: InternalQueryResult<TData, TVariables> = {
+    [originalResult]: result,
+    data, // Ensure always defined, even if result.data is missing.
+    ...resultWithoutPartial,
+    ...internalState.obsQueryFields,
+    client: internalState.client,
+    observable: internalState.observable,
+    variables: internalState.observable.variables,
+    called: !internalState.queryHookOptions.skip,
+    previousData: internalState.previousData,
+  };
 
   if (!queryResult.error && isNonEmptyArray(result.errors)) {
     // Until a set naming convention for networkError and graphQLErrors is

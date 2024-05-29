@@ -18,6 +18,7 @@ import type {
 import type { InternalState } from "./useQuery.js";
 import {
   createWatchQueryOptions,
+  getDefaultFetchPolicy,
   toQueryResult,
   useInternalState,
   useQueryWithInternalState,
@@ -103,7 +104,10 @@ export function useLazyQuery<
 
   const initialFetchPolicy =
     useQueryResult.observable.options.initialFetchPolicy ||
-    internalState.getDefaultFetchPolicy();
+    getDefaultFetchPolicy(
+      internalState.queryHookOptions.defaultOptions,
+      internalState.client.defaultOptions
+    );
 
   const { obsQueryFields } = internalState;
   const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];

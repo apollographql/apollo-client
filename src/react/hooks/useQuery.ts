@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { equal } from "@wry/equality";
 
 import type {
+  DefaultOptions,
   OperationVariables,
   WatchQueryFetchPolicy,
 } from "../../core/index.js";
@@ -385,7 +386,10 @@ export function createWatchQueryOptions<
 
   if (skip) {
     const {
-      fetchPolicy = internalState.getDefaultFetchPolicy(),
+      fetchPolicy = getDefaultFetchPolicy(
+        internalState.queryHookOptions.defaultOptions,
+        internalState.client.defaultOptions
+      ),
       initialFetchPolicy = fetchPolicy,
     } = watchQueryOptions;
 
@@ -399,7 +403,10 @@ export function createWatchQueryOptions<
   } else if (!watchQueryOptions.fetchPolicy) {
     watchQueryOptions.fetchPolicy =
       internalState.observable?.options.initialFetchPolicy ||
-      internalState.getDefaultFetchPolicy();
+      getDefaultFetchPolicy(
+        internalState.queryHookOptions.defaultOptions,
+        internalState.client.defaultOptions
+      );
   }
 
   return watchQueryOptions;
@@ -454,14 +461,6 @@ class InternalState<TData, TVariables extends OperationVariables> {
     );
 
     return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
-  }
-
-  getDefaultFetchPolicy(): WatchQueryFetchPolicy {
-    return (
-      this.queryHookOptions.defaultOptions?.fetchPolicy ||
-      this.client.defaultOptions.watchQuery?.fetchPolicy ||
-      "cache-first"
-    );
   }
 
   // Defining these methods as no-ops on the prototype allows us to call
@@ -536,6 +535,20 @@ class InternalState<TData, TVariables extends OperationVariables> {
     }
     return this.result!;
   }
+}
+
+export function getDefaultFetchPolicy<
+  TData,
+  TVariables extends OperationVariables,
+>(
+  queryHookDefaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
+  clientDefaultOptions?: DefaultOptions
+): WatchQueryFetchPolicy {
+  return (
+    queryHookDefaultOptions?.fetchPolicy ||
+    clientDefaultOptions?.watchQuery?.fetchPolicy ||
+    "cache-first"
+  );
 }
 
 function toApolloError<TData>(

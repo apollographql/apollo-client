@@ -47,6 +47,29 @@ interface InternalQueryResult<TData, TVariables extends OperationVariables>
   [originalResult]: ApolloQueryResult<TData>;
 }
 
+const noop = () => {};
+
+export interface InternalState<TData, TVariables extends OperationVariables> {
+  readonly client: ReturnType<typeof useApolloClient>;
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+  queryHookOptions: QueryHookOptions<TData, TVariables>;
+  watchQueryOptions: WatchQueryOptions<TVariables, TData>;
+
+  // Defining these methods as no-ops on the prototype allows us to call
+  // state.onCompleted and/or state.onError without worrying about whether a
+  // callback was provided.
+  onCompleted(data: TData): void;
+  onError(error: ApolloError): void;
+
+  observable: ObservableQuery<TData, TVariables>;
+  obsQueryFields: Omit<ObservableQueryFields<TData, TVariables>, "variables">;
+  // These members are populated by getCurrentResult and setResult, and it's
+  // okay/normal for them to be initially undefined.
+  result: undefined | InternalQueryResult<TData, TVariables>;
+  previousData: undefined | TData;
+}
+
 /**
  * A hook for executing queries in an Apollo application.
  *
@@ -167,9 +190,8 @@ export function useQueryWithInternalState<
   // Like the forceUpdate method, the versions of these methods inherited from
   // InternalState.prototype are empty no-ops, but we can override them on the
   // base state object (without modifying the prototype).
-  internalState.onCompleted =
-    options.onCompleted || InternalState.prototype.onCompleted;
-  internalState.onError = options.onError || InternalState.prototype.onError;
+  internalState.onCompleted = options.onCompleted || noop;
+  internalState.onError = options.onError || noop;
 
   // See if there is an existing observable that was used to fetch the same
   // data and if so, use it instead since it will contain the proper queryId
@@ -328,7 +350,23 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>
 ): InternalState<TData, TVariables> {
   function createInternalState(previous?: InternalState<TData, TVariables>) {
-    return new InternalState(client, query, previous);
+    verifyDocumentType(query, DocumentType.Query);
+
+    // Reuse previousData from previous InternalState (if any) to provide
+    // continuity of previousData even if/when the query or client changes.
+    const previousResult = previous && previous.result;
+    const previousData = previousResult && previousResult.data;
+    const internalState: Partial<InternalState<TData, TVariables>> = {
+      client,
+      query,
+      onCompleted: noop,
+      onError: noop,
+    };
+    if (previousData) {
+      internalState.previousData = previousData;
+    }
+
+    return internalState as InternalState<TData, TVariables>;
   }
 
   let [state, updateState] = React.useState(createInternalState);
@@ -411,45 +449,6 @@ export function createWatchQueryOptions<
   }
 
   return watchQueryOptions;
-}
-
-export { type InternalState };
-class InternalState<TData, TVariables extends OperationVariables> {
-  constructor(
-    public readonly client: ReturnType<typeof useApolloClient>,
-    public query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    previous?: InternalState<TData, TVariables>
-  ) {
-    verifyDocumentType(query, DocumentType.Query);
-
-    // Reuse previousData from previous InternalState (if any) to provide
-    // continuity of previousData even if/when the query or client changes.
-    const previousResult = previous && previous.result;
-    const previousData = previousResult && previousResult.data;
-    if (previousData) {
-      this.previousData = previousData;
-    }
-  }
-
-  public queryHookOptions!: QueryHookOptions<TData, TVariables>;
-  public watchQueryOptions!: WatchQueryOptions<TVariables, TData>;
-
-  // Defining these methods as no-ops on the prototype allows us to call
-  // state.onCompleted and/or state.onError without worrying about whether a
-  // callback was provided.
-  public onCompleted(data: TData) {}
-  public onError(error: ApolloError) {}
-
-  public observable!: ObservableQuery<TData, TVariables>;
-  public obsQueryFields!: Omit<
-    ObservableQueryFields<TData, TVariables>,
-    "variables"
-  >;
-
-  // These members are populated by getCurrentResult and setResult, and it's
-  // okay/normal for them to be initially undefined.
-  public result: undefined | InternalQueryResult<TData, TVariables>;
-  public previousData: undefined | TData;
 }
 
 export function getObsQueryOptions<

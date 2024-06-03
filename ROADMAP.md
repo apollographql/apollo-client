@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2024-04-29**
+**Last updated: 2024-06-03**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -16,11 +16,13 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 ## [3.11.0](https://github.com/apollographql/apollo-client/milestone/40) - July 9th, 2024
 _Release candidate - July 2nd, 2024_
 
+- Rewriting `useQuery` and `useSubscription` for better React Compiler support
+
 ## Upcoming features
 
 - Data masking
 - Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
-- leaner client (under alternate entry point)
+- Leaner client (under alternate entry point)
 - Better types for `useQuery`/`useMutation`/`useSubscription`
 
 ## 4.0

@@ -43,7 +43,10 @@ const {
 
 const originalResult = Symbol();
 interface InternalQueryResult<TData, TVariables extends OperationVariables>
-  extends QueryResult<TData, TVariables> {
+  extends Omit<
+    QueryResult<TData, TVariables>,
+    Exclude<keyof ObservableQueryFields<TData, TVariables>, "variables">
+  > {
   [originalResult]: ApolloQueryResult<TData>;
 }
 
@@ -57,7 +60,6 @@ export interface InternalState<TData, TVariables extends OperationVariables> {
   watchQueryOptions: WatchQueryOptions<TVariables, TData>;
 
   observable: ObservableQuery<TData, TVariables>;
-  obsQueryFields: Omit<ObservableQueryFields<TData, TVariables>, "variables">;
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
   result: undefined | InternalQueryResult<TData, TVariables>;
@@ -130,9 +132,10 @@ function _useQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  return useQueryWithInternalState(
-    useInternalState(useApolloClient(options.client), query),
-    options
+  const { result, obsQueryFields } = useQueryWithInternalState(query, options);
+  return React.useMemo(
+    () => ({ ...result, ...obsQueryFields }),
+    [result, obsQueryFields]
   );
 }
 
@@ -140,9 +143,13 @@ export function useQueryWithInternalState<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  internalState: InternalState<TData, TVariables>,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
+  const internalState = useInternalState(
+    useApolloClient(options.client),
+    query
+  );
   // The renderPromises field gets initialized here in the useQuery method, at
   // the beginning of everything (for a given component rendering, at least),
   // so we can safely use this.renderPromises in other/later InternalState
@@ -210,7 +217,9 @@ export function useQueryWithInternalState<
     internalState.observable || // Reuse this.observable if possible (and not SSR)
     internalState.client.watchQuery(getObsQueryOptions(internalState)));
 
-  internalState.obsQueryFields = React.useMemo(
+  const obsQueryFields = React.useMemo<
+    Omit<ObservableQueryFields<TData, TVariables>, "variables">
+  >(
     () => ({
       refetch: obsQuery.refetch.bind(obsQuery),
       reobserve: obsQuery.reobserve.bind(obsQuery),
@@ -356,7 +365,7 @@ export function useQueryWithInternalState<
     () => getCurrentResult(internalState, callbackRef.current)
   );
 
-  return result;
+  return { result, obsQueryFields, internalState };
 }
 
 export function useInternalState<TData, TVariables extends OperationVariables>(
@@ -553,7 +562,7 @@ function handleErrorOrCompleted<TData, TVariables extends OperationVariables>(
 function getCurrentResult<TData, TVariables extends OperationVariables>(
   internalState: InternalState<TData, TVariables>,
   callbacks: Callbacks<TData>
-): QueryResult<TData, TVariables> {
+): InternalQueryResult<TData, TVariables> {
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or
   // we're doing server rendering and therefore override the result below.
@@ -600,16 +609,15 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
   const queryResult: InternalQueryResult<TData, TVariables> = {
     data, // Ensure always defined, even if result.data is missing.
     ...resultWithoutPartial,
-    ...internalState.obsQueryFields,
     client: internalState.client,
     observable: internalState.observable,
     variables: internalState.observable.variables,
     called: !internalState.queryHookOptions.skip,
     previousData: internalState.previousData,
-  } satisfies QueryResult<TData, TVariables> as InternalQueryResult<
-    TData,
-    TVariables
-  >;
+  } satisfies Omit<
+    InternalQueryResult<TData, TVariables>,
+    typeof originalResult
+  > as InternalQueryResult<TData, TVariables>;
   // non-enumerable property to hold the original result, for referential equality checks
   Object.defineProperty(queryResult, originalResult, { value: result });
 

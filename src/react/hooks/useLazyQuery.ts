@@ -21,10 +21,8 @@ import {
   getDefaultFetchPolicy,
   getObsQueryOptions,
   toQueryResult,
-  useInternalState,
   useQueryWithInternalState,
 } from "./useQuery.js";
-import { useApolloClient } from "./useApolloClient.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -34,6 +32,7 @@ const EAGER_METHODS = [
   "fetchMore",
   "updateQuery",
   "startPolling",
+  "stopPolling",
   "subscribeToMore",
 ] as const;
 
@@ -93,12 +92,11 @@ export function useLazyQuery<
   optionsRef.current = options;
   queryRef.current = document;
 
-  const internalState = useInternalState<TData, TVariables>(
-    useApolloClient(options && options.client),
-    document
-  );
-
-  const useQueryResult = useQueryWithInternalState(internalState, {
+  const {
+    internalState,
+    obsQueryFields,
+    result: useQueryResult,
+  } = useQueryWithInternalState(document, {
     ...merged,
     skip: !execOptionsRef.current,
   });
@@ -110,7 +108,6 @@ export function useLazyQuery<
       internalState.client.defaultOptions
     );
 
-  const { obsQueryFields } = internalState;
   const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = React.useMemo(() => {
@@ -128,7 +125,7 @@ export function useLazyQuery<
       };
     }
 
-    return eagerMethods;
+    return eagerMethods as typeof obsQueryFields;
   }, [forceUpdateState, obsQueryFields]);
 
   const called = !!execOptionsRef.current;
@@ -174,7 +171,16 @@ export function useLazyQuery<
     [eagerMethods, forceUpdateState, initialFetchPolicy, internalState]
   );
 
-  return [execute, result];
+  const executeRef = React.useRef(execute);
+  React.useLayoutEffect(() => {
+    executeRef.current = execute;
+  });
+
+  const stableExecute = React.useCallback<typeof execute>(
+    (...args) => executeRef.current(...args),
+    []
+  );
+  return [stableExecute, result];
 }
 
 function executeQuery<TData, TVariables extends OperationVariables>(
@@ -207,7 +213,9 @@ function executeQuery<TData, TVariables extends OperationVariables>(
   internalState.result = void 0;
   forceUpdate();
 
-  return new Promise<QueryResult<TData, TVariables>>((resolve) => {
+  return new Promise<
+    Omit<QueryResult<TData, TVariables>, (typeof EAGER_METHODS)[number]>
+  >((resolve) => {
     let result: ApolloQueryResult<TData>;
 
     // Subscribe to the concast independently of the ObservableQuery in case

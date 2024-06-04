@@ -197,13 +197,20 @@ function executeQuery<TData, TVariables extends OperationVariables>(
   }
 
   internalState.watchQueryOptions = createWatchQueryOptions(
+    internalState.client,
+    internalState.query,
     options,
-    internalState,
-    hasRenderPromises
+    hasRenderPromises,
+    internalState.observable
   );
 
   const concast = internalState.observable.reobserveAsConcast(
-    getObsQueryOptions(internalState, options)
+    getObsQueryOptions(
+      internalState.client,
+      options,
+      internalState.watchQueryOptions,
+      internalState.observable
+    )
   );
 
   // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,

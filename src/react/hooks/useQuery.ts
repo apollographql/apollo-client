@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { equal } from "@wry/equality";
 
 import type {
+  ApolloClient,
   DefaultOptions,
   OperationVariables,
   WatchQueryFetchPolicy,
@@ -184,11 +185,14 @@ export function useQueryWithInternalState<
   // rather than left uninitialized.
   const renderPromises = React.useContext(getApolloContext()).renderPromises;
 
-  const watchQueryOptions = createWatchQueryOptions(
-    options,
-    internalState,
-    !!renderPromises
-  );
+  const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
+    createWatchQueryOptions(
+      internalState.client,
+      internalState.query,
+      options,
+      !!renderPromises,
+      internalState.observable
+    );
 
   // Update this.watchQueryOptions, but only when they have changed, which
   // allows us to depend on the referential stability of
@@ -208,7 +212,12 @@ export function useQueryWithInternalState<
       // (potentially) kicks off a network request (for example, when the
       // variables have changed), which is technically a side-effect.
       internalState.observable.reobserve(
-        getObsQueryOptions(internalState, options)
+        getObsQueryOptions(
+          internalState.client,
+          options,
+          internalState.watchQueryOptions,
+          internalState.observable
+        )
       );
 
       // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
@@ -243,7 +252,12 @@ export function useQueryWithInternalState<
       renderPromises.getSSRObservable(internalState.watchQueryOptions)) ||
     internalState.observable || // Reuse this.observable if possible (and not SSR)
     internalState.client.watchQuery(
-      getObsQueryOptions(internalState, options)
+      getObsQueryOptions(
+        internalState.client,
+        options,
+        internalState.watchQueryOptions,
+        undefined
+      )
     ));
 
   const obsQueryFields = React.useMemo<
@@ -403,6 +417,8 @@ export function createWatchQueryOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
+  client: ApolloClient<object>,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   {
     skip,
     ssr,
@@ -414,14 +430,14 @@ export function createWatchQueryOptions<
     // query property that we add below.
     ...otherOptions
   }: QueryHookOptions<TData, TVariables> = {},
-  internalState: InternalState<TData, TVariables>,
-  hasRenderPromises: boolean
+  hasRenderPromises: boolean,
+  observable: ObservableQuery<TData, TVariables> | undefined
 ): WatchQueryOptions<TVariables, TData> {
   // This Object.assign is safe because otherOptions is a fresh ...rest object
   // that did not exist until just now, so modifications are still allowed.
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> = Object.assign(
     otherOptions,
-    { query: internalState.query }
+    { query }
   );
 
   if (
@@ -439,28 +455,18 @@ export function createWatchQueryOptions<
   }
 
   if (skip) {
-    const {
-      fetchPolicy = getDefaultFetchPolicy(
-        defaultOptions,
-        internalState.client.defaultOptions
-      ),
-      initialFetchPolicy = fetchPolicy,
-    } = watchQueryOptions;
-
     // When skipping, we set watchQueryOptions.fetchPolicy initially to
     // "standby", but we also need/want to preserve the initial non-standby
     // fetchPolicy that would have been used if not skipping.
-    Object.assign(watchQueryOptions, {
-      initialFetchPolicy,
-      fetchPolicy: "standby",
-    });
+    watchQueryOptions.initialFetchPolicy =
+      watchQueryOptions.initialFetchPolicy ||
+      watchQueryOptions.fetchPolicy ||
+      getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
+    watchQueryOptions.fetchPolicy = "standby";
   } else if (!watchQueryOptions.fetchPolicy) {
     watchQueryOptions.fetchPolicy =
-      internalState.observable?.options.initialFetchPolicy ||
-      getDefaultFetchPolicy(
-        defaultOptions,
-        internalState.client.defaultOptions
-      );
+      observable?.options.initialFetchPolicy ||
+      getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
   }
 
   return watchQueryOptions;
@@ -470,12 +476,14 @@ export function getObsQueryOptions<
   TData,
   TVariables extends OperationVariables,
 >(
-  internalState: InternalState<TData, TVariables>,
-  queryHookOptions: QueryHookOptions<TData, TVariables>
+  client: ApolloClient<object>,
+  queryHookOptions: QueryHookOptions<TData, TVariables>,
+  watchQueryOptions: Partial<WatchQueryOptions<TVariables, TData>>,
+  observable: ObservableQuery<TData, TVariables> | undefined
 ): WatchQueryOptions<TVariables, TData> {
   const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
 
-  const globalDefaults = internalState.client.defaultOptions.watchQuery;
+  const globalDefaults = client.defaultOptions.watchQuery;
   if (globalDefaults) toMerge.push(globalDefaults);
 
   if (queryHookOptions.defaultOptions) {
@@ -492,12 +500,7 @@ export function getObsQueryOptions<
   // (if provided) should be merged, to ensure individual defaulted
   // variables always have values, if not otherwise defined in
   // observable.options or watchQueryOptions.
-  toMerge.push(
-    compact(
-      internalState.observable && internalState.observable.options,
-      internalState.watchQueryOptions
-    )
-  );
+  toMerge.push(compact(observable && observable.options, watchQueryOptions));
 
   return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
 }
@@ -514,7 +517,11 @@ function setResult<TData, TVariables extends OperationVariables>(
     internalState.previousData = previousResult.data;
   }
   internalState.result = toQueryResult(
-    unsafeHandlePartialRefetch(nextResult, internalState, partialRefetch),
+    unsafeHandlePartialRefetch(
+      nextResult,
+      internalState.observable,
+      partialRefetch
+    ),
     internalState
   );
   // Calling state.setResult always triggers an update, though some call sites
@@ -634,7 +641,7 @@ function unsafeHandlePartialRefetch<
   TVariables extends OperationVariables,
 >(
   result: ApolloQueryResult<TData>,
-  internalState: InternalState<TData, TVariables>,
+  observable: ObservableQuery<TData, TVariables>,
   partialRefetch: boolean | undefined
 ): ApolloQueryResult<TData> {
   // TODO: This code should be removed when the partialRefetch option is
@@ -645,9 +652,9 @@ function unsafeHandlePartialRefetch<
     partialRefetch &&
     !result.loading &&
     (!result.data || Object.keys(result.data).length === 0) &&
-    internalState.observable.options.fetchPolicy !== "cache-only"
+    observable.options.fetchPolicy !== "cache-only"
   ) {
-    internalState.observable.refetch();
+    observable.refetch();
     return {
       ...result,
       loading: true,

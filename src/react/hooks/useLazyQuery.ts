@@ -92,19 +92,20 @@ export function useLazyQuery<
   optionsRef.current = options;
   queryRef.current = document;
 
+  const queryHookOptions = {
+    ...merged,
+    skip: !execOptionsRef.current,
+  };
   const {
     internalState,
     obsQueryFields,
     result: useQueryResult,
-  } = useQueryWithInternalState(document, {
-    ...merged,
-    skip: !execOptionsRef.current,
-  });
+  } = useQueryWithInternalState(document, queryHookOptions);
 
   const initialFetchPolicy =
     useQueryResult.observable.options.initialFetchPolicy ||
     getDefaultFetchPolicy(
-      internalState.queryHookOptions.defaultOptions,
+      queryHookOptions.defaultOptions,
       internalState.client.defaultOptions
     );
 
@@ -196,13 +197,13 @@ function executeQuery<TData, TVariables extends OperationVariables>(
   }
 
   internalState.watchQueryOptions = createWatchQueryOptions(
-    (internalState.queryHookOptions = options),
+    options,
     internalState,
     hasRenderPromises
   );
 
   const concast = internalState.observable.reobserveAsConcast(
-    getObsQueryOptions(internalState)
+    getObsQueryOptions(internalState, options)
   );
 
   // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,

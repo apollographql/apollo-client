@@ -146,10 +146,37 @@ export function useQueryWithInternalState<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  const internalState = useInternalState(
-    useApolloClient(options.client),
-    query
-  );
+  const client = useApolloClient(options.client);
+  function createInternalState(previous?: InternalState<TData, TVariables>) {
+    verifyDocumentType(query, DocumentType.Query);
+
+    // Reuse previousData from previous InternalState (if any) to provide
+    // continuity of previousData even if/when the query or client changes.
+    const previousResult = previous && previous.result;
+    const previousData = previousResult && previousResult.data;
+    const internalState: Partial<InternalState<TData, TVariables>> = {
+      client,
+      query,
+    };
+    if (previousData) {
+      internalState.previousData = previousData;
+    }
+
+    return internalState as InternalState<TData, TVariables>;
+  }
+
+  let [internalState, updateState] = React.useState(createInternalState);
+
+  if (client !== internalState.client || query !== internalState.query) {
+    // If the client or query have changed, we need to create a new InternalState.
+    // This will trigger a re-render with the new state, but it will also continue
+    // to run the current render function to completion.
+    // Since we sometimes trigger some side-effects in the render function, we
+    // re-assign `state` to the new state to ensure that those side-effects are
+    // triggered with the new state.
+    updateState((internalState = createInternalState(internalState)));
+  }
+
   // The renderPromises field gets initialized here in the useQuery method, at
   // the beginning of everything (for a given component rendering, at least),
   // so we can safely use this.renderPromises in other/later InternalState
@@ -366,43 +393,6 @@ export function useQueryWithInternalState<
   );
 
   return { result, obsQueryFields, internalState };
-}
-
-export function useInternalState<TData, TVariables extends OperationVariables>(
-  client: ApolloClient<any>,
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>
-): InternalState<TData, TVariables> {
-  function createInternalState(previous?: InternalState<TData, TVariables>) {
-    verifyDocumentType(query, DocumentType.Query);
-
-    // Reuse previousData from previous InternalState (if any) to provide
-    // continuity of previousData even if/when the query or client changes.
-    const previousResult = previous && previous.result;
-    const previousData = previousResult && previousResult.data;
-    const internalState: Partial<InternalState<TData, TVariables>> = {
-      client,
-      query,
-    };
-    if (previousData) {
-      internalState.previousData = previousData;
-    }
-
-    return internalState as InternalState<TData, TVariables>;
-  }
-
-  let [state, updateState] = React.useState(createInternalState);
-
-  if (client !== state.client || query !== state.query) {
-    // If the client or query have changed, we need to create a new InternalState.
-    // This will trigger a re-render with the new state, but it will also continue
-    // to run the current render function to completion.
-    // Since we sometimes trigger some side-effects in the render function, we
-    // re-assign `state` to the new state to ensure that those side-effects are
-    // triggered with the new state.
-    updateState((state = createInternalState(state)));
-  }
-
-  return state;
 }
 
 // A function to massage options before passing them to ObservableQuery.

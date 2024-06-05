@@ -61,11 +61,11 @@ export interface InternalState<TData, TVariables extends OperationVariables> {
   readonly client: ReturnType<typeof useApolloClient>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
-  observable: ObsQueryWithMeta<TData, TVariables>;
+  readonly observable: ObsQueryWithMeta<TData, TVariables>;
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
-  result: undefined | InternalQueryResult<TData, TVariables>;
-  previousData: undefined | TData;
+  result?: undefined | InternalQueryResult<TData, TVariables>;
+  previousData?: undefined | TData;
 }
 
 interface Callbacks<TData> {
@@ -149,35 +149,6 @@ export function useQueryWithInternalState<
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const client = useApolloClient(options.client);
-  function createInternalState(previous?: InternalState<TData, TVariables>) {
-    verifyDocumentType(query, DocumentType.Query);
-
-    // Reuse previousData from previous InternalState (if any) to provide
-    // continuity of previousData even if/when the query or client changes.
-    const previousResult = previous && previous.result;
-    const previousData = previousResult && previousResult.data;
-    const internalState: Partial<InternalState<TData, TVariables>> = {
-      client,
-      query,
-    };
-    if (previousData) {
-      internalState.previousData = previousData;
-    }
-
-    return internalState as InternalState<TData, TVariables>;
-  }
-
-  let [internalState, updateState] = React.useState(createInternalState);
-
-  if (client !== internalState.client || query !== internalState.query) {
-    // If the client or query have changed, we need to create a new InternalState.
-    // This will trigger a re-render with the new state, but it will also continue
-    // to run the current render function to completion.
-    // Since we sometimes trigger some side-effects in the render function, we
-    // re-assign `state` to the new state to ensure that those side-effects are
-    // triggered with the new state.
-    updateState((internalState = createInternalState(internalState)));
-  }
 
   // The renderPromises field gets initialized here in the useQuery method, at
   // the beginning of everything (for a given component rendering, at least),
@@ -188,38 +159,69 @@ export function useQueryWithInternalState<
   // rather than left uninitialized.
   const renderPromises = React.useContext(getApolloContext()).renderPromises;
 
-  const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
+  const makeWatchQueryOptions = (
+    observable?: ObservableQuery<TData, TVariables>
+  ) =>
     createWatchQueryOptions(
-      internalState.client,
-      internalState.query,
+      client,
+      query,
       options,
       !!renderPromises,
-      internalState.observable
+      observable
     );
 
-  // See if there is an existing observable that was used to fetch the same
-  // data and if so, use it instead since it will contain the proper queryId
-  // to fetch the result set. This is used during SSR.
-  const obsQuery: ObsQueryWithMeta<TData, TVariables> =
-    (internalState.observable =
-      (renderPromises && renderPromises.getSSRObservable(watchQueryOptions)) ||
-      internalState.observable || // Reuse this.observable if possible (and not SSR)
-      internalState.client.watchQuery(
-        getObsQueryOptions(
-          internalState.client,
-          options,
-          watchQueryOptions,
-          undefined
-        )
-      ));
+  function createInternalState(previous?: InternalState<TData, TVariables>) {
+    verifyDocumentType(query, DocumentType.Query);
+
+    const internalState: InternalState<TData, TVariables> = {
+      client,
+      query,
+      observable:
+        // See if there is an existing observable that was used to fetch the same
+        // data and if so, use it instead since it will contain the proper queryId
+        // to fetch the result set. This is used during SSR.
+        (renderPromises &&
+          renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
+        client.watchQuery(
+          getObsQueryOptions(
+            client,
+            options,
+            makeWatchQueryOptions(),
+            undefined
+          )
+        ),
+      // Reuse previousData from previous InternalState (if any) to provide
+      // continuity of previousData even if/when the query or client changes.
+      previousData: previous?.result?.data,
+    };
+
+    return internalState as InternalState<TData, TVariables>;
+  }
+
+  let [internalState, updateInternalState] =
+    React.useState(createInternalState);
+
+  if (client !== internalState.client || query !== internalState.query) {
+    // If the client or query have changed, we need to create a new InternalState.
+    // This will trigger a re-render with the new state, but it will also continue
+    // to run the current render function to completion.
+    // Since we sometimes trigger some side-effects in the render function, we
+    // re-assign `state` to the new state to ensure that those side-effects are
+    // triggered with the new state.
+    updateInternalState((internalState = createInternalState(internalState)));
+  }
+
+  const observable = internalState.observable;
+  const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
+    makeWatchQueryOptions(observable);
 
   // TODO: this part is not compatible with any rules of React, and there's
   // no good way to rewrite it.
   // it should be moved out into a separate hook that will not be optimized by the compiler
   {
     if (
-      obsQuery[lastWatchOptions] &&
-      !equal(obsQuery[lastWatchOptions], watchQueryOptions)
+      observable[lastWatchOptions] &&
+      !equal(observable[lastWatchOptions], watchQueryOptions)
     ) {
       // Though it might be tempting to postpone this reobserve call to the
       // useEffect block, we need getCurrentResult to return an appropriate
@@ -229,13 +231,8 @@ export function useQueryWithInternalState<
       // subscriptions, though it does feel less than ideal that reobserve
       // (potentially) kicks off a network request (for example, when the
       // variables have changed), which is technically a side-effect.
-      internalState.observable.reobserve(
-        getObsQueryOptions(
-          internalState.client,
-          options,
-          watchQueryOptions,
-          internalState.observable
-        )
+      observable.reobserve(
+        getObsQueryOptions(client, options, watchQueryOptions, observable)
       );
 
       // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
@@ -245,7 +242,7 @@ export function useQueryWithInternalState<
         internalState.result?.data || internalState.previousData;
       internalState.result = void 0;
     }
-    obsQuery[lastWatchOptions] = watchQueryOptions;
+    observable[lastWatchOptions] = watchQueryOptions;
   }
 
   const _callbacks = {
@@ -267,19 +264,19 @@ export function useQueryWithInternalState<
     Omit<ObservableQueryFields<TData, TVariables>, "variables">
   >(
     () => ({
-      refetch: obsQuery.refetch.bind(obsQuery),
-      reobserve: obsQuery.reobserve.bind(obsQuery),
-      fetchMore: obsQuery.fetchMore.bind(obsQuery),
-      updateQuery: obsQuery.updateQuery.bind(obsQuery),
-      startPolling: obsQuery.startPolling.bind(obsQuery),
-      stopPolling: obsQuery.stopPolling.bind(obsQuery),
-      subscribeToMore: obsQuery.subscribeToMore.bind(obsQuery),
+      refetch: observable.refetch.bind(observable),
+      reobserve: observable.reobserve.bind(observable),
+      fetchMore: observable.fetchMore.bind(observable),
+      updateQuery: observable.updateQuery.bind(observable),
+      startPolling: observable.startPolling.bind(observable),
+      stopPolling: observable.stopPolling.bind(observable),
+      subscribeToMore: observable.subscribeToMore.bind(observable),
     }),
-    [obsQuery]
+    [observable]
   );
 
   if (
-    (renderPromises || internalState.client.disableNetworkFetches) &&
+    (renderPromises || client.disableNetworkFetches) &&
     options.ssr === false &&
     !options.skip
   ) {
@@ -308,11 +305,11 @@ export function useQueryWithInternalState<
   const ssrAllowed = !(options.ssr === false || options.skip);
 
   if (renderPromises && ssrAllowed) {
-    renderPromises.registerSSRObservable(obsQuery);
+    renderPromises.registerSSRObservable(observable);
 
-    if (obsQuery.getCurrentResult().loading) {
+    if (observable.getCurrentResult().loading) {
       // TODO: This is a legacy API which could probably be cleaned up
-      renderPromises.addObservableQueryPromise(obsQuery);
+      renderPromises.addObservableQueryPromise(observable);
     }
   }
 
@@ -329,7 +326,7 @@ export function useQueryWithInternalState<
           // We use `getCurrentResult()` instead of the onNext argument because
           // the values differ slightly. Specifically, loading results will have
           // an empty object for data instead of `undefined` for some reason.
-          const result = obsQuery.getCurrentResult();
+          const result = observable.getCurrentResult();
           // Make sure we're not attempting to re-render similar results
           if (
             previousResult &&
@@ -351,7 +348,7 @@ export function useQueryWithInternalState<
 
         const onError = (error: Error) => {
           subscription.unsubscribe();
-          subscription = obsQuery.resubscribeAfterError(onNext, onError);
+          subscription = observable.resubscribeAfterError(onNext, onError);
 
           if (!hasOwnProperty.call(error, "graphQLErrors")) {
             // The error is not a GraphQL error
@@ -379,7 +376,7 @@ export function useQueryWithInternalState<
           }
         };
 
-        let subscription = obsQuery.subscribe(onNext, onError);
+        let subscription = observable.subscribe(onNext, onError);
 
         // Do the "unsubscribe" with a short delay.
         // This way, an existing subscription can be reused without an additional
@@ -398,7 +395,7 @@ export function useQueryWithInternalState<
         // useEffect ultimately responsible for the subscription, so we are
         // effectively passing this dependency array to that useEffect buried
         // inside useSyncExternalStore, as desired.
-        obsQuery,
+        observable,
         renderPromises,
         internalState.client.disableNetworkFetches,
         partialRefetch,

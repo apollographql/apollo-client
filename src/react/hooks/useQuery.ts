@@ -320,6 +320,8 @@ export function useQueryInternals<
       client
     );
   } else if (
+    // reset result if the last render was skipping for some reason,
+    // but this render isn't skipping anymore
     resultData.current &&
     (resultData.current[originalResult] === ssrDisabledResult ||
       resultData.current[originalResult] === skipStandbyResult)

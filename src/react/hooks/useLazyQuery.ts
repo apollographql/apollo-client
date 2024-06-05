@@ -3,6 +3,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import * as React from "rehackt";
 
 import type {
+  ApolloClient,
   ApolloQueryResult,
   OperationVariables,
 } from "../../core/index.js";
@@ -15,7 +16,11 @@ import type {
   QueryHookOptions,
   QueryResult,
 } from "../types/types.js";
-import type { InternalState } from "./useQuery.js";
+import type {
+  InternalResult,
+  ObsQueryWithMeta,
+  UpdateInternalState,
+} from "./useQuery.js";
 import {
   createWatchQueryOptions,
   getDefaultFetchPolicy,
@@ -98,16 +103,19 @@ export function useLazyQuery<
     skip: !execOptionsRef.current,
   };
   const {
-    internalState,
     obsQueryFields,
     result: useQueryResult,
+    client,
+    resultData,
+    observable,
+    updateInternalState,
   } = useQueryWithInternalState(document, queryHookOptions);
 
   const initialFetchPolicy =
-    useQueryResult.observable.options.initialFetchPolicy ||
+    observable.options.initialFetchPolicy ||
     getDefaultFetchPolicy(
       queryHookOptions.defaultOptions,
-      internalState.client.defaultOptions
+      client.defaultOptions
     );
 
   const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
@@ -160,8 +168,11 @@ export function useLazyQuery<
       const promise = executeQuery(
         { ...options, skip: false },
         false,
-        internalState,
-        forceUpdateState
+        document,
+        resultData,
+        observable,
+        client,
+        updateInternalState
       ).then((queryResult) => Object.assign(queryResult, eagerMethods));
 
       // Because the return value of `useLazyQuery` is usually floated, we need
@@ -170,7 +181,15 @@ export function useLazyQuery<
 
       return promise;
     },
-    [eagerMethods, forceUpdateState, initialFetchPolicy, internalState]
+    [
+      client,
+      document,
+      eagerMethods,
+      initialFetchPolicy,
+      observable,
+      resultData,
+      updateInternalState,
+    ]
   );
 
   const executeRef = React.useRef(execute);
@@ -190,38 +209,40 @@ function executeQuery<TData, TVariables extends OperationVariables>(
     query?: DocumentNode;
   },
   hasRenderPromises: boolean,
-  internalState: InternalState<TData, TVariables>,
-  forceUpdate: () => void
+  currentQuery: DocumentNode,
+  resultData: InternalResult<TData, TVariables>,
+  observable: ObsQueryWithMeta<TData, TVariables>,
+  client: ApolloClient<object>,
+  updateInternalState: UpdateInternalState<TData, TVariables>
 ) {
-  if (options.query) {
-    internalState.query = options.query;
-  }
-
+  const query = options.query || currentQuery;
   const watchQueryOptions = createWatchQueryOptions(
-    internalState.client,
-    internalState.query,
+    client,
+    query,
     options,
     hasRenderPromises,
-    internalState.observable
+    observable
   );
 
-  const concast = internalState.observable.reobserveAsConcast(
-    getObsQueryOptions(
-      internalState.client,
-      options,
-      watchQueryOptions,
-      internalState.observable
-    )
+  const concast = observable.reobserveAsConcast(
+    getObsQueryOptions(client, options, watchQueryOptions, observable)
   );
-  internalState.observable[lastWatchOptions] = watchQueryOptions;
-
-  // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
-  // but save the current data as this.previousData, just like setResult
-  // usually does.
-  internalState.previousData =
-    internalState.result?.data || internalState.previousData;
-  internalState.result = void 0;
-  forceUpdate();
+  // this needs to be set to prevent an immediate `resubscribe` in the
+  // next rerender of the `useQuery` internals
+  observable[lastWatchOptions] = watchQueryOptions;
+  updateInternalState({
+    client,
+    observable,
+    // might be a different query
+    query,
+    resultData: Object.assign(resultData, {
+      // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
+      // but save the current data as this.previousData, just like setResult
+      // usually does.
+      previousData: resultData.current?.data || resultData.previousData,
+      current: undefined,
+    }),
+  });
 
   return new Promise<
     Omit<QueryResult<TData, TVariables>, (typeof EAGER_METHODS)[number]>
@@ -239,13 +260,15 @@ function executeQuery<TData, TVariables extends OperationVariables>(
       error: () => {
         resolve(
           toQueryResult(
-            internalState.observable.getCurrentResult(),
-            internalState
+            observable.getCurrentResult(),
+            resultData,
+            observable,
+            client
           )
         );
       },
       complete: () => {
-        resolve(toQueryResult(result, internalState));
+        resolve(toQueryResult(result, resultData, observable, client));
       },
     });
   });

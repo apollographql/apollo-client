@@ -53,20 +53,29 @@ interface InternalQueryResult<TData, TVariables extends OperationVariables>
 const noop = () => {};
 export const lastWatchOptions = Symbol();
 
-interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
+export interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   extends ObservableQuery<TData, TVariables> {
   [lastWatchOptions]?: WatchQueryOptions<TVariables, TData>;
 }
-export interface InternalState<TData, TVariables extends OperationVariables> {
-  readonly client: ReturnType<typeof useApolloClient>;
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
-  readonly observable: ObsQueryWithMeta<TData, TVariables>;
+export interface InternalResult<TData, TVariables extends OperationVariables> {
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
-  result?: undefined | InternalQueryResult<TData, TVariables>;
+  current?: undefined | InternalQueryResult<TData, TVariables>;
   previousData?: undefined | TData;
 }
+
+interface InternalState<TData, TVariables extends OperationVariables> {
+  client: ReturnType<typeof useApolloClient>;
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  observable: ObsQueryWithMeta<TData, TVariables>;
+  resultData: InternalResult<TData, TVariables>;
+}
+
+export type UpdateInternalState<
+  TData,
+  TVariables extends OperationVariables,
+> = (state: InternalState<TData, TVariables>) => void;
 
 interface Callbacks<TData> {
   // Defining these methods as no-ops on the prototype allows us to call
@@ -190,9 +199,11 @@ export function useQueryWithInternalState<
             undefined
           )
         ),
-      // Reuse previousData from previous InternalState (if any) to provide
-      // continuity of previousData even if/when the query or client changes.
-      previousData: previous?.result?.data,
+      resultData: {
+        // Reuse previousData from previous InternalState (if any) to provide
+        // continuity of previousData even if/when the query or client changes.
+        previousData: previous?.resultData.current?.data,
+      },
     };
 
     return internalState as InternalState<TData, TVariables>;
@@ -211,7 +222,7 @@ export function useQueryWithInternalState<
     updateInternalState((internalState = createInternalState(internalState)));
   }
 
-  const observable = internalState.observable;
+  const { observable, resultData } = internalState;
   const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
     makeWatchQueryOptions(observable);
 
@@ -238,9 +249,9 @@ export function useQueryWithInternalState<
       // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
       // but save the current data as this.previousData, just like setResult
       // usually does.
-      internalState.previousData =
-        internalState.result?.data || internalState.previousData;
-      internalState.result = void 0;
+      resultData.previousData =
+        resultData.current?.data || resultData.previousData;
+      resultData.current = void 0;
     }
     observable[lastWatchOptions] = watchQueryOptions;
   }
@@ -282,7 +293,12 @@ export function useQueryWithInternalState<
   ) {
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
-    internalState.result = toQueryResult(ssrDisabledResult, internalState);
+    resultData.current = toQueryResult(
+      ssrDisabledResult,
+      resultData,
+      observable,
+      client
+    );
   } else if (options.skip || watchQueryOptions.fetchPolicy === "standby") {
     // When skipping a query (ie. we're not querying for data but still want to
     // render children), make sure the `data` is cleared out and `loading` is
@@ -294,12 +310,18 @@ export function useQueryWithInternalState<
     // previously received data is all of a sudden removed. Unfortunately,
     // changing this is breaking, so we'll have to wait until Apollo Client 4.0
     // to address this.
-    internalState.result = toQueryResult(skipStandbyResult, internalState);
+    resultData.current = toQueryResult(
+      skipStandbyResult,
+      resultData,
+      observable,
+      client
+    );
   } else if (
-    internalState.result?.[originalResult] === ssrDisabledResult ||
-    internalState.result?.[originalResult] === skipStandbyResult
+    resultData.current &&
+    (resultData.current[originalResult] === ssrDisabledResult ||
+      resultData.current[originalResult] === skipStandbyResult)
   ) {
-    internalState.result = void 0;
+    resultData.current = void 0;
   }
 
   const ssrAllowed = !(options.ssr === false || options.skip);
@@ -313,16 +335,21 @@ export function useQueryWithInternalState<
     }
   }
 
+  const disableNetworkFetches = client.disableNetworkFetches;
   const partialRefetch = options.partialRefetch;
   const result = useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
+        // reference `disableNetworkFetches` here to ensure that the rules of hooks
+        // keep it as a dependency of this effect, even though it's not used
+        disableNetworkFetches;
+
         if (renderPromises) {
           return () => {};
         }
 
         const onNext = () => {
-          const previousResult = internalState.result;
+          const previousResult = resultData.current;
           // We use `getCurrentResult()` instead of the onNext argument because
           // the values differ slightly. Specifically, loading results will have
           // an empty object for data instead of `undefined` for some reason.
@@ -338,11 +365,13 @@ export function useQueryWithInternalState<
           }
 
           setResult(
+            resultData,
             result,
             handleStoreChange,
-            internalState,
             callbackRef.current,
-            partialRefetch
+            partialRefetch,
+            observable,
+            client
           );
         };
 
@@ -355,13 +384,14 @@ export function useQueryWithInternalState<
             throw error;
           }
 
-          const previousResult = internalState.result;
+          const previousResult = resultData.current;
           if (
             !previousResult ||
             (previousResult && previousResult.loading) ||
             !equal(error, previousResult.error)
           ) {
             setResult(
+              resultData,
               {
                 data: (previousResult && previousResult.data) as TData,
                 error: error as ApolloError,
@@ -369,9 +399,10 @@ export function useQueryWithInternalState<
                 networkStatus: NetworkStatus.error,
               },
               handleStoreChange,
-              internalState,
               callbackRef.current,
-              partialRefetch
+              partialRefetch,
+              observable,
+              client
             );
           }
         };
@@ -386,27 +417,42 @@ export function useQueryWithInternalState<
           setTimeout(() => subscription.unsubscribe());
         };
       },
-      // eslint-disable-next-line react-compiler/react-compiler
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+
       [
-        // We memoize the subscribe function using useCallback and the following
-        // dependency keys, because the subscribe function reference is all that
-        // useSyncExternalStore uses internally as a dependency key for the
-        // useEffect ultimately responsible for the subscription, so we are
-        // effectively passing this dependency array to that useEffect buried
-        // inside useSyncExternalStore, as desired.
-        observable,
+        disableNetworkFetches,
         renderPromises,
-        internalState.client.disableNetworkFetches,
+        observable,
+        resultData,
         partialRefetch,
+        client,
       ]
     ),
-
-    () => getCurrentResult(internalState, callbackRef.current, partialRefetch),
-    () => getCurrentResult(internalState, callbackRef.current, partialRefetch)
+    () =>
+      getCurrentResult(
+        resultData,
+        observable,
+        callbackRef.current,
+        partialRefetch,
+        client
+      ),
+    () =>
+      getCurrentResult(
+        resultData,
+        observable,
+        callbackRef.current,
+        partialRefetch,
+        client
+      )
   );
 
-  return { result, obsQueryFields, internalState };
+  return {
+    result,
+    obsQueryFields,
+    observable,
+    resultData,
+    client,
+    updateInternalState,
+  };
 }
 
 // A function to massage options before passing them to ObservableQuery.
@@ -503,23 +549,23 @@ export function getObsQueryOptions<
 }
 
 function setResult<TData, TVariables extends OperationVariables>(
+  resultData: InternalResult<TData, TVariables>,
   nextResult: ApolloQueryResult<TData>,
   forceUpdate: () => void,
-  internalState: InternalState<TData, TVariables>,
   callbacks: Callbacks<TData>,
-  partialRefetch: boolean | undefined
+  partialRefetch: boolean | undefined,
+  observable: ObservableQuery<TData, TVariables>,
+  client: ApolloClient<object>
 ) {
-  const previousResult = internalState.result;
+  const previousResult = resultData.current;
   if (previousResult && previousResult.data) {
-    internalState.previousData = previousResult.data;
+    resultData.previousData = previousResult.data;
   }
-  internalState.result = toQueryResult(
-    unsafeHandlePartialRefetch(
-      nextResult,
-      internalState.observable,
-      partialRefetch
-    ),
-    internalState
+  resultData.current = toQueryResult(
+    unsafeHandlePartialRefetch(nextResult, observable, partialRefetch),
+    resultData,
+    observable,
+    client
   );
   // Calling state.setResult always triggers an update, though some call sites
   // perform additional equality checks before committing to an update.
@@ -559,25 +605,29 @@ function handleErrorOrCompleted<TData, TVariables extends OperationVariables>(
 }
 
 function getCurrentResult<TData, TVariables extends OperationVariables>(
-  internalState: InternalState<TData, TVariables>,
+  resultData: InternalResult<TData, TVariables>,
+  observable: ObservableQuery<TData, TVariables>,
   callbacks: Callbacks<TData>,
-  partialRefetch: boolean | undefined
+  partialRefetch: boolean | undefined,
+  client: ApolloClient<object>
 ): InternalQueryResult<TData, TVariables> {
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or
   // we're doing server rendering and therefore override the result below.
-  if (!internalState.result) {
+  if (!resultData.current) {
     // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
     // this could call unsafeHandlePartialRefetch
     setResult(
-      internalState.observable.getCurrentResult(),
+      resultData,
+      observable.getCurrentResult(),
       () => {},
-      internalState,
       callbacks,
-      partialRefetch
+      partialRefetch,
+      observable,
+      client
     );
   }
-  return internalState.result!;
+  return resultData.current!;
 }
 
 export function getDefaultFetchPolicy<
@@ -604,17 +654,19 @@ function toApolloError<TData>(
 
 export function toQueryResult<TData, TVariables extends OperationVariables>(
   result: ApolloQueryResult<TData>,
-  internalState: InternalState<TData, TVariables>
+  resultData: InternalResult<TData, TVariables>,
+  observable: ObservableQuery<TData, TVariables>,
+  client: ApolloClient<object>
 ): InternalQueryResult<TData, TVariables> {
   const { data, partial, ...resultWithoutPartial } = result;
   const queryResult: InternalQueryResult<TData, TVariables> = {
     data, // Ensure always defined, even if result.data is missing.
     ...resultWithoutPartial,
-    client: internalState.client,
-    observable: internalState.observable,
-    variables: internalState.observable.variables,
+    client: client,
+    observable: observable,
+    variables: observable.variables,
     called: result !== ssrDisabledResult && result !== skipStandbyResult,
-    previousData: internalState.previousData,
+    previousData: resultData.previousData,
   } satisfies Omit<
     InternalQueryResult<TData, TVariables>,
     typeof originalResult

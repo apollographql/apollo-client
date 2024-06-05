@@ -226,6 +226,8 @@ export function useQueryInternals<
   // happening), but that's fine as long as it has been initialized that way,
   // rather than left uninitialized.
   const renderPromises = React.useContext(getApolloContext()).renderPromises;
+  const disableNetworkFetches = client.disableNetworkFetches;
+  const ssrAllowed = !(options.ssr === false || options.skip);
 
   const makeWatchQueryOptions = (
     observable?: ObservableQuery<TData, TVariables>
@@ -249,35 +251,13 @@ export function useQueryInternals<
   const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
     makeWatchQueryOptions(observable);
 
-  // TODO: this part is not compatible with any rules of React, and there's
-  // no good way to rewrite it.
-  // it should be moved out into a separate hook that will not be optimized by the compiler
-  {
-    if (
-      observable[lastWatchOptions] &&
-      !equal(observable[lastWatchOptions], watchQueryOptions)
-    ) {
-      // Though it might be tempting to postpone this reobserve call to the
-      // useEffect block, we need getCurrentResult to return an appropriate
-      // loading:true result synchronously (later within the same call to
-      // useQuery). Since we already have this.observable here (not true for
-      // the very first call to useQuery), we are not initiating any new
-      // subscriptions, though it does feel less than ideal that reobserve
-      // (potentially) kicks off a network request (for example, when the
-      // variables have changed), which is technically a side-effect.
-      observable.reobserve(
-        getObsQueryOptions(client, options, watchQueryOptions, observable)
-      );
-
-      // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
-      // but save the current data as this.previousData, just like setResult
-      // usually does.
-      resultData.previousData =
-        resultData.current?.data || resultData.previousData;
-      resultData.current = void 0;
-    }
-    observable[lastWatchOptions] = watchQueryOptions;
-  }
+  useResubscribeIfNecessary<TData, TVariables>(
+    observable, // might get mutated during render
+    resultData, // might get mutated during render
+    watchQueryOptions,
+    client,
+    options
+  );
 
   const _callbacks = {
     onCompleted: options.onCompleted || noop,
@@ -310,7 +290,7 @@ export function useQueryInternals<
   );
 
   if (
-    (renderPromises || client.disableNetworkFetches) &&
+    (renderPromises || disableNetworkFetches) &&
     options.ssr === false &&
     !options.skip
   ) {
@@ -347,8 +327,6 @@ export function useQueryInternals<
     resultData.current = void 0;
   }
 
-  const ssrAllowed = !(options.ssr === false || options.skip);
-
   if (renderPromises && ssrAllowed) {
     renderPromises.registerSSRObservable(observable);
 
@@ -358,7 +336,6 @@ export function useQueryInternals<
     }
   }
 
-  const disableNetworkFetches = client.disableNetworkFetches;
   const partialRefetch = options.partialRefetch;
   const result = useSyncExternalStore(
     React.useCallback(
@@ -476,6 +453,47 @@ export function useQueryInternals<
     client,
     updateInternalState,
   };
+}
+// this hook is not compatible with any rules of React, and there's no good way to rewrite it.
+// it should stay a separate hook that will not be optimized by the compiler
+function useResubscribeIfNecessary<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  /** this hook will mutate properties on `observable` */
+  observable: ObsQueryWithMeta<TData, TVariables>,
+  /** this hook will mutate properties on `resultData` */
+  resultData: InternalResult<TData, TVariables>,
+  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
+  client: ApolloClient<object>,
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+) {
+  {
+    if (
+      observable[lastWatchOptions] &&
+      !equal(observable[lastWatchOptions], watchQueryOptions)
+    ) {
+      // Though it might be tempting to postpone this reobserve call to the
+      // useEffect block, we need getCurrentResult to return an appropriate
+      // loading:true result synchronously (later within the same call to
+      // useQuery). Since we already have this.observable here (not true for
+      // the very first call to useQuery), we are not initiating any new
+      // subscriptions, though it does feel less than ideal that reobserve
+      // (potentially) kicks off a network request (for example, when the
+      // variables have changed), which is technically a side-effect.
+      observable.reobserve(
+        getObsQueryOptions(client, options, watchQueryOptions, observable)
+      );
+
+      // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
+      // but save the current data as this.previousData, just like setResult
+      // usually does.
+      resultData.previousData =
+        resultData.current?.data || resultData.previousData;
+      resultData.current = void 0;
+    }
+    observable[lastWatchOptions] = watchQueryOptions;
+  }
 }
 
 // A function to massage options before passing them to ObservableQuery.

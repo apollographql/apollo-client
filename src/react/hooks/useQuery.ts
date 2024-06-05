@@ -36,6 +36,7 @@ import {
   maybeDeepFreeze,
 } from "../../utilities/index.js";
 import { wrapHook } from "./internal/index.js";
+import type { RenderPromises } from "../ssr/RenderPromises.js";
 
 const {
   prototype: { hasOwnProperty },
@@ -143,42 +144,23 @@ function _useQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  const { result, obsQueryFields } = useQueryWithInternalState(query, options);
+  const { result, obsQueryFields } = useQueryInternals(query, options);
   return React.useMemo(
     () => ({ ...result, ...obsQueryFields }),
     [result, obsQueryFields]
   );
 }
 
-export function useQueryWithInternalState<
+function useInternalState<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  client: ApolloClient<object>,
+  query: DocumentNode | TypedDocumentNode<any, any>,
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+  renderPromises: RenderPromises | undefined,
+  makeWatchQueryOptions: () => WatchQueryOptions<TVariables, TData>
 ) {
-  const client = useApolloClient(options.client);
-
-  // The renderPromises field gets initialized here in the useQuery method, at
-  // the beginning of everything (for a given component rendering, at least),
-  // so we can safely use this.renderPromises in other/later InternalState
-  // methods without worrying it might be uninitialized. Even after
-  // initialization, this.renderPromises is usually undefined (unless SSR is
-  // happening), but that's fine as long as it has been initialized that way,
-  // rather than left uninitialized.
-  const renderPromises = React.useContext(getApolloContext()).renderPromises;
-
-  const makeWatchQueryOptions = (
-    observable?: ObservableQuery<TData, TVariables>
-  ) =>
-    createWatchQueryOptions(
-      client,
-      query,
-      options,
-      !!renderPromises,
-      observable
-    );
-
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
@@ -219,10 +201,51 @@ export function useQueryWithInternalState<
     // Since we sometimes trigger some side-effects in the render function, we
     // re-assign `state` to the new state to ensure that those side-effects are
     // triggered with the new state.
-    updateInternalState((internalState = createInternalState(internalState)));
+    const newInternalState = createInternalState(internalState);
+    updateInternalState(newInternalState);
+    return [newInternalState, updateInternalState] as const;
   }
 
-  const { observable, resultData } = internalState;
+  return [internalState, updateInternalState] as const;
+}
+
+export function useQueryInternals<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+) {
+  const client = useApolloClient(options.client);
+
+  // The renderPromises field gets initialized here in the useQuery method, at
+  // the beginning of everything (for a given component rendering, at least),
+  // so we can safely use this.renderPromises in other/later InternalState
+  // methods without worrying it might be uninitialized. Even after
+  // initialization, this.renderPromises is usually undefined (unless SSR is
+  // happening), but that's fine as long as it has been initialized that way,
+  // rather than left uninitialized.
+  const renderPromises = React.useContext(getApolloContext()).renderPromises;
+
+  const makeWatchQueryOptions = (
+    observable?: ObservableQuery<TData, TVariables>
+  ) =>
+    createWatchQueryOptions(
+      client,
+      query,
+      options,
+      !!renderPromises,
+      observable
+    );
+
+  const [{ observable, resultData }, updateInternalState] = useInternalState(
+    client,
+    query,
+    options,
+    renderPromises,
+    makeWatchQueryOptions
+  );
+
   const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
     makeWatchQueryOptions(observable);
 

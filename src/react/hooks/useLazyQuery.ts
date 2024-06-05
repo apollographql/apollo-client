@@ -27,7 +27,7 @@ import {
   getObsQueryOptions,
   lastWatchOptions,
   toQueryResult,
-  useQueryWithInternalState,
+  useQueryInternals,
 } from "./useQuery.js";
 
 // The following methods, when called will execute the query, regardless of
@@ -109,7 +109,7 @@ export function useLazyQuery<
     resultData,
     observable,
     updateInternalState,
-  } = useQueryWithInternalState(document, queryHookOptions);
+  } = useQueryInternals(document, queryHookOptions);
 
   const initialFetchPolicy =
     observable.options.initialFetchPolicy ||

@@ -20,6 +20,7 @@ import {
   createWatchQueryOptions,
   getDefaultFetchPolicy,
   getObsQueryOptions,
+  lastWatchOptions,
   toQueryResult,
   useQueryWithInternalState,
 } from "./useQuery.js";
@@ -196,7 +197,7 @@ function executeQuery<TData, TVariables extends OperationVariables>(
     internalState.query = options.query;
   }
 
-  internalState.watchQueryOptions = createWatchQueryOptions(
+  const watchQueryOptions = createWatchQueryOptions(
     internalState.client,
     internalState.query,
     options,
@@ -208,10 +209,11 @@ function executeQuery<TData, TVariables extends OperationVariables>(
     getObsQueryOptions(
       internalState.client,
       options,
-      internalState.watchQueryOptions,
+      watchQueryOptions,
       internalState.observable
     )
   );
+  internalState.observable[lastWatchOptions] = watchQueryOptions;
 
   // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
   // but save the current data as this.previousData, just like setResult

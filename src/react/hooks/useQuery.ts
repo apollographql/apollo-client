@@ -51,14 +51,17 @@ interface InternalQueryResult<TData, TVariables extends OperationVariables>
 }
 
 const noop = () => {};
+export const lastWatchOptions = Symbol();
 
+interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
+  extends ObservableQuery<TData, TVariables> {
+  [lastWatchOptions]?: WatchQueryOptions<TVariables, TData>;
+}
 export interface InternalState<TData, TVariables extends OperationVariables> {
   readonly client: ReturnType<typeof useApolloClient>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
-  watchQueryOptions: WatchQueryOptions<TVariables, TData>;
-
-  observable: ObservableQuery<TData, TVariables>;
+  observable: ObsQueryWithMeta<TData, TVariables>;
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
   result: undefined | InternalQueryResult<TData, TVariables>;
@@ -194,15 +197,30 @@ export function useQueryWithInternalState<
       internalState.observable
     );
 
-  // Update this.watchQueryOptions, but only when they have changed, which
-  // allows us to depend on the referential stability of
-  // this.watchQueryOptions elsewhere.
-  const currentWatchQueryOptions = internalState.watchQueryOptions;
+  // See if there is an existing observable that was used to fetch the same
+  // data and if so, use it instead since it will contain the proper queryId
+  // to fetch the result set. This is used during SSR.
+  const obsQuery: ObsQueryWithMeta<TData, TVariables> =
+    (internalState.observable =
+      (renderPromises && renderPromises.getSSRObservable(watchQueryOptions)) ||
+      internalState.observable || // Reuse this.observable if possible (and not SSR)
+      internalState.client.watchQuery(
+        getObsQueryOptions(
+          internalState.client,
+          options,
+          watchQueryOptions,
+          undefined
+        )
+      ));
 
-  if (!equal(watchQueryOptions, currentWatchQueryOptions)) {
-    internalState.watchQueryOptions = watchQueryOptions;
-
-    if (currentWatchQueryOptions && internalState.observable) {
+  // TODO: this part is not compatible with any rules of React, and there's
+  // no good way to rewrite it.
+  // it should be moved out into a separate hook that will not be optimized by the compiler
+  {
+    if (
+      obsQuery[lastWatchOptions] &&
+      !equal(obsQuery[lastWatchOptions], watchQueryOptions)
+    ) {
       // Though it might be tempting to postpone this reobserve call to the
       // useEffect block, we need getCurrentResult to return an appropriate
       // loading:true result synchronously (later within the same call to
@@ -215,7 +233,7 @@ export function useQueryWithInternalState<
         getObsQueryOptions(
           internalState.client,
           options,
-          internalState.watchQueryOptions,
+          watchQueryOptions,
           internalState.observable
         )
       );
@@ -227,6 +245,7 @@ export function useQueryWithInternalState<
         internalState.result?.data || internalState.previousData;
       internalState.result = void 0;
     }
+    obsQuery[lastWatchOptions] = watchQueryOptions;
   }
 
   const _callbacks = {
@@ -243,22 +262,6 @@ export function useQueryWithInternalState<
     // base state object (without modifying the prototype).
     callbackRef.current = _callbacks;
   });
-
-  // See if there is an existing observable that was used to fetch the same
-  // data and if so, use it instead since it will contain the proper queryId
-  // to fetch the result set. This is used during SSR.
-  const obsQuery = (internalState.observable =
-    (renderPromises &&
-      renderPromises.getSSRObservable(internalState.watchQueryOptions)) ||
-    internalState.observable || // Reuse this.observable if possible (and not SSR)
-    internalState.client.watchQuery(
-      getObsQueryOptions(
-        internalState.client,
-        options,
-        internalState.watchQueryOptions,
-        undefined
-      )
-    ));
 
   const obsQueryFields = React.useMemo<
     Omit<ObservableQueryFields<TData, TVariables>, "variables">
@@ -283,10 +286,7 @@ export function useQueryWithInternalState<
     // If SSR has been explicitly disabled, and this function has been called
     // on the server side, return the default loading state.
     internalState.result = toQueryResult(ssrDisabledResult, internalState);
-  } else if (
-    options.skip ||
-    internalState.watchQueryOptions.fetchPolicy === "standby"
-  ) {
+  } else if (options.skip || watchQueryOptions.fetchPolicy === "standby") {
     // When skipping a query (ie. we're not querying for data but still want to
     // render children), make sure the `data` is cleared out and `loading` is
     // set to `false` (since we aren't loading anything).

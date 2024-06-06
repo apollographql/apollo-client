@@ -11,7 +11,7 @@ type MatchesFragmentFn = (
   typename: string
 ) => boolean;
 
-export function mask<TData = unknown>(
+export function maskQuery<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
   matchesFragment: MatchesFragmentFn

@@ -1,10 +1,15 @@
 import { Kind } from "graphql";
-import type { InlineFragmentNode, SelectionSetNode } from "graphql";
+import type {
+  FragmentDefinitionNode,
+  InlineFragmentNode,
+  SelectionSetNode,
+} from "graphql";
 import {
   getMainDefinition,
   resultKeyNameFromField,
 } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
+import { invariant } from "../utilities/globals/index.js";
 
 type MatchesFragmentFn = (
   fragmentNode: InlineFragmentNode,
@@ -20,6 +25,45 @@ export function maskQuery<TData = unknown>(
   const [masked, changed] = maskSelectionSet(
     data,
     definition.selectionSet,
+    matchesFragment
+  );
+
+  return changed ? masked : data;
+}
+
+export function maskFragment<TData = unknown>(
+  data: TData,
+  document: TypedDocumentNode<TData> | DocumentNode,
+  matchesFragment: MatchesFragmentFn,
+  fragmentName?: string
+): TData {
+  const fragments = document.definitions.filter(
+    (node): node is FragmentDefinitionNode =>
+      node.kind === Kind.FRAGMENT_DEFINITION
+  );
+
+  if (typeof fragmentName === "undefined") {
+    invariant(
+      fragments.length === 1,
+      `Found %s fragments. \`fragmentName\` must be provided when there is more than 1 fragment.`,
+      fragments.length
+    );
+    fragmentName = fragments[0].name.value;
+  }
+
+  const fragment = fragments.find(
+    (fragment) => fragment.name.value === fragmentName
+  );
+
+  invariant(
+    !!fragment,
+    `Could not find fragment with name "%s".`,
+    fragmentName
+  );
+
+  const [masked, changed] = maskSelectionSet(
+    data,
+    fragment.selectionSet,
     matchesFragment
   );
 

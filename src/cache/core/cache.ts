@@ -370,7 +370,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public maskDocument<TData = unknown>(document: DocumentNode, data: TData) {
+  public maskQuery<TData = unknown>(document: DocumentNode, data: TData) {
     if (!this.fragmentMatches) {
       if (__DEV__) {
         invariant.warn(

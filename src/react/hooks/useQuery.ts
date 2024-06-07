@@ -218,14 +218,8 @@ export function useQueryInternals<
 ) {
   const client = useApolloClient(options.client);
 
-  // The renderPromises field gets initialized here in the useQuery method, at
-  // the beginning of everything (for a given component rendering, at least),
-  // so we can safely use this.renderPromises in other/later InternalState
-  // methods without worrying it might be uninitialized. Even after
-  // initialization, this.renderPromises is usually undefined (unless SSR is
-  // happening), but that's fine as long as it has been initialized that way,
-  // rather than left uninitialized.
   const renderPromises = React.useContext(getApolloContext()).renderPromises;
+  const isSyncSSR = !!renderPromises;
   const disableNetworkFetches = client.disableNetworkFetches;
   const ssrAllowed = !(options.ssr === false || options.skip);
   const partialRefetch = options.partialRefetch;
@@ -265,10 +259,10 @@ export function useQueryInternals<
   >(() => bindObservableMethods(observable), [observable]);
 
   useHandleSkip<TData, TVariables>(
-    renderPromises,
+    resultData, // might get mutated during render
+    isSyncSSR,
     disableNetworkFetches,
     options,
-    resultData,
     observable,
     client,
     watchQueryOptions
@@ -282,7 +276,7 @@ export function useQueryInternals<
 
   const result = useObservableSubscriptionResult<TData, TVariables>(
     disableNetworkFetches,
-    renderPromises,
+    isSyncSSR,
     resultData,
     observable,
     {
@@ -308,7 +302,7 @@ function useObservableSubscriptionResult<
   TVariables extends OperationVariables = OperationVariables,
 >(
   disableNetworkFetches: boolean,
-  renderPromises: RenderPromises | undefined,
+  skipSubscribing: boolean,
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   callbacks: {
@@ -336,7 +330,7 @@ function useObservableSubscriptionResult<
         // keep it as a dependency of this effect, even though it's not used
         disableNetworkFetches;
 
-        if (renderPromises) {
+        if (skipSubscribing) {
           return () => {};
         }
 
@@ -412,7 +406,7 @@ function useObservableSubscriptionResult<
 
       [
         disableNetworkFetches,
-        renderPromises,
+        skipSubscribing,
         observable,
         resultData,
         partialRefetch,
@@ -460,16 +454,17 @@ function useHandleSkip<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  renderPromises: RenderPromises | undefined,
+  /** this hook will mutate properties on `resultData` */
+  resultData: InternalResult<TData, TVariables>,
+  isSyncSSR: boolean,
   disableNetworkFetches: boolean,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-  resultData: InternalResult<TData, TVariables>,
   observable: ObsQueryWithMeta<TData, TVariables>,
   client: ApolloClient<object>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
 ) {
   if (
-    (renderPromises || disableNetworkFetches) &&
+    (isSyncSSR || disableNetworkFetches) &&
     options.ssr === false &&
     !options.skip
   ) {

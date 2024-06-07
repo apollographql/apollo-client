@@ -224,16 +224,12 @@ export function useQueryInternals<
   const ssrAllowed = !(options.ssr === false || options.skip);
   const partialRefetch = options.partialRefetch;
 
-  const makeWatchQueryOptions = (
-    observable?: ObservableQuery<TData, TVariables>
-  ) =>
-    createWatchQueryOptions(
-      client,
-      query,
-      options,
-      !!renderPromises,
-      observable
-    );
+  const makeWatchQueryOptions = createMakeWatchQueryOptions(
+    client,
+    query,
+    options,
+    isSyncSSR
+  );
 
   const [{ observable, resultData }, updateInternalState] = useInternalState(
     client,
@@ -546,8 +542,12 @@ function useResubscribeIfNecessary<
   }
 }
 
-// A function to massage options before passing them to ObservableQuery.
-export function createWatchQueryOptions<
+/*
+ * A function to massage options before passing them to ObservableQuery.
+ * This is two-step curried because we want to reuse the `make` function,
+ * but the `observable` might differ between calls to `make`.
+ */
+export function createMakeWatchQueryOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -564,46 +564,47 @@ export function createWatchQueryOptions<
     // query property that we add below.
     ...otherOptions
   }: QueryHookOptions<TData, TVariables> = {},
-  hasRenderPromises: boolean,
-  observable: ObservableQuery<TData, TVariables> | undefined
-): WatchQueryOptions<TVariables, TData> {
-  // This Object.assign is safe because otherOptions is a fresh ...rest object
-  // that did not exist until just now, so modifications are still allowed.
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = Object.assign(
-    otherOptions,
-    { query }
-  );
+  hasRenderPromises: boolean
+) {
+  return (
+    observable?: ObservableQuery<TData, TVariables>
+  ): WatchQueryOptions<TVariables, TData> => {
+    // This Object.assign is safe because otherOptions is a fresh ...rest object
+    // that did not exist until just now, so modifications are still allowed.
+    const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
+      Object.assign(otherOptions, { query });
 
-  if (
-    hasRenderPromises &&
-    (watchQueryOptions.fetchPolicy === "network-only" ||
-      watchQueryOptions.fetchPolicy === "cache-and-network")
-  ) {
-    // this behavior was added to react-apollo without explanation in this PR
-    // https://github.com/apollographql/react-apollo/pull/1579
-    watchQueryOptions.fetchPolicy = "cache-first";
-  }
+    if (
+      hasRenderPromises &&
+      (watchQueryOptions.fetchPolicy === "network-only" ||
+        watchQueryOptions.fetchPolicy === "cache-and-network")
+    ) {
+      // this behavior was added to react-apollo without explanation in this PR
+      // https://github.com/apollographql/react-apollo/pull/1579
+      watchQueryOptions.fetchPolicy = "cache-first";
+    }
 
-  if (!watchQueryOptions.variables) {
-    watchQueryOptions.variables = {} as TVariables;
-  }
+    if (!watchQueryOptions.variables) {
+      watchQueryOptions.variables = {} as TVariables;
+    }
 
-  if (skip) {
-    // When skipping, we set watchQueryOptions.fetchPolicy initially to
-    // "standby", but we also need/want to preserve the initial non-standby
-    // fetchPolicy that would have been used if not skipping.
-    watchQueryOptions.initialFetchPolicy =
-      watchQueryOptions.initialFetchPolicy ||
-      watchQueryOptions.fetchPolicy ||
-      getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
-    watchQueryOptions.fetchPolicy = "standby";
-  } else if (!watchQueryOptions.fetchPolicy) {
-    watchQueryOptions.fetchPolicy =
-      observable?.options.initialFetchPolicy ||
-      getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
-  }
+    if (skip) {
+      // When skipping, we set watchQueryOptions.fetchPolicy initially to
+      // "standby", but we also need/want to preserve the initial non-standby
+      // fetchPolicy that would have been used if not skipping.
+      watchQueryOptions.initialFetchPolicy =
+        watchQueryOptions.initialFetchPolicy ||
+        watchQueryOptions.fetchPolicy ||
+        getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
+      watchQueryOptions.fetchPolicy = "standby";
+    } else if (!watchQueryOptions.fetchPolicy) {
+      watchQueryOptions.fetchPolicy =
+        observable?.options.initialFetchPolicy ||
+        getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
+    }
 
-  return watchQueryOptions;
+    return watchQueryOptions;
+  };
 }
 
 export function getObsQueryOptions<

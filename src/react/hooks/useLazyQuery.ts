@@ -22,7 +22,7 @@ import type {
   UpdateInternalState,
 } from "./useQuery.js";
 import {
-  createWatchQueryOptions,
+  createMakeWatchQueryOptions,
   getDefaultFetchPolicy,
   getObsQueryOptions,
   lastWatchOptions,
@@ -167,7 +167,6 @@ export function useLazyQuery<
 
       const promise = executeQuery(
         { ...options, skip: false },
-        false,
         document,
         resultData,
         observable,
@@ -208,7 +207,6 @@ function executeQuery<TData, TVariables extends OperationVariables>(
   options: QueryHookOptions<TData, TVariables> & {
     query?: DocumentNode;
   },
-  hasRenderPromises: boolean,
   currentQuery: DocumentNode,
   resultData: InternalResult<TData, TVariables>,
   observable: ObsQueryWithMeta<TData, TVariables>,
@@ -216,13 +214,12 @@ function executeQuery<TData, TVariables extends OperationVariables>(
   updateInternalState: UpdateInternalState<TData, TVariables>
 ) {
   const query = options.query || currentQuery;
-  const watchQueryOptions = createWatchQueryOptions(
+  const watchQueryOptions = createMakeWatchQueryOptions(
     client,
     query,
     options,
-    hasRenderPromises,
-    observable
-  );
+    false
+  )(observable);
 
   const concast = observable.reobserveAsConcast(
     getObsQueryOptions(client, options, watchQueryOptions, observable)

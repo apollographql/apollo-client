@@ -222,10 +222,37 @@ function useInternalState<
     // triggered with the new state.
     const newInternalState = createInternalState(internalState);
     updateInternalState(newInternalState);
-    return [newInternalState, updateInternalState] as const;
+    return [newInternalState, onQueryExecuted] as const;
   }
 
-  return [internalState, updateInternalState] as const;
+  return [internalState, onQueryExecuted] as const;
+
+  /**
+   * Used by `useLazyQuery` when a new query is executed.
+   * We keep this logic here since it needs to update things in unsafe
+   * ways and here we at least can keep track of that in a single place.
+   */
+  function onQueryExecuted(
+    watchQueryOptions: WatchQueryOptions<TVariables, TData>
+  ) {
+    // this needs to be set to prevent an immediate `resubscribe` in the
+    // next rerender of the `useQuery` internals
+    Object.assign(internalState.observable, {
+      [lastWatchOptions]: watchQueryOptions,
+    });
+    const resultData = internalState.resultData;
+    updateInternalState({
+      ...internalState,
+      // might be a different query
+      query: watchQueryOptions.query,
+      resultData: Object.assign(resultData, {
+        // We need to modify the previous `resultData` object as we rely on the
+        // object reference in other places
+        previousData: resultData.current?.data || resultData.previousData,
+        current: undefined,
+      }),
+    });
+  }
 }
 
 export function useQueryInternals<
@@ -250,7 +277,7 @@ export function useQueryInternals<
     isSyncSSR
   );
 
-  const [{ observable, resultData }, updateInternalState] = useInternalState(
+  const [{ observable, resultData }, onQueryExecuted] = useInternalState(
     client,
     query,
     options,
@@ -308,7 +335,7 @@ export function useQueryInternals<
     observable,
     resultData,
     client,
-    updateInternalState,
+    onQueryExecuted,
   };
 }
 

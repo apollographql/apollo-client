@@ -6,6 +6,7 @@ import type {
   ApolloClient,
   ApolloQueryResult,
   OperationVariables,
+  WatchQueryOptions,
 } from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
 import type {
@@ -16,16 +17,11 @@ import type {
   QueryHookOptions,
   QueryResult,
 } from "../types/types.js";
-import type {
-  InternalResult,
-  ObsQueryWithMeta,
-  UpdateInternalState,
-} from "./useQuery.js";
+import type { InternalResult, ObsQueryWithMeta } from "./useQuery.js";
 import {
   createMakeWatchQueryOptions,
   getDefaultFetchPolicy,
   getObsQueryOptions,
-  lastWatchOptions,
   toQueryResult,
   useQueryInternals,
 } from "./useQuery.js";
@@ -108,7 +104,7 @@ export function useLazyQuery<
     client,
     resultData,
     observable,
-    updateInternalState,
+    onQueryExecuted,
   } = useQueryInternals(document, queryHookOptions);
 
   const initialFetchPolicy =
@@ -171,7 +167,7 @@ export function useLazyQuery<
         client,
         document,
         { ...options, skip: false },
-        updateInternalState
+        onQueryExecuted
       ).then((queryResult) => Object.assign(queryResult, eagerMethods));
 
       // Because the return value of `useLazyQuery` is usually floated, we need
@@ -187,7 +183,7 @@ export function useLazyQuery<
       initialFetchPolicy,
       observable,
       resultData,
-      updateInternalState,
+      onQueryExecuted,
     ]
   );
 
@@ -211,7 +207,7 @@ function executeQuery<TData, TVariables extends OperationVariables>(
   options: QueryHookOptions<TData, TVariables> & {
     query?: DocumentNode;
   },
-  updateInternalState: UpdateInternalState<TData, TVariables>
+  onQueryExecuted: (options: WatchQueryOptions<TVariables, TData>) => void
 ) {
   const query = options.query || currentQuery;
   const watchQueryOptions = createMakeWatchQueryOptions(
@@ -224,21 +220,7 @@ function executeQuery<TData, TVariables extends OperationVariables>(
   const concast = observable.reobserveAsConcast(
     getObsQueryOptions(observable, client, options, watchQueryOptions)
   );
-  // this needs to be set to prevent an immediate `resubscribe` in the
-  // next rerender of the `useQuery` internals
-  observable[lastWatchOptions] = watchQueryOptions;
-  updateInternalState({
-    client,
-    observable,
-    // might be a different query
-    query,
-    resultData: Object.assign(resultData, {
-      // We need to modify the previous `resultData` object as we rely on the
-      // object reference in other places
-      previousData: resultData.current?.data || resultData.previousData,
-      current: undefined,
-    }),
-  });
+  onQueryExecuted(watchQueryOptions);
 
   return new Promise<
     Omit<QueryResult<TData, TVariables>, (typeof EAGER_METHODS)[number]>

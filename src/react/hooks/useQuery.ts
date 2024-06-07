@@ -70,7 +70,7 @@ interface InternalQueryResult<TData, TVariables extends OperationVariables>
   [originalResult]: ApolloQueryResult<TData>;
 }
 
-const noop = () => {};
+function noop() {}
 export const lastWatchOptions = Symbol();
 
 export interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
@@ -213,20 +213,6 @@ function useInternalState<
   let [internalState, updateInternalState] =
     React.useState(createInternalState);
 
-  if (client !== internalState.client || query !== internalState.query) {
-    // If the client or query have changed, we need to create a new InternalState.
-    // This will trigger a re-render with the new state, but it will also continue
-    // to run the current render function to completion.
-    // Since we sometimes trigger some side-effects in the render function, we
-    // re-assign `state` to the new state to ensure that those side-effects are
-    // triggered with the new state.
-    const newInternalState = createInternalState(internalState);
-    updateInternalState(newInternalState);
-    return [newInternalState, onQueryExecuted] as const;
-  }
-
-  return [internalState, onQueryExecuted] as const;
-
   /**
    * Used by `useLazyQuery` when a new query is executed.
    * We keep this logic here since it needs to update things in unsafe
@@ -253,6 +239,20 @@ function useInternalState<
       }),
     });
   }
+
+  if (client !== internalState.client || query !== internalState.query) {
+    // If the client or query have changed, we need to create a new InternalState.
+    // This will trigger a re-render with the new state, but it will also continue
+    // to run the current render function to completion.
+    // Since we sometimes trigger some side-effects in the render function, we
+    // re-assign `state` to the new state to ensure that those side-effects are
+    // triggered with the new state.
+    const newInternalState = createInternalState(internalState);
+    updateInternalState(newInternalState);
+    return [newInternalState, onQueryExecuted] as const;
+  }
+
+  return [internalState, onQueryExecuted] as const;
 }
 
 export function useQueryInternals<
@@ -405,8 +405,11 @@ function useObservableSubscriptionResult<
         };
 
         const onError = (error: Error) => {
-          subscription.unsubscribe();
-          subscription = observable.resubscribeAfterError(onNext, onError);
+          subscription.current.unsubscribe();
+          subscription.current = observable.resubscribeAfterError(
+            onNext,
+            onError
+          );
 
           if (!hasOwnProperty.call(error, "graphQLErrors")) {
             // The error is not a GraphQL error
@@ -436,14 +439,19 @@ function useObservableSubscriptionResult<
           }
         };
 
-        let subscription = observable.subscribe(onNext, onError);
+        // TODO evaluate if we keep this in
+        // React Compiler cannot handle scoped `let` access, but a mutable object
+        // like this is fine.
+        // was:
+        // let subscription = observable.subscribe(onNext, onError);
+        const subscription = { current: observable.subscribe(onNext, onError) };
 
         // Do the "unsubscribe" with a short delay.
         // This way, an existing subscription can be reused without an additional
         // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
         // happen in very fast succession.
         return () => {
-          setTimeout(() => subscription.unsubscribe());
+          setTimeout(() => subscription.current.unsubscribe());
         };
       },
 

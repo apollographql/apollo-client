@@ -276,18 +276,7 @@ export function useQueryInternals<
 
   const obsQueryFields = React.useMemo<
     Omit<ObservableQueryFields<TData, TVariables>, "variables">
-  >(
-    () => ({
-      refetch: observable.refetch.bind(observable),
-      reobserve: observable.reobserve.bind(observable),
-      fetchMore: observable.fetchMore.bind(observable),
-      updateQuery: observable.updateQuery.bind(observable),
-      startPolling: observable.startPolling.bind(observable),
-      stopPolling: observable.stopPolling.bind(observable),
-      subscribeToMore: observable.subscribeToMore.bind(observable),
-    }),
-    [observable]
-  );
+  >(() => bindObservableMethods(observable), [observable]);
 
   if (
     (renderPromises || disableNetworkFetches) &&
@@ -769,3 +758,17 @@ const skipStandbyResult = maybeDeepFreeze({
   error: void 0,
   networkStatus: NetworkStatus.ready,
 });
+
+function bindObservableMethods<TData, TVariables extends OperationVariables>(
+  observable: ObservableQuery<TData, TVariables>
+) {
+  return {
+    refetch: observable.refetch.bind(observable),
+    reobserve: observable.reobserve.bind(observable),
+    fetchMore: observable.fetchMore.bind(observable),
+    updateQuery: observable.updateQuery.bind(observable),
+    startPolling: observable.startPolling.bind(observable),
+    stopPolling: observable.stopPolling.bind(observable),
+    subscribeToMore: observable.subscribeToMore.bind(observable),
+  };
+}

@@ -166,11 +166,11 @@ export function useLazyQuery<
       });
 
       const promise = executeQuery(
-        { ...options, skip: false },
-        document,
         resultData,
         observable,
         client,
+        document,
+        { ...options, skip: false },
         updateInternalState
       ).then((queryResult) => Object.assign(queryResult, eagerMethods));
 
@@ -204,13 +204,13 @@ export function useLazyQuery<
 }
 
 function executeQuery<TData, TVariables extends OperationVariables>(
-  options: QueryHookOptions<TData, TVariables> & {
-    query?: DocumentNode;
-  },
-  currentQuery: DocumentNode,
   resultData: InternalResult<TData, TVariables>,
   observable: ObsQueryWithMeta<TData, TVariables>,
   client: ApolloClient<object>,
+  currentQuery: DocumentNode,
+  options: QueryHookOptions<TData, TVariables> & {
+    query?: DocumentNode;
+  },
   updateInternalState: UpdateInternalState<TData, TVariables>
 ) {
   const query = options.query || currentQuery;
@@ -222,7 +222,7 @@ function executeQuery<TData, TVariables extends OperationVariables>(
   )(observable);
 
   const concast = observable.reobserveAsConcast(
-    getObsQueryOptions(client, options, watchQueryOptions, observable)
+    getObsQueryOptions(observable, client, options, watchQueryOptions)
   );
   // this needs to be set to prevent an immediate `resubscribe` in the
   // next rerender of the `useQuery` internals
@@ -233,9 +233,8 @@ function executeQuery<TData, TVariables extends OperationVariables>(
     // might be a different query
     query,
     resultData: Object.assign(resultData, {
-      // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
-      // but save the current data as this.previousData, just like setResult
-      // usually does.
+      // We need to modify the previous `resultData` object as we rely on the
+      // object reference in other places
       previousData: resultData.current?.data || resultData.previousData,
       current: undefined,
     }),

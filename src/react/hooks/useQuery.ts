@@ -1,3 +1,22 @@
+/**
+ * Function parameters in this file try to follow a common order for the sake of
+ * readability and consistency. The order is as follows:
+ *
+ * resultData
+ * observable
+ * client
+ * query
+ * options
+ * watchQueryOptions
+ * makeWatchQueryOptions
+ * isSSRAllowed
+ * disableNetworkFetches
+ * partialRefetch
+ * renderPromises
+ * isSyncSSR
+ * callbacks
+ */
+/** */
 import { invariant } from "../../utilities/globals/index.js";
 
 import * as React from "rehackt";
@@ -175,10 +194,10 @@ function useInternalState<
           renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
         client.watchQuery(
           getObsQueryOptions(
+            undefined,
             client,
             options,
-            makeWatchQueryOptions(),
-            undefined
+            makeWatchQueryOptions()
           )
         ),
       resultData: {
@@ -243,11 +262,11 @@ export function useQueryInternals<
     makeWatchQueryOptions(observable);
 
   useResubscribeIfNecessary<TData, TVariables>(
-    observable, // might get mutated during render
     resultData, // might get mutated during render
-    watchQueryOptions,
+    observable, // might get mutated during render
     client,
-    options
+    options,
+    watchQueryOptions
   );
 
   const obsQueryFields = React.useMemo<
@@ -256,31 +275,31 @@ export function useQueryInternals<
 
   useHandleSkip<TData, TVariables>(
     resultData, // might get mutated during render
-    isSyncSSR,
-    disableNetworkFetches,
-    options,
     observable,
     client,
-    watchQueryOptions
+    options,
+    watchQueryOptions,
+    disableNetworkFetches,
+    isSyncSSR
   );
 
   useRegisterSSRObservable<TData, TVariables>(
+    observable,
     renderPromises,
-    ssrAllowed,
-    observable
+    ssrAllowed
   );
 
   const result = useObservableSubscriptionResult<TData, TVariables>(
-    disableNetworkFetches,
-    isSyncSSR,
     resultData,
     observable,
+    client,
+    disableNetworkFetches,
+    partialRefetch,
+    isSyncSSR,
     {
       onCompleted: options.onCompleted || noop,
       onError: options.onError || noop,
-    },
-    partialRefetch,
-    client
+    }
   );
 
   return {
@@ -297,16 +316,17 @@ function useObservableSubscriptionResult<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  disableNetworkFetches: boolean,
-  skipSubscribing: boolean,
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
+  client: ApolloClient<object>,
+  disableNetworkFetches: boolean,
+  partialRefetch: boolean | undefined,
+  skipSubscribing: boolean,
+
   callbacks: {
     onCompleted: (data: TData) => void;
     onError: (error: ApolloError) => void;
-  },
-  partialRefetch: boolean | undefined,
-  client: ApolloClient<object>
+  }
 ) {
   const callbackRef = React.useRef<Callbacks<TData>>(callbacks);
   React.useEffect(() => {
@@ -347,13 +367,13 @@ function useObservableSubscriptionResult<
           }
 
           setResult(
-            resultData,
             result,
-            handleStoreChange,
-            callbackRef.current,
-            partialRefetch,
+            resultData,
             observable,
-            client
+            client,
+            partialRefetch,
+            handleStoreChange,
+            callbackRef.current
           );
         };
 
@@ -373,18 +393,18 @@ function useObservableSubscriptionResult<
             !equal(error, previousResult.error)
           ) {
             setResult(
-              resultData,
               {
                 data: (previousResult && previousResult.data) as TData,
                 error: error as ApolloError,
                 loading: false,
                 networkStatus: NetworkStatus.error,
               },
-              handleStoreChange,
-              callbackRef.current,
-              partialRefetch,
+              resultData,
               observable,
-              client
+              client,
+              partialRefetch,
+              handleStoreChange,
+              callbackRef.current
             );
           }
         };
@@ -432,9 +452,9 @@ function useRegisterSSRObservable<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
+  observable: ObsQueryWithMeta<TData, TVariables>,
   renderPromises: RenderPromises | undefined,
-  ssrAllowed: boolean,
-  observable: ObsQueryWithMeta<TData, TVariables>
+  ssrAllowed: boolean
 ) {
   if (renderPromises && ssrAllowed) {
     renderPromises.registerSSRObservable(observable);
@@ -452,12 +472,12 @@ function useHandleSkip<
 >(
   /** this hook will mutate properties on `resultData` */
   resultData: InternalResult<TData, TVariables>,
-  isSyncSSR: boolean,
-  disableNetworkFetches: boolean,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
   observable: ObsQueryWithMeta<TData, TVariables>,
   client: ApolloClient<object>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
+  disableNetworkFetches: boolean,
+  isSyncSSR: boolean
 ) {
   if (
     (isSyncSSR || disableNetworkFetches) &&
@@ -506,13 +526,13 @@ function useResubscribeIfNecessary<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  /** this hook will mutate properties on `observable` */
-  observable: ObsQueryWithMeta<TData, TVariables>,
   /** this hook will mutate properties on `resultData` */
   resultData: InternalResult<TData, TVariables>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
+  /** this hook will mutate properties on `observable` */
+  observable: ObsQueryWithMeta<TData, TVariables>,
   client: ApolloClient<object>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
 ) {
   {
     if (
@@ -528,7 +548,7 @@ function useResubscribeIfNecessary<
       // (potentially) kicks off a network request (for example, when the
       // variables have changed), which is technically a side-effect.
       observable.reobserve(
-        getObsQueryOptions(client, options, watchQueryOptions, observable)
+        getObsQueryOptions(observable, client, options, watchQueryOptions)
       );
 
       // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
@@ -564,7 +584,7 @@ export function createMakeWatchQueryOptions<
     // query property that we add below.
     ...otherOptions
   }: QueryHookOptions<TData, TVariables> = {},
-  hasRenderPromises: boolean
+  isSyncSSR: boolean
 ) {
   return (
     observable?: ObservableQuery<TData, TVariables>
@@ -575,7 +595,7 @@ export function createMakeWatchQueryOptions<
       Object.assign(otherOptions, { query });
 
     if (
-      hasRenderPromises &&
+      isSyncSSR &&
       (watchQueryOptions.fetchPolicy === "network-only" ||
         watchQueryOptions.fetchPolicy === "cache-and-network")
     ) {
@@ -611,10 +631,10 @@ export function getObsQueryOptions<
   TData,
   TVariables extends OperationVariables,
 >(
+  observable: ObservableQuery<TData, TVariables> | undefined,
   client: ApolloClient<object>,
   queryHookOptions: QueryHookOptions<TData, TVariables>,
-  watchQueryOptions: Partial<WatchQueryOptions<TVariables, TData>>,
-  observable: ObservableQuery<TData, TVariables> | undefined
+  watchQueryOptions: Partial<WatchQueryOptions<TVariables, TData>>
 ): WatchQueryOptions<TVariables, TData> {
   const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
 
@@ -641,13 +661,13 @@ export function getObsQueryOptions<
 }
 
 function setResult<TData, TVariables extends OperationVariables>(
-  resultData: InternalResult<TData, TVariables>,
   nextResult: ApolloQueryResult<TData>,
-  forceUpdate: () => void,
-  callbacks: Callbacks<TData>,
-  partialRefetch: boolean | undefined,
+  resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>
+  client: ApolloClient<object>,
+  partialRefetch: boolean | undefined,
+  forceUpdate: () => void,
+  callbacks: Callbacks<TData>
 ) {
   const previousResult = resultData.current;
   if (previousResult && previousResult.data) {
@@ -710,13 +730,13 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
     // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
     // this could call unsafeHandlePartialRefetch
     setResult(
-      resultData,
       observable.getCurrentResult(),
-      () => {},
-      callbacks,
-      partialRefetch,
+      resultData,
       observable,
-      client
+      client,
+      partialRefetch,
+      () => {},
+      callbacks
     );
   }
   return resultData.current!;

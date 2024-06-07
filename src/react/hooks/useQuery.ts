@@ -228,6 +228,7 @@ export function useQueryInternals<
   const renderPromises = React.useContext(getApolloContext()).renderPromises;
   const disableNetworkFetches = client.disableNetworkFetches;
   const ssrAllowed = !(options.ssr === false || options.skip);
+  const partialRefetch = options.partialRefetch;
 
   const makeWatchQueryOptions = (
     observable?: ObservableQuery<TData, TVariables>
@@ -259,21 +260,6 @@ export function useQueryInternals<
     options
   );
 
-  const _callbacks = {
-    onCompleted: options.onCompleted || noop,
-    onError: options.onError || noop,
-  };
-  const callbackRef = React.useRef<Callbacks<TData>>(_callbacks);
-  React.useEffect(() => {
-    // Make sure state.onCompleted and state.onError always reflect the latest
-    // options.onCompleted and options.onError callbacks provided to useQuery,
-    // since those functions are often recreated every time useQuery is called.
-    // Like the forceUpdate method, the versions of these methods inherited from
-    // InternalState.prototype are empty no-ops, but we can override them on the
-    // base state object (without modifying the prototype).
-    callbackRef.current = _callbacks;
-  });
-
   const obsQueryFields = React.useMemo<
     Omit<ObservableQueryFields<TData, TVariables>, "variables">
   >(() => bindObservableMethods(observable), [observable]);
@@ -294,8 +280,56 @@ export function useQueryInternals<
     observable
   );
 
-  const partialRefetch = options.partialRefetch;
-  const result = useSyncExternalStore(
+  const result = useObservableSubscriptionResult<TData, TVariables>(
+    disableNetworkFetches,
+    renderPromises,
+    resultData,
+    observable,
+    {
+      onCompleted: options.onCompleted || noop,
+      onError: options.onError || noop,
+    },
+    partialRefetch,
+    client
+  );
+
+  return {
+    result,
+    obsQueryFields,
+    observable,
+    resultData,
+    client,
+    updateInternalState,
+  };
+}
+
+function useObservableSubscriptionResult<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  disableNetworkFetches: boolean,
+  renderPromises: RenderPromises | undefined,
+  resultData: InternalResult<TData, TVariables>,
+  observable: ObservableQuery<TData, TVariables>,
+  callbacks: {
+    onCompleted: (data: TData) => void;
+    onError: (error: ApolloError) => void;
+  },
+  partialRefetch: boolean | undefined,
+  client: ApolloClient<object>
+) {
+  const callbackRef = React.useRef<Callbacks<TData>>(callbacks);
+  React.useEffect(() => {
+    // Make sure state.onCompleted and state.onError always reflect the latest
+    // options.onCompleted and options.onError callbacks provided to useQuery,
+    // since those functions are often recreated every time useQuery is called.
+    // Like the forceUpdate method, the versions of these methods inherited from
+    // InternalState.prototype are empty no-ops, but we can override them on the
+    // base state object (without modifying the prototype).
+    callbackRef.current = callbacks;
+  });
+
+  return useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
         // reference `disableNetworkFetches` here to ensure that the rules of hooks
@@ -402,16 +436,8 @@ export function useQueryInternals<
         client
       )
   );
-
-  return {
-    result,
-    obsQueryFields,
-    observable,
-    resultData,
-    client,
-    updateInternalState,
-  };
 }
+
 function useRegisterSSRObservable<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,

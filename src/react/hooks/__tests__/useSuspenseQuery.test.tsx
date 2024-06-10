@@ -61,8 +61,6 @@ import {
   useTrackRenders,
 } from "../../../testing/internal";
 
-const IS_REACT_19 = React.version.startsWith("19");
-
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
   "wrapper"
@@ -9593,8 +9591,6 @@ describe("useSuspenseQuery", () => {
 
     await act(() => user.type(input, "ab"));
 
-    // this currently times out in React 19
-    if (IS_REACT_19) return;
     await waitFor(() => {
       expect(screen.getByTestId("result")).toHaveTextContent("ab");
     });
@@ -9616,7 +9612,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => {
       expect(screen.getByTestId("result")).toHaveTextContent("abc");
     });
-  });
+  }, 10000);
 
   it("works with startTransition to change variables", async () => {
     type Variables = {

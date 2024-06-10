@@ -1502,9 +1502,6 @@ describe("useQuery Hook", () => {
 
   describe("<React.StrictMode>", () => {
     it("double-rendering should not trigger duplicate network requests", async () => {
-      // this test (or our assumptions) probably needs to be rewritten to work in React 19
-      if (IS_REACT_19) return;
-
       const query: TypedDocumentNode<{
         linkCount: number;
       }> = gql`
@@ -1562,7 +1559,7 @@ describe("useQuery Hook", () => {
 
       function checkObservableQueries(expectedLinkCount: number) {
         const obsQueries = client.getObservableQueries("all");
-        expect(obsQueries.size).toBe(2);
+        expect(obsQueries.size).toBe(IS_REACT_19 ? 1 : 2);
 
         const activeSet = new Set<typeof result.current.observable>();
         const inactiveSet = new Set<typeof result.current.observable>();
@@ -1583,7 +1580,7 @@ describe("useQuery Hook", () => {
           }
         });
         expect(activeSet.size).toBe(1);
-        expect(inactiveSet.size).toBe(1);
+        expect(inactiveSet.size).toBe(obsQueries.size - activeSet.size);
       }
 
       checkObservableQueries(1);

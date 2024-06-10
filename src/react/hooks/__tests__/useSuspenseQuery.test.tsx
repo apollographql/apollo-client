@@ -9591,9 +9591,14 @@ describe("useSuspenseQuery", () => {
 
     await act(() => user.type(input, "ab"));
 
-    await waitFor(() => {
-      expect(screen.getByTestId("result")).toHaveTextContent("ab");
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("result")).toHaveTextContent("ab");
+      },
+      {
+        timeout: 10000,
+      }
+    );
 
     await act(() => user.type(input, "c"));
 

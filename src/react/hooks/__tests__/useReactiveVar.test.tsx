@@ -253,8 +253,6 @@ describe("useReactiveVar Hook", () => {
     });
 
     itAsync("works with strict mode", async (resolve, reject) => {
-      // this test currently times out in React 19
-      if (IS_REACT_19) return resolve();
       const counterVar = makeVar(0);
       const mock = jest.fn();
 

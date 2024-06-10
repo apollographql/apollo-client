@@ -27,3 +27,9 @@ if (!Symbol.asyncDispose) {
     value: Symbol("asyncDispose"),
   });
 }
+
+//@ts-ignore
+console.createTask = (fn, ...args) => {
+  console.log("createTask", fn, args);
+  return fn();
+};

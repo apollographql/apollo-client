@@ -38,11 +38,12 @@ jobs:
       - run: npm run ci:precheck
       - run: npm version
       - run: npm ci
+      - run: test -eq "<< parameters.project >>" "Core Tests" && npm run test:memory
       - run:
           name: Jest suite with coverage
-          command: npm run test:ci
+          command: npm run test:ci --selectProjects "<< parameters.project >>"
           environment:
-            JEST_JUNIT_OUTPUT_FILE: "reports/junit/js-test-results.xml"
+            JEST_JUNIT_OUTPUT_FILE: "reports/junit/js-test-results-<< parameters.project >>.xml"
       - store_test_results:
           path: reports/junit
       - store_artifacts:
@@ -124,7 +125,11 @@ workflows:
   Build and Test:
     jobs:
       # - Filesize
-      - Tests
+      - Tests:
+          matrix:
+            parameters:
+              project:
+                ["Core Tests", "ReactDOM 17", "ReactDOM 18", "ReactDOM 19"]
       - Formatting
       - Lint
       - BuildTarball
@@ -165,7 +170,7 @@ workflows:
                 - "@types/react@16.8 @types/react-dom@16.8"
                 - "@types/react@17 @types/react-dom@17"
                 - "@types/react@18 @types/react-dom@18"
-                - "@types/react@npm:types-react@19.0.0-alpha.3 @types/react-dom@npm:types-react-dom@19.0.0-alpha.3"
+                - "@types/react@npm:types-react@19.0.0-rc.0 @types/react-dom@npm:types-react-dom@19.0.0-rc.0"
                 - "typescript@next"
   security-scans:
     jobs:

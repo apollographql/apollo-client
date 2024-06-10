@@ -7,6 +7,8 @@ import { withCleanup } from "../../../../testing/internal";
 const UNDEF = {};
 
 it("returns a function that returns `true` if called during render", () => {
+  // We don't provide this functionality with React 19 anymore since it requires internals access
+  if (React.version.startsWith("19")) return;
   let result: boolean | typeof UNDEF = UNDEF;
   function TestComponent() {
     const calledDuringRender = useRenderGuard();

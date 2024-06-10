@@ -35,6 +35,8 @@ import {
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 
+const IS_REACT_19 = React.version.startsWith("19");
+
 describe("useQuery Hook", () => {
   describe("General use", () => {
     it("should handle a simple query", async () => {
@@ -1501,7 +1503,7 @@ describe("useQuery Hook", () => {
   describe("<React.StrictMode>", () => {
     it("double-rendering should not trigger duplicate network requests", async () => {
       // this test (or our assumptions) probably needs to be rewritten to work in React 19
-      if (React.version.startsWith("19")) return;
+      if (IS_REACT_19) return;
 
       const query: TypedDocumentNode<{
         linkCount: number;

@@ -44,7 +44,7 @@ jobs:
       - run: if test "<< parameters.project >>" = "Core Tests"; then npm run test:memory; fi
       - run:
           name: Jest suite with coverage
-          command: npm run test:ci --selectProjects "<< parameters.project >>"
+          command: npm run test:ci -- --selectProjects "<< parameters.project >>"
           environment:
             JEST_JUNIT_OUTPUT_FILE: "reports/junit/js-test-results-<< parameters.project >>.xml"
       - store_test_results:

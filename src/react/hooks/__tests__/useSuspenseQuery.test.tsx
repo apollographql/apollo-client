@@ -9519,8 +9519,6 @@ describe("useSuspenseQuery", () => {
   });
 
   it("works with useDeferredValue", async () => {
-    // this test currently times out in React 19
-    if (IS_REACT_19) return;
     const user = userEvent.setup();
 
     interface Variables {
@@ -9595,6 +9593,8 @@ describe("useSuspenseQuery", () => {
 
     await act(() => user.type(input, "ab"));
 
+    // this currently times out in React 19
+    if (IS_REACT_19) return;
     await waitFor(() => {
       expect(screen.getByTestId("result")).toHaveTextContent("ab");
     });

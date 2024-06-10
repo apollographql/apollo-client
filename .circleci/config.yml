@@ -33,6 +33,9 @@ jobs:
   Tests:
     docker:
       - image: cimg/node:22.2.0
+    parameters:
+      project:
+        type: string
     steps:
       - checkout
       - run: npm run ci:precheck

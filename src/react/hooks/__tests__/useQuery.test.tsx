@@ -1559,7 +1559,7 @@ describe("useQuery Hook", () => {
 
       function checkObservableQueries(expectedLinkCount: number) {
         const obsQueries = client.getObservableQueries("all");
-/*
+        /*
 This is due to a timing change in React 19
 
 In React 18, you observe this pattern:

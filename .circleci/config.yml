@@ -73,7 +73,7 @@ jobs:
       react:
         type: string
     docker:
-      - image: cimg/node:22.2.0
+      - image: cimg/node:22.2.0-browsers
     steps:
       - checkout
       - attach_workspace:

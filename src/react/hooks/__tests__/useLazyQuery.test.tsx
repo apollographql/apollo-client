@@ -42,7 +42,7 @@ describe("useLazyQuery Hook", () => {
       {
         request: { query: helloQuery },
         result: { data: { hello: "world" } },
-        delay: 20,
+        delay: 50,
       },
     ];
     const { result } = renderHook(() => useLazyQuery(helloQuery), {
@@ -147,26 +147,29 @@ describe("useLazyQuery Hook", () => {
       }
     );
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].called).toBe(false);
+    let currentResult = result.current[1];
+    expect(currentResult.loading).toBe(false);
+    expect(currentResult.called).toBe(false);
     const execute = result.current[0];
     setTimeout(() => execute());
 
     await waitFor(
       () => {
-        expect(result.current[1].loading).toBe(true);
+        currentResult = result.current[1];
+        expect(currentResult.loading).toBe(true);
       },
       { interval: 1 }
     );
-    expect(result.current[1].called).toBe(true);
+    expect(currentResult.called).toBe(true);
 
     await waitFor(
       () => {
-        expect(result.current[1].loading).toBe(false);
+        currentResult = result.current[1];
+        expect(currentResult.loading).toBe(false);
       },
       { interval: 1 }
     );
-    expect(result.current[1].called).toBe(true);
+    expect(currentResult.called).toBe(true);
   });
 
   it("should use variables defined in hook options (if any), when running the lazy execution function", async () => {
@@ -552,43 +555,48 @@ describe("useLazyQuery Hook", () => {
       ),
     });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
+    let currentResult = result.current[1];
+    expect(currentResult.loading).toBe(false);
+    expect(currentResult.data).toBe(undefined);
     const execute = result.current[0];
 
     setTimeout(() => execute());
 
     await waitFor(
       () => {
-        expect(result.current[1].loading).toBe(true);
+        currentResult = result.current[1];
+        expect(currentResult.loading).toBe(true);
       },
       { interval: 1 }
     );
 
     await waitFor(
       () => {
-        expect(result.current[1].loading).toBe(false);
+        currentResult = result.current[1];
+        expect(currentResult.loading).toBe(false);
       },
       { interval: 1 }
     );
-    expect(result.current[1].data).toEqual({ hello: "world" });
+    expect(currentResult.data).toEqual({ hello: "world" });
 
     setTimeout(() => execute({ query: query2 }));
 
     await waitFor(
       () => {
-        expect(result.current[1].loading).toBe(true);
+        currentResult = result.current[1];
+        expect(currentResult.loading).toBe(true);
       },
       { interval: 1 }
     );
 
     await waitFor(
       () => {
-        expect(result.current[1].loading).toBe(false);
+        currentResult = result.current[1];
+        expect(currentResult.loading).toBe(false);
       },
       { interval: 1 }
     );
-    expect(result.current[1].data).toEqual({ name: "changed" });
+    expect(currentResult.data).toEqual({ name: "changed" });
   });
 
   it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
@@ -833,50 +841,55 @@ describe("useLazyQuery Hook", () => {
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
       ),
     });
+    let currentResult = result.current[1];
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].previousData).toBe(undefined);
+    expect(currentResult.loading).toBe(false);
+    expect(currentResult.data).toBe(undefined);
+    expect(currentResult.previousData).toBe(undefined);
     const execute = result.current[0];
     setTimeout(() => execute({ variables: { id: 1 } }));
 
     await waitFor(
       () => {
-        expect(result.current[1].loading).toBe(true);
+        currentResult = result.current[1];
+        expect(currentResult.loading).toBe(true);
       },
       { interval: 1 }
     );
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].previousData).toBe(undefined);
+    expect(currentResult.data).toBe(undefined);
+    expect(currentResult.previousData).toBe(undefined);
 
     await waitFor(
       () => {
-        expect(result.current[1].loading).toBe(false);
+        currentResult = result.current[1];
+        expect(currentResult.loading).toBe(false);
       },
       { interval: 1 }
     );
-    expect(result.current[1].data).toEqual(data1);
-    expect(result.current[1].previousData).toBe(undefined);
+    expect(currentResult!.data).toEqual(data1);
+    expect(currentResult!.previousData).toBe(undefined);
 
     setTimeout(() => execute({ variables: { id: 2 } }));
 
     await waitFor(
       () => {
-        expect(result.current[1].loading).toBe(true);
+        currentResult = result.current[1];
+        expect(currentResult.loading).toBe(true);
       },
       { interval: 1 }
     );
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].previousData).toEqual(data1);
+    expect(currentResult.data).toBe(undefined);
+    expect(currentResult.previousData).toEqual(data1);
 
     await waitFor(
       () => {
-        expect(result.current[1].loading).toBe(false);
+        currentResult = result.current[1];
+        expect(currentResult.loading).toBe(false);
       },
       { interval: 1 }
     );
-    expect(result.current[1].data).toEqual(data2);
-    expect(result.current[1].previousData).toEqual(data1);
+    expect(currentResult.data).toEqual(data2);
+    expect(currentResult.previousData).toEqual(data1);
   });
 
   it("should work with cache-and-network fetch policy", async () => {

@@ -770,6 +770,7 @@ describe("useQuery Hook", () => {
         {
           request: { query: query1 },
           result: { data: allPeopleData },
+          delay: 3,
         },
         {
           request: { query: query2 },
@@ -811,6 +812,7 @@ describe("useQuery Hook", () => {
       );
       await waitFor(
         () => {
+          // flaky here too
           expect(result.current[1].loading).toBe(true);
         },
         { interval: 1 }
@@ -1841,18 +1843,21 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
           hello
         }
       `;
-      const mocks = [
+      const mocks: MockedResponse[] = [
         {
           request: { query },
           result: { data: { hello: "world 1" } },
+          delay: 10,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
+          delay: 10,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
+          delay: 10,
         },
       ];
 
@@ -1869,22 +1874,25 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
       );
 
       const { result, unmount } = renderHook(
-        () => useQuery(query, { pollInterval: 10 }),
+        () => useQuery(query, { pollInterval: 20 }),
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      let currentResult = result.current;
+      expect(currentResult.loading).toBe(true);
+      expect(currentResult.data).toBe(undefined);
 
       await waitFor(
         () => {
-          expect(result.current.loading).toBe(false);
+          currentResult = result.current;
+          expect(currentResult.loading).toBe(false);
         },
         { interval: 1 }
       );
       await waitFor(
         () => {
-          expect(result.current.data).toEqual({ hello: "world 1" });
+          currentResult = result.current;
+          expect(currentResult.data).toEqual({ hello: "world 1" });
         },
         { interval: 1 }
       );
@@ -1906,7 +1914,7 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
             const newRequestCount = requestSpy.mock.calls.length;
             expect(newRequestCount).toBeGreaterThan(requestCount);
           },
-          { interval: 1, timeout: 20 }
+          { interval: 1, timeout: 40 }
         )
       ).rejects.toThrow();
 
@@ -2082,18 +2090,21 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         }
       `;
 
-      const mocks = [
+      const mocks: MockedResponse[] = [
         {
           request: { query },
           result: { data: { hello: "world 1" } },
+          delay: 3,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
+          delay: 3,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
+          delay: 3,
         },
       ];
 
@@ -3738,63 +3749,69 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
+      let currentResult = result.current;
+      expect(currentResult.loading).toBe(true);
+      expect(currentResult.data).toBe(undefined);
+      expect(currentResult.error).toBe(undefined);
 
       await waitFor(
         () => {
-          expect(result.current.loading).toBe(false);
+          currentResult = result.current;
+          expect(currentResult.loading).toBe(false);
         },
         { interval: 1 }
       );
 
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.message).toBe("same error");
+      expect(currentResult.data).toBe(undefined);
+      expect(currentResult.error).toBeInstanceOf(ApolloError);
+      expect(currentResult.error!.message).toBe("same error");
 
-      result.current.refetch();
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
+      currentResult.refetch();
 
       await waitFor(
         () => {
-          expect(result.current.loading).toBe(false);
+          currentResult = result.current;
+          expect(currentResult.loading).toBe(true);
         },
         { interval: 1 }
       );
-      expect(result.current.data).toEqual({ hello: "world" });
-      expect(result.current.error).toBe(undefined);
+      expect(currentResult.data).toBe(undefined);
+      expect(currentResult.error).toBe(undefined);
+
+      await waitFor(
+        () => {
+          currentResult = result.current;
+          expect(currentResult.loading).toBe(false);
+        },
+        { interval: 1 }
+      );
+      expect(currentResult.data).toEqual({ hello: "world" });
+      expect(currentResult.error).toBe(undefined);
 
       const catchFn = jest.fn();
-      result.current.refetch().catch(catchFn);
+      currentResult.refetch().catch(catchFn);
 
       await waitFor(
         () => {
-          expect(result.current.loading).toBe(true);
+          currentResult = result.current;
+          expect(currentResult.loading).toBe(true);
         },
         { interval: 1 }
       );
-      expect(result.current.data).toEqual({ hello: "world" });
-      expect(result.current.error).toBe(undefined);
+      expect(currentResult.data).toEqual({ hello: "world" });
+      expect(currentResult.error).toBe(undefined);
 
       await waitFor(
         () => {
-          expect(result.current.loading).toBe(false);
+          currentResult = result.current;
+          expect(currentResult.loading).toBe(false);
         },
         { interval: 1 }
       );
       // TODO: Is this correct behavior here?
-      expect(result.current.data).toEqual({ hello: "world" });
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.message).toBe("same error");
+      expect(currentResult.data).toEqual({ hello: "world" });
+      expect(currentResult.error).toBeInstanceOf(ApolloError);
+      expect(currentResult.error!.message).toBe("same error");
 
       expect(catchFn.mock.calls.length).toBe(1);
       expect(catchFn.mock.calls[0].length).toBe(1);

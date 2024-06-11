@@ -384,6 +384,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       return data;
     }
 
+    if (!this.dataMaskingEnabledInClient) {
+      return data;
+    }
+
     return maskQuery(data, document, this.fragmentMatches.bind(this));
   }
 

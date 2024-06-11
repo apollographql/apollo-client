@@ -269,7 +269,10 @@ export class ObservableQuery<
       const diff = this.queryInfo.getDiff();
 
       if (diff.complete || this.options.returnPartialData) {
-        result.data = diff.result;
+        result.data = this.queryManager.cache.maskDocument(
+          this.query,
+          diff.result
+        );
       }
 
       if (equal(result.data, {})) {

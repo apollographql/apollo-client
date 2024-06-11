@@ -7097,6 +7097,87 @@ describe("data masking", () => {
       ]);
     }
   });
+
+  it.each([
+    "cache-first",
+    "network-only",
+    "cache-and-network",
+  ] as FetchPolicy[])(
+    "masks result returned from getCurrentResult when using %s fetchPolicy",
+    async (fetchPolicy) => {
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        };
+      }
+
+      const query: TypedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 34,
+              },
+            },
+          },
+          delay: 20,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const observable = client.watchQuery({ query, fetchPolicy });
+      const stream = new ObservableStream(observable);
+
+      {
+        const { data } = await stream.takeNext();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+      }
+
+      {
+        const { data } = observable.getCurrentResult(false);
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+      }
+    }
+  );
 });
 
 function clientRoundtrip(

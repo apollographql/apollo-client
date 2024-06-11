@@ -102,6 +102,9 @@ export type WatchFragmentResult<TData> =
 export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
 
+  /** @internal */
+  public dataMaskingEnabledInClient: boolean = false;
+
   // required to implement
   // core API
   public abstract read<TData = any, TVariables = any>(

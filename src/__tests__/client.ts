@@ -6938,6 +6938,95 @@ describe("data masking", () => {
       });
     }
   });
+
+  it("masks partial cache data when returnPartialData is `true`", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User (server)",
+              age: 35,
+            },
+          },
+        },
+        delay: 20,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          // @ts-expect-error TODO: Determine how to write this with masked types
+          age: 34,
+        },
+      },
+    });
+
+    const observable = client.watchQuery({
+      query,
+      returnPartialData: true
+    });
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+        },
+      });
+    }
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User (server)",
+        },
+      });
+    }
+  });
 });
 
 function clientRoundtrip(

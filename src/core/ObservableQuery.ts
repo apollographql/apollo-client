@@ -1008,6 +1008,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     result: ApolloQueryResult<TData>,
     variables: TVariables | undefined
   ) {
+    result.data = this.queryManager.cache.maskDocument(this.query, result.data);
     const lastError = this.getLastError();
     const isDifferent = this.isDifferentFromLastResult(result, variables);
     // Update the last result even when isDifferentFromLastResult returns false,

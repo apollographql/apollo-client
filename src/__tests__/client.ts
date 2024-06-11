@@ -29,10 +29,14 @@ import {
 } from "../utilities";
 import { ApolloLink } from "../link/core";
 import {
+  ApolloCache,
+  Cache,
   createFragmentRegistry,
+  DataProxy,
   InMemoryCache,
   makeVar,
   PossibleTypesMap,
+  Reference,
 } from "../cache";
 import { ApolloError } from "../errors";
 
@@ -6595,6 +6599,76 @@ describe("data masking", () => {
     }
   });
 
+  it("does not mask query when using a cache that does not support it", async () => {
+    using _ = spyOnConsole("warn");
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new TestCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+    }
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining("This cache does not support data masking")
+    );
+  });
+
   it("masks queries updated by the cache", async () => {
     interface Query {
       currentUser: {
@@ -7206,4 +7280,50 @@ function clientRoundtrip(
       expect(result.data).toEqual(data.data);
     })
     .then(resolve, reject);
+}
+
+class TestCache extends ApolloCache<unknown> {
+  public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
+    return {};
+  }
+
+  public evict(): boolean {
+    return false;
+  }
+
+  public extract(optimistic?: boolean): unknown {
+    return undefined;
+  }
+
+  public performTransaction(
+    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void
+  ): void {
+    transaction(this);
+  }
+
+  public read<T, TVariables = any>(
+    query: Cache.ReadOptions<TVariables>
+  ): T | null {
+    return null;
+  }
+
+  public removeOptimistic(id: string): void {}
+
+  public reset(): Promise<void> {
+    return new Promise<void>(() => null);
+  }
+
+  public restore(serializedState: unknown): ApolloCache<unknown> {
+    return this;
+  }
+
+  public watch(watch: Cache.WatchOptions): () => void {
+    return function () {};
+  }
+
+  public write<TResult = any, TVariables = any>(
+    _: Cache.WriteOptions<TResult, TVariables>
+  ): Reference | undefined {
+    return;
+  }
 }

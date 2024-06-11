@@ -269,10 +269,7 @@ export class ObservableQuery<
       const diff = this.queryInfo.getDiff();
 
       if (diff.complete || this.options.returnPartialData) {
-        result.data = this.queryManager.cache.maskDocument(
-          this.query,
-          diff.result
-        );
+        result.data = this.maskQuery(diff.result);
       }
 
       if (equal(result.data, {})) {
@@ -1011,7 +1008,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     result: ApolloQueryResult<TData>,
     variables: TVariables | undefined
   ) {
-    result.data = this.queryManager.cache.maskDocument(this.query, result.data);
+    result.data = this.maskQuery(result.data);
     const lastError = this.getLastError();
     const isDifferent = this.isDifferentFromLastResult(result, variables);
     // Update the last result even when isDifferentFromLastResult returns false,
@@ -1065,6 +1062,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private transformDocument(document: DocumentNode) {
     return this.queryManager.transform(document);
+  }
+
+  private maskQuery(data: TData) {
+    return this.queryManager.cache.maskDocument(this.query, data);
   }
 }
 

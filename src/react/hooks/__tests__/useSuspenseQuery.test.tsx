@@ -11289,17 +11289,20 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    client.writeQuery({
-      query,
-      data: {
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          // @ts-expect-error TODO: Determine how to write this with masked types
-          age: 34,
+    {
+      using _ = spyOnConsole("error");
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            // @ts-expect-error TODO: Determine how to write this with masked types
+            age: 34,
+          },
         },
-      },
-    });
+      });
+    }
 
     const Profiler = createProfiler({
       initialSnapshot: {

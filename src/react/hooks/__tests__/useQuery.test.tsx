@@ -1559,6 +1559,32 @@ describe("useQuery Hook", () => {
 
       function checkObservableQueries(expectedLinkCount: number) {
         const obsQueries = client.getObservableQueries("all");
+/*
+This is due to a timing change in React 19
+
+In React 18, you observe this pattern:
+
+  1.  render
+  2.  useState initializer
+  3.  component continues to render with first state
+  4.  strictMode: render again
+  5.  strictMode: call useState initializer again
+  6.  component continues to render with second state
+
+now, in React 19 it looks like this:
+
+  1.  render
+  2.  useState initializer
+  3.  strictMode: call useState initializer again
+  4.  component continues to render with one of these two states
+  5.  strictMode: render again
+  6.  component continues to render with the same state as during the first render
+
+Since useQuery breaks the rules of React and mutably creates an ObservableQuery on the state during render if none is present, React 18 did create two, while React 19 only creates one.
+
+This is pure coincidence though, and the useQuery rewrite that doesn't break the rules of hooks as much and creates the ObservableQuery as part of the state initializer will end up with behaviour closer to the old React 18 behaviour again.
+
+*/
         expect(obsQueries.size).toBe(IS_REACT_19 ? 1 : 2);
 
         const activeSet = new Set<typeof result.current.observable>();

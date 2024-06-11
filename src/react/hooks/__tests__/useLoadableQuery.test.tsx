@@ -55,6 +55,8 @@ import {
   useTrackRenders,
 } from "../../../testing/internal";
 
+const IS_REACT_19 = React.version.startsWith("19");
+
 afterEach(() => {
   jest.useRealTimers();
 });
@@ -4594,6 +4596,8 @@ it('does not suspend deferred queries with partial data in the cache and using a
 });
 
 it("throws when calling loadQuery on first render", async () => {
+  // We don't provide this functionality with React 19 anymore since it requires internals access
+  if (IS_REACT_19) return;
   using _consoleSpy = spyOnConsole("error");
   const { query, mocks } = useSimpleQueryCase();
 
@@ -4613,6 +4617,8 @@ it("throws when calling loadQuery on first render", async () => {
 });
 
 it("throws when calling loadQuery on subsequent render", async () => {
+  // We don't provide this functionality with React 19 anymore since it requires internals access
+  if (React.version.startsWith("19")) return;
   using _consoleSpy = spyOnConsole("error");
   const { query, mocks } = useSimpleQueryCase();
 

@@ -6999,7 +6999,7 @@ describe("data masking", () => {
 
     const observable = client.watchQuery({
       query,
-      returnPartialData: true
+      returnPartialData: true,
     });
 
     const stream = new ObservableStream(observable);
@@ -7025,6 +7025,76 @@ describe("data masking", () => {
           name: "Test User (server)",
         },
       });
+    }
+  });
+
+  it("masks partial data returned from data on errors with errorPolicy `all`", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: null,
+              age: 34,
+            },
+          },
+          errors: [new GraphQLError("Couldn't get name")],
+        },
+        delay: 20,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query, errorPolicy: "all" });
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data, errors } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: null,
+        },
+      });
+
+      expect(errors).toEqual([
+        new ApolloError({
+          graphQLErrors: [new GraphQLError("Couldn't get name")],
+        }),
+      ]);
     }
   });
 });

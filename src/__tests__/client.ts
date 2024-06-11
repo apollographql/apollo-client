@@ -6469,6 +6469,131 @@ describe("data masking", () => {
       });
     }
   });
+
+  it("does not mask query when dataMasking is `false`", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+    }
+  });
+
+  it("does not mask query by default", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30
+        },
+      });
+    }
+  });
 });
 
 function clientRoundtrip(

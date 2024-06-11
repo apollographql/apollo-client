@@ -23,6 +23,7 @@ import {
   mockSingleLink,
   tick,
   wait,
+  MockedResponse,
 } from "../../../testing";
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
@@ -1925,18 +1926,21 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         }
       `;
 
-      const mocks = [
+      const mocks: MockedResponse[] = [
         {
           request: { query },
           result: { data: { hello: "world 1" } },
+          delay: 3,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
+          delay: 3,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
+          delay: 3,
         },
       ];
 

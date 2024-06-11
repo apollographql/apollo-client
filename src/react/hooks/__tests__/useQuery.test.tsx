@@ -23,6 +23,7 @@ import {
   mockSingleLink,
   tick,
   wait,
+  MockedResponse,
 } from "../../../testing";
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
@@ -1897,18 +1898,21 @@ describe("useQuery Hook", () => {
         }
       `;
 
-      const mocks = [
+      const mocks: MockedResponse[] = [
         {
           request: { query },
           result: { data: { hello: "world 1" } },
+          delay: 3,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
+          delay: 3,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
+          delay: 3,
         },
       ];
 

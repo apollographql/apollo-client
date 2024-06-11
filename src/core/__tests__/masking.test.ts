@@ -816,7 +816,7 @@ test("throws when document contains more than 1 fragment without a fragmentName"
     )
   ).toThrow(
     new InvariantError(
-      "Found 2 fragments. `fragmentName` must be provided when there is more than 1 fragment."
+      "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
     )
   );
 });

@@ -45,7 +45,7 @@ export function maskFragment<TData = unknown>(
   if (typeof fragmentName === "undefined") {
     invariant(
       fragments.length === 1,
-      `Found %s fragments. \`fragmentName\` must be provided when there is more than 1 fragment.`,
+      `Found %s fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
       fragments.length
     );
     fragmentName = fragments[0].name.value;

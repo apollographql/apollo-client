@@ -374,6 +374,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   }
 
   public maskDocument<TData = unknown>(document: DocumentNode, data: TData) {
+    if (!this.dataMaskingEnabledInClient) {
+      return data;
+    }
+
     if (!this.fragmentMatches) {
       if (__DEV__) {
         invariant.warn(
@@ -381,10 +385,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         );
       }
 
-      return data;
-    }
-
-    if (!this.dataMaskingEnabledInClient) {
       return data;
     }
 

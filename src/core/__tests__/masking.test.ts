@@ -1,7 +1,8 @@
-import { mask } from "../masking.js";
+import { maskFragment, maskQuery } from "../masking.js";
 import { InMemoryCache, gql } from "../index.js";
 import { InlineFragmentNode } from "graphql";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
+import { InvariantError } from "../../utilities/globals/index.js";
 
 test("strips top-level fragment data from query", () => {
   const query = gql`
@@ -15,7 +16,7 @@ test("strips top-level fragment data from query", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     { foo: true, bar: true },
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -39,7 +40,7 @@ test("strips fragment data from nested object", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     { user: { __typename: "User", id: 1, name: "Test User" } },
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -63,7 +64,7 @@ test("strips fragment data from arrays", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     {
       users: [
         { __typename: "User", id: 1, name: "Test User 1" },
@@ -102,7 +103,7 @@ test("strips multiple fragments in the same selection set", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     {
       user: {
         __typename: "User",
@@ -144,7 +145,7 @@ test("strips multiple fragments across different selection sets", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     {
       user: {
         __typename: "User",
@@ -184,7 +185,7 @@ test("leaves overlapping fields in query", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     {
       user: {
         __typename: "User",
@@ -225,7 +226,7 @@ test("does not strip inline fragments", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     {
       user: {
         __typename: "User",
@@ -296,7 +297,7 @@ test("strips named fragments inside inline fragments", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     {
       user: {
         __typename: "User",
@@ -347,7 +348,7 @@ test("handles objects with no matching inline fragment condition", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     {
       drinks: [
         { __typename: "HotChocolate", id: 1 },
@@ -380,7 +381,7 @@ test("handles field aliases", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     {
       user: {
         __typename: "User",
@@ -473,7 +474,7 @@ test("handles overlapping fields inside multiple inline fragments", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     {
       drinks: [
         {
@@ -564,7 +565,7 @@ test("does nothing if there are no fragments to mask", () => {
     }
   `;
 
-  const data = mask(
+  const data = maskQuery(
     { user: { __typename: "User", id: 1, name: "Test User" } },
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -655,7 +656,7 @@ test("maintains referential equality on subtrees that did not change", () => {
   const drink = { __typename: "Espresso" };
   const originalData = deepFreeze({ user, post, authors, industries, drink });
 
-  const data = mask(
+  const data = maskQuery(
     originalData,
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -711,13 +712,274 @@ test("maintains referential equality the entire result if there are no fragments
     },
   });
 
-  const data = mask(
+  const data = maskQuery(
     originalData,
     query,
     createFragmentMatcher(new InMemoryCache())
   );
 
   expect(data).toBe(originalData);
+});
+
+test("masks named fragments in fragment documents", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      __typename
+      id
+      ...UserProfile
+    }
+
+    fragment UserProfile on User {
+      age
+    }
+  `;
+
+  const data = maskFragment(
+    { __typename: "User", id: 1, age: 30 },
+    fragment,
+    createFragmentMatcher(new InMemoryCache()),
+    "UserFields"
+  );
+
+  expect(data).toEqual({ __typename: "User", id: 1 });
+});
+
+test("masks named fragments in nested fragment objects", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      __typename
+      id
+      profile {
+        __typename
+        ...UserProfile
+      }
+    }
+
+    fragment UserProfile on User {
+      age
+    }
+  `;
+
+  const data = maskFragment(
+    { __typename: "User", id: 1, profile: { __typename: "Profile", age: 30 } },
+    fragment,
+    createFragmentMatcher(new InMemoryCache()),
+    "UserFields"
+  );
+
+  expect(data).toEqual({
+    __typename: "User",
+    id: 1,
+    profile: { __typename: "Profile" },
+  });
+});
+
+test("does not mask inline fragment in fragment documents", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      __typename
+      id
+      ... @defer {
+        age
+      }
+    }
+  `;
+
+  const data = maskFragment(
+    { __typename: "User", id: 1, age: 30 },
+    fragment,
+    createFragmentMatcher(new InMemoryCache()),
+    "UserFields"
+  );
+
+  expect(data).toEqual({ __typename: "User", id: 1, age: 30 });
+});
+
+test("throws when document contains more than 1 fragment without a fragmentName", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      __typename
+      id
+      ...UserProfile
+    }
+
+    fragment UserProfile on User {
+      age
+    }
+  `;
+
+  expect(() =>
+    maskFragment(
+      { __typename: "User", id: 1, age: 30 },
+      fragment,
+      createFragmentMatcher(new InMemoryCache())
+    )
+  ).toThrow(
+    new InvariantError(
+      "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
+    )
+  );
+});
+
+test("throws when fragment cannot be found within document", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      __typename
+      id
+      ...UserProfile
+    }
+
+    fragment UserProfile on User {
+      age
+    }
+  `;
+
+  expect(() =>
+    maskFragment(
+      { __typename: "User", id: 1, age: 30 },
+      fragment,
+      createFragmentMatcher(new InMemoryCache()),
+      "ProfileFields"
+    )
+  ).toThrow(
+    new InvariantError('Could not find fragment with name "ProfileFields".')
+  );
+});
+
+test("maintains referential equality on fragment subtrees that did not change", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      __typename
+      id
+      profile {
+        __typename
+        ...ProfileFields
+      }
+      post {
+        __typename
+        id
+        title
+      }
+      industries {
+        __typename
+        ... on TechIndustry {
+          languageRequirements
+        }
+        ... on FinanceIndustry {
+          ...FinanceIndustryFields
+        }
+        ... on TradeIndustry {
+          id
+          yearsInBusiness
+          ...TradeIndustryFields
+        }
+      }
+      drinks {
+        __typename
+        ... on SportsDrink {
+          ...SportsDrinkFields
+        }
+        ... on Espresso {
+          __typename
+        }
+      }
+    }
+
+    fragment ProfileFields on Profile {
+      age
+    }
+
+    fragment FinanceIndustryFields on FinanceIndustry {
+      yearsInBusiness
+    }
+
+    fragment TradeIndustryFields on TradeIndustry {
+      languageRequirements
+    }
+
+    fragment SportsDrinkFields on SportsDrink {
+      saltContent
+    }
+  `;
+
+  const profile = {
+    __typename: "Profile",
+    age: 30,
+  };
+  const post = { __typename: "Post", id: 1, title: "Test Post" };
+  const industries = [
+    { __typename: "TechIndustry", languageRequirements: ["TypeScript"] },
+    { __typename: "FinanceIndustry", yearsInBusiness: 10 },
+    {
+      __typename: "TradeIndustry",
+      id: 10,
+      yearsInBusiness: 15,
+      languageRequirements: ["English", "German"],
+    },
+  ];
+  const drinks = [
+    { __typename: "Espresso" },
+    { __typename: "SportsDrink", saltContent: "1000mg" },
+  ];
+  const user = deepFreeze({
+    __typename: "User",
+    id: 1,
+    profile,
+    post,
+    industries,
+    drinks,
+  });
+
+  const data = maskFragment(
+    user,
+    fragment,
+    createFragmentMatcher(new InMemoryCache()),
+    "UserFields"
+  );
+
+  expect(data).toEqual({
+    __typename: "User",
+    id: 1,
+    profile: { __typename: "Profile" },
+    post: { __typename: "Post", id: 1, title: "Test Post" },
+    industries: [
+      { __typename: "TechIndustry", languageRequirements: ["TypeScript"] },
+      { __typename: "FinanceIndustry" },
+      { __typename: "TradeIndustry", id: 10, yearsInBusiness: 15 },
+    ],
+    drinks: [{ __typename: "Espresso" }, { __typename: "SportsDrink" }],
+  });
+
+  expect(data).not.toBe(user);
+  expect(data.profile).not.toBe(profile);
+  expect(data.post).toBe(post);
+  expect(data.industries).not.toBe(industries);
+  expect(data.industries[0]).toBe(industries[0]);
+  expect(data.industries[1]).not.toBe(industries[1]);
+  expect(data.industries[2]).not.toBe(industries[2]);
+  expect(data.drinks).not.toBe(drinks);
+  expect(data.drinks[0]).toBe(drinks[0]);
+  expect(data.drinks[1]).not.toBe(drinks[1]);
+});
+
+test("maintains referential equality on fragment when no data is masked", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      __typename
+      id
+      age
+    }
+  `;
+
+  const user = { __typename: "User", id: 1, age: 30 };
+
+  const data = maskFragment(
+    user,
+    fragment,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  expect(data).toBe(user);
 });
 
 function createFragmentMatcher(cache: InMemoryCache) {

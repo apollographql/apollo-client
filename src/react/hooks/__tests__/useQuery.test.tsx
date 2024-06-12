@@ -1,7 +1,7 @@
 import React, { Fragment, ReactNode, useEffect, useRef, useState } from "react";
 import { DocumentNode, GraphQLError } from "graphql";
 import gql from "graphql-tag";
-import { act } from "react-dom/test-utils";
+import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {
@@ -34,6 +34,8 @@ import {
 } from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
+
+const IS_REACT_19 = React.version.startsWith("19");
 
 describe("useQuery Hook", () => {
   describe("General use", () => {
@@ -1557,7 +1559,33 @@ describe("useQuery Hook", () => {
 
       function checkObservableQueries(expectedLinkCount: number) {
         const obsQueries = client.getObservableQueries("all");
-        expect(obsQueries.size).toBe(2);
+        /*
+This is due to a timing change in React 19
+
+In React 18, you observe this pattern:
+
+  1.  render
+  2.  useState initializer
+  3.  component continues to render with first state
+  4.  strictMode: render again
+  5.  strictMode: call useState initializer again
+  6.  component continues to render with second state
+
+now, in React 19 it looks like this:
+
+  1.  render
+  2.  useState initializer
+  3.  strictMode: call useState initializer again
+  4.  component continues to render with one of these two states
+  5.  strictMode: render again
+  6.  component continues to render with the same state as during the first render
+
+Since useQuery breaks the rules of React and mutably creates an ObservableQuery on the state during render if none is present, React 18 did create two, while React 19 only creates one.
+
+This is pure coincidence though, and the useQuery rewrite that doesn't break the rules of hooks as much and creates the ObservableQuery as part of the state initializer will end up with behaviour closer to the old React 18 behaviour again.
+
+*/
+        expect(obsQueries.size).toBe(IS_REACT_19 ? 1 : 2);
 
         const activeSet = new Set<typeof result.current.observable>();
         const inactiveSet = new Set<typeof result.current.observable>();
@@ -1578,7 +1606,7 @@ describe("useQuery Hook", () => {
           }
         });
         expect(activeSet.size).toBe(1);
-        expect(inactiveSet.size).toBe(1);
+        expect(inactiveSet.size).toBe(obsQueries.size - activeSet.size);
       }
 
       checkObservableQueries(1);

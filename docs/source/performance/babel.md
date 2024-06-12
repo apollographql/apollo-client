@@ -41,7 +41,7 @@ And that's it! All the usages of `import gql from 'graphql-tag'` will be removed
 
 ## Using graphql-tag-swc-plugin
 
-This plugin is same as [babel-plugin-graphql-tag](#using-babel-plugin-graphql-tag) but for swc, a fast rust based babel alternative.
+This plugin is the same as [babel-plugin-graphql-tag](#using-babel-plugin-graphql-tag) but for [swc](https://swc.rs/), a fast rust based babel alternative.
 
 Install the plugin in your dev dependencies:
 
@@ -72,7 +72,7 @@ Then add the plugin in your `.swcrc` configuration file:
 }
 ```
 
-For more information on configuration and features, please checkout [`graphql-tag-swc-plugin` here](https://github.com/rishabh3112/graphql-tag-swc-plugin).
+For more information on configuration and features, please checkout the [`graphql-tag-swc-plugin` here](https://github.com/rishabh3112/graphql-tag-swc-plugin) documentation.
 
 ## Using graphql-tag.macro
 

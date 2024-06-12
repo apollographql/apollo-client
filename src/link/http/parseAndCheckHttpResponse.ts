@@ -29,8 +29,9 @@ export async function readMultipartBody<
   // https://www.rfc-editor.org/rfc/rfc9110.html#name-parameters
   // e.g. multipart/mixed;boundary="graphql";deferSpec=20220824
   // if no boundary is specified, default to -
-  const boundaryVal = contentType?.includes(delimiter)
-    ? contentType
+  const boundaryVal =
+    contentType?.includes(delimiter) ?
+      contentType
         ?.substring(contentType?.indexOf(delimiter) + delimiter.length)
         .replace(/['"]/g, "")
         .replace(/\;(.*)/gm, "")
@@ -83,6 +84,9 @@ export async function readMultipartBody<
           if (isApolloPayloadResult(result)) {
             let next = {};
             if ("payload" in result) {
+              if (Object.keys(result).length === 1 && result.payload === null) {
+                return;
+              }
               next = { ...result.payload };
             }
             if ("errors" in result) {
@@ -204,14 +208,6 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
       .text()
       .then((bodyText) => parseJsonBody(response, bodyText))
       .then((result: any) => {
-        if (response.status >= 300) {
-          // Network error
-          throwServerError(
-            response,
-            result,
-            `Response not successful: Received status code ${response.status}`
-          );
-        }
         if (
           !Array.isArray(result) &&
           !hasOwnProperty.call(result, "data") &&
@@ -222,9 +218,9 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
             response,
             result,
             `Server response was missing for query '${
-              Array.isArray(operations)
-                ? operations.map((op) => op.operationName)
-                : operations.operationName
+              Array.isArray(operations) ?
+                operations.map((op) => op.operationName)
+              : operations.operationName
             }'.`
           );
         }

@@ -1,0 +1,22 @@
+name: Devtools - Trigger Error Code PR after npm Release
+on:
+  workflow_dispatch: # for testing
+  workflow_run:
+    workflows: ["Prerelease", "Release"]
+    types:
+      - completed
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: github-actions-bot-app-token
+        with:
+          app-id: 819772
+          private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
+          repositories: apollo-client-devtools
+      - uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: update-errorcodes.yml
+          repo: apollographql/apollo-client-devtools
+          token: ${{ steps.github-actions-bot-app-token.outputs.token }}

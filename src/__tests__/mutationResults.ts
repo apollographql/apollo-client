@@ -2,7 +2,7 @@ import { cloneDeep } from "lodash";
 import gql from "graphql-tag";
 import { GraphQLError } from "graphql";
 
-import { ApolloClient } from "../core";
+import { ApolloClient, FetchResult } from "../core";
 import { InMemoryCache } from "../cache";
 import { ApolloLink } from "../link/core";
 import {
@@ -1186,8 +1186,6 @@ describe("mutation results", () => {
 
       subscribeAndCount(reject, watchedQuery, (count, result) => {
         if (count === 1) {
-          expect(result.data).toEqual({ echo: "a" });
-        } else if (count === 2) {
           expect(result.data).toEqual({ echo: "b" });
           client.mutate({
             mutation: resetMutation,
@@ -1197,7 +1195,7 @@ describe("mutation results", () => {
               },
             },
           });
-        } else if (count === 3) {
+        } else if (count === 2) {
           expect(result.data).toEqual({ echo: "0" });
           resolve();
         }
@@ -1819,6 +1817,41 @@ describe("mutation results", () => {
               resolve();
             }
           }, reject);
+      }
+    );
+
+    itAsync(
+      "data might be undefined in case of failure with errorPolicy = ignore",
+      async (resolve, reject) => {
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: new ApolloLink(
+            () =>
+              new Observable<FetchResult<{ foo: string }>>((observer) => {
+                observer.next({
+                  errors: [new GraphQLError("Oops")],
+                });
+                observer.complete();
+              })
+          ).setOnError(reject),
+        });
+
+        const ignoreErrorsResult = await client.mutate({
+          mutation: gql`
+            mutation Foo {
+              foo
+            }
+          `,
+          fetchPolicy: "no-cache",
+          errorPolicy: "ignore",
+        });
+
+        expect(ignoreErrorsResult).toEqual({
+          data: undefined,
+          errors: undefined,
+        });
+
+        resolve();
       }
     );
   });

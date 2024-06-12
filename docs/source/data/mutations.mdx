@@ -1,10 +1,12 @@
 ---
 title: Mutations in Apollo Client
 description: Modify data with the useMutation hook
+api_doc:
+  - "@apollo/client!MutationHookOptions:interface"
+  - "@apollo/client!MutationResult:interface"
 ---
 
-import MutationOptions3 from '../../shared/mutation-options.mdx';
-import MutationResult3 from '../../shared/mutation-result.mdx';
+import { PropertySignatureTable } from '../../shared/ApiDoc';
 
 Now that we've [learned how to query data](queries/) from our backend with Apollo Client, the natural next step is to learn how to _modify_ back-end data with **mutations**.
 
@@ -152,7 +154,7 @@ if (error) return `Submission error! ${error.message}`;
 
 ### Resetting mutation status
 
-The mutation result object returned by `useMutation` includes a [`reset` function](#reset):
+The mutation result object returned by `useMutation` includes a [`reset` function](#mutationresult-interface-reset):
 
 ```js
 const [login, { data, loading, error, reset }] = useMutation(LOGIN_MUTATION);
@@ -210,6 +212,8 @@ const [addTodo, { data, loading, error }] = useMutation(ADD_TODO, {
   ],
 });
 ```
+
+> You can only refetch _active_ queries. Active queries are those used by components on the current page. If the data you want to update is not fetched by a component on the current page, it's best to [update your cache directly](#updating-the-cache-directly).
 
 Each element in the `refetchQueries` array is one of the following:
 
@@ -378,7 +382,7 @@ detail with usage examples, see the [API reference](../api/react/hooks/).
 
 The `useMutation` hook accepts the following options:
 
-<MutationOptions3 />
+<PropertySignatureTable canonicalReference="@apollo/client!MutationHookOptions:interface" idPrefix="mutationhookoptions-interface" />
 
 ### Result
 
@@ -386,7 +390,7 @@ The `useMutation` result is a tuple with a mutate function in the first position
 
 You call the mutate function to trigger the mutation from your UI.
 
-<MutationResult3 />
+<PropertySignatureTable canonicalReference="@apollo/client!MutationResult:interface" idPrefix="mutationresult-interface" />
 
 ## Next steps
 

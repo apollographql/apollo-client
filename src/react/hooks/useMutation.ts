@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "rehackt";
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type {
@@ -12,6 +12,7 @@ import type {
 import type {
   ApolloCache,
   DefaultContext,
+  MutationOptions,
   OperationVariables,
 } from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
@@ -20,6 +21,53 @@ import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import { ApolloError } from "../../errors/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 
+/**
+ *
+ *
+ * > Refer to the [Mutations](https://www.apollographql.com/docs/react/data/mutations/) section for a more in-depth overview of `useMutation`.
+ *
+ * @example
+ * ```jsx
+ * import { gql, useMutation } from '@apollo/client';
+ *
+ * const ADD_TODO = gql`
+ *   mutation AddTodo($type: String!) {
+ *     addTodo(type: $type) {
+ *       id
+ *       type
+ *     }
+ *   }
+ * `;
+ *
+ * function AddTodo() {
+ *   let input;
+ *   const [addTodo, { data }] = useMutation(ADD_TODO);
+ *
+ *   return (
+ *     <div>
+ *       <form
+ *         onSubmit={e => {
+ *           e.preventDefault();
+ *           addTodo({ variables: { type: input.value } });
+ *           input.value = '';
+ *         }}
+ *       >
+ *         <input
+ *           ref={node => {
+ *             input = node;
+ *           }}
+ *         />
+ *         <button type="submit">Add Todo</button>
+ *       </form>
+ *     </div>
+ *   );
+ * }
+ * ```
+ * @since 3.0.0
+ * @param mutation - A GraphQL mutation document parsed into an AST by `gql`.
+ * @param options - Options to control how the mutation is executed.
+ * @returns A tuple in the form of `[mutate, result]`
+ */
 export function useMutation<
   TData = any,
   TVariables = OperationVariables,
@@ -51,11 +99,9 @@ export function useMutation<
     options,
   });
 
-  // TODO: Trying to assign these in a useEffect or useLayoutEffect breaks
-  // higher-order components.
-  {
+  React.useLayoutEffect(() => {
     Object.assign(ref.current, { client, options, mutation });
-  }
+  });
 
   const execute = React.useCallback(
     (
@@ -87,22 +133,25 @@ export function useMutation<
       }
 
       const mutationId = ++ref.current.mutationId;
-      const clientOptions = mergeOptions(baseOptions, executeOptions as any);
+      const clientOptions = mergeOptions(baseOptions, executeOptions);
 
       return client
-        .mutate(clientOptions)
+        .mutate(clientOptions as MutationOptions<TData, OperationVariables>)
         .then((response) => {
           const { data, errors } = response;
           const error =
-            errors && errors.length > 0
-              ? new ApolloError({ graphQLErrors: errors })
-              : void 0;
+            errors && errors.length > 0 ?
+              new ApolloError({ graphQLErrors: errors })
+            : void 0;
 
           const onError =
             executeOptions.onError || ref.current.options?.onError;
 
           if (error && onError) {
-            onError(error, clientOptions);
+            onError(
+              error,
+              clientOptions as MutationOptions<TData, OperationVariables>
+            );
           }
 
           if (
@@ -126,7 +175,10 @@ export function useMutation<
             executeOptions.onCompleted || ref.current.options?.onCompleted;
 
           if (!error) {
-            onCompleted?.(response.data!, clientOptions);
+            onCompleted?.(
+              response.data!,
+              clientOptions as MutationOptions<TData, OperationVariables>
+            );
           }
 
           return response;
@@ -150,7 +202,10 @@ export function useMutation<
             executeOptions.onError || ref.current.options?.onError;
 
           if (onError) {
-            onError(error, clientOptions);
+            onError(
+              error,
+              clientOptions as MutationOptions<TData, OperationVariables>
+            );
 
             // TODO(brian): why are we returning this here???
             return { data: void 0, errors: error };
@@ -164,15 +219,22 @@ export function useMutation<
 
   const reset = React.useCallback(() => {
     if (ref.current.isMounted) {
-      setResult({ called: false, loading: false, client });
+      const result = {
+        called: false,
+        loading: false,
+        client: ref.current.client,
+      };
+      Object.assign(ref.current, { mutationId: 0, result });
+      setResult(result);
     }
   }, []);
 
   React.useEffect(() => {
-    ref.current.isMounted = true;
+    const current = ref.current;
+    current.isMounted = true;
 
     return () => {
-      ref.current.isMounted = false;
+      current.isMounted = false;
     };
   }, []);
 

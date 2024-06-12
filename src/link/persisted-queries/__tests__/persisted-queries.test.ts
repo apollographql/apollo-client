@@ -66,7 +66,7 @@ const giveUpResponse = JSON.stringify({ errors: giveUpErrors });
 const giveUpResponseWithCode = JSON.stringify({ errors: giveUpErrorsWithCode });
 const multiResponse = JSON.stringify({ errors: multipleErrors });
 
-export function sha256(data: string) {
+function sha256(data: string) {
   const hash = crypto.createHash("sha256");
   hash.update(data);
   return hash.digest("hex");
@@ -151,6 +151,32 @@ describe("happy path", () => {
     }, reject);
   });
 
+  it("clears the cache when calling `resetHashCache`", async () => {
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response })),
+      { repeat: 1 }
+    );
+
+    const hashRefs: WeakRef<String>[] = [];
+    function hash(query: string) {
+      const newHash = new String(query);
+      hashRefs.push(new WeakRef(newHash));
+      return newHash as string;
+    }
+    const persistedLink = createPersistedQuery({ sha256: hash });
+    await new Promise<void>((complete) =>
+      execute(persistedLink.concat(createHttpLink()), {
+        query,
+        variables,
+      }).subscribe({ complete })
+    );
+
+    await expect(hashRefs[0]).not.toBeGarbageCollected();
+    persistedLink.resetHashCache();
+    await expect(hashRefs[0]).toBeGarbageCollected();
+  });
+
   itAsync("supports loading the hash from other method", (resolve, reject) => {
     fetchMock.post(
       "/graphql",
@@ -219,7 +245,7 @@ describe("happy path", () => {
         reject("should have thrown an error");
       } catch (error) {
         expect(
-          error.message.indexOf(
+          (error as Error).message.indexOf(
             'Missing/invalid "sha256" or "generateHash" function'
           )
         ).toBe(0);
@@ -238,7 +264,7 @@ describe("happy path", () => {
           reject("should have thrown an error");
         } catch (error) {
           expect(
-            error.message.indexOf(
+            (error as Error).message.indexOf(
               'Missing/invalid "sha256" or "generateHash" function'
             )
           ).toBe(0);
@@ -517,6 +543,46 @@ describe("failure path", () => {
       })
   );
 
+  it.each([
+    // TODO(fixme): test flake on CI https://github.com/apollographql/apollo-client/issues/11782
+    // ["error message", giveUpResponse],
+    ["error code", giveUpResponseWithCode],
+  ] as const)(
+    "clears the cache when receiving NotSupported error (%s)",
+    async (_description, failingResponse) => {
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: failingResponse })),
+        { repeat: 1 }
+      );
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 1 }
+      );
+
+      const hashRefs: WeakRef<String>[] = [];
+      function hash(query: string) {
+        const newHash = new String(query);
+        hashRefs.push(new WeakRef(newHash));
+        return newHash as string;
+      }
+      const persistedLink = createPersistedQuery({ sha256: hash });
+      await new Promise<void>((complete) =>
+        execute(persistedLink.concat(createHttpLink()), {
+          query,
+          variables,
+        }).subscribe({ complete })
+      );
+      // fetch-mock holds a history of all options it has been called with
+      // that includes the `signal` option, which (with the native `AbortController`)
+      // has a reference to the `Request` instance, which will somehow reference our
+      // hash object
+      fetchMock.resetHistory();
+      await expect(hashRefs[0]).toBeGarbageCollected();
+    }
+  );
+
   itAsync("works with multiple errors", (resolve, reject) => {
     fetchMock.post(
       "/graphql",
@@ -569,6 +635,7 @@ describe("failure path", () => {
               status,
             });
           }
+          // @ts-expect-error
           return global.fetch.apply(null, args);
         };
         const link = createPersistedQuery({ sha256 }).concat(
@@ -623,6 +690,7 @@ describe("failure path", () => {
             status,
           });
         }
+        // @ts-expect-error
         return global.fetch.apply(null, args);
       };
       const link = createPersistedQuery({ sha256 }).concat(
@@ -662,6 +730,7 @@ describe("failure path", () => {
               status,
             });
           }
+          // @ts-expect-error
           return global.fetch.apply(null, args);
         };
 

@@ -24,6 +24,7 @@ import {
   itAsync,
   MockLink,
   mockSingleLink,
+  MockSubscriptionLink,
   subscribeAndCount,
   wait,
 } from "../../testing";
@@ -34,6 +35,7 @@ import wrap from "../../testing/core/wrap";
 import { resetStore } from "./QueryManager";
 import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
+import { ObservableStream } from "../../testing/internal";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
@@ -46,7 +48,8 @@ export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   >(
     original: T
   ) =>
-    jest.fn<ReturnType<T>, Parameters<T>>(function () {
+    jest.fn<ReturnType<T>, Parameters<T>>(function (): ReturnType<T> {
+      // @ts-expect-error
       return original.apply(queryManager, arguments);
     });
 
@@ -1084,6 +1087,98 @@ describe("ObservableQuery", () => {
         });
       }
     );
+
+    it("calling refetch with different variables before the query itself resolved will only yield the result for the new variables", async () => {
+      const observers: SubscriptionObserver<FetchResult<typeof dataOne>>[] = [];
+      const queryManager = new QueryManager({
+        cache: new InMemoryCache(),
+        link: new ApolloLink((operation, forward) => {
+          return new Observable((observer) => {
+            observers.push(observer);
+          });
+        }),
+      });
+      const observableQuery = queryManager.watchQuery({
+        query,
+        variables: { id: 1 },
+      });
+      const stream = new ObservableStream(observableQuery);
+
+      observableQuery.refetch({ id: 2 });
+
+      observers[0].next({ data: dataOne });
+      observers[0].complete();
+
+      observers[1].next({ data: dataTwo });
+      observers[1].complete();
+
+      {
+        const result = await stream.takeNext();
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: dataTwo,
+        });
+      }
+      expect(stream.take()).rejects.toThrow(/Timeout/i);
+    });
+
+    it("calling refetch multiple times with different variables will return only results for the most recent variables", async () => {
+      const observers: SubscriptionObserver<FetchResult<typeof dataOne>>[] = [];
+      const queryManager = new QueryManager({
+        cache: new InMemoryCache(),
+        link: new ApolloLink((operation, forward) => {
+          return new Observable((observer) => {
+            observers.push(observer);
+          });
+        }),
+      });
+      const observableQuery = queryManager.watchQuery({
+        query,
+        variables: { id: 1 },
+      });
+      const stream = new ObservableStream(observableQuery);
+
+      observers[0].next({ data: dataOne });
+      observers[0].complete();
+
+      {
+        const result = await stream.takeNext();
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: dataOne,
+        });
+      }
+
+      observableQuery.refetch({ id: 2 });
+      observableQuery.refetch({ id: 3 });
+
+      observers[1].next({ data: dataTwo });
+      observers[1].complete();
+
+      observers[2].next({
+        data: {
+          people_one: {
+            name: "SomeOneElse",
+          },
+        },
+      });
+      observers[2].complete();
+
+      {
+        const result = await stream.takeNext();
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            people_one: {
+              name: "SomeOneElse",
+            },
+          },
+        });
+      }
+    });
 
     itAsync(
       "calls fetchRequest with fetchPolicy `no-cache` when using `no-cache` fetch policy",
@@ -2295,6 +2390,124 @@ describe("ObservableQuery", () => {
       }
     );
 
+    it("handles multiple calls to getCurrentResult without losing data", async () => {
+      const query = gql`
+        {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const obs = client.watchQuery({ query });
+      const stream = new ObservableStream(obs);
+
+      link.simulateResult({
+        result: {
+          data: {
+            greeting: {
+              message: "Hello world",
+              __typename: "Greeting",
+            },
+          },
+          hasNext: true,
+        },
+      });
+
+      {
+        const result = await stream.takeNext();
+        expect(result.data).toEqual({
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+          },
+        });
+      }
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+        },
+      });
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+        },
+      });
+
+      link.simulateResult(
+        {
+          result: {
+            incremental: [
+              {
+                data: {
+                  recipient: {
+                    name: "Alice",
+                    __typename: "Person",
+                  },
+                  __typename: "Greeting",
+                },
+                path: ["greeting"],
+              },
+            ],
+            hasNext: false,
+          },
+        },
+        true
+      );
+
+      {
+        const result = await stream.takeNext();
+        expect(result.data).toEqual({
+          greeting: {
+            message: "Hello world",
+            recipient: {
+              name: "Alice",
+              __typename: "Person",
+            },
+            __typename: "Greeting",
+          },
+        });
+      }
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          recipient: {
+            name: "Alice",
+            __typename: "Person",
+          },
+          __typename: "Greeting",
+        },
+      });
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          recipient: {
+            name: "Alice",
+            __typename: "Person",
+          },
+          __typename: "Greeting",
+        },
+      });
+    });
+
     {
       type Result = Partial<ApolloQueryResult<{ hello: string }>>;
 
@@ -2740,7 +2953,7 @@ describe("ObservableQuery", () => {
             throw new Error("not reached");
           } catch (error) {
             expect(error).toBeInstanceOf(TypeError);
-            expect(error.message).toMatch(
+            expect((error as Error).message).toMatch(
               /Cannot assign to read only property 'value'/
             );
           }

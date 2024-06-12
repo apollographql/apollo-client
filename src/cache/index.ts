@@ -1,6 +1,10 @@
 import "../utilities/globals/index.js";
 
-export type { Transaction } from "./core/cache.js";
+export type {
+  Transaction,
+  WatchFragmentOptions,
+  WatchFragmentResult,
+} from "./core/cache.js";
 export { ApolloCache } from "./core/cache.js";
 export { Cache } from "./core/types/Cache.js";
 export type { DataProxy } from "./core/types/DataProxy.js";
@@ -14,7 +18,11 @@ export type {
 export { MissingFieldError } from "./core/types/common.js";
 
 export type { Reference } from "../utilities/index.js";
-export { isReference, makeReference } from "../utilities/index.js";
+export {
+  isReference,
+  makeReference,
+  canonicalStringify,
+} from "../utilities/index.js";
 
 export { EntityStore } from "./inmemory/entityStore.js";
 export {
@@ -37,8 +45,6 @@ export type {
   PossibleTypesMap,
 } from "./inmemory/policies.js";
 export { Policies } from "./inmemory/policies.js";
-
-export { canonicalStringify } from "./inmemory/object-canon.js";
 
 export type { FragmentRegistryAPI } from "./inmemory/fragmentRegistry.js";
 export { createFragmentRegistry } from "./inmemory/fragmentRegistry.js";

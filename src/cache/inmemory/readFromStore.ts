@@ -28,6 +28,9 @@ import {
   isNonNullObject,
   canUseWeakMap,
   compact,
+  canonicalStringify,
+  cacheSizes,
+  defaultCacheSizes,
 } from "../../utilities/index.js";
 import type { Cache } from "../core/types/Cache.js";
 import type {
@@ -50,7 +53,7 @@ import type { Policies } from "./policies.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { MissingTree } from "../core/types/common.js";
 import { MissingFieldError } from "../core/types/common.js";
-import { canonicalStringify, ObjectCanon } from "./object-canon.js";
+import { ObjectCanon } from "./object-canon.js";
 
 export type VariableMap = { [name: string]: any };
 
@@ -152,6 +155,10 @@ export class StoreReader {
 
     this.canon = config.canon || new ObjectCanon();
 
+    // memoized functions in this class will be "garbage-collected"
+    // by recreating the whole `StoreReader` in
+    // `InMemoryCache.resetResultsCache`
+    // (triggered from `InMemoryCache.gc` with `resetResultCache: true`)
     this.executeSelectionSet = wrap(
       (options) => {
         const { canonizeResults } = options.context;
@@ -188,7 +195,10 @@ export class StoreReader {
         return this.execSelectionSetImpl(options);
       },
       {
-        max: this.config.resultCacheMaxSize,
+        max:
+          this.config.resultCacheMaxSize ||
+          cacheSizes["inMemoryCache.executeSelectionSet"] ||
+          defaultCacheSizes["inMemoryCache.executeSelectionSet"],
         keyArgs: execSelectionSetKeyArgs,
         // Note that the parameters of makeCacheKey are determined by the
         // array returned by keyArgs.
@@ -214,7 +224,10 @@ export class StoreReader {
         return this.execSubSelectedArrayImpl(options);
       },
       {
-        max: this.config.resultCacheMaxSize,
+        max:
+          this.config.resultCacheMaxSize ||
+          cacheSizes["inMemoryCache.executeSubSelectedArray"] ||
+          defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
         makeCacheKey({ field, array, context }) {
           if (supportsResultCaching(context.store)) {
             return context.store.makeCacheKey(field, array, context.varString);
@@ -227,9 +240,6 @@ export class StoreReader {
   /**
    * Given a store and a query, return as much of the result as possible and
    * identify if any data was missing from the store.
-   * @param  {DocumentNode} query A parsed GraphQL query document
-   * @param  {Store} store The Apollo Client store object
-   * @return {result: Object, complete: [boolean]}
    */
   public diffQueryAgainstStore<T>({
     store,
@@ -386,22 +396,24 @@ export class StoreReader {
           if (!addTypenameToDocument.added(selection)) {
             missing = missingMerger.merge(missing, {
               [resultName]: `Can't find field '${selection.name.value}' on ${
-                isReference(objectOrReference)
-                  ? objectOrReference.__ref + " object"
-                  : "object " + JSON.stringify(objectOrReference, null, 2)
+                isReference(objectOrReference) ?
+                  objectOrReference.__ref + " object"
+                : "object " + JSON.stringify(objectOrReference, null, 2)
               }`,
             });
           }
         } else if (isArray(fieldValue)) {
-          fieldValue = handleMissing(
-            this.executeSubSelectedArray({
-              field: selection,
-              array: fieldValue,
-              enclosingRef,
-              context,
-            }),
-            resultName
-          );
+          if (fieldValue.length > 0) {
+            fieldValue = handleMissing(
+              this.executeSubSelectedArray({
+                field: selection,
+                array: fieldValue,
+                enclosingRef,
+                context,
+              }),
+              resultName
+            );
+          }
         } else if (!selection.selectionSet) {
           // If the field does not have a selection set, then we handle it
           // as a scalar value. To keep this.canon from canonicalizing
@@ -446,11 +458,12 @@ export class StoreReader {
 
     const result = mergeDeepArray(objectsToMerge);
     const finalResult: ExecResult = { result, missing };
-    const frozen = context.canonizeResults
-      ? this.canon.admit(finalResult)
-      : // Since this.canon is normally responsible for freezing results (only in
+    const frozen =
+      context.canonizeResults ?
+        this.canon.admit(finalResult)
+        // Since this.canon is normally responsible for freezing results (only in
         // development), freeze them manually if canonization is disabled.
-        maybeDeepFreeze(finalResult);
+      : maybeDeepFreeze(finalResult);
 
     // Store this result with its selection set so that we can quickly
     // recognize it again in the StoreReader#isFresh method.
@@ -535,7 +548,7 @@ function firstMissing(tree: MissingTree): string | undefined {
       return value;
     });
   } catch (result) {
-    return result;
+    return result as string;
   }
 }
 

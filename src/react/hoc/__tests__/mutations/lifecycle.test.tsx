@@ -1,5 +1,5 @@
 import React from "react";
-import { render, cleanup } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import gql from "graphql-tag";
 
 import { ApolloProvider } from "../../../context/ApolloProvider";
@@ -21,8 +21,6 @@ const expectedData = {
 };
 
 describe("graphql(mutation) lifecycle", () => {
-  afterEach(cleanup);
-
   itAsync(
     "allows falsy values in the mapped variables from props",
     (resolve, reject) => {
@@ -94,7 +92,9 @@ describe("graphql(mutation) lifecycle", () => {
       class Container extends React.Component<ChildProps<Props>> {
         render() {
           if (this.props.listId !== 2) return null;
-          this.props.mutate!().then(() => resolve());
+          setTimeout(() => {
+            this.props.mutate!().then(() => resolve());
+          });
           return null;
         }
       }

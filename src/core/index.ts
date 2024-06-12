@@ -14,6 +14,8 @@ export type {
   SubscriptionOptions,
   FetchPolicy,
   WatchQueryFetchPolicy,
+  MutationFetchPolicy,
+  RefetchWritePolicy,
   ErrorPolicy,
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
@@ -38,6 +40,8 @@ export type {
   FieldMergeFunction,
   FieldFunctionOptions,
   PossibleTypesMap,
+  WatchFragmentOptions,
+  WatchFragmentResult,
 } from "../cache/index.js";
 export {
   Cache,

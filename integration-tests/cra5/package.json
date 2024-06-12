@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@apollo/client": "^3.10.1",
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "graphql": "^16.8.1",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
     "react-scripts": "5.0.1",
-    "typescript": "^4.9.5",
-    "@apollo/client": "^3.7.16",
-    "graphql": "^16.8.1"
+    "typescript": "^4.9.5"
   },
   "scripts": {
     "start": "PORT=3000 react-scripts start",
@@ -37,9 +37,9 @@
     ]
   },
   "devDependencies": {
-    "shared": "*",
-    "playwright": "*",
     "@playwright/test": "*",
-    "serve": "*"
+    "playwright": "*",
+    "serve": "*",
+    "shared": "*"
   }
 }

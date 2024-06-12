@@ -1,4 +1,4 @@
-import React, { Fragment, StrictMode, Suspense } from "react";
+import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import {
   act,
   screen,
@@ -51,7 +51,15 @@ import {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions";
-import { profile, spyOnConsole } from "../../../testing/internal";
+import {
+  PaginatedCaseData,
+  PaginatedCaseVariables,
+  createProfiler,
+  profile,
+  setupPaginatedCase,
+  spyOnConsole,
+  useTrackRenders,
+} from "../../../testing/internal";
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -250,17 +258,15 @@ interface VariablesCaseVariables {
 function useVariablesQueryCase() {
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const query: TypedDocumentNode<
-    VariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
-    query CharacterQuery($id: ID!) {
-      character(id: $id) {
-        id
-        name
+  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+    gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
       }
-    }
-  `;
+    `;
 
   const mocks = CHARACTERS.map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
@@ -357,7 +363,7 @@ describe("useSuspenseQuery", () => {
 
     const Component = () => {
       const result = useSuspenseQuery(query);
-      ProfiledApp.updateSnapshot(result);
+      ProfiledApp.replaceSnapshot(result);
       return <div>{result.data.greeting}</div>;
     };
 
@@ -1666,17 +1672,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("uses cached result with network request and does not suspend when switching back to already used variables while using `cache-and-network` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -1783,17 +1787,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("refetches and suspends when switching back to already used variables while using `network-only` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -1889,17 +1891,15 @@ describe("useSuspenseQuery", () => {
   });
 
   it("refetches and suspends when switching back to already used variables while using `no-cache` fetch policy", async () => {
-    const query: TypedDocumentNode<
-      VariablesCaseData,
-      VariablesCaseVariables
-    > = gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
         }
-      }
-    `;
+      `;
 
     const mocks = [
       {
@@ -3650,8 +3650,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
-
-    expect(client.getObservableQueries().size).toBe(0);
+    await waitFor(() => expect(client.getObservableQueries().size).toBe(0));
   });
 
   it('throws network errors when errorPolicy is set to "none"', async () => {
@@ -5561,6 +5560,100 @@ describe("useSuspenseQuery", () => {
     expect(fetchCount).toBe(1);
   });
 
+  // https://github.com/apollographql/apollo-client/issues/11768
+  it("does not make network requests when using `skipToken` with strict mode", async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.variables, operation.variables)
+        );
+
+        if (!mock) {
+          throw new Error("Could not find mock for operation");
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ skip, id }) =>
+        useSuspenseQuery(query, skip ? skipToken : { variables: { id } }),
+      { mocks, link, strictMode: true, initialProps: { skip: true, id: "1" } }
+    );
+
+    expect(fetchCount).toBe(0);
+
+    rerender({ skip: false, id: "1" });
+
+    expect(fetchCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ skip: true, id: "2" });
+
+    expect(fetchCount).toBe(1);
+  });
+
+  it("does not make network requests when using `skip` with strict mode", async () => {
+    const { query, mocks } = useVariablesQueryCase();
+
+    let fetchCount = 0;
+
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        fetchCount++;
+
+        const mock = mocks.find(({ request }) =>
+          equal(request.variables, operation.variables)
+        );
+
+        if (!mock) {
+          throw new Error("Could not find mock for operation");
+        }
+
+        observer.next(mock.result);
+        observer.complete();
+      });
+    });
+
+    const { result, rerender } = renderSuspenseHook(
+      ({ skip, id }) => useSuspenseQuery(query, { skip, variables: { id } }),
+      { mocks, link, strictMode: true, initialProps: { skip: true, id: "1" } }
+    );
+
+    expect(fetchCount).toBe(0);
+
+    rerender({ skip: false, id: "1" });
+
+    expect(fetchCount).toBe(1);
+
+    await waitFor(() => {
+      expect(result.current).toMatchObject({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    });
+
+    rerender({ skip: true, id: "2" });
+
+    expect(fetchCount).toBe(1);
+  });
+
   it("`skip` result is referentially stable", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
@@ -5791,12 +5884,12 @@ describe("useSuspenseQuery", () => {
 
       const todo = data?.todo;
 
-      return todo ? (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      ) : null;
+      return todo ?
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        : null;
     }
 
     render(<App />);
@@ -5891,12 +5984,12 @@ describe("useSuspenseQuery", () => {
 
       const todo = data?.todo;
 
-      return todo ? (
-        <div data-testid="todo">
-          {todo.name}
-          {todo.completed && " (completed)"}
-        </div>
-      ) : null;
+      return todo ?
+          <div data-testid="todo">
+            {todo.name}
+            {todo.completed && " (completed)"}
+          </div>
+        : null;
     }
 
     render(<App />);
@@ -9498,9 +9591,14 @@ describe("useSuspenseQuery", () => {
 
     await act(() => user.type(input, "ab"));
 
-    await waitFor(() => {
-      expect(screen.getByTestId("result")).toHaveTextContent("ab");
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("result")).toHaveTextContent("ab");
+      },
+      {
+        timeout: 10000,
+      }
+    );
 
     await act(() => user.type(input, "c"));
 
@@ -9519,7 +9617,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => {
       expect(screen.getByTestId("result")).toHaveTextContent("abc");
     });
-  });
+  }, 10000);
 
   it("works with startTransition to change variables", async () => {
     type Variables = {
@@ -9938,6 +10036,539 @@ describe("useSuspenseQuery", () => {
       );
       expect(todo1).toHaveTextContent("Clean room");
     });
+  });
+
+  it("updates networkStatus when a network request returns the same cached data with 'cache-and-network' fetchPolicy", async () => {
+    const { query } = useSimpleQueryCase();
+
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { greeting: "Hello" } });
+          observer.complete();
+        }, 10);
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    // preloaded cache
+    await client.writeQuery({ query, data: { greeting: "Hello" } });
+
+    const { result } = renderSuspenseHook(
+      () =>
+        useSuspenseQuery(query, {
+          fetchPolicy: "cache-and-network",
+        }),
+      { client }
+    );
+
+    await waitFor(() => {
+      // We should see the cached greeting while the network request is in flight
+      // and the network status should be set to `loading`.
+      expect(result.current).toMatchObject({
+        data: { greeting: "Hello" },
+        networkStatus: NetworkStatus.loading,
+      });
+    });
+
+    await waitFor(() => {
+      // We should see the updated greeting once the network request finishes
+      // and the network status should be set to `ready`.
+      expect(result.current).toMatchObject({
+        data: { greeting: "Hello" },
+        networkStatus: NetworkStatus.ready,
+      });
+    });
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/11315
+  it("fetchMore does not cause extra render", async () => {
+    const { query, link } = setupPaginatedCase();
+
+    const user = userEvent.setup();
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              letters: offsetLimitPagination(),
+            },
+          },
+        },
+      }),
+      link,
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<
+          PaginatedCaseData,
+          PaginatedCaseVariables
+        > | null,
+      },
+    });
+
+    function SuspenseFallback() {
+      useTrackRenders();
+
+      return <div>Loading...</div>;
+    }
+
+    function App() {
+      useTrackRenders();
+      const [isPending, startTransition] = useTransition();
+      const result = useSuspenseQuery(query, {
+        variables: { offset: 0, limit: 2 },
+      });
+      const { data, fetchMore } = result;
+
+      Profiler.mergeSnapshot({ result });
+
+      return (
+        <button
+          disabled={isPending}
+          onClick={() =>
+            startTransition(() => {
+              fetchMore({
+                variables: {
+                  offset: data.letters.length,
+                  limit: data.letters.length + 1,
+                },
+              });
+            })
+          }
+        >
+          Fetch next
+        </button>
+      );
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+        ],
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Fetch next")));
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(screen.getByText("Fetch next")).toBeDisabled();
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+        ],
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
+          { __typename: "Letter", letter: "E", position: 5 },
+        ],
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/11708
+  it("`fetchMore` works with startTransition when setting errorPolicy as default option in ApolloClient constructor", async () => {
+    type Variables = {
+      offset: number;
+    };
+
+    interface Todo {
+      __typename: "Todo";
+      id: string;
+      name: string;
+      completed: boolean;
+    }
+    interface Data {
+      todos: Todo[];
+    }
+    const user = userEvent.setup();
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query TodosQuery($offset: Int!) {
+        todos(offset: $offset) {
+          id
+          name
+          completed
+        }
+      }
+    `;
+
+    const mocks: MockedResponse<Data, Variables>[] = [
+      {
+        request: { query, variables: { offset: 0 } },
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+        },
+        delay: 10,
+      },
+      {
+        request: { query, variables: { offset: 1 } },
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "2",
+                name: "Take out trash",
+                completed: true,
+              },
+            ],
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        isPending: false,
+        result: null as Pick<
+          UseSuspenseQueryResult<Data>,
+          "data" | "error" | "networkStatus"
+        > | null,
+      },
+    });
+
+    function SuspenseFallback() {
+      useTrackRenders();
+
+      return <div>Loading...</div>;
+    }
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              todos: offsetLimitPagination(),
+            },
+          },
+        },
+      }),
+      defaultOptions: {
+        watchQuery: {
+          errorPolicy: "all",
+        },
+      },
+    });
+
+    function App() {
+      useTrackRenders();
+      const [isPending, startTransition] = React.useTransition();
+      const { data, error, networkStatus, fetchMore } = useSuspenseQuery(
+        query,
+        {
+          variables: { offset: 0 },
+        }
+      );
+
+      Profiler.mergeSnapshot({
+        isPending,
+        result: { data, error, networkStatus },
+      });
+
+      return (
+        <button
+          onClick={() => {
+            startTransition(() => {
+              fetchMore({ variables: { offset: 1 } });
+            });
+          }}
+        >
+          Load more
+        </button>
+      );
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot).toEqual({
+        isPending: false,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Load more")));
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot).toEqual({
+        isPending: true,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot).toEqual({
+        isPending: false,
+        result: {
+          data: {
+            todos: [
+              {
+                __typename: "Todo",
+                id: "1",
+                name: "Clean room",
+                completed: false,
+              },
+              {
+                __typename: "Todo",
+                id: "2",
+                name: "Take out trash",
+                completed: true,
+              },
+            ],
+          },
+          error: undefined,
+          networkStatus: NetworkStatus.ready,
+        },
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/11642
+  it("returns merged array when `fetchMore` returns empty array of results", async () => {
+    const query: TypedDocumentNode<PaginatedCaseData, PaginatedCaseVariables> =
+      gql`
+        query LettersQuery($limit: Int, $offset: Int) {
+          letters(limit: $limit, offset: $offset) {
+            letter
+            position
+          }
+        }
+      `;
+
+    const data = "ABCD".split("").map((letter, index) => ({
+      __typename: "Letter",
+      letter,
+      position: index + 1,
+    }));
+
+    const link = new MockLink([
+      {
+        request: { query, variables: { offset: 0, limit: 2 } },
+        result: { data: { letters: data.slice(0, 2) } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { offset: 2, limit: 2 } },
+        result: { data: { letters: data.slice(2, 4) } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { offset: 4, limit: 2 } },
+        result: { data: { letters: [] } },
+        delay: 20,
+      },
+    ]);
+
+    const user = userEvent.setup();
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              letters: offsetLimitPagination(),
+            },
+          },
+        },
+      }),
+      link,
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<
+          PaginatedCaseData,
+          PaginatedCaseVariables
+        > | null,
+      },
+    });
+
+    function App() {
+      useTrackRenders();
+      const result = useSuspenseQuery(query, {
+        variables: { offset: 0, limit: 2 },
+      });
+      const { data, fetchMore } = result;
+
+      Profiler.mergeSnapshot({ result });
+
+      return (
+        <button
+          onClick={() =>
+            fetchMore({
+              variables: {
+                offset: data.letters.length,
+                limit: 2,
+              },
+            })
+          }
+        >
+          Fetch next
+        </button>
+      );
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    // initial suspended render
+    await Profiler.takeRender();
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+        ],
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Fetch next")));
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
+        ],
+      });
+    }
+
+    await act(() => user.click(screen.getByText("Fetch next")));
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
+        ],
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
   });
 
   describe.skip("type tests", () => {

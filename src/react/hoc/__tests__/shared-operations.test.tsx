@@ -1,5 +1,5 @@
 import React from "react";
-import { render, cleanup } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import gql from "graphql-tag";
 import { DocumentNode } from "graphql";
 
@@ -25,8 +25,6 @@ function compose(...funcs: Function[]) {
 }
 
 describe("shared operations", () => {
-  afterEach(cleanup);
-
   describe("withApollo", () => {
     it("passes apollo-client to props", () => {
       const client = new ApolloClient({
@@ -92,7 +90,7 @@ describe("shared operations", () => {
       people: DataValue<PeopleData>;
     }
 
-    // Since we want to test decorators usage, and this does not play well with Typescript,
+    // Since we want to test decorators usage, and this does not play well with TypeScript,
     // we resort to setting everything as any to avoid type checking.
     const withPeople: any = graphql<{}, PeopleData, {}, PeopleChildProps>(
       peopleQuery,

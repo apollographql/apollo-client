@@ -47,6 +47,7 @@ import observableToPromise, {
 import { itAsync, subscribeAndCount } from "../../../testing/core";
 import { ApolloClient } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
+import { Concast, print } from "../../../utilities";
 
 interface MockedMutation {
   reject: (reason: any) => any;
@@ -1610,7 +1611,7 @@ describe("QueryManager", () => {
     });
   });
 
-  const getIdField = ({ id }: { id: string }) => id;
+  const getIdField = (obj: any) => obj.id;
 
   itAsync(
     "runs a mutation with object parameters and puts the result in the store",
@@ -5848,9 +5849,8 @@ describe("QueryManager", () => {
 
         const variables = { id: "1234" };
 
-        const refetchError = testQueryError
-          ? new Error("Refetch failed")
-          : undefined;
+        const refetchError =
+          testQueryError ? new Error("Refetch failed") : undefined;
 
         const queryManager = mockQueryManager(
           {
@@ -6127,7 +6127,11 @@ describe("QueryManager", () => {
 
       queryManager.query({ query, context: { queryDeduplication: true } });
 
-      expect(queryManager["inFlightLinkObservables"].size).toBe(1);
+      expect(
+        queryManager["inFlightLinkObservables"].peek(print(query), "{}")
+      ).toEqual({
+        observable: expect.any(Concast),
+      });
     });
 
     it("should allow overriding global queryDeduplication: true to false", () => {
@@ -6153,7 +6157,9 @@ describe("QueryManager", () => {
 
       queryManager.query({ query, context: { queryDeduplication: false } });
 
-      expect(queryManager["inFlightLinkObservables"].size).toBe(0);
+      expect(
+        queryManager["inFlightLinkObservables"].peek(print(query), "{}")
+      ).toBeUndefined();
     });
   });
 
@@ -6250,6 +6256,231 @@ describe("QueryManager", () => {
       "should not show missing cache result fields warning when returnPartialData is true",
       (resolve, reject) => {
         validateWarnings(resolve, reject, true, 0);
+      }
+    );
+  });
+
+  describe("defaultContext", () => {
+    let _: any; // trash variable to throw away values when destructuring
+    _ = _; // omit "'_' is declared but its value is never read." compiler warning
+
+    it("ApolloClient and QueryManager share a `defaultContext` instance (default empty object)", () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+
+      expect(client.defaultContext).toBe(client["queryManager"].defaultContext);
+    });
+
+    it("ApolloClient and QueryManager share a `defaultContext` instance (provided option)", () => {
+      const defaultContext = {};
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+        defaultContext,
+      });
+
+      expect(client.defaultContext).toBe(defaultContext);
+      expect(client["queryManager"].defaultContext).toBe(defaultContext);
+    });
+
+    it("`defaultContext` cannot be reassigned on the user-facing `ApolloClient`", () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+
+      expect(() => {
+        // @ts-ignore
+        client.defaultContext = { query: { fetchPolicy: "cache-only" } };
+      }).toThrowError(/Cannot set property defaultContext/);
+    });
+
+    it.each([
+      ["query", { method: "query", option: "query" }],
+      ["mutation", { method: "mutate", option: "mutation" }],
+      ["subscription", { method: "subscribe", option: "query" }],
+    ] as const)(
+      "`defaultContext` will be applied to the context of a %s",
+      async (_, { method, option }) => {
+        let context: any;
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: new ApolloLink(
+            (operation) =>
+              new Observable((observer) => {
+                ({ cache: _, ...context } = operation.getContext());
+                observer.complete();
+              })
+          ),
+          defaultContext: {
+            foo: "bar",
+          },
+        });
+
+        // @ts-ignore a bit too generic for TS
+        client[method]({
+          [option]: gql`
+            query {
+              foo
+            }
+          `,
+        });
+
+        expect(context.foo).toBe("bar");
+      }
+    );
+
+    it("`ApolloClient.defaultContext` can be modified and changes will show up in future queries", async () => {
+      let context: any;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          (operation) =>
+            new Observable((observer) => {
+              ({ cache: _, ...context } = operation.getContext());
+              observer.complete();
+            })
+        ),
+        defaultContext: {
+          foo: "bar",
+        },
+      });
+
+      // one query to "warm up" with an old value to make sure the value
+      // isn't locked in at the first query or something
+      await client.query({
+        query: gql`
+          query {
+            foo
+          }
+        `,
+      });
+
+      expect(context.foo).toBe("bar");
+
+      client.defaultContext.foo = "changed";
+
+      await client.query({
+        query: gql`
+          query {
+            foo
+          }
+        `,
+      });
+
+      expect(context.foo).toBe("changed");
+    });
+
+    it("`defaultContext` will be shallowly merged with explicit context", async () => {
+      let context: any;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          (operation) =>
+            new Observable((observer) => {
+              ({ cache: _, ...context } = operation.getContext());
+              observer.complete();
+            })
+        ),
+        defaultContext: {
+          foo: { bar: "baz" },
+          a: { b: "c" },
+        },
+      });
+
+      await client.query({
+        query: gql`
+          query {
+            foo
+          }
+        `,
+        context: {
+          a: { x: "y" },
+        },
+      });
+
+      expect(context).toEqual(
+        expect.objectContaining({
+          foo: { bar: "baz" },
+          a: { b: undefined, x: "y" },
+        })
+      );
+    });
+
+    it("`defaultContext` will be shallowly merged with context from `defaultOptions.query.context", async () => {
+      let context: any;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          (operation) =>
+            new Observable((observer) => {
+              ({ cache: _, ...context } = operation.getContext());
+              observer.complete();
+            })
+        ),
+        defaultContext: {
+          foo: { bar: "baz" },
+          a: { b: "c" },
+        },
+        defaultOptions: {
+          query: {
+            context: {
+              a: { x: "y" },
+            },
+          },
+        },
+      });
+
+      await client.query({
+        query: gql`
+          query {
+            foo
+          }
+        `,
+      });
+
+      expect(context.foo).toStrictEqual({ bar: "baz" });
+      expect(context.a).toStrictEqual({ x: "y" });
+    });
+
+    it(
+      "document existing behavior: `defaultOptions.query.context` will be " +
+        "completely overwritten by, not merged with, explicit context",
+      async () => {
+        let context: any;
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: new ApolloLink(
+            (operation) =>
+              new Observable((observer) => {
+                ({ cache: _, ...context } = operation.getContext());
+                observer.complete();
+              })
+          ),
+          defaultOptions: {
+            query: {
+              context: {
+                foo: { bar: "baz" },
+              },
+            },
+          },
+        });
+
+        await client.query({
+          query: gql`
+            query {
+              foo
+            }
+          `,
+          context: {
+            a: { x: "y" },
+          },
+        });
+
+        expect(context.a).toStrictEqual({ x: "y" });
+        expect(context.foo).toBeUndefined();
       }
     );
   });

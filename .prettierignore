@@ -24,7 +24,16 @@
 !/docs/source/development-testing
 /docs/source/development-testing/**
 !/docs/source/development-testing/reducing-bundle-size.mdx
+!/docs/source/development-testing/schema-driven-testing.mdx
+
+!docs/shared
+/docs/shared/**
+!/docs/shared/ApiDoc
+!/docs/shared/ApiDoc/**
+!/docs/shared/Overrides
+!/docs/shared/Overrides/**
 
 node_modules/
 .yalc/
 .next/
+.changeset/

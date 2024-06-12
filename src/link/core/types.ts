@@ -76,7 +76,14 @@ export interface Operation {
   variables: Record<string, any>;
   operationName: string;
   extensions: Record<string, any>;
-  setContext: (context: DefaultContext) => DefaultContext;
+  setContext: {
+    (context: Partial<DefaultContext>): void;
+    (
+      updateContext: (
+        previousContext: DefaultContext
+      ) => Partial<DefaultContext>
+    ): void;
+  };
   getContext: () => DefaultContext;
 }
 
@@ -85,6 +92,7 @@ export interface SingleExecutionResult<
   TContext = DefaultContext,
   TExtensions = Record<string, any>,
 > extends ExecutionResult<TData, TExtensions> {
+  // data might be undefined if errorPolicy was set to 'ignore'
   data?: TData | null;
   context?: TContext;
 }

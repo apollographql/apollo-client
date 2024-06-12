@@ -17,14 +17,16 @@ import {
   isReference,
   TypedDocumentNode,
 } from "../../../core";
+import { defaultCacheSizes } from "../../../utilities";
 
 describe("resultCacheMaxSize", () => {
   const cache = new InMemoryCache();
-  const defaultMaxSize = Math.pow(2, 16);
 
   it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
     const reader = new StoreReader({ cache });
-    expect(reader["executeSelectionSet"].options.max).toBe(defaultMaxSize);
+    expect(reader["executeSelectionSet"].options.max).toBe(
+      defaultCacheSizes["inMemoryCache.executeSelectionSet"]
+    );
   });
 
   it("configures max size on caches when resultCacheMaxSize is set", () => {
@@ -556,6 +558,69 @@ describe("reading from the store", () => {
         },
       ],
     });
+  });
+
+  it("runs a nested query - skips iterating into an empty array", () => {
+    const reader = new StoreReader({
+      cache: new InMemoryCache(),
+    });
+
+    const result = {
+      id: "abcd",
+      stringField: "This is a string!",
+      numberField: 5,
+      nullField: null,
+      nestedArray: [
+        {
+          id: "abcde",
+          stringField: "This is a string also!",
+          numberField: 7,
+          nullField: null,
+        },
+      ],
+      emptyArray: [],
+    } satisfies StoreObject;
+
+    const store = defaultNormalizedCacheFactory({
+      ROOT_QUERY: { ...result, nestedArray: [makeReference("abcde")] },
+      abcde: result.nestedArray[0],
+    });
+
+    expect(reader["executeSubSelectedArray"].size).toBe(0);
+
+    // assumption: cache size does not increase for empty array
+    readQueryFromStore(reader, {
+      store,
+      query: gql`
+        {
+          stringField
+          numberField
+          emptyArray {
+            id
+            stringField
+            numberField
+          }
+        }
+      `,
+    });
+    expect(reader["executeSubSelectedArray"].size).toBe(0);
+
+    // assumption: cache size increases for array with content
+    readQueryFromStore(reader, {
+      store,
+      query: gql`
+        {
+          stringField
+          numberField
+          nestedArray {
+            id
+            stringField
+            numberField
+          }
+        }
+      `,
+    });
+    expect(reader["executeSubSelectedArray"].size).toBe(1);
   });
 
   it("throws on a missing field", () => {
@@ -1477,12 +1542,12 @@ describe("reading from the store", () => {
           fields: {
             ruler(ruler, { canRead, toReference }) {
               // If the throne is empty, promote Apollo!
-              return canRead(ruler)
-                ? ruler
-                : toReference({
+              return canRead(ruler) ? ruler : (
+                  toReference({
                     __typename: "Deity",
                     name: "Apollo",
-                  });
+                  })
+                );
             },
           },
         },
@@ -1654,8 +1719,8 @@ describe("reading from the store", () => {
           ...diffWithoutDevouredSons.result.ruler,
           children: diffWithoutDevouredSons.result.ruler.children.map(
             (child) => {
-              return child.name === "Zeus"
-                ? {
+              return child.name === "Zeus" ?
+                  {
                     ...child,
                     children: childrenOfZeus
                       // Remove empty child.children arrays.
@@ -1904,7 +1969,7 @@ describe("reading from the store", () => {
           );
           expect(value.__ref).toBe('Deity:{"name":"Zeus"}');
           // Interim ruler Apollo takes over for real.
-          return toReference(apolloRulerResult.ruler);
+          return toReference(apolloRulerResult.ruler)!;
         },
       },
     });

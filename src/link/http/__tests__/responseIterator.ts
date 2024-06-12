@@ -5,7 +5,7 @@ import { itAsync, subscribeAndCount } from "../../../testing";
 import type { Observable } from "zen-observable-ts";
 import { ObservableQuery } from "../../../core";
 import { TextEncoder, TextDecoder } from "util";
-import { ReadableStream } from "web-streams-polyfill/ponyfill/es2018";
+import { ReadableStream } from "web-streams-polyfill";
 import { Readable } from "stream";
 
 var Blob = require("blob-polyfill").Blob;
@@ -17,10 +17,11 @@ function makeCallback<TArgs extends any[]>(
 ) {
   return function () {
     try {
+      // @ts-expect-error
       callback.apply(this, arguments);
       resolve();
     } catch (error) {
-      reject(error);
+      reject(error as Error);
     }
   } as typeof callback;
 }

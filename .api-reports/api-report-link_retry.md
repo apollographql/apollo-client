@@ -28,12 +28,18 @@ class ApolloLink {
     //
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
+    // @internal
+    getMemoryInternals?: () => unknown;
+    // @internal
+    readonly left?: ApolloLink;
     // (undocumented)
     protected onError(error: any, observer?: Observer<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
+    // @internal
+    readonly right?: ApolloLink;
     // (undocumented)
     setOnError(fn: ApolloLink["onError"]): this;
     // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -48,7 +54,7 @@ class ApolloLink {
 interface DefaultContext extends Record<string, any> {
 }
 
-// @public (undocumented)
+// @public
 interface DelayFunction {
     // (undocumented)
     (count: number, operation: Operation, error: any): number;
@@ -56,11 +62,8 @@ interface DelayFunction {
 
 // @public (undocumented)
 interface DelayFunctionOptions {
-    // (undocumented)
     initial?: number;
-    // (undocumented)
     jitter?: boolean;
-    // (undocumented)
     max?: number;
 }
 
@@ -156,7 +159,10 @@ interface Operation {
     // (undocumented)
     query: DocumentNode;
     // (undocumented)
-    setContext: (context: DefaultContext) => DefaultContext;
+    setContext: {
+        (context: Partial<DefaultContext>): void;
+        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
+    };
     // (undocumented)
     variables: Record<string, any>;
 }
@@ -167,7 +173,7 @@ type Path = ReadonlyArray<string | number>;
 // @public (undocumented)
 type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
-// @public (undocumented)
+// @public
 interface RetryFunction {
     // (undocumented)
     (count: number, operation: Operation, error: any): boolean | Promise<boolean>;
@@ -175,9 +181,7 @@ interface RetryFunction {
 
 // @public (undocumented)
 interface RetryFunctionOptions {
-    // (undocumented)
     max?: number;
-    // (undocumented)
     retryIf?: (error: any, operation: Operation) => boolean | Promise<boolean>;
 }
 
@@ -187,13 +191,9 @@ export namespace RetryLink {
     export interface Options {
         // Warning: (ae-forgotten-export) The symbol "RetryFunctionOptions" needs to be exported by the entry point index.d.ts
         // Warning: (ae-forgotten-export) The symbol "RetryFunction" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
         attempts?: RetryFunctionOptions | RetryFunction;
         // Warning: (ae-forgotten-export) The symbol "DelayFunctionOptions" needs to be exported by the entry point index.d.ts
         // Warning: (ae-forgotten-export) The symbol "DelayFunction" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
         delay?: DelayFunctionOptions | DelayFunction;
     }
 }

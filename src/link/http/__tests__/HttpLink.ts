@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 import fetchMock from "fetch-mock";
 import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 import { TextDecoder } from "util";
-import { ReadableStream } from "web-streams-polyfill/ponyfill/es2018";
+import { ReadableStream } from "web-streams-polyfill";
 import { Readable } from "stream";
 
 import {
@@ -92,10 +92,11 @@ function makeCallback<TArgs extends any[]>(
 ) {
   return function () {
     try {
+      // @ts-expect-error
       callback.apply(this, arguments);
       resolve();
     } catch (error) {
-      reject(error);
+      reject(error as Error);
     }
   } as typeof callback;
 }
@@ -633,6 +634,7 @@ describe("HttpLink", () => {
         expect(subscriber.next).toHaveBeenCalledTimes(2);
         expect(subscriber.complete).toHaveBeenCalledTimes(2);
         expect(subscriber.error).not.toHaveBeenCalled();
+        expect(fetchMock.calls().length).toBe(2);
         resolve();
       }, 50);
     });
@@ -886,10 +888,7 @@ describe("HttpLink", () => {
 
     itAsync("allows uri to be a function", (resolve, reject) => {
       const variables = { params: "stub" };
-      const customFetch: WindowOrWorkerGlobalScope["fetch"] = (
-        uri,
-        options
-      ) => {
+      const customFetch: typeof fetch = (uri, options) => {
         const { operationName } = convertBatchedBody(options!.body);
         try {
           expect(operationName).toBe("SampleQuery");
@@ -1202,7 +1201,7 @@ describe("HttpLink", () => {
         reject("warning wasn't called");
       } catch (e) {
         makeCallback(resolve, reject, () =>
-          expect(e.message).toMatch(/has not been found globally/)
+          expect((e as Error).message).toMatch(/has not been found globally/)
         )();
       }
     });
@@ -1214,7 +1213,7 @@ describe("HttpLink", () => {
         reject("warning wasn't called");
       } catch (e) {
         makeCallback(resolve, reject, () =>
-          expect(e.message).toMatch(/has not been found globally/)
+          expect((e as Error).message).toMatch(/has not been found globally/)
         )();
       }
     });
@@ -1941,6 +1940,10 @@ describe("HttpLink", () => {
         "Content-Type: application/json",
         "",
         '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"blue","roll":2,"sides":5}}}}}',
+        "---",
+        "Content-Type: application/json",
+        "",
+        '{"payload": null}',
         "-----",
       ].join("\r\n");
 

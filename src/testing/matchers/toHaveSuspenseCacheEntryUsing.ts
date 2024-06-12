@@ -3,8 +3,8 @@ import type { DocumentNode } from "graphql";
 import type { OperationVariables } from "../../core/index.js";
 import { ApolloClient } from "../../core/index.js";
 import { canonicalStringify } from "../../cache/index.js";
-import { getSuspenseCache } from "../../react/cache/index.js";
-import type { CacheKey } from "../../react/cache/types.js";
+import { getSuspenseCache } from "../../react/internal/index.js";
+import type { CacheKey } from "../../react/internal/index.js";
 
 export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
   [

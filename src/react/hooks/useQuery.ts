@@ -1,6 +1,6 @@
 import { invariant } from "../../utilities/globals/index.js";
 
-import * as React from "react";
+import * as React from "rehackt";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { equal } from "@wry/equality";
 
@@ -36,11 +36,46 @@ import {
   isNonEmptyArray,
   maybeDeepFreeze,
 } from "../../utilities/index.js";
+import { wrapHook } from "./internal/index.js";
 
 const {
   prototype: { hasOwnProperty },
 } = Object;
 
+/**
+ * A hook for executing queries in an Apollo application.
+ *
+ * To run a query within a React component, call `useQuery` and pass it a GraphQL query document.
+ *
+ * When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
+ *
+ * > Refer to the [Queries](https://www.apollographql.com/docs/react/data/queries) section for a more in-depth overview of `useQuery`.
+ *
+ * @example
+ * ```jsx
+ * import { gql, useQuery } from '@apollo/client';
+ *
+ * const GET_GREETING = gql`
+ *   query GetGreeting($language: String!) {
+ *     greeting(language: $language) {
+ *       message
+ *     }
+ *   }
+ * `;
+ *
+ * function Hello() {
+ *   const { loading, error, data } = useQuery(GET_GREETING, {
+ *     variables: { language: 'english' },
+ *   });
+ *   if (loading) return <p>Loading ...</p>;
+ *   return <h1>Hello {data.greeting.message}!</h1>;
+ * }
+ * ```
+ * @since 3.0.0
+ * @param query - A GraphQL query document parsed into an AST by `gql`.
+ * @param options - Options to control how the query is executed.
+ * @returns Query result object
+ */
 export function useQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
@@ -51,6 +86,20 @@ export function useQuery<
     NoInfer<TVariables>
   > = Object.create(null)
 ): QueryResult<TData, TVariables> {
+  return wrapHook(
+    "useQuery",
+    _useQuery,
+    useApolloClient(options && options.client)
+  )(query, options);
+}
+
+function _useQuery<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+) {
   return useInternalState(useApolloClient(options.client), query).useQuery(
     options
   );
@@ -60,23 +109,30 @@ export function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient<any>,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>
 ): InternalState<TData, TVariables> {
-  const stateRef = React.useRef<InternalState<TData, TVariables>>();
-  if (
-    !stateRef.current ||
-    client !== stateRef.current.client ||
-    query !== stateRef.current.query
-  ) {
-    stateRef.current = new InternalState(client, query, stateRef.current);
-  }
-  const state = stateRef.current;
-
   // By default, InternalState.prototype.forceUpdate is an empty function, but
   // we replace it here (before anyone has had a chance to see this state yet)
   // with a function that unconditionally forces an update, using the latest
-  // setTick function. Updating this state by calling state.forceUpdate is the
-  // only way we trigger React component updates (no other useState calls within
-  // the InternalState class).
-  state.forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
+  // setTick function. Updating this state by calling state.forceUpdate or the
+  // uSES notification callback are the only way we trigger React component updates.
+  const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
+
+  function createInternalState(previous?: InternalState<TData, TVariables>) {
+    return Object.assign(new InternalState(client, query, previous), {
+      forceUpdateState,
+    });
+  }
+
+  let [state, updateState] = React.useState(createInternalState);
+
+  if (client !== state.client || query !== state.query) {
+    // If the client or query have changed, we need to create a new InternalState.
+    // This will trigger a re-render with the new state, but it will also continue
+    // to run the current render function to completion.
+    // Since we sometimes trigger some side-effects in the render function, we
+    // re-assign `state` to the new state to ensure that those side-effects are
+    // triggered with the new state.
+    updateState((state = createInternalState(state)));
+  }
 
   return state;
 }
@@ -174,13 +230,16 @@ class InternalState<TData, TVariables extends OperationVariables> {
     // initialization, this.renderPromises is usually undefined (unless SSR is
     // happening), but that's fine as long as it has been initialized that way,
     // rather than left uninitialized.
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     this.renderPromises = React.useContext(getApolloContext()).renderPromises;
 
     this.useOptions(options);
 
     const obsQuery = this.useObservableQuery();
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const result = useSyncExternalStore(
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       React.useCallback(
         (handleStoreChange) => {
           if (this.renderPromises) {
@@ -251,7 +310,9 @@ class InternalState<TData, TVariables extends OperationVariables> {
           // effectively passing this dependency array to that useEffect buried
           // inside useSyncExternalStore, as desired.
           obsQuery,
+          // eslint-disable-next-line react-hooks/exhaustive-deps
           this.renderPromises,
+          // eslint-disable-next-line react-hooks/exhaustive-deps
           this.client.disableNetworkFetches,
         ]
       ),
@@ -271,8 +332,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
   // useQuery method, so we can safely use these members in other/later methods
   // without worrying they might be uninitialized.
   private renderPromises: ApolloContextValue["renderPromises"];
-  private queryHookOptions: QueryHookOptions<TData, TVariables>;
-  private watchQueryOptions: WatchQueryOptions<TVariables, TData>;
+  private queryHookOptions!: QueryHookOptions<TData, TVariables>;
+  private watchQueryOptions!: WatchQueryOptions<TVariables, TData>;
 
   private useOptions(options: QueryHookOptions<TData, TVariables>) {
     const watchQueryOptions = this.createWatchQueryOptions(
@@ -461,8 +522,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
   private onCompleted(data: TData) {}
   private onError(error: ApolloError) {}
 
-  private observable: ObservableQuery<TData, TVariables>;
-  private obsQueryFields: Omit<
+  private observable!: ObservableQuery<TData, TVariables>;
+  public obsQueryFields!: Omit<
     ObservableQueryFields<TData, TVariables>,
     "variables"
   >;
@@ -477,6 +538,7 @@ class InternalState<TData, TVariables extends OperationVariables> {
       this.observable || // Reuse this.observable if possible (and not SSR)
       this.client.watchQuery(this.getObsQueryOptions()));
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     this.obsQueryFields = React.useMemo(
       () => ({
         refetch: obsQuery.refetch.bind(obsQuery),
@@ -552,8 +614,8 @@ class InternalState<TData, TVariables extends OperationVariables> {
   private toApolloError(
     result: ApolloQueryResult<TData>
   ): ApolloError | undefined {
-    return isNonEmptyArray(result.errors)
-      ? new ApolloError({ graphQLErrors: result.errors })
+    return isNonEmptyArray(result.errors) ?
+        new ApolloError({ graphQLErrors: result.errors })
       : result.error;
   }
 

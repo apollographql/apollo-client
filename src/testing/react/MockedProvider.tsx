@@ -11,7 +11,7 @@ import type { Resolvers } from "../../core/index.js";
 import type { ApolloCache } from "../../cache/index.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
-  mocks?: ReadonlyArray<MockedResponse>;
+  mocks?: ReadonlyArray<MockedResponse<any, any>>;
   addTypename?: boolean;
   defaultOptions?: DefaultOptions;
   cache?: ApolloCache<TSerializedCache>;
@@ -69,11 +69,11 @@ export class MockedProvider extends React.Component<
     const { children, childProps } = this.props;
     const { client } = this.state;
 
-    return React.isValidElement(children) ? (
-      <ApolloProvider client={client}>
-        {React.cloneElement(React.Children.only(children), { ...childProps })}
-      </ApolloProvider>
-    ) : null;
+    return React.isValidElement(children) ?
+        <ApolloProvider client={client}>
+          {React.cloneElement(React.Children.only(children), { ...childProps })}
+        </ApolloProvider>
+      : null;
   }
 
   public componentWillUnmount() {

@@ -493,8 +493,8 @@ describe("diffing queries against the store", () => {
     };
 
     const cache = new InMemoryCache({
-      dataIdFromObject({ id }: { id: string }) {
-        return id;
+      dataIdFromObject(obj: any) {
+        return obj.id;
       },
     });
 
@@ -841,7 +841,7 @@ describe("diffing queries against the store", () => {
 
       const writer = new StoreWriter(
         new InMemoryCache({
-          dataIdFromObject: ({ id }: { id: string }) => id,
+          dataIdFromObject: (obj: any) => obj.id,
         })
       );
 
@@ -1067,7 +1067,7 @@ describe("diffing queries against the store", () => {
         });
         throw new Error("should have thrown");
       } catch (e) {
-        expect(e.message).toEqual(
+        expect((e as Error).message).toEqual(
           "Missing selection set for object of type Message returned for query field messageList"
         );
       }

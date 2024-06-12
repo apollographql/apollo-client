@@ -1,16 +1,17 @@
 import { invariant } from "../../utilities/globals/index.js";
 
-import * as React from "react";
+import * as React from "rehackt";
+import type * as ReactTypes from "react";
 
 import type { ApolloClient } from "../../core/index.js";
 import { getApolloContext } from "./ApolloContext.js";
 
 export interface ApolloProviderProps<TCache> {
   client: ApolloClient<TCache>;
-  children: React.ReactNode | React.ReactNode[] | null;
+  children: ReactTypes.ReactNode | ReactTypes.ReactNode[] | null;
 }
 
-export const ApolloProvider: React.FC<ApolloProviderProps<any>> = ({
+export const ApolloProvider: ReactTypes.FC<ApolloProviderProps<any>> = ({
   client,
   children,
 }) => {

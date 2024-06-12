@@ -7,7 +7,7 @@ import { mergeIncrementalData } from "../utilities/index.js";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
-import type { QueryListener, MethodKeys } from "./types.js";
+import type { QueryListener } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
 import {
   isNonEmptyArray,
@@ -36,10 +36,11 @@ const destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)<
 
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,
-  methodName: MethodKeys<ApolloCache<any>>
+  methodName: "evict" | "modify" | "reset"
 ) {
   const original = cache[methodName];
   if (typeof original === "function") {
+    // @ts-expect-error this is just too generic to be typed correctly
     cache[methodName] = function () {
       destructiveMethodCounts.set(
         cache,
@@ -49,6 +50,7 @@ function wrapDestructiveCacheMethod(
         // that matters in any conceivable practical scenario.
         (destructiveMethodCounts.get(cache)! + 1) % 1e15
       );
+      // @ts-expect-error this is just too generic to be typed correctly
       return original.apply(this, arguments);
     };
   }
@@ -111,7 +113,7 @@ export class QueryInfo {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus?: NetworkStatus;
-    observableQuery?: ObservableQuery<any>;
+    observableQuery?: ObservableQuery<any, any>;
     lastRequestId?: number;
   }): this {
     let networkStatus = query.networkStatus || NetworkStatus.loading;
@@ -155,6 +157,10 @@ export class QueryInfo {
     this.dirty = false;
   }
 
+  resetDiff() {
+    this.lastDiff = void 0;
+  }
+
   getDiff(): Cache.DiffResult<any> {
     const options = this.getDiffOptions();
 
@@ -183,8 +189,9 @@ export class QueryInfo {
     diff: Cache.DiffResult<any> | null,
     options?: Cache.DiffOptions
   ) {
-    this.lastDiff = diff
-      ? {
+    this.lastDiff =
+      diff ?
+        {
           diff,
           options: options || this.getDiffOptions(),
         }
@@ -203,7 +210,22 @@ export class QueryInfo {
 
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.lastDiff && this.lastDiff.diff;
+
+    // If we are trying to deliver an incomplete cache result, we avoid
+    // reporting it if the query has errored, otherwise we let the broadcast try
+    // and repair the partial result by refetching the query. This check avoids
+    // a situation where a query that errors and another succeeds with
+    // overlapping data does not report the partial data result to the errored
+    // query.
+    //
+    // See https://github.com/apollographql/apollo-client/issues/11400 for more
+    // information on this issue.
+    if (diff && !diff.complete && this.observableQuery?.getLastError()) {
+      return;
+    }
+
     this.updateLastDiff(diff);
+
     if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
       this.dirty = true;
       if (!this.notifyTimeout) {
@@ -212,10 +234,10 @@ export class QueryInfo {
     }
   }
 
-  public readonly observableQuery: ObservableQuery<any> | null = null;
+  public readonly observableQuery: ObservableQuery<any, any> | null = null;
   private oqListener?: QueryListener;
 
-  setObservableQuery(oq: ObservableQuery<any> | null) {
+  setObservableQuery(oq: ObservableQuery<any, any> | null) {
     if (oq === this.observableQuery) return;
 
     if (this.oqListener) {
@@ -359,9 +381,8 @@ export class QueryInfo {
     cacheWriteBehavior: CacheWriteBehavior
   ) {
     const merger = new DeepMerger();
-    const graphQLErrors = isNonEmptyArray(result.errors)
-      ? result.errors.slice(0)
-      : [];
+    const graphQLErrors =
+      isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.

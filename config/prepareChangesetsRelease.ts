@@ -30,9 +30,9 @@ function copyDir(src: string, dest: string) {
     let srcPath = path.join(src, entry.name);
     let destPath = path.join(dest, entry.name);
 
-    entry.isDirectory()
-      ? copyDir(srcPath, destPath)
-      : fs.copyFileSync(srcPath, destPath);
+    entry.isDirectory() ?
+      copyDir(srcPath, destPath)
+    : fs.copyFileSync(srcPath, destPath);
   }
 }
 

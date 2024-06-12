@@ -25,6 +25,7 @@ import {
   addTypenameToDocument,
   isNonEmptyArray,
   argumentsObjectFromField,
+  canonicalStringify,
 } from "../../utilities/index.js";
 
 import type {
@@ -44,7 +45,6 @@ import type { StoreReader } from "./readFromStore.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { EntityStore } from "./entityStore.js";
 import type { Cache } from "../../core/index.js";
-import { canonicalStringify } from "./object-canon.js";
 import { normalizeReadFieldOptions } from "./policies.js";
 import type { ReadFieldFunction } from "../core/types/common.js";
 
@@ -95,13 +95,13 @@ function getContextFlavor<TContext extends FlavorableWriteContext>(
     context.flavors.set(
       key,
       (flavored =
-        context.clientOnly === clientOnly && context.deferred === deferred
-          ? context
-          : {
-              ...context,
-              clientOnly,
-              deferred,
-            })
+        context.clientOnly === clientOnly && context.deferred === deferred ?
+          context
+        : {
+            ...context,
+            clientOnly,
+            deferred,
+          })
     );
   }
   return flavored as TContext;
@@ -330,9 +330,9 @@ export class StoreWriter {
           field,
           // Reset context.clientOnly and context.deferred to their default
           // values before processing nested selection sets.
-          field.selectionSet
-            ? getContextFlavor(context, false, false)
-            : context,
+          field.selectionSet ?
+            getContextFlavor(context, false, false)
+          : context,
           childTree
         );
 
@@ -633,13 +633,15 @@ export class StoreWriter {
         // Items in the same position in different arrays are not
         // necessarily related to each other, so when incoming is an array
         // we process its elements as if there was no existing data.
-        !isArray(incoming) &&
-        // Likewise, existing must be either a Reference or a StoreObject
-        // in order for its fields to be safe to merge with the fields of
-        // the incoming object.
-        (isReference(existing) || storeValueIsStoreObject(existing))
-          ? existing
-          : void 0;
+        (
+          !isArray(incoming) &&
+          // Likewise, existing must be either a Reference or a StoreObject
+          // in order for its fields to be safe to merge with the fields of
+          // the incoming object.
+          (isReference(existing) || storeValueIsStoreObject(existing))
+        ) ?
+          existing
+        : void 0;
 
       // This narrowing is implied by mergeTree.map.size > 0 and
       // !isReference(incoming), though TypeScript understandably cannot
@@ -665,11 +667,13 @@ export class StoreWriter {
         from: typeof e | typeof i,
         name: string | number
       ): StoreValue => {
-        return isArray(from)
-          ? typeof name === "number"
-            ? from[name]
+        return (
+          isArray(from) ?
+            typeof name === "number" ?
+              from[name]
             : void 0
-          : context.store.getFieldValue(from, String(name));
+          : context.store.getFieldValue(from, String(name))
+        );
       };
 
       mergeTree.map.forEach((childTree, storeFieldName) => {
@@ -739,18 +743,17 @@ function mergeMergeTrees(
   if (!left || mergeTreeIsEmpty(left)) return right;
 
   const info =
-    left.info && right.info
-      ? {
-          ...left.info,
-          ...right.info,
-        }
-      : left.info || right.info;
+    left.info && right.info ?
+      {
+        ...left.info,
+        ...right.info,
+      }
+    : left.info || right.info;
 
   const needToMergeMaps = left.map.size && right.map.size;
-  const map = needToMergeMaps
-    ? new Map()
-    : left.map.size
-    ? left.map
+  const map =
+    needToMergeMaps ? new Map()
+    : left.map.size ? left.map
     : right.map;
 
   const merged = { info, map };
@@ -854,8 +857,8 @@ This could cause additional (usually avoidable) network requests to fetch data t
 
 To address this problem (which is not a bug in Apollo Client), %sdefine a custom merge function for the %s field, so InMemoryCache can safely merge these objects:
 
-  existing: %s
-  incoming: %s
+  existing: %o
+  incoming: %o
 
 For more information about these options, please refer to the documentation:
 
@@ -864,13 +867,13 @@ For more information about these options, please refer to the documentation:
 `,
     fieldName,
     parentType,
-    childTypenames.length
-      ? "either ensure all objects of type " +
-          childTypenames.join(" and ") +
-          " have an ID or a custom merge function, or "
-      : "",
+    childTypenames.length ?
+      "either ensure all objects of type " +
+        childTypenames.join(" and ") +
+        " have an ID or a custom merge function, or "
+    : "",
     typeDotName,
-    existing,
-    incoming
+    { ...existing },
+    { ...incoming }
   );
 }

@@ -1,0 +1,560 @@
+---
+title: Schema-driven testing
+description: Using createTestSchema and associated APIs
+minVersion: 3.10.0
+---
+
+This article describes best practices for writing integration tests using testing utilities released as experimental in v3.10. These testing tools allow developers to execute queries against a schema configured with mock resolvers and default scalar values in order to test an entire Apollo Client application, including the [link chain](/react/api/link/introduction).
+
+## Guiding principles
+
+Kent C. Dodds [said it best](https://twitter.com/kentcdodds/status/977018512689455106):
+
+> The more your tests resemble the way your software is used, the more confidence they can give you.
+
+When it comes to testing applications built with Apollo Client, this means validating the code path your users' requests will travel from the UI to the network layer and back.
+
+Unit-style testing with [`MockedProvider`](/react/development-testing/testing) can be useful for testing individual components—or even entire pages or React subtrees—in isolation by mocking the expected response data for individual operations. However, it's important to also test the integration of your components with the network layer. That's where schema-driven testing comes in.
+
+> This page is heavily inspired by the excellent [Redux documentation](https://redux.js.org/usage/writing-tests#guiding-principles); the same principles apply to Apollo Client.
+
+## `createTestSchema` and `createSchemaFetch`
+
+### Installation
+
+First, ensure you have installed Apollo Client v3.10 or greater. Then, install the following peer dependencies:
+
+```bash
+npm i @graphql-tools/merge @graphql-tools/schema @graphql-tools/utils undici --save-dev
+```
+
+Consider a React application that fetches a list of products from a GraphQL server:
+
+<ExpansionPanel title="Click to expand">
+
+```tsx title="products.tsx"
+import { gql, TypedDocumentNode, useSuspenseQuery } from "@apollo/client";
+
+type ProductsQuery = {
+  products: Array<{
+    __typename: "Product";
+    id: string;
+    title: string;
+    mediaUrl: string;
+  }>;
+};
+
+const PRODUCTS_QUERY: TypedDocumentNode<ProductsQuery> = gql`
+  query ProductsQuery {
+    products {
+      id
+      title
+      mediaUrl
+    }
+  }
+`;
+
+export function Products() {
+  const { data } = useSuspenseQuery(PRODUCTS_QUERY);
+
+  return (
+    <div>
+      {data.products.map((product) => (
+        <p key={product.id}>
+          <a href={product.mediaUrl}>
+            {product.title} - {product.id}
+          </a>
+        </p>
+      ))}
+    </div>
+  );
+}
+```
+
+</ExpansionPanel>
+
+Now let's write some tests using a test schema created with the `createTestSchema` utility that can then be used to create a mock fetch implementation with `createSchemaFetch`.
+
+### Configuring your test environment
+
+First, some Node.js globals will need to be polyfilled in order for JSDOM tests to run correctly. Create a file called e.g. `jest.polyfills.js`:
+
+```js title="jest.polyfills.js"
+/**
+ * @note The block below contains polyfills for Node.js globals
+ * required for Jest to function when running JSDOM tests.
+ * These have to be require's and have to be in this exact
+ * order, since "undici" depends on the "TextEncoder" global API.
+ */
+
+const { TextDecoder, TextEncoder } = require("node:util");
+const { ReadableStream } = require("node:stream/web");
+const { clearImmediate } = require("node:timers");
+const { performance } = require("node:perf_hooks");
+
+Object.defineProperties(globalThis, {
+  TextDecoder: { value: TextDecoder },
+  TextEncoder: { value: TextEncoder },
+  ReadableStream: { value: ReadableStream },
+  performance: { value: performance },
+  clearImmediate: { value: clearImmediate },
+});
+
+const { Blob, File } = require("node:buffer");
+const { fetch, Headers, FormData, Request, Response } = require("undici");
+
+Object.defineProperties(globalThis, {
+  fetch: { value: fetch, writable: true },
+  Response: { value: Response },
+  Blob: { value: Blob },
+  File: { value: File },
+  Headers: { value: Headers },
+  FormData: { value: FormData },
+  Request: { value: Request },
+});
+
+// Note: if your environment supports it, you can use the `using` keyword
+// but must polyfill Symbol.dispose here with Jest versions <= 29
+// where Symbol.dispose is not defined
+//
+// Jest bug: https://github.com/jestjs/jest/issues/14874
+// Fix is available in https://github.com/jestjs/jest/releases/tag/v30.0.0-alpha.3
+if (!Symbol.dispose) {
+  Object.defineProperty(Symbol, "dispose", {
+    value: Symbol("dispose"),
+  });
+}
+if (!Symbol.asyncDispose) {
+  Object.defineProperty(Symbol, "asyncDispose", {
+    value: Symbol("asyncDispose"),
+  });
+}
+```
+
+Now, in a `jest.config.ts` or `jest.config.js` file, add the following configuration:
+
+```ts title="jest.config.ts"
+import type { Config } from "jest";
+
+const config: Config = {
+  globals: {
+    "globalThis.__DEV__": JSON.stringify(true),
+  },
+  testEnvironment: "jsdom",
+  setupFiles: ["./jest.polyfills.js"],
+  // You may also have an e.g. setupTests.ts file here
+  setupFilesAfterEnv: ["<rootDir>/setupTests.ts"],
+  // If you're using MSW, opt out of the browser export condition for MSW tests
+  // For more information, see: https://github.com/mswjs/msw/issues/1786#issuecomment-1782559851
+  testEnvironmentOptions: {
+    customExportConditions: [""],
+  },
+  // If you plan on importing .gql/.graphql files in your tests, transform them with @graphql-tools/jest-transform
+  transform: {
+    "\\.(gql|graphql)$": "@graphql-tools/jest-transform",
+  },
+};
+
+export default config;
+```
+
+In the example `setupTests.ts` file below, `@testing-library/jest-dom` is imported to allow the use of custom `jest-dom` matchers (see the [`@testing-library/jest-dom` documentation](https://github.com/testing-library/jest-dom?tab=readme-ov-file#usage) for more information) and fragment warnings are disabled which can pollute the test output:
+
+```ts title="setupTests.ts"
+import "@testing-library/jest-dom";
+import { gql } from "@apollo/client";
+
+gql.disableFragmentWarnings();
+```
+
+### Testing with MSW
+
+Now, let's write a test for the `Products` component using [MSW](https://mswjs.io/).
+
+MSW is a powerful tool for intercepting network traffic and mocking responses. Read more about its design and philosophy [here](https://mswjs.io/blog/why-mock-service-worker/).
+
+MSW has the concept of [handlers](https://mswjs.io/docs/best-practices/structuring-handlers/) that allow network requests to be intercepted. Let's create a handler that will intercept all GraphQL operations:
+
+```ts title="src/__tests__/handlers.ts"
+import { graphql, HttpResponse } from "msw";
+import { execute } from "graphql";
+import type { ExecutionResult } from "graphql";
+import type { ObjMap } from "graphql/jsutils/ObjMap";
+import { gql } from "@apollo/client";
+import { createTestSchema } from "@apollo/client/testing/experimental";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import graphqlSchema from "../../../schema.graphql";
+
+// First, create a static schema...
+const staticSchema = makeExecutableSchema({ typeDefs: graphqlSchema });
+
+// ...which is then passed as the first argument to `createTestSchema`
+// along with mock resolvers and default scalar values.
+export let testSchema = createTestSchema(staticSchema, {
+  resolvers: {
+    Query: {
+      products: () => [
+        {
+          id: "1",
+          title: "Blue Jays Hat",
+        },
+      ],
+    },
+  },
+  scalars: {
+    Int: () => 6,
+    Float: () => 22.1,
+    String: () => "string",
+  },
+});
+
+export const handlers = [
+  // Intercept all GraphQL operations and return a response generated by the
+  // test schema. Add additional handlers as needed.
+  graphql.operation<ExecutionResult<ObjMap<unknown>, ObjMap<unknown>>>(
+    async ({ query, variables, operationName }) => {
+      const document = gql(query);
+
+      const result = await execute({
+        document,
+        operationName,
+        schema: testSchema,
+        variableValues: variables,
+      });
+
+      return HttpResponse.json(result);
+    }
+  ),
+];
+```
+
+MSW can be used in [the browser](https://mswjs.io/docs/integrations/browser), in [Node.js](https://mswjs.io/docs/integrations/node) and in [React Native](https://mswjs.io/docs/integrations/react-native). Since this example is using Jest and JSDOM to run tests in a Node.js environment, let's configure the server per the [Node.js integration guide](https://mswjs.io/docs/integrations/node):
+
+```ts title="src/__tests__/server.ts"
+import { setupServer } from "msw/node";
+import { handlers } from "./handlers";
+
+// This configures a request mocking server with the given request handlers.
+export const server = setupServer(...handlers);
+```
+
+Finally, let's do server set up and teardown in the `setupTests.ts` file created in the previous step:
+
+```ts title="setupTests.ts" {6-8}
+import "@testing-library/jest-dom";
+import { gql } from "@apollo/client";
+
+gql.disableFragmentWarnings();
+
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+afterAll(() => server.close());
+afterEach(() => server.resetHandlers());
+```
+
+Finally, let's write some tests 🎉
+
+```tsx title="src/__tests__/products.test.tsx"
+import { Suspense } from "react";
+import { render as rtlRender, screen } from "@testing-library/react";
+import {
+  ApolloClient,
+  ApolloProvider,
+  NormalizedCacheObject,
+} from "@apollo/client";
+import { testSchema } from "./handlers";
+import { Products } from "../products";
+// This should be a function that returns a new ApolloClient instance
+// configured just like your production Apollo Client instance - see the FAQ.
+import { makeClient } from "../client";
+
+const render = (renderedClient: ApolloClient<NormalizedCacheObject>) =>
+  rtlRender(
+    <ApolloProvider client={renderedClient}>
+      <Suspense fallback="Loading...">
+        <Products />
+      </Suspense>
+    </ApolloProvider>
+  );
+
+describe("Products", () => {
+  test("renders", async () => {
+    render(makeClient());
+
+    await screen.findByText("Loading...");
+
+    // This is the data from our initial mock resolver in the test schema
+    // defined in the handlers file 🎉
+    expect(await screen.findByText(/blue jays hat/i)).toBeInTheDocument();
+  });
+
+  test("allows resolvers to be updated via .add", async () => {
+    // Calling .add on the test schema will update the resolvers
+    // with new data
+    testSchema.add({
+      resolvers: {
+        Query: {
+          products: () => {
+            return [
+              {
+                id: "2",
+                title: "Mets Hat",
+              },
+            ];
+          },
+        },
+      },
+    });
+
+    render(makeClient());
+
+    await screen.findByText("Loading...");
+
+    // Our component now renders the new data from the updated resolver
+    await screen.findByText(/mets hat/i);
+  });
+
+  test("handles test schema resetting via .reset", async () => {
+    // Calling .reset on the test schema will reset the resolvers
+    testSchema.reset();
+
+    render(makeClient());
+
+    await screen.findByText("Loading...");
+
+    // The component now renders the initial data configured on the test schema
+    await screen.findByText(/blue jays hat/i);
+  });
+});
+```
+
+### Testing by mocking fetch with `createSchemaFetch`
+
+First, import `createSchemaFetch` and `createTestSchema` from the new `@apollo/client/testing` entrypoint. Next, import a local copy of your graph's schema: jest should be configured to transform `.gql` or `.graphql` files using `@graphql-tools/jest-transform` (see the `jest.config.ts` example configuration above.)
+
+Here's how an initial set up of the test file might look:
+
+```tsx title="products.test.tsx"
+import {
+  createSchemaFetch,
+  createTestSchema,
+} from "@apollo/client/testing/experimental";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import { render as rtlRender, screen } from "@testing-library/react";
+import graphqlSchema from "../../../schema.graphql";
+// This should be a function that returns a new ApolloClient instance
+// configured just like your production Apollo Client instance - see the FAQ.
+import { makeClient } from "../../client";
+import { ApolloProvider, NormalizedCacheObject } from "@apollo/client";
+import { Products } from "../../products";
+import { Suspense } from "react";
+
+// First, let's create an executable schema...
+const staticSchema = makeExecutableSchema({ typeDefs: graphqlSchema });
+
+// which is then passed as the first argument to `createTestSchema`.
+const schema = createTestSchema(staticSchema, {
+  // Next, let's define mock resolvers
+  resolvers: {
+    Query: {
+      products: () =>
+        Array.from({ length: 5 }, (_element, id) => ({
+          id,
+          mediaUrl: `https://example.com/image${id}.jpg`,
+        })),
+    },
+  },
+  // ...and default scalar values
+  scalars: {
+    Int: () => 6,
+    Float: () => 22.1,
+    String: () => "default string",
+  },
+});
+
+// This `render` helper function would typically be extracted and shared between
+// test files.
+const render = (renderedClient: ApolloClient<NormalizedCacheObject>) =>
+  rtlRender(
+    <ApolloProvider client={renderedClient}>
+      <Suspense fallback="Loading...">
+        <Products />
+      </Suspense>
+    </ApolloProvider>
+  );
+```
+
+Now let's write some tests 🎉
+
+First, `createSchemaFetch` can be used to mock the global `fetch` implementation with one that resolves network requests with payloads generated from the test schema.
+
+```tsx title="products.test.tsx"
+describe("Products", () => {
+  it("renders", async () => {
+    using _fetch = createSchemaFetch(schema).mockGlobal();
+
+    render(makeClient());
+
+    await screen.findByText("Loading...");
+
+    // title is rendering the default string scalar
+    const findAllByText = await screen.findAllByText(/default string/);
+    expect(findAllByText).toHaveLength(5);
+
+    // the products resolver is returning 5 products
+    await screen.findByText(/0/);
+    await screen.findByText(/1/);
+    await screen.findByText(/2/);
+    await screen.findByText(/3/);
+    await screen.findByText(/4/);
+  });
+});
+```
+
+#### A note on `using` and explicit resource management
+
+You may have noticed a new keyword in the first line of the test above: `using`.
+
+`using` is part of a [proposed new language feature](https://github.com/tc39/proposal-explicit-resource-management) which is currently at Stage 3 of the TC39 proposal process.
+
+If you are using TypeScript 5.2 or greater, or using Babel's [`@babel/plugin-proposal-explicit-resource-management` plugin](https://babeljs.io/docs/babel-plugin-proposal-explicit-resource-management), you can use the `using` keyword to automatically perform some cleanup when `_fetch` goes out of scope. In our case, this is when the test is complete; this means restoring the global fetch function to its original state automatically after each test.
+
+If your environment does not support explicit resource management, you'll find that calling `mockGlobal()` returns a restore function that you can manually call at the end of each test:
+
+```tsx title="products.test.tsx"
+describe("Products", () => {
+  it("renders", async () => {
+    const { restore } = createSchemaFetch(schema).mockGlobal();
+
+    render(makeClient());
+
+    // make assertions against the rendered DOM output
+
+    restore();
+  });
+});
+```
+
+## Modifying a test schema using `testSchema.add` and `testSchema.fork`
+
+If you need to make changes to the behavior of a schema after it has been created, you can use the `testSchema.add` method to add new resolvers to the schema or overwrite existing ones.
+This can be useful for testing scenarios where the behavior of the schema needs to change inside a test.
+
+````tsx title="products.test.tsx"
+describe("Products", () => {
+  it("renders", async () => {
+    const { restore } = createSchemaFetch(schema).mockGlobal();
+
+    render(makeClient());
+
+    // make assertions against the rendered DOM output
+
+    // Here we want to change the return value of the `products` resolver
+    // for the next outgoing query.
+    testSchema.add({
+      resolvers: {
+        Query: {
+          products: () =>
+            Array.from({ length: 5 }, (_element, id) => ({
+              // we want to return ids starting from 5 for the second request
+              id: id + 5,
+              mediaUrl: `https://example.com/image${id + 5}.jpg`,
+            })),
+        },
+      },
+    });
+
+    // trigger a new query with a user interaction
+    userEvent.click(screen.getByText("Fetch more"));
+
+    // make assertions against the rendered DOM output
+
+    restore();
+    testSchema.reset();
+  });
+});
+```
+
+Alternatively, you can use `testSchema.fork` to create a new schema with the same configuration as the original schema,
+but with the ability to make changes to the new isolated schema without affecting the original schema.
+This can be useful if you just want to mock the global fetch function with a different schema for each test without
+having to care about resetting your original testSchema.
+You could also write incremental tests where each test builds on the previous one.
+
+If you use MSW, you will probably end up using `testSchema.add`, as MSW needs to be set up with a single schema for all tests.
+If you are going the `createSchemaFetch` route, you can use `testSchema.fork` to create a new schema for each test,
+and then use `forkedSchema.add` to make changes to the schema for that test.
+
+```tsx
+const baseSchema = createTestSchema(staticSchema, {
+  resolvers: {
+    // ...
+  },
+  scalars: {
+    // ...
+  },
+});
+
+test("a test", () => {
+  const forkedSchema = baseSchema.fork();
+
+  const { restore } = createSchemaFetch(forkedSchema).mockGlobal();
+
+  // make assertions against the rendered DOM output
+
+  forkedSchema.add({
+    // ...
+  });
+
+  restore();
+  // forkedSchema will just be discarded, and there is no need to reset it
+});
+````
+
+### FAQ
+
+#### When should I use `createSchemaFetch` vs [MSW](https://mswjs.io/)?
+
+There are many benefits to using [MSW](https://mswjs.io/): it's a powerful tool with a great set of APIs. Read more about its philosophy and benefits [here](https://mswjs.io/blog/why-mock-service-worker/).
+
+Wherever possible, use MSW: it enables more realistic tests that can catch more bugs by intercepting requests _after_ they've been dispatched by an application. MSW also supports both REST and GraphQL handlers, so if your application uses a combination (e.g. to fetch data from a third party endpoint), MSW will provide more flexibility than `createSchemaFetch`, which is a more lightweight solution.
+
+#### Should I share a single `ApolloClient` instance between tests?
+
+No; please create a new instance of `ApolloClient` for each test. Even if the cache is reset in between tests, the client maintains some internal state that is not reset. This could have some unintended consequences. For example, the `ApolloClient` instance could have pending queries that could cause the following test's queries to be deduplicated by default.
+
+Instead, create a `makeClient` function or equivalent so that every test uses the same client configuration as your production client, but no two tests share the same client instance. Here's an example:
+
+<ExpansionPanel title="Click to expand">
+
+```ts title="src/client.ts"
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+
+const httpLink = new HttpLink({
+  uri: "https://example.com/graphql",
+});
+
+export const makeClient = () => {
+  return new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+  });
+};
+
+export const client = makeClient();
+```
+
+</ExpansionPanel>
+
+This way, every test can use `makeClient` to create a new client instance, and you can still use `client` in your production code.
+
+#### Can I use these testing tools with Vitest?
+
+Unfortunately not at the moment. This is caused by a known limitation with the `graphql` package and tools that bundle ESM by default known as the [dual package hazard](https://nodejs.org/api/packages.html#dual-package-hazard).
+
+Please see [this issue](https://github.com/graphql/graphql-js/issues/4062) to track the related discussion on the `graphql/graphql-js` repository.
+
+## Sandbox example
+
+For a working example that demonstrates how to use both Testing Library and Mock Service Worker to write integration tests with `createTestSchema`, check out this project on CodeSandbox:
+
+[![Edit Testing React Components](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/sandbox/github/apollographql/docs-examples/tree/main/apollo-client/v3/schema-driven-testing)

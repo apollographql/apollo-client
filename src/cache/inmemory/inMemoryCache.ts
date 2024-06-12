@@ -16,6 +16,10 @@ import {
   addTypenameToDocument,
   isReference,
   DocumentTransform,
+  canonicalStringify,
+  print,
+  cacheSizes,
+  defaultCacheSizes,
 } from "../../utilities/index.js";
 import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
 import { StoreReader } from "./readFromStore.js";
@@ -24,8 +28,8 @@ import { EntityStore, supportsResultCaching } from "./entityStore.js";
 import { makeVar, forgetCache, recallCache } from "./reactiveVars.js";
 import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
-import { canonicalStringify } from "./object-canon.js";
 import type { OperationVariables } from "../../core/index.js";
+import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -33,18 +37,18 @@ type BroadcastOptions = Pick<
 >;
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data: EntityStore;
-  private optimisticData: EntityStore;
+  private data!: EntityStore;
+  private optimisticData!: EntityStore;
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
   private addTypename: boolean;
 
-  private storeReader: StoreReader;
-  private storeWriter: StoreWriter;
+  private storeReader!: StoreReader;
+  private storeWriter!: StoreWriter;
   private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
-  private maybeBroadcastWatch: OptimisticWrapperFunction<
+  private maybeBroadcastWatch!: OptimisticWrapperFunction<
     [Cache.WatchOptions, BroadcastOptions?],
     any,
     [Cache.WatchOptions]
@@ -109,9 +113,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
         canonizeResults: shouldCanonizeResults(this.config),
-        canon: resetResultIdentities
-          ? void 0
-          : previousReader && previousReader.canon,
+        canon:
+          resetResultIdentities ? void 0 : (
+            previousReader && previousReader.canon
+          ),
         fragments,
       })),
       fragments
@@ -122,7 +127,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         return this.broadcastWatch(c, options);
       },
       {
-        max: this.config.resultCacheMaxSize,
+        max:
+          this.config.resultCacheMaxSize ||
+          cacheSizes["inMemoryCache.maybeBroadcastWatch"] ||
+          defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"],
         makeCacheKey: (c: Cache.WatchOptions) => {
           // Return a cache key (thus enabling result caching) only if we're
           // currently using a data store that can track cache dependencies.
@@ -225,8 +233,11 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // that nothing was modified.
       return false;
     }
-    const store = options.optimistic // Defaults to false.
-      ? this.optimisticData
+    const store =
+      (
+        options.optimistic // Defaults to false.
+      ) ?
+        this.optimisticData
       : this.data;
     try {
       ++this.txCount;
@@ -293,6 +304,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     resetResultIdentities?: boolean;
   }) {
     canonicalStringify.reset();
+    print.reset();
+    this.addTypenameTransform.resetCache();
+    this.config.fragments?.resetCaches();
     const ids = this.optimisticData.gc();
     if (options && !this.txCount) {
       if (options.resetResultCache) {
@@ -568,4 +582,17 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       c.callback((c.lastDiff = diff), lastDiff);
     }
   }
+
+  /**
+   * @experimental
+   * @internal
+   * This is not a stable API - it is used in development builds to expose
+   * information to the DevTools.
+   * Use at your own risk!
+   */
+  public getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
+}
+
+if (__DEV__) {
+  InMemoryCache.prototype.getMemoryInternals = getInMemoryCacheMemoryInternals;
 }

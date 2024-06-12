@@ -63,7 +63,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
                 (networkError &&
                   networkError.result &&
                   networkError.result.errors) ||
-                undefined,
+                void 0,
               forward,
             });
             if (retriedResult) {

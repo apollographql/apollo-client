@@ -3588,6 +3588,7 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         { interval: 1 }
       );
       expect(result.current.data).toBe(undefined);
+      // TODO
       expect(result.current.error).toBe(undefined);
 
       await waitFor(

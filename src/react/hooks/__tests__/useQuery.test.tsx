@@ -3559,48 +3559,43 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         </MockedProvider>
       );
 
-      const { result } = renderHook(
-        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-        { wrapper }
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { notifyOnNetworkStatusChange: true })
       );
+      render(<ProfiledHook />, { wrapper });
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+        expect(result.error).toBe(undefined);
+      }
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.message).toBe("error 1");
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toBe(undefined);
+        expect(result.error).toBeInstanceOf(ApolloError);
+        expect(result.error!.message).toBe("error 1");
+      }
 
       const catchFn = jest.fn();
+      ProfiledHook.getCurrentSnapshot().refetch().catch(catchFn);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+        // TODO
+        expect(result.error).toBe(undefined);
+      }
 
-      result.current.refetch().catch(catchFn);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toBe(undefined);
-      // TODO
-      expect(result.current.error).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.message).toBe("error 2");
-
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toBe(undefined);
+        expect(result.error).toBeInstanceOf(ApolloError);
+        expect(result.error!.message).toBe("error 2");
+      }
       expect(catchFn.mock.calls.length).toBe(1);
       expect(catchFn.mock.calls[0].length).toBe(1);
       expect(catchFn.mock.calls[0][0]).toBeInstanceOf(ApolloError);
@@ -6061,63 +6056,72 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         {
           request: { query },
           result: { data: { hello: "world 1" } },
+          delay: 3,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
+          delay: 3,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
+          delay: 3,
         },
       ];
 
       const cache = new InMemoryCache();
       const onCompleted = jest.fn();
-      const { result } = renderHook(
-        () =>
-          useQuery(query, {
-            onCompleted,
-            notifyOnNetworkStatusChange: true,
-            pollInterval: 10,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
-        }
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, {
+          onCompleted,
+          notifyOnNetworkStatusChange: true,
+          pollInterval: 110,
+        })
       );
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks} cache={cache}>
+            {children}
+          </MockedProvider>
+        ),
+      });
 
-      expect(result.current.loading).toBe(true);
-
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 1" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
-      expect(onCompleted).toHaveBeenCalledTimes(2);
-
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
-      expect(onCompleted).toHaveBeenCalledTimes(3);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.data).toEqual(undefined);
+        expect(result.loading).toBe(true);
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.data).toEqual({ hello: "world 1" });
+        expect(result.loading).toBe(false);
+        expect(onCompleted).toHaveBeenCalledTimes(1);
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.data).toEqual({ hello: "world 1" });
+        expect(result.loading).toBe(true);
+        expect(onCompleted).toHaveBeenCalledTimes(1);
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.data).toEqual({ hello: "world 2" });
+        expect(result.loading).toBe(false);
+        expect(onCompleted).toHaveBeenCalledTimes(2);
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.data).toEqual({ hello: "world 2" });
+        expect(result.loading).toBe(true);
+        expect(onCompleted).toHaveBeenCalledTimes(2);
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.data).toEqual({ hello: "world 3" });
+        expect(result.loading).toBe(false);
+        expect(onCompleted).toHaveBeenCalledTimes(3);
+      }
     });
 
     // This test was added for issue https://github.com/apollographql/apollo-client/issues/9794

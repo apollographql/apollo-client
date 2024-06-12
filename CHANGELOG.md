@@ -1,5 +1,30 @@
 # @apollo/client
 
+## 3.10.5
+
+### Patch Changes
+
+- [#11888](https://github.com/apollographql/apollo-client/pull/11888) [`7fb7939`](https://github.com/apollographql/apollo-client/commit/7fb7939edb7ca8f4273b75554f96ea9936731458) Thanks [@phryneas](https://github.com/phryneas)! - switch `useRenderGuard` to an approach not accessing React's internals
+
+- [#11511](https://github.com/apollographql/apollo-client/pull/11511) [`6536369`](https://github.com/apollographql/apollo-client/commit/6536369cf213469d20d15b779c344268d70fecd5) Thanks [@phryneas](https://github.com/phryneas)! - `useLoadableQuery`: ensure that `loadQuery` is updated if the ApolloClient instance changes
+
+- [#11860](https://github.com/apollographql/apollo-client/pull/11860) [`8740f19`](https://github.com/apollographql/apollo-client/commit/8740f198805a99e01136617c4055d611b92cc231) Thanks [@alessbell](https://github.com/alessbell)! - Fixes [#11849](https://github.com/apollographql/apollo-client/issues/11849) by reevaluating `window.fetch` each time `BatchHttpLink` uses it, if not configured via `options.fetch`. Takes the same approach as PR [#8603](https://github.com/apollographql/apollo-client/pull/8603) which fixed the same issue in `HttpLink`.
+
+- [#11852](https://github.com/apollographql/apollo-client/pull/11852) [`d502a69`](https://github.com/apollographql/apollo-client/commit/d502a69654d8ffa31e09467da028304a934a9874) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where calling the `useMutation` `reset` function would point the hook to an outdated `client` reference.
+
+- [#11329](https://github.com/apollographql/apollo-client/pull/11329) [`3d164ea`](https://github.com/apollographql/apollo-client/commit/3d164ea16c17d271f6fa9e5ad8f013623eec23a0) Thanks [@PaLy](https://github.com/PaLy)! - Fix graphQLErrors in Error Link if networkError.result is an empty string
+
+- [#11852](https://github.com/apollographql/apollo-client/pull/11852) [`d502a69`](https://github.com/apollographql/apollo-client/commit/d502a69654d8ffa31e09467da028304a934a9874) Thanks [@phryneas](https://github.com/phryneas)! - Prevent writing to a ref in render in `useMutation`.
+  As a result, you might encounter problems in the future if you call the mutation's `execute` function during render. Please note that this was never supported behavior, and we strongly recommend against it.
+
+- [#11848](https://github.com/apollographql/apollo-client/pull/11848) [`ad63924`](https://github.com/apollographql/apollo-client/commit/ad6392424ddbeb6f91b165c806251490e1cdd69e) Thanks [@phryneas](https://github.com/phryneas)! - Ensure covariant behavior: `MockedResponse<X,Y>` should be assignable to `MockedResponse`
+
+- [#11851](https://github.com/apollographql/apollo-client/pull/11851) [`45c47be`](https://github.com/apollographql/apollo-client/commit/45c47be26d4e020cfcff359a5af19ccfc39b930e) Thanks [@phryneas](https://github.com/phryneas)! - Avoid usage of useRef in useInternalState to prevent ref access in render.
+
+- [#11877](https://github.com/apollographql/apollo-client/pull/11877) [`634d91a`](https://github.com/apollographql/apollo-client/commit/634d91aeb10ab308b05d5ffb918678806046af09) Thanks [@phryneas](https://github.com/phryneas)! - Add missing name to tuple member (fix TS5084)
+
+- [#11851](https://github.com/apollographql/apollo-client/pull/11851) [`45c47be`](https://github.com/apollographql/apollo-client/commit/45c47be26d4e020cfcff359a5af19ccfc39b930e) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where `useLazyQuery` would not pick up a client change.
+
 ## 3.10.4
 
 ### Patch Changes

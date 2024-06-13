@@ -2124,12 +2124,13 @@ export type SubscribeToMoreOptions<TData = any, TSubscriptionVariables = Operati
 };
 
 // @public (undocumented)
-export interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
+export interface SubscriptionOptions<TVariables = OperationVariables, TData = any, TExtensions = Record<string, any>> {
     context?: DefaultContext;
     errorPolicy?: ErrorPolicy;
     fetchPolicy?: FetchPolicy;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     variables?: TVariables;
+    extensions?: TExtensions;
 }
 
 // @public (undocumented)

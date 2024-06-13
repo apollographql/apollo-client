@@ -18,6 +18,18 @@ export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };
 };
 
+export function shouldMask(selection: SelectionNode) {
+
+  const { directives } = selection
+  if (!directives || !directives.length) {
+      return false;
+  }
+
+  return directives.some(directive => {
+      return directive.name.value === "mask"
+  })
+}
+
 export function shouldInclude(
   { directives }: SelectionNode,
   variables?: Record<string, any>

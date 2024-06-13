@@ -17,6 +17,7 @@ import {
   isReference,
   makeReference,
   shouldInclude,
+  shouldMask,
   addTypenameToDocument,
   getDefaultValues,
   getMainDefinition,
@@ -377,7 +378,7 @@ export class StoreReader {
     workSet.forEach((selection) => {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
-      if (!shouldInclude(selection, variables)) return;
+      if (shouldMask(selection) || !shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
         let fieldValue = policies.readField(

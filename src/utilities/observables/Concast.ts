@@ -211,7 +211,7 @@ export class Concast<T> extends Observable<T> {
           iterateObserversSafely(this.observers, "complete");
         } else if (isPromiseLike(value)) {
           value.then(
-            (obs) => (this.sub = obs.subscribe(this.handlers)),
+            (obs) => (this.sub = obs?.subscribe(this.handlers)),
             this.handlers.error
           );
         } else {

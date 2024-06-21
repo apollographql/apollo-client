@@ -31,6 +31,7 @@ import { useMutation } from "../useMutation";
 import {
   createProfiler,
   profileHook,
+  skipActWarnings,
   spyOnConsole,
 } from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
@@ -2120,7 +2121,7 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
       unmount();
 
       await expect(ProfiledHook).not.toRerender({ timeout: 50 });
-
+      // TODO rarely seeing 3 here investigate further
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
     });
@@ -5183,42 +5184,35 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         </MockedProvider>
       );
 
-      const { result } = renderHook(
-        () =>
-          useQuery(query, {
-            variables: { id: 1 },
-            notifyOnNetworkStatusChange: true,
-          }),
-        { wrapper }
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, {
+          variables: { id: 1 },
+          notifyOnNetworkStatusChange: true,
+        })
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world 1" });
-
-      result.current.refetch({ id: 2 });
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world 2" });
+      render(<ProfiledHook />, { wrapper });
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 1" });
+      }
+      ProfiledHook.getCurrentSnapshot().refetch({ id: 2 });
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world 2" });
+      }
     });
 
     it("refetching after an error", async () => {
@@ -5246,69 +5240,61 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
 
       const cache = new InMemoryCache();
 
-      const { result } = renderHook(
-        () =>
-          useQuery(query, {
-            notifyOnNetworkStatusChange: true,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
-        }
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, {
+          notifyOnNetworkStatusChange: true,
+        })
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks} cache={cache}>
+            {children}
+          </MockedProvider>
+        ),
+      });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.error).toBe(undefined);
-      expect(result.current.data).toEqual({ hello: "world 1" });
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.error).toBe(undefined);
+        expect(result.data).toEqual({ hello: "world 1" });
+      }
 
-      result.current.refetch();
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.error).toBe(undefined);
-      expect(result.current.data).toEqual({ hello: "world 1" });
+      ProfiledHook.getCurrentSnapshot().refetch();
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.error).toBe(undefined);
+        expect(result.data).toEqual({ hello: "world 1" });
+      }
+      await waitFor(() => {}, { interval: 1 });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.data).toEqual({ hello: "world 1" });
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.error).toBeInstanceOf(ApolloError);
+        expect(result.data).toEqual({ hello: "world 1" });
+      }
 
-      result.current.refetch();
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.error).toBe(undefined);
-      expect(result.current.data).toEqual({ hello: "world 1" });
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.error).toBe(undefined);
-      expect(result.current.data).toEqual({ hello: "world 2" });
+      ProfiledHook.getCurrentSnapshot().refetch();
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.error).toBe(undefined);
+        expect(result.data).toEqual({ hello: "world 1" });
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.error).toBe(undefined);
+        expect(result.data).toEqual({ hello: "world 2" });
+      }
     });
 
     describe("refetchWritePolicy", () => {
@@ -6618,43 +6604,42 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         <ApolloProvider client={client}>{children}</ApolloProvider>
       );
 
-      const { result } = renderHook(
-        () =>
-          useQuery(query, {
-            partialRefetch: true,
-            notifyOnNetworkStatusChange: true,
-          }),
-        { wrapper }
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, {
+          partialRefetch: true,
+          notifyOnNetworkStatusChange: true,
+        })
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
-      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+      render(<ProfiledHook />, { wrapper });
 
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(true);
-      expect(result.current.error).toBe(undefined);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.data).toBe(undefined);
+        expect(result.error).toBe(undefined);
+        expect(result.networkStatus).toBe(NetworkStatus.loading);
+      }
 
-      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
-      expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.networkStatus).toBe(NetworkStatus.refetch);
+        expect(result.loading).toBe(true);
+        expect(result.error).toBe(undefined);
+        expect(result.data).toBe(undefined);
+      }
 
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
-      );
+      const calls = skipActWarnings(consoleSpy.error.mock.calls);
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toMatch("Missing field");
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world" });
-      expect(result.current.error).toBe(undefined);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual({ hello: "world" });
+        expect(result.error).toBe(undefined);
+      }
     });
   });
 

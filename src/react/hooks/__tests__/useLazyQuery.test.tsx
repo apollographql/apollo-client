@@ -839,8 +839,8 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(false);
-      expect(result!.data).toEqual(data1);
-      expect(result!.previousData).toBe(undefined);
+      expect(result.data).toEqual(data1);
+      expect(result.previousData).toBe(undefined);
     }
 
     setTimeout(() => execute({ variables: { id: 2 } }));

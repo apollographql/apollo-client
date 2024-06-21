@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { GraphQLError } from "graphql";
 import gql from "graphql-tag";
-import { act } from "react-dom/test-utils";
+import { act } from "@testing-library/react";
 import { render, waitFor, screen, renderHook } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import fetchMock from "fetch-mock";

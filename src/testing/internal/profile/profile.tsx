@@ -434,13 +434,20 @@ export function profileHook<ReturnValue extends ValidSnapshot, Props>(
   );
 }
 
-function resolveHookOwner(): React.ComponentType | undefined {
+function resolveR18HookOwner(): React.ComponentType | undefined {
   return (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
     ?.ReactCurrentOwner?.current?.elementType;
 }
 
+function resolveR19HookOwner(): React.ComponentType | undefined {
+  return (
+    React as any
+  ).__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE?.A?.getOwner()
+    .elementType;
+}
+
 export function useTrackRenders({ name }: { name?: string } = {}) {
-  const component = name || resolveHookOwner();
+  const component = name || resolveR18HookOwner() || resolveR19HookOwner();
 
   if (!component) {
     throw new Error(

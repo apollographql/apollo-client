@@ -2808,7 +2808,7 @@ export function useLoadableQuery<TData = unknown, TVariables extends OperationVa
 export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = [
 loadQuery: LoadQueryFunction<TVariables>,
 queryRef: QueryRef<TData, TVariables> | null,
-    {
+handlers: {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
     reset: ResetFunction;

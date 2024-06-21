@@ -44,7 +44,7 @@ export type UseLoadableQueryResult<
 > = [
   loadQuery: LoadQueryFunction<TVariables>,
   queryRef: QueryRef<TData, TVariables> | null,
-  {
+  handlers: {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: FetchMoreFunction<TData, TVariables>;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */

@@ -3585,7 +3585,6 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         const result = await ProfiledHook.takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
-        // TODO
         expect(result.error).toBe(undefined);
       }
 
@@ -7926,7 +7925,6 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
           people: peopleData.map(({ gender, ...person }) => person),
         });
       }
-      await waitFor(() => {}, { interval: 1 });
 
       rerender(<ProfiledHook gender="female" />);
 

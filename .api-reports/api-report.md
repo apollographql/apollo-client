@@ -195,6 +195,7 @@ export interface ApolloContextValue {
 export class ApolloError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ApolloErrorOptions" needs to be exported by the entry point index.d.ts
     constructor({ graphQLErrors, protocolErrors, clientErrors, networkError, errorMessage, extraInfo, }: ApolloErrorOptions);
+    cause: Error | null;
     // (undocumented)
     clientErrors: ReadonlyArray<Error>;
     // (undocumented)

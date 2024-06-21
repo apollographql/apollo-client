@@ -36,8 +36,6 @@ import {
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 
-const IS_REACT_19 = React.version.startsWith("19");
-
 describe("useQuery Hook", () => {
   describe("General use", () => {
     it("should handle a simple query", async () => {
@@ -1560,7 +1558,7 @@ Since useQuery breaks the rules of React and mutably creates an ObservableQuery 
 This is pure coincidence though, and the useQuery rewrite that doesn't break the rules of hooks as much and creates the ObservableQuery as part of the state initializer will end up with behaviour closer to the old React 18 behaviour again.
 
 */
-        expect(obsQueries.size).toBe(IS_REACT_19 ? 1 : 2);
+        expect(obsQueries.size).toBe(2);
 
         const activeSet = new Set<typeof result.current.observable>();
         const inactiveSet = new Set<typeof result.current.observable>();

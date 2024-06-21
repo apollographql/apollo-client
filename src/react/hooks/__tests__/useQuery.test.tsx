@@ -1968,6 +1968,7 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
 
       await expect(ProfiledHook).not.toRerender({ timeout: 50 });
 
+      // TODO rarely seeing 3 here (also old `useQuery` implementation)
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
     });
@@ -5273,7 +5274,6 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         expect(result.error).toBe(undefined);
         expect(result.data).toEqual({ hello: "world 1" });
       }
-      await waitFor(() => {}, { interval: 1 });
 
       {
         const result = await ProfiledHook.takeSnapshot();
@@ -5550,73 +5550,67 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
             {children}
           </MockedProvider>
         );
-
-        const { result } = renderHook(
-          () =>
-            useQuery(query, {
-              variables: { min: 0, max: 12 },
-              notifyOnNetworkStatusChange: true,
-              // Intentionally not passing refetchWritePolicy.
-            }),
-          { wrapper }
+        const ProfiledHook = profileHook(() =>
+          useQuery(query, {
+            variables: { min: 0, max: 12 },
+            notifyOnNetworkStatusChange: true,
+            // Intentionally not passing refetchWritePolicy.
+          })
         );
 
-        expect(result.current.loading).toBe(true);
-        expect(result.current.error).toBe(undefined);
-        expect(result.current.data).toBe(undefined);
-        expect(typeof result.current.refetch).toBe("function");
+        render(<ProfiledHook />, { wrapper });
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(false);
-          },
-          { interval: 1 }
-        );
-        expect(result.current.error).toBeUndefined();
-        expect(result.current.data).toEqual({ primes: [2, 3, 5, 7, 11] });
-        expect(mergeParams).toEqual([[void 0, [2, 3, 5, 7, 11]]]);
+        {
+          const result = await ProfiledHook.takeSnapshot();
+          expect(result.loading).toBe(true);
+          expect(result.error).toBe(undefined);
+          expect(result.data).toBe(undefined);
+          expect(typeof result.refetch).toBe("function");
+        }
+        {
+          const result = await ProfiledHook.takeSnapshot();
+          expect(result.loading).toBe(false);
+          expect(result.error).toBeUndefined();
+          expect(result.data).toEqual({ primes: [2, 3, 5, 7, 11] });
+          expect(mergeParams.shift()).toEqual([void 0, [2, 3, 5, 7, 11]]);
+        }
 
         const thenFn = jest.fn();
-        result.current.refetch({ min: 12, max: 30 }).then(thenFn);
+        ProfiledHook.getCurrentSnapshot()
+          .refetch({ min: 12, max: 30 })
+          .then(thenFn);
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(true);
-          },
-          { interval: 1 }
-        );
-        expect(result.current.error).toBe(undefined);
-        expect(result.current.data).toEqual({
-          // We get the stale data because we configured keyArgs: false.
-          primes: [2, 3, 5, 7, 11],
-        });
+        {
+          const result = await ProfiledHook.takeSnapshot();
+          expect(result.loading).toBe(true);
+          expect(result.error).toBe(undefined);
+          expect(result.data).toEqual({
+            // We get the stale data because we configured keyArgs: false.
+            primes: [2, 3, 5, 7, 11],
+          });
+          // This networkStatus is setVariables instead of refetch because we
+          // called refetch with new variables.
+          expect(result.networkStatus).toBe(NetworkStatus.setVariables);
+        }
 
-        // This networkStatus is setVariables instead of refetch because we
-        // called refetch with new variables.
-        expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
+        {
+          const result = await ProfiledHook.takeSnapshot();
+          expect(result.loading).toBe(false);
+          expect(result.error).toBe(undefined);
+          expect(result.data).toEqual({ primes: [13, 17, 19, 23, 29] });
+          expect(mergeParams.shift()).toEqual(
+            // Without refetchWritePolicy: "overwrite", this array will be
+            // all 10 primes (2 through 29) together.
+            [undefined, [13, 17, 19, 23, 29]]
+          );
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(false);
-          },
-          { interval: 1 }
-        );
-
-        expect(result.current.error).toBe(undefined);
-        expect(result.current.data).toEqual({ primes: [13, 17, 19, 23, 29] });
-        expect(mergeParams).toEqual([
-          [undefined, [2, 3, 5, 7, 11]],
-          // Without refetchWritePolicy: "overwrite", this array will be
-          // all 10 primes (2 through 29) together.
-          [undefined, [13, 17, 19, 23, 29]],
-        ]);
-
-        expect(thenFn).toHaveBeenCalledTimes(1);
-        expect(thenFn).toHaveBeenCalledWith({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: { primes: [13, 17, 19, 23, 29] },
-        });
+          expect(thenFn).toHaveBeenCalledTimes(1);
+          expect(thenFn).toHaveBeenCalledWith({
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            data: { primes: [13, 17, 19, 23, 29] },
+          });
+        }
       });
     });
 
@@ -6352,83 +6346,92 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
       );
 
       const onError = jest.fn();
-      const { result } = renderHook(
-        () => ({
-          mutation: useMutation(mutation, {
-            optimisticResponse: { addCar: carData },
-            update(cache, { data }) {
-              cache.modify({
-                fields: {
-                  cars(existing, { readField }) {
-                    const newCarRef = cache.writeFragment({
-                      data: data!.addCar,
-                      fragment: gql`
-                        fragment NewCar on Car {
-                          id
-                          make
-                          model
-                        }
-                      `,
-                    });
+      const ProfiledHook = profileHook(() => ({
+        mutation: useMutation(mutation, {
+          optimisticResponse: { addCar: carData },
+          update(cache, { data }) {
+            cache.modify({
+              fields: {
+                cars(existing, { readField }) {
+                  const newCarRef = cache.writeFragment({
+                    data: data!.addCar,
+                    fragment: gql`
+                      fragment NewCar on Car {
+                        id
+                        make
+                        model
+                      }
+                    `,
+                  });
 
-                    if (
-                      existing.some(
-                        (ref: Reference) =>
-                          readField("id", ref) === data!.addCar.id
-                      )
-                    ) {
-                      return existing;
-                    }
+                  if (
+                    existing.some(
+                      (ref: Reference) =>
+                        readField("id", ref) === data!.addCar.id
+                    )
+                  ) {
+                    return existing;
+                  }
 
-                    return [...existing, newCarRef];
-                  },
+                  return [...existing, newCarRef];
                 },
-              });
-            },
-            onError,
-          }),
-          query: useQuery(query),
+              },
+            });
+          },
+          onError,
         }),
-        { wrapper }
-      );
+        query: useQuery(query),
+      }));
+      render(<ProfiledHook />, { wrapper });
 
-      expect(result.current.query.loading).toBe(true);
-      const mutate = result.current.mutation[0];
-
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual(carsData);
+      {
+        const { query } = await ProfiledHook.takeSnapshot();
+        expect(query.loading).toBe(true);
+      }
+      const mutate = ProfiledHook.getCurrentSnapshot().mutation[0];
+      {
+        const { query } = await ProfiledHook.takeSnapshot();
+        expect(query.loading).toBe(false);
+        expect(query.loading).toBe(false);
+        expect(query.data).toEqual(carsData);
+      }
 
       act(() => void mutate());
-      // The mutation ran and is loading the result. The query stays at not
-      // loading as nothing has changed for the query, but optimistic data is
-      // rendered.
 
-      expect(result.current.mutation[1].loading).toBe(true);
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual(allCarsData);
+      {
+        // The mutation ran and is loading the result. The query stays at not
+        // loading as nothing has changed for the query, but optimistic data is
+        // rendered.
+        let { query, mutation } = await ProfiledHook.takeSnapshot();
+
+        while (!mutation[1].loading) {
+          // useMutation seems to sometimes have an extra render
+          // before it enters `loading` state - this test doesn't test
+          // that part of that hook so we just work around it
+          ({ query, mutation } = await ProfiledHook.takeSnapshot());
+        }
+        expect(mutation[1].loading).toBe(true);
+        expect(query.loading).toBe(false);
+        expect(query.data).toEqual(allCarsData);
+      }
 
       expect(onError).toHaveBeenCalledTimes(0);
-      await tick();
-      // The mutation ran and is loading the result. The query stays at
-      // not loading as nothing has changed for the query.
-      expect(result.current.mutation[1].loading).toBe(true);
-      expect(result.current.query.loading).toBe(false);
+      {
+        const { query, mutation } = await ProfiledHook.takeSnapshot();
+        // The mutation ran and is loading the result. The query stays at
+        // not loading as nothing has changed for the query.
+        expect(mutation[1].loading).toBe(true);
+        expect(query.loading).toBe(false);
+      }
 
-      await waitFor(() => {
-        expect(result.current.mutation[1].loading).toBe(false);
-      });
-
-      // The mutation has completely finished, leaving the query with access to
-      // the original cache data.
-      expect(result.current.mutation[1].loading).toBe(false);
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual(carsData);
+      {
+        const { query, mutation } = await ProfiledHook.takeSnapshot();
+        // The mutation has completely finished, leaving the query with access to
+        // the original cache data.
+        expect(mutation[1].loading).toBe(false);
+        expect(query.loading).toBe(false);
+        expect(query.data).toEqual(carsData);
+      }
 
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError.mock.calls[0][0].message).toBe("Oh no!");
@@ -7903,66 +7906,68 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         </MockedProvider>
       );
 
-      const { result, rerender } = renderHook(
-        ({ gender }) =>
-          useQuery(query, {
-            variables: { gender },
-            fetchPolicy: "network-only",
-          }),
-        { wrapper, initialProps: { gender: "all" } }
+      const ProfiledHook = profileHook(({ gender }: { gender: string }) =>
+        useQuery(query, {
+          variables: { gender },
+          fetchPolicy: "network-only",
+        })
       );
+      const { rerender } = render(<ProfiledHook gender="all" />, { wrapper });
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.networkStatus).toBe(NetworkStatus.loading);
+        expect(result.data).toBe(undefined);
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.data).toEqual({
+          people: peopleData.map(({ gender, ...person }) => person),
+        });
+      }
+      await waitFor(() => {}, { interval: 1 });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      rerender(<ProfiledHook gender="female" />);
 
-      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.data).toEqual({
-        people: peopleData.map(({ gender, ...person }) => person),
-      });
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
+        expect(result.data).toBe(undefined);
+      }
 
-      rerender({ gender: "female" });
-      expect(result.current.loading).toBe(true);
-      expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.data).toEqual({
+          people: peopleData
+            .filter((person) => person.gender === "female")
+            .map(({ gender, ...person }) => person),
+        });
+      }
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.data).toEqual({
-        people: peopleData
-          .filter((person) => person.gender === "female")
-          .map(({ gender, ...person }) => person),
-      });
+      rerender(<ProfiledHook gender="nonbinary" />);
 
-      rerender({ gender: "nonbinary" });
-      expect(result.current.loading).toBe(true);
-      expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
-      expect(result.current.data).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.data).toEqual({
-        people: peopleData
-          .filter((person) => person.gender === "nonbinary")
-          .map(({ gender, ...person }) => person),
-      });
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(true);
+        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
+        expect(result.data).toBe(undefined);
+      }
+      {
+        const result = await ProfiledHook.takeSnapshot();
+        expect(result.loading).toBe(false);
+        expect(result.networkStatus).toBe(NetworkStatus.ready);
+        expect(result.data).toEqual({
+          people: peopleData
+            .filter((person) => person.gender === "nonbinary")
+            .map(({ gender, ...person }) => person),
+        });
+      }
     });
   });
 

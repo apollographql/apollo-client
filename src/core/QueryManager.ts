@@ -293,6 +293,7 @@ export class QueryManager<TStore> {
             optimisticResponse: isOptimistic ? optimisticResponse : void 0,
           },
           variables,
+          {},
           false
         ),
 
@@ -981,52 +982,55 @@ export class QueryManager<TStore> {
     errorPolicy = "none",
     variables,
     context = {},
+    extensions = {},
   }: SubscriptionOptions): Observable<FetchResult<T>> {
     query = this.transform(query);
     variables = this.getVariables(query, variables);
 
     const makeObservable = (variables: OperationVariables) =>
-      this.getObservableFromLink<T>(query, context, variables).map((result) => {
-        if (fetchPolicy !== "no-cache") {
-          // the subscription interface should handle not sending us results we no longer subscribe to.
-          // XXX I don't think we ever send in an object with errors, but we might in the future...
-          if (shouldWriteResult(result, errorPolicy)) {
-            this.cache.write({
-              query,
-              result: result.data,
-              dataId: "ROOT_SUBSCRIPTION",
-              variables: variables,
-            });
+      this.getObservableFromLink<T>(query, context, variables, extensions).map(
+        (result) => {
+          if (fetchPolicy !== "no-cache") {
+            // the subscription interface should handle not sending us results we no longer subscribe to.
+            // XXX I don't think we ever send in an object with errors, but we might in the future...
+            if (shouldWriteResult(result, errorPolicy)) {
+              this.cache.write({
+                query,
+                result: result.data,
+                dataId: "ROOT_SUBSCRIPTION",
+                variables: variables,
+              });
+            }
+
+            this.broadcastQueries();
           }
 
-          this.broadcastQueries();
+          const hasErrors = graphQLResultHasError(result);
+          const hasProtocolErrors = graphQLResultHasProtocolErrors(result);
+          if (hasErrors || hasProtocolErrors) {
+            const errors: ApolloErrorOptions = {};
+            if (hasErrors) {
+              errors.graphQLErrors = result.errors;
+            }
+            if (hasProtocolErrors) {
+              errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
+            }
+
+            // `errorPolicy` is a mechanism for handling GraphQL errors, according
+            // to our documentation, so we throw protocol errors regardless of the
+            // set error policy.
+            if (errorPolicy === "none" || hasProtocolErrors) {
+              throw new ApolloError(errors);
+            }
+          }
+
+          if (errorPolicy === "ignore") {
+            delete result.errors;
+          }
+
+          return result;
         }
-
-        const hasErrors = graphQLResultHasError(result);
-        const hasProtocolErrors = graphQLResultHasProtocolErrors(result);
-        if (hasErrors || hasProtocolErrors) {
-          const errors: ApolloErrorOptions = {};
-          if (hasErrors) {
-            errors.graphQLErrors = result.errors;
-          }
-          if (hasProtocolErrors) {
-            errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
-          }
-
-          // `errorPolicy` is a mechanism for handling GraphQL errors, according
-          // to our documentation, so we throw protocol errors regardless of the
-          // set error policy.
-          if (errorPolicy === "none" || hasProtocolErrors) {
-            throw new ApolloError(errors);
-          }
-        }
-
-        if (errorPolicy === "ignore") {
-          delete result.errors;
-        }
-
-        return result;
-      });
+      );
 
     if (this.getDocumentInfo(query).hasClientExports) {
       const observablePromise = this.localState
@@ -1088,6 +1092,7 @@ export class QueryManager<TStore> {
     query: DocumentNode,
     context: any,
     variables?: OperationVariables,
+    extensions?: Record<string, any>,
     // Prefer context.queryDeduplication if specified.
     deduplication: boolean = context?.queryDeduplication ??
       this.queryDeduplication
@@ -1106,6 +1111,7 @@ export class QueryManager<TStore> {
           ...context,
           forceFetch: !deduplication,
         }),
+        extensions,
       };
 
       context = operation.context;

@@ -146,6 +146,7 @@ export function useSubscription<
       variables: options?.variables,
       fetchPolicy: options?.fetchPolicy,
       context: options?.context,
+      extensions: options?.extensions,
     });
   });
 
@@ -198,6 +199,7 @@ export function useSubscription<
           variables: options?.variables,
           fetchPolicy: options?.fetchPolicy,
           context: options?.context,
+          extensions: options?.extensions,
         })
       );
       canResetObservableRef.current = false;

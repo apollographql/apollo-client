@@ -20,3 +20,4 @@ export type {
   RenderWithMocksOptions,
 } from "./renderHelpers.js";
 export { renderWithClient, renderWithMocks } from "./renderHelpers.js";
+export { skipActWarnings } from "./skipActWarnings.js";

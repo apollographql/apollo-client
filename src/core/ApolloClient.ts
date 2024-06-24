@@ -144,6 +144,13 @@ export interface ApolloClientOptions<TCacheShape> {
    * @since 3.11.0
    */
   devtools?: DevtoolsOptions;
+
+  /**
+   * Determines if data masking is enabled for the client.
+   *
+   * @default false
+   */
+  dataMasking?: boolean;
 }
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
@@ -237,6 +244,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       name: clientAwarenessName,
       version: clientAwarenessVersion,
       devtools,
+      dataMasking,
     } = options;
 
     let { link } = options;
@@ -248,6 +256,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     this.link = link;
     this.cache = cache;
+    this.cache.dataMaskingEnabledInClient = !!dataMasking;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
     this.defaultOptions = defaultOptions || Object.create(null);

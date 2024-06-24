@@ -4102,6 +4102,867 @@ it.each<SuspenseQueryHookFetchPolicy>([
   }
 );
 
+it("masks queries when dataMasking is `true`", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+    };
+  }
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createDefaultProfiler<Query>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query);
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  // loading
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+it("does not mask query when dataMasking is `false`", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+    };
+  }
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: false,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createDefaultProfiler<Query>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query);
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  // loading
+  await Profiler.takeRender();
+
+  const { snapshot } = await Profiler.takeRender();
+
+  expect(snapshot.result).toEqual({
+    data: {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    },
+    error: undefined,
+    networkStatus: NetworkStatus.ready,
+  });
+});
+
+it("does not mask query by default", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+    };
+  }
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+    },
+  ];
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createDefaultProfiler<Query>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query);
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  // loading
+  await Profiler.takeRender();
+
+  const { snapshot } = await Profiler.takeRender();
+
+  expect(snapshot.result).toEqual({
+    data: {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    },
+    error: undefined,
+    networkStatus: NetworkStatus.ready,
+  });
+});
+
+it("masks queries updated by the cache", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+    };
+  }
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createDefaultProfiler<Query>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query);
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  // loading
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.writeQuery({
+    query,
+    data: {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User (updated)",
+        // @ts-ignore TODO: Determine how to handle cache writes with masked
+        // query type
+        age: 35,
+      },
+    },
+  });
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User (updated)",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+it("does not rerender when updating field in named fragment", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+    };
+  }
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createDefaultProfiler<Query>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query);
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  // loading
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  client.writeQuery({
+    query,
+    data: {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        // @ts-ignore TODO: Determine how to handle cache writes with masked
+        // query type
+        age: 35,
+      },
+    },
+  });
+
+  await expect(Profiler).not.toRerender();
+
+  expect(client.readQuery({ query })).toEqual({
+    currentUser: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 35,
+    },
+  });
+});
+
+it("masks result from cache when using with cache-first fetch policy", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+    };
+  }
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        // @ts-expect-error TODO: Determine how to write this with masked types
+        age: 30,
+      },
+    },
+  });
+
+  const Profiler = createDefaultProfiler<Query>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, {
+      fetchPolicy: "cache-first",
+    });
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  const { snapshot } = await Profiler.takeRender();
+
+  expect(snapshot.result).toEqual({
+    data: {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+      },
+    },
+    error: undefined,
+    networkStatus: NetworkStatus.ready,
+  });
+});
+
+it("masks cache and network result when using cache-and-network fetch policy", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+    };
+  }
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (server)",
+            age: 35,
+          },
+        },
+      },
+      delay: 20,
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        // @ts-expect-error TODO: Determine how to write this with masked types
+        age: 34,
+      },
+    },
+  });
+
+  const Profiler = createDefaultProfiler<Query>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, {
+      fetchPolicy: "cache-and-network",
+    });
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User (server)",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+it("masks partial cache data when returnPartialData is `true`", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+    };
+  }
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (server)",
+            age: 35,
+          },
+        },
+      },
+      delay: 20,
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  {
+    using _ = spyOnConsole("error");
+    client.writeQuery({
+      query,
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          // @ts-expect-error TODO: Determine how to write this with masked types
+          age: 34,
+        },
+      },
+    });
+  }
+
+  const Profiler = createDefaultProfiler<DeepPartial<Query>>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, { returnPartialData: true });
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.loading,
+    });
+  }
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User (server)",
+        },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+it("masks partial data returned from data on errors with errorPolicy `all`", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+    };
+  }
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: null,
+            age: 34,
+          },
+        },
+        errors: [new GraphQLError("Couldn't get name")],
+      },
+      delay: 20,
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const Profiler = createDefaultProfiler<Query | undefined>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [queryRef] = useBackgroundQuery(query, { errorPolicy: "all" });
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook queryRef={queryRef} />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  // loading
+  await Profiler.takeRender();
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: null,
+        },
+      },
+      error: new ApolloError({
+        graphQLErrors: [new GraphQLError("Couldn't get name")],
+      }),
+      networkStatus: NetworkStatus.error,
+    });
+  }
+});
+
 describe("refetch", () => {
   it("re-suspends when calling `refetch`", async () => {
     const { query, mocks: defaultMocks } = setupVariablesCase();

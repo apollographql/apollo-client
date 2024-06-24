@@ -220,7 +220,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
-      dataMasking = false,
+      dataMasking,
     } = options;
 
     let { link } = options;

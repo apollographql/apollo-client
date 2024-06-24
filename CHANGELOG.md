@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.10.6
+
+### Patch Changes
+
+- [#11900](https://github.com/apollographql/apollo-client/pull/11900) [`f745558`](https://github.com/apollographql/apollo-client/commit/f74555826995009a6bb9d824506cecb3508e3365) Thanks [@phryneas](https://github.com/phryneas)! - `useMutation`: use `useIsomorphicLayoutEffect` instead of `useLayoutEffect`
+
 ## 3.10.5
 
 ### Patch Changes

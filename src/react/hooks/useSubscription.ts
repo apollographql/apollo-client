@@ -107,7 +107,10 @@ export function useSubscription<
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>> = {}
+  options: SubscriptionHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>
+  > = Object.create(null)
 ) {
   const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options.client);
@@ -133,8 +136,8 @@ export function useSubscription<
     }
   }
 
-  let { skip, fetchPolicy, variables, shouldResubscribe, context } = options;
-  variables = useDeepMemo(() => variables, [variables]);
+  const { skip, fetchPolicy, shouldResubscribe, context } = options;
+  const variables = useDeepMemo(() => options.variables, [options.variables]);
 
   let [observable, setObservable] = React.useState(() =>
     options.skip ? null : (

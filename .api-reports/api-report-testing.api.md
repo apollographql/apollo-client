@@ -13,7 +13,7 @@ import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
-import type * as ReactTypes from 'react';
+import * as React_2 from 'react';
 import type { Subscriber } from 'zen-observable-ts';
 import type { Subscription } from 'zen-observable-ts';
 import { Trie } from '@wry/trie';
@@ -304,27 +304,6 @@ type AsStoreObject<T extends {
     [K in keyof T]: T[K];
 };
 
-// Warning: (ae-forgotten-export) The symbol "MutationSharedOptions" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-interface BaseMutationOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
-    // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
-    client?: ApolloClient<object>;
-    ignoreResults?: boolean;
-    notifyOnNetworkStatusChange?: boolean;
-    onCompleted?: (data: TData, clientOptions?: BaseMutationOptions) => void;
-    onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
-}
-
-// Warning: (ae-forgotten-export) The symbol "SharedWatchQueryOptions" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-interface BaseQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends SharedWatchQueryOptions<TVariables, TData> {
-    client?: ApolloClient<any>;
-    context?: DefaultContext;
-    ssr?: boolean;
-}
-
 // @public (undocumented)
 namespace Cache_2 {
     // (undocumented)
@@ -438,15 +417,6 @@ const enum CacheWriteBehavior {
 type CanReadFunction = (value: StoreValue) => boolean;
 
 // @public (undocumented)
-export type ChildDataProps<TProps = {}, TData = {}, TGraphQLVariables = OperationVariables> = TProps & DataProps<TData, TGraphQLVariables>;
-
-// @public (undocumented)
-export type ChildMutateProps<TProps = {}, TData = {}, TGraphQLVariables = OperationVariables> = TProps & MutateProps<TData, TGraphQLVariables>;
-
-// @public (undocumented)
-export type ChildProps<TProps = {}, TData = {}, TGraphQLVariables = OperationVariables> = TProps & Partial<DataProps<TData, TGraphQLVariables>> & Partial<MutateProps<TData, TGraphQLVariables>>;
-
-// @public (undocumented)
 class Concast<T> extends Observable<T> {
     // Warning: (ae-forgotten-export) The symbol "MaybeAsync" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "ConcastSourcesIterable" needs to be exported by the entry point index.d.ts
@@ -470,11 +440,16 @@ class Concast<T> extends Observable<T> {
 // @public (undocumented)
 type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 
+// @internal (undocumented)
+type CovariantUnaryFunction<out Arg, out Ret> = {
+    fn(arg: Arg): Ret;
+}["fn"];
+
+// Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "NormalizedCacheObject" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-export interface DataProps<TData, TGraphQLVariables = OperationVariables> {
-    // (undocumented)
-    data: DataValue<TData, TGraphQLVariables>;
-}
+export function createMockClient<TData>(data: TData, query: DocumentNode, variables?: {}): ApolloClient<NormalizedCacheObject>;
 
 // @public (undocumented)
 namespace DataProxy {
@@ -551,9 +526,6 @@ interface DataProxy {
     writeFragment<TData = any, TVariables = any>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
     writeQuery<TData = any, TVariables = any>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
-
-// @public (undocumented)
-export type DataValue<TData, TGraphQLVariables = OperationVariables> = QueryControls<TData, TGraphQLVariables> & Partial<TData>;
 
 // Warning: (ae-forgotten-export) The symbol "DeepPartialPrimitive" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DeepPartialMap" needs to be exported by the entry point index.d.ts
@@ -689,15 +661,6 @@ interface ExecutionPatchResultBase {
 }
 
 // @public (undocumented)
-interface FetchMoreOptions<TData = any, TVariables = OperationVariables> {
-    // (undocumented)
-    updateQuery?: (previousQueryResult: TData, options: {
-        fetchMoreResult?: TData;
-        variables?: TVariables;
-    }) => TData;
-}
-
-// @public (undocumented)
 interface FetchMoreQueryOptions<TVariables, TData = any> {
     // (undocumented)
     context?: DefaultContext;
@@ -778,9 +741,6 @@ const getApolloClientMemoryInternals: (() => {
         };
     };
 }) | undefined;
-
-// @public @deprecated (undocumented)
-export function graphql<TProps extends TGraphQLVariables | {} = {}, TData extends object = {}, TGraphQLVariables extends OperationVariables = {}, TChildProps extends object = Partial<DataProps<TData, TGraphQLVariables>> & Partial<MutateProps<TData, TGraphQLVariables>>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>) => ReactTypes.ComponentClass<TProps>;
 
 // @public (undocumented)
 type GraphQLErrors = ReadonlyArray<GraphQLError>;
@@ -872,6 +832,13 @@ function isReference(obj: any): obj is Reference;
 type IsStrictlyAny<T> = UnionToIntersection<UnionForAny<T>> extends never ? true : false;
 
 // @public (undocumented)
+export const itAsync: ((this: unknown, message: string, callback: (resolve: (result?: any) => void, reject: (reason?: any) => void) => any, timeout?: number | undefined) => void) & {
+    only: (message: string, callback: (resolve: (result?: any) => void, reject: (reason?: any) => void) => any, timeout?: number) => void;
+    skip: (message: string, callback: (resolve: (result?: any) => void, reject: (reason?: any) => void) => any, timeout?: number) => void;
+    todo: (message: string, callback: (resolve: (result?: any) => void, reject: (reason?: any) => void) => any, timeout?: number) => void;
+};
+
+// @public (undocumented)
 class LocalState<TCacheShape> {
     // Warning: (ae-forgotten-export) The symbol "LocalStateOptions" needs to be exported by the entry point index.d.ts
     constructor({ cache, client, resolvers, fragmentMatcher, }: LocalStateOptions<TCacheShape>);
@@ -941,6 +908,138 @@ type MissingTree = string | {
     readonly [key: string]: MissingTree;
 };
 
+// @public (undocumented)
+interface MockApolloLink extends ApolloLink {
+    // (undocumented)
+    operation?: Operation;
+}
+
+// Warning: (ae-forgotten-export) The symbol "MockedProviderState" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export class MockedProvider extends React_2.Component<MockedProviderProps, MockedProviderState> {
+    constructor(props: MockedProviderProps);
+    // (undocumented)
+    componentWillUnmount(): void;
+    // (undocumented)
+    static defaultProps: MockedProviderProps;
+    // (undocumented)
+    render(): React_2.JSX.Element | null;
+}
+
+// @public (undocumented)
+export interface MockedProviderProps<TSerializedCache = {}> {
+    // (undocumented)
+    addTypename?: boolean;
+    // (undocumented)
+    cache?: ApolloCache<TSerializedCache>;
+    // (undocumented)
+    childProps?: object;
+    // (undocumented)
+    children?: any;
+    connectToDevTools?: boolean;
+    // Warning: (ae-forgotten-export) The symbol "DefaultOptions" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    defaultOptions?: DefaultOptions;
+    // (undocumented)
+    link?: ApolloLink;
+    // (undocumented)
+    mocks?: ReadonlyArray<MockedResponse<any, any>>;
+    // (undocumented)
+    resolvers?: Resolvers;
+    // (undocumented)
+    showWarnings?: boolean;
+}
+
+// @public (undocumented)
+interface MockedProviderState {
+    // (undocumented)
+    client: ApolloClient<any>;
+}
+
+// @public (undocumented)
+export interface MockedResponse<out TData = Record<string, any>, out TVariables = Record<string, any>> {
+    // (undocumented)
+    delay?: number;
+    // (undocumented)
+    error?: Error;
+    // (undocumented)
+    maxUsageCount?: number;
+    // (undocumented)
+    newData?: ResultFunction<FetchResult<TData>, TVariables>;
+    // (undocumented)
+    request: GraphQLRequest<TVariables>;
+    // (undocumented)
+    result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;
+    // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    variableMatcher?: VariableMatcher<TVariables>;
+}
+
+// @public (undocumented)
+interface MockedSubscriptionResult {
+    // (undocumented)
+    delay?: number;
+    // (undocumented)
+    error?: Error;
+    // (undocumented)
+    result?: FetchResult;
+}
+
+// @public (undocumented)
+export class MockLink extends ApolloLink {
+    constructor(mockedResponses: ReadonlyArray<MockedResponse<any, any>>, addTypename?: Boolean, options?: MockLinkOptions);
+    // (undocumented)
+    addMockedResponse(mockedResponse: MockedResponse): void;
+    // (undocumented)
+    addTypename: Boolean;
+    // (undocumented)
+    operation: Operation;
+    // (undocumented)
+    request(operation: Operation): Observable<FetchResult> | null;
+    // (undocumented)
+    showWarnings: boolean;
+}
+
+// @public (undocumented)
+export interface MockLinkOptions {
+    // (undocumented)
+    showWarnings?: boolean;
+}
+
+// @public (undocumented)
+export function mockObservableLink(): MockSubscriptionLink;
+
+// Warning: (ae-forgotten-export) The symbol "MockApolloLink" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function mockSingleLink(...mockedResponses: Array<any>): MockApolloLink;
+
+// @public (undocumented)
+export class MockSubscriptionLink extends ApolloLink {
+    constructor();
+    // (undocumented)
+    onSetup(listener: any): void;
+    // (undocumented)
+    onUnsubscribe(listener: any): void;
+    // (undocumented)
+    operation?: Operation;
+    // (undocumented)
+    request(operation: Operation): Observable<FetchResult>;
+    // (undocumented)
+    setups: any[];
+    // (undocumented)
+    simulateComplete(): void;
+    // Warning: (ae-forgotten-export) The symbol "MockedSubscriptionResult" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    simulateResult(result: MockedSubscriptionResult, complete?: boolean): void;
+    // (undocumented)
+    unsubscribers: any[];
+}
+
 // Warning: (ae-forgotten-export) The symbol "ModifierDetails" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DeleteModifier" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "InvalidateModifier" needs to be exported by the entry point index.d.ts
@@ -967,18 +1066,6 @@ type Modifiers<T extends Record<string, any> = Record<string, unknown>> = Partia
 }>;
 
 // @public (undocumented)
-export interface MutateProps<TData = any, TGraphQLVariables = OperationVariables> {
-    // Warning: (ae-forgotten-export) The symbol "MutationFunction" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    mutate: MutationFunction<TData, TGraphQLVariables>;
-    // Warning: (ae-forgotten-export) The symbol "MutationResult" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    result: MutationResult<TData>;
-}
-
-// @public (undocumented)
 interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> {
     awaitRefetchQueries?: boolean;
     context?: TContext;
@@ -1002,18 +1089,8 @@ interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TCon
 // @public (undocumented)
 type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
 
-// Warning: (ae-forgotten-export) The symbol "MutationFunctionOptions" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "MutationSharedOptions" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
-type MutationFunction<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> = (options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>) => Promise<FetchResult<TData>>;
-
-// Warning: (ae-forgotten-export) The symbol "BaseMutationOptions" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-interface MutationFunctionOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
-    mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
 // @public (undocumented)
 interface MutationOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
     mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -1032,16 +1109,6 @@ type MutationQueryReducersMap<T = {
 }> = {
     [queryName: string]: MutationQueryReducer<T>;
 };
-
-// @public (undocumented)
-interface MutationResult<TData = any> {
-    called: boolean;
-    client: ApolloClient<object>;
-    data?: TData | null;
-    error?: ApolloError;
-    loading: boolean;
-    reset(): void;
-}
 
 // Warning: (ae-forgotten-export) The symbol "MutationBaseOptions" needs to be exported by the entry point index.d.ts
 //
@@ -1100,6 +1167,16 @@ type NextLink = (operation: Operation) => Observable<FetchResult>;
 
 // @public (undocumented)
 type NextResultListener = (method: "next" | "error" | "complete", arg?: any) => any;
+
+// @public
+interface NormalizedCacheObject {
+    // (undocumented)
+    [dataId: string]: StoreObject | undefined;
+    // (undocumented)
+    __META?: {
+        extraRootIds: string[];
+    };
+}
 
 // @public (undocumented)
 class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> extends Observable<ApolloQueryResult<TData>> {
@@ -1188,67 +1265,13 @@ interface Operation {
 }
 
 // @public (undocumented)
-export interface OperationOption<TProps, TData, TGraphQLVariables extends OperationVariables = OperationVariables, TChildProps = ChildProps<TProps, TData, TGraphQLVariables>, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> {
-    // (undocumented)
-    alias?: string;
-    // (undocumented)
-    name?: string;
-    // Warning: (ae-forgotten-export) The symbol "BaseQueryOptions" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    options?: BaseQueryOptions<TGraphQLVariables> | BaseMutationOptions<TData, TGraphQLVariables, TContext, TCache> | ((props: TProps) => BaseQueryOptions<TGraphQLVariables> | BaseMutationOptions<TData, TGraphQLVariables, TContext, TCache>);
-    // (undocumented)
-    props?: (props: OptionProps<TProps, TData, TGraphQLVariables>, lastProps?: TChildProps | void) => TChildProps;
-    // (undocumented)
-    shouldResubscribe?: (props: TProps, nextProps: TProps) => boolean;
-    // (undocumented)
-    skip?: boolean | ((props: TProps) => boolean);
-    // (undocumented)
-    withRef?: boolean;
-}
-
-// @public (undocumented)
 type OperationVariables = Record<string, any>;
-
-// @public (undocumented)
-export interface OptionProps<TProps = any, TData = any, TGraphQLVariables = OperationVariables> extends Partial<DataProps<TData, TGraphQLVariables>>, Partial<MutateProps<TData, TGraphQLVariables>> {
-    // (undocumented)
-    ownProps: TProps;
-}
 
 // @public (undocumented)
 type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
-
-// @public (undocumented)
-export interface QueryControls<TData = any, TGraphQLVariables = OperationVariables> {
-    // (undocumented)
-    error?: ApolloError;
-    // Warning: (ae-forgotten-export) The symbol "FetchMoreOptions" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    fetchMore: (fetchMoreOptions: FetchMoreQueryOptions<TGraphQLVariables, TData> & FetchMoreOptions<TData, TGraphQLVariables>) => Promise<ApolloQueryResult<TData>>;
-    // (undocumented)
-    loading: boolean;
-    // (undocumented)
-    networkStatus: number;
-    // (undocumented)
-    refetch: (variables?: TGraphQLVariables) => Promise<ApolloQueryResult<TData>>;
-    // (undocumented)
-    startPolling: (pollInterval: number) => void;
-    // (undocumented)
-    stopPolling: () => void;
-    // (undocumented)
-    subscribeToMore: (options: SubscribeToMoreOptions) => () => void;
-    // Warning: (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    updateQuery: (mapFn: (previousQueryResult: any, options: UpdateQueryOptions<any>) => any) => void;
-    // (undocumented)
-    variables: TGraphQLVariables;
-}
 
 // @public (undocumented)
 class QueryInfo {
@@ -1337,8 +1360,6 @@ class QueryManager<TStore> {
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
     // (undocumented)
     readonly defaultContext: Partial<DefaultContext>;
-    // Warning: (ae-forgotten-export) The symbol "DefaultOptions" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     defaultOptions: DefaultOptions;
     // (undocumented)
@@ -1367,7 +1388,7 @@ class QueryManager<TStore> {
     getQueryStore(): Record<string, QueryStoreValue>;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
-        observable?: Observable<FetchResult<any>> | undefined;
+        observable?: Observable<FetchResult<any>>;
     }>;
     // (undocumented)
     link: ApolloLink;
@@ -1536,6 +1557,11 @@ interface Resolvers {
     };
 }
 
+// Warning: (ae-forgotten-export) The symbol "CovariantUnaryFunction" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<V, T>;
+
 // @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
@@ -1605,6 +1631,9 @@ type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<st
 type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
 
 // @public (undocumented)
+export function subscribeAndCount<TResult>(reject: (reason: any) => any, observable: Observable<TResult>, cb: (handleCount: number, result: TResult) => any): Subscription;
+
+// @public (undocumented)
 type SubscribeToMoreOptions<TData = any, TSubscriptionVariables = OperationVariables, TSubscriptionData = TData> = {
     document: DocumentNode | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
     variables?: TSubscriptionVariables;
@@ -1621,6 +1650,9 @@ interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     variables?: TVariables;
 }
+
+// @public (undocumented)
+export function tick(): Promise<void>;
 
 // @public (undocumented)
 type ToReferenceFunction = (objOrIdOrRef: StoreObject | string | Reference, mergeIntoStore?: boolean) => Reference | undefined;
@@ -1667,16 +1699,16 @@ type UpdateQueryFn<TData = any, TSubscriptionVariables = OperationVariables, TSu
 }) => TData;
 
 // @public (undocumented)
-interface UpdateQueryOptions<TVariables> {
-    // (undocumented)
-    variables?: TVariables;
-}
-
-// @public (undocumented)
 interface UriFunction {
     // (undocumented)
     (operation: Operation): string;
 }
+
+// @public (undocumented)
+type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<V, boolean>;
+
+// @public (undocumented)
+export function wait(ms: number): Promise<void>;
 
 // @public
 interface WatchFragmentOptions<TData, TVars> {
@@ -1703,27 +1735,21 @@ type WatchFragmentResult<TData> = {
 // @public (undocumented)
 type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
+// Warning: (ae-forgotten-export) The symbol "SharedWatchQueryOptions" needs to be exported by the entry point index.d.ts
+//
 // @public
 interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends SharedWatchQueryOptions<TVariables, TData> {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 // @public @deprecated (undocumented)
-export function withApollo<TProps, TResult = any>(WrappedComponent: ReactTypes.ComponentType<WithApolloClient<Omit<TProps, "client">>>, operationOptions?: OperationOption<TProps, TResult>): ReactTypes.ComponentClass<Omit<TProps, "client">>;
-
-// @public (undocumented)
-export type WithApolloClient<P> = P & {
-    client?: ApolloClient<any>;
-};
+export function withErrorSpy<TArgs extends any[], TResult>(it: (...args: TArgs) => TResult, ...args: TArgs): TResult;
 
 // @public @deprecated (undocumented)
-export function withMutation<TProps extends TGraphQLVariables | {} = {}, TData extends Record<string, any> = {}, TGraphQLVariables extends OperationVariables = {}, TChildProps = MutateProps<TData, TGraphQLVariables>, TContext extends Record<string, any> = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>) => ReactTypes.ComponentClass<TProps>;
+export function withLogSpy<TArgs extends any[], TResult>(it: (...args: TArgs) => TResult, ...args: TArgs): TResult;
 
 // @public @deprecated (undocumented)
-export function withQuery<TProps extends TGraphQLVariables | Record<string, any> = Record<string, any>, TData extends object = {}, TGraphQLVariables extends object = {}, TChildProps extends object = DataProps<TData, TGraphQLVariables>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>) => ReactTypes.ComponentClass<TProps>;
-
-// @public @deprecated (undocumented)
-export function withSubscription<TProps extends TGraphQLVariables | {} = {}, TData extends object = {}, TGraphQLVariables extends object = {}, TChildProps extends object = DataProps<TData, TGraphQLVariables>>(document: DocumentNode, operationOptions?: OperationOption<TProps, TData, TGraphQLVariables, TChildProps>): (WrappedComponent: ReactTypes.ComponentType<TProps & TChildProps>) => ReactTypes.ComponentClass<TProps>;
+export function withWarningSpy<TArgs extends any[], TResult>(it: (...args: TArgs) => TResult, ...args: TArgs): TResult;
 
 // Warnings were encountered during analysis:
 //

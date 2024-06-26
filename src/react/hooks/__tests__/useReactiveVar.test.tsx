@@ -6,6 +6,7 @@ import { makeVar } from "../../../core";
 import { useReactiveVar } from "../useReactiveVar";
 
 const IS_REACT_18 = React.version.startsWith("18");
+const IS_REACT_19 = React.version.startsWith("19");
 
 describe("useReactiveVar Hook", () => {
   it("works with one component", async () => {
@@ -277,7 +278,7 @@ describe("useReactiveVar Hook", () => {
       );
 
       await waitFor(() => {
-        if (IS_REACT_18) {
+        if (IS_REACT_18 || IS_REACT_19) {
           expect(mock).toHaveBeenCalledTimes(3);
           expect(mock).toHaveBeenNthCalledWith(1, 0);
           expect(mock).toHaveBeenNthCalledWith(2, 0);

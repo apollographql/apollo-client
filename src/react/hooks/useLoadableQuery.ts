@@ -44,7 +44,7 @@ export type UseLoadableQueryResult<
 > = [
   loadQuery: LoadQueryFunction<TVariables>,
   queryRef: QueryRef<TData, TVariables> | null,
-  {
+  handlers: {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: FetchMoreFunction<TData, TVariables>;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
@@ -245,12 +245,19 @@ export function useLoadableQuery<
 
       setQueryRef(wrapQueryRef(queryRef));
     },
-    [query, queryKey, suspenseCache, watchQueryOptions, calledDuringRender]
+    [
+      query,
+      queryKey,
+      suspenseCache,
+      watchQueryOptions,
+      calledDuringRender,
+      client,
+    ]
   );
 
   const reset: ResetFunction = React.useCallback(() => {
     setQueryRef(null);
-  }, [queryRef]);
+  }, []);
 
   return [loadQuery, queryRef, { fetchMore, refetch, reset }];
 }

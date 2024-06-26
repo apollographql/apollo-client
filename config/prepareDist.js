@@ -92,3 +92,14 @@ entryPoints.forEach(function buildPackageJson({
     ) + "\n"
   );
 });
+
+entryPoints.forEach(function buildCts({
+  dirs,
+  bundleName = dirs[dirs.length - 1],
+}) {
+  if (!dirs.length) return;
+  fs.writeFileSync(
+    path.join(distRoot, ...dirs, `${bundleName}.d.cts`),
+    'export * from "./index.d.ts";\n'
+  );
+});

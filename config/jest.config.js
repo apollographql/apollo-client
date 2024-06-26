@@ -29,6 +29,16 @@ const defaults = {
 const ignoreTSFiles = ".ts$";
 const ignoreTSXFiles = ".tsx$";
 
+const react19TestFileIgnoreList = [
+  ignoreTSFiles,
+  // The HOCs and Render Prop Components have been deprecated since March 2020,
+  // and to test them we would need to rewrite a lot of our test suites.
+  // We will not support them any more for React 19.
+  // They will probably work, but we make no more guarantees.
+  "src/react/hoc/.*",
+  "src/react/components/.*",
+];
+
 const react17TestFileIgnoreList = [
   ignoreTSFiles,
   // We only support Suspense with React 18, so don't test suspense hooks with
@@ -49,6 +59,17 @@ const tsStandardConfig = {
 
 // For both React (Jest) "projects", ignore core tests (.ts files) as they
 // do not import React, to avoid running them twice.
+const standardReact19Config = {
+  ...defaults,
+  displayName: "ReactDOM 19",
+  testPathIgnorePatterns: react19TestFileIgnoreList,
+  moduleNameMapper: {
+    "^react$": "react-19",
+    "^react-dom$": "react-dom-19",
+    "^react-dom/(.*)$": "react-dom-19/$1",
+  },
+};
+
 const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
@@ -69,5 +90,10 @@ const standardReact17Config = {
 };
 
 module.exports = {
-  projects: [tsStandardConfig, standardReact17Config, standardReact18Config],
+  projects: [
+    tsStandardConfig,
+    standardReact17Config,
+    standardReact18Config,
+    standardReact19Config,
+  ],
 };

@@ -251,18 +251,18 @@ function _useSuspenseQuery<
   }, [queryRef.result]);
 
   const result = fetchPolicy === "standby" ? skipResult : __use(promise);
-  const fetchMore = React.useCallback(
-    ((options) => {
+
+  const fetchMore = React.useCallback<
+    FetchMoreFunction<unknown, OperationVariables>
+  >(
+    (options) => {
       const promise = queryRef.fetchMore(options);
       setPromise([queryRef.key, queryRef.promise]);
 
       return promise;
-    }) satisfies FetchMoreFunction<
-      unknown,
-      OperationVariables
-    > as FetchMoreFunction<TData | undefined, TVariables>,
+    },
     [queryRef]
-  );
+  ) as FetchMoreFunction<TData | undefined, TVariables>;
 
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {

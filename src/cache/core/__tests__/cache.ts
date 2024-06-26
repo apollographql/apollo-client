@@ -505,5 +505,15 @@ describe.skip("Cache type tests", () => {
         },
       });
     });
+
+    test("allows undefined as return value", () => {
+      const cache = new TestCache();
+      cache.modify<{ foo: string }>({
+        id: "foo",
+        fields: {
+          foo: () => undefined,
+        },
+      });
+    });
   });
 });

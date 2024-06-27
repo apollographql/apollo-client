@@ -512,6 +512,8 @@ describe.skip("Cache type tests", () => {
         id: "foo",
         fields: {
           foo: () => undefined,
+          // @ts-expect-error needs return statement
+          bar: () => {},
         },
       });
     });

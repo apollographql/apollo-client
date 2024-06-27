@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.10.8
+
+### Patch Changes
+
+- [#11911](https://github.com/apollographql/apollo-client/pull/11911) [`1f0460a`](https://github.com/apollographql/apollo-client/commit/1f0460a60fc613e8d6f218a74ded69e81e960791) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow `undefined` to be returned from a `cache.modify` modifier function when a generic type argument is used.
+
 ## 3.10.7
 
 ### Patch Changes

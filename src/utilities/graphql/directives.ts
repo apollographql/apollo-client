@@ -133,3 +133,7 @@ export function getInclusionDirectives(
 
   return result;
 }
+
+export function isUnmaskedDocument(document: DocumentNode) {
+  return false;
+}

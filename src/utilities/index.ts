@@ -12,6 +12,7 @@ export {
   hasClientExports,
   getDirectiveNames,
   getInclusionDirectives,
+  isUnmaskedDocument,
 } from "./graphql/directives.js";
 
 export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";

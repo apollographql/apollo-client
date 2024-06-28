@@ -135,5 +135,49 @@ export function getInclusionDirectives(
 }
 
 export function isUnmaskedDocument(document: DocumentNode) {
-  return false;
+  let unmasked = false;
+
+  visit(document, {
+    OperationDefinition(node) {
+      if (node.directives) {
+        unmasked = node.directives.some(
+          (directive) => directive.name.value === "unmasked"
+        );
+      }
+
+      if (__DEV__) {
+        // Allow us to continue traversal in development to warn if we detect
+        // the unmasked directive anywhere else in the document.
+        return;
+      }
+
+      return BREAK;
+    },
+    Directive(node, _, __, ___, ancestors) {
+      if (__DEV__) {
+        if (node.name.value !== "unmasked") {
+          return;
+        }
+
+        const parent = ancestors[ancestors.length - 1];
+
+        // Make sure we aren't checking the `unmasked` directive defined on
+        // the operation, which we don't want to warn on.
+        if (
+          Array.isArray(parent) ||
+          (parent as ASTNode).kind !== "OperationDefinition"
+        ) {
+          invariant.warn(
+            unmasked ?
+              "@unmasked directive is used in a location other than the document root."
+            : "@unmasked directive is used in a location other than the document root which has no effect."
+          );
+
+          return BREAK;
+        }
+      }
+    },
+  });
+
+  return unmasked;
 }

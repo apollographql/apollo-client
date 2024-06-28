@@ -175,6 +175,8 @@ export function isUnmaskedDocument(document: DocumentNode) {
             operationName ? `'${operationName}': ` : "anonymous operation"
           );
 
+          // We only want to warn once if we detect misused of @unmasked so we
+          // immediately stop traversal.
           return BREAK;
         }
       }

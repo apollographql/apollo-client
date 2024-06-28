@@ -470,6 +470,7 @@ Array [
   "isReference",
   "isStatefulPromise",
   "isSubscriptionOperation",
+  "isUnmaskedDocument",
   "iterateObserversSafely",
   "makeReference",
   "makeUniqueId",

@@ -6599,6 +6599,69 @@ describe("data masking", () => {
     }
   });
 
+  it("does not mask queries marked with @unmasked", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery @unmask {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+    }
+  });
+
   it("does not mask query when using a cache that does not support it", async () => {
     using _ = spyOnConsole("warn");
 

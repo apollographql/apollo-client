@@ -516,9 +516,9 @@ describe("shouldInclude", () => {
 });
 
 describe("isUnmaskedDocument", () => {
-  it("returns true when @unmasked used on document", () => {
+  it("returns true when @unmask used on document", () => {
     const query = gql`
-      query MyQuery @unmasked {
+      query MyQuery @unmask {
         myField
       }
     `;
@@ -526,7 +526,7 @@ describe("isUnmaskedDocument", () => {
     expect(isUnmaskedDocument(query)).toBe(true);
   });
 
-  it("returns false when @unmasked is not used", () => {
+  it("returns false when @unmask is not used", () => {
     const query = gql`
       query MyQuery {
         myField
@@ -536,17 +536,17 @@ describe("isUnmaskedDocument", () => {
     expect(isUnmaskedDocument(query)).toBe(false);
   });
 
-  it("returns false when @unmasked is used in a location other than the document root", () => {
+  it("returns false when @unmask is used in a location other than the document root", () => {
     using _ = spyOnConsole("warn");
 
     const query = gql`
-      query MyQuery($id: ID! @unmasked) {
-        foo @unmasked
+      query MyQuery($id: ID! @unmask) {
+        foo @unmask
         bar(arg: true) {
-          ... @unmasked {
+          ... @unmask {
             baz
           }
-          ...MyFragment @unmasked
+          ...MyFragment @unmask
         }
       }
     `;
@@ -554,17 +554,17 @@ describe("isUnmaskedDocument", () => {
     expect(isUnmaskedDocument(query)).toBe(false);
   });
 
-  it("warns when using @unmasked directive in a location other than the document root", () => {
+  it("warns when using @unmask directive in a location other than the document root", () => {
     using consoleSpy = spyOnConsole("warn");
 
     const query = gql`
-      query MyQuery($id: ID! @unmasked) {
-        foo @unmasked
+      query MyQuery($id: ID! @unmask) {
+        foo @unmask
         bar(arg: true) {
-          ... @unmasked {
+          ... @unmask {
             baz
           }
-          ...MyFragment @unmasked
+          ...MyFragment @unmask
         }
       }
     `;
@@ -574,22 +574,22 @@ describe("isUnmaskedDocument", () => {
     expect(result).toBe(false);
     expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
     expect(consoleSpy.warn).toHaveBeenCalledWith(
-      "@unmasked directive used in %s is provided in a location other than the document root which is ignored.",
+      "@unmask directive used in %s is provided in a location other than the document root which is ignored.",
       "'MyQuery': "
     );
   });
 
-  it("warns when using @unmasked directive a location other than the document root while also using @unmasked at the root", () => {
+  it("warns when using @unmask directive a location other than the document root while also using @unmask at the root", () => {
     using consoleSpy = spyOnConsole("warn");
 
     const query = gql`
-      query MyQuery($id: ID! @unmasked) @unmasked {
-        foo @unmasked
+      query MyQuery($id: ID! @unmask) @unmask {
+        foo @unmask
         bar(arg: true) {
-          ... @unmasked {
+          ... @unmask {
             baz
           }
-          ...MyFragment @unmasked
+          ...MyFragment @unmask
         }
       }
     `;
@@ -599,7 +599,7 @@ describe("isUnmaskedDocument", () => {
     expect(result).toBe(true);
     expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
     expect(consoleSpy.warn).toHaveBeenCalledWith(
-      "@unmasked directive used in %s is provided in a location other than the document root which is ignored.",
+      "@unmask directive used in %s is provided in a location other than the document root which is ignored.",
       "'MyQuery': "
     );
   });

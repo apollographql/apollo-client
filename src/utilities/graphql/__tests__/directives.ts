@@ -574,7 +574,7 @@ describe("isUnmaskedDocument", () => {
     expect(result).toBe(false);
     expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
     expect(consoleSpy.warn).toHaveBeenCalledWith(
-      "%s@unmasked directive is used in a location other than the document root which has no effect.",
+      "@unmasked directive used in %s is provided in a location other than the document root which is ignored.",
       "'MyQuery': "
     );
   });
@@ -599,7 +599,7 @@ describe("isUnmaskedDocument", () => {
     expect(result).toBe(true);
     expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
     expect(consoleSpy.warn).toHaveBeenCalledWith(
-      "%s@unmasked directive is used in a location other than the document root.",
+      "@unmasked directive used in %s is provided in a location other than the document root which is ignored.",
       "'MyQuery': "
     );
   });

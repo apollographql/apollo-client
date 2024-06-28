@@ -171,10 +171,8 @@ export function isUnmaskedDocument(document: DocumentNode) {
           (parent as ASTNode).kind !== "OperationDefinition"
         ) {
           invariant.warn(
-            unmasked ?
-              "%s@unmasked directive is used in a location other than the document root."
-            : "%s@unmasked directive is used in a location other than the document root which has no effect.",
-            operationName ? `'${operationName}': ` : ""
+            "@unmasked directive used in %s is provided in a location other than the document root which is ignored.",
+            operationName ? `'${operationName}': ` : "anonymous operation"
           );
 
           return BREAK;

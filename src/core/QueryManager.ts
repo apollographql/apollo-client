@@ -26,6 +26,7 @@ import {
   getOperationDefinition,
   getOperationName,
   hasClientExports,
+  isUnmaskedDocument,
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
   Observable,
@@ -95,6 +96,7 @@ interface TransformCacheEntry {
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
+  isUnmasked: boolean;
   clientQuery: DocumentNode | null;
   serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
@@ -688,6 +690,7 @@ export class QueryManager<TStore> {
         hasClientExports: hasClientExports(document),
         hasForcedResolvers: this.localState.shouldForceResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
+        isUnmasked: isUnmaskedDocument(document),
         clientQuery: this.localState.clientQuery(document),
         serverQuery: removeDirectivesFromDocument(
           [

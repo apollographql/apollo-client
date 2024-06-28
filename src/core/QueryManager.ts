@@ -160,7 +160,7 @@ export class QueryManager<TStore> {
     localState?: LocalState<TStore>;
     assumeImmutableResults?: boolean;
     defaultContext?: Partial<DefaultContext>;
-    dataMasking: boolean;
+    dataMasking?: boolean;
   }) {
     const defaultDocumentTransform = new DocumentTransform(
       (document) => this.cache.transformDocument(document),
@@ -176,7 +176,7 @@ export class QueryManager<TStore> {
     this.localState = localState || new LocalState({ cache });
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = assumeImmutableResults;
-    this.dataMasking = dataMasking;
+    this.dataMasking = !!dataMasking;
     this.documentTransform =
       documentTransform ?
         defaultDocumentTransform

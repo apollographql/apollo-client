@@ -268,7 +268,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       documentTransform,
       queryDeduplication,
       ssrMode,
-      dataMasking: !!dataMasking,
+      dataMasking,
       clientAwareness: {
         name: clientAwarenessName!,
         version: clientAwarenessVersion!,

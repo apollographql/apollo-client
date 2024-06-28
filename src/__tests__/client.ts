@@ -6609,7 +6609,7 @@ describe("data masking", () => {
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
-      query UnmaskedQuery @unmask {
+      query UnmaskedQuery @unmasked {
         currentUser {
           id
           name

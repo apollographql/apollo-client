@@ -10908,18 +10908,20 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    client.writeQuery({
-      query,
-      data: {
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User (updated)",
-          // @ts-ignore TODO: Determine how to handle cache writes with masked
-          // query type
-          age: 35,
+    setTimeout(() => {
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (updated)",
+            // @ts-ignore TODO: Determine how to handle cache writes with masked
+            // query type
+            age: 35,
+          },
         },
-      },
+      });
     });
 
     {

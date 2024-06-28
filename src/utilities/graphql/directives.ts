@@ -136,9 +136,12 @@ export function getInclusionDirectives(
 
 export function isUnmaskedDocument(document: DocumentNode) {
   let unmasked = false;
+  let operationName: string | undefined;
 
   visit(document, {
     OperationDefinition(node) {
+      operationName = node.name?.value;
+
       if (node.directives) {
         unmasked = node.directives.some(
           (directive) => directive.name.value === "unmasked"
@@ -169,8 +172,9 @@ export function isUnmaskedDocument(document: DocumentNode) {
         ) {
           invariant.warn(
             unmasked ?
-              "@unmasked directive is used in a location other than the document root."
-            : "@unmasked directive is used in a location other than the document root which has no effect."
+              "%s@unmasked directive is used in a location other than the document root."
+            : "%s@unmasked directive is used in a location other than the document root which has no effect.",
+            operationName ? `'${operationName}': ` : ""
           );
 
           return BREAK;

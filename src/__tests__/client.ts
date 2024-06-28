@@ -6600,7 +6600,7 @@ describe("data masking", () => {
     }
   });
 
-  it("does not mask queries marked with @unmasked", async () => {
+  it("does not mask queries marked with @unmask", async () => {
     interface Query {
       currentUser: {
         __typename: "User";
@@ -6610,7 +6610,7 @@ describe("data masking", () => {
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
-      query UnmaskedQuery @unmasked {
+      query UnmaskedQuery @unmask {
         currentUser {
           id
           name
@@ -6663,7 +6663,7 @@ describe("data masking", () => {
     }
   });
 
-  it("does not mask queries marked with @unmasked added by document transforms", async () => {
+  it("does not mask queries marked with @unmask added by document transforms", async () => {
     const documentTransform = new DocumentTransform((document) => {
       return visit(document, {
         OperationDefinition(node) {
@@ -6672,7 +6672,7 @@ describe("data masking", () => {
             directives: [
               {
                 kind: Kind.DIRECTIVE,
-                name: { kind: Kind.NAME, value: "unmasked" },
+                name: { kind: Kind.NAME, value: "unmask" },
               },
             ],
           } satisfies OperationDefinitionNode;

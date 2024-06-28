@@ -144,13 +144,13 @@ export function isUnmaskedDocument(document: DocumentNode) {
 
       if (node.directives) {
         unmasked = node.directives.some(
-          (directive) => directive.name.value === "unmasked"
+          (directive) => directive.name.value === "unmask"
         );
       }
 
       if (__DEV__) {
         // Allow us to continue traversal in development to warn if we detect
-        // the unmasked directive anywhere else in the document.
+        // the unmask directive anywhere else in the document.
         return;
       }
 
@@ -158,24 +158,24 @@ export function isUnmaskedDocument(document: DocumentNode) {
     },
     Directive(node, _, __, ___, ancestors) {
       if (__DEV__) {
-        if (node.name.value !== "unmasked") {
+        if (node.name.value !== "unmask") {
           return;
         }
 
         const parent = ancestors[ancestors.length - 1];
 
-        // Make sure we aren't checking the `unmasked` directive defined on
+        // Make sure we aren't checking the `unmask` directive defined on
         // the operation, which we don't want to warn on.
         if (
           Array.isArray(parent) ||
           (parent as ASTNode).kind !== "OperationDefinition"
         ) {
           invariant.warn(
-            "@unmasked directive used in %s is provided in a location other than the document root which is ignored.",
+            "@unmask directive used in %s is provided in a location other than the document root which is ignored.",
             operationName ? `'${operationName}': ` : "anonymous operation"
           );
 
-          // We only want to warn once if we detect misused of @unmasked so we
+          // We only want to warn once if we detect misused of @unmask so we
           // immediately stop traversal.
           return BREAK;
         }

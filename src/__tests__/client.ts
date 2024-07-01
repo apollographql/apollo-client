@@ -7396,6 +7396,82 @@ describe("data masking", () => {
       }
     }
   );
+
+  it("warns when accessing a fragmented field while using @unmask", async () => {
+    using consoleSpy = spyOnConsole("warn");
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery @unmask {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+        name
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 34,
+            },
+          },
+        },
+        delay: 20,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+      data.currentUser.__typename;
+      data.currentUser.id;
+      data.currentUser.name;
+
+      expect(consoleSpy.warn).not.toHaveBeenCalled();
+
+      data.currentUser.age;
+
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.warn).toHaveBeenCalledWith(
+        "Field '%s' will not be available when masking query %s. Please read the field from the fragment instead.",
+        "age"
+        // "'UnmaskedQuery'"
+      );
+
+      // Ensure we only warn once
+      data.currentUser.age;
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    }
+  });
 });
 
 function clientRoundtrip(

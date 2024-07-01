@@ -117,8 +117,9 @@ function maskSelectionSet(
 
           // If we've set a descriptor on the object by adding warnings to field
           // access, overwrite the descriptor because we're adding a field that
-          // is accessible when masked. This checks avoids the need for us to
-          // maintain which fields are masked/unmasked and better handle
+          // is accessible when masked. This avoids the need for us to maintain
+          // which fields are masked/unmasked and avoids dependence on field
+          // order.
           if (descriptor) {
             Object.defineProperty(memo, keyName, { value: data[keyName] });
           } else {

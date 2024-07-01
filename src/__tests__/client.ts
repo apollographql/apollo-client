@@ -7462,7 +7462,7 @@ describe("data masking", () => {
 
       expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
       expect(consoleSpy.warn).toHaveBeenCalledWith(
-        "Field '%s' will not be available when masking query %s. Please read the field from the fragment instead.",
+        "Accessing unmasked field '%s' on query %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
         "age"
         // "'UnmaskedQuery'"
       );

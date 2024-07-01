@@ -6650,6 +6650,9 @@ describe("data masking", () => {
     const stream = new ObservableStream(observable);
 
     {
+      // Hide unmasked field warning
+      using _ = spyOnConsole("warn");
+
       const { data } = await stream.takeNext();
 
       expect(data).toEqual({
@@ -6730,6 +6733,9 @@ describe("data masking", () => {
     const stream = new ObservableStream(observable);
 
     {
+      // Hide unmasked field warning
+      using _ = spyOnConsole("warn");
+
       const { data } = await stream.takeNext();
 
       expect(data).toEqual({

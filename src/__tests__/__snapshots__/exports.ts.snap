@@ -490,6 +490,7 @@ Array [
   "removeFragmentSpreadFromDocument",
   "resultKeyNameFromField",
   "shouldInclude",
+  "shouldMask",
   "storeKeyNameFromField",
   "stringifyForDisplay",
   "stripTypename",

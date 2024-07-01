@@ -690,6 +690,7 @@ export class QueryManager<TStore> {
             { name: "client", remove: true },
             { name: "connection" },
             { name: "nonreactive" },
+            { name: 'mask' },
           ],
           document
         ),

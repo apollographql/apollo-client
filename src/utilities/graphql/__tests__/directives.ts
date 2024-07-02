@@ -523,7 +523,10 @@ describe("isUnmaskedDocument", () => {
       }
     `;
 
-    expect(isUnmaskedDocument(query)).toBe(true);
+    const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(query);
+
+    expect(isUnmasked).toBe(true);
+    expect(warnOnFieldAccess).toBe(true);
   });
 
   it("returns false when @unmask is not used", () => {
@@ -533,28 +536,13 @@ describe("isUnmaskedDocument", () => {
       }
     `;
 
-    expect(isUnmaskedDocument(query)).toBe(false);
+    const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(query);
+
+    expect(isUnmasked).toBe(false);
+    expect(warnOnFieldAccess).toBe(true);
   });
 
   it("returns false when @unmask is used in a location other than the document root", () => {
-    using _ = spyOnConsole("warn");
-
-    const query = gql`
-      query MyQuery($id: ID! @unmask) {
-        foo @unmask
-        bar(arg: true) {
-          ... @unmask {
-            baz
-          }
-          ...MyFragment @unmask
-        }
-      }
-    `;
-
-    expect(isUnmaskedDocument(query)).toBe(false);
-  });
-
-  it("warns when using @unmask directive in a location other than the document root", () => {
     using consoleSpy = spyOnConsole("warn");
 
     const query = gql`
@@ -569,9 +557,10 @@ describe("isUnmaskedDocument", () => {
       }
     `;
 
-    const result = isUnmaskedDocument(query);
+    const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(query);
 
-    expect(result).toBe(false);
+    expect(isUnmasked).toBe(false);
+    expect(warnOnFieldAccess).toBe(true);
     expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
     expect(consoleSpy.warn).toHaveBeenCalledWith(
       "@unmask directive used in %s is provided in a location other than the document root which is ignored.",
@@ -594,9 +583,10 @@ describe("isUnmaskedDocument", () => {
       }
     `;
 
-    const result = isUnmaskedDocument(query);
+    const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(query);
 
-    expect(result).toBe(true);
+    expect(isUnmasked).toBe(true);
+    expect(warnOnFieldAccess).toBe(true);
     expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
     expect(consoleSpy.warn).toHaveBeenCalledWith(
       "@unmask directive used in %s is provided in a location other than the document root which is ignored.",

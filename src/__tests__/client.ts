@@ -6,6 +6,7 @@ import {
   Kind,
   print,
   visit,
+  OperationDefinitionNode,
 } from "graphql";
 import gql from "graphql-tag";
 
@@ -6579,6 +6580,149 @@ describe("data masking", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+    }
+  });
+
+  it("does not mask queries marked with @unmask", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery @unmask {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+    }
+  });
+
+  it("does not mask queries marked with @unmask added by document transforms", async () => {
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        OperationDefinition(node) {
+          return {
+            ...node,
+            directives: [
+              {
+                kind: Kind.DIRECTIVE,
+                name: { kind: Kind.NAME, value: "unmask" },
+              },
+            ],
+          } satisfies OperationDefinitionNode;
+        },
+      });
+    });
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+      documentTransform,
     });
 
     const observable = client.watchQuery({ query });

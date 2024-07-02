@@ -91,9 +91,6 @@ export type WatchFragmentResult<TData> =
 export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
 
-  /** @internal */
-  public dataMaskingEnabledInClient: boolean = false;
-
   // required to implement
   // core API
   public abstract read<TData = any, TVariables = any>(
@@ -370,10 +367,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   }
 
   public maskDocument<TData = unknown>(document: DocumentNode, data: TData) {
-    if (!this.dataMaskingEnabledInClient) {
-      return data;
-    }
-
     if (!this.fragmentMatches) {
       if (__DEV__) {
         invariant.warn(

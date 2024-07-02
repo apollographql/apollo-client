@@ -529,6 +529,19 @@ describe("isUnmaskedDocument", () => {
     expect(warnOnFieldAccess).toBe(true);
   });
 
+  it("allows disabling unmask warnings with argument", () => {
+    const query = gql`
+      query MyQuery @unmask(warnOnFieldAccess: false) {
+        myField
+      }
+    `;
+
+    const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(query);
+
+    expect(isUnmasked).toBe(true);
+    expect(warnOnFieldAccess).toBe(false);
+  });
+
   it("returns false when @unmask is not used", () => {
     const query = gql`
       query MyQuery {

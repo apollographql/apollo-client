@@ -561,6 +561,24 @@ describe("isUnmaskedDocument", () => {
     );
   });
 
+  it("warns when passing non-boolean to warnOnFieldAccess", () => {
+    using consoleSpy = spyOnConsole("warn");
+    const query = gql`
+      query MyQuery @unmask(warnOnFieldAccess: "") {
+        myField
+      }
+    `;
+
+    const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(query);
+
+    expect(isUnmasked).toBe(true);
+    expect(warnOnFieldAccess).toBe(true);
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.warn).toHaveBeenCalledWith(
+      "@unmask 'warnOnFieldAccess' argument must be of type boolean."
+    );
+  });
+
   it("returns false when @unmask is not used", () => {
     const query = gql`
       query MyQuery {

@@ -30,13 +30,14 @@ import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import {
   createProfiler,
+  disableActWarnings,
   profileHook,
-  skipActWarnings,
   spyOnConsole,
 } from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 
+const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_19 = React.version.startsWith("19");
 
 describe("useQuery Hook", () => {
@@ -6576,6 +6577,7 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
     });
 
     it("should attempt a refetch when data is missing, partialRefetch is true and addTypename is false for the cache", async () => {
+      using _disabledActWarnings = disableActWarnings();
       using consoleSpy = spyOnConsole("error");
       const query = gql`
         {
@@ -6631,8 +6633,11 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
         expect(result.data).toBe(undefined);
       }
 
-      const calls = skipActWarnings(consoleSpy.error.mock.calls);
-      expect(calls.length).toBe(1);
+      const calls = consoleSpy.error.mock.calls;
+      if (!IS_REACT_17) {
+        // React 17 doesn't know `IS_REACT_ACT_ENVIRONMENT` yet, so it will log a warning that we don't care about.
+        expect(calls.length).toBe(1);
+      }
       expect(calls[0][0]).toMatch("Missing field");
 
       {

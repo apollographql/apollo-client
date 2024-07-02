@@ -147,33 +147,22 @@ export class QueryManager<TStore> {
   // @apollo/experimental-nextjs-app-support can access type info.
   protected fetchCancelFns = new Map<string, (error: any) => any>();
 
-  constructor({
-    cache,
-    link,
-    defaultOptions,
-    documentTransform,
-    queryDeduplication,
-    onBroadcast,
-    ssrMode,
-    clientAwareness,
-    localState,
-    assumeImmutableResults,
-    defaultContext,
-  }: QueryManagerOptions<TStore>) {
+  constructor(options: QueryManagerOptions<TStore>) {
     const defaultDocumentTransform = new DocumentTransform(
       (document) => this.cache.transformDocument(document),
       // Allow the apollo cache to manage its own transform caches
       { cache: false }
     );
 
-    this.cache = cache;
-    this.link = link;
-    this.defaultOptions = defaultOptions;
-    this.queryDeduplication = queryDeduplication;
-    this.clientAwareness = clientAwareness;
-    this.localState = localState;
-    this.ssrMode = ssrMode;
-    this.assumeImmutableResults = assumeImmutableResults;
+    this.cache = options.cache;
+    this.link = options.link;
+    this.defaultOptions = options.defaultOptions;
+    this.queryDeduplication = options.queryDeduplication;
+    this.clientAwareness = options.clientAwareness;
+    this.localState = options.localState;
+    this.ssrMode = options.ssrMode;
+    this.assumeImmutableResults = options.assumeImmutableResults;
+    const documentTransform = options.documentTransform;
     this.documentTransform =
       documentTransform ?
         defaultDocumentTransform
@@ -184,9 +173,9 @@ export class QueryManager<TStore> {
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform;
-    this.defaultContext = defaultContext || Object.create(null);
+    this.defaultContext = options.defaultContext || Object.create(null);
 
-    if ((this.onBroadcast = onBroadcast)) {
+    if ((this.onBroadcast = options.onBroadcast)) {
       this.mutationStore = Object.create(null);
     }
   }

@@ -18,7 +18,9 @@ import {
 } from "../../../cache/inmemory/types";
 
 // mocks
-import mockQueryManager from "../../../testing/core/mocking/mockQueryManager";
+import mockQueryManager, {
+  getDefaultOptionsForQueryManagerTests,
+} from "../../../testing/core/mocking/mockQueryManager";
 import mockWatchQuery from "../../../testing/core/mocking/mockWatchQuery";
 import {
   MockApolloLink,
@@ -89,14 +91,16 @@ describe("QueryManager", () => {
     clientAwareness?: { [key: string]: string };
     queryDeduplication?: boolean;
   }) => {
-    return new QueryManager({
-      link,
-      cache: new InMemoryCache({ addTypename: false, ...config }),
-      clientAwareness,
-      queryDeduplication,
-      // Enable client.queryManager.mutationStore tracking.
-      onBroadcast() {},
-    });
+    return new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link,
+        cache: new InMemoryCache({ addTypename: false, ...config }),
+        clientAwareness,
+        queryDeduplication,
+        // Enable client.queryManager.mutationStore tracking.
+        onBroadcast() {},
+      })
+    );
   };
 
   // Helper method that sets up a mockQueryManager and then passes on the
@@ -539,10 +543,12 @@ describe("QueryManager", () => {
       });
     });
 
-    const mockedQueryManger = new QueryManager({
-      link: mockedSingleLink,
-      cache: new InMemoryCache({ addTypename: false }),
-    });
+    const mockedQueryManger = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link: mockedSingleLink,
+        cache: new InMemoryCache({ addTypename: false }),
+      })
+    );
 
     const observableQuery = mockedQueryManger.watchQuery({
       query: request.query,
@@ -620,22 +626,24 @@ describe("QueryManager", () => {
       });
     });
 
-    const mockedQueryManger = new QueryManager({
-      link: mockedSingleLink,
-      cache: new InMemoryCache({ addTypename: false }),
-      defaultOptions: {
-        watchQuery: {
-          fetchPolicy: "cache-and-network",
-          returnPartialData: false,
-          partialRefetch: true,
-          notifyOnNetworkStatusChange: true,
+    const mockedQueryManger = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link: mockedSingleLink,
+        cache: new InMemoryCache({ addTypename: false }),
+        defaultOptions: {
+          watchQuery: {
+            fetchPolicy: "cache-and-network",
+            returnPartialData: false,
+            partialRefetch: true,
+            notifyOnNetworkStatusChange: true,
+          },
+          query: {
+            fetchPolicy: "network-only",
+          },
         },
-        query: {
-          fetchPolicy: "network-only",
-        },
-      },
-      queryDeduplication: false,
-    });
+        queryDeduplication: false,
+      })
+    );
 
     const observableQuery = mockedQueryManger.watchQuery<
       (typeof expResult)["data"],
@@ -2893,14 +2901,16 @@ describe("QueryManager", () => {
           age: "32",
         },
       };
-      const queryManager = new QueryManager<NormalizedCacheObject>({
-        link: mockSingleLink(
-          { request: { query: queryA }, result: { data: dataA } },
-          { request: { query: queryB }, result: { data: dataB }, delay: 20 }
-        ).setOnError(reject),
-        cache: new InMemoryCache({}),
-        ssrMode: true,
-      });
+      const queryManager = new QueryManager<NormalizedCacheObject>(
+        getDefaultOptionsForQueryManagerTests({
+          link: mockSingleLink(
+            { request: { query: queryA }, result: { data: dataA } },
+            { request: { query: queryB }, result: { data: dataB }, delay: 20 }
+          ).setOnError(reject),
+          cache: new InMemoryCache({}),
+          ssrMode: true,
+        })
+      );
 
       const observableA = queryManager.watchQuery({
         query: queryA,
@@ -3070,24 +3080,26 @@ describe("QueryManager", () => {
         },
       };
 
-      const queryManager = new QueryManager<NormalizedCacheObject>({
-        link: mockSingleLink(
-          {
-            request: { query, variables },
-            result: { data: data1 },
-          },
-          {
-            request: { query, variables },
-            result: { data: data2 },
-          },
-          {
-            request: { query, variables },
-            result: { data: data2 },
-          }
-        ).setOnError(reject),
-        cache: new InMemoryCache({ addTypename: false }),
-        ssrMode: true,
-      });
+      const queryManager = new QueryManager<NormalizedCacheObject>(
+        getDefaultOptionsForQueryManagerTests({
+          link: mockSingleLink(
+            {
+              request: { query, variables },
+              result: { data: data1 },
+            },
+            {
+              request: { query, variables },
+              result: { data: data2 },
+            },
+            {
+              request: { query, variables },
+              result: { data: data2 },
+            }
+          ).setOnError(reject),
+          cache: new InMemoryCache({ addTypename: false }),
+          ssrMode: true,
+        })
+      );
 
       const observable = queryManager.watchQuery<any>({
         query,
@@ -5984,10 +5996,12 @@ describe("QueryManager", () => {
         ).setOnError(reject);
         const cache = new InMemoryCache();
 
-        const queryManager = new QueryManager<NormalizedCacheObject>({
-          link,
-          cache,
-        });
+        const queryManager = new QueryManager<NormalizedCacheObject>(
+          getDefaultOptionsForQueryManagerTests({
+            link,
+            cache,
+          })
+        );
 
         return queryManager
           .query({ query: query1 })

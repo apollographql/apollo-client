@@ -7,6 +7,7 @@ import { QueryManager } from "../core/QueryManager";
 import { itAsync, mockObservableLink } from "../testing";
 import { GraphQLError } from "graphql";
 import { spyOnConsole } from "../testing/internal";
+import { getDefaultOptionsForQueryManagerTests } from "../testing/core/mocking/mockQueryManager";
 
 describe("GraphQL Subscriptions", () => {
   const results = [
@@ -103,10 +104,12 @@ describe("GraphQL Subscriptions", () => {
 
   itAsync("should multiplex subscriptions", (resolve, reject) => {
     const link = mockObservableLink();
-    const queryManager = new QueryManager({
-      link,
-      cache: new InMemoryCache({ addTypename: false }),
-    });
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link,
+        cache: new InMemoryCache({ addTypename: false }),
+      })
+    );
 
     const obs = queryManager.startGraphQLSubscription(options);
 
@@ -143,10 +146,12 @@ describe("GraphQL Subscriptions", () => {
     (resolve, reject) => {
       const link = mockObservableLink();
       let numResults = 0;
-      const queryManager = new QueryManager({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      });
+      const queryManager = new QueryManager(
+        getDefaultOptionsForQueryManagerTests({
+          link,
+          cache: new InMemoryCache({ addTypename: false }),
+        })
+      );
 
       // tslint:disable-next-line
       queryManager.startGraphQLSubscription(options).subscribe({
@@ -192,10 +197,12 @@ describe("GraphQL Subscriptions", () => {
 
   it("should throw an error if the result has errors on it", () => {
     const link = mockObservableLink();
-    const queryManager = new QueryManager({
-      link,
-      cache: new InMemoryCache({ addTypename: false }),
-    });
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link,
+        cache: new InMemoryCache({ addTypename: false }),
+      })
+    );
 
     const obs = queryManager.startGraphQLSubscription(options);
 
@@ -242,10 +249,12 @@ describe("GraphQL Subscriptions", () => {
       }
     `;
     const link = mockObservableLink();
-    const queryManager = new QueryManager({
-      link,
-      cache: new InMemoryCache(),
-    });
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link,
+        cache: new InMemoryCache(),
+      })
+    );
 
     const obs = queryManager.startGraphQLSubscription({
       query,
@@ -289,10 +298,12 @@ describe("GraphQL Subscriptions", () => {
       }
     `;
     const link = mockObservableLink();
-    const queryManager = new QueryManager({
-      link,
-      cache: new InMemoryCache(),
-    });
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link,
+        cache: new InMemoryCache(),
+      })
+    );
 
     const obs = queryManager.startGraphQLSubscription({
       query,
@@ -358,10 +369,12 @@ describe("GraphQL Subscriptions", () => {
       }
     `;
     const link = mockObservableLink();
-    const queryManager = new QueryManager({
-      link,
-      cache: new InMemoryCache(),
-    });
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link,
+        cache: new InMemoryCache(),
+      })
+    );
 
     const obs = queryManager.startGraphQLSubscription({
       query,
@@ -400,10 +413,12 @@ describe("GraphQL Subscriptions", () => {
       }
     `;
     const link = mockObservableLink();
-    const queryManager = new QueryManager({
-      link,
-      cache: new InMemoryCache(),
-    });
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link,
+        cache: new InMemoryCache(),
+      })
+    );
 
     const obs = queryManager.startGraphQLSubscription({
       query,
@@ -501,10 +516,12 @@ describe("GraphQL Subscriptions", () => {
 
   it("should throw an error if the result has protocolErrors on it", async () => {
     const link = mockObservableLink();
-    const queryManager = new QueryManager({
-      link,
-      cache: new InMemoryCache({ addTypename: false }),
-    });
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link,
+        cache: new InMemoryCache({ addTypename: false }),
+      })
+    );
 
     const obs = queryManager.startGraphQLSubscription(options);
 

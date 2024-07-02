@@ -15,6 +15,7 @@ import { itAsync, MockSubscriptionLink } from "../../../testing/core";
 // core
 import { QueryManager } from "../../QueryManager";
 import { NextLink, Operation, Reference } from "../../../core";
+import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/mocking/mockQueryManager";
 
 describe("Link interactions", () => {
   itAsync(
@@ -56,10 +57,12 @@ describe("Link interactions", () => {
 
       const mockLink = new MockSubscriptionLink();
       const link = ApolloLink.from([evictionLink, mockLink]);
-      const queryManager = new QueryManager({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      });
+      const queryManager = new QueryManager(
+        getDefaultOptionsForQueryManagerTests({
+          cache: new InMemoryCache({ addTypename: false }),
+          link,
+        })
+      );
 
       const observable = queryManager.watchQuery<any>({
         query,
@@ -102,10 +105,12 @@ describe("Link interactions", () => {
       };
 
       const link = new MockSubscriptionLink();
-      const queryManager = new QueryManager({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      });
+      const queryManager = new QueryManager(
+        getDefaultOptionsForQueryManagerTests({
+          cache: new InMemoryCache({ addTypename: false }),
+          link,
+        })
+      );
 
       const observable = queryManager.watchQuery<any>({
         query,
@@ -176,10 +181,12 @@ describe("Link interactions", () => {
       };
 
       const link = new MockSubscriptionLink();
-      const queryManager = new QueryManager({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      });
+      const queryManager = new QueryManager(
+        getDefaultOptionsForQueryManagerTests({
+          cache: new InMemoryCache({ addTypename: false }),
+          link,
+        })
+      );
 
       const observable = queryManager.watchQuery<any>({
         query,
@@ -256,10 +263,12 @@ describe("Link interactions", () => {
 
       const mockLink = new MockSubscriptionLink();
       const link = ApolloLink.from([evictionLink, mockLink]);
-      const queryManager = new QueryManager({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      });
+      const queryManager = new QueryManager(
+        getDefaultOptionsForQueryManagerTests({
+          cache: new InMemoryCache({ addTypename: false }),
+          link,
+        })
+      );
 
       queryManager.mutate({ mutation });
 
@@ -298,10 +307,12 @@ describe("Link interactions", () => {
 
       const mockLink = new MockSubscriptionLink();
       const link = ApolloLink.from([evictionLink, mockLink]);
-      const queryManager = new QueryManager({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      });
+      const queryManager = new QueryManager(
+        getDefaultOptionsForQueryManagerTests({
+          cache: new InMemoryCache({ addTypename: false }),
+          link,
+        })
+      );
 
       queryManager.mutate({ mutation, context: { planet: "Tatooine" } });
 
@@ -341,34 +352,36 @@ describe("Link interactions", () => {
       return Observable.of({ data: bookData });
     });
 
-    const queryManager = new QueryManager({
-      link,
-      cache: new InMemoryCache({
-        typePolicies: {
-          Query: {
-            fields: {
-              book(_, { args, toReference, readField }) {
-                if (!args) {
-                  throw new Error("arg must never be null");
-                }
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link,
+        cache: new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                book(_, { args, toReference, readField }) {
+                  if (!args) {
+                    throw new Error("arg must never be null");
+                  }
 
-                const ref = toReference({ __typename: "Book", id: args.id });
-                if (!ref) {
-                  throw new Error("ref must never be null");
-                }
+                  const ref = toReference({ __typename: "Book", id: args.id });
+                  if (!ref) {
+                    throw new Error("ref must never be null");
+                  }
 
-                expect(ref).toEqual({ __ref: `Book:${args.id}` });
-                const found = readField<Reference[]>("books")!.find(
-                  (book) => book.__ref === ref.__ref
-                );
-                expect(found).toBeTruthy();
-                return found;
+                  expect(ref).toEqual({ __ref: `Book:${args.id}` });
+                  const found = readField<Reference[]>("books")!.find(
+                    (book) => book.__ref === ref.__ref
+                  );
+                  expect(found).toBeTruthy();
+                  return found;
+                },
               },
             },
           },
-        },
-      }),
-    });
+        }),
+      })
+    );
 
     await queryManager.query({ query });
 
@@ -418,10 +431,12 @@ describe("Link interactions", () => {
       });
     });
 
-    const queryManager = new QueryManager({
-      link,
-      cache: new InMemoryCache({ addTypename: false }),
-    });
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        link,
+        cache: new InMemoryCache({ addTypename: false }),
+      })
+    );
 
     await queryManager.query({ query });
 

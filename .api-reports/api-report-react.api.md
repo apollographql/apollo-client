@@ -35,8 +35,6 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     readonly assumeImmutableResults: boolean;
     // (undocumented)
     batch<U>(options: Cache_2.BatchOptions<this, U>): U;
-    // @internal (undocumented)
-    dataMaskingEnabledInClient: boolean;
     // (undocumented)
     abstract diff<T>(query: Cache_2.DiffOptions): Cache_2.DiffResult<T>;
     // (undocumented)
@@ -1532,7 +1530,7 @@ type QueryListener = (queryInfo: QueryInfo) => void;
 
 // @public (undocumented)
 class QueryManager<TStore> {
-    constructor({ cache, link, defaultOptions, documentTransform, queryDeduplication, onBroadcast, ssrMode, clientAwareness, localState, assumeImmutableResults, defaultContext, }: {
+    constructor({ cache, link, defaultOptions, documentTransform, queryDeduplication, onBroadcast, ssrMode, clientAwareness, localState, assumeImmutableResults, defaultContext, dataMasking, }: {
         cache: ApolloCache<TStore>;
         link: ApolloLink;
         defaultOptions?: DefaultOptions;
@@ -1544,6 +1542,7 @@ class QueryManager<TStore> {
         localState?: LocalState<TStore>;
         assumeImmutableResults?: boolean;
         defaultContext?: Partial<Context>;
+        dataMasking?: boolean;
     });
     // (undocumented)
     readonly assumeImmutableResults: boolean;
@@ -1553,6 +1552,8 @@ class QueryManager<TStore> {
     cache: ApolloCache<TStore>;
     // (undocumented)
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
+    // (undocumented)
+    readonly dataMasking: boolean;
     // (undocumented)
     readonly defaultContext: Partial<Context>;
     // Warning: (ae-forgotten-export) The symbol "DefaultOptions" needs to be exported by the entry point index.d.ts
@@ -2306,9 +2307,9 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:116:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:390:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:125:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:160:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:394:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:203:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts

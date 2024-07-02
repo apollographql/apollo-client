@@ -184,7 +184,6 @@ describe("abstract cache", () => {
         user: { __typename: "User", id: 1, name: "Mister Masked" },
       };
       const cache = new TestCache();
-      cache.dataMaskingEnabledInClient = true;
 
       const result = cache.maskDocument(query, data);
 
@@ -197,8 +196,6 @@ describe("abstract cache", () => {
 
     it("returns masked query for caches that implement required interface", () => {
       class MaskingCache extends TestCache {
-        public dataMaskingEnabledInClient = true;
-
         protected fragmentMatches(
           _fragment: InlineFragmentNode,
           _typename: string

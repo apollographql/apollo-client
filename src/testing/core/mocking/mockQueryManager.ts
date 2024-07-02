@@ -18,6 +18,7 @@ export const getDefaultOptionsForQueryManagerTests = <TStore>(
   localState: new LocalState({ cache: options.cache }),
   assumeImmutableResults: !!options.cache.assumeImmutableResults,
   defaultContext: undefined,
+  dataMasking: false,
   ...options,
 });
 

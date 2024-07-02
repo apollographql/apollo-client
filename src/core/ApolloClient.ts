@@ -256,7 +256,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     this.link = link;
     this.cache = cache;
-    this.cache.dataMaskingEnabledInClient = !!dataMasking;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
     this.defaultOptions = defaultOptions || Object.create(null);
@@ -301,6 +300,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       documentTransform,
       queryDeduplication,
       ssrMode,
+      dataMasking: !!dataMasking,
       clientAwareness: {
         name: clientAwarenessName!,
         version: clientAwarenessVersion!,

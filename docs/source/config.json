@@ -53,10 +53,17 @@
       "Mocking schema capabilities": "/development-testing/client-schema-mocking",
       "Reducing bundle size": "/development-testing/reducing-bundle-size"
     },
+    "Server-Side Rendering and React Server Components": {
+      "Introduction": "/ssr-and-rsc/introduction",
+      "Usage in React Server Components": "/ssr-and-rsc/usage-in-rsc",
+      "Usage in React Client Components with streaming SSR": "/ssr-and-rsc/usage-in-client-components",
+      "Setting up with Next.js": "/ssr-and-rsc/nextjs",
+      "Setting up a custom \"streaming SSR\" server": "/ssr-and-rsc/custom-streaming-ssr",
+      "Classic Server-side rendering with `renderToString`": "/ssr-and-rsc/server-side-rendering-string"
+    },
     "Performance": {
       "Improving performance": "/performance/performance",
       "Optimistic mutation results": "/performance/optimistic-ui",
-      "Server-side rendering": "/performance/server-side-rendering",
       "Compiling queries with Babel": "/performance/babel"
     },
     "Integrations": {

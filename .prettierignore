@@ -25,6 +25,9 @@
 /docs/source/development-testing/**
 !/docs/source/development-testing/reducing-bundle-size.mdx
 !/docs/source/development-testing/schema-driven-testing.mdx
+!/docs/source/ssr-and-rsc
+!/docs/source/ssr-and-rsc/**
+
 
 !docs/shared
 /docs/shared/**

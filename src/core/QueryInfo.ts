@@ -1,4 +1,4 @@
-import type { DocumentNode, GraphQLError } from "graphql";
+import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
 
 import type { Cache, ApolloCache } from "../cache/index.js";
@@ -15,7 +15,10 @@ import {
   canUseWeakMap,
 } from "../utilities/index.js";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type { ApolloError } from "../errors/index.js";
+import type {
+  ApolloError,
+  GraphQLErrorsFromResponse,
+} from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 
 export type QueryStoreValue = Pick<
@@ -82,7 +85,7 @@ export class QueryInfo {
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
-  graphQLErrors?: ReadonlyArray<GraphQLError>;
+  graphQLErrors?: GraphQLErrorsFromResponse;
   stopped = false;
 
   private cache: ApolloCache<any>;

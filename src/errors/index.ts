@@ -1,6 +1,7 @@
 import "../utilities/globals/index.js";
 
-import type { GraphQLError, GraphQLErrorExtensions } from "graphql";
+import type { GraphQLErrorExtensions } from "graphql";
+import { GraphQLError } from "graphql";
 
 import { isNonNullObject } from "../utilities/index.js";
 import type { ServerParseError } from "../link/http/index.js";
@@ -17,7 +18,7 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
 };
 
 export interface ApolloErrorOptions {
-  graphQLErrors?: ReadonlyArray<GraphQLError>;
+  graphQLErrors?: GraphQLErrorsFromResponse;
   protocolErrors?: ReadonlyArray<{
     message: string;
     extensions?: GraphQLErrorExtensions[];
@@ -67,6 +68,17 @@ const generateErrorMessage = (err: ApolloError) => {
   );
 };
 
+/**
+ * A GraphQLError, as received from the server in a GraphQL Response
+ *
+ * See https://github.com/graphql/graphql-spec/blob/main/spec/Section%207%20--%20Response.md#errors
+ * (scroll down to Error Result Format)
+ * Only `message` is mandatory in the spec, the other fields are optional.
+ */
+export type GraphQLErrorFromResponse = Pick<GraphQLError, "message"> &
+  Partial<GraphQLError>;
+export type GraphQLErrorsFromResponse = ReadonlyArray<GraphQLErrorFromResponse>;
+
 export type GraphQLErrors = ReadonlyArray<GraphQLError>;
 
 export type NetworkError = Error | ServerParseError | ServerError | null;
@@ -74,7 +86,7 @@ export type NetworkError = Error | ServerParseError | ServerError | null;
 export class ApolloError extends Error {
   public name: string;
   public message: string;
-  public graphQLErrors: GraphQLErrors;
+  public graphQLErrors: GraphQLErrorsFromResponse;
   public protocolErrors: ReadonlyArray<{
     message: string;
     extensions?: GraphQLErrorExtensions[];
@@ -100,7 +112,7 @@ export class ApolloError extends Error {
   }: ApolloErrorOptions) {
     super(errorMessage);
     this.name = "ApolloError";
-    this.graphQLErrors = graphQLErrors || [];
+    this.graphQLErrors = (graphQLErrors || []).map(reviveGraphQLError);
     this.protocolErrors = protocolErrors || [];
     this.clientErrors = clientErrors || [];
     this.networkError = networkError || null;
@@ -111,4 +123,24 @@ export class ApolloError extends Error {
     // supported on Android (see issue #3236).
     (this as any).__proto__ = ApolloError.prototype;
   }
+}
+
+/**
+ * Revives a GraphQL error that has been received over the network.
+ * Some fields of GraphQL errors, e.g. `extensions`, are not mandatory in the
+ * spec, but they are not optional in the `GraphQLError` type.
+ * This function ensures that all errors are instances of the `GraphQLError` class.
+ */
+export function reviveGraphQLError(
+  error: GraphQLErrorFromResponse
+): GraphQLError {
+  return error instanceof GraphQLError ? error : (
+      new GraphQLError(
+        error.message,
+        // This will pass `message` into the `options` parameter.
+        // The constructor does not expect that, but it will ignore it and we
+        // don't need to destructure `error`, saving some bundle size.
+        error
+      )
+    );
 }

@@ -1,12 +1,15 @@
 import type { ExecutionResult } from "graphql";
 
-import type { NetworkError, GraphQLErrors } from "../../errors/index.js";
+import type {
+  NetworkError,
+  GraphQLErrorsFromResponse,
+} from "../../errors/index.js";
 import { Observable } from "../../utilities/index.js";
 import type { Operation, FetchResult, NextLink } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
 
 export interface ErrorResponse {
-  graphQLErrors?: GraphQLErrors;
+  graphQLErrors?: GraphQLErrorsFromResponse;
   networkError?: NetworkError;
   response?: ExecutionResult;
   operation: Operation;

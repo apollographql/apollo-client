@@ -12,7 +12,7 @@ import type {
   ValueNode,
   ASTNode,
 } from "graphql";
-import { visit, BREAK } from "graphql";
+import { visit, BREAK, Kind } from "graphql";
 
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };
@@ -134,8 +134,11 @@ export function getInclusionDirectives(
   return result;
 }
 
-export function isUnmaskedDocument(document: DocumentNode) {
-  let unmasked = false;
+export function isUnmaskedDocument(
+  document: DocumentNode
+): [isUnmasked: boolean, options: { warnOnFieldAccess: boolean }] {
+  let masked = false;
+  let warnOnFieldAccess = true;
   let operationName: string | undefined;
 
   visit(document, {
@@ -143,9 +146,29 @@ export function isUnmaskedDocument(document: DocumentNode) {
       operationName = node.name?.value;
 
       if (node.directives) {
-        unmasked = node.directives.some(
+        const directive = node.directives.find(
           (directive) => directive.name.value === "unmask"
         );
+
+        masked = !!directive;
+
+        const warnsArg = directive?.arguments?.find(
+          (arg) => arg.name.value === "warnOnFieldAccess"
+        );
+
+        if (__DEV__) {
+          if (warnsArg && warnsArg.value.kind !== Kind.BOOLEAN) {
+            invariant.warn(
+              warnsArg.value.kind === Kind.VARIABLE ?
+                "@unmask 'warnOnFieldAccess' argument does not support variables."
+              : "@unmask 'warnOnFieldAccess' argument must be of type boolean."
+            );
+          }
+        }
+
+        if (warnsArg && "value" in warnsArg.value) {
+          warnOnFieldAccess = warnsArg.value.value !== false;
+        }
       }
 
       if (__DEV__) {
@@ -183,5 +206,5 @@ export function isUnmaskedDocument(document: DocumentNode) {
     },
   });
 
-  return unmasked;
+  return [masked, { warnOnFieldAccess }];
 }

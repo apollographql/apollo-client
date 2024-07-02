@@ -27,12 +27,14 @@ export function maskQuery<TData = unknown>(
 ): TData {
   const definition = getMainDefinition(document);
   const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
+  const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(document);
   const [masked, changed] = maskSelectionSet(
     data,
     definition.selectionSet,
     matchesFragment,
     fragmentMap,
-    isUnmaskedDocument(document)
+    isUnmasked,
+    warnOnFieldAccess
   );
 
   return changed ? masked : data;
@@ -75,7 +77,8 @@ export function maskFragment<TData = unknown>(
     fragment.selectionSet,
     matchesFragment,
     fragmentMap,
-    false
+    false,
+    true
   );
 
   return changed ? masked : data;
@@ -86,7 +89,8 @@ function maskSelectionSet(
   selectionSet: SelectionSetNode,
   matchesFragment: MatchesFragmentFn,
   fragmentMap: FragmentMap,
-  isUnmasked: boolean
+  isUnmasked: boolean,
+  warnOnFieldAccess: boolean
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
@@ -97,7 +101,8 @@ function maskSelectionSet(
         selectionSet,
         matchesFragment,
         fragmentMap,
-        isUnmasked
+        isUnmasked,
+        warnOnFieldAccess
       );
       changed ||= itemChanged;
 
@@ -132,7 +137,8 @@ function maskSelectionSet(
               childSelectionSet,
               matchesFragment,
               fragmentMap,
-              isUnmasked
+              isUnmasked,
+              warnOnFieldAccess
             );
 
             if (childChanged) {
@@ -156,7 +162,8 @@ function maskSelectionSet(
             selection.selectionSet,
             matchesFragment,
             fragmentMap,
-            isUnmasked
+            isUnmasked,
+            warnOnFieldAccess
           );
 
           return [
@@ -172,7 +179,12 @@ function maskSelectionSet(
 
           return [
             isUnmasked ?
-              addAccessorWarnings(memo, data, fragment.selectionSet)
+              addAccessorWarnings(
+                memo,
+                data,
+                fragment.selectionSet,
+                warnOnFieldAccess
+              )
             : memo,
             true,
           ];
@@ -185,7 +197,8 @@ function maskSelectionSet(
 function addAccessorWarnings(
   memo: Record<string, unknown>,
   parent: Record<string, unknown>,
-  selectionSetNode: SelectionSetNode
+  selectionSetNode: SelectionSetNode,
+  warnOnFieldAccess: boolean
 ) {
   selectionSetNode.selections.forEach((selection) => {
     switch (selection.kind) {
@@ -196,7 +209,11 @@ function addAccessorWarnings(
           return;
         }
 
-        return addAccessorWarning(memo, parent[keyName], keyName);
+        if (warnOnFieldAccess) {
+          return addAccessorWarning(memo, parent[keyName], keyName);
+        } else {
+          memo[keyName] = parent[keyName];
+        }
       }
     }
   });

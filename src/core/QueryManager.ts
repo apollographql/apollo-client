@@ -64,7 +64,7 @@ import type {
   InternalRefetchQueriesMap,
   DefaultContext,
 } from "./types.js";
-import { LocalState } from "./LocalState.js";
+import type { LocalState } from "./LocalState.js";
 
 import type { QueryStoreValue } from "./QueryInfo.js";
 import {

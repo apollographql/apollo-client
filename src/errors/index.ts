@@ -84,9 +84,14 @@ export class ApolloError extends Error {
   /**
    * Indicates the specific original cause of the error.
    *
-   * This field contains the first available `networkError`, `clientError`, or `graphQLError`, or `null` if none are available.
+   * This field contains the first available `networkError`, `graphQLError`, `protocolError`, `clientError`, or `null` if none are available.
    */
-  public cause: Error | null;
+  public cause:
+    | ({
+        message: string;
+        extensions?: GraphQLErrorExtensions[];
+      } & Partial<Error>)
+    | null;
 
   // An object that can be used to provide some additional information
   // about an error, e.g. specifying the type of error this is. Used
@@ -113,9 +118,12 @@ export class ApolloError extends Error {
     this.message = errorMessage || generateErrorMessage(this);
     this.extraInfo = extraInfo;
     this.cause =
-      [networkError, ...(clientErrors || []), ...(graphQLErrors || [])].find(
-        (e) => !!e
-      ) || null;
+      [
+        networkError,
+        ...(graphQLErrors || []),
+        ...(protocolErrors || []),
+        ...(clientErrors || []),
+      ].find((e) => !!e) || null;
 
     // We're not using `Object.setPrototypeOf` here as it isn't fully
     // supported on Android (see issue #3236).

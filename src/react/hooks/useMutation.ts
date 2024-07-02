@@ -20,6 +20,7 @@ import { equal } from "@wry/equality";
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import { ApolloError } from "../../errors/index.js";
 import { useApolloClient } from "./useApolloClient.js";
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 
 /**
  *
@@ -99,7 +100,7 @@ export function useMutation<
     options,
   });
 
-  React.useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     Object.assign(ref.current, { client, options, mutation });
   });
 

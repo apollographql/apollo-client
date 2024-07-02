@@ -60,9 +60,10 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
               networkError,
               //Network errors can return GraphQL errors on for example a 403
               graphQLErrors:
-                networkError &&
-                networkError.result &&
-                networkError.result.errors,
+                (networkError &&
+                  networkError.result &&
+                  networkError.result.errors) ||
+                void 0,
               forward,
             });
             if (retriedResult) {

@@ -197,27 +197,6 @@ interface ApolloClientOptions<TCacheShape> {
 }
 
 // @public (undocumented)
-export const ApolloConsumer: ReactTypes.FC<ApolloConsumerProps>;
-
-// @public (undocumented)
-export interface ApolloConsumerProps {
-    // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    children: (client: ApolloClient<object>) => ReactTypes.ReactNode;
-}
-
-// @public (undocumented)
-export interface ApolloContextValue {
-    // (undocumented)
-    client?: ApolloClient<object>;
-    // Warning: (ae-forgotten-export) The symbol "RenderPromises" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    renderPromises?: RenderPromises;
-}
-
-// @public (undocumented)
 class ApolloError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ApolloErrorOptions" needs to be exported by the entry point index.d.ts
     constructor({ graphQLErrors, protocolErrors, clientErrors, networkError, errorMessage, extraInfo, }: ApolloErrorOptions);
@@ -302,17 +281,6 @@ class ApolloLink {
 }
 
 // @public (undocumented)
-export const ApolloProvider: ReactTypes.FC<ApolloProviderProps<any>>;
-
-// @public (undocumented)
-export interface ApolloProviderProps<TCache> {
-    // (undocumented)
-    children: ReactTypes.ReactNode | ReactTypes.ReactNode[] | null;
-    // (undocumented)
-    client: ApolloClient<TCache>;
-}
-
-// @public (undocumented)
 interface ApolloQueryResult<T> {
     // (undocumented)
     data: T;
@@ -340,6 +308,7 @@ type AsStoreObject<T extends {
 //
 // @public (undocumented)
 interface BaseQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = any> extends SharedWatchQueryOptions<TVariables, TData> {
+    // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
     client?: ApolloClient<any>;
     context?: DefaultContext;
     ssr?: boolean;
@@ -773,7 +742,23 @@ const getApolloClientMemoryInternals: (() => {
 }) | undefined;
 
 // @public (undocumented)
-export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
+export function getDataFromTree(tree: ReactTypes.ReactNode, context?: {
+    [key: string]: any;
+}): Promise<string>;
+
+// Warning: (ae-forgotten-export) The symbol "GetMarkupFromTreeOptions" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function getMarkupFromTree({ tree, context, renderFunction, }: GetMarkupFromTreeOptions): Promise<string>;
+
+// @public (undocumented)
+type GetMarkupFromTreeOptions = {
+    tree: ReactTypes.ReactNode;
+    context?: {
+        [key: string]: any;
+    };
+    renderFunction?: (tree: ReactTypes.ReactElement<any>) => string | PromiseLike<string>;
+};
 
 // @public (undocumented)
 type GraphQLErrors = ReadonlyArray<GraphQLError>;
@@ -939,7 +924,7 @@ type MissingTree = string | {
 // Warning: (ae-forgotten-export) The symbol "InvalidateModifier" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type Modifier<T> = (value: T, details: ModifierDetails) => T | DeleteModifier | InvalidateModifier;
+type Modifier<T> = (value: T, details: ModifierDetails) => T | DeleteModifier | InvalidateModifier | undefined;
 
 // @public (undocumented)
 type ModifierDetails = {
@@ -1322,7 +1307,7 @@ class QueryManager<TStore> {
     getQueryStore(): Record<string, QueryStoreValue>;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
-        observable?: Observable<FetchResult<any>> | undefined;
+        observable?: Observable<FetchResult<any>>;
     }>;
     // (undocumented)
     link: ApolloLink;
@@ -1489,7 +1474,7 @@ type RefetchQueryDescriptor = string | DocumentNode;
 type RefetchWritePolicy = "merge" | "overwrite";
 
 // @public (undocumented)
-class RenderPromises {
+export class RenderPromises {
     // (undocumented)
     addObservableQueryPromise<TData, TVariables extends OperationVariables>(obsQuery: ObservableQuery<TData, TVariables>): ReactTypes.ReactNode;
     // Warning: (ae-forgotten-export) The symbol "QueryData" needs to be exported by the entry point index.d.ts
@@ -1511,10 +1496,10 @@ class RenderPromises {
 }
 
 // @public (undocumented)
-type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
+export function renderToStringWithData(component: ReactTypes.ReactElement<any>): Promise<string>;
 
-// @public @deprecated (undocumented)
-export const resetApolloContext: typeof getApolloContext;
+// @public (undocumented)
+type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
 // @public (undocumented)
 type Resolver = (rootValue?: any, args?: any, context?: any, info?: {

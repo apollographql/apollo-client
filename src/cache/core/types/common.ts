@@ -107,7 +107,7 @@ export type ModifierDetails = {
 export type Modifier<T> = (
   value: T,
   details: ModifierDetails
-) => T | DeleteModifier | InvalidateModifier;
+) => T | DeleteModifier | InvalidateModifier | undefined;
 
 type StoreObjectValueMaybeReference<StoreVal> =
   StoreVal extends Array<Record<string, any>> ?

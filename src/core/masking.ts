@@ -5,9 +5,13 @@ import type {
   SelectionSetNode,
 } from "graphql";
 import {
+  createFragmentMap,
   getMainDefinition,
   resultKeyNameFromField,
+  isUnmaskedDocument,
+  getFragmentDefinitions,
 } from "../utilities/index.js";
+import type { FragmentMap } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
 import { invariant } from "../utilities/globals/index.js";
 
@@ -22,10 +26,15 @@ export function maskQuery<TData = unknown>(
   matchesFragment: MatchesFragmentFn
 ): TData {
   const definition = getMainDefinition(document);
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
+  const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(document);
   const [masked, changed] = maskSelectionSet(
     data,
     definition.selectionSet,
-    matchesFragment
+    matchesFragment,
+    fragmentMap,
+    isUnmasked,
+    warnOnFieldAccess
   );
 
   return changed ? masked : data;
@@ -41,6 +50,8 @@ export function maskFragment<TData = unknown>(
     (node): node is FragmentDefinitionNode =>
       node.kind === Kind.FRAGMENT_DEFINITION
   );
+
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
 
   if (typeof fragmentName === "undefined") {
     invariant(
@@ -64,7 +75,10 @@ export function maskFragment<TData = unknown>(
   const [masked, changed] = maskSelectionSet(
     data,
     fragment.selectionSet,
-    matchesFragment
+    matchesFragment,
+    fragmentMap,
+    false,
+    true
   );
 
   return changed ? masked : data;
@@ -73,7 +87,10 @@ export function maskFragment<TData = unknown>(
 function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
-  matchesFragment: MatchesFragmentFn
+  matchesFragment: MatchesFragmentFn,
+  fragmentMap: FragmentMap,
+  isUnmasked: boolean,
+  warnOnFieldAccess: boolean
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
@@ -82,7 +99,10 @@ function maskSelectionSet(
       const [masked, itemChanged] = maskSelectionSet(
         item,
         selectionSet,
-        matchesFragment
+        matchesFragment,
+        fragmentMap,
+        isUnmasked,
+        warnOnFieldAccess
       );
       changed ||= itemChanged;
 
@@ -97,15 +117,28 @@ function maskSelectionSet(
       switch (selection.kind) {
         case Kind.FIELD: {
           const keyName = resultKeyNameFromField(selection);
+          const descriptor = Object.getOwnPropertyDescriptor(memo, keyName);
           const childSelectionSet = selection.selectionSet;
 
-          memo[keyName] = data[keyName];
+          // If we've set a descriptor on the object by adding warnings to field
+          // access, overwrite the descriptor because we're adding a field that
+          // is accessible when masked. This avoids the need for us to maintain
+          // which fields are masked/unmasked and avoids dependence on field
+          // order.
+          if (descriptor) {
+            Object.defineProperty(memo, keyName, { value: data[keyName] });
+          } else {
+            memo[keyName] = data[keyName];
+          }
 
           if (childSelectionSet) {
             const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
-              matchesFragment
+              matchesFragment,
+              fragmentMap,
+              isUnmasked,
+              warnOnFieldAccess
             );
 
             if (childChanged) {
@@ -127,7 +160,10 @@ function maskSelectionSet(
           const [fragmentData, childChanged] = maskSelectionSet(
             data,
             selection.selectionSet,
-            matchesFragment
+            matchesFragment,
+            fragmentMap,
+            isUnmasked,
+            warnOnFieldAccess
           );
 
           return [
@@ -139,9 +175,76 @@ function maskSelectionSet(
           ];
         }
         default:
-          return [memo, true];
+          const fragment = fragmentMap[selection.name.value];
+
+          return [
+            isUnmasked ?
+              addAccessorWarnings(
+                memo,
+                data,
+                fragment.selectionSet,
+                warnOnFieldAccess
+              )
+            : memo,
+            true,
+          ];
       }
     },
     [Object.create(null), false]
   );
+}
+
+function addAccessorWarnings(
+  memo: Record<string, unknown>,
+  parent: Record<string, unknown>,
+  selectionSetNode: SelectionSetNode,
+  warnOnFieldAccess: boolean
+) {
+  selectionSetNode.selections.forEach((selection) => {
+    switch (selection.kind) {
+      case Kind.FIELD: {
+        const keyName = resultKeyNameFromField(selection);
+
+        if (keyName in memo) {
+          return;
+        }
+
+        if (warnOnFieldAccess) {
+          return addAccessorWarning(memo, parent[keyName], keyName);
+        } else {
+          memo[keyName] = parent[keyName];
+        }
+      }
+    }
+  });
+
+  return memo;
+}
+
+function addAccessorWarning(
+  data: Record<string, any>,
+  value: any,
+  fieldName: string
+) {
+  let currentValue = value;
+  let warned = false;
+
+  Object.defineProperty(data, fieldName, {
+    get() {
+      if (!warned) {
+        invariant.warn(
+          "Accessing unmasked field '%s' on query %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+          fieldName
+        );
+        warned = true;
+      }
+
+      return currentValue;
+    },
+    set(value) {
+      currentValue = value;
+    },
+    enumerable: true,
+    configurable: true,
+  });
 }

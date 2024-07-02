@@ -104,6 +104,19 @@ interface TransformCacheEntry {
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
+export interface QueryManagerOptions<TStore> {
+  cache: ApolloCache<TStore>;
+  link: ApolloLink;
+  defaultOptions: DefaultOptions;
+  documentTransform: DocumentTransform | null | undefined;
+  queryDeduplication: boolean;
+  onBroadcast: undefined | (() => void);
+  ssrMode: boolean;
+  clientAwareness: Record<string, string>;
+  localState: LocalState<TStore>;
+  assumeImmutableResults: boolean;
+  defaultContext: Partial<DefaultContext> | undefined;
+}
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -139,26 +152,14 @@ export class QueryManager<TStore> {
     link,
     defaultOptions,
     documentTransform,
-    queryDeduplication = false,
+    queryDeduplication,
     onBroadcast,
-    ssrMode = false,
-    clientAwareness = {},
+    ssrMode,
+    clientAwareness,
     localState,
-    assumeImmutableResults = !!cache.assumeImmutableResults,
+    assumeImmutableResults,
     defaultContext,
-  }: {
-    cache: ApolloCache<TStore>;
-    link: ApolloLink;
-    defaultOptions?: DefaultOptions;
-    documentTransform?: DocumentTransform;
-    queryDeduplication?: boolean;
-    onBroadcast?: () => void;
-    ssrMode?: boolean;
-    clientAwareness?: Record<string, string>;
-    localState?: LocalState<TStore>;
-    assumeImmutableResults?: boolean;
-    defaultContext?: Partial<DefaultContext>;
-  }) {
+  }: QueryManagerOptions<TStore>) {
     const defaultDocumentTransform = new DocumentTransform(
       (document) => this.cache.transformDocument(document),
       // Allow the apollo cache to manage its own transform caches
@@ -167,10 +168,10 @@ export class QueryManager<TStore> {
 
     this.cache = cache;
     this.link = link;
-    this.defaultOptions = defaultOptions || Object.create(null);
+    this.defaultOptions = defaultOptions;
     this.queryDeduplication = queryDeduplication;
     this.clientAwareness = clientAwareness;
-    this.localState = localState || new LocalState({ cache });
+    this.localState = localState;
     this.ssrMode = ssrMode;
     this.assumeImmutableResults = assumeImmutableResults;
     this.documentTransform =

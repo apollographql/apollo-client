@@ -1314,19 +1314,8 @@ type QueryListener = (queryInfo: QueryInfo) => void;
 
 // @public (undocumented)
 class QueryManager<TStore> {
-    constructor({ cache, link, defaultOptions, documentTransform, queryDeduplication, onBroadcast, ssrMode, clientAwareness, localState, assumeImmutableResults, defaultContext, }: {
-        cache: ApolloCache<TStore>;
-        link: ApolloLink;
-        defaultOptions?: DefaultOptions;
-        documentTransform?: DocumentTransform;
-        queryDeduplication?: boolean;
-        onBroadcast?: () => void;
-        ssrMode?: boolean;
-        clientAwareness?: Record<string, string>;
-        localState?: LocalState<TStore>;
-        assumeImmutableResults?: boolean;
-        defaultContext?: Partial<DefaultContext>;
-    });
+    // Warning: (ae-forgotten-export) The symbol "QueryManagerOptions" needs to be exported by the entry point index.d.ts
+    constructor({ cache, link, defaultOptions, documentTransform, queryDeduplication, onBroadcast, ssrMode, clientAwareness, localState, assumeImmutableResults, defaultContext, }: QueryManagerOptions<TStore>);
     // (undocumented)
     readonly assumeImmutableResults: boolean;
     // (undocumented)
@@ -1357,6 +1346,8 @@ class QueryManager<TStore> {
     //
     // (undocumented)
     getDocumentInfo(document: DocumentNode): TransformCacheEntry;
+    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     getLocalState(): LocalState<TStore>;
     // (undocumented)
@@ -1367,7 +1358,7 @@ class QueryManager<TStore> {
     getQueryStore(): Record<string, QueryStoreValue>;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
-        observable?: Observable<FetchResult<any>>;
+        observable?: Observable<FetchResult<any>> | undefined;
     }>;
     // (undocumented)
     link: ApolloLink;
@@ -1434,6 +1425,32 @@ class QueryManager<TStore> {
     transform(document: DocumentNode): DocumentNode;
     // (undocumented)
     watchQuery<T, TVariables extends OperationVariables = OperationVariables>(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables>;
+}
+
+// @public (undocumented)
+interface QueryManagerOptions<TStore> {
+    // (undocumented)
+    assumeImmutableResults: boolean;
+    // (undocumented)
+    cache: ApolloCache<TStore>;
+    // (undocumented)
+    clientAwareness: Record<string, string>;
+    // (undocumented)
+    defaultContext: Partial<DefaultContext> | undefined;
+    // (undocumented)
+    defaultOptions: DefaultOptions;
+    // (undocumented)
+    documentTransform: DocumentTransform | null | undefined;
+    // (undocumented)
+    link: ApolloLink;
+    // (undocumented)
+    localState: LocalState<TStore>;
+    // (undocumented)
+    onBroadcast: undefined | (() => void);
+    // (undocumented)
+    queryDeduplication: boolean;
+    // (undocumented)
+    ssrMode: boolean;
 }
 
 // @public
@@ -1736,9 +1753,8 @@ export function withSubscription<TProps extends TGraphQLVariables | {} = {}, TDa
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:116:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:390:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:137:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:391:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:203:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts

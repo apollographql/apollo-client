@@ -24,7 +24,7 @@ export interface UseFragmentOptions<TData, TVars>
       Cache.ReadFragmentOptions<TData, TVars>,
       "id" | "variables" | "returnPartialData"
     > {
-  from: StoreObject | Reference | string;
+  from: FragmentStoreObject<TData> | Reference | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
   /**
@@ -37,6 +37,11 @@ export interface UseFragmentOptions<TData, TVars>
    */
   client?: ApolloClient<any>;
 }
+
+export type FragmentStoreObject<TData> =
+  TData extends { __typename?: string | undefined } ?
+    StoreObject<TData["__typename"]>
+  : StoreObject;
 
 export type UseFragmentResult<TData> =
   | {

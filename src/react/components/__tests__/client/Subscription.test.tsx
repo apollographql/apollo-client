@@ -470,7 +470,6 @@ describe("should update", () => {
 
     {
       const {
-        snapshot,
         snapshot: { loading, data },
       } = await ProfiledContainer.takeRender();
       expect(loading).toBeTruthy();

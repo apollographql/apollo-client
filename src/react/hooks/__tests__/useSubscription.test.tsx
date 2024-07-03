@@ -1,5 +1,5 @@
 import React from "react";
-import { renderHook, waitFor } from "@testing-library/react";
+import { render, renderHook, waitFor } from "@testing-library/react";
 import gql from "graphql-tag";
 
 import {
@@ -14,7 +14,8 @@ import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../context";
 import { MockSubscriptionLink } from "../../../testing";
 import { useSubscription } from "../useSubscription";
-import { spyOnConsole } from "../../../testing/internal";
+import { profileHook, spyOnConsole } from "../../../testing/internal";
+import { SubscriptionHookOptions } from "../../types/types";
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {
@@ -1120,6 +1121,170 @@ followed by new in-flight setup", async () => {
 
     unmount();
   });
+});
+
+describe("ignoreResults", () => {
+  it("should not rerender when ignoreResults is true, but will call `onData` and `onComplete`", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ["Audi", "BMW"].map((make) => ({
+      result: { data: { car: { make } } },
+    }));
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    const onError = jest.fn((() => {}) as SubscriptionHookOptions["onError"]);
+    const onComplete = jest.fn(
+      (() => {}) as SubscriptionHookOptions["onComplete"]
+    );
+    const ProfiledHook = profileHook(() =>
+      useSubscription(subscription, {
+        ignoreResults: true,
+        onData,
+        onError,
+        onComplete,
+      })
+    );
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    const snapshot = await ProfiledHook.takeSnapshot();
+    expect(snapshot).toStrictEqual({
+      loading: false,
+      error: undefined,
+      data: undefined,
+      variables: undefined,
+    });
+    link.simulateResult(results[0]);
+
+    await waitFor(() => {
+      expect(onData).toHaveBeenCalledTimes(1);
+      expect(onData.mock.lastCall?.[0].data).toStrictEqual({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+      expect(onError).toHaveBeenCalledTimes(0);
+      expect(onComplete).toHaveBeenCalledTimes(0);
+    });
+
+    link.simulateResult(results[1], true);
+    await waitFor(() => {
+      expect(onData).toHaveBeenCalledTimes(2);
+      expect(onData.mock.lastCall?.[0].data).toStrictEqual({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+      expect(onError).toHaveBeenCalledTimes(0);
+      expect(onComplete).toHaveBeenCalledTimes(1);
+    });
+
+    // const error = new Error("test");
+    // link.simulateResult({ error });
+    // await waitFor(() => {
+    //   expect(onData).toHaveBeenCalledTimes(2);
+    //   expect(onError).toHaveBeenCalledTimes(1);
+    //   expect(onError).toHaveBeenLastCalledWith(error);
+    //   expect(onComplete).toHaveBeenCalledTimes(0);
+    // });
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
+  it("should not rerender when ignoreResults is true and an error occurs", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ["Audi", "BMW"].map((make) => ({
+      result: { data: { car: { make } } },
+    }));
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    const onError = jest.fn((() => {}) as SubscriptionHookOptions["onError"]);
+    const onComplete = jest.fn(
+      (() => {}) as SubscriptionHookOptions["onComplete"]
+    );
+    const ProfiledHook = profileHook(() =>
+      useSubscription(subscription, {
+        ignoreResults: true,
+        onData,
+        onError,
+        onComplete,
+      })
+    );
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    const snapshot = await ProfiledHook.takeSnapshot();
+    expect(snapshot).toStrictEqual({
+      loading: false,
+      error: undefined,
+      data: undefined,
+      variables: undefined,
+    });
+    link.simulateResult(results[0]);
+
+    await waitFor(() => {
+      expect(onData).toHaveBeenCalledTimes(1);
+      expect(onData.mock.lastCall?.[0].data).toStrictEqual({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+      expect(onError).toHaveBeenCalledTimes(0);
+      expect(onComplete).toHaveBeenCalledTimes(0);
+    });
+
+    const error = new Error("test");
+    link.simulateResult({ error });
+    await waitFor(() => {
+      expect(onData).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenLastCalledWith(error);
+      expect(onComplete).toHaveBeenCalledTimes(0);
+    });
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
+  it.todo(
+    "can switch from `ignoreResults: true` to `ignoreResults: false` and will start rerendering, without creating a new subscription"
+  );
+  it.todo(
+    "can switch from `ignoreResults: false` to `ignoreResults: true` and will stop rerendering, without creating a new subscription"
+  );
 });
 
 describe.skip("Type Tests", () => {

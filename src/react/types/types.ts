@@ -457,6 +457,11 @@ export interface BaseSubscriptionOptions<
   onError?: (error: ApolloError) => void;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
   onSubscriptionComplete?: () => void;
+  /**
+   * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#ignoreResults:member}
+   * @default false
+   */
+  ignoreResults?: boolean;
 }
 
 export interface SubscriptionResult<TData = any, TVariables = any> {
@@ -478,16 +483,6 @@ export interface SubscriptionHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {}
-
-export interface SubscriptionDataOptions<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
-> extends BaseSubscriptionOptions<TData, TVariables> {
-  subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  children?:
-    | null
-    | ((result: SubscriptionResult<TData>) => ReactTypes.ReactNode);
-}
 
 export interface SubscriptionCurrentObservable {
   query?: Observable<any>;

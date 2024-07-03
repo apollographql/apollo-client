@@ -137,7 +137,8 @@ export function useSubscription<
     }
   }
 
-  const { skip, fetchPolicy, shouldResubscribe, context } = options;
+  const { skip, fetchPolicy, shouldResubscribe, context, ignoreResults } =
+    options;
   const variables = useDeepMemo(() => options.variables, [options.variables]);
 
   let [observable, setObservable] = React.useState(() =>
@@ -176,14 +177,15 @@ export function useSubscription<
     optionsRef.current = options;
   });
 
+  const fallbackLoading = !skip && !ignoreResults;
   const fallbackResult = React.useMemo<SubscriptionResult<TData, TVariables>>(
     () => ({
-      loading: !skip,
+      loading: fallbackLoading,
       error: void 0,
       data: void 0,
       variables,
     }),
-    [skip, variables]
+    [fallbackLoading, variables]
   );
 
   return useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
@@ -211,7 +213,7 @@ export function useSubscription<
               variables,
             };
             observable.__.setResult(result);
-            update();
+            if (!ignoreResults) update();
 
             if (optionsRef.current.onData) {
               optionsRef.current.onData({
@@ -233,7 +235,7 @@ export function useSubscription<
                 error,
                 variables,
               });
-              update();
+              if (!ignoreResults) update();
               optionsRef.current.onError?.(error);
             }
           },
@@ -250,7 +252,8 @@ export function useSubscription<
 
         return () => {
           // immediately stop receiving subscription values, but do not unsubscribe
-          // until after a short delay in case another useSubscription hook is
+          // until after a short delay in case another useSubscription hook
+          // (or this hook, after flipping `ignoreResults`) is
           // reusing the same underlying observable and is about to subscribe
           subscriptionStopped = true;
           setTimeout(() => {
@@ -258,9 +261,12 @@ export function useSubscription<
           });
         };
       },
-      [observable]
+      [ignoreResults, observable]
     ),
-    () => (observable && !skip ? observable.__.result : fallbackResult)
+    () =>
+      observable && !skip && !ignoreResults ?
+        observable.__.result
+      : fallbackResult
   );
 }
 

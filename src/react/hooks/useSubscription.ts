@@ -47,7 +47,9 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
  * @remarks
  * #### Consider using `onData` instead of `useEffect`
  *
- * If you want to react to incoming data, please use the `onData` option instead of `useEffect`. State updates you make inside a `useEffect` hook might cause additional rerenders, and `useEffect` is mostly meant for side effects of rendering, not as an event handler.
+ * If you want to react to incoming data, please use the `onData` option instead of `useEffect`.
+ * State updates you make inside a `useEffect` hook might cause additional rerenders, and `useEffect` is mostly meant for side effects of rendering, not as an event handler.
+ * State updates made in an event handler like `onData` might - depending on the React version - be batched and cause only a single rerender.
  *
  * Consider the following component:
  *

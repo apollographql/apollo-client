@@ -2,4 +2,4 @@
 "@apollo/client": minor
 ---
 
-Reimplement `useSubscription`
+Reimplement `useSubscription` to fix rules of React violations.

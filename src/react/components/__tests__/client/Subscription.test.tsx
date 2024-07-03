@@ -473,7 +473,6 @@ describe("should update", () => {
         snapshot,
         snapshot: { loading, data },
       } = await ProfiledContainer.takeRender();
-      console.log(snapshot);
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }

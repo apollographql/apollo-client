@@ -48,7 +48,6 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
  * #### Consider using `onData` instead of `useEffect`
  *
  * If you want to react to incoming data, please use the `onData` option instead of `useEffect`. State updates you make inside a `useEffect` hook might cause additional rerenders, and `useEffect` is mostly meant for side effects of rendering, not as an event handler.
- * That's why we provide you with `onData` as an option to `useSubscription`.
  *
  * Consider the following component:
  *
@@ -180,7 +179,7 @@ export function useSubscription<
       loading: !skip,
       error: void 0,
       data: void 0,
-      variables: variables,
+      variables,
     }),
     [skip, variables]
   );

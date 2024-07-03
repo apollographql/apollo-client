@@ -17,7 +17,11 @@ import type { CacheKey, QueryRef } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
+import type {
+  FetchMoreFunction,
+  RefetchFunction,
+  SubscribeToMoreFunction,
+} from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import type { SkipToken } from "./constants.js";
@@ -26,6 +30,7 @@ export type UseBackgroundQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = {
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   refetch: RefetchFunction<TData, TVariables>;
 };
@@ -277,10 +282,16 @@ function _useBackgroundQuery<
     [queryRef]
   );
 
+  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
+    React.useCallback(
+      (options) => queryRef.observable.subscribeToMore(options),
+      [queryRef]
+    );
+
   React.useEffect(() => queryRef.softRetain(), [queryRef]);
 
   return [
     didFetchResult.current ? wrappedQueryRef : void 0,
-    { fetchMore, refetch },
+    { fetchMore, refetch, subscribeToMore },
   ];
 }

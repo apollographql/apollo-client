@@ -30,8 +30,11 @@ export type UseBackgroundQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = {
+  /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
   refetch: RefetchFunction<TData, TVariables>;
 };
 

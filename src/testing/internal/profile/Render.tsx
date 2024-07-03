@@ -128,16 +128,12 @@ export class RenderInstance<Snapshot> implements Render<Snapshot> {
     const snapScreen = Object.assign(within(this.domSnapshot), {
       debug: (
         ...[dom = this.domSnapshot, ...rest]: Parameters<typeof screen.debug>
-      ) => {
-        screen.debug(dom, ...rest);
-      },
+      ) => screen.debug(dom, ...rest),
       logTestingPlaygroundURL: (
         ...[dom = this.domSnapshot, ...rest]: Parameters<
           typeof screen.logTestingPlaygroundURL
         >
-      ) => {
-        screen.logTestingPlaygroundURL(dom, ...rest);
-      },
+      ) => screen.logTestingPlaygroundURL(dom, ...rest),
     });
     return () => snapScreen;
   }

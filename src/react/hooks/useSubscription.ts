@@ -266,8 +266,7 @@ export function useSubscription<
 
         return () => {
           // immediately stop receiving subscription values, but do not unsubscribe
-          // until after a short delay in case another useSubscription hook
-          // (or this hook, after flipping `ignoreResults`) is
+          // until after a short delay in case another useSubscription hook is
           // reusing the same underlying observable and is about to subscribe
           subscriptionStopped = true;
           setTimeout(() => {

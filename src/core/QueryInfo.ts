@@ -1,22 +1,22 @@
-import type { DocumentNode, GraphQLError } from "graphql";
 import { equal } from "@wry/equality";
+import type { DocumentNode, GraphQLError } from "graphql";
 
-import type { Cache, ApolloCache } from "../cache/index.js";
-import { DeepMerger } from "../utilities/index.js";
-import { mergeIncrementalData } from "../utilities/index.js";
-import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
-import type { ObservableQuery } from "./ObservableQuery.js";
-import { reobserveCacheFirst } from "./ObservableQuery.js";
-import type { QueryListener } from "./types.js";
+import type { ApolloCache, Cache } from "../cache/index.js";
+import type { ApolloError } from "../errors/index.js";
 import type { FetchResult } from "../link/core/index.js";
 import {
-  isNonEmptyArray,
-  graphQLResultHasError,
+  DeepMerger,
   canUseWeakMap,
+  graphQLResultHasError,
+  isNonEmptyArray,
+  mergeIncrementalData,
 } from "../utilities/index.js";
-import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type { ApolloError } from "../errors/index.js";
+import type { ObservableQuery } from "./ObservableQuery.js";
+import { reobserveCacheFirst } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
+import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
+import type { QueryListener } from "./types.js";
+import type { ErrorPolicy, WatchQueryOptions } from "./watchQueryOptions.js";
 
 export type QueryStoreValue = Pick<
   QueryInfo,
@@ -287,11 +287,17 @@ export class QueryInfo {
   }
 
   private shouldNotify() {
-    if (!this.dirty || !this.listeners.size) {
+    if (
+      !this.dirty ||
+      !this.listeners.size ||
+      // It's possible that the query is no longer being watched, but the
+      // ObservableQuery is still active/pending cleanup. In this case, we should not notify.
+      !this.observableQuery?.hasObservers()
+    ) {
       return false;
     }
 
-    if (isNetworkRequestInFlight(this.networkStatus) && this.observableQuery) {
+    if (isNetworkRequestInFlight(this.networkStatus)) {
       const { fetchPolicy } = this.observableQuery.options;
       if (fetchPolicy !== "cache-only" && fetchPolicy !== "cache-and-network") {
         return false;

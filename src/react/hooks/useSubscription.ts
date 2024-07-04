@@ -191,7 +191,7 @@ export function useSubscription<
 
   const ignoreResultsRef = React.useRef(ignoreResults);
   useIsomorphicLayoutEffect(() => {
-    // We cannot directly reference `ignoreResults` directly in the effect below
+    // We cannot reference `ignoreResults` directly in the effect below
     // it would add a dependency to the `useEffect` deps array, which means the
     // subscription would be recreated if `ignoreResults` changes
     // As a result, on resubscription, the last result would be re-delivered,

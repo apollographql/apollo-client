@@ -2,16 +2,30 @@ import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import * as React from "rehackt";
 
-import type { OperationVariables } from "../../core/index.js";
+import type {
+  ApolloClient,
+  ApolloQueryResult,
+  OperationVariables,
+  WatchQueryOptions,
+} from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
 import type {
   LazyQueryHookExecOptions,
   LazyQueryHookOptions,
   LazyQueryResultTuple,
   NoInfer,
+  QueryHookOptions,
+  QueryResult,
 } from "../types/types.js";
-import { useInternalState } from "./useQuery.js";
-import { useApolloClient } from "./useApolloClient.js";
+import type { InternalResult, ObsQueryWithMeta } from "./useQuery.js";
+import {
+  createMakeWatchQueryOptions,
+  getDefaultFetchPolicy,
+  getObsQueryOptions,
+  toQueryResult,
+  useQueryInternals,
+} from "./useQuery.js";
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -21,6 +35,7 @@ const EAGER_METHODS = [
   "fetchMore",
   "updateQuery",
   "startPolling",
+  "stopPolling",
   "subscribeToMore",
 ] as const;
 
@@ -80,21 +95,27 @@ export function useLazyQuery<
   optionsRef.current = options;
   queryRef.current = document;
 
-  const internalState = useInternalState<TData, TVariables>(
-    useApolloClient(options && options.client),
-    document
-  );
-
-  const useQueryResult = internalState.useQuery({
+  const queryHookOptions = {
     ...merged,
     skip: !execOptionsRef.current,
-  });
+  };
+  const {
+    obsQueryFields,
+    result: useQueryResult,
+    client,
+    resultData,
+    observable,
+    onQueryExecuted,
+  } = useQueryInternals(document, queryHookOptions);
 
   const initialFetchPolicy =
-    useQueryResult.observable.options.initialFetchPolicy ||
-    internalState.getDefaultFetchPolicy();
+    observable.options.initialFetchPolicy ||
+    getDefaultFetchPolicy(
+      queryHookOptions.defaultOptions,
+      client.defaultOptions
+    );
 
-  const { forceUpdateState, obsQueryFields } = internalState;
+  const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
@@ -111,7 +132,7 @@ export function useLazyQuery<
       };
     }
 
-    return eagerMethods;
+    return eagerMethods as typeof obsQueryFields;
   }, [forceUpdateState, obsQueryFields]);
 
   const called = !!execOptionsRef.current;
@@ -141,9 +162,14 @@ export function useLazyQuery<
         ...execOptionsRef.current,
       });
 
-      const promise = internalState
-        .executeQuery({ ...options, skip: false })
-        .then((queryResult) => Object.assign(queryResult, eagerMethods));
+      const promise = executeQuery(
+        resultData,
+        observable,
+        client,
+        document,
+        { ...options, skip: false },
+        onQueryExecuted
+      ).then((queryResult) => Object.assign(queryResult, eagerMethods));
 
       // Because the return value of `useLazyQuery` is usually floated, we need
       // to catch the promise to prevent unhandled rejections.
@@ -151,8 +177,80 @@ export function useLazyQuery<
 
       return promise;
     },
-    [eagerMethods, initialFetchPolicy, internalState]
+    [
+      client,
+      document,
+      eagerMethods,
+      initialFetchPolicy,
+      observable,
+      resultData,
+      onQueryExecuted,
+    ]
   );
 
-  return [execute, result];
+  const executeRef = React.useRef(execute);
+  useIsomorphicLayoutEffect(() => {
+    executeRef.current = execute;
+  });
+
+  const stableExecute = React.useCallback<typeof execute>(
+    (...args) => executeRef.current(...args),
+    []
+  );
+  return [stableExecute, result];
+}
+
+function executeQuery<TData, TVariables extends OperationVariables>(
+  resultData: InternalResult<TData, TVariables>,
+  observable: ObsQueryWithMeta<TData, TVariables>,
+  client: ApolloClient<object>,
+  currentQuery: DocumentNode,
+  options: QueryHookOptions<TData, TVariables> & {
+    query?: DocumentNode;
+  },
+  onQueryExecuted: (options: WatchQueryOptions<TVariables, TData>) => void
+) {
+  const query = options.query || currentQuery;
+  const watchQueryOptions = createMakeWatchQueryOptions(
+    client,
+    query,
+    options,
+    false
+  )(observable);
+
+  const concast = observable.reobserveAsConcast(
+    getObsQueryOptions(observable, client, options, watchQueryOptions)
+  );
+  onQueryExecuted(watchQueryOptions);
+
+  return new Promise<
+    Omit<QueryResult<TData, TVariables>, (typeof EAGER_METHODS)[number]>
+  >((resolve) => {
+    let result: ApolloQueryResult<TData>;
+
+    // Subscribe to the concast independently of the ObservableQuery in case
+    // the component gets unmounted before the promise resolves. This prevents
+    // the concast from terminating early and resolving with `undefined` when
+    // there are no more subscribers for the concast.
+    concast.subscribe({
+      next: (value) => {
+        result = value;
+      },
+      error: () => {
+        resolve(
+          toQueryResult(
+            observable.getCurrentResult(),
+            resultData.previousData,
+            observable,
+            client
+          )
+        );
+      },
+      complete: () => {
+        resolve(
+          toQueryResult(result, resultData.previousData, observable, client)
+        );
+      },
+    });
+  });
 }

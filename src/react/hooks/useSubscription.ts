@@ -21,6 +21,7 @@ import { Observable } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -188,6 +189,19 @@ export function useSubscription<
     [fallbackLoading, variables]
   );
 
+  const ignoreResultsRef = React.useRef(ignoreResults);
+  useIsomorphicLayoutEffect(() => {
+    // We cannot directly reference `ignoreResults` directly in the effect below
+    // it would add a dependency to the `useEffect` deps array, which means the
+    // subscription would be recreated if `ignoreResults` changes
+    // As a result, on resubscription, the last result would be re-delivered,
+    // rendering the component one additional time, and re-triggering `onData`.
+    // The same applies to `fetchPolicy`, which results in a new `observable`
+    // being created. We cannot really avoid it in that case, but we can at least
+    // avoid it for `ignoreResults`.
+    ignoreResultsRef.current = ignoreResults;
+  });
+
   return useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
     React.useCallback(
       (update) => {
@@ -213,7 +227,7 @@ export function useSubscription<
               variables,
             };
             observable.__.setResult(result);
-            if (!ignoreResults) update();
+            if (!ignoreResultsRef.current) update();
 
             if (optionsRef.current.onData) {
               optionsRef.current.onData({
@@ -235,7 +249,7 @@ export function useSubscription<
                 error,
                 variables,
               });
-              if (!ignoreResults) update();
+              if (!ignoreResultsRef.current) update();
               optionsRef.current.onError?.(error);
             }
           },
@@ -261,7 +275,7 @@ export function useSubscription<
           });
         };
       },
-      [ignoreResults, observable]
+      [observable]
     ),
     () =>
       observable && !skip && !ignoreResults ?

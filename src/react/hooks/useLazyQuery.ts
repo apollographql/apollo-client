@@ -25,6 +25,7 @@ import {
   toQueryResult,
   useQueryInternals,
 } from "./useQuery.js";
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -188,7 +189,7 @@ export function useLazyQuery<
   );
 
   const executeRef = React.useRef(execute);
-  React.useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     executeRef.current = execute;
   });
 
@@ -239,14 +240,16 @@ function executeQuery<TData, TVariables extends OperationVariables>(
         resolve(
           toQueryResult(
             observable.getCurrentResult(),
-            resultData,
+            resultData.previousData,
             observable,
             client
           )
         );
       },
       complete: () => {
-        resolve(toQueryResult(result, resultData, observable, client));
+        resolve(
+          toQueryResult(result, resultData.previousData, observable, client)
+        );
       },
     });
   });

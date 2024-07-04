@@ -193,12 +193,7 @@ function useInternalState<
         (renderPromises &&
           renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
         client.watchQuery(
-          getObsQueryOptions(
-            undefined,
-            client,
-            options,
-            makeWatchQueryOptions()
-          )
+          getObsQueryOptions(void 0, client, options, makeWatchQueryOptions())
         ),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
@@ -267,7 +262,7 @@ export function useQueryInternals<
   const renderPromises = React.useContext(getApolloContext()).renderPromises;
   const isSyncSSR = !!renderPromises;
   const disableNetworkFetches = client.disableNetworkFetches;
-  const ssrAllowed = !(options.ssr === false || options.skip);
+  const ssrAllowed = options.ssr !== false && !options.skip;
   const partialRefetch = options.partialRefetch;
 
   const makeWatchQueryOptions = createMakeWatchQueryOptions(
@@ -310,11 +305,7 @@ export function useQueryInternals<
     isSyncSSR
   );
 
-  useRegisterSSRObservable<TData, TVariables>(
-    observable,
-    renderPromises,
-    ssrAllowed
-  );
+  useRegisterSSRObservable(observable, renderPromises, ssrAllowed);
 
   const result = useObservableSubscriptionResult<TData, TVariables>(
     resultData,
@@ -349,7 +340,6 @@ function useObservableSubscriptionResult<
   disableNetworkFetches: boolean,
   partialRefetch: boolean | undefined,
   skipSubscribing: boolean,
-
   callbacks: {
     onCompleted: (data: TData) => void;
     onError: (error: ApolloError) => void;
@@ -483,11 +473,8 @@ function useObservableSubscriptionResult<
   );
 }
 
-function useRegisterSSRObservable<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  observable: ObsQueryWithMeta<TData, TVariables>,
+function useRegisterSSRObservable(
+  observable: ObsQueryWithMeta<any, any>,
   renderPromises: RenderPromises | undefined,
   ssrAllowed: boolean
 ) {
@@ -523,7 +510,7 @@ function useHandleSkip<
     // on the server side, return the default loading state.
     resultData.current = toQueryResult(
       ssrDisabledResult,
-      resultData,
+      resultData.previousData,
       observable,
       client
     );
@@ -540,7 +527,7 @@ function useHandleSkip<
     // to address this.
     resultData.current = toQueryResult(
       skipStandbyResult,
-      resultData,
+      resultData.previousData,
       observable,
       client
     );
@@ -569,32 +556,30 @@ function useResubscribeIfNecessary<
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
 ) {
-  {
-    if (
-      observable[lastWatchOptions] &&
-      !equal(observable[lastWatchOptions], watchQueryOptions)
-    ) {
-      // Though it might be tempting to postpone this reobserve call to the
-      // useEffect block, we need getCurrentResult to return an appropriate
-      // loading:true result synchronously (later within the same call to
-      // useQuery). Since we already have this.observable here (not true for
-      // the very first call to useQuery), we are not initiating any new
-      // subscriptions, though it does feel less than ideal that reobserve
-      // (potentially) kicks off a network request (for example, when the
-      // variables have changed), which is technically a side-effect.
-      observable.reobserve(
-        getObsQueryOptions(observable, client, options, watchQueryOptions)
-      );
+  if (
+    observable[lastWatchOptions] &&
+    !equal(observable[lastWatchOptions], watchQueryOptions)
+  ) {
+    // Though it might be tempting to postpone this reobserve call to the
+    // useEffect block, we need getCurrentResult to return an appropriate
+    // loading:true result synchronously (later within the same call to
+    // useQuery). Since we already have this.observable here (not true for
+    // the very first call to useQuery), we are not initiating any new
+    // subscriptions, though it does feel less than ideal that reobserve
+    // (potentially) kicks off a network request (for example, when the
+    // variables have changed), which is technically a side-effect.
+    observable.reobserve(
+      getObsQueryOptions(observable, client, options, watchQueryOptions)
+    );
 
-      // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
-      // but save the current data as this.previousData, just like setResult
-      // usually does.
-      resultData.previousData =
-        resultData.current?.data || resultData.previousData;
-      resultData.current = void 0;
-    }
-    observable[lastWatchOptions] = watchQueryOptions;
+    // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
+    // but save the current data as this.previousData, just like setResult
+    // usually does.
+    resultData.previousData =
+      resultData.current?.data || resultData.previousData;
+    resultData.current = void 0;
   }
+  observable[lastWatchOptions] = watchQueryOptions;
 }
 
 /*
@@ -710,7 +695,7 @@ function setResult<TData, TVariables extends OperationVariables>(
   }
   resultData.current = toQueryResult(
     unsafeHandlePartialRefetch(nextResult, observable, partialRefetch),
-    resultData,
+    resultData.previousData,
     observable,
     client
   );
@@ -724,7 +709,7 @@ function setResult<TData, TVariables extends OperationVariables>(
   );
 }
 
-function handleErrorOrCompleted<TData, TVariables extends OperationVariables>(
+function handleErrorOrCompleted<TData>(
   result: ApolloQueryResult<TData>,
   previousResult: ApolloQueryResult<TData> | undefined,
   callbacks: Callbacks<TData>
@@ -801,7 +786,7 @@ function toApolloError<TData>(
 
 export function toQueryResult<TData, TVariables extends OperationVariables>(
   result: ApolloQueryResult<TData>,
-  resultData: InternalResult<TData, TVariables>,
+  previousData: TData | undefined,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>
 ): InternalQueryResult<TData, TVariables> {
@@ -813,7 +798,7 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
     observable: observable,
     variables: observable.variables,
     called: result !== ssrDisabledResult && result !== skipStandbyResult,
-    previousData: resultData.previousData,
+    previousData,
   } satisfies Omit<
     InternalQueryResult<TData, TVariables>,
     typeof originalResult

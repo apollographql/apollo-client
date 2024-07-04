@@ -355,6 +355,7 @@ export interface BaseSubscriptionOptions<TData = any, TVariables extends Operati
     client?: ApolloClient<object>;
     context?: DefaultContext;
     fetchPolicy?: FetchPolicy;
+    ignoreResults?: boolean;
     onComplete?: () => void;
     onData?: (options: OnDataOptions<TData>) => any;
     onError?: (error: ApolloError) => void;
@@ -2547,7 +2548,7 @@ export interface SubscriptionCurrentObservable {
     subscription?: ObservableSubscription;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface SubscriptionDataOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseSubscriptionOptions<TData, TVariables> {
     // (undocumented)
     children?: null | ((result: SubscriptionResult<TData>) => ReactTypes.ReactNode);

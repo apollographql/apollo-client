@@ -459,7 +459,7 @@ export interface BaseSubscriptionOptions<
   onSubscriptionComplete?: () => void;
   /**
    * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#ignoreResults:member}
-   * @default false
+   * @defaultValue `false`
    */
   ignoreResults?: boolean;
 }
@@ -483,6 +483,19 @@ export interface SubscriptionHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {}
+
+/**
+ * @deprecated This type is not used anymore. It will be removed in the next major version of Apollo Client
+ */
+export interface SubscriptionDataOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+> extends BaseSubscriptionOptions<TData, TVariables> {
+  subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  children?:
+    | null
+    | ((result: SubscriptionResult<TData>) => ReactTypes.ReactNode);
+}
 
 export interface SubscriptionCurrentObservable {
   query?: Observable<any>;

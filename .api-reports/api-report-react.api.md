@@ -384,6 +384,7 @@ export interface BaseSubscriptionOptions<TData = any, TVariables extends Operati
     context?: Context;
     // Warning: (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
     fetchPolicy?: FetchPolicy;
+    ignoreResults?: boolean;
     onComplete?: () => void;
     onData?: (options: OnDataOptions<TData>) => any;
     onError?: (error: ApolloError) => void;
@@ -1915,7 +1916,7 @@ export interface SubscriptionCurrentObservable {
     subscription?: Subscription;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface SubscriptionDataOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseSubscriptionOptions<TData, TVariables> {
     // (undocumented)
     children?: null | ((result: SubscriptionResult<TData>) => ReactTypes.ReactNode);

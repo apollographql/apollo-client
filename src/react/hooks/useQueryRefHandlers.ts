@@ -118,11 +118,9 @@ function _useQueryRefHandlers<
     [internalQueryRef]
   );
 
-  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-    React.useCallback(
-      (options) => internalQueryRef.observable.subscribeToMore(options),
-      [internalQueryRef]
-    );
-
-  return { refetch, fetchMore, subscribeToMore };
+  return {
+    refetch,
+    fetchMore,
+    subscribeToMore: internalQueryRef.observable.subscribeToMore,
+  };
 }

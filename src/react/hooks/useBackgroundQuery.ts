@@ -285,16 +285,14 @@ function _useBackgroundQuery<
     [queryRef]
   );
 
-  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
-    React.useCallback(
-      (options) => queryRef.observable.subscribeToMore(options),
-      [queryRef]
-    );
-
   React.useEffect(() => queryRef.softRetain(), [queryRef]);
 
   return [
     didFetchResult.current ? wrappedQueryRef : void 0,
-    { fetchMore, refetch, subscribeToMore },
+    {
+      fetchMore,
+      refetch,
+      subscribeToMore: queryRef.observable.subscribeToMore,
+    },
   ];
 }

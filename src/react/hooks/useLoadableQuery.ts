@@ -53,7 +53,7 @@ export type UseLoadableQueryResult<
     fetchMore: FetchMoreFunction<TData, TVariables>;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
     refetch: RefetchFunction<TData, TVariables>;
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member(1)} */
+    /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
     /**
      * A function that resets the `queryRef` back to `null`.

@@ -17,6 +17,9 @@ import { useSubscription } from "../useSubscription";
 import { profileHook, spyOnConsole } from "../../../testing/internal";
 import { SubscriptionHookOptions } from "../../types/types";
 import { ErrorBoundary } from "react-error-boundary";
+import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
+import { GraphQLError } from "graphql";
+import { on } from "events";
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {
@@ -1147,9 +1150,11 @@ followed by new in-flight setup", async () => {
           </ErrorBoundary>
         </ApolloProvider>
       );
-      const errorResult = {
-        error: new ApolloError({ errorMessage: "test" }),
-        result: { data: { totalLikes: 42 } },
+      const errorResult: MockedSubscriptionResult = {
+        result: {
+          data: { totalLikes: 42 },
+          errors: [new GraphQLError("test")],
+        },
       };
       return {
         client,
@@ -1160,7 +1165,7 @@ followed by new in-flight setup", async () => {
         errorResult,
       };
     }
-    it.each([undefined, "none", "all", "ignore" /* why? */] as const)(
+    it.each([undefined, "none"] as const)(
       "returns GraphQLError in result when `errorPolicy` is %s and calls `onError`",
       async (errorPolicy) => {
         const {
@@ -1170,10 +1175,18 @@ followed by new in-flight setup", async () => {
           errorResult,
           errorBoundaryOnError,
         } = setup();
+        const onData = jest.fn();
         const onError = jest.fn();
-        render(<ProfiledHook errorPolicy={errorPolicy} onError={onError} />, {
-          wrapper,
-        });
+        render(
+          <ProfiledHook
+            errorPolicy={errorPolicy}
+            onError={onError}
+            onData={onData}
+          />,
+          {
+            wrapper,
+          }
+        );
 
         await ProfiledHook.takeSnapshot();
         link.simulateResult(errorResult);
@@ -1181,24 +1194,59 @@ followed by new in-flight setup", async () => {
           const snapshot = await ProfiledHook.takeSnapshot();
           expect(snapshot).toStrictEqual({
             loading: false,
-            error: errorResult.error,
+            error: new ApolloError({ errorMessage: "test" }),
             data: undefined,
             variables: undefined,
           });
         }
 
         expect(onError).toHaveBeenCalledTimes(1);
-        expect(onError).toHaveBeenCalledWith(errorResult.error);
+        expect(onError).toHaveBeenCalledWith(errorResult.result!.errors![0]);
+        expect(onData).toHaveBeenCalledTimes(0);
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       }
     );
+    it("returns GraphQLError and data in result when `errorPolicy` is all, and calls `onError`", async () => {
+      const { ProfiledHook, wrapper, link, errorResult, errorBoundaryOnError } =
+        setup();
+      const onData = jest.fn();
+      const onError = jest.fn();
+      render(
+        <ProfiledHook errorPolicy="all" onError={onError} onData={onData} />,
+        {
+          wrapper,
+        }
+      );
+
+      await ProfiledHook.takeSnapshot();
+      link.simulateResult(errorResult);
+      {
+        const snapshot = await ProfiledHook.takeSnapshot();
+        expect(snapshot).toStrictEqual({
+          loading: false,
+          error: new ApolloError({ errorMessage: "test" }),
+          data: { totalLikes: 42 },
+          variables: undefined,
+        });
+      }
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(errorResult.result!.errors![0]);
+      // is this good?
+      expect(onData).toHaveBeenCalledTimes(0);
+      expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
+    });
     it("does not expose GraphQLError `errorPolicy` is `ignore`", async () => {
       const { ProfiledHook, wrapper, link, errorResult, errorBoundaryOnError } =
         setup();
+      const onData = jest.fn();
       const onError = jest.fn();
-      render(<ProfiledHook errorPolicy="ignore" onError={onError} />, {
-        wrapper,
-      });
+      render(
+        <ProfiledHook errorPolicy="ignore" onError={onError} onData={onData} />,
+        {
+          wrapper,
+        }
+      );
 
       await ProfiledHook.takeSnapshot();
       link.simulateResult(errorResult);
@@ -1207,13 +1255,24 @@ followed by new in-flight setup", async () => {
         expect(snapshot).toStrictEqual({
           loading: false,
           error: undefined,
-          // fails
           data: { totalLikes: 42 },
           variables: undefined,
         });
       }
 
       expect(onError).toHaveBeenCalledTimes(0);
+      expect(onData).toHaveBeenCalledTimes(1);
+      expect(onData).toHaveBeenCalledWith({
+        client: expect.anything(),
+        // is this nested response format really correct?
+        data: {
+          data: { totalLikes: 42 },
+          loading: false,
+          // should this be undefined?
+          error: undefined,
+          variables: undefined,
+        },
+      });
       expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
     });
   });

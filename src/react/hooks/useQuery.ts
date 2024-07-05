@@ -776,8 +776,8 @@ export function getDefaultFetchPolicy<
   );
 }
 
-function toApolloError<TData>(
-  result: ApolloQueryResult<TData>
+export function toApolloError<TData>(
+  result: Pick<ApolloQueryResult<TData>, "errors" | "error">
 ): ApolloError | undefined {
   return isNonEmptyArray(result.errors) ?
       new ApolloError({ graphQLErrors: result.errors })

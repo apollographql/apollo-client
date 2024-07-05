@@ -22,6 +22,7 @@ import { Observable } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
+import { toApolloError } from "./useQuery.js";
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -218,13 +219,15 @@ export function useSubscription<
               // TODO: fetchResult.data can be null but SubscriptionResult.data
               // expects TData | undefined only
               data: fetchResult.data!,
-              error: void 0,
+              error: toApolloError(fetchResult),
               variables,
             };
             observable.__.setResult(result);
             update();
 
-            if (optionsRef.current.onData) {
+            if (result.error) {
+              optionsRef.current.onError?.(result.error);
+            } else if (optionsRef.current.onData) {
               optionsRef.current.onData({
                 client,
                 data: result,

@@ -2752,6 +2752,7 @@ UseBackgroundQueryResult<TData, TVariables>
 
 // @public (undocumented)
 export type UseBackgroundQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
 };
@@ -2811,6 +2812,7 @@ queryRef: QueryRef<TData, TVariables> | null,
 handlers: {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
     reset: ResetFunction;
 }
 ];
@@ -2828,6 +2830,7 @@ export function useQueryRefHandlers<TData = unknown, TVariables extends Operatio
 export interface UseQueryRefHandlersResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
 // @public
@@ -2901,8 +2904,6 @@ export interface UseSuspenseQueryResult<TData = unknown, TVariables extends Oper
     networkStatus: NetworkStatus;
     // (undocumented)
     refetch: RefetchFunction<TData, TVariables>;
-    // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreFunction" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
@@ -2994,9 +2995,10 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:29:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:30:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useLoadableQuery.ts:107:1 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:38:3 - (ae-forgotten-export) The symbol "SubscribeToMoreFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:54:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:78:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useLoadableQuery.ts:120:9 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

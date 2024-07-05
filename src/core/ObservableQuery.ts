@@ -163,6 +163,8 @@ export class ObservableQuery<
     this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
     this.isTornDown = false;
 
+    this.subscribeToMore = this.subscribeToMore.bind(this);
+
     const {
       watchQuery: { fetchPolicy: defaultFetchPolicy = "cache-first" } = {},
     } = queryManager.defaultOptions;

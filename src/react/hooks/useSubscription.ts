@@ -21,6 +21,7 @@ import { Observable } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -146,6 +147,14 @@ export function useSubscription<
     )
   );
 
+  const recreate = () =>
+    createSubscription(client, subscription, variables, fetchPolicy, context);
+
+  const recreateRef = React.useRef(recreate);
+  useIsomorphicLayoutEffect(() => {
+    recreateRef.current = recreate;
+  });
+
   if (skip) {
     if (observable) {
       setObservable((observable = null));
@@ -160,15 +169,7 @@ export function useSubscription<
         !!shouldResubscribe(options!)
       : shouldResubscribe) !== false)
   ) {
-    setObservable(
-      (observable = createSubscription(
-        client,
-        subscription,
-        variables,
-        fetchPolicy,
-        context
-      ))
-    );
+    setObservable((observable = recreate()));
   }
 
   const optionsRef = React.useRef(options);
@@ -186,7 +187,7 @@ export function useSubscription<
     [skip, variables]
   );
 
-  return useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
+  const ret = useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
     React.useCallback(
       (update) => {
         if (!observable) {
@@ -262,6 +263,19 @@ export function useSubscription<
     ),
     () => (observable && !skip ? observable.__.result : fallbackResult)
   );
+  return React.useMemo(
+    () => ({
+      ...ret,
+      restart() {
+        invariant(
+          !optionsRef.current.skip,
+          "A subscription that is skipped cannot be restarted."
+        );
+        setObservable(recreateRef.current());
+      },
+    }),
+    [ret]
+  );
 }
 
 function createSubscription<
@@ -297,11 +311,11 @@ function createSubscription<
       // to get around strict mode
       if (!observable) {
         observable = client.subscribe({
-        query,
-        variables,
-        fetchPolicy,
-        context,
-      });
+          query,
+          variables,
+          fetchPolicy,
+          context,
+        });
       }
       const sub = observable.subscribe(observer);
       return () => sub.unsubscribe();

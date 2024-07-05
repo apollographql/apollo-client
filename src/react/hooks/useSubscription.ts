@@ -295,12 +295,14 @@ function createSubscription<
     new Observable<FetchResult<TData>>((observer) => {
       // lazily start the subscription when the first observer subscribes
       // to get around strict mode
-      observable ||= client.subscribe({
+      if (!observable) {
+        observable = client.subscribe({
         query,
         variables,
         fetchPolicy,
         context,
       });
+      }
       const sub = observable.subscribe(observer);
       return () => sub.unsubscribe();
     }),

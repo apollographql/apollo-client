@@ -8,7 +8,7 @@ import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLSchema } from 'graphql';
 
-// @alpha
+// @alpha @deprecated
 export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
     validate?: boolean;
     delay?: {
@@ -24,7 +24,7 @@ export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
 // Warning: (ae-forgotten-export) The symbol "TestSchemaOptions" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ProxiedSchema" needs to be exported by the entry point index.d.ts
 //
-// @alpha
+// @alpha @deprecated
 export const createTestSchema: (schemaWithTypeDefs: GraphQLSchema, options: TestSchemaOptions) => ProxiedSchema;
 
 // @public

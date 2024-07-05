@@ -1348,8 +1348,8 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
+    await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
-    expect(onSubscribe).toHaveBeenCalledTimes(2);
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
     {
@@ -1410,8 +1410,8 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
+    await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
-    expect(onSubscribe).toHaveBeenCalledTimes(2);
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
     {

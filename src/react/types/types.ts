@@ -437,6 +437,8 @@ export interface BaseSubscriptionOptions<
   variables?: TVariables;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: FetchPolicy;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#shouldResubscribe:member} */
   shouldResubscribe?:
     | boolean
@@ -479,6 +481,9 @@ export interface SubscriptionHookOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {}
 
+/**
+ * @deprecated This type is not used anymore. It will be removed in the next major version of Apollo Client
+ */
 export interface SubscriptionDataOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,

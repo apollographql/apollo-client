@@ -13,6 +13,7 @@ import type {
 import type {
   ApolloClient,
   DefaultContext,
+  ErrorPolicy,
   FetchPolicy,
   FetchResult,
   OperationVariables,
@@ -137,12 +138,20 @@ export function useSubscription<
     }
   }
 
-  const { skip, fetchPolicy, shouldResubscribe, context } = options;
+  const { skip, fetchPolicy, errorPolicy, shouldResubscribe, context } =
+    options;
   const variables = useDeepMemo(() => options.variables, [options.variables]);
 
   let [observable, setObservable] = React.useState(() =>
     options.skip ? null : (
-      createSubscription(client, subscription, variables, fetchPolicy, context)
+      createSubscription(
+        client,
+        subscription,
+        variables,
+        fetchPolicy,
+        errorPolicy,
+        context
+      )
     )
   );
 
@@ -155,6 +164,7 @@ export function useSubscription<
     ((client !== observable.__.client ||
       subscription !== observable.__.query ||
       fetchPolicy !== observable.__.fetchPolicy ||
+      errorPolicy !== observable.__.errorPolicy ||
       !equal(variables, observable.__.variables)) &&
       (typeof shouldResubscribe === "function" ?
         !!shouldResubscribe(options!)
@@ -166,6 +176,7 @@ export function useSubscription<
         subscription,
         variables,
         fetchPolicy,
+        errorPolicy,
         context
       ))
     );
@@ -272,6 +283,7 @@ function createSubscription<
   query: TypedDocumentNode<TData, TVariables>,
   variables?: TVariables,
   fetchPolicy?: FetchPolicy,
+  errorPolicy?: ErrorPolicy,
   context?: DefaultContext
 ) {
   const __ = {
@@ -279,6 +291,7 @@ function createSubscription<
     client,
     query,
     fetchPolicy,
+    errorPolicy,
     result: {
       loading: true,
       data: void 0,
@@ -299,6 +312,7 @@ function createSubscription<
         query,
         variables,
         fetchPolicy,
+        errorPolicy,
         context,
       });
       const sub = observable.subscribe(observer);

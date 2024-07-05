@@ -1,5 +1,5 @@
 import React from "react";
-import { renderHook, waitFor } from "@testing-library/react";
+import { render, renderHook, waitFor } from "@testing-library/react";
 import gql from "graphql-tag";
 
 import {
@@ -14,7 +14,9 @@ import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../context";
 import { MockSubscriptionLink } from "../../../testing";
 import { useSubscription } from "../useSubscription";
-import { spyOnConsole } from "../../../testing/internal";
+import { profileHook, spyOnConsole } from "../../../testing/internal";
+import { SubscriptionHookOptions } from "../../types/types";
+import { ErrorBoundary } from "react-error-boundary";
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {
@@ -1119,6 +1121,101 @@ followed by new in-flight setup", async () => {
     expect(result.current.tails.data).toBeUndefined();
 
     unmount();
+  });
+
+  describe.only("errorPolicy", () => {
+    function setup() {
+      const subscription: TypedDocumentNode<{ totalLikes: number }, {}> = gql`
+        subscription ($id: ID!) {
+          totalLikes
+        }
+      `;
+      const errorBoundaryOnError = jest.fn();
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        link,
+        cache: new Cache(),
+      });
+      const ProfiledHook = profileHook(
+        (options: SubscriptionHookOptions<{ totalLikes: number }, {}>) =>
+          useSubscription(subscription, options)
+      );
+      const wrapper = ({ children }: { children: any }) => (
+        <ApolloProvider client={client}>
+          <ErrorBoundary onError={errorBoundaryOnError} fallback={<>error</>}>
+            {children}
+          </ErrorBoundary>
+        </ApolloProvider>
+      );
+      const errorResult = {
+        error: new ApolloError({ errorMessage: "test" }),
+        result: { data: { totalLikes: 42 } },
+      };
+      return {
+        client,
+        link,
+        errorBoundaryOnError,
+        ProfiledHook,
+        wrapper,
+        errorResult,
+      };
+    }
+    it.each([undefined, "none", "all", "ignore" /* why? */] as const)(
+      "returns GraphQLError in result when `errorPolicy` is %s and calls `onError`",
+      async (errorPolicy) => {
+        const {
+          ProfiledHook,
+          wrapper,
+          link,
+          errorResult,
+          errorBoundaryOnError,
+        } = setup();
+        const onError = jest.fn();
+        render(<ProfiledHook errorPolicy={errorPolicy} onError={onError} />, {
+          wrapper,
+        });
+
+        await ProfiledHook.takeSnapshot();
+        link.simulateResult(errorResult);
+        {
+          const snapshot = await ProfiledHook.takeSnapshot();
+          expect(snapshot).toStrictEqual({
+            loading: false,
+            error: errorResult.error,
+            data: undefined,
+            variables: undefined,
+          });
+        }
+
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith(errorResult.error);
+        expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
+      }
+    );
+    it("does not expose GraphQLError `errorPolicy` is `ignore`", async () => {
+      const { ProfiledHook, wrapper, link, errorResult, errorBoundaryOnError } =
+        setup();
+      const onError = jest.fn();
+      render(<ProfiledHook errorPolicy="ignore" onError={onError} />, {
+        wrapper,
+      });
+
+      await ProfiledHook.takeSnapshot();
+      link.simulateResult(errorResult);
+      {
+        const snapshot = await ProfiledHook.takeSnapshot();
+        expect(snapshot).toStrictEqual({
+          loading: false,
+          error: undefined,
+          // fails
+          data: { totalLikes: 42 },
+          variables: undefined,
+        });
+      }
+
+      expect(onError).toHaveBeenCalledTimes(0);
+      expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
+    });
   });
 });
 
